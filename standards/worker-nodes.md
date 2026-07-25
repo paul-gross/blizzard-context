@@ -42,6 +42,18 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 **Don't.** Ship a new custom worker node with a `produces:` name and an un-instructed prompt against a hub already running `produces_mode = "enforce"` — expect every completion from that node to be rejected, not silently degraded.
 
+## The `requires_checks` gate (`bzh:worker-node-checks-gate`)
+
+**Rule.** A choice may declare `requires_checks: true`; selecting it while any of the node's `checks:` is red (the runner runs them at worker exit — [../domain/graphs.md](../domain/graphs.md) §Judgement and choices, #114) is treated as a **failure, not a judgement** — the engine consumes a retry and re-queues a fresh attempt rather than accepting the edge, the red evidence injected into the re-attempt's judgement. Unlike `produces_mode`, this needs **no config flag**: gating applies iff a choice declares `requires_checks`, so a graph that declares none is unaffected. It is enforced twice off one shared predicate (`wire.completion.checks_gate_violated`) — the runner's own gate and the hub's completion backstop, the same runner-gate-plus-hub-backstop shape `bzh:worker-node-produces-backstop` has — so a runner that skips its gate is still fenced by the hub. A red check reported through a **non-gated** choice (`fail`) routes normally, its context-rich fix path intact.
+
+**Why.** Without the gate, enforcement of "checks are green" is social (prompt prose + the worker's honest self-report), and prompt prose and the `checks:` YAML can silently drift; running the checks and gating the edge makes the graph author's intent mechanical without taking routing authority from the worker — a red check still routes wherever the worker's non-gated choices allow.
+
+**Detect.** A custom single-application graph that wants "a green build cannot be routed to delivery" but leaves its `pass` choice ungated — the worker can still select `pass` over a red check, exactly the drift the gate closes. (The mint-time validator already rejects the ill-formed shapes — [../domain/graphs.md](../domain/graphs.md) §Judgement and choices owns which — so they never reach here.)
+
+**Do.** On a single-application graph (never a reusable one — `checks:` makes a graph application-specific, `bzh:app-agnostic-graphs`), declare the node's `checks:` and set `requires_checks: true` on the choice that must not be taken over red — typically build's `pass`, never its `fail`.
+
+**Don't.** Reach for an engine-routed "check-failed" edge that overrides the worker's choice — rejected by design: it would split routing authority between the graph author's choices and a mechanical router, and discard the worker's context-rich `fail` reporting path.
+
 ## The worker's identity env (`bzh:worker-node-attach-env`)
 
 **Rule.** Both declaration CLI calls the worker runs — `blizzard runner artifact create` and `blizzard runner artifact commit` — read their identity from the spawn environment, not from arguments the node's prompt has to thread:
