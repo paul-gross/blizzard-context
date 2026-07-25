@@ -10,4 +10,5 @@ Parent: [../index.md](../index.md).
 | [./mise.md](./mise.md) | Running a repo task or discovering a code repo's command surface — the `mise` front door `blizzard` and `blizzard-mock` share |
 | [../verification/blizzard.md#tools](../verification/blizzard.md#tools) | Standing up the scenario a verification needs — the setup tools the matrix owns |
 | The `blizzard` repo's `docs/ci.md` | Watching or debugging a GitHub Actions run with `gh` — the in-repo operator reference for the `gh run` commands |
+| `winter-github:/context/gh-cli.md#viewing-an-existing-issue` | Reading a blizzard issue with `gh` before implementing it — `gh issue view <N> --repo paul-gross/blizzard` alone exits 1 (`GraphQL: Projects (classic) is being deprecated … repository.issue.projectCards`); pass `--json title,body,labels,state` (or `gh issue list --json number,title,body`) instead |
 | `winter-github:/index.md` | Filing or refining a GitHub issue with `gh` — the issue skills and conventions |

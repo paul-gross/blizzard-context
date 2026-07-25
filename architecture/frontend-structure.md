@@ -9,9 +9,11 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 **Why.** A presentational component is testable with plain inputs and no client stub, and is reusable across a container that reads live data and one a spec drives with a fixture — collapsing the two into one component forces every test of the markup through a query/mutation double, and forces every future consumer to carry the data layer along with the view.
 
+**Exception.** A header-slot mini-container — a small component projected into a shared header's `[header-trailing]`-style slot, whose entire template is kit primitives (`fleet-kit-badge`, `fleet-kit-button`, …) with no bespoke domain markup (rows, cards, forms) of its own — may inject its own query/mutation without splitting out a presentational sibling. The slot itself is the composition boundary the host (`BoardHeader`) already exposes; a container/presentational split below it buys no testability the plain-kit template doesn't already have, only an extra file. This is narrow: the moment such a component grows a row, card, or form, it re-enters the rule.
+
 **Detect.** A component file that both calls an `inject*Query`/`inject*Mutation` and carries a multi-line `template:` with domain markup (rows, cards, forms) rather than delegating to a child; a presentational component that itself calls `inject*Query`.
 
-**Do.** `chunk-detail.ts` (the container: owns the query, maps `pmItems`/`actionError`, forwards `detail`) renders `chunk-detail-panel.ts` (the presentational panel), passing data down and re-emitting its outputs up unchanged.
+**Do.** `chunk-detail.ts` (the container: owns the query, maps `pmItems`/`actionError`, forwards `detail`) renders `chunk-detail-panel.ts` (the presentational panel), passing data down and re-emitting its outputs up unchanged. Under the Exception: `local-identity.ts` and `local-pause-control.ts` (issue #131, #133) each inject their own status read (and, for the latter, its own pause mutation) and render straight off kit primitives (`KitBadge`, `KitButton`) inside the runner header's `[header-trailing]` slot — no row/card/form markup, so no presentational sibling is owed.
 
 **Don't.** A single component that both injects `injectHubRunnersQuery()` and renders the registry table inline — a test of the table now needs a stubbed client even when the row markup is all that changed.
 
