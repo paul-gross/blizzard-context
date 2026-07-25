@@ -47,7 +47,7 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 ## Time, id, and status formatting resolve through the shared owner (`bzh:frontend-formatters`)
 
-**Rule.** A component never re-derives its own absolute/relative time string, id-shortening scheme, or status→color ladder — it resolves through `fleet`'s single owner: the time module (`fleet/lib/when.ts` — `formatWhen`, `formatAge`, `formatHeldFor`, `ageMs`, `formatUtcClock`, `formatSeenAgo`, plus a component's own thin display wrapper where the surface's exact text needs it), `compactRef` (`fleet/lib/compact-ref.ts`) for every id shortening, and the `Tone`-typed status map (`fleet/lib/chunk-lanes.ts`'s `STATUS_TONE`, `local-panel/chunk-status.ts`'s `deriveMachineChunkStatus`) for status-to-color.
+**Rule.** A component never re-derives its own absolute/relative time string, id-shortening scheme, or status→color ladder — it resolves through `fleet`'s single owner: the time module (`fleet/lib/when.ts` — `formatWhen`, `formatAge`, `formatHeldFor`, `ageMs`, `formatLocalClockWithDay`, `formatSeenAgo`, plus a component's own thin display wrapper where the surface's exact text needs it), `compactRef` (`fleet/lib/compact-ref.ts`) for every id shortening, and the `Tone`-typed status map (`fleet/lib/chunk-lanes.ts`'s `STATUS_TONE`, `local-panel/chunk-status.ts`'s `deriveMachineChunkStatus`) for status-to-color.
 
 **Why.** Four time implementations, two id-shortening styles, and two parallel status-color tables (issue #81) meant a "fix formatting" task spanned every file with its own copy instead of one. A single owner also carries the skew-tolerance guarantee (`bzh:utc-instants`) once instead of re-implementing — and re-forgetting — it per component.
 
