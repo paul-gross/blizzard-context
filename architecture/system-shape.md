@@ -59,17 +59,31 @@ A chunk's **status** is always *derived* by query from those facts, never writte
 
 ## A graph carries workflow, never application knowledge (`bzh:app-agnostic-graphs`)
 
-**Rule.** A workflow graph declares the *shape of the work* — node roles, what each node produces and under what name, the attach protocol, and the choice names a judgement selects between. It never declares how a particular application is built, tested, linted, or branched. The same graph must drive twenty unrelated applications unchanged; anything that would stop it belongs in the workspace the work happens in, not in the graph.
+**Rule.** A workflow graph declares the *shape of the work* — node roles, what each node produces and under what name, the declaration protocol, and the choice names a judgement selects between. It never declares how a particular application is built, tested, linted, or branched. The same graph must drive twenty unrelated applications unchanged; anything that would stop it belongs in the workspace the work happens in, not in the graph.
 
 **Why.** Blizzard orchestrates agents working in a **poly-repo capable workspace** — a worker is leased a feature environment, not a checkout, and one chunk may span several repos at once. Blizzard is not a build system and holds no model of any application in that workspace. The moment a graph names a toolchain, that graph forks per application, and it forks again per repo the instant a chunk spans two repos that build differently. Each repo is also the only place the answer stays correct: it changes when that repo's toolchain changes, with no graph re-mint and no fleet-wide edit. This is the same inversion as `bzh:pluggable-seams`, one level up — the graph depends on the abstraction "this node verifies its work", never on a concrete verification command.
 
-**Scope.** Governs authored graph YAML and its prompts. The **fleet protocol** is not application knowledge and stays in the graph: `blizzard runner attach --name <n>`, `blizzard runner ask`, and the PM-item proxy are blizzard's own surface, identical across every application it drives.
+**Scope.** Governs authored graph YAML and its prompts. The **fleet protocol** is not application knowledge and stays in the graph: `blizzard runner artifact create --name <n>` (an asset), `blizzard runner artifact commit` (a git commit), `blizzard runner ask`, and the PM-item proxy are blizzard's own surface, identical across every application it drives. `blizzard runner attach` is a deprecated alias for `artifact create` ([../standards/worker-nodes.md](../standards/worker-nodes.md) `bzh:worker-node-attach-instruction`) — no packaged prompt names it.
 
 **Detect.** A concrete toolchain command in a graph's `checks:` or prompt text (`mise run test`, `npm run lint`, `pytest`); a prompt naming a language, framework, directory layout, or branch-naming convention; a graph whose name or prose ties it to one application; a node instructing a specific file path inside the application.
 
 **Do.** Instruct the *obligation* and let the repo supply the specifics — "verify the change through the methods this repository declares, and treat a missing method as a gap to surface". A competent agent reads the repo's own conventions; blizzard's job is the loop around the work, not teaching the agent to do it.
 
 **Don't.** Author `checks: [mise run lint, mise run test]` on a build node, or a prompt telling the worker to run them. Both bind the graph to one repo's tooling, and the engine executes neither — the runner never runs `checks:` and the hub never reads the reported results, so such a declaration buys coupling and no enforcement.
+
+## Git mutation lives in the worker seam (`bzh:git-write-in-worker-seam`)
+
+**Rule.** Only the worker mutates git — it commits its work and pushes its branch. The runner's own git surface is **read-only**: it confirms what the worker declared (`git ls-remote` + `git remote get-url`), it never commits and never pushes. The worker declares what it pushed — `(forge, repo, branch, commit)`, through the runner's local declaration channel — and the runner's read-only verify is what turns that declaration into a submitted artifact.
+
+**Why.** The runner is the deterministic shell (`bzh:deterministic-shell`) and holds the only credentialed copy of the leased environment, but it cannot know what a worker's turn actually produced without either trusting the worker's say-so blindly or **inferring** it from git residue — and residue is lossy: a detached worktree's `git rev-parse --abbrev-ref HEAD` returns the literal string `HEAD`, which a runner that both infers *and* pushes turns into a wedge the instant it tries to push a branch named `HEAD`. Splitting the two roles — the worker states a fact about what it did, the runner independently confirms that fact against the forge it can already see — gets both properties at once: the runner never fabricates a pointer from ambiguous residue, and it never merely trusts an unverified claim either.
+
+**Scope.** Governs the runner's `IWorktreeGit` seam (`runner/loop/worktree.py`) and its ADVANCE collection step. The runner still holds the only credentialed copy of the leased environment; it is only the git mutation *within* that environment that moves to the worker.
+
+**Detect.** A runner-side `git push`, `git commit`, or any git call that resolves *which* branch/commit to act on from repository state (`git rev-parse --abbrev-ref HEAD`, "HEAD is ahead of base") rather than from a declaration the worker made through the local API.
+
+**Do.** The worker pushes its branch, then declares it — `blizzard runner artifact commit --repo <r> --branch <b> --commit <sha>`, `--forge` optional and defaulting to `git remote get-url origin` run in the repo — and the runner's `IWorktreeGit.verify(repo_workdir, forge, branch, commit)` confirms it read-only before submitting the `GIT_COMMIT` artifact.
+
+**Don't.** A runner step that walks the leased environment's repo worktrees looking for one whose `HEAD` is ahead of the base branch and pushes whatever it finds — inference from residue this shape avoids.
 
 ## See also
 

@@ -15,4 +15,4 @@ Parent: [../index.md](../index.md).
 | [./persistence.md](./persistence.md) | Touching a store schema or a migration — the portable-SQL rule and the manual-Alembic migration policy |
 | [./wire.md](./wire.md) | Adding a route (or a frontend consumer) that serializes or reads an instant — the UTC-aware-end-to-end rule spanning store, domain, wire, and TS |
 | [./hub-nodes.md](./hub-nodes.md) | Authoring or reviewing an `executor: hub` node — the `run:` step shape, the injected env-var contract, the outcome protocol, and the per-step idempotence a `run:` command must honor |
-| [./worker-nodes.md](./worker-nodes.md) | Authoring or reviewing a worker node that declares a `produces:` asset — the prompt's attach instruction, the judgement-assessment fallback, the `produces_mode` enforcement backstop, and the worker's injected identity env |
+| [./worker-nodes.md](./worker-nodes.md) | Authoring or reviewing a worker node that declares a `produces:` entry — the prompt's declaration instruction, the judgement-assessment fallback, the `produces_mode` enforcement backstop, and the worker's injected identity env |

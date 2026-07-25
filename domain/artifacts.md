@@ -12,7 +12,7 @@ Two kinds:
 | Kind | Carries |
 |------|---------|
 | commit pointer | A repository, a branch name, and a commit hash — the branch is pushed to the forge **before** the artifact is submitted, so the pointer never dangles. A chunk touching five repos submits five pointers. |
-| asset | Text or a blob — a review's findings, a spike write-up. A worker node's asset is normally submitted by an explicit worker attach, per the node's `produces:` list ([standards/worker-nodes.md](../standards/worker-nodes.md)). |
+| asset | Text or a blob — a review's findings, a spike write-up. A worker node's asset is normally submitted by an explicit worker declaration, per the node's `produces:` list ([standards/worker-nodes.md](../standards/worker-nodes.md)). |
 
 - **The hash is authoritative.** Branches move, so the hash pins the state that was actually verified; the branch name serves only to detect work committed ahead of it. There is deliberately no fencing at the branch ref: a zombie clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing` in [execution.md](./execution.md)).
 - **Self-describing provenance.** An artifact knows the chunk, the exact node, and the attempt that produced it.
@@ -56,4 +56,4 @@ A hub node's script authors its outcome choices exactly like a worker node's jud
 
 - [./work.md](./work.md) — the transition an artifact commits with, and the `done` status delivery derives.
 - [../standards/hub-nodes.md](../standards/hub-nodes.md) — the technical authoring schema for a hub command node like `deliver`: the `run:` step shape, the injected env-var contract, the outcome protocol, and the per-step idempotence rule its script is held to.
-- [../standards/worker-nodes.md](../standards/worker-nodes.md) — the technical authoring contract for a worker node's asset: the prompt's `attach` instruction, the judgement-assessment fallback, and the `produces_mode` enforcement backstop.
+- [../standards/worker-nodes.md](../standards/worker-nodes.md) — the technical authoring contract for a worker node's asset: the prompt's declaration instruction, the judgement-assessment fallback, and the `produces_mode` enforcement backstop.

@@ -51,7 +51,7 @@ The worker's **heartbeat** is a side effect of its tool use — no agent coopera
 
 A worker session never discovers its work — the runner primes it with the **node envelope**, assembled by the hub for the chunk's current node:
 
-- **The node's prompt and configuration** — the base prompt plus the taken edge's arrival context ([graphs.md](./graphs.md)).
+- **The node's prompt and configuration** — the base prompt plus the taken edge's arrival context ([graphs.md](./graphs.md)), plus, when the node declares `produces:`, a procedurally-generated required-artifacts table naming each entry's kind and the fleet-protocol verb that declares it ([standards/worker-nodes.md](../standards/worker-nodes.md)).
 - **The chunk's relevant artifacts** — earlier steps' outputs, resolved newest-first from the artifact series ([artifacts.md](./artifacts.md)).
 - **The runner's machine-local context** — which environments the chunk holds and where they live on this machine; the hub contributes none of this.
 
