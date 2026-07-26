@@ -23,7 +23,7 @@ Two kinds:
 
 **Why.** The forge is already the durable owner of code and the runner's machine of its sessions; a hub that holds only references stays small, safe to centralize, and safe to expose to the board.
 
-**Detect.** A design or schema persisting file contents, diffs, patches, or session transcripts at the hub; an artifact carrying code instead of a pointer to it; a PM item's contents stored rather than read through.
+**Detect.** A design or schema persisting file contents, diffs, patches, or session transcripts at the hub; an artifact carrying code instead of a pointer to it; a work item's contents stored rather than read through.
 
 **Do.** Push the branch to the forge, then submit the repository, branch, and commit hash as the pointer artifact.
 

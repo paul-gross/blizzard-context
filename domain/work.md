@@ -6,10 +6,10 @@ Part of the [domain model](./index.md).
 
 ## Chunk
 
-The hub's unit of orchestrated work: it wraps one or more backlog items from the backing project-management system by pointer, travels a workflow graph, and accumulates artifacts, questions, and decisions as it goes.
+The hub's unit of orchestrated work: it wraps one or more backlog items from the backing work source by work ref, travels a workflow graph, and accumulates artifacts, questions, and decisions as it goes.
 
-- **The PM item is the durable referent; the chunk is ephemeral.** An unacquired chunk may be discarded or grouped away, and re-ingesting the same item mints a fresh chunk — nothing of value lives only on an unstarted chunk. An item already wrapped by a live chunk cannot be ingested again.
-- **The item's contents are never stored.** A chunk holds pointers; reads pass through to the backing system.
+- **The work item is the durable referent; the chunk is ephemeral.** An unacquired chunk may be discarded or grouped away, and re-ingesting the same item mints a fresh chunk — nothing of value lives only on an unstarted chunk. An item already wrapped by a live chunk cannot be ingested again.
+- **The item's contents are never stored.** A chunk holds work refs; reads pass through to the backing work source.
 - **Pinned to exactly one immutable graph, once it has left `not_ready`.** The pin is set at mint from a default and, while the chunk still rests `not_ready`, is a plain editable selection — the operator's one pre-flight window to repin it. Once the chunk leaves `not_ready` the pin is immutable and changes only when a [migration](#migration) applies — never silently.
 - **The model selection is a chunk property alongside the graph pin.** Set at mint from the default, editable only while the chunk rests `not_ready`, immutable thereafter — the same pre-flight window as the graph pin, not a fact log.
 - **The intended migration is a chunk property alongside the graph pin and model.** Nullable — `null` when no migration is queued, otherwise an intent naming a mode (`auto` or `forced`), a target graph, and, for a forced intent, a target node. Unlike the graph pin and model's pre-flight-only window, it is set, overwritten, or cleared by the operator at any non-terminal status. Applying it re-pins the chunk and clears the intent atomically, in the same write as the migration ([migration](#migration)).
@@ -34,7 +34,7 @@ The exact fact vocabulary and derivation queries live in the code. This table is
 | `stopped` | Abandoned by an operator — terminal at any point after acquisition, artifacts and history retained. |
 | `done` | Terminal — the chunk reached the graph's reserved terminal transition. Ordinarily this is immediate once the commit artifacts land, but a graph may instead route further runner work after landing before reaching it, so landing itself is not necessarily terminal ([artifacts.md](./artifacts.md) §Landing is not necessarily terminal). |
 
-Discarding or grouping an unacquired chunk is not a status: the chunk is simply gone from every listing, because the PM item remains the durable referent.
+Discarding or grouping an unacquired chunk is not a status: the chunk is simply gone from every listing, because the work item remains the durable referent.
 
 ## Transition
 
