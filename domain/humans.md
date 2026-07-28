@@ -24,6 +24,7 @@ A worker that needs input asks a durable question — free-form, or with options
 - **The reap clock stops** while the question is open: a chunk waiting on a person is not stalled.
 - **Exactly one answer ever exists.** The first answer wins; later would-be answerers are told who won and what they said.
 - **The session resumes around the answer** — the dormant agent session continues with the answer delivered into it, and the resume restarts the reap clock.
+- **The delivery is itself a fact, and the question carries it.** Answered and delivered are distinct derived states: answered says a person decided, delivered says the resume actually ran and the agent heard. A question row surfaces both, so the return trip is visible to whoever answered rather than inferred from the chunk moving.
 
 ## Gate decision
 
