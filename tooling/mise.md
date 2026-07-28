@@ -4,7 +4,7 @@ The code repos — `blizzard` and `blizzard-mock` — front their command surfac
 Agents, CI scripts, and humans invoke the same entrypoints, so a command proven in one context is identical in the others.
 
 - **Discover** a repo's tasks with `mise tasks` from that repo's root — each task carries a description stating what it runs and what it needs.
-- **Run** one with `mise run <task>`, also from the repo root. Tasks are repo-local; there is no workspace-level mise surface, and the markdown repos (`blizzard-harness`, `blizzard-discovery`) carry no `mise.toml`.
+- **Run** one with `mise run <task>`, also from the repo root. Tasks are repo-local; there is no workspace-level mise surface, and the markdown repos (`blizzard-context`, `blizzard-discovery`) carry no `mise.toml`.
 - **Trust** a fresh worktree on first use: when mise reports the repo's config untrusted, run `mise trust` in that repo root once.
 
 What each verification task *asserts* — and the stable method id a plan or review cites it by — is owned by the verifiability matrix ([../verification/blizzard.md](../verification/blizzard.md)).

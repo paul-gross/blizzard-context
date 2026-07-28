@@ -1,10 +1,10 @@
-# blizzard-harness
+# blizzard-context
 
 Blizzard's conventions harness — the rules every piece of blizzard code and every blizzard agent context is held to.
 Derived from [winter-canon](https://github.com/paul-gross/winter-canon), it carries blizzard's own domain, architecture, standards, and verification conventions in the domain-organized, routing-hub style of `winter-harness`.
 
 **Start at [`index.md`](./index.md)** — the topology and the domain routing table.
-It is the file installed into every blizzard agent context (as the `blizzard-harness:` extension) and the entry point a reader traverses to reach any convention.
+It is the file installed into every blizzard agent context (as the `blizzard-context:` extension) and the entry point a reader traverses to reach any convention.
 
 ## Layout
 

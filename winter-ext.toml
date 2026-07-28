@@ -1,9 +1,11 @@
-name = "blizzard-harness"
+name = "blizzard-context"
 prefix = "bzh"
 
-# blizzard-harness is blizzard's instance of a harness. It derives from
+# blizzard-context is blizzard's instance of a harness. It derives from
 # winter-canon — the universal substrate every harness builds on — so it
 # declares that dependency, keeping winter-canon strictly below it in the
-# graph. Its conventions are addressed via the `blizzard-harness:` path
-# notation (e.g. `blizzard-harness:/architecture/repository-access.md`).
+# graph. Its conventions are addressed via the `blizzard-context:` path
+# notation (e.g. `blizzard-context:/architecture/repository-access.md`).
+# `prefix` stays `bzh` — it matches the repo's historical rule-id scheme
+# (index.md §"Rule ids"), which is stable across the rename.
 requires = ["winter-canon"]
