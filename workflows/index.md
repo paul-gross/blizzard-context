@@ -8,4 +8,4 @@ Parent: [../index.md](../index.md).
 | Workflow | When to read |
 |----------|--------------|
 | [./feature-delivery.md](./feature-delivery.md) | How a feature reaches `master` — blizzard orchestrates the delivery; read for what the platform owns, what a node worker owes, and where the outside-a-fleet path lives |
-| [./release.md](./release.md) | Cutting a milestone or release-candidate build — the tag-is-the-release sequence from a green `master` to a published wheel |
+| [./release.md](./release.md) | Cutting a milestone or release-candidate build — the tag-is-the-release sequence from a green `master` to a published wheel and container image |
