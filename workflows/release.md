@@ -16,7 +16,7 @@
    git push origin v0.1.0
    ```
 
-5. **Watch the release run and verify the publish.** Watch the `release.yml` run to green (`blizzard:ci`), then confirm the GitHub Release exists with the wheel attached: `gh release view v0.1.0 --repo paul-gross/blizzard`.
+5. **Watch the release run and verify the publish.** Watch the `release.yml` run to green (`blizzard:ci`), then confirm the GitHub Release exists with the wheel attached: `gh release view v0.1.0 --repo paul-gross/blizzard`. Also confirm the published image: `docker pull ghcr.io/paul-gross/blizzard-hub:v0.1.0` succeeds **anonymously** (no `docker login`) — the GHCR push has no local method (no `docker buildx` on the dev machine), so this pull is the only proof it worked, and package visibility is a one-time repo setting a workflow can't assert (`docs/ci.md`'s "The image publish" section).
 6. **Repair forward.** A red release run is fixed on `master` and cut again as the next tag (`-rc.N+1`, or the next patch) — a pushed tag is immutable.
 
 **Gap.** No `v*` tag has yet exercised the `release` workflow end to end (the matrix names this open piece — [../verification/blizzard.md](../verification/blizzard.md)); the first cut also verifies the release pipeline itself, so shepherd it rather than fire-and-forget.
