@@ -8,6 +8,12 @@ Scopes here: **`blizzard`** for the app repo's Python QA and the daemon-level ti
 
 Every row below states a live command; none carries a Gap marker. Should a new row again precede its code, restore the bootstrap convention: state the intended command, mark **Gap (phase N)**, and drop the marker in the change that lands the method.
 
+Bootstrap phases, referenced as `P3`–`P7` throughout the rows and spokes below: **P3** service manifests, **P4** `blizzard-mock` fleet, **P5** `blizzard` scaffold, **P6** the walking-skeleton acceptance loop, **P7** the feature build (engine completeness — review + fail cycle, escalation, heartbeats, store-and-forward, fencing; the board + fleet ops; then the running-daemon service tier and the kill-9 crash sweep, all real as of wave 4).
+
+The MVP acceptance journey's thirteen criteria are exercised end to end by named methods: criteria 2/3/4 (exactly-once, zombie fencing, kill-9) by `blizzard:crash-sweep` + the invariant checker; 6/7/9/11/12 by `blizzard:e2e`'s scenarios and `blizzard:journey`; 1 (pass-through) by `blizzard:journey`'s every-chunk work-item read; and 13 (delivery-conflict reconcile) by the component-tier partial-land test plus `blizzard:journey`'s clean multi-repo grouped land.
+
+**Gap.** The tag `release` workflow's full-suite tiers reuse the push-verified multi-repo setup but have not yet been exercised under a real `v*` tag.
+
 Full per-method detail lives in three spokes, one `### <method-id>` section per row marked *(more)* below, in table order:
 
 | Spoke | Holds |
