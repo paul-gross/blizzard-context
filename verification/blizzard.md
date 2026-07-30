@@ -47,7 +47,7 @@ Verification that runs as a single command — exit 0 is the pass signal.
 | web:unit-test | `npm run test` in `web/` — vitest, the frontend unit/component tier over all four projects ([../standards/frontend.md](../standards/frontend.md)). |
 | web:typecheck | `npm run build` in `web/` — a real AOT compile of both Angular apps, the type check `web:unit-test`'s esbuild-based vitest never performs. Run after any change adding or narrowing a required field on a shared interface, or changing an exported function/method signature — the construction sites those changes can break stay green under every other web tier. |
 | web:client-drift | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`). *(more)* |
-| web:structural-gate | `npm run structural-gate` in `web/` — a `max-lines` ceiling plus a retired-chrome-class grep sweep (`bzh:frontend-kit`). *(more)* |
+| web:structural-gate | `npm run structural-gate` in `web/` — a `max-lines` ceiling, a retired-chrome-class grep sweep (`bzh:frontend-kit`), and an empty-state-without-the-kit sweep (`bzh:frontend-empty-state-gated`). *(more)* |
 | web:shell-sweep | `npm run shell-sweep` in `web/` — a real-Chromium proof (`@vitest/browser-playwright`) that the hub board and runner local-panel shells' shared header never lets the profile menu drift off-viewport across width × signed-in username length. *(more)* |
 | blizzard:journey | `BLIZZARD_JOURNEY=1 uv run pytest -m journey` (`mise run journey`) — the capstone acceptance-journey rehearsal over real host daemons. *(more)* |
 | blizzard-mock:build | `uv sync` in the `blizzard-mock` repo. |

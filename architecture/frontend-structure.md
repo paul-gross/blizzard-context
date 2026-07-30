@@ -29,6 +29,18 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 **Don't.** A new panel pastes another `.panel { background: linear-gradient(...); border: 1px solid var(--bezel); }` block — the exact duplication the kit exists to retire.
 
+## A data-backed view's empty state is gated on a resolved read (`bzh:frontend-empty-state-gated`)
+
+**Rule.** A view's empty-state copy renders only once the read backing it has resolved — never from a bare `data().length === 0` check. A container maps its query's `isPending()`/`isError()` (never `isFetching()`) through `query-state.ts`'s `asyncState`/`asyncStateOf` onto a `KitAsyncStateValue`, and the presentational view renders it through `KitAsyncState` rather than inferring `'empty'` from an array that reads `[]` during the first fetch exactly as it would once genuinely empty. A **disabled** query (`enabled: false` — a conditional read with nothing selected yet) reports `isPending()` as permanently `true`; a container for one branches on its own "nothing selected" rest state *before* consulting the triad, or that rest state renders as an endless spinner instead.
+
+**Why.** `data() ?? []`'s `[]` is indistinguishable from a settled empty read — the exact conflation issue #181 fixed: a healthy busy fleet reads as idle on every reload because the board showed its "FLEET IDLE" copy while the first `GET /api/chunks` was still in flight. Reading `isPending()` rather than `isFetching()` is what keeps a background refetch (a poll, an SSE-driven invalidation) from regressing an already-rendered view back to a loading state — the property `query-state.ts`'s own doc comment asserts directly.
+
+**Detect.** A component rendering a `data-testid` matching `*-empty` that does not also reference `fleet-kit-async-state` in the same file (`web:structural-gate`'s third check, `EMPTY_STATE_EXEMPT_FILES` naming the views a one-time sweep confirmed are reachable only after a parent's own triad has already resolved); a container reading `query.isFetching()` where `isPending()` belongs; a conditional query's "nothing selected" state expressed as a branch *after* (rather than before) the triad.
+
+**Do.** `board-page.ts` derives `asyncState(chunksQuery, chunks().length === 0)` and hands it to `board-shell.ts`'s `state` input, which renders `fleet-kit-async-state` in place of a bare length check. `chunk-detail.ts` branches on `chunkId() === null` — its own rest state — before ever consulting `asyncState(detailQuery, false)`, since the detail query is `enabled: false` while nothing is selected.
+
+**Don't.** `@if (rows().length === 0) { <p>NO RUNNERS REGISTERED</p> }` off a query's `data() ?? []` with no `isPending()`/`isError()` check anywhere in the component — indistinguishable from the pre-#181 defect this rule exists to keep from recurring.
+
 ## Sub-barrels and the SSE registry are the disjoint-diff mechanism (`bzh:frontend-disjoint-diffs`)
 
 **Rule.** Two agents changing two different features must produce diffs that touch no shared file beyond one sub-barrel export line and one SSE registry row. Each feature directory under `fleet/lib/` owns an `index.ts` sub-barrel re-exported once from the root `public-api.ts`; a live feature registers its invalidated query keys as a declarative row in the SSE dispatch registry (`sse/fleet-live.ts`) rather than a new `case` in a hand-written switch.
@@ -44,5 +56,5 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 ## See also
 
 - [../standards/frontend.md](../standards/frontend.md) — the kit adoption rule (`bzh:frontend-kit`) cites `bzh:frontend-kit-floor` rather than restating it; the toolchain (lint/test/generated-client) rules live there.
-- [../verification/blizzard.md](../verification/blizzard.md) — `web:structural-gate`, the tooled grep sweep that enforces `bzh:frontend-kit-floor`'s Detect.
+- [../verification/blizzard.md](../verification/blizzard.md) — `web:structural-gate`, the tooled grep sweep that enforces both `bzh:frontend-kit-floor`'s Detect and `bzh:frontend-empty-state-gated`'s.
 - [./clean-architecture.md](./clean-architecture.md) — the daemon-side dependency-inversion this doc is the frontend's counterpart to.
