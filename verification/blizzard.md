@@ -81,8 +81,10 @@ The mocks the upper tiers bind are owned by `blizzard-mock` (P4); the tier *rule
 - **Sweep the release-only tiers before you push (`bzh:sweep-release-only-tiers`).** The `blizzard:gate` row names *which* tiers that command cannot run; this is what that blind spot actually bites. Those tiers are the only ones reading two surfaces nothing else type-checks: **board `data-testid`s and `data-*` attributes** (`tests/e2e/`) and **wire field names off a live API response** (`tests/service/`). A rename of either therefore ships green and breaks them where you will not see it. Grep before pushing, then run what the change touched:
 
   ```bash
-  grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/
+  grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
   ```
+
+  The `demo/` directory is in that list because the tiers are no longer the only readers: the board's kiosk demo mode (`?demo=true`) steers on four board handles from **production** code — `chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key`. It fails *quietly* where a scenario fails loudly (the wait times out, the scroll is skipped, the screen holds still), so each half is pinned on the producing side: the first pair by `tests/e2e/test_board_browser_e2e.py`, the second by `web/projects/hub/src/app/board/chunk/chunk-artifacts-tab.spec.ts`. Note the second pair is unreachable by grep from the component side at all — `artifacts-tab-artifact-key` is never a literal there, only synthesized as `` `${testid()}-key` `` — which is why it has a named spec rather than a sweep.
 
   That grep catches a handle you **removed**. A handle you **added** breaks these tiers just as hard and the grep is blind to it: a `data-testid` is only a usable locator while exactly one component renders it, so a second component claiming an existing name makes every `get_by_test_id` for it ambiguous and the scenario dies on `strict mode violation: … resolved to 2 elements`. A new component that renders a concept an existing one already renders (the same chunk's open question, in a rail *and* in the detail dock) is the case to watch — give it its own prefixed handles. Check a new handle is unique before you add it:
 
