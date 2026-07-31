@@ -141,6 +141,18 @@ winter service up alpha --wait
 The fixture's winter source resolves by walking up from the `blizzard-mock` worktree to the workspace root — **do not pass `--winter-source $PWD`**: inside a `cd … && …` subshell `$PWD` expands *after* the `cd`, so it names the `blizzard-mock` checkout (which has no `tools/winter-cli`) and minting fails. Let the walk-up default resolve it, or set `$BLIZZARD_MOCK_WINTER_SOURCE` to the workspace root explicitly.
 Pass: `curl -fs localhost:${BZ_FORGE_PORT:-4421}/healthz` returns `ok`, and `curl -fs localhost:${BZ_FORGE_PORT:-4421}/repos/blizzard/toy-api` returns `200` with `"default_branch": "main"` — the live forge fronts the minted origins. Leave services down after (`winter service down alpha`; remove the fixture with `blizzard-mock-fixture destroy --env alpha`).
 
+### blizzard-mock:manual-seeded-board — a realistic board with zero work sources and no hub restart
+Surface: `blizzard-mock-data scenario board` (`tool:mock-data`, [../tooling/store-seeding.md](../tooling/store-seeding.md)) as the direct store-seed path a human actually renders — proving a fresh env's hub serves a realistic, fully-populated board from data written straight into its store, with no work source ever configured and the hub daemon never restarted between the seed and the view. `blizzard:service-test`'s `test_mock_data_seeding_service.py` already proves the two machine-checkable halves of this claim (the seeder's intended per-chunk status agrees with the hub's own `derive_chunk_status`, and the hub reads the seeded rows with no restart) — this method covers only what a human eye is needed for: does the board actually *render* the seeded facts correctly.
+Setup: a freshly provisioned, not-yet-seeded env, its shell vars sourced (see [../tooling/store-seeding.md](../tooling/store-seeding.md)'s §Running it for why a plain shell needs `source <(winter env <env>)` before `$BZ_HUB_RUNTIME`/`$BZ_HUB_WEB_PORT` resolve):
+```
+winter provision alpha
+winter service up alpha --wait
+source <(winter env alpha)
+```
+Confirm the env's hub runtime config carries zero `[[work_source]]` blocks (`cat $BZ_HUB_RUNTIME/blizzard-hub.toml` — a fresh `hub init` scaffold emits the work-source block as a commented-out example only, never live) and that no forge fixture has been minted for the env (`blizzard-mock-fixture` never run against it — `tool:mock-fleet`'s forge is up but fronts no origins).
+Steps: (1) seed a stress board straight into the running env's own hub store: `cd alpha/blizzard-mock && uv run blizzard-mock-data scenario board --chunks 9 --stress --dir "$BZ_HUB_RUNTIME"` — `--chunks 9` (not the `--chunks 6` default) is deliberate here: fewer than nine only covers a prefix of `_STATUS_ORDER` (`domain/scenario_seed.py`), and step 3 below needs every one of the nine derived statuses actually seeded; (2) without restarting the hub, open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`; (3) confirm the seeded chunk cards render across all nine derived statuses; (4) confirm the cost column shows the cost-partial chunk `scenario board` always seeds (a `NULL cost_usd` usage fact) as partial, not as `$0.00`; (5) open the Events tab and confirm the seeded mixed-severity rows render; (6) open the multi-question `--stress` chunk's detail dock and confirm its two extra independent question trails render in the dock's trail.
+Pass: every check in steps 3–6 holds, observed against the same hub process `service up` started — no restart, reset, or re-init between the seed command and the view.
+
 ## Tools
 
 Setup an agent uses to stand up the scenario a verification needs — not assertions of correctness themselves.
@@ -151,7 +163,7 @@ Full per-tool detail for the rows marked *(more)*: [./blizzard/tools.md](./blizz
 |------|-----|
 | tool:service-up | `winter service up <env> --wait` — the verification stack for a feature env, port-band isolated. *(more)* |
 | tool:mock-fleet | The `blizzard-mock` fleet — forge, fixture-workspace scaffold, mock harness, mock hub/runner, stub OAuth IdP; every seam real. *(more)* |
-| tool:mock-data | The mock-data CLI (`blizzard-mock-data`) — seed the hub/runner stores. `reset`/`create runner` work; other verbs are stubs. *(more)* |
+| tool:mock-data | The mock-data CLI (`blizzard-mock-data`) — `reset`, nine per-concept `create` verbs, and `scenario board` for a whole ready-to-view board in one command. `fixture list\|apply` is still a stub. *(more)* |
 | tool:fixture-workspace | The fixture-workspace scaffold (`blizzard-mock-fixture`) — bare `file://` origins + a disposable winter workspace. **Built (P4).** *(more)* |
 
 ## See also
