@@ -54,7 +54,7 @@ Beyond these keys a step inherits the hub daemon's own environment, with one str
 
 **Detect.** A `run:` script printing its choice anywhere but the last stdout line; a node authoring `pending` as one of its own choices; a script relying on exit code alone to select among more than the two reserved defaults.
 
-**Do.** `land_pr_ci.py` prints the reserved `pending` while any repo's PR isn't yet `mergeable_state: clean`, and `landed` once every repo has merged; `land_default.py` prints `conflict` before its push stage ever starts, so nothing lands when one repo is dirty.
+**Do.** `land_pr_ci.py` prints the reserved `pending` while any repo's PR isn't yet `mergeable_state: clean` and no repo's check runs have completed with a terminal conclusion, `failure` immediately once a `blocked`/`unstable` repo's check run has completed failing rather than waiting out `poll_timeout` (issue #232), and `landed` once every repo has merged; `land_default.py` prints `conflict` before its push stage ever starts, so nothing lands when one repo is dirty.
 
 **Don't.** A script exiting nonzero while printing `landed` to try to force that edge — a nonzero exit only ever selects one of the node's own explicitly-authored choices or falls back to `failure`, never a success outcome by accident.
 
