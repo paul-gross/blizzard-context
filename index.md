@@ -5,6 +5,10 @@ blizzard-context derives from **winter-canon**: the canon defines what any harne
 It follows `winter-harness` in **style** — domain-organized convention directories, routing hubs, a verifiability matrix, and architecture guidance — while carrying **blizzard's own rules**, not winter's.
 The repo is named for what it holds rather than for the concept: blizzard also drives *coding harnesses* (Claude Code, Codex, OpenCode — the adapter seam), and that seam keeps the word.
 
+## Scope
+
+This harness's conventions bind `blizzard`'s and `blizzard-mock`'s code too, not only this repo's own files: `standards/` conformance is gated by each of those repos' own CI (ruff, pyright, eslint, `web:structural-gate`, …), while the canon's prose-authoring principles (`winter-canon:/principles.md` — `canon:one-owner`, `canon:no-hard-wrap`, `canon:no-retro`) bind their agent-facing docs and code comments at judgment only (`winter-canon:/enforcement-channels.md`), the same as they bind this repo's own — no mechanical gate catches a restated enumeration or a hard-wrapped README there, so review is what closes the gap. `blizzard-discovery` is the one repo this harness does not govern: it is a frozen historical record, not maintained to match current code (`workspace:/context/project/index.md`).
+
 ## Path notation
 
 Files here are addressed with the `blizzard-context:` prefix — for example, `blizzard-context:/architecture/repository-access.md`.
