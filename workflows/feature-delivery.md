@@ -2,7 +2,7 @@
 
 ## Rule
 
-Feature delivery is orchestrated by blizzard itself: a chunk travels its workflow graph — the default graph triages it into a delivery lane (`bas-dwf` / `adv-dwf`), whose canonical shape is `build → review → deliver` — and the platform owns the choreography end to end: sequencing between nodes, the review carry-back, retries and escalation, delivery, and landing.
+Feature delivery is orchestrated by blizzard itself: a chunk travels its workflow graph — the default graph triages it into a delivery lane (`bas-dwf` / `adv-dwf` / `bas-hwf`), whose canonical shape is `build → review → deliver` — and the platform owns the choreography end to end: sequencing between nodes, the review carry-back, retries and escalation, delivery, and landing.
 An agent never drives that sequence by hand — it performs exactly the node role its session was primed with, exits, and the facts it reports move the chunk.
 
 ## Why
