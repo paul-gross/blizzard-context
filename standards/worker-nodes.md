@@ -66,7 +66,7 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 **Why.** A prompt only ever names the declaration's own content (`--name <produces-name>`, or `--repo`/`--branch`/`--commit`) — the identity triple is the runner's own concern, injected once at spawn, so a node's author never has to carry or leak a lease id or token into authored prose.
 
-**Scope.** These three vars are shared by every worker CLI the runner spawns with (`ask`, `heartbeat`, `session-end`), not declaration-specific; `artifact create` and `artifact commit` are the two that also read `BLIZZARD_LEASE_TOKEN`, since both durably record content rather than a soft-fail signal.
+**Scope.** `BLIZZARD_LEASE_ID` and `BLIZZARD_RUNNER_URL` are shared by every worker CLI the runner spawns with (`ask`, `heartbeat`, `session-end`, every `artifact`/`chunk` verb). `BLIZZARD_LEASE_TOKEN` is narrower but not declaration-specific either: every lease-scoped `artifact` verb (`create`, `commit`, `list`, `get`, `staged`) and `chunk` verb (`history`) sends it as `X-Blizzard-Lease-Token` to authorize the call — `create`/`commit` are not the only two that read it, only the two that durably record content rather than read it back.
 
 **Detect.** A node prompt instructing the worker to pass a lease id, runner URL, or token explicitly — there is nothing in either declaration CLI's own signature (`src/blizzard/runner/cli.py`) for such an argument to bind to.
 
