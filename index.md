@@ -7,7 +7,7 @@ The repo is named for what it holds rather than for the concept: blizzard also d
 
 ## Scope
 
-This harness's conventions bind `blizzard`'s and `blizzard-mock`'s code too, not only this repo's own files: `standards/` conformance is gated by each of those repos' own CI (ruff, pyright, eslint, `web:structural-gate`, …), while the canon's prose-authoring principles (`winter-canon:/principles.md` — `canon:one-owner`, `canon:no-hard-wrap`, `canon:no-retro`) bind their agent-facing docs and code comments at judgment only (`winter-canon:/enforcement-channels.md`), the same as they bind this repo's own — no mechanical gate catches a restated enumeration or a hard-wrapped README there, so review is what closes the gap. `blizzard-discovery` is the one repo this harness does not govern: it is a frozen historical record, not maintained to match current code (`workspace:/context/project/index.md`).
+This harness's conventions bind `blizzard`'s and `blizzard-mock`'s code too, not only this repo's own files — see [`standards/prose-authoring.md`](./standards/prose-authoring.md) (`bzh:prose-authoring-scope`) for where and how each channel binds.
 
 ## Path notation
 
