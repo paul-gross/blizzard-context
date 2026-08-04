@@ -29,3 +29,4 @@ The commands a change must pass:
 ## See also
 
 - [`./wire.md`](./wire.md) — `bzh:utc-instants`, whose fitness test (`tests/test_wire_timestamps.py`) runs under `uv run pytest` like any other unit test.
+- [`../CONTRIBUTING.md`](../CONTRIBUTING.md)'s "Docstring prose is bound too" bullet — a docstring is code, not a markdown file, but the same markdown-authoring principles (one canonical owner, point don't duplicate, no retrospective framing, no manual line-wrapping, minimal examples) bind it too.
