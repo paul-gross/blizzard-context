@@ -26,6 +26,7 @@ Every rule here follows the canon slot skeleton and stable-id scheme:
 - Give every rule a stable `bzh:<slug>` id in its heading — the id's single home (`blizzard-context:/index.md` §"Rule ids"); a non-rule leaf (a procedure or taxonomy file, `canon:rule-shape` §File kinds) carries a file-level `bzh:<slug>` id in its title. Treat a rename or removal as a breaking change for anything citing it.
 - Follow the cross-cutting authoring principles in `winter-canon:/principles.md` — one canonical owner per fact, point don't duplicate, no retrospective framing, no manual line-wrapping, minimal examples.
 - A new rule or routing change is a harness change: run the cold-spawn eval it is owed before pushing (`winter-canon:/evaluating-harness-changes.md`).
+- **Scope beyond this repo.** `winter-canon:/principles.md` binds every agent-facing markdown file across the blizzard ecosystem, not just this repo's own convention files — a project repo's README or a docstring's prose (`blizzard`, `blizzard-mock`, …) is held to the same one-canonical-owner / point-don't-duplicate / no-hard-wrap rules this file is. `standards/` stays scoped to code and wire conventions; this is the one place that states markdown authoring's own scope.
 
 ## Pre-push expectations
 
