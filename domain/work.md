@@ -30,7 +30,7 @@ The exact fact vocabulary and derivation queries live in the code. This table is
 | `running` | Claimed by a runner and being worked. |
 | `delivering` | In the hub's own hands — queued for or undergoing delivery, or awaiting an external merge; the holding runner keeps its environments until the outcome is known. |
 | `waiting_on_human` | Parked on **invited** human input — an open ask or an unresolved gate decision ([humans.md](./humans.md)); the reap clock is stopped. |
-| `needs_human` | Parked on **failure** — retries exhausted, or a worker died without a verdict; a person must requeue or take over ([humans.md](./humans.md)). |
+| `needs_human` | Parked on **failure** — the system ran out of moves, runner- or hub-authored ([humans.md](./humans.md) §Escalation); a person must requeue or take over. |
 | `paused` | Held on an operator's per-chunk pause fact — on a live route the runner kills the worker but keeps the lease, route, epoch, environments, and retry budget so resume respawns in place; an unclaimed chunk is withheld from the queue instead. Ranks below the human-gated statuses and above `delivering`/`running` ([execution.md](./execution.md)). |
 | `stopped` | Abandoned by an operator — terminal at any point after acquisition, artifacts and history retained. |
 | `done` | Terminal — the chunk reached the graph's reserved terminal transition. Ordinarily this is immediate once the commit artifacts land, but a graph may instead route further runner work after landing before reaching it, so landing itself is not necessarily terminal ([artifacts.md](./artifacts.md) §Landing is not necessarily terminal). |
