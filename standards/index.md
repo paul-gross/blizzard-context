@@ -9,7 +9,7 @@ Parent: [../index.md](../index.md).
 
 | Standard | When to read |
 |----------|--------------|
-| [./python.md](./python.md) | Writing or reviewing Python — the uv / ruff / pyright toolchain and the commands a change must pass |
+| [./python.md](./python.md) | Writing or reviewing Python, or authoring a docstring's prose — the uv / ruff / pyright toolchain, the commands a change must pass, and the conventions that prose is held to |
 | [./frontend.md](./frontend.md) | Writing or reviewing the Angular apps — the eslint-no-prettier / vitest toolchain and the committed, drift-checked generated API client |
 | [./logging.md](./logging.md) | Adding a log call or picking a level — the structlog call-site and level conventions |
 | [./persistence.md](./persistence.md) | Touching a store schema or a migration — the portable-SQL rule and the manual-Alembic migration policy |
