@@ -9,6 +9,7 @@ Parent: [../index.md](../index.md).
 
 | Standard | When to read |
 |----------|--------------|
+| [./comments.md](./comments.md) | Writing or squashing a `#` comment or docstring anywhere in blizzard's Python trees — the locality discipline: what code prose may state, what must be deleted, and when a comment-defended decision becomes a pinning test |
 | [./python.md](./python.md) | Writing or reviewing Python, or authoring a docstring's prose — the uv / ruff / pyright toolchain, the commands a change must pass, and the conventions that prose is held to |
 | [./frontend.md](./frontend.md) | Writing or reviewing the Angular apps — the eslint-no-prettier / vitest toolchain and the committed, drift-checked generated API client |
 | [./logging.md](./logging.md) | Adding a log call or picking a level — the structlog call-site and level conventions |
