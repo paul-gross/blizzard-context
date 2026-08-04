@@ -30,4 +30,4 @@ That stability is why `bzh:` outlived the repo's old name: the prefix is histori
 | [workflows/](./workflows/index.md) | Reasoning about how work reaches `master` — feature delivery is blizzard-orchestrated, not agent-driven — or carrying out the release cut, the one deterministic sequence an agent still drives |
 | [exemplars/python/repo_pattern.py](./exemplars/python/repo_pattern.py) | Building a repository — the reference shape for the Protocol-seam + internal-adapter + injected-error pattern the architecture rules require |
 | [tooling/](./tooling/index.md) | Driving an external tool beyond the winter CLI — the repo task runner, `gh` for CI runs and issues, or the verification-scenario setup tools |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Committing to this repo — commit format, delivery, and the pre-push expectation; also where markdown-authoring scope extends to docstring prose in every project repo |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Committing to this repo — commit format, delivery, and the pre-push expectation |

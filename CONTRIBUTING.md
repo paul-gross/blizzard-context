@@ -26,7 +26,6 @@ Every rule here follows the canon slot skeleton and stable-id scheme:
 - Give every rule a stable `bzh:<slug>` id in its heading — the id's single home (`blizzard-context:/index.md` §"Rule ids"); a non-rule leaf (a procedure or taxonomy file, `canon:rule-shape` §File kinds) carries a file-level `bzh:<slug>` id in its title. Treat a rename or removal as a breaking change for anything citing it.
 - Follow the cross-cutting authoring principles in `winter-canon:/principles.md` — one canonical owner per fact, point don't duplicate, no retrospective framing, no manual line-wrapping, minimal examples.
 - A new rule or routing change is a harness change: run the cold-spawn eval it is owed before pushing (`winter-canon:/evaluating-harness-changes.md`).
-- **Docstring prose is bound too, not just markdown files.** `winter-canon:/principles.md`'s own scope already reaches every agent-facing markdown *file* across the blizzard ecosystem — a project repo's README (`blizzard`, `blizzard-mock`, …) included, no extension needed. What canon's own scope doesn't reach is prose that isn't a markdown file at all: a Python (or any other language's) docstring. This is the one place that extends the same five rules — one canonical owner per fact, point don't duplicate, no retrospective framing, no manual line-wrapping, minimal examples — to that prose too. [`standards/python.md`](./standards/python.md) points here for exactly this reason, since that is the route a Python author actually takes.
 
 ## Pre-push expectations
 

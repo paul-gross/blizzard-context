@@ -26,7 +26,18 @@ The commands a change must pass:
 
 **Don't.** Add black or isort "as well as ruff" — ruff owns both lint and format, and a second formatter is a second opinion that fights the first.
 
+## Docstring prose is bound by the markdown-authoring principles too (`bzh:docstring-prose-authoring`)
+
+**Rule.** A docstring is code, not a markdown file, but the markdown-authoring principles in `winter-canon:/principles.md` — one canonical owner per fact, point don't duplicate, no retrospective framing, minimal examples — bind it too. **Not** `canon:no-hard-wrap`: `bzh:python-toolchain`'s own `ruff` gate gives every `src/` docstring a real line-length ceiling (`line-length = 120`, `E501` selected), so a rule additionally forbidding line breaks inside that ceiling would have no way to comply with both gates at once — the toolchain's own wrap governs instead.
+
+**Why.** The same defects the markdown-authoring principles exist to prevent — a fact duplicated across two docstrings, a docstring that explains today's code by contrasting it with a deleted one, a citation to a chunk-internal review id that resolves nowhere once the chunk closes — recur in Python prose exactly as often as in markdown; nothing about being inside a triple-quoted string changes why they're worth naming.
+
+**Detect.** A docstring re-explaining a fact its own class/module already states elsewhere; a docstring anchored to code the same change deletes ("unlike the old X…", "ported from Y", "as of this change"); a docstring citing a chunk-internal review-round finding id.
+
+**Do.** State a docstring's fact once, forward-looking, in the module that owns it. Let `ruff format`'s own wrap stand.
+
+**Don't.** Repeat a fact a sibling docstring or this file's own prose already states. Frame present behavior as a correction to code the same change removes.
+
 ## See also
 
 - [`./wire.md`](./wire.md) — `bzh:utc-instants`, whose fitness test (`tests/test_wire_timestamps.py`) runs under `uv run pytest` like any other unit test.
-- [`../CONTRIBUTING.md`](../CONTRIBUTING.md)'s "Docstring prose is bound too" bullet — a docstring is code, not a markdown file, but the same markdown-authoring principles (one canonical owner, point don't duplicate, no retrospective framing, no manual line-wrapping, minimal examples) bind it too.
