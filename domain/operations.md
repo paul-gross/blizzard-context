@@ -12,9 +12,11 @@ Operational visibility is **two** distinct, operator-visible feeds over the same
 
 A durable, append-only, **typed and severity-ranked** series of the operationally-significant things that happen to runners and workers — not a mirror of every state delta, but the subset an operator must act on. The **hub owns it**: the runner detects a failure and reports it as a durable fact; the hub records it into the log and re-broadcasts it live. Each event carries a **severity** (`info` | `warning` | `critical`), a **kind** (its `noun-verb` name), the runner/chunk/lease/node it concerns where those exist, a human-legible message, and an open `detail` payload. Like every fact in the system it is never mutated once written and carries no `status` column — the log *is* the history.
 
+The severity vocabulary is **closed**, and closed the hard way: the log ranks by it, so a value outside the three sorts below every ordinary row and no severity filter reaches it — an emitter inventing a fourth buries its own event rather than adding a band.
+
 ## The kinds
 
-The runner surfaces failures at the single point every failed attempt already funnels through, and at each command it captures:
+The runner surfaces failures at the single point every failed attempt already funnels through, and at each command it captures; the hub adds the ones only it is positioned to see:
 
 | Kind | Severity | When |
 |------|----------|------|
@@ -23,6 +25,9 @@ The runner surfaces failures at the single point every failed attempt already fu
 | `attempt-abandoned` | `info` | The attempt was given up because the chunk moved on (reassigned/detached), not because the work failed |
 | `command-failed` | `warning` | A captured spawn / git-push / environment-prep command failed, carrying the command and its stderr tail |
 | `needs-human` | `critical` | A standing open escalation (see below) |
+| `hub-node-unroutable-outcome` | `critical` | A hub node produced an outcome its graph authors no edge for — nothing routes, so the chunk re-polls that same outcome until someone authors one. Announced once per node visit, not once per poll |
+| `work-item-closed` | `info` | A landed chunk's work item was closed at its own source ([work.md](./work.md) §Chunk) |
+| `work-item-close-failed` | `warning` | That closure attempt failed; a later sweep retries it |
 
 A deliberately-deferred failure — a runner that has told its operator it will start no processes — surfaces **nothing**: the failure is deferred, not an outcome to act on.
 
@@ -40,13 +45,14 @@ The **activity feed** is the fleet's second operator-visible feed: a reconstruct
 
 Where the operational event log ranks by severity, the activity feed orders strictly by **pure recency** — newest first, with no severity axis at all. It exists to answer "what just happened across the fleet", not "what needs my attention", and the two feeds are read side by side rather than one subsuming the other.
 
-The feed is bounded, not a full history: it holds at most the last **24 hours**, capped at the most recent **200** rows.
+The feed is bounded, not a full history: by default the last **24 hours**, capped at the most recent **200** rows.
 
-Not every fact the domain records produces a row. Three things are structurally excluded:
+Not every fact the domain records produces a row. Four things are structurally excluded:
 
 - **A direct chunk edit** — an in-place field mutation carries no durable fact table behind it, so there is nothing to reconstruct a row from.
 - **A ready-queue reorder** — it writes one row per moved chunk with no per-row news of its own; the reorder as a whole is not activity an operator needs surfaced row-by-row.
 - **A runner's registration or heartbeat** — these have no fact table either, and — being routine liveness noise already flooding the live feed — are muted rather than reproduced in a surface meant for legibility.
+- **A runner's own subscription-usage sample** — durably recorded, like the reorder above, but rate-limit telemetry rather than fleet activity: it belongs to the runner's registry row, where its current utilization is read, not to a history of what happened.
 
 ## See also
 
