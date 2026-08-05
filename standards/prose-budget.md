@@ -30,12 +30,11 @@ There is no in-place waiver.
 
 Binds the same trees as `bzh:comment-locality`; `blizzard-context`'s `exemplars/` files are expository teaching artifacts and are not bound.
 A change is held to the caps on every block it adds or edits; the pre-existing surface is worked down by pruning passes and the ratchet, never blocked on an incidentally-touched file.
-The live measurable half is `scripts/prose_density.py check` in the `blizzard` repo — a per-root growth ratchet against the committed baseline (`blizzard:prose-ratchet`).
-Per-block cap reporting — the check naming each over-cap block's file and line — is **Gap (phase 2)**: intended `scripts/prose_density.py check --blocks`; the marker drops in the change that lands it.
+The measurable half is `mise run prose-check` in the `blizzard` repo (`blizzard:prose-ratchet`) — a per-root growth ratchet against the committed baseline; `check --blocks` additionally names each over-cap block as file:line.
 
 ## Detect
 
-- Any block over its cap — reviewer-measured until the per-block check above lands.
+- Any block over its cap — `scripts/prose_density.py check --blocks` names the file and line.
 - A parameter-by-parameter docstring: one paragraph per field.
 - A prune that tightens wording to keep every fact — under-cap is reached by dropping content, not compressing it.
 

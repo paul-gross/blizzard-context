@@ -35,7 +35,7 @@ Verification that runs as a single command — exit 0 is the pass signal.
 | blizzard:unit-test | `uv run pytest -m unit` — one class or function in isolation ([tiers](#test-tiers)). Bare `uv run pytest` runs unit + component. *(more)* |
 | blizzard:component-test | `uv run pytest -m component` — a domain slice with real internal collaborators, doubles only at the seams ([tiers](#test-tiers)). *(more)* |
 | blizzard:sse-contract | `mise run sse-contract` — gates the SSE frame shape contract against the golden corpus `contracts/sse/`: the Python producer+parse half, then the board's transport spec. *(more)* |
-| blizzard:prose-ratchet | `uv run python scripts/prose_density.py check src tests ../blizzard-mock/src` — fails when any root's comment/docstring prose grows over the committed baseline ([../standards/prose-budget.md](../standards/prose-budget.md)). |
+| blizzard:prose-ratchet | `mise run prose-check` (`scripts/prose_density.py check src tests ../blizzard-mock/src`) — fails when any root's comment/docstring prose grows over the committed baseline; `--blocks` additionally reports every block over its `bzh:prose-budget` cap ([../standards/prose-budget.md](../standards/prose-budget.md)). |
 | blizzard:gate | `mise run gate` (`./scripts/ci-gate.sh`) — the local reproduction of the shared `gate` job. Not the full master merge gate. *(more)* |
 | blizzard:wheel | `mise run build` (`./scripts/build-wheel.sh`) — builds both Angular apps, then the one wheel, node-free. `BLIZZARD_VERSION` overrides the wheel version. *(more)* |
 | blizzard:wheel-smoke | The exit-criterion serve smoke on the built wheel (node-free venv) — the **P5 exit criterion**. *(more)* |
