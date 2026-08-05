@@ -9,7 +9,10 @@ Parent: [../index.md](../index.md).
 
 | Standard | When to read |
 |----------|--------------|
-| [./comments.md](./comments.md) | Writing or squashing a `#` comment or docstring anywhere in blizzard's Python trees — the locality discipline: what code prose may state, what must be deleted, and when a comment-defended decision becomes a pinning test |
+| [./comments.md](./comments.md) | Deciding **which facts** a `#` comment or docstring may state at all — the locality discipline, and when a comment-defended decision becomes a pinning test |
+| [./comment-encapsulation.md](./comment-encapsulation.md) | Deciding **whose vocabulary** states a fact on or near a seam — prose on a Protocol, wire model, or schema, or on its implementations and callers |
+| [./prose-budget.md](./prose-budget.md) | Deciding **how much room** a comment or docstring gets, or pruning over-dense prose — the hard per-block line caps |
+| [./one-prose-home.md](./one-prose-home.md) | Deciding **where** a fact's one full prose statement lives — and what every other site may carry |
 | [./python.md](./python.md) | Writing or reviewing Python, or authoring a docstring's prose — the uv / ruff / pyright toolchain, the commands a change must pass, and the conventions that prose is held to |
 | [./frontend.md](./frontend.md) | Writing or reviewing the Angular apps — the eslint-no-prettier / vitest toolchain and the committed, drift-checked generated API client |
 | [./logging.md](./logging.md) | Adding a log call or picking a level — the structlog call-site and level conventions |

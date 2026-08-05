@@ -1,6 +1,9 @@
 """Canonical repository-pattern example.
 
 Read this when adding a new repository class or extending an existing one.
+The prose here is expository teaching commentary and is not a model of in-tree
+comment density or altitude — `bzh:prose-budget` and `bzh:comment-encapsulation`
+do not bind exemplar files; write in-tree prose to those rules, not to this file's.
 The shape codifies the three seams the blizzard architecture rules require
 (architecture/clean-architecture.md, architecture/repository-access.md):
 

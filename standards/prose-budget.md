@@ -1,0 +1,63 @@
+# Every prose block has a hard budget (`bzh:prose-budget`)
+
+Follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), at file-per-rule granularity.
+
+## Rule
+
+A comment or docstring block fits the cap for its host below; a block over cap is pruned, not defended — the burden of proof sits on every line kept, never on deleting one.
+A docstring block counts its physical span in lines, blank lines included; a `#` block counts its consecutive comment lines.
+
+| Host | Cap |
+|------|-----|
+| Module docstring | 6 lines |
+| Class, dataclass, or Protocol docstring | 4 lines |
+| Function or method docstring | 5 lines |
+| Test docstring | 3 lines |
+| Field, column, or constant `#` comment | 1 line |
+| Inline `#` comment block | 2 lines |
+
+## Why
+
+No author judges its own writing as too long, so without a numeric bound every keep-category of `bzh:comment-locality` is elastic and any paragraph survives by framing itself as rationale.
+A hard cap turns pruning from a judgment call into a trigger.
+
+## Exception
+
+A block whose owned content genuinely cannot fit moves the excess to its one prose home (`bzh:one-prose-home`) — the seam, the pinning test, or an owning doc — and keeps a capped statement plus a pointer in place.
+There is no in-place waiver.
+
+## Scope
+
+Binds the same trees as `bzh:comment-locality`; `blizzard-context`'s `exemplars/` files are expository teaching artifacts and are not bound.
+A change is held to the caps on every block it adds or edits; the pre-existing surface is worked down by pruning passes and the ratchet, never blocked on an incidentally-touched file.
+The live measurable half is `scripts/prose_density.py check` in the `blizzard` repo — a per-root growth ratchet against the committed baseline (`blizzard:prose-ratchet`).
+Per-block cap reporting — the check naming each over-cap block's file and line — is **Gap (phase 2)**: intended `scripts/prose_density.py check --blocks`; the marker drops in the change that lands it.
+
+## Detect
+
+- Any block over its cap — reviewer-measured until the per-block check above lands.
+- A parameter-by-parameter docstring: one paragraph per field.
+- A prune that tightens wording to keep every fact — under-cap is reached by dropping content, not compressing it.
+
+## Do
+
+```python
+Column("ordinal", Integer, nullable=False),  # authored `sessions:` position, display-only
+```
+
+## Don't
+
+```python
+# The declaration's 0-based position in the authored `sessions:` map. Order carries no
+# semantics — every lookup is by name — but it is what the graph explorer renders, and
+# the composite primary key above makes an index scan (name order) the natural plan for
+# the by-graph read, so authored order has to be a persisted fact rather than an
+# insertion-order accident to survive the round trip.
+Column("ordinal", Integer, nullable=False),
+```
+
+## See also
+
+- `bzh:comment-locality` in [`./comments.md`](./comments.md) — which facts a block may state at all; this rule bounds how much room stating them gets.
+- `bzh:one-prose-home` in [`./one-prose-home.md`](./one-prose-home.md) — where over-cap content moves instead of being re-wrapped in place.
+- `bzh:docstring-prose-authoring` in [`./python.md`](./python.md) — the wrap regime each tree's prose lines follow, which the caps count over.
