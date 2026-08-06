@@ -11,6 +11,7 @@ It is the file installed into every blizzard agent context (as the `blizzard-con
 - [`domain/`](./domain/index.md) — the business/domain model: what the concepts are and how they behave, technical-free.
 - [`architecture/`](./architecture/index.md) — structural invariants and design decisions a change must honor.
 - [`standards/`](./standards/index.md) — the code-quality toolchains and conventions finished code is held to.
-- [`verification/`](./verification/index.md) — the verifiability matrix: how a change is proven.
+- [`verification/`](./verification/index.md) — blizzard's verifiability matrix: how a change to the application is proven.
 - [`exemplars/`](./exemplars/python/repo_pattern.py) — reference implementations to pattern new work off.
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) — commit format, authoring conventions, and delivery.
+- [`verifiability.md`](./verifiability.md) — this repo's own verifiability matrix: how a change here is verified.
