@@ -6,6 +6,8 @@ This is the correctness reference: read it when planning a change against intent
 
 This domain owns the behavioral statement an agent plans and reviews against. Where it and the **code** disagree, the code is current and this file is the one to fix.
 
+This tree is also the fixed home a domain-concept fact relocates to when code prose restates it (`bzh:one-prose-home`): the fact moves here, and the restating code sites reduce to a pointer at the section that now states it.
+
 Parent: [../index.md](../index.md).
 
 | Doc | When to read |

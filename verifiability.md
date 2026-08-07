@@ -15,7 +15,7 @@ Run from the repo root.
 
 ### blizzard-context:manual-reference-check — by-hand reference and routing pass
 
-The by-hand pre-push pass [CONTRIBUTING.md](./CONTRIBUTING.md) §Pre-push expectations already requires. Surface: every `blizzard-context:` / `winter-canon:` / `workspace:` notation and every relative link in the changed files. Pass: each resolves to a file with the claimed shape, every cited `bzh:` id is defined, and every new or moved leaf has a row in its nearest hub. Carries the standing **Gap** that no automated markdown lint — path-notation, routing-reference, anchor checks — ships in this repo.
+The by-hand pre-push pass [CONTRIBUTING.md](./CONTRIBUTING.md) §Pre-push expectations already requires. Surface: every `blizzard-context:` / `winter-canon:` / `workspace:` notation, every repo-root-relative or repo-qualified code pointer (`bzh:one-prose-home`'s Pointer forms), and every relative link in the changed files. Pass: each resolves to a file with the claimed shape, every cited `bzh:` id is defined, and every new or moved leaf has a row in its nearest hub. Carries the standing **Gap** that no automated markdown lint — path-notation, routing-reference, anchor checks — ships in this repo.
 
 ### blizzard-context:manual-cold-eval — cold-spawn behavioral eval
 

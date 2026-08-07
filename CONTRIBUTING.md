@@ -29,7 +29,7 @@ Every rule here follows the canon slot skeleton and stable-id scheme:
 
 ## Pre-push expectations
 
-- **References resolve.** Every `blizzard-context:` / `winter-canon:` / `workspace:` path notation and every relative link points at a file that exists with the claimed shape; every `bzh:` id cited is defined.
+- **References resolve.** Every `blizzard-context:` / `winter-canon:` / `workspace:` path notation, every repo-root-relative (`src/blizzard/...`) or repo-qualified (`blizzard/src/...`, `blizzard-mock/src/...`) code pointer (`bzh:one-prose-home`'s Pointer forms), and every relative link points at a file that exists with the claimed shape; every `bzh:` id cited is defined.
 - **Routing is complete.** A new leaf has a row in its nearest hub; a moved or removed leaf's row is repointed or deleted in the same change (`winter-canon:/progressive-disclosure.md`, `canon:index-scrutiny`).
 - **Gap.** [verifiability.md](./verifiability.md) declares this repo's verification methods and the standing gap in them; verify the above by hand until the markdown lints land. When they do, register them with `winter lint` via `winter-ext.toml` and run them before pushing.
 
