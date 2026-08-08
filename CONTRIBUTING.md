@@ -24,7 +24,7 @@ Every rule here follows the canon slot skeleton and stable-id scheme:
 
 - Write rules in the `Rule` / `Why` / `Detect` / `Do` / `Don't` / `See also` skeleton owned by `winter-canon:/rule-shape.md`; keep hubs pure routers and let spokes own content (`winter-canon:/progressive-disclosure.md`).
 - Give every rule a stable `bzh:<slug>` id in its heading — the id's single home (`blizzard-context:/index.md` §"Rule ids"); a non-rule leaf (a procedure or taxonomy file, `canon:rule-shape` §File kinds) carries a file-level `bzh:<slug>` id in its title. Treat a rename or removal as a breaking change for anything citing it.
-- Follow the cross-cutting authoring principles in `winter-canon:/principles.md` — one canonical owner per fact, point don't duplicate, no retrospective framing, no manual line-wrapping, minimal examples.
+- Read `winter-canon:/principles.md` before authoring or editing any file here, and follow every principle it states — the canon owns that list, so this is a read-trigger rather than a copy to re-sync.
 - A new rule or routing change is a harness change: run the cold-spawn eval it is owed before pushing (`winter-canon:/evaluating-harness-changes.md`).
 
 ## Pre-push expectations

@@ -32,6 +32,8 @@ Binds the same trees as `bzh:comment-locality`; `blizzard-context`'s `exemplars/
 A change is held to the caps on every block it adds or edits; the pre-existing surface is worked down by pruning passes and the ratchet, never blocked on an incidentally-touched file.
 The measurable half is `mise run prose-check` in the `blizzard` repo (`blizzard:prose-ratchet`) — a per-root growth ratchet against the committed baseline; `check --blocks` additionally names each over-cap block as file:line.
 
+The ratchet's only teeth are that committed number, so **re-recording it (`measure --write-baseline`) is a deliberate act, not a step in going green.** A re-record upward is warranted only when the growth is prose **newly added code** had to carry — a new module, guard, class, or method whose blocks are each under cap — and the change says so where it lands. Rewriting the baseline to absorb prose grown on code that already existed reads as passing the gate while defeating it: prune to the old number instead. The distinction is per block, not per file, so a new class in an old module qualifies and a fuller docstring on an untouched one does not. Re-record **once**, at the tip of the work, rather than per commit — the baseline is a generated snapshot, and several commits each re-recording it conflict on rebase by construction.
+
 ## Detect
 
 - Any block over its cap — `scripts/prose_density.py check --blocks` names the file and line.
