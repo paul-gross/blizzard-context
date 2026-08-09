@@ -2,7 +2,7 @@
 
 The single authoritative list of the `blizzard:e2e` scenarios — [../blizzard.md](../blizzard.md) `## Commands` names the command; this is the full scenario-by-scenario detail.
 
-`mise run e2e` (`BLIZZARD_E2E=1 uv run pytest tests/e2e/`) — the **standing e2e smoke suite**, full-stack scenarios over the canonical `build → review → deliver` delivery shape, its human-loop variants, the operator board and its mobile glance shell, the graph explorer, the authored post-merge edge, the cross-graph migration, node session-mode continuity, the browser login/session lifecycle, the multi-daemon runner SSO federation, the operational event log, resume-time spawn-preamble elision, the forge-status label projection, checks-gate enforcement, the YAML-authored delivery policies and their conflict path, and the non-code spike, each self-managing the forge + hub + runner over a minted `blizzard-mock` fixture (every seam real, no tokens/network).
+`mise run e2e` (`BLIZZARD_E2E=1 uv run pytest tests/e2e/`) — the **standing e2e smoke suite**, full-stack scenarios over the canonical `build → review → deliver` delivery shape, its human-loop variants, the operator board and its mobile glance shell, the graph explorer, the authored post-merge edge, the cross-graph migration, node session-mode continuity, the browser login/session lifecycle, the multi-daemon runner SSO federation, the operational event log, resume-time spawn-preamble elision, the forge-status label projection, checks-gate enforcement, the YAML-authored delivery policies and their conflict path, the chunk board's Transcripts tab, and the non-code spike, each self-managing the forge + hub + runner over a minted `blizzard-mock` fixture (every seam real, no tokens/network).
 
 ### test_acceptance_loop
 
@@ -139,6 +139,14 @@ The **forge-status label projection** (#179): one work source opted into `annota
 **The mobile glance board** (#181 Phase 5) at a real ~390px width (`bzh:narrow-viewport-tier-rule`): `/board` routes to the glance shell, and a held-open `GET /api/chunks` proves the loading-vs-empty distinction — while the read is in flight the "Needs you" lane shows loading, never empty (AC 4). A second consumer of `bzh:narrow-viewport-tier-rule`'s `narrow_viewport` fixture. Needs the built bundle + the sibling `blizzard-mock` worktree + a local winter source + an installed Chromium, skipping cleanly without any of them, or without `BLIZZARD_E2E=1`.
 
 - `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` — with the chunks read captured and held open, the glance shell renders `needs-you-loading` and no `needs-you-empty` row; releasing the held route lands the row and clears loading, the empty state never shown in between.
+
+### test_transcript_tab_browser_e2e
+
+The **chunk board's Transcripts tab** (blizzard#248 Phase 3): a real Chromium over the served board, seeded by posting segments straight through `POST /api/fleet/transcripts` as a runner principal rather than through a live runner — the runner's own shipping lane (#246) is undelivered, so this is the only path a segment reaches a test.
+
+- `test_chunk_transcripts_tab_browser` — opens the tab on a chunk carrying one node-history step's worth of segments, opens the step's first segment (a collapsed-by-default thinking turn it expands, and a tool call whose sidechain nests inline under it), follows the continues-in link to the step's second segment, opens that segment's *unlinked* sidechain standalone and back again, then follows the continued-from link back to the first segment — proving the tab, the lazy per-segment fetch, the collapsed/expanding thinking render, the nested-vs-standalone sidechain split, and the resume-seam links all real, end to end.
+
+Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree (its forge-registered repo only — no runner is ever spawned) + a local winter source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source.
 
 ### test_spike_terminal_e2e
 
