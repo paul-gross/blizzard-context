@@ -89,5 +89,5 @@ Each choice keys exactly one outgoing edge; its description is what sharpens a w
 ## See also
 
 - [./work.md](./work.md) — the chunk that travels this definition, and the migration that moves it between definitions.
-- [../standards/hub-nodes.md](../standards/hub-nodes.md) — the technical authoring schema for a hub-executed node: the `run:` step shape, the injected env-var contract, the outcome protocol, and the per-step idempotence rule.
-- [../standards/worker-nodes.md](../standards/worker-nodes.md) — the technical authoring contract for a worker node's `produces:` list: the prompt's declaration instruction, the fallback, and the enforcement backstop.
+- [../standards/hub-nodes.md](../standards/hub-nodes.md) — the technical authoring contract a hub-executed node is held to.
+- [../standards/worker-nodes.md](../standards/worker-nodes.md) — the technical authoring contract a worker node's declared outputs are held to.

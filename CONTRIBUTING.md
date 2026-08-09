@@ -23,15 +23,17 @@ Conventional Commits with a scope:
 Every rule here follows the canon slot skeleton and stable-id scheme:
 
 - Write rules in the `Rule` / `Why` / `Detect` / `Do` / `Don't` / `See also` skeleton owned by `winter-canon:/rule-shape.md`; keep hubs pure routers and let spokes own content (`winter-canon:/progressive-disclosure.md`).
-- Give every rule a stable `bzh:<slug>` id in its heading — the id's single home (`blizzard-context:/index.md` §"Rule ids"); a non-rule leaf (a procedure or taxonomy file, `canon:rule-shape` §File kinds) carries a file-level `bzh:<slug>` id in its title. Treat a rename or removal as a breaking change for anything citing it.
+- Give every rule its stable `bzh:` id, per the scheme [index.md](./index.md) §"Rule ids" owns — including that a rename or removal is a breaking change for anything citing it.
 - Read `winter-canon:/principles.md` before authoring or editing any file here, and follow every principle it states — the canon owns that list, so this is a read-trigger rather than a copy to re-sync.
 - A new rule or routing change is a harness change: run the cold-spawn eval it is owed before pushing (`winter-canon:/evaluating-harness-changes.md`).
 
 ## Pre-push expectations
 
-- **References resolve.** Every `blizzard-context:` / `winter-canon:` / `workspace:` path notation, every repo-root-relative (`src/blizzard/...`) or repo-qualified (`blizzard/src/...`, `blizzard-mock/src/...`) code pointer (`bzh:one-prose-home`'s Pointer forms), and every relative link points at a file that exists with the claimed shape; every `bzh:` id cited is defined.
-- **Routing is complete.** A new leaf has a row in its nearest hub; a moved or removed leaf's row is repointed or deleted in the same change (`winter-canon:/progressive-disclosure.md`, `canon:index-scrutiny`).
-- **Gap.** [verifiability.md](./verifiability.md) declares this repo's verification methods and the standing gap in them; verify the above by hand until the markdown lints land. When they do, register them with `winter lint` via `winter-ext.toml` and run them before pushing.
+Run this repo's own declared methods before pushing. [verifiability.md](./verifiability.md) owns each one's surface and pass criteria; what belongs here is only *which* a change owes:
+
+- `blizzard-context:registry-drift` and `blizzard-context:registry-drift-tests` — every change.
+- `blizzard-context:manual-reference-check` — every change: the by-hand pass standing in for the markdown lints this repo still lacks. When they land, register them with `winter lint` via `winter-ext.toml` and run them here instead.
+- `blizzard-context:manual-cold-eval` — a rule addition, a trigger broadening, or a routing change (`canon:cold-eval`).
 
 ## Delivery
 

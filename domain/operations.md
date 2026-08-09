@@ -10,7 +10,7 @@ Operational visibility is **two** distinct, operator-visible feeds over the same
 
 ## What it is
 
-A durable, append-only, **typed and severity-ranked** series of the operationally-significant things that happen to runners and workers — not a mirror of every state delta, but the subset an operator must act on. The **hub owns it**: the runner detects a failure and reports it as a durable fact; the hub records it into the log and re-broadcasts it live. Each event carries a **severity** (`info` | `warning` | `critical`), a **kind** (its `noun-verb` name), the runner/chunk/lease/node it concerns where those exist, a human-legible message, and an open `detail` payload. Like every fact in the system it is never mutated once written and carries no `status` column — the log *is* the history.
+A durable, append-only, **typed and severity-ranked** series of the operationally-significant things that happen to runners and workers — not a mirror of every state delta, but the subset an operator must act on. The **hub owns it**: the runner detects a failure and reports it as a durable fact; the hub records it into the log and re-broadcasts it live. Each event carries a **severity** (`info` | `warning` | `critical`), a **kind** (its `noun-verb` name), the runner/chunk/lease/node it concerns where those exist, a human-legible message, and an open `detail` payload. Like every fact in the system it is never mutated once written and carries no mutable state of its own — the log *is* the history.
 
 The severity vocabulary is **closed**, and closed the hard way: the log ranks by it, so a value outside the three sorts below every ordinary row and no severity filter reaches it — an emitter inventing a fourth buries its own event rather than adding a band.
 
@@ -49,9 +49,9 @@ The feed is bounded, not a full history: by default the last **24 hours**, cappe
 
 Not every fact the domain records produces a row. Four things are structurally excluded:
 
-- **A direct chunk edit** — an in-place field mutation carries no durable fact table behind it, so there is nothing to reconstruct a row from.
+- **A direct chunk edit** — an in-place field mutation records no durable fact behind it, so there is nothing to reconstruct an entry from.
 - **A ready-queue reorder** — it writes one row per moved chunk with no per-row news of its own; the reorder as a whole is not activity an operator needs surfaced row-by-row.
-- **A runner's registration or heartbeat** — these have no fact table either, and — being routine liveness noise already flooding the live feed — are muted rather than reproduced in a surface meant for legibility.
+- **A runner's registration or heartbeat** — these record no durable fact either, and — being routine liveness noise already flooding the live feed — are muted rather than reproduced in a surface meant for legibility.
 - **A runner's own subscription-usage sample** — durably recorded, like the reorder above, but rate-limit telemetry rather than fleet activity: it belongs to the runner's registry row, where its current utilization is read, not to a history of what happened.
 
 ## See also

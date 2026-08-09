@@ -1,6 +1,8 @@
 # Domain — blizzard
 
 Blizzard's **domain model**: what the concepts are, how they behave, and how they intertwine — with no technical detail.
+"No technical detail" means no *implementation* vocabulary: no store column or table names, wire models, service classes, or HTTP routes — those belong to [architecture/](../architecture/index.md) and [standards/](../standards/index.md), and a domain file points there rather than spelling them.
+The vocabulary an operator or graph author actually writes — a status name, an authored node's own keys — is domain vocabulary, and stays.
 Conforms to the `domain/` slot of the canon harness shape (`winter-canon:/harness-structure.md`).
 This is the correctness reference: read it when planning a change against intent, or when reviewing or verifying behavior against the model — where the companion [architecture/](../architecture/index.md) domain governs how the *code* is structured, this domain governs how the *concepts* work.
 
