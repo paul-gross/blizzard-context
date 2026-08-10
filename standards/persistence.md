@@ -18,6 +18,10 @@ A select whose consumer depends on the result's row order — an index into it, 
 
 **Don't.** Reach for a postgres-only type or a sqlite-only pragma that changes correctness — the schema is no longer one portable surface and now needs two test runs. Drop the `order_by` from a select whose consumer indexes `[-1]`/`[0]` or otherwise assumes an order — sqlite's rowid order hides the omission, postgres does not.
 
+**Recorded exemptions** — a sqlite-only pragma admitted because the hazard it guards is itself sqlite-only, so no portable equivalent exists to reach for:
+
+- **The transcript lane's outbound buffer (`transcript_outbound_buffer`, issue #246).** `sqlite_autoincrement=True` on its `seq` primary key guards a real, sqlite-only correctness hazard: this table prunes acked, non-final rows (unlike its sibling `outbound_buffer`, which never deletes), and a bare sqlite `INTEGER PRIMARY KEY` reuses a pruned row's rowid — a later insert could be reissued a `seq` a consumer already treated as final. Postgres needs no equivalent: this column's `autoincrement=True` compiles there to a sequence-backed `SERIAL`, which never reuses a deleted row's value by construction, so the schema stays one portable surface in effect even though this one pragma is sqlite-only syntax. `tests/test_pin_runner_store.py` pins the sqlite behavior; no postgres-side test exists because there is no postgres-side hazard to cover.
+
 ## Migrations are manual, Alembic, CLI-driven (`bzh:manual-migrations`)
 
 **Rule.** Schema change is **Alembic**, applied manually through the CLI — never automatically at daemon startup.
