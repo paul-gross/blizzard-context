@@ -29,7 +29,7 @@ Reset first when the store isn't already known-clean:
 blizzard-mock-data reset --store hub --dir "$BZ_HUB_RUNTIME"
 ```
 
-Reach for the nine `create` verbs individually when a scenario needs one hand-placed concept rather than a whole board — `create chunk`'s output pipes into a sibling verb:
+Reach for the per-concept `create` verbs individually when a scenario needs one hand-placed concept rather than a whole board — `create chunk`'s output pipes into a sibling verb:
 
 ```bash
 chunk_id=$(blizzard-mock-data create chunk --store hub --status running --dir "$BZ_HUB_RUNTIME")

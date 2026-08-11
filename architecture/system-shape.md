@@ -89,5 +89,5 @@ A chunk's **status** is always *derived* by query from those facts, never writte
 
 ## See also
 
-- [./crash-correctness.md](./crash-correctness.md) — the four daemon requirements built on `bzh:facts-not-status` and `bzh:deterministic-shell`.
+- [./crash-correctness.md](./crash-correctness.md) — the daemon requirements built on `bzh:facts-not-status` and `bzh:deterministic-shell`.
 - [../standards/persistence.md](../standards/persistence.md) — `bzh:sql-portable`, the portable-SQL rule the facts-only stores are held to.

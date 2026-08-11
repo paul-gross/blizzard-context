@@ -8,12 +8,29 @@ run`/`npm run` task names, and paired command text) against the real
 dangling ordinal/cardinal scenario or spec identification. Stdlib-only,
 Python 3.11+.
 
+Check F (issue blizzard#274) adds the registry-count half, and this docstring is the
+one home for its contract — the census, `check_F`, and `bzh:one-prose-home` §Detect all
+point here rather than restating it.
+
+`scripts/registry-copies.json` declares, per owned registry: a **probe** recomputing the
+owner's true cardinality from the owner itself, the **noun** whose count is at stake, an
+optional **line_requires** narrowing where that noun reads as a registry count, and the
+**sites** allowed to state it (each `role: owner|allowed` with a `reason`). A count is
+matched when a numeral or number-word precedes the noun within `_COPY_GAP_WORDS`
+intervening words, outside fenced blocks.
+
+F sweeps all of this repo's markdown, plus each sibling checkout's bound markdown as
+`SWEPT_CHECKOUT_GLOBS` and `SWEPT_EXCLUDED_PREFIXES` below declare it — those constants
+govern the siblings only. `bzh:one-prose-home` §Scope owns the swept surface as a whole
+and is the place to read it. Three failure classes: a declared site disagreeing with its probe,
+an undeclared site stating the count, and a declared site whose prose is gone.
+
 Emits NDJSON findings on stdout, one object per line, following the
 `winter lint` finding contract (`check`, `status` in {pass, warn, fail},
 optional `message`/`file`/`line`/`remediation`). Exits 0 by default; with
 `--gate`, exits 1 on any `fail` finding, on any registry input missing
-(`blizzard.md`, `commands.md`, `e2e-scenarios.md`, or an empty
-`verification/` sweep), or on any check that did not actually run to
+(`blizzard.md`, `commands.md`, `e2e-scenarios.md`, `registry-copies.json`,
+or an empty `verification/` sweep), or on any check that did not actually run to
 completion against its full required inputs — an unresolved interpreter, a
 marker whose `pytest --collect-only` failed, or an unreadable `mise.toml`/
 `package.json` all count as *not run*, never as a silent pass. A check
@@ -39,6 +56,52 @@ Declared limitations (stated here rather than discovered later):
 - B2's cross-tier classifier and D2's pairing rule are documented heuristics
   with auditable output, not parsers. Their skip lists are reviewed by hand
   whenever the relevant sections are edited.
+- F's `line_requires` is a third heuristic of that kind: English reuses
+  `verbs`, `tiers`, `checks`, and `spokes` freely, and the corpus carries an
+  operator doc's work-stopping "four verbs", a model-tier "three tiers", and a
+  brand doc's "six snow-white spokes" on a wheel — none of them copies. Because
+  it narrows on the phrasing that exists today, a site reworded past it reads as
+  a vanished registration, and a new copy phrased outside it is not seen at all.
+  Review each entry's expression by hand whenever its owner or any site's
+  sentence is reworded, not only when its sites change.
+- F proves cardinality, never membership. A site stating the right count and
+  then naming the wrong members passes; that half stays a
+  `blizzard-context:manual-reference-check` item.
+- F enforces only registries someone entered in the census. Nothing detects an
+  owned registry that has copies and no entry — the census's coverage is a
+  deliberate, reviewed list, not a discovered one.
+- F reads markdown only. A count restated in a `.py` docstring or a `.ts`
+  comment inside a `bzh:one-prose-home`-bound tree is outside every sweep:
+  `blizzard:restatement-sweep` matches marker phrases and a bare count carries
+  none. Two live instances: `blizzard-mock/src/blizzard_mock/mock_data/cli.py`'s
+  "all nine derived statuses", and `blizzard/web/scripts/structural-gate.js`'s
+  own "Four checks, all live" — the latter in a `.js` file, which
+  `blizzard:restatement-sweep` does not read either (its `_EXTS` is `.py`/`.ts`/`.md`).
+- The number vocabulary is `two` through `twenty` plus digits. A registry of one
+  member, one above twenty, or a copy written as a hyphenated compound
+  ("twenty-two scenarios") is not matched — the compound is refused outright
+  rather than read as its tail word, so a 22-member registry's correct copy is
+  a miss and never a wrong-value failure. `one` is excluded deliberately: no
+  census entry has cardinality 1, while ordinary prose ("one tier", "one
+  scenario") is everywhere, so admitting it would trade a real miss for many
+  false fails.
+- A count stated in a heading is never matched. `_prose_units` ends a unit at a
+  heading and does not emit the heading itself, so `## Three checks, in order`
+  is invisible to every entry — a live instance sits in the swept set at
+  `blizzard/src/blizzard/hub/graphs/default/prompts/triage.md`. Headings are
+  where a registry's size is most tempting to state, so read a green run with
+  that in mind.
+- A count is matched within one prose unit — contiguous prose lines joined, per
+  `_prose_units`, which breaks at a blank line, a fenced block, and a heading. A
+  count separated from its noun by one of those is not matched. Consecutive
+  table rows are contiguous non-blank lines, so a whole table joins into **one**
+  unit rather than one unit per row: a `line_requires` cue in any row admits a
+  count in any other, per the bullet below. What a table does stop is a count
+  split across two cells, because the `|` between them fails the gap
+  sub-pattern — not because units know about cells.
+- `line_requires` gates the whole prose unit, not one physical line, so a cue
+  anywhere in a joined paragraph admits a count elsewhere in it. Its name is
+  historical; the unit is the gate.
 - The script proves *agreement*, never *adequacy*. A registry entry that
   describes a real test inaccurately passes every check. Prose accuracy is a
   human read.
@@ -47,6 +110,7 @@ Declared limitations (stated here rather than discovered later):
 from __future__ import annotations
 
 import argparse
+import ast
 import glob
 import json
 import os
@@ -1007,6 +1071,491 @@ def check_E(md_files: list[tuple[str, str]]) -> list[Finding]:
                 )
     return findings
 
+# --------------------------------------------------------------------------
+# Check F — registered counts of an owned registry's cardinality
+# --------------------------------------------------------------------------
+
+REGISTRY_COPIES = Path(__file__).with_name("registry-copies.json")
+
+# How many words may sit between the number and the noun for the pair to read as a
+# stated count (see the module docstring's check-F contract).
+_COPY_GAP_WORDS = 2
+
+# F's own word->value map. Deliberately not derived from NUMERAL_WORDS, which exists
+# for check E's "is this a numeral word" test and carries no numeric contract — a word
+# appended there for E would otherwise silently mint a wrong value here.
+_WORD_TO_INT = {
+    "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+    "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14,
+    "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
+    "twenty": 20,
+}
+_COPY_NUMBER_WORDS = tuple(_WORD_TO_INT)
+
+# Inline-markup characters dropped before matching, per `_strip_code_ticks`. Removing a
+# marker only ever rejoins characters the reader already sees as one word, so it can
+# destroy a spurious match but never mint one: the pattern still needs real whitespace
+# between the number and its noun.
+_MARKUP_CHARS = str.maketrans("", "", "`*_")
+
+
+class CopyRegistryError(Exception):
+    """A malformed registry-copies.json, or a probe that cannot resolve against a
+    checkout that IS present — a config error the gate refuses on. A probe naming a
+    checkout that is simply absent is not this: it is a skip, raised as
+    `ProbeRepoUnavailable` below."""
+
+
+class ProbeRepoUnavailable(Exception):
+    """A probe naming a sibling checkout that is not present. An environment condition,
+    not a census defect — the entry is skipped and check F stays out of `executed`, the
+    same shape every other check uses for a missing checkout."""
+
+
+def _strip_code_ticks(line: str) -> str:
+    """Inline markup hides a number or a noun behind punctuation (`nine per-concept
+    ``create`` verbs`, `the **four** test tiers`) — drop the markers but keep the words,
+    so the gap counts real words either way.
+
+    Emphasis matters as much as backticks here: `**` abuts the word it wraps, so a
+    bolded number or noun fails the `\\b`-anchored number token and the `\\s+`-anchored
+    gap alike, and the copy reads as absent. A registry count is emphasized often
+    enough — the corpus writes `**two**` in bound markdown today — that leaving it
+    matched only when written plainly would report a green the sweep never earned.
+    """
+    return line.translate(_MARKUP_CHARS)
+
+
+def _prose_units(text: str) -> list[tuple[int, str, list[int]]]:
+    """Contiguous prose lines joined into one matching unit, as (first-line-no, joined
+    text, per-character source line numbers).
+
+    A count and its noun are one phrase to a reader and must be one to the matcher:
+    hard-wrapped prose splits them across a line break ("one of the nine\nderived
+    statuses"), and matching per physical line reads such a copy as absent, which makes
+    a green run indistinguishable from full coverage.
+
+    A unit ends at a blank line, a fenced block, or a heading — each is a boundary a
+    sentence does not cross, so joining past one would invent a phrase no reader sees.
+    Backticks are stripped as the unit is built, keeping `owners` aligned with the text
+    the matcher searches so a finding's line number names the prose it found.
+    """
+    units: list[tuple[int, str, list[int]]] = []
+    buf: list[tuple[int, str]] = []
+
+    def flush() -> None:
+        if not buf:
+            return
+        parts: list[str] = []
+        owners: list[int] = []
+        for idx, (line_no, line) in enumerate(buf):
+            piece = _strip_code_ticks(line.strip())
+            if idx:
+                parts.append(" ")
+                owners.append(line_no)
+            parts.append(piece)
+            owners.extend([line_no] * len(piece))
+        units.append((buf[0][0], "".join(parts), owners))
+        buf.clear()
+
+    in_fence = False
+    fence_marker: tuple[str, int] | None = None
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        fm = _FENCE_RE.match(line)
+        if in_fence:
+            assert fence_marker is not None
+            if fm and fm.group(1)[0] == fence_marker[0] and len(fm.group(1)) >= fence_marker[1]:
+                in_fence = False
+            continue
+        if fm:
+            flush()
+            in_fence = True
+            fence_marker = (fm.group(1)[0], len(fm.group(1)))
+            continue
+        if not line.strip() or line.lstrip().startswith("#"):
+            flush()
+            continue
+        buf.append((line_no, line))
+    flush()
+    return units
+
+
+def _stated_counts(line: str, noun: str) -> list[tuple[int, str]]:
+    """Every `<number> [word]{0,gap} <noun>` in `line`, as (value, matched text)."""
+    try:
+        pattern = re.compile(
+            # `(?<!-)` refuses the tail of a hyphenated compound: `\b` treats the hyphen
+            # in "twenty-two" as a boundary, so the bare token would match and report the
+            # value 2 for a site that says 22 — a *false* drift failure telling a correct
+            # author to correct correct prose, which is worse than the miss below it.
+            r"(?<!-)\b(?P<num>[0-9]+|" + "|".join(_COPY_NUMBER_WORDS) + r")\b"
+            r"(?P<mid>(?:\s+[A-Za-z][A-Za-z0-9-]*){0," + str(_COPY_GAP_WORDS) + r"})"
+            r"\s+(?P<noun>" + noun + r")\b",
+            re.IGNORECASE,
+        )
+    except re.error as exc:
+        raise CopyRegistryError(f"noun {noun!r} is not a valid regex: {exc}") from exc
+    out: list[tuple[int, str]] = []
+    for m in pattern.finditer(_strip_code_ticks(line)):
+        raw = m.group("num").lower()
+        value = int(raw) if raw.isdigit() else _WORD_TO_INT.get(raw)
+        if value is None:
+            continue
+        out.append((value, m.group(0).strip()))
+    return out
+
+
+def _stated_counts_located(unit: str, owners: list[int], fallback: int, noun: str) -> list[tuple[int, int, str]]:
+    """`_stated_counts` over a joined prose unit, each hit carrying the source line the
+    match starts on so a finding still points at real prose."""
+    located: list[tuple[int, int, str]] = []
+    cursor = 0
+    for value, snippet in _stated_counts(unit, noun):
+        pos = unit.find(snippet, cursor)
+        if pos < 0:
+            pos = unit.find(snippet)
+        cursor = pos + len(snippet) if pos >= 0 else cursor
+        line_no = owners[pos] if 0 <= pos < len(owners) else fallback
+        located.append((value, line_no, snippet))
+    return located
+
+
+def _probe_file(root: Path, rel: str) -> Path:
+    """Every probe resolves its owner through here, so an owner that moved lands as a
+    finding with a remediation rather than an OSError out of `run()` — and a moved owner
+    is exactly the drift check F exists to catch."""
+    path = root / rel
+    if not path.is_file():
+        raise CopyRegistryError(f"probe owner file not found: {path}")
+    return path
+
+
+def _probe_md_table_rows(path: Path, section: str) -> int:
+    """Body rows of the first table under `section`, which ends at the next heading of
+    the same or a shallower level."""
+    text = path.read_text(errors="replace")
+    lines = text.splitlines()
+    start = None
+    depth = 0
+    for i, line in enumerate(lines):
+        m = re.match(r"^(#{1,6}) (.+?)\s*$", line)
+        if m and m.group(2).strip() == section:
+            start = i + 1
+            depth = len(m.group(1))
+            break
+    if start is None:
+        raise CopyRegistryError(f"section {section!r} not found in {path}")
+
+    rows = 0
+    seen_header = False
+    for line in lines[start:]:
+        m = re.match(r"^(#{1,6}) ", line)
+        if m and len(m.group(1)) <= depth:
+            break
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            if seen_header and rows:
+                break
+            continue
+        if re.match(r"^\|[\s:|-]+\|$", stripped):
+            seen_header = True
+            continue
+        if not seen_header:
+            continue
+        rows += 1
+    if not seen_header:
+        raise CopyRegistryError(f"no table under section {section!r} in {path}")
+    return rows
+
+
+def _probe_md_heading_count(path: Path, level: int, exclude: list[str]) -> int:
+    text = path.read_text(errors="replace")
+    marker = "#" * level + " "
+    count = 0
+    for _line_no, line, _spans in _lines_excluding_fences(text):
+        if not line.startswith(marker):
+            continue
+        title = line[len(marker) :].strip()
+        # A heading carries its rule id in backticks; compare on the prose half.
+        bare = re.sub(r"\s*\(`[^`]+`\)\s*$", "", title).strip()
+        if bare in exclude or title in exclude:
+            continue
+        count += 1
+    if count == 0:
+        raise CopyRegistryError(f"no level-{level} headings found in {path}")
+    return count
+
+
+def _probe_regex_count(path: Path, pattern: str) -> int:
+    try:
+        hits = len(re.findall(pattern, path.read_text(errors="replace")))
+    except re.error as exc:
+        raise CopyRegistryError(f"probe pattern {pattern!r} is not a valid regex: {exc}") from exc
+    if hits == 0:
+        raise CopyRegistryError(f"probe pattern {pattern!r} matched nothing in {path}")
+    return hits
+
+
+def _probe_py_tuple_len(path: Path, name: str) -> int:
+    try:
+        tree = ast.parse(path.read_text(errors="replace"))
+    except SyntaxError as exc:
+        raise CopyRegistryError(f"probe file {path} does not parse: {exc}") from exc
+    for node in tree.body:
+        targets = (
+            [node.target] if isinstance(node, ast.AnnAssign) else node.targets if isinstance(node, ast.Assign) else []
+        )
+        for target in targets:
+            if isinstance(target, ast.Name) and target.id == name:
+                value = node.value
+                if isinstance(value, (ast.Tuple, ast.List, ast.Set)):
+                    return len(value.elts)
+                raise CopyRegistryError(f"{name} in {path} is not a tuple/list/set literal")
+    raise CopyRegistryError(f"{name} not found at module level in {path}")
+
+
+def _probe_dir_file_count(root: Path, glob: str) -> int:
+    if not root.is_dir():
+        raise CopyRegistryError(f"probe dir {root} does not exist")
+    hits = len([p for p in root.glob(glob) if p.is_file()])
+    if hits == 0:
+        raise CopyRegistryError(f"probe glob {glob!r} matched no file in {root}")
+    return hits
+
+
+def _probe_glob_count(root: Path, glob: str) -> int:
+    hits = len([p for p in root.glob(glob) if p.is_file() and not any(d in p.parts for d in PRUNE_DIRS)])
+    if hits == 0:
+        raise CopyRegistryError(f"probe glob {glob!r} matched no file under {root}")
+    return hits
+
+
+def _resolve_probe(probe: dict, roots: dict[str, Path]) -> int:
+    kind = probe.get("kind")
+    repo = probe.get("repo")
+    if repo not in KNOWN_PROBE_REPOS:
+        raise CopyRegistryError(f"probe names repo {repo!r}, not one of {sorted(KNOWN_PROBE_REPOS)}")
+    root = roots.get(repo)
+    if root is None:
+        raise ProbeRepoUnavailable(repo)
+    if kind == "md-table-rows":
+        return _probe_md_table_rows(_probe_file(root, probe["file"]), probe["section"])
+    if kind == "md-heading-count":
+        return _probe_md_heading_count(
+            _probe_file(root, probe["file"]), int(probe.get("level", 2)), probe.get("exclude", [])
+        )
+    if kind == "regex-count":
+        return _probe_regex_count(_probe_file(root, probe["file"]), probe["pattern"])
+    if kind == "py-tuple-len":
+        return _probe_py_tuple_len(_probe_file(root, probe["file"]), probe["name"])
+    if kind == "dir-file-count":
+        return _probe_dir_file_count(root / probe["dir"], probe.get("glob", "*.md"))
+    if kind == "glob-count":
+        return _probe_glob_count(root, probe["glob"])
+    raise CopyRegistryError(f"unknown probe kind {kind!r}")
+
+
+# The repos a census may probe or site: this harness plus the checkouts it reads.
+KNOWN_PROBE_REPOS = frozenset({"blizzard-context", "blizzard", "blizzard-mock"})
+
+_SITE_ROLES = {"owner", "allowed"}
+
+# Each probe kind and the keys `_resolve_probe` indexes for it. Validated at load so a
+# hand-edited census fails as a census error rather than a KeyError out of `run()`.
+_PROBE_REQUIRED_KEYS = {
+    "md-table-rows": ("repo", "file", "section"),
+    "md-heading-count": ("repo", "file"),
+    "regex-count": ("repo", "file", "pattern"),
+    "py-tuple-len": ("repo", "file", "name"),
+    "dir-file-count": ("repo", "dir"),
+    "glob-count": ("repo", "glob"),
+}
+
+
+def load_copy_registry(path: Path = REGISTRY_COPIES) -> list[dict]:
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CopyRegistryError(f"cannot read {path}: {exc}") from exc
+    entries = data.get("registries")
+    if not isinstance(entries, list) or not entries:
+        raise CopyRegistryError(f"{path} declares no registries")
+    for entry in entries:
+        for field in ("id", "what", "noun", "owner", "probe", "sites"):
+            if field not in entry:
+                raise CopyRegistryError(f"registry {entry.get('id', '?')!r} is missing {field!r}")
+        probe = entry["probe"]
+        kind = probe.get("kind") if isinstance(probe, dict) else None
+        if kind not in _PROBE_REQUIRED_KEYS:
+            raise CopyRegistryError(
+                f"registry {entry['id']!r} has probe kind {kind!r}, not one of {sorted(_PROBE_REQUIRED_KEYS)}"
+            )
+        for key in _PROBE_REQUIRED_KEYS[kind]:
+            if key not in probe:
+                raise CopyRegistryError(f"registry {entry['id']!r}'s {kind} probe is missing {key!r}")
+            if not isinstance(probe[key], str):
+                raise CopyRegistryError(f"registry {entry['id']!r}'s probe {key!r} must be a string")
+        if "level" in probe and not isinstance(probe["level"], int):
+            raise CopyRegistryError(f"registry {entry['id']!r}'s probe 'level' must be an integer")
+        for field in ("noun", "line_requires"):
+            expr = entry.get(field)
+            if expr is None:
+                continue
+            try:
+                re.compile(expr)
+            except (re.error, TypeError) as exc:
+                raise CopyRegistryError(f"registry {entry['id']!r}'s {field} is not a valid regex: {exc}") from exc
+        for site in entry["sites"]:
+            for field in ("repo", "file", "role", "reason"):
+                if field not in site:
+                    raise CopyRegistryError(f"a site of {entry['id']!r} is missing {field!r}")
+            if site["repo"] not in KNOWN_PROBE_REPOS:
+                raise CopyRegistryError(
+                    f"a site of {entry['id']!r} names repo {site['repo']!r}, not one of {sorted(KNOWN_PROBE_REPOS)}"
+                )
+            if site["role"] not in _SITE_ROLES:
+                raise CopyRegistryError(
+                    f"a site of {entry['id']!r} has role {site['role']!r}, not one of {sorted(_SITE_ROLES)}"
+                )
+            if not str(site["reason"]).strip():
+                raise CopyRegistryError(f"a site of {entry['id']!r} carries an empty reason")
+    return entries
+
+
+def check_F(
+    swept: list[tuple[str, str, str]],
+    entries: list[dict],
+    roots: dict[str, Path],
+) -> list[Finding]:
+    """`swept` is (repo, relfile, text); the contract this implements is the module
+    docstring's. An entry whose probe repo is absent is skipped with a `warn` and does
+    not discard the findings of the entries around it."""
+    findings: list[Finding] = []
+    swept_files = {(repo, relfile) for repo, relfile, _text in swept}
+    for entry in entries:
+        try:
+            actual = _resolve_probe(entry["probe"], roots)
+        except ProbeRepoUnavailable as exc:
+            findings.append(
+                Finding("F", "warn", f"{entry['what']}: probe needs the {exc} checkout, which is absent — entry skipped")
+            )
+            continue
+        except CopyRegistryError as exc:
+            # Scoped to this entry so one unresolvable probe leaves every other
+            # registry's verdict intact and still reaches the reader.
+            findings.append(
+                Finding(
+                    "F",
+                    "fail",
+                    f"{entry['what']}: probe cannot resolve — {exc}",
+                    f"scripts/{REGISTRY_COPIES.name}",
+                    None,
+                    "Fix the probe, or the owner it names if that owner moved.",
+                )
+            )
+            continue
+
+        try:
+            declared = {(s["repo"], s["file"]) for s in entry["sites"]}
+            absent_repos = {repo for repo, _f in declared if repo not in roots}
+            if absent_repos:
+                findings.append(
+                    Finding(
+                        "F",
+                        "warn",
+                        f"{entry['what']}: site(s) live in the {', '.join(sorted(absent_repos))} checkout, "
+                        f"which is absent — entry skipped",
+                    )
+                )
+                continue
+            unreachable = declared - swept_files
+            if unreachable:
+                # A site the sweep never reads could only ever report "no longer observed",
+                # sending the author to delete a registration that is correct. Every repo
+                # involved is present here, so this really is a census defect.
+                raise CopyRegistryError(
+                    f"registry {entry['id']!r} declares site(s) outside check F's swept set: "
+                    + ", ".join(f"{r}/{f}" for r, f in sorted(unreachable))
+                )
+
+            requires = None
+            if entry.get("line_requires"):
+                try:
+                    requires = re.compile(entry["line_requires"])
+                except re.error as exc:
+                    raise CopyRegistryError(f"registry {entry['id']!r} has an invalid line_requires: {exc}") from exc
+
+            entry_findings: list[Finding] = []
+            seen: set[tuple[str, str]] = set()
+            for repo, relfile, text in swept:
+                for first_line, unit, owners in _prose_units(text):
+                    if requires is not None and not requires.search(unit):
+                        continue
+                    for value, line_no, snippet in _stated_counts_located(unit, owners, first_line, entry["noun"]):
+                        key = (repo, relfile)
+                        if key not in declared:
+                            entry_findings.append(
+                                Finding(
+                                    "F",
+                                    "fail",
+                                    f"unregistered count of {entry['what']}: `{snippet}` — owner is {entry['owner']}",
+                                    f"{repo}/{relfile}",
+                                    line_no,
+                                    "Reduce it to a pointer at the owner; or, if the phrase is unrelated to that "
+                                    "registry, narrow the entry's `line_requires`; or register the site in "
+                                    "scripts/registry-copies.json with the reason it survives.",
+                                )
+                            )
+                            continue
+                        seen.add(key)
+                        if value != actual:
+                            entry_findings.append(
+                                Finding(
+                                    "F",
+                                    "fail",
+                                    f"{entry['what']} drifted: this site states {value}, {entry['owner']} has {actual} — `{snippet}`",
+                                    f"{repo}/{relfile}",
+                                    line_no,
+                                    f"Update the copy to {actual}, or reduce it to a pointer at the owner.",
+                                )
+                            )
+            for site in entry["sites"]:
+                key = (site["repo"], site["file"])
+                if key not in seen:
+                    entry_findings.append(
+                        Finding(
+                            "F",
+                            "fail",
+                            f"registered count of {entry['what']} is no longer observed at this site — "
+                            f"the registration outlived the prose it exempts",
+                            f"{site['repo']}/{site['file']}",
+                            None,
+                            "Delete the site from scripts/registry-copies.json, or restore the count if its "
+                            "sentence was reworded past the entry's `line_requires`.",
+                        )
+                    )
+        except CopyRegistryError as exc:
+            # Same isolation as the probe above: a defect in one entry's own
+            # declaration must not take the other entries' verdicts with it.
+            findings.append(
+                Finding(
+                    "F",
+                    "fail",
+                    f"{entry['what']}: census entry unusable — {exc}",
+                    f"scripts/{REGISTRY_COPIES.name}",
+                    None,
+                    "Fix this entry in scripts/registry-copies.json.",
+                )
+            )
+            continue
+        findings += entry_findings
+        if not entry_findings:
+            findings.append(
+                Finding("F", "pass", f"{entry['what']}: {actual}, {len(entry['sites'])} registered site(s)")
+            )
+    return findings
+
+
 
 # --------------------------------------------------------------------------
 # Interpreter / collection
@@ -1042,7 +1591,28 @@ def _collect(cmd_prefix: list[str], blizzard_root: Path, marker: str) -> list[st
 # checks against, so a check dropped by a missing checkout, interpreter, or
 # registry input (rather than run and passing) is caught explicitly instead
 # of inferred from warn text.
-ALL_CHECKS = ("A", "B1", "B2", "C", "C2", "D", "D2", "E")
+ALL_CHECKS = ("A", "B1", "B2", "C", "C2", "D", "D2", "E", "F")
+
+# Check F's swept markdown inside each sibling checkout. This dict instantiates
+# `bzh:one-prose-home` §Scope's Binds list, one glob per bound tree that can hold
+# markdown, so the census cannot probe a repo whose prose the check never reads. The
+# rule's Scope slot points here rather than restating the patterns.
+SWEPT_CHECKOUT_GLOBS = {
+    "blizzard": ("README.md", "docs/**/*.md", "src/**/*.md", "tests/**/*.md", "web/projects/**/*.md"),
+    "blizzard-mock": ("src/**/*.md",),
+}
+
+# §Scope's generated-output exclusions, as path prefixes relative to their checkout.
+# Generated trees are mirrors of an owner, never independent sites, so a count in one
+# is not a copy to dispose of.
+SWEPT_EXCLUDED_PREFIXES = {
+    "blizzard": (("src", "blizzard", "static"), ("web", "projects", "fleet", "src", "lib", "api")),
+    "blizzard-mock": (),
+}
+
+
+def _swept_excluded(repo: str, rel_parts: tuple[str, ...]) -> bool:
+    return any(rel_parts[: len(prefix)] == prefix for prefix in SWEPT_EXCLUDED_PREFIXES.get(repo, ()))
 
 
 def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bool) -> tuple[list[Finding], int]:
@@ -1180,8 +1750,60 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
     findings += check_E(all_md_files)
     executed.add("E")
 
+    # Check F sweeps this repo's markdown *and* each sibling checkout's bound markdown,
+    # so a count copied into a README is caught by the same census as one copied into a
+    # spoke. A checkout that is absent leaves the sweep partial — a skip, never a green.
+    swept: list[tuple[str, str, str]] = [("blizzard-context", relfile, text) for relfile, text in all_md_files]
+    for repo, patterns in SWEPT_CHECKOUT_GLOBS.items():
+        root = checkouts.get(repo)
+        if root is None:
+            continue
+        for pattern in patterns:
+            for path in sorted(root.glob(pattern)):
+                if not path.is_file() or any(d in path.parts for d in PRUNE_DIRS):
+                    continue
+                if _swept_excluded(repo, path.relative_to(root).parts):
+                    continue
+                swept.append((repo, _relpath(path, root), path.read_text(errors="replace")))
+    try:
+        # Read the census from the repo under check, not from beside this script:
+        # `run()` is pointed at a fixture root by its own tests, and a census whose
+        # probes name the real tree would be measuring a repo nobody asked about.
+        copy_entries = load_copy_registry(repo_root / "scripts" / REGISTRY_COPIES.name)
+        probe_roots = {"blizzard-context": repo_root, **checkouts}
+        findings += check_F(swept, copy_entries, probe_roots)
+        # F ran to completion only when every checkout its census probes was present;
+        # a skipped entry (ProbeRepoUnavailable) leaves it out, exactly like a marker
+        # whose collection failed leaves B1 out.
+        needed = {e["probe"].get("repo") for e in copy_entries} - {"blizzard-context"}
+        if needed <= set(checkouts) and set(SWEPT_CHECKOUT_GLOBS) <= set(checkouts):
+            executed.add("F")
+    except CopyRegistryError as exc:
+        findings.append(
+            Finding(
+                "F",
+                "fail",
+                f"registry-count census unusable: {exc}",
+                f"scripts/{REGISTRY_COPIES.name}",
+                None,
+                "Fix scripts/registry-copies.json, or the owner the failing probe names.",
+            )
+        )
+        registry_input_missing = True
+
     fail_count = sum(1 for f in findings if f.status == "fail")
     skipped = set(ALL_CHECKS) - executed
+    if skipped:
+        # Name them: `--gate` refuses a green on a skipped check, and a reader (or a
+        # test) needs to know *which* check did not run without inferring it from
+        # whichever warn happened to cause it.
+        findings.append(
+            Finding(
+                "skipped",
+                "warn",
+                f"checks that did not run to completion against their full inputs: {', '.join(sorted(skipped))}",
+            )
+        )
     if gate and (fail_count or skipped or registry_input_missing):
         return findings, 1
     return findings, 0

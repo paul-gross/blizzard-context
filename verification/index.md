@@ -9,4 +9,4 @@ Parent: [../index.md](../index.md).
 
 | Doc | When to read |
 |-----|--------------|
-| [./blizzard.md](./blizzard.md) | Verifying any blizzard change — the four test tiers, the tier rules, the kill-9 crash sweep, and the per-component commands and tools, each with its stable method id |
+| [./blizzard.md](./blizzard.md) | Verifying any blizzard change, or choosing which method proves one |

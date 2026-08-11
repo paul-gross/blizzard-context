@@ -1,0 +1,171 @@
+{
+  "_comment": [
+    "The registered-count census (blizzard#274), read by check F. What F proves, how a",
+    "count is matched, and its limits are stated once in check-registry-drift.py's module",
+    "docstring; what it sweeps is `bzh:one-prose-home` §Scope. Neither is restated here.",
+    "",
+    "This file owns the `role` vocabulary: `owner` is the registry's own home stating its",
+    "own count — checked so a file's lead sentence and the enumeration beneath it cannot",
+    "disagree — and `allowed` is a deliberate survivor elsewhere, whose `reason` names the",
+    "class sanctioning it under `bzh:one-prose-home` §Exception."
+  ],
+  "registries": [
+    {
+      "id": "test-tiers",
+      "what": "the test-tier roster",
+      "noun": "tiers?",
+      "line_requires": "test tier|tiers, all used",
+      "owner": "verification/blizzard.md#test-tiers",
+      "probe": {
+        "kind": "md-table-rows",
+        "repo": "blizzard-context",
+        "file": "verification/blizzard.md",
+        "section": "Test tiers"
+      },
+      "sites": [
+        {
+          "repo": "blizzard-context",
+          "file": "verification/blizzard.md",
+          "role": "owner",
+          "reason": "the roster's own home — checked so its lead sentence and its table cannot disagree"
+        },
+        {
+          "repo": "blizzard",
+          "file": "docs/ci.md",
+          "role": "allowed",
+          "reason": "operator-facing doc whose reader is outside the workspace and cannot resolve a harness path — §Exception class 1"
+        }
+      ]
+    },
+    {
+      "id": "crash-correctness-requirements",
+      "what": "the crash-correctness requirements",
+      "noun": "requirements?",
+      "line_requires": "crash|kill -9|daemon",
+      "owner": "architecture/crash-correctness.md",
+      "probe": {
+        "kind": "md-heading-count",
+        "repo": "blizzard-context",
+        "file": "architecture/crash-correctness.md",
+        "level": 2,
+        "exclude": [
+          "See also"
+        ]
+      },
+      "sites": [
+        {
+          "repo": "blizzard-context",
+          "file": "architecture/crash-correctness.md",
+          "role": "owner",
+          "reason": "the requirements' own home — checked so its lead sentence and its headings cannot disagree"
+        }
+      ]
+    },
+    {
+      "id": "mock-data-create-verbs",
+      "what": "the blizzard-mock-data per-concept `create` verbs",
+      "noun": "verbs?",
+      "line_requires": "create|mock-data|per-concept",
+      "owner": "blizzard-mock/src/blizzard_mock/mock_data/cli.py",
+      "probe": {
+        "kind": "regex-count",
+        "repo": "blizzard-mock",
+        "file": "src/blizzard_mock/mock_data/cli.py",
+        "pattern": "@create\\.command\\("
+      },
+      "sites": [
+        {
+          "repo": "blizzard-mock",
+          "file": "src/blizzard_mock/mock_data/README.md",
+          "role": "owner",
+          "reason": "the tool's own flag-by-flag contract, which verification/blizzard/tools.md names as the home — checked against the CLI it documents"
+        }
+      ]
+    },
+    {
+      "id": "scenario-seed-statuses",
+      "what": "the derived chunk statuses `scenario board` seeds across",
+      "noun": "statuses",
+      "line_requires": "derived status|seeded|scenario board|spreads",
+      "owner": "blizzard-mock/src/blizzard_mock/mock_data/domain/scenario_seed.py `_STATUS_ORDER`",
+      "probe": {
+        "kind": "py-tuple-len",
+        "repo": "blizzard-mock",
+        "file": "src/blizzard_mock/mock_data/domain/scenario_seed.py",
+        "name": "_STATUS_ORDER"
+      },
+      "sites": [
+        {
+          "repo": "blizzard-context",
+          "file": "verification/blizzard.md",
+          "role": "allowed",
+          "reason": "a manual method's own step, whose count is the assertion the operator performs — §Exception class 2, applied to a manual method rather than a pinning test"
+        },
+        {
+          "repo": "blizzard-mock",
+          "file": "src/blizzard_mock/mock_data/README.md",
+          "role": "allowed",
+          "reason": "the tool's own user-facing contract doc, whose reader is running the CLI rather than reading _STATUS_ORDER — §Exception class 1"
+        }
+      ]
+    },
+    {
+      "id": "structural-gate-checks",
+      "what": "the web:structural-gate sweeps",
+      "noun": "checks",
+      "line_requires": "structural-gate|sweep",
+      "owner": "blizzard/web/scripts/structural-gate.js",
+      "probe": {
+        "kind": "regex-count",
+        "repo": "blizzard",
+        "file": "web/scripts/structural-gate.js",
+        "pattern": "const [A-Za-z]+Violations = \\[\\];"
+      },
+      "sites": []
+    },
+    {
+      "id": "verification-spokes",
+      "what": "the verification/blizzard/ spokes",
+      "noun": "spokes?",
+      "line_requires": "method|verification",
+      "owner": "verification/blizzard/",
+      "probe": {
+        "kind": "dir-file-count",
+        "repo": "blizzard-context",
+        "dir": "verification/blizzard",
+        "glob": "*.md"
+      },
+      "sites": []
+    },
+    {
+      "id": "shell-sweep-specs",
+      "what": "the web:shell-sweep spec inventory",
+      "noun": "specs?",
+      "line_requires": "shell-sweep|real-Chromium",
+      "owner": "verification/blizzard/commands.md#webshell-sweep",
+      "probe": {
+        "kind": "glob-count",
+        "repo": "blizzard",
+        "glob": "web/projects/**/*.shell-sweep.spec.ts"
+      },
+      "sites": []
+    },
+    {
+      "id": "e2e-scenarios",
+      "what": "the standing e2e scenario roster",
+      "noun": "scenarios?",
+      "line_requires": "e2e|full-stack|standing",
+      "owner": "verification/blizzard/e2e-scenarios.md",
+      "probe": {
+        "kind": "md-heading-count",
+        "repo": "blizzard-context",
+        "file": "verification/blizzard/e2e-scenarios.md",
+        "level": 3,
+        "exclude": [
+          "See also"
+        ]
+      },
+      "sites": []
+    }
+  ]
+}
