@@ -43,6 +43,18 @@ A chunk's **status** is always *derived* by query from those facts, never writte
 
 **Don't.** Write a `chunk.status = "running"` column and update it as the chunk moves — the column outlives the truth the instant the process dies.
 
+## An open fact declares what closes it on a terminal chunk (`bzh:open-facts-declare-closure`)
+
+**Rule.** Every runner-local **open** read — a fact that stands until something supersedes or closes it — declares what closes it when the **hub** terminally ends the chunk (`stopped` or `done`). A read whose closers are all runner-local events is incomplete, not merely narrow.
+
+**Why.** The runner derives openness from its own facts, but the hub owns whether a chunk is still work. A terminally-ended chunk produces no further runner-local event — no lease is minted, no worker exits, no binding is taken — so a closer expressed only in runner-local terms can never fire, and the fact stands forever. This has shipped twice: issue #202 (an ask-parked lease's park fact and a held binding never retired on a non-happy-path ending) and blizzard#292 (an escalation never closed when its chunk was stopped, leaving a permanent `needs_human` alert on a real fleet). Both were found by an operator, not by a test.
+
+**Detect.** An `open_*` read, or an `Unsuperseded`/`Unclosed` predicate, whose superseding facts are all runner-local (a lease mint, a spawn, a closure, a release), with no arm for the hub reporting the chunk terminal; a PULL step that reconciles only `list_active_leases()` while the fact in question outlives its lease.
+
+**Do.** State at each such read what retires it on a hub-terminal chunk. When no runner-local event can, mirror the hub's answer into a local fact so the read itself stays hub-free — `escalation_closures`, written by `Pull._reconcile_escalations`, is the reference shape.
+
+**Don't.** Leave a later lease mint as the sole closer for a fact that outlives its lease — a terminally-ended chunk is never claimed again, so that closer is unreachable by construction.
+
 ## Worker environments are allowlisted, never inherited (`bzh:worker-env-allowlist`)
 
 **Rule.** A worker/judge/resume child environment is built from an explicit allowlist — a fixed base set plus deliberate additions (locale variables) plus the operator's declared passthrough — never from a full copy of the daemon's own `os.environ`.
