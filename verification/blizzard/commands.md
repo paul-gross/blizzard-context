@@ -1,5 +1,8 @@
 # Blizzard command detail (`bzh:matrix-command-detail`)
 
+<!-- the `###` sections below are machine-parsed by `blizzard-context:/scripts/check-registry-drift.py`'s `_sections(text, "###")` — at `##` it reads no sections at all. -->
+<!-- rumdl-disable MD001 -->
+
 Full per-method detail for the [../blizzard.md](../blizzard.md) Commands table rows marked *(more)* — one `### <method-id>` section per row, in table order, except `blizzard:e2e` ([its own registry](./e2e-scenarios.md)). Read [../blizzard.md](../blizzard.md) first for the short command and the method-id inventory.
 
 ### blizzard:unit-test

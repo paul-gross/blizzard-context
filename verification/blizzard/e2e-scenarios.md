@@ -1,5 +1,8 @@
 # The standing e2e scenario registry — `blizzard:e2e` (`bzh:e2e-scenario-registry`)
 
+<!-- the `###` sections below are machine-parsed by `blizzard-context:/scripts/check-registry-drift.py`'s `_sections(text, "###")` — at `##` it reads no sections at all. -->
+<!-- rumdl-disable MD001 -->
+
 The single authoritative list of the `blizzard:e2e` scenarios — [../blizzard.md](../blizzard.md) `## Commands` names the command; this is the full scenario-by-scenario detail.
 
 `mise run e2e` (`BLIZZARD_E2E=1 uv run pytest tests/e2e/`) — the **standing e2e smoke suite**, full-stack scenarios over the canonical `build → review → deliver` delivery shape, its human-loop variants, the operator board and its mobile glance shell, the graph explorer, the authored post-merge edge, the cross-graph migration, node session-mode continuity, the browser login/session lifecycle, the multi-daemon runner SSO federation, the operational event log, resume-time spawn-preamble elision, the forge-status label projection, checks-gate enforcement, the YAML-authored delivery policies and their conflict path, the chunk board's Transcripts tab, and the non-code spike, each self-managing the forge + hub + runner over a minted `blizzard-mock` fixture (every seam real, no tokens/network).

@@ -169,7 +169,7 @@ This is a manual method by the matrix's own bootstrap convention (line 9 above):
 Surface: the winter-wired mock forge (`tool:service-up`, band `+1`) fronting a real fixture workspace's per-env bare origins — the same single git truth the daemons will bind to, exercised out of process rather than in-test.
 Setup — mint a fixture at the path the forge reads (`$BZ_FORGE_REPOS_DIR = ${BLIZZARD_MOCK_SCRATCH_ROOT}/${WINTER_ENV}/origins`), then bring the stack up. Run from the workspace root:
 
-```
+```bash
 BLIZZARD_MOCK_SCRATCH_ROOT=/tmp/blizzard-mock/fixtures WINTER_ENV=alpha \
   sh -c 'cd alpha/blizzard-mock && uv run blizzard-mock-fixture mint --env alpha'
 winter service up alpha --wait
@@ -183,7 +183,7 @@ Pass: `curl -fs localhost:${BZ_FORGE_PORT:-4421}/healthz` returns `ok`, and `cur
 Surface: `blizzard-mock-data scenario board` (`tool:mock-data`, [../tooling/store-seeding.md](../tooling/store-seeding.md)) as the direct store-seed path a human actually renders — proving a fresh env's hub serves a realistic, fully-populated board from data written straight into its store, with no work source ever configured and the hub daemon never restarted between the seed and the view. `blizzard:service-test`'s `test_mock_data_seeding_service.py` already proves the two machine-checkable halves of this claim (the seeder's intended per-chunk status agrees with the hub's own `derive_chunk_status`, and the hub reads the seeded rows with no restart) — this method covers only what a human eye is needed for: does the board actually *render* the seeded facts correctly.
 Setup: a freshly provisioned, not-yet-seeded env, its shell vars sourced (see [../tooling/store-seeding.md](../tooling/store-seeding.md)'s §Running it for why a plain shell needs `source <(winter env <env>)` before `$BZ_HUB_RUNTIME`/`$BZ_HUB_WEB_PORT` resolve):
 
-```
+```bash
 winter provision alpha
 winter service up alpha --wait
 source <(winter env alpha)

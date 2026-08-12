@@ -1,5 +1,8 @@
 # Blizzard tool detail (`bzh:matrix-tool-detail`)
 
+<!-- the flat `###` shape is this file's stated contract, shared with its sibling spokes. -->
+<!-- rumdl-disable MD001 -->
+
 Full per-tool detail for the [../blizzard.md](../blizzard.md) Tools table rows marked *(more)* — one `### <tool-id>` section per row, in table order.
 
 ### tool:service-up

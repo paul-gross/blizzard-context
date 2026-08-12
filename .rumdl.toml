@@ -1,6 +1,7 @@
 [global]
 # MD013 off: canon:no-hard-wrap makes long physical lines the house style
-disable = ["MD013"]
+# MD076 off: rule lists carry multi-block items (paragraphs, fences, nested lists), so the blank lines between them are what CommonMark requires, not stray spacing
+disable = ["MD013", "MD076"]
 
 [MD004]
 style = "dash"
