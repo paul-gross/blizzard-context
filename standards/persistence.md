@@ -47,7 +47,7 @@ A select whose consumer depends on the result's row order — an index into it, 
 
 **Detect.** A migration importing a table from `blizzard.{hub,runner}.store.schema` that a later revision in the same tree reshapes; a frozen `sa.Table` literal whose constraint set — especially a foreign key — is narrower than `schema.py` declared for that table at this revision's point in history; a `NoReferencedTableError` resolved by deleting the offending `sa.ForeignKey` instead of adding a resolution stub.
 
-**Do.** The `_frozen_metadata` block in `blizzard`'s `src/blizzard/hub/store/migrations/versions/20260714_0819_delivery_pr_facts.py` (lines 40–60): a local `MetaData()`, a `chunks` stub table carrying just the referenced column, and the frozen `delivery_pr_opened` table whose `sa.ForeignKey("chunks.chunk_id")` resolves against the stub. `20260713_1218_walking_skeleton_facts.py` (lines 57–77) is the original precedent for the same idiom.
+**Do.** The `_frozen_metadata` block in `blizzard`'s `src/blizzard/hub/store/migrations/versions/20260714_0819_delivery_pr_facts.py` (lines 40–60): a local `MetaData()`, a `chunks` stub table carrying just the referenced column, and the frozen `delivery_pr_opened` table whose `sa.ForeignKey("chunks.chunk_id")` resolves against the stub. `20260713_1218_walking_skeleton_facts.py` is the original precedent for the same idiom, applied there to every table it creates.
 
 **Don't.** Hitting `NoReferencedTableError` on a bare `sa.ForeignKey` and concluding the fix is to drop the FK — that ships a fresh store with no constraint where `schema.py`'s has one, a silent divergence a reviewer has to catch by hand.
 
