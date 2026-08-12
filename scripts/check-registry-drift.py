@@ -157,13 +157,7 @@ class Finding:
 # D4 (blizzard#272 Phase 1). Each entry: relative-to-blizzard-checkout path ->
 # one-line reason naming the tracking issue. An exempted file emits a `warn`
 # in check B1, never a silent `pass`.
-KNOWN_UNMARKED: dict[str, str] = {
-    "tests/test_intended_migration_apply.py": (
-        "carries no pytestmark and no per-test marker at all, so no tier "
-        "selection collects it — fix filed as blizzard#286; sibling ordinal "
-        "cleanup blizzard#285 — this exemption is deleted when #286 lands."
-    ),
-}
+KNOWN_UNMARKED: dict[str, str] = {}
 
 # The blizzard tier markers check B1/B2/C draw from, in the order the matrix
 # lists them.
