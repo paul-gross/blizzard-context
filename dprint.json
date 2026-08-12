@@ -1,7 +1,8 @@
 {
   "markdown": {
-    // maintain, not never: canon:no-hard-wrap blesses both paragraph-per-line and sentence-per-line; never would collapse sentence-per-line files (e.g. CONTRIBUTING.md)
-    "textWrap": "maintain",
+    // prose hard-wraps at the same 120-column ceiling the Python toolchain enforces; tables, fences, and headings keep their own formatting
+    "textWrap": "always",
+    "lineWidth": 120,
     "emphasisKind": "asterisks",
     "strongKind": "asterisks",
     "unorderedListKind": "dashes"
