@@ -12,7 +12,7 @@ Every human entry is either **opt-in** (asks, gates) or **exceptional** (escalat
 | Ask | The worker, mid-step | `waiting_on_human` | The first answer; the session resumes around it |
 | Gate decision | The workflow (a human-judged node) or runner configuration | `waiting_on_human` | A person picking one of the choices; the resolving transition follows |
 | Escalation | The system, on exhausted failure | `needs_human` | Supersession — a requeue makes the chunk leasable again, or the chunk ends; there is no resolution fact |
-| Takeover | A person, entering a held session | Nothing of its own — the chunk keeps the condition it was already in, plus human-in-session detail | Explicit hand-back — requeue |
+| Takeover | A person, entering a held session | Nothing of its own — the chunk keeps the condition it was already in, plus human-in-session detail | Explicit hand-back — requeue — or the chunk ending while still held |
 
 The two parked conditions differ by cause: `waiting_on_human` is **invited** input — the model expects a person and stops the reap clock; `needs_human` is **failure** — the system ran out of moves and a person must act.
 Both derive from open facts, never stored flags ([work.md](./work.md) §Statuses).
@@ -58,9 +58,9 @@ Ordinarily the chunk is already parked `needs_human` and there is no live attemp
 A **forced** entry into a chunk still being worked is allowed too: it kills the live worker and fences that attempt's epoch, so the displaced worker's late submission bounces (`bzh:epoch-fencing` in [execution.md](./execution.md)) — and, since nothing failed and nothing was invited, the chunk keeps deriving `running` rather than becoming `needs_human`.
 It is refused, rather than forced, when that attempt has already submitted its outcome: a fence minted behind a queued submission would never take effect.
 
-- **Entering through the wrapped takeover verb, when the escalation carries one (§Escalation above), records the takeover fact with the daemon before it resumes anything** — so no loop step can respawn or judge the held session while a person holds it.
-- **No attempt runs during a takeover** — the chunk keeps whatever condition it was in, with human-in-session detail, until it is explicitly requeued.
-- **Hand-back is explicit**: the person requeues the chunk; nothing infers that a human is done.
+- **Entering through the wrapped takeover verb, when the escalation carries one (§Escalation above), records the takeover fact with the daemon before it resumes anything** — so no loop step can respawn or judge the held session while a person holds it. That same fact is also what lets the resumed session's own verbs (`attach`, `ask`, `artifact …`) reach the runner: it authorizes them against the reference lease it names, active or already closed, rather than minting or reopening a lease of its own.
+- **No attempt runs during a takeover** — the chunk keeps whatever condition it was in, with human-in-session detail, until it is explicitly requeued or the chunk itself ends.
+- **Hand-back is ordinarily explicit**: the person requeues the chunk. The one exception is the chunk ending — stopped or done — while a takeover is still open: nothing infers a *person* is done, but the hub's own terminal fact closes the takeover fact regardless, the same shape an escalation's own hub-ends-it closer (§Escalation above) already uses.
 
 ## See also
 
