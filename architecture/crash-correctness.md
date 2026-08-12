@@ -300,6 +300,26 @@ when a change adds durable state that a reviewer would otherwise expect a sweep 
   invariant — the same shape as the #95 jti, #125 event-emission, #149 preamble-fingerprint, #137
   promote-then-tail-stamp, #216 delivery-closure-sweep, #230 marker-token, and blizzard#250 backfill exemptions above.
 
+- **The hub's transcript-event derivation sweep (blizzard#254).** `EventDerivationReconciler`
+  (`blizzard/src/blizzard/hub/domain/analytics/derivation.py`) is not a loop step any sweep family reaches — it is the
+  hub's own in-process `Sweep` driver, the same shape as its `AnnotationReconciler`/`DeliveryClosureReconciler` siblings
+  — and holds no state of its own between passes, re-deriving its candidate set every time from
+  `EventDerivationService.candidate_segment_ids()` (the visible segment set diffed against each segment's own derivation
+  marker) rather than tracking what it has already reached. Its two durable write paths are each a single transaction:
+  the per-segment replacement (`TranscriptEventStore.replace_segment_events` — delete this
+  `(segment_id, extractor_version)` pair's rows, insert the fresh set, write the marker) and the drop of a segment that
+  left the visible set (`drop_segment`). A `kill -9` at any point during either therefore leaves a segment either
+  underived, fully derived (rows + marker together), or fully dropped (rows + markers together) — never half — and the
+  next pass re-reaches it: an underived segment is still a candidate, and a dropped-but-not-yet-noticed segment is
+  recomputed from `derived_segment_ids() - visible_segment_ids()` fresh every sweep. There is therefore **no
+  `bzh:crash-point-registry` entry** for it, in the shape this registry already uses for the hub's own delivery-closure
+  sweep (#216) and the runner's transcript backfill (blizzard#250): both are converging reconcilers with no state
+  between passes. **No new `bzh:invariant-checker` assertion** either: per-segment-per-version uniqueness
+  (`(segment_id, extractor_version, kind, turn_path, occurrence)`) is a store-level unique constraint the engine
+  enforces, not a derived cross-fact invariant the checker must recompute — the same shape as the #95 jti, #125
+  event-emission, #149 preamble-fingerprint, #137 promote-then-tail-stamp, #216 delivery-closure-sweep, #230
+  marker-token, and blizzard#250 backfill exemptions above.
+
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 
 **Rule.** A checker of assertions evaluated over both stores' facts after any crash → restart → recover cycle holds the

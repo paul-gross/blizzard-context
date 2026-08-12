@@ -68,6 +68,21 @@ heartbeat age, pid liveness, latest transition).
 **Don't.** Write a `chunk.status = "running"` column and update it as the chunk moves — the column outlives the truth
 the instant the process dies.
 
+**Recorded positions** — a case that looks like it might carry a derived condition but does not, stated so a reviewer
+does not have to re-derive the same judgement:
+
+- **Derived transcript events (blizzard#254).** `transcript_events` conforms to this rule rather than being exempt from
+  it: each row is an immutable *observation* — a definite occurrence (a file read, a skill invocation, an agent spawn)
+  at a definite time — never a *condition* that can go stale, the distinction the rule bars. Three properties are
+  load-bearing: (a) nothing derives a status from a row and no admission, claim, or spawn is gated on one — dropping the
+  whole table costs only query latency, never correctness; (b) it is fully re-derivable from `transcript_segments`, so
+  its authority is always the segments, never itself; (c) its source's mutability is bounded and **observed**, not
+  assumed — the paired `transcript_event_derivations` marker records a content fingerprint of what a derivation saw, so
+  a segment whose stored content later changes underneath it (a rejected record accepted, a late record landing) is
+  detected and re-derived by the standing sweep rather than silently going stale, the same crash-safety shape
+  `bzh:crash-point-registry`'s own recorded exemptions ([./crash-correctness.md](./crash-correctness.md)) use for a
+  converging reconciler with no state between passes.
+
 ## An open fact declares what closes it on a terminal chunk (`bzh:open-facts-declare-closure`)
 
 **Rule.** Every runner-local **open** read — a fact that stands until something supersedes or closes it — declares what
