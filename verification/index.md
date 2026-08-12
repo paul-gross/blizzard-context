@@ -7,6 +7,6 @@ An agent reads the matrix whenever it plans how a change will be checked, not on
 
 Parent: [../index.md](../index.md).
 
-| Doc | When to read |
-|-----|--------------|
+| Doc                            | When to read                                                       |
+| ------------------------------ | ------------------------------------------------------------------ |
 | [./blizzard.md](./blizzard.md) | Verifying any blizzard change, or choosing which method proves one |

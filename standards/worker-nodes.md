@@ -58,10 +58,10 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 **Rule.** Both declaration CLI calls the worker runs — `blizzard runner artifact create` and `blizzard runner artifact commit` — read their identity from the spawn environment, not from arguments the node's prompt has to thread:
 
-| Var | Carries |
-|-----|---------|
-| `BLIZZARD_LEASE_ID` | The worker's current lease id — which chunk/node/attempt the declaration is recorded against. |
-| `BLIZZARD_RUNNER_URL` | The runner's local API the declaration posts to. |
+| Var                    | Carries                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `BLIZZARD_LEASE_ID`    | The worker's current lease id — which chunk/node/attempt the declaration is recorded against.                        |
+| `BLIZZARD_RUNNER_URL`  | The runner's local API the declaration posts to.                                                                     |
 | `BLIZZARD_LEASE_TOKEN` | The lease's minted capability token, sent as `X-Blizzard-Lease-Token` — authorizes the call; sent only when present. |
 
 **Why.** A prompt only ever names the declaration's own content (`--name <produces-name>`, or `--repo`/`--branch`/`--commit`) — the identity triple is the runner's own concern, injected once at spawn, so a node's author never has to carry or leak a lease id or token into authored prose.

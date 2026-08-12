@@ -20,10 +20,10 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 **Rule.** Access is layer-gated: controllers at the API and CLI edges may hold **read-only** repositories only; **write** repositories are held by the domain layer alone, so all mutation flows through the business rules.
 
-| Layer | Read-only repositories | Write repositories |
-|-------|------------------------|--------------------|
-| Controllers (API / CLI edges) | allowed | **forbidden** |
-| Domain layer | allowed | allowed |
+| Layer                         | Read-only repositories | Write repositories |
+| ----------------------------- | ---------------------- | ------------------ |
+| Controllers (API / CLI edges) | allowed                | **forbidden**      |
+| Domain layer                  | allowed                | allowed            |
 
 **Why.** A controller that can write around the domain can violate an invariant the domain exists to protect; forcing every mutation through the domain layer keeps the business rules the single gate on state change. A controller answering a query straight from a read model is fine — reads bypass no invariant.
 

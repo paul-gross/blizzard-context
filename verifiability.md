@@ -6,12 +6,12 @@ The verification methods available for blizzard-context itself — how a change 
 
 Run from the repo root.
 
-| Method | Command |
-|--------|---------|
-| `blizzard-context:registry-drift` | `python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate` — local-only: needs the sibling `blizzard` checkout (with its `.venv`) and `blizzard-mock` checkout, which a feature env satisfies and a standalone `.winter/ext/context/` install does not; `--gate` refuses a green on any skipped check, not only a `fail`. |
-| `blizzard-context:registry-drift-tests` | `python3 tests/test_check_registry_drift.py` — exercises every check against stdlib-only fixtures, needing no blizzard checkout. Mirrors `winter-workflow:lint-tests`. |
-| `blizzard-context:markdown-format` | `dprint check` — every markdown file matches the format `dprint.json` declares; `dprint fmt` writes the fix. Needs the `dprint` binary on `PATH`. |
-| `blizzard-context:markdown-lint` | `rumdl check .` — the structural markdown lint `.rumdl.toml` declares; `rumdl check . --fix` applies the autofixable subset. Needs the `rumdl` binary on `PATH`. |
+| Method                                  | Command                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard-context:registry-drift`       | `python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate` — local-only: needs the sibling `blizzard` checkout (with its `.venv`) and `blizzard-mock` checkout, which a feature env satisfies and a standalone `.winter/ext/context/` install does not; `--gate` refuses a green on any skipped check, not only a `fail`. |
+| `blizzard-context:registry-drift-tests` | `python3 tests/test_check_registry_drift.py` — exercises every check against stdlib-only fixtures, needing no blizzard checkout. Mirrors `winter-workflow:lint-tests`.                                                                                                                                                                                                  |
+| `blizzard-context:markdown-format`      | `dprint check` — every markdown file matches the format `dprint.json` declares; `dprint fmt` writes the fix. Needs the `dprint` binary on `PATH`.                                                                                                                                                                                                                       |
+| `blizzard-context:markdown-lint`        | `rumdl check .` — the structural markdown lint `.rumdl.toml` declares; `rumdl check . --fix` applies the autofixable subset. Needs the `rumdl` binary on `PATH`.                                                                                                                                                                                                        |
 
 ## Manual testing
 

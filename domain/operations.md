@@ -18,16 +18,16 @@ The severity vocabulary is **closed**, and closed the hard way: the log ranks by
 
 The runner surfaces failures at the single point every failed attempt already funnels through, and at each command it captures; the hub adds the ones only it is positioned to see:
 
-| Kind | Severity | When |
-|------|----------|------|
-| `attempt-failed` | `warning` | An attempt died and another will run (a retry) |
-| `worker-lost` | `critical` | Retries are exhausted — the attempt is lost to a human |
-| `attempt-abandoned` | `info` | The attempt was given up because the chunk moved on (reassigned/detached), not because the work failed |
-| `command-failed` | `warning` | A captured spawn / git-push / environment-prep command failed, carrying the command and its stderr tail |
-| `needs-human` | `critical` | A standing open escalation (see below) |
+| Kind                          | Severity   | When                                                                                                                                                                                               |
+| ----------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `attempt-failed`              | `warning`  | An attempt died and another will run (a retry)                                                                                                                                                     |
+| `worker-lost`                 | `critical` | Retries are exhausted — the attempt is lost to a human                                                                                                                                             |
+| `attempt-abandoned`           | `info`     | The attempt was given up because the chunk moved on (reassigned/detached), not because the work failed                                                                                             |
+| `command-failed`              | `warning`  | A captured spawn / git-push / environment-prep command failed, carrying the command and its stderr tail                                                                                            |
+| `needs-human`                 | `critical` | A standing open escalation (see below)                                                                                                                                                             |
 | `hub-node-unroutable-outcome` | `critical` | A hub node produced an outcome its graph authors no edge for — nothing routes, so the chunk re-polls that same outcome until someone authors one. Announced once per node visit, not once per poll |
-| `work-item-closed` | `info` | A landed chunk's work item was closed at its own source ([work.md](./work.md) §Chunk) |
-| `work-item-close-failed` | `warning` | That closure attempt failed; a later sweep retries it |
+| `work-item-closed`            | `info`     | A landed chunk's work item was closed at its own source ([work.md](./work.md) §Chunk)                                                                                                              |
+| `work-item-close-failed`      | `warning`  | That closure attempt failed; a later sweep retries it                                                                                                                                              |
 
 A deliberately-deferred failure — a runner that has told its operator it will start no processes — surfaces **nothing**: the failure is deferred, not an outcome to act on.
 

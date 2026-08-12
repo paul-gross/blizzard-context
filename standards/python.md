@@ -8,13 +8,13 @@ Follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sh
 **Rule.** Python is packaged with **uv** and held to **ruff** (lint *and* format) and **pyright**; the quality gates run from the first commit, not retrofitted.
 The commands a change must pass:
 
-| Check | Command |
-|-------|---------|
-| Install | `uv sync` — installs the project and its `dev` group |
-| Lint | `uv run ruff check .` |
-| Format | `uv run ruff format --check .` (write with `uv run ruff format .`) |
-| Typecheck | `uv run pyright` |
-| Test | `uv run pytest` (the unit and component tiers — [./frontend.md](./frontend.md) and [../verification/blizzard.md](../verification/blizzard.md) own the browser tiers) |
+| Check     | Command                                                                                                                                                              |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install   | `uv sync` — installs the project and its `dev` group                                                                                                                 |
+| Lint      | `uv run ruff check .`                                                                                                                                                |
+| Format    | `uv run ruff format --check .` (write with `uv run ruff format .`)                                                                                                   |
+| Typecheck | `uv run pyright`                                                                                                                                                     |
+| Test      | `uv run pytest` (the unit and component tiers — [./frontend.md](./frontend.md) and [../verification/blizzard.md](../verification/blizzard.md) own the browser tiers) |
 
 `pyproject.toml`'s `[tool.ruff.lint] select` enables exactly `E, F, I, UP, B, C4, SIM, RUF` — **not** bandit's `S` family, so a `# noqa: S10x` directive silences a rule ruff never runs and fails as an unused `noqa` instead.
 

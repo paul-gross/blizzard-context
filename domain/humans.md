@@ -7,12 +7,12 @@ Part of the [domain model](./index.md).
 The default posture is human-**on**-the-loop: the default graph has no human touchpoints — agents verify and merge to main.
 Every human entry is either **opt-in** (asks, gates) or **exceptional** (escalation, takeover); adding and removing gates is the dial between reviewing every step and supervising outcomes.
 
-| Entry | Who initiates | Parks the chunk as | Resolved by |
-|-------|---------------|--------------------|-------------|
-| Ask | The worker, mid-step | `waiting_on_human` | The first answer; the session resumes around it |
-| Gate decision | The workflow (a human-judged node) or runner configuration | `waiting_on_human` | A person picking one of the choices; the resolving transition follows |
-| Escalation | The system, on exhausted failure | `needs_human` | Supersession — a requeue makes the chunk leasable again, or the chunk ends; there is no resolution fact |
-| Takeover | A person, entering a held session | Nothing of its own — the chunk keeps the condition it was already in, plus human-in-session detail | Explicit hand-back — requeue — or the chunk ending while still held |
+| Entry         | Who initiates                                              | Parks the chunk as                                                                                 | Resolved by                                                                                             |
+| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Ask           | The worker, mid-step                                       | `waiting_on_human`                                                                                 | The first answer; the session resumes around it                                                         |
+| Gate decision | The workflow (a human-judged node) or runner configuration | `waiting_on_human`                                                                                 | A person picking one of the choices; the resolving transition follows                                   |
+| Escalation    | The system, on exhausted failure                           | `needs_human`                                                                                      | Supersession — a requeue makes the chunk leasable again, or the chunk ends; there is no resolution fact |
+| Takeover      | A person, entering a held session                          | Nothing of its own — the chunk keeps the condition it was already in, plus human-in-session detail | Explicit hand-back — requeue — or the chunk ending while still held                                     |
 
 The two parked conditions differ by cause: `waiting_on_human` is **invited** input — the model expects a person and stops the reap clock; `needs_human` is **failure** — the system ran out of moves and a person must act.
 Both derive from open facts, never stored flags ([work.md](./work.md) §Statuses).

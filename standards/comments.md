@@ -20,22 +20,22 @@ Prose density is also self-replicating — agents match the comment density of t
 Binds `#` comments and docstrings across blizzard's Python trees (`blizzard/src`, `blizzard/tests`, `blizzard-mock/src`).
 What stays, exhaustively:
 
-| Keep | Example shape |
-|------|---------------|
-| Why-this-here rationale | why this guard, this ordering, this default — for the adjacent code |
-| A local invariant not expressible in code | a lock-ordering or lifetime fact about this module's own state |
-| A safety warning tied to the adjacent line | "SIGKILL between these two writes is the armed crash point" |
-| An issue / decision citation | `(issue #258)`, `(D-104)`, a `bzh:` id — riding a one-line fact; a citation never licenses a paragraph |
-| A pointer at the owner | "supersession rules: `hub/domain/status.py`" — a pointer, never the restated content |
-| Wire-model field semantics | a wire dataclass docstring scoped to the field's own meaning — it generates into `openapi/`; claims about how a *client* renders or uses the field go |
+| Keep                                       | Example shape                                                                                                                                         |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Why-this-here rationale                    | why this guard, this ordering, this default — for the adjacent code                                                                                   |
+| A local invariant not expressible in code  | a lock-ordering or lifetime fact about this module's own state                                                                                        |
+| A safety warning tied to the adjacent line | "SIGKILL between these two writes is the armed crash point"                                                                                           |
+| An issue / decision citation               | `(issue #258)`, `(D-104)`, a `bzh:` id — riding a one-line fact; a citation never licenses a paragraph                                                |
+| A pointer at the owner                     | "supersession rules: `hub/domain/status.py`" — a pointer, never the restated content                                                                  |
+| Wire-model field semantics                 | a wire dataclass docstring scoped to the field's own meaning — it generates into `openapi/`; claims about how a *client* renders or uses the field go |
 
 A docstring that **generates into `blizzard/openapi/`** — a wire model's, or a route handler's — is public API reference text, so it additionally drops what an external consumer cannot resolve:
 
-| Goes | Stays |
-|------|-------|
-| A client rendering or UI-surface claim | The keep table above, unchanged — including the issue / decision / `bzh:` citation, which resolves against a public repository |
-| An internal identifier: a Python module path, class, method, Sphinx role, or test node id | An absolute public URL, when a reference is warranted |
-| Winter workspace path notation | A sibling **route or schema published in the same spec** |
+| Goes                                                                                      | Stays                                                                                                                          |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| A client rendering or UI-surface claim                                                    | The keep table above, unchanged — including the issue / decision / `bzh:` citation, which resolves against a public repository |
+| An internal identifier: a Python module path, class, method, Sphinx role, or test node id | An absolute public URL, when a reference is warranted                                                                          |
+| Winter workspace path notation                                                            | A sibling **route or schema published in the same spec**                                                                       |
 
 The one exclusion is `blizzard-mock/src`, whose wire models mirror a schema they never export — nothing there generates, so this paragraph does not reach it. Inside `blizzard/src/blizzard/wire` the whole package is held to it, published or not: a model there is one `responses=` from being reference text, and the Detect bullet below enforces exactly that reach.
 

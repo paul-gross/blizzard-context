@@ -8,10 +8,10 @@ Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 
 **Rule.** TypeScript and Angular are linted with **eslint** and unit/component-tested with **vitest**; there is **no prettier** — formatting concerns that matter are expressed as eslint rules.
 
-| Check | Command |
-|-------|---------|
-| Lint | `npm run lint` (eslint over the Angular workspace) |
-| Test | `npm run test` (vitest — the frontend unit and component tier; Playwright owns the service and e2e tiers, [../verification/blizzard.md](../verification/blizzard.md)) |
+| Check | Command                                                                                                                                                               |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint  | `npm run lint` (eslint over the Angular workspace)                                                                                                                    |
+| Test  | `npm run test` (vitest — the frontend unit and component tier; Playwright owns the service and e2e tiers, [../verification/blizzard.md](../verification/blizzard.md)) |
 
 **Why.** A single linter that also owns formatting avoids a second formatter's competing opinion, and keeps the frontend's quality gate one command rather than two tools to reconcile.
 

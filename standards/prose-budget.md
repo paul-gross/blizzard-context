@@ -7,14 +7,14 @@ Follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sh
 A comment or docstring block fits the cap for its host below; a block over cap is pruned, not defended — the burden of proof sits on every line kept, never on deleting one.
 A docstring block counts its physical span in lines, blank lines included; a `#` block counts its consecutive comment lines.
 
-| Host | Cap |
-|------|-----|
-| Module docstring | 6 lines |
+| Host                                    | Cap     |
+| --------------------------------------- | ------- |
+| Module docstring                        | 6 lines |
 | Class, dataclass, or Protocol docstring | 4 lines |
-| Function or method docstring | 5 lines |
-| Test docstring | 3 lines |
-| Field, column, or constant `#` comment | 1 line |
-| Inline `#` comment block | 2 lines |
+| Function or method docstring            | 5 lines |
+| Test docstring                          | 3 lines |
+| Field, column, or constant `#` comment  | 1 line  |
+| Inline `#` comment block                | 2 lines |
 
 ## Why
 
