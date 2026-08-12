@@ -346,13 +346,19 @@ and the `id`/reconnect-replay behavior actually observed on a real `GET /api/eve
 what the component tier's replay-tail read shows (an event was **recorded**, not what a subscriber actually
 **received**) and from `blizzard:service-test`'s live-fan-out proof (count and timing of frames, not their field-level
 shape, which `blizzard:sse-contract` now covers instead of this method). Setup: a hub hosted on a scratch port
-(`blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`). Steps: (1) start the hub on the scratch
-port; (2) hold an SSE subscription open against `GET /api/events/stream` (`curl -N` or a streaming HTTP client) before
-driving the act; (3) drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call
-under test; (4) assert the reserved comment opens the stream, a keepalive comment arrives on an idle connection within
-the documented cadence, and the frame(s)' `id`/reconnect-replay behavior on a live socket — the field-level shape of the
-frame `data:` itself is `blizzard:sse-contract`'s claim, not re-asserted here. Pass: the framing/timing behavior above
-holds over a real connection, for every call driven.
+(`blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`).
+
+Steps:
+
+1. start the hub on the scratch port
+2. hold an SSE subscription open against `GET /api/events/stream` (`curl -N` or a streaming HTTP client) before driving
+   the act
+3. drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call under test
+4. assert the reserved comment opens the stream, a keepalive comment arrives on an idle connection within the documented
+   cadence, and the frame(s)' `id`/reconnect-replay behavior on a live socket — the field-level shape of the frame
+   `data:` itself is `blizzard:sse-contract`'s claim, not re-asserted here.
+
+Pass: the framing/timing behavior above holds over a real connection, for every call driven.
 
 ### blizzard:manual-rollback-drill — the compose deployment's rollback promise, run for real
 
@@ -377,13 +383,19 @@ tests from touching the network at all, and the endpoint is undocumented and unv
 blizzard with no changelog to catch it. Every CI-tier test exercises Claude Code's external-subscription-usage sampling
 against a stubbed transport (the fixtures the unit/component tiers bind); this manual method is what ties that stub back
 to what the vendor actually returns. Setup: the runner machine's own real Claude Code OAuth credentials
-(`~/.claude/.credentials.json`), a working `blizzard runner` binary. Steps: (1) run
-`blizzard runner external-usage probe` (issue #218's phase-1 diagnostic subcommand — read-only, no store write, no
-enqueue); (2) separately run `claude`'s own `/usage` command against the same account; (3) compare the two. Pass: the
-probe's parsed 5h/7d utilization percentages and reset times match what `claude /usage` itself reports for the same
-account, within the natural few-second sampling skew. This is a deliberately-built method closing a real, permanent gap,
-not a placeholder for a future CI tier — the same shape as `blizzard:manual-rollback-drill` above: no tier will ever be
-added to replace it, because the thing it proves (an external vendor's live, undocumented response shape) is
+(`~/.claude/.credentials.json`), a working `blizzard runner` binary.
+
+Steps:
+
+1. run `blizzard runner external-usage probe` (issue #218's phase-1 diagnostic subcommand — read-only, no store write,
+   no enqueue)
+2. separately run `claude`'s own `/usage` command against the same account
+3. compare the two.
+
+Pass: the probe's parsed 5h/7d utilization percentages and reset times match what `claude /usage` itself reports for the
+same account, within the natural few-second sampling skew. This is a deliberately-built method closing a real, permanent
+gap, not a placeholder for a future CI tier — the same shape as `blizzard:manual-rollback-drill` above: no tier will
+ever be added to replace it, because the thing it proves (an external vendor's live, undocumented response shape) is
 structurally outside what a hermetic, network-free CI tier can ever see. (`blizzard:manual-sse-probe` above was once a
 similar case; issue #235's `blizzard:sse-contract` has since automated its field-shape half, leaving only framing/timing
 manual — a reminder that "structurally unreachable by CI" should be checked afresh each time a surface like this comes
@@ -396,27 +408,37 @@ pytest fixture's lifetime — the process pair it stands up is gone the moment t
 behavior against a **standing** hub a human or a `frontend-verifier` agent can point a real browser at outside a test
 run, in a provisioned feature env (`auth.mode = "none"` is the default a `winter service up <env>`-started hub scaffolds
 via `blizzard hub init`, so a running env's own service stack serves everything unauthenticated unless this method's
-setup is applied to it). This is what closes that gap. Setup: (1) start the stub IdP standing
-(`blizzard-mock/src/blizzard_mock/idp/README.md`'s "Standing instance" section —
-`blizzard-mock-idp --host 127.0.0.1 --port <idp-port>`, confirm `GET /healthz`); (2) a hub runtime dir — a scratch dir,
-or a provisioned env's own `$BZ_HUB_RUNTIME` if you intend that env's hub to run in `oauth` mode — with
-`[auth] mode = "oauth"` and one `[[auth.oauth.provider]] type = "oidc"` entry pointing `issuer` at the standing IdP
-(`hub/config.py`'s `AUTH_MODE_OAUTH`; note the mode is `"oauth"`, not `"oidc"` — `oidc` is the provider `type`); (3)
-`mise run web-build` so the hub serves the built board. Steps: (1) start the hub
-(`blizzard hub host --dir <hub-dir> --port <hub-port>`); (2) drive a real browser to `http://127.0.0.1:<hub-port>/`,
-confirm the `/login` gate renders the configured provider's button, click it, and confirm the dance lands authenticated
-(a fresh identity mints `pending`); (3) `PUT /_levers/profile` on the IdP before a login to script a specific identity,
-or flip it between two logins (fresh browser context each time) to prove two distinct identities; (4) set a role
-directly in `<hub-dir>/data/hub.db`'s `users` table (the same seam `blizzard:e2e`'s login-session scenario uses ahead of
-a role-assignment API) and reload (same session cookie, no re-login) to confirm role-dependent UI — e.g. a seeded
-not-ready chunk's Promote control present for `contributor`, absent for `guest`. Pass: the browser reaches an
-authenticated board through the standing IdP, and at least two roles are observed rendering visibly different UI on the
-same underlying state. This is a manual method by the matrix's own bootstrap convention (line 9 above): no automated
-tier drives a real browser against a standing, out-of-fixture process pair, and building one would mean giving the e2e
-tier a persistent-process mode it does not otherwise need — the cost is not worth it for a surface a human or a
-`frontend-verifier` agent can already reach by hand. Whether this method's setup becomes a standing, opt-in feature of
-the winter workspace's own per-env service stack (rather than assembled by hand each time) is a workspace-manifest
-question outside any project repo's scope — see blizzard#236's comment for the follow-on discussion.
+setup is applied to it). This is what closes that gap.
+
+Setup:
+
+1. start the stub IdP standing (`blizzard-mock/src/blizzard_mock/idp/README.md`'s "Standing instance" section —
+   `blizzard-mock-idp --host 127.0.0.1 --port <idp-port>`, confirm `GET /healthz`)
+2. a hub runtime dir — a scratch dir, or a provisioned env's own `$BZ_HUB_RUNTIME` if you intend that env's hub to run
+   in `oauth` mode — with `[auth] mode = "oauth"` and one `[[auth.oauth.provider]] type = "oidc"` entry pointing
+   `issuer` at the standing IdP (`hub/config.py`'s `AUTH_MODE_OAUTH`; note the mode is `"oauth"`, not `"oidc"` — `oidc`
+   is the provider `type`)
+3. `mise run web-build` so the hub serves the built board.
+
+Steps:
+
+1. start the hub (`blizzard hub host --dir <hub-dir> --port <hub-port>`)
+2. drive a real browser to `http://127.0.0.1:<hub-port>/`, confirm the `/login` gate renders the configured provider's
+   button, click it, and confirm the dance lands authenticated (a fresh identity mints `pending`)
+3. `PUT /_levers/profile` on the IdP before a login to script a specific identity, or flip it between two logins (fresh
+   browser context each time) to prove two distinct identities
+4. set a role directly in `<hub-dir>/data/hub.db`'s `users` table (the same seam `blizzard:e2e`'s login-session scenario
+   uses ahead of a role-assignment API) and reload (same session cookie, no re-login) to confirm role-dependent UI —
+   e.g. a seeded not-ready chunk's Promote control present for `contributor`, absent for `guest`.
+
+Pass: the browser reaches an authenticated board through the standing IdP, and at least two roles are observed rendering
+visibly different UI on the same underlying state. This is a manual method by the matrix's own bootstrap convention
+(line 9 above): no automated tier drives a real browser against a standing, out-of-fixture process pair, and building
+one would mean giving the e2e tier a persistent-process mode it does not otherwise need — the cost is not worth it for a
+surface a human or a `frontend-verifier` agent can already reach by hand. Whether this method's setup becomes a
+standing, opt-in feature of the winter workspace's own per-env service stack (rather than assembled by hand each time)
+is a workspace-manifest question outside any project repo's scope — see blizzard#236's comment for the follow-on
+discussion.
 
 ### blizzard-mock:manual — the live wired-service forge over a real fixture
 
@@ -462,16 +484,25 @@ source <(winter env alpha)
 Confirm the env's hub runtime config carries zero `[[work_source]]` blocks (`cat $BZ_HUB_RUNTIME/blizzard-hub.toml` — a
 fresh `hub init` scaffold emits the work-source block as a commented-out example only, never live) and that no forge
 fixture has been minted for the env (`blizzard-mock-fixture` never run against it — `tool:mock-fleet`'s forge is up but
-fronts no origins). Steps: (1) seed a stress board straight into the running env's own hub store:
-`cd alpha/blizzard-mock && uv run blizzard-mock-data scenario board --chunks 9 --stress --dir "$BZ_HUB_RUNTIME"` —
-`--chunks 9` (not the `--chunks 6` default) is deliberate here: fewer than nine only covers a prefix of `_STATUS_ORDER`
-(`domain/scenario_seed.py`), and step 3 below needs every one of the nine derived statuses actually seeded; (2) without
-restarting the hub, open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`; (3) confirm the seeded chunk cards render
-across all nine derived statuses; (4) confirm the cost column shows the cost-partial chunk `scenario board` always seeds
-(a `NULL cost_usd` usage fact) as partial, not as `$0.00`; (5) open the Events tab and confirm the seeded mixed-severity
-rows render; (6) open the multi-question `--stress` chunk's detail dock and confirm its two extra independent question
-trails render in the dock's trail. Pass: every check in steps 3–6 holds, observed against the same hub process
-`service up` started — no restart, reset, or re-init between the seed command and the view.
+fronts no origins).
+
+Steps:
+
+1. seed a stress board straight into the running env's own hub store:
+   `cd alpha/blizzard-mock && uv run blizzard-mock-data scenario board --chunks 9 --stress --dir "$BZ_HUB_RUNTIME"` —
+   `--chunks 9` (not the `--chunks 6` default) is deliberate here: fewer than nine only covers a prefix of
+   `_STATUS_ORDER` (`domain/scenario_seed.py`), and step 3 below needs every one of the nine derived statuses actually
+   seeded
+2. without restarting the hub, open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`
+3. confirm the seeded chunk cards render across all nine derived statuses
+4. confirm the cost column shows the cost-partial chunk `scenario board` always seeds (a `NULL cost_usd` usage fact) as
+   partial, not as `$0.00`
+5. open the Events tab and confirm the seeded mixed-severity rows render
+6. open the multi-question `--stress` chunk's detail dock and confirm its two extra independent question trails render
+   in the dock's trail.
+
+Pass: every check in steps 3–6 holds, observed against the same hub process `service up` started — no restart, reset, or
+re-init between the seed command and the view.
 
 ## Tools
 
