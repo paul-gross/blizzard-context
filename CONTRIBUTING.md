@@ -42,10 +42,11 @@ pass criteria; what belongs here is only *which* a change owes:
 
 - `blizzard-context:registry-drift` and `blizzard-context:registry-drift-tests` — every change.
 - `blizzard-context:markdown-format` and `blizzard-context:markdown-lint` — every change: the mechanical style gates
-  every markdown file here is held to.
+  every markdown file here is held to. They also run through `winter lint`: this extension contributes the check
+  (`winter-ext.toml`'s `lint` field), so a routine env lint catches the same drift; `blizzard-context:lint-script-tests`
+  covers the contribution itself.
 - `blizzard-context:manual-reference-check` — every change: the by-hand pass covering the reference checks no tool here
-  runs — path notation, routing references, anchors. Registering the markdown tooling with `winter lint` via
-  `winter-ext.toml` is a follow-up.
+  runs — path notation, routing references, anchors.
 - `blizzard-context:manual-cold-eval` — a rule addition, a trigger broadening, or a routing change (`canon:cold-eval`).
 
 ## Delivery
