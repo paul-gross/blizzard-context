@@ -32,7 +32,8 @@ Every rule here follows the canon slot skeleton and stable-id scheme:
 Run this repo's own declared methods before pushing. [verifiability.md](./verifiability.md) owns each one's surface and pass criteria; what belongs here is only *which* a change owes:
 
 - `blizzard-context:registry-drift` and `blizzard-context:registry-drift-tests` — every change.
-- `blizzard-context:manual-reference-check` — every change: the by-hand pass standing in for the markdown lints this repo still lacks. When they land, register them with `winter lint` via `winter-ext.toml` and run them here instead.
+- `blizzard-context:markdown-format` and `blizzard-context:markdown-lint` — every change: the mechanical style gates every markdown file here is held to.
+- `blizzard-context:manual-reference-check` — every change: the by-hand pass covering the reference checks no tool here runs — path notation, routing references, anchors. Registering the markdown tooling with `winter lint` via `winter-ext.toml` is a follow-up.
 - `blizzard-context:manual-cold-eval` — a rule addition, a trigger broadening, or a routing change (`canon:cold-eval`).
 
 ## Delivery
