@@ -3,160 +3,420 @@
 <!-- the `###` sections below are machine-parsed by `blizzard-context:/scripts/check-registry-drift.py`'s `_sections(text, "###")` — at `##` it reads no sections at all. -->
 <!-- rumdl-disable MD001 -->
 
-The single authoritative list of the `blizzard:e2e` scenarios — [../blizzard.md](../blizzard.md) `## Commands` names the command; this is the full scenario-by-scenario detail.
+The single authoritative list of the `blizzard:e2e` scenarios — [../blizzard.md](../blizzard.md) `## Commands` names the
+command; this is the full scenario-by-scenario detail.
 
-`mise run e2e` (`BLIZZARD_E2E=1 uv run pytest tests/e2e/`) — the **standing e2e smoke suite**, full-stack scenarios over the canonical `build → review → deliver` delivery shape, its human-loop variants, the operator board and its mobile glance shell, the graph explorer, the authored post-merge edge, the cross-graph migration, node session-mode continuity, the browser login/session lifecycle, the multi-daemon runner SSO federation, the operational event log, resume-time spawn-preamble elision, the forge-status label projection, checks-gate enforcement, the YAML-authored delivery policies and their conflict path, the chunk board's Transcripts tab, and the non-code spike, each self-managing the forge + hub + runner over a minted `blizzard-mock` fixture (every seam real, no tokens/network).
+`mise run e2e` (`BLIZZARD_E2E=1 uv run pytest tests/e2e/`) — the **standing e2e smoke suite**, full-stack scenarios over
+the canonical `build → review → deliver` delivery shape, its human-loop variants, the operator board and its mobile
+glance shell, the graph explorer, the authored post-merge edge, the cross-graph migration, node session-mode continuity,
+the browser login/session lifecycle, the multi-daemon runner SSO federation, the operational event log, resume-time
+spawn-preamble elision, the forge-status label projection, checks-gate enforcement, the YAML-authored delivery policies
+and their conflict path, the chunk board's Transcripts tab, and the non-code spike, each self-managing the forge + hub +
+runner over a minted `blizzard-mock` fixture (every seam real, no tokens/network).
 
 ### test_acceptance_loop
 
 The happy path: build → review (scripted PASS) → deliver → landed.
 
-- `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts the commit is reachable from bare `main` **and** the hub's facts derive `done`.
-- `test_build_worker_reads_work_item_through_the_passthrough` — the build worker fetches its issue body and comment through the runner→hub work-item pass-through and commits the fetched text, asserted reachable from bare `main` (MVP criterion 1 at the e2e tier).
+- `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts the commit is reachable from bare `main` **and** the hub's
+  facts derive `done`.
+- `test_build_worker_reads_work_item_through_the_passthrough` — the build worker fetches its issue body and comment
+  through the runner→hub work-item pass-through and commits the fetched text, asserted reachable from bare `main` (MVP
+  criterion 1 at the e2e tier).
 
 ### test_review_cycle_e2e
 
 Review fails once, then passes and the chunk lands.
 
-- `test_review_cycle_fails_once_then_delivers` — the findings asset + fail-edge `prompt_addendum` thread back into build's re-entry envelope (the addendum's committed marker lands on bare `main`), build runs twice, then review passes and it lands.
+- `test_review_cycle_fails_once_then_delivers` — the findings asset + fail-edge `prompt_addendum` thread back into
+  build's re-entry envelope (the addendum's committed marker lands on bare `main`), build runs twice, then review passes
+  and it lands.
 
 ### test_escalation_e2e
 
 Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`.
 
-- `test_retries_exhausted_escalates_and_takeover_resumes_session` — the chunk derives `needs_human`, and the surfaced takeover command run **verbatim** actually resumes the parked mock session (its persisted turn advances); beside it, the escalation's `wrapped_takeover_command` is shape-checked — the runner-composed `blizzard runner takeover <chunk_id> --dir <resolved runner dir>` form, asserted against the run's own resolved runner directory, though the verbatim raw command remains the one actually executed.
+- `test_retries_exhausted_escalates_and_takeover_resumes_session` — the chunk derives `needs_human`, and the surfaced
+  takeover command run **verbatim** actually resumes the parked mock session (its persisted turn advances); beside it,
+  the escalation's `wrapped_takeover_command` is shape-checked — the runner-composed
+  `blizzard runner takeover <chunk_id> --dir <resolved runner dir>` form, asserted against the run's own resolved runner
+  directory, though the verbatim raw command remains the one actually executed.
 
 ### test_ask_answer_e2e
 
 A build worker runs the real `blizzard runner ask` and exits.
 
-- `test_ask_parks_then_answer_resumes_session_to_done` — the chunk parks `waiting_on_human` with the reap clock stopped (extra ticks reap nothing and consume no retry, the same single question stays open), then `blizzard hub answer` resumes the dormant session (the mock's persisted session state records the human's answer script) and the chunk lands (MVP criterion 7).
+- `test_ask_parks_then_answer_resumes_session_to_done` — the chunk parks `waiting_on_human` with the reap clock stopped
+  (extra ticks reap nothing and consume no retry, the same single question stays open), then `blizzard hub answer`
+  resumes the dormant session (the mock's persisted session state records the human's answer script) and the chunk lands
+  (MVP criterion 7).
 
 ### test_gate_decision_e2e
 
 A graph with a human `approve-gate` ahead of deliver.
 
-- `test_graph_gate_parks_a_decision_then_decide_delivers` — parks an open Decision carrying the build's git-commit artifact, `blizzard hub decisions` lists it, `blizzard hub decide … approve` resolves it first-write-wins, the holding runner records the resolving transition, and the chunk delivers to bare `main` (MVP criterion 12).
+- `test_graph_gate_parks_a_decision_then_decide_delivers` — parks an open Decision carrying the build's git-commit
+  artifact, `blizzard hub decisions` lists it, `blizzard hub decide … approve` resolves it first-write-wins, the holding
+  runner records the resolving transition, and the chunk delivers to bare `main` (MVP criterion 12).
 
 ### test_board_browser_e2e
 
-The **browser half of the e2e tier**: a real Chromium driven by Playwright over the served mission-control board (`blizzard hub host` mounts the built Angular app at `/`).
+The **browser half of the e2e tier**: a real Chromium driven by Playwright over the served mission-control board
+(`blizzard hub host` mounts the built Angular app at `/`).
 
-- `test_board_browser_live_group_reorder_answer_and_pause` — loaded once and never reloaded, it proves the status chip flips live over SSE as facts land, the detail drawer renders node history + the artifact store, two ready chunks are **grouped** from their cards in the board's **READY lane** — #137 folded the ready queue back onto the board as a column, so a promoted chunk crosses from BACKLOG into READY rather than leaving the board — and the queue is **reordered** by dragging the grouped survivor's card to the top of that lane with real pointer events (the `@angular/cdk` drop list the lane arms; the drop → anchor arithmetic itself is fenced at `web:unit-test` with a synthesized `CdkDragDrop`), so the next FILL claims the grouped plural-pointer survivor first (both honored), a parked chunk's question is **answered from the board** and it resumes to `done`; a running chunk is **paused directly from its chunk detail dock** — the claim-keeping, one-*chunk* lever, distinct from the runner-level brake below: its chip flips to `paused` live over SSE with no reload (the one status a pause-parked chunk's chip actually shows — [../../domain/work.md](../../domain/work.md) §Statuses explains why `paused` ranks below the human-gated statuses, so the proof needs a chunk caught genuinely running, not one already parked on a question) and relocates to the WAIT/HUMAN column, the claim survives (its route holds after the runner kills the worker and parks the lease), the dock names who paused it, and resuming it from the dock returns it to a live, progressing status; and the runner registry's **pause/resume** brake stops and then restarts new claims (MVP criterion 11) — engaged *before* the survivor lands, because the landing frees the runner's only agent slot in the same tick (FILL's reconcile releases the survivor's binding, blizzard#202), so from that instant the brake is the only thing holding the remaining ready chunk in the lane.
+- `test_board_browser_live_group_reorder_answer_and_pause` — loaded once and never reloaded, it proves the status chip
+  flips live over SSE as facts land, the detail drawer renders node history + the artifact store, two ready chunks are
+  **grouped** from their cards in the board's **READY lane** — #137 folded the ready queue back onto the board as a
+  column, so a promoted chunk crosses from BACKLOG into READY rather than leaving the board — and the queue is
+  **reordered** by dragging the grouped survivor's card to the top of that lane with real pointer events (the
+  `@angular/cdk` drop list the lane arms; the drop → anchor arithmetic itself is fenced at `web:unit-test` with a
+  synthesized `CdkDragDrop`), so the next FILL claims the grouped plural-pointer survivor first (both honored), a parked
+  chunk's question is **answered from the board** and it resumes to `done`; a running chunk is **paused directly from
+  its chunk detail dock** — the claim-keeping, one-*chunk* lever, distinct from the runner-level brake below: its chip
+  flips to `paused` live over SSE with no reload (the one status a pause-parked chunk's chip actually shows —
+  [../../domain/work.md](../../domain/work.md) §Statuses explains why `paused` ranks below the human-gated statuses, so
+  the proof needs a chunk caught genuinely running, not one already parked on a question) and relocates to the
+  WAIT/HUMAN column, the claim survives (its route holds after the runner kills the worker and parks the lease), the
+  dock names who paused it, and resuming it from the dock returns it to a live, progressing status; and the runner
+  registry's **pause/resume** brake stops and then restarts new claims (MVP criterion 11) — engaged *before* the
+  survivor lands, because the landing frees the runner's only agent slot in the same tick (FILL's reconcile releases the
+  survivor's binding, blizzard#202), so from that instant the brake is the only thing holding the remaining ready chunk
+  in the lane.
 
-Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree + a local winter source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source — but an unbuilt bundle fails loudly instead of skipping.
+Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree + a local winter
+source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned
+worktree, or without the winter source — but an unbuilt bundle fails loudly instead of skipping.
 
 ### test_board_cost_live_e2e
 
-The **cost/usage render half** (epic #57 / #60): the same served board, loaded once and never reloaded, over a chunk claimed straight through `POST /api/fleet/routes`.
+The **cost/usage render half** (epic #57 / #60): the same served board, loaded once and never reloaded, over a chunk
+claimed straight through `POST /api/fleet/routes`.
 
-- `test_board_renders_cost_and_updates_live_over_sse` — proves the P4 figures render end to end off the live hub — the card's **cost badge**, the header's **spend-today** figure (`GET /api/spend?since=`), and the detail dock's **cost + the four token classes inline** (issue #182 retired the expand toggle) — and, the claim only a real browser over the real SSE spine can make, that they **update live over SSE with no reload**: a fresh `usage.recorded` fact pushed to `POST /api/fleet/events` re-broadcasts `chunk-changed`, the `FleetLiveUpdates` spine invalidates the chunk read **and** `hubFleetSpendKey`, and card + header + dock all move in place; a cost-absent (crash/reap-path) row then flips every figure to its `~`-marked **lower bound**, never a silently-understated exact. The **partial marking** and the per-history-step `(node, epoch)` inline match are additionally fenced at the component tier (`chunk-detail-panel.spec.ts`, `board-header.spec.ts`, `board-shell.spec.ts`, `fleet-live.spec.ts`, `test_usage_facts_ingest.py`, `test_fleet_spend_api.py`, `test_hub_cli_status.py`). It needs the sibling provisioned `blizzard-mock` worktree and a local winter source, so it is skipped in the `gate`/`pr` single-repo checkout; **the tag `release` workflow runs the full e2e tier headless** over the multi-repo checkout (Chromium installed via `uv run playwright install --with-deps chromium`), and the master `push` workflow runs the sibling service + crash tiers. Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree + a local winter source + an installed Chromium (locally: `uv run playwright install chromium`); it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source — but an unbuilt bundle fails loudly instead of skipping.
+- `test_board_renders_cost_and_updates_live_over_sse` — proves the P4 figures render end to end off the live hub — the
+  card's **cost badge**, the header's **spend-today** figure (`GET /api/spend?since=`), and the detail dock's **cost +
+  the four token classes inline** (issue #182 retired the expand toggle) — and, the claim only a real browser over the
+  real SSE spine can make, that they **update live over SSE with no reload**: a fresh `usage.recorded` fact pushed to
+  `POST /api/fleet/events` re-broadcasts `chunk-changed`, the `FleetLiveUpdates` spine invalidates the chunk read
+  **and** `hubFleetSpendKey`, and card + header + dock all move in place; a cost-absent (crash/reap-path) row then flips
+  every figure to its `~`-marked **lower bound**, never a silently-understated exact. The **partial marking** and the
+  per-history-step `(node, epoch)` inline match are additionally fenced at the component tier
+  (`chunk-detail-panel.spec.ts`, `board-header.spec.ts`, `board-shell.spec.ts`, `fleet-live.spec.ts`,
+  `test_usage_facts_ingest.py`, `test_fleet_spend_api.py`, `test_hub_cli_status.py`). It needs the sibling provisioned
+  `blizzard-mock` worktree and a local winter source, so it is skipped in the `gate`/`pr` single-repo checkout; **the
+  tag `release` workflow runs the full e2e tier headless** over the multi-repo checkout (Chromium installed via
+  `uv run playwright install --with-deps chromium`), and the master `push` workflow runs the sibling service + crash
+  tiers. Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree + a local
+  winter source + an installed Chromium (locally: `uv run playwright install chromium`); it skips cleanly without
+  `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source — but an unbuilt
+  bundle fails loudly instead of skipping.
 
 ### test_graphs_diagram_browser_e2e
 
-The **graph-explorer diagram**: a real Chromium over the served board visits `/graphs`, opens a minted graph's detail from the explorer.
+The **graph-explorer diagram**: a real Chromium over the served board visits `/graphs`, opens a minted graph's detail
+from the explorer.
 
-- `test_graphs_diagram_renders_in_the_browser` — asserts the `<fleet-graph-diagram>` SVG DAG renders against the *built* bundle from real minted data (every declared node drawn, the START marker's connector landing on the graph's own entry node — blizzard#207 replaced the per-node entry ring with it, so which node is the entry survives only as laid-out geometry — an advance edge, and the review→build back-edge derived as a `retry` edge — a structural kind no wire field carries), naming the ever-present `graph-diagram-fallback` path a layout failure shows instead of a broken page. Unlike `test_board_browser_e2e` it needs **no runner and no forge traffic** — a diagram is a pure read of an immutable `GraphView` — so it stands up only the served hub. Needs the built bundle (hence `mise run e2e`'s `depends = ["web-build"]`) + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without Chromium — but an unbuilt bundle fails loudly instead of skipping.
-- `test_graphs_diagram_selection_in_the_browser` (blizzard#159, **node/edge/self-loop selection**) — drives the same fixture — extended with a self-loop, `build`'s own `retry` choice — through: clicking the `build` node selects it, marks its incident edges (including its self-loop) `data-incident`, and fills the detail pane with its fields and prompt text; clicking a point on the advance edge's rendered curve, computed off the visible path's own `getPointAtLength` and offset from the midpoint the label pill sits near, selects that edge — the one tier that can prove a click merely *near* a curve (not exactly on the thin visible stroke) actually hits it, since jsdom's `web:unit-test` tier does no geometry and only proves the companion-hit-path *mechanism*; clicking the self-loop selects it on the same terms; and clicking empty canvas clears the selection and restores the neutral hint.
-- `test_diagram_geometry_matches_the_rendered_text` (#157) — every box the layout measurer sized fits the text Chromium actually drew, reconstructed from the rendered SVG's own advance widths rather than a canvas of its own, which would only prove Chromium's measurers agree with each other. It sweeps every graph blizzard ships, discovered from the tree so a new one is covered the day it lands; a shipped graph that renders the diagram-unavailable fallback instead is admitted **only** when it routes an edge out of the graph (a cross-graph `to: graph:<name>` migration target, which `layoutGraph` documents as the one shape it refuses — today the triage router), and is a layout regression otherwise.
+- `test_graphs_diagram_renders_in_the_browser` — asserts the `<fleet-graph-diagram>` SVG DAG renders against the *built*
+  bundle from real minted data (every declared node drawn, the START marker's connector landing on the graph's own entry
+  node — blizzard#207 replaced the per-node entry ring with it, so which node is the entry survives only as laid-out
+  geometry — an advance edge, and the review→build back-edge derived as a `retry` edge — a structural kind no wire field
+  carries), naming the ever-present `graph-diagram-fallback` path a layout failure shows instead of a broken page.
+  Unlike `test_board_browser_e2e` it needs **no runner and no forge traffic** — a diagram is a pure read of an immutable
+  `GraphView` — so it stands up only the served hub. Needs the built bundle (hence `mise run e2e`'s
+  `depends = ["web-build"]`) + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without Chromium —
+  but an unbuilt bundle fails loudly instead of skipping.
+- `test_graphs_diagram_selection_in_the_browser` (blizzard#159, **node/edge/self-loop selection**) — drives the same
+  fixture — extended with a self-loop, `build`'s own `retry` choice — through: clicking the `build` node selects it,
+  marks its incident edges (including its self-loop) `data-incident`, and fills the detail pane with its fields and
+  prompt text; clicking a point on the advance edge's rendered curve, computed off the visible path's own
+  `getPointAtLength` and offset from the midpoint the label pill sits near, selects that edge — the one tier that can
+  prove a click merely *near* a curve (not exactly on the thin visible stroke) actually hits it, since jsdom's
+  `web:unit-test` tier does no geometry and only proves the companion-hit-path *mechanism*; clicking the self-loop
+  selects it on the same terms; and clicking empty canvas clears the selection and restores the neutral hint.
+- `test_diagram_geometry_matches_the_rendered_text` (#157) — every box the layout measurer sized fits the text Chromium
+  actually drew, reconstructed from the rendered SVG's own advance widths rather than a canvas of its own, which would
+  only prove Chromium's measurers agree with each other. It sweeps every graph blizzard ships, discovered from the tree
+  so a new one is covered the day it lands; a shipped graph that renders the diagram-unavailable fallback instead is
+  admitted **only** when it routes an edge out of the graph (a cross-graph `to: graph:<name>` migration target, which
+  `layoutGraph` documents as the one shape it refuses — today the triage router), and is a layout regression otherwise.
 
 ### test_post_merge_node_e2e
 
-The **authored post-merge edge**: a graph whose `deliver` hub command node authors `landed → verify` (a post-merge runner node).
+The **authored post-merge edge**: a graph whose `deliver` hub command node authors `landed → verify` (a post-merge
+runner node).
 
-- `test_authored_landed_edge_runs_a_post_merge_node_after_landing` — merges every repo to bare `main`, then the runner advances the held chunk into `verify` in its warm environment and runs it *after* the land — the chunk's transition history reads `build → deliver (landed) → verify → done`, so `verify` demonstrably ran post-merge, and its informational `landed` detail stays true at `done`; its crash-tier companion is `tests/crash/test_kill9_sweep.py::test_kill9_at_hub_command_node_crash_point` (the `hubnode.after-marker.before-next` window — the per-step window after a hub node marks a repo landed but before it moves on, shared by every hub command node). It needs no browser, but like the others it needs the sibling provisioned `blizzard-mock` worktree and a local winter source, so it is skipped in the `gate`/`pr` single-repo checkout and runs in the tag `release` workflow's full e2e tier.
+- `test_authored_landed_edge_runs_a_post_merge_node_after_landing` — merges every repo to bare `main`, then the runner
+  advances the held chunk into `verify` in its warm environment and runs it *after* the land — the chunk's transition
+  history reads `build → deliver (landed) → verify → done`, so `verify` demonstrably ran post-merge, and its
+  informational `landed` detail stays true at `done`; its crash-tier companion is
+  `tests/crash/test_kill9_sweep.py::test_kill9_at_hub_command_node_crash_point` (the `hubnode.after-marker.before-next`
+  window — the per-step window after a hub node marks a repo landed but before it moves on, shared by every hub command
+  node). It needs no browser, but like the others it needs the sibling provisioned `blizzard-mock` worktree and a local
+  winter source, so it is skipped in the `gate`/`pr` single-repo checkout and runs in the tag `release` workflow's full
+  e2e tier.
 
 ### test_migration_e2e
 
-The **cross-graph migration** (#90): a source graph (`default-delivery`) whose `build` node authors a cross-graph judgement choice (`to: graph:triage-delivery`) hands the chunk off.
+The **cross-graph migration** (#90): a source graph (`default-delivery`) whose `build` node authors a cross-graph
+judgement choice (`to: graph:triage-delivery`) hands the chunk off.
 
-- `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — taking it records a migration (never a transition), re-pins `graph_id` to the target, and re-queues the chunk at the target graph's own `build` node (name-match-else-entry), which commits + delivers to bare `main`; asserted at both ends (the change reachable from `main` exactly once — the target's is the only landing branch; the hub's `migrations` step + two-graph history + re-pinned `graph_id` + `done`). Its crash-tier companion is `test_kill9_at_migrate_crash_point` (the `migrate.after-record.before-response` window); the served board renders the two-graph timeline (`MigrationView`/history union) and the `/graphs` explorer is unaffected (it reads graphs, not chunks), both covered generically by `test_board_browser_e2e`/`test_graphs_diagram_browser_e2e`. Like the others it needs the sibling `blizzard-mock` worktree + a local winter source and runs in the tag `release` full e2e tier. Its git + fleet-truth assertions run in-process regardless; when Chromium is installed it additionally drives the served board and the `/graphs` explorer to prove the two-graph timeline renders, degrading — never skipping the module — to the in-process assertions alone when Chromium is absent; it takes no built-bundle guard, so that browser half fails loudly rather than skipping if the bundle is unbuilt.
+- `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — taking it records a migration (never a
+  transition), re-pins `graph_id` to the target, and re-queues the chunk at the target graph's own `build` node
+  (name-match-else-entry), which commits + delivers to bare `main`; asserted at both ends (the change reachable from
+  `main` exactly once — the target's is the only landing branch; the hub's `migrations` step + two-graph history +
+  re-pinned `graph_id` + `done`). Its crash-tier companion is `test_kill9_at_migrate_crash_point` (the
+  `migrate.after-record.before-response` window); the served board renders the two-graph timeline
+  (`MigrationView`/history union) and the `/graphs` explorer is unaffected (it reads graphs, not chunks), both covered
+  generically by `test_board_browser_e2e`/`test_graphs_diagram_browser_e2e`. Like the others it needs the sibling
+  `blizzard-mock` worktree + a local winter source and runs in the tag `release` full e2e tier. Its git + fleet-truth
+  assertions run in-process regardless; when Chromium is installed it additionally drives the served board and the
+  `/graphs` explorer to prove the two-graph timeline renders, degrading — never skipping the module — to the in-process
+  assertions alone when Chromium is absent; it takes no built-bundle guard, so that browser half fails loudly rather
+  than skipping if the bundle is unbuilt.
 
 ### test_session_modes_e2e
 
-**Node session modes** (#115): a `build → review → build` fail-cycle whose `build` node carries `session: resume:build` (the packaged default's own setting) and `review` is `session: fresh`.
+**Node session modes** (#115): a `build → review → build` fail-cycle whose `build` node carries `session: resume:build`
+(the packaged default's own setting) and `review` is `session: fresh`.
 
-- `test_session_modes_resume_targeted_and_fresh_across_a_cycle` — after the chunk lands, the scenario reopens the runner store to map each node-step lease's `session_id` and reads the mock harness's persisted per-session `turns` (`<workspace>/.blizzard-mock-harness/sessions/<sid>.json`), proving: the two `build` leases share **one** session id whose turns grew past a single visit (spawn + judgement resume) — the re-entry **resumed build's own session in place**, not re-spawned (a regression dropping `resume:build`, or failing to thread `session_source` through the store→envelope, re-spawns fresh and yields two distinct build ids — the assertion's negative case, verified by hand); the two `fresh` review visits carry **two distinct** session ids disjoint from build's; first arrival at build spawned fresh (the chunk's first lease can resume nothing); and `latest_session_id(chunk, None)` (what bare `resume` would inherit) is a **review** session, not build's — the concrete reason the targeted form exists (plan Q4). It drives the loop in-process one tick at a time like the other in-process scenarios — no browser — so it needs the sibling `blizzard-mock` worktree + a local winter source and runs in the tag `release` full e2e tier, skipped without `BLIZZARD_E2E=1`.
-- `test_a_named_pool_threads_one_session_across_nodes_and_applies_model_at_mint_only` — a named pool: `build` carries `fresh:code` and mints a session on each entry, `review` carries `resume:code` and continues the head `build` just minted — a pairing no `resume:<node>` form expresses — and the mint-only model contract holds off the mock's own recorded argv: every mint carries the resolved model, no resume does.
+- `test_session_modes_resume_targeted_and_fresh_across_a_cycle` — after the chunk lands, the scenario reopens the runner
+  store to map each node-step lease's `session_id` and reads the mock harness's persisted per-session `turns`
+  (`<workspace>/.blizzard-mock-harness/sessions/<sid>.json`), proving: the two `build` leases share **one** session id
+  whose turns grew past a single visit (spawn + judgement resume) — the re-entry **resumed build's own session in
+  place**, not re-spawned (a regression dropping `resume:build`, or failing to thread `session_source` through the
+  store→envelope, re-spawns fresh and yields two distinct build ids — the assertion's negative case, verified by hand);
+  the two `fresh` review visits carry **two distinct** session ids disjoint from build's; first arrival at build spawned
+  fresh (the chunk's first lease can resume nothing); and `latest_session_id(chunk, None)` (what bare `resume` would
+  inherit) is a **review** session, not build's — the concrete reason the targeted form exists (plan Q4). It drives the
+  loop in-process one tick at a time like the other in-process scenarios — no browser — so it needs the sibling
+  `blizzard-mock` worktree + a local winter source and runs in the tag `release` full e2e tier, skipped without
+  `BLIZZARD_E2E=1`.
+- `test_a_named_pool_threads_one_session_across_nodes_and_applies_model_at_mint_only` — a named pool: `build` carries
+  `fresh:code` and mints a session on each entry, `review` carries `resume:code` and continues the head `build` just
+  minted — a pairing no `resume:<node>` form expresses — and the mint-only model contract holds off the mock's own
+  recorded argv: every mint carries the resolved model, no resume does.
 
 ### test_login_session_e2e
 
-The **browser login dance + mid-stream session-expiry redirect** (#93, epic #89 human auth; the role ladder reshaped by #210): a real Chromium over the served board under `auth.mode = "oauth"` against the real `blizzard-mock` **stub IdP** (`blizzard-mock-idp`, the #92 counterpart), every seam real, no network beyond the two local subprocesses.
+The **browser login dance + mid-stream session-expiry redirect** (#93, epic #89 human auth; the role ladder reshaped by
+#210): a real Chromium over the served board under `auth.mode = "oauth"` against the real `blizzard-mock` **stub IdP**
+(`blizzard-mock-idp`, the #92 counterpart), every seam real, no network beyond the two local subprocesses.
 
-- `test_browser_login_dance_and_mid_stream_session_expiry` — proves, in one loaded page: an **unauthenticated** hit is gated to `/login` by the app's own 401 seam, rendering the configured provider button (`login-provider-<name>`) and **no** board chrome (`board-header` absent) — never an auto-redirect for a single provider; clicking it drives the **real OAuth authorize→callback dance** against the stub IdP and lands back authenticated as a freshly-minted `pending` identity — the bottom, no-access role (#210) — which renders the **pending lobby** ("signed in, awaiting access", `pending-lobby-username` = the handle) rather than a board silently 403ing every read — itself the proof the dance produced a real, working session cookie; then, promoted to `guest` directly in the hub store (the #94 role-assignment API's stand-in, the same "mint what no API yet exposes" pattern the suite uses for fixture state) and reloaded, it reaches the **live board** with its SSE stream open (`board-shell`, `pending-lobby` gone) over a seeded not-ready chunk whose card renders with **no Promote control** — the end-to-end proof that a `guest` reads everything and mutates nothing, not merely a unit-tier claim; promoted again to `contributor` and reloaded, that same card's Promote control is present; and finally, with every `sessions` row deleted (an unambiguous stand-in for expiry — the resolve path treats missing and expired identically) and the hub restarted, the restart **force-drops the open SSE stream** and the client's own reconnect — the fetch-based transport's one seam that can read a status code (`sse.service.ts`, the `authFailed` channel) — receives **401 on that single reconnect attempt** and the app routes back to `/login` **within one reconnect cycle**, proving the auth-failure channel end to end rather than an unbounded retry loop (AC 5). Needs the built bundle `blizzard hub host` serves (hence `mise run e2e`'s `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree with its stub IdP + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned worktree/stub IdP, but takes no `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly instead of skipping.
+- `test_browser_login_dance_and_mid_stream_session_expiry` — proves, in one loaded page: an **unauthenticated** hit is
+  gated to `/login` by the app's own 401 seam, rendering the configured provider button (`login-provider-<name>`) and
+  **no** board chrome (`board-header` absent) — never an auto-redirect for a single provider; clicking it drives the
+  **real OAuth authorize→callback dance** against the stub IdP and lands back authenticated as a freshly-minted
+  `pending` identity — the bottom, no-access role (#210) — which renders the **pending lobby** ("signed in, awaiting
+  access", `pending-lobby-username` = the handle) rather than a board silently 403ing every read — itself the proof the
+  dance produced a real, working session cookie; then, promoted to `guest` directly in the hub store (the #94
+  role-assignment API's stand-in, the same "mint what no API yet exposes" pattern the suite uses for fixture state) and
+  reloaded, it reaches the **live board** with its SSE stream open (`board-shell`, `pending-lobby` gone) over a seeded
+  not-ready chunk whose card renders with **no Promote control** — the end-to-end proof that a `guest` reads everything
+  and mutates nothing, not merely a unit-tier claim; promoted again to `contributor` and reloaded, that same card's
+  Promote control is present; and finally, with every `sessions` row deleted (an unambiguous stand-in for expiry — the
+  resolve path treats missing and expired identically) and the hub restarted, the restart **force-drops the open SSE
+  stream** and the client's own reconnect — the fetch-based transport's one seam that can read a status code
+  (`sse.service.ts`, the `authFailed` channel) — receives **401 on that single reconnect attempt** and the app routes
+  back to `/login` **within one reconnect cycle**, proving the auth-failure channel end to end rather than an unbounded
+  retry loop (AC 5). Needs the built bundle `blizzard hub host` serves (hence `mise run e2e`'s
+  `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree with its stub IdP + an installed
+  Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned worktree/stub IdP, but takes no
+  `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly instead of skipping.
 
 ### test_runner_federation_e2e
 
-The **multi-daemon runner SSO bounce** (#95, epic #89 human auth): a hub (`auth.mode = "oauth"`) against the `blizzard-mock` **stub IdP** and **two** registered runners (A, B), each with its own federation identity, all real subprocesses.
+The **multi-daemon runner SSO bounce** (#95, epic #89 human auth): a hub (`auth.mode = "oauth"`) against the
+`blizzard-mock` **stub IdP** and **two** registered runners (A, B), each with its own federation identity, all real
+subprocesses.
 
-- `test_multi_daemon_sso_bounce` — a real Chromium navigates to runner A with no session and is bounced runner A → hub → (no hub session yet, so on through) the stub-IdP provider dance → back into a runner-A-domain session on runner A's own served page — the whole round trip with no manual navigation, the hub-signed token delivered by the hub's auto-submitting `form_post` page and **never in a query string** (asserted across every request URL Chromium makes). The token Chromium's own `POST /api/auth/callback` carried is then replayed against runner B (**rejected** — audience-bound `aud`) and against runner A a second time (**rejected** — single-use `jti`); a mismatched `state` is **rejected**; and a mid-run hub key rotation (`POST /api/auth/rotate-signing-key`) is **picked up by a live second browser bounce into runner B with no restart** of either daemon (the runner's JWKS cache refetches on the unknown `kid`). The runner's own three-lane gating is pinned at the lower tiers — the served web mount + its human-lane JSON API session-gated under an oauth-mode hub, the worker-hook lane and CLI-socket lane ungated (`tests/test_runner_route_gating.py`, `tests/test_runner_federation.py`); this scenario proves the browser-navigated bounce end to end. Needs the built bundle the runner itself serves + the sibling provisioned `blizzard-mock` worktree with its stub IdP + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned worktree/stub IdP, but takes no `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly instead of skipping.
+- `test_multi_daemon_sso_bounce` — a real Chromium navigates to runner A with no session and is bounced runner A → hub →
+  (no hub session yet, so on through) the stub-IdP provider dance → back into a runner-A-domain session on runner A's
+  own served page — the whole round trip with no manual navigation, the hub-signed token delivered by the hub's
+  auto-submitting `form_post` page and **never in a query string** (asserted across every request URL Chromium makes).
+  The token Chromium's own `POST /api/auth/callback` carried is then replayed against runner B (**rejected** —
+  audience-bound `aud`) and against runner A a second time (**rejected** — single-use `jti`); a mismatched `state` is
+  **rejected**; and a mid-run hub key rotation (`POST /api/auth/rotate-signing-key`) is **picked up by a live second
+  browser bounce into runner B with no restart** of either daemon (the runner's JWKS cache refetches on the unknown
+  `kid`). The runner's own three-lane gating is pinned at the lower tiers — the served web mount + its human-lane JSON
+  API session-gated under an oauth-mode hub, the worker-hook lane and CLI-socket lane ungated
+  (`tests/test_runner_route_gating.py`, `tests/test_runner_federation.py`); this scenario proves the browser-navigated
+  bounce end to end. Needs the built bundle the runner itself serves + the sibling provisioned `blizzard-mock` worktree
+  with its stub IdP + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned
+  worktree/stub IdP, but takes no `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly
+  instead of skipping.
 
 ### test_event_log_e2e
 
 The **operational event log** (#125): the module holds in-process and browser-driven assertions.
 
-- `test_a_verdict_less_exit_surfaces_a_critical_worker_lost_event` — the in-process half: drives a real mock worker to a **verdict-less** exit that exhausts its retry budget, so the runner escalates and its Phase-3 emission surfaces a **critical** `worker-lost` operational event that both reads back off the live `GET /api/events` **and** fans out on the SSE spine as an `event-logged` frame (read off the stream's replay tail) — the runner-emit → hub-fold → read-and-fan-out chain end to end, no browser.
-- `test_the_events_tab_renders_filters_and_updates_live_in_the_browser` — proving the **Events tab**: a real Chromium over the **built** bundle seeds a mixed-severity feed straight through `POST /api/fleet/events`, opens the **Events tab** from `nav-events`, and proves the rows render **severity-then-recency** (the critical row first though it arrived last), the severity filter narrows then restores the list, a fresh event pushed after load **arrives live over SSE with no reload**, and a row **deep-links** to its chunk.
-- `test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — proving the board's **rail** Event log — the separate, pure-recency activity feed (#213 Phase 5), distinct from the Events tab above — survives a reload: it drives several fact families (a chunk transition, a question, a decision, a runner pause) to seed a mixed feed, loads the board once and confirms the rail's Event log panel renders a row for each over the live SSE spine, then **reloads the page** and confirms the same rows are still there — the panel's on-mount `GET /api/activity` backfill re-seeding the ring from durable history — with **no duplicate and no missing row at the seam** between the backfilled history and the live tee that resumes after reload.
-- `test_the_events_grid_does_not_collapse_at_a_narrow_viewport` — issue #155's narrow-viewport fallback for the Events tab's time-first grid (#153/#154): at a real ~390px width a long-message row stays bounded in height and the page gains no horizontal scroll.
+- `test_a_verdict_less_exit_surfaces_a_critical_worker_lost_event` — the in-process half: drives a real mock worker to a
+  **verdict-less** exit that exhausts its retry budget, so the runner escalates and its Phase-3 emission surfaces a
+  **critical** `worker-lost` operational event that both reads back off the live `GET /api/events` **and** fans out on
+  the SSE spine as an `event-logged` frame (read off the stream's replay tail) — the runner-emit → hub-fold →
+  read-and-fan-out chain end to end, no browser.
+- `test_the_events_tab_renders_filters_and_updates_live_in_the_browser` — proving the **Events tab**: a real Chromium
+  over the **built** bundle seeds a mixed-severity feed straight through `POST /api/fleet/events`, opens the **Events
+  tab** from `nav-events`, and proves the rows render **severity-then-recency** (the critical row first though it
+  arrived last), the severity filter narrows then restores the list, a fresh event pushed after load **arrives live over
+  SSE with no reload**, and a row **deep-links** to its chunk.
+- `test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — proving the board's **rail** Event log — the
+  separate, pure-recency activity feed (#213 Phase 5), distinct from the Events tab above — survives a reload: it drives
+  several fact families (a chunk transition, a question, a decision, a runner pause) to seed a mixed feed, loads the
+  board once and confirms the rail's Event log panel renders a row for each over the live SSE spine, then **reloads the
+  page** and confirms the same rows are still there — the panel's on-mount `GET /api/activity` backfill re-seeding the
+  ring from durable history — with **no duplicate and no missing row at the seam** between the backfilled history and
+  the live tee that resumes after reload.
+- `test_the_events_grid_does_not_collapse_at_a_narrow_viewport` — issue #155's narrow-viewport fallback for the Events
+  tab's time-first grid (#153/#154): at a real ~390px width a long-message row stays bounded in height and the page
+  gains no horizontal scroll.
 
-The browser-driven assertions above — every function but the in-process `test_a_verdict_less_exit_surfaces_a_critical_worker_lost_event` — need the built bundle + the sibling `blizzard-mock` worktree + a local winter source + an installed Chromium, skipping cleanly without any of them; the in-process function needs the sibling `blizzard-mock` worktree + a local winter source. The file runs in the tag `release` full e2e tier, skipped without `BLIZZARD_E2E=1`.
+The browser-driven assertions above — every function but the in-process
+`test_a_verdict_less_exit_surfaces_a_critical_worker_lost_event` — need the built bundle + the sibling `blizzard-mock`
+worktree + a local winter source + an installed Chromium, skipping cleanly without any of them; the in-process function
+needs the sibling `blizzard-mock` worktree + a local winter source. The file runs in the tag `release` full e2e tier,
+skipped without `BLIZZARD_E2E=1`.
 
 ### test_resume_preamble_e2e
 
-**Resume-time spawn-preamble elision** (#149), over `test_session_modes_e2e`'s `build → review → build` fail-cycle shape (the one that enters `build` twice on **one** session). It reads what the harness process *actually received*: the mock records each turn's user text into a Claude-Code-shaped transcript (`<root>/mock-claude-code/<sid>.jsonl`), and for an untagged prompt that text is the runner's preamble verbatim — so one session's transcript is the ordered record of what each of its turns was sent, and the facts-table header discriminates a spawn turn from a resume-with-message turn. This is the only tier that sees the preamble a **real** harness process received across a **real** `--resume`: the component tier asserts the `prompt_prefix` the loop hands a *fake* adapter, which proves the wiring but not the delivery. Both functions were verified to fail under mutation — disabling the elision fails both, and freezing layer 2's digest fails only the announcement one — so neither passes vacuously. The standing layers are deliberately padded to realistic size: the collapse banner is real prose (~450 chars), so against one-line prompts the elision is *not* a saving, and asserting one would assert something false. Like the other non-browser scenarios it needs the sibling `blizzard-mock` worktree + a local winter source, skipping without `BLIZZARD_E2E=1`.
+**Resume-time spawn-preamble elision** (#149), over `test_session_modes_e2e`'s `build → review → build` fail-cycle shape
+(the one that enters `build` twice on **one** session). It reads what the harness process *actually received*: the mock
+records each turn's user text into a Claude-Code-shaped transcript (`<root>/mock-claude-code/<sid>.jsonl`), and for an
+untagged prompt that text is the runner's preamble verbatim — so one session's transcript is the ordered record of what
+each of its turns was sent, and the facts-table header discriminates a spawn turn from a resume-with-message turn. This
+is the only tier that sees the preamble a **real** harness process received across a **real** `--resume`: the component
+tier asserts the `prompt_prefix` the loop hands a *fake* adapter, which proves the wiring but not the delivery. Both
+functions were verified to fail under mutation — disabling the elision fails both, and freezing layer 2's digest fails
+only the announcement one — so neither passes vacuously. The standing layers are deliberately padded to realistic size:
+the collapse banner is real prose (~450 chars), so against one-line prompts the elision is *not* a saving, and asserting
+one would assert something false. Like the other non-browser scenarios it needs the sibling `blizzard-mock` worktree + a
+local winter source, skipping without `BLIZZARD_E2E=1`.
 
-- `test_resumed_node_entry_elides_unchanged_standing_layers` — **the efficiency half**: with both standing layers set and unchanged between the two entries, the resumed node-entry spawn collapses them to a single line, re-sends neither, announces nothing, and still carries its own freshly minted lease id with the previous attempt's absent.
-- `test_resumed_node_entry_announces_a_replaced_workspace_prompt` — **the correctness half**: an operator replaces the workspace prompt through the live `PUT /api/workspace-prompt` door *between* the two entries, and the second spawn leads with the updated-since-your-previous-turn announcement, carries the new prose, drops the superseded prose, and keeps layer 1 collapsed.
+- `test_resumed_node_entry_elides_unchanged_standing_layers` — **the efficiency half**: with both standing layers set
+  and unchanged between the two entries, the resumed node-entry spawn collapses them to a single line, re-sends neither,
+  announces nothing, and still carries its own freshly minted lease id with the previous attempt's absent.
+- `test_resumed_node_entry_announces_a_replaced_workspace_prompt` — **the correctness half**: an operator replaces the
+  workspace prompt through the live `PUT /api/workspace-prompt` door *between* the two entries, and the second spawn
+  leads with the updated-since-your-previous-turn announcement, carries the new prose, drops the superseded prose, and
+  keeps layer 1 collapsed.
 
 ### test_forge_status_e2e
 
-The **forge-status label projection** (#179): one work source opted into `annotate = true` with a 1s sweep interval, one minted fixture, four properties.
+The **forge-status label projection** (#179): one work source opted into `annotate = true` with a 1s sweep interval, one
+minted fixture, four properties.
 
-- `test_forge_status_projection_e2e` — the happy path: ingest shows `blizzard:ingested`, driving the chunk through build/review/deliver flips it to `blizzard:in-progress` at some point before `done`, where both clear (a label-history snapshot taken every tick, since the sweep lands asynchronously on its own interval rather than in lockstep with a runner tick). A second chunk stopped before any runner ever claims it has its marker cleared on the next sweep. A label deleted by hand on the forge is re-asserted on the next sweep — the hub holds no annotation state of its own, so nothing needs repairing, only re-deriving. And the forge's own `unreachable` lever (not a process kill, which would also wipe its in-memory issue/label state and defeat "re-converges once the forge returns") stands in for an outage: the hub keeps serving reads and chunk transitions throughout, the daemon log shows a `sources_skipped` entry naming the source, and the label lands once the lever clears. Needs the sibling `blizzard-mock` worktree + a local winter source, skipping without `BLIZZARD_E2E=1`; its Phase 2/3 unit/component coverage is `tests/test_work_source.py` (the GitHub adapter's annotator half) and `tests/test_forge_status.py` (`derive_marker`, `live_work_refs()`, `AnnotationReconciler.sweep()`), and its background-driver unit coverage is `tests/test_annotation_loop.py`; the service-tier companion `tests/service/test_forge_status_service.py` proves the sweep starts only for an opted-in source, browserless, against the real mock forge.
+- `test_forge_status_projection_e2e` — the happy path: ingest shows `blizzard:ingested`, driving the chunk through
+  build/review/deliver flips it to `blizzard:in-progress` at some point before `done`, where both clear (a label-history
+  snapshot taken every tick, since the sweep lands asynchronously on its own interval rather than in lockstep with a
+  runner tick). A second chunk stopped before any runner ever claims it has its marker cleared on the next sweep. A
+  label deleted by hand on the forge is re-asserted on the next sweep — the hub holds no annotation state of its own, so
+  nothing needs repairing, only re-deriving. And the forge's own `unreachable` lever (not a process kill, which would
+  also wipe its in-memory issue/label state and defeat "re-converges once the forge returns") stands in for an outage:
+  the hub keeps serving reads and chunk transitions throughout, the daemon log shows a `sources_skipped` entry naming
+  the source, and the label lands once the lever clears. Needs the sibling `blizzard-mock` worktree + a local winter
+  source, skipping without `BLIZZARD_E2E=1`; its Phase 2/3 unit/component coverage is `tests/test_work_source.py` (the
+  GitHub adapter's annotator half) and `tests/test_forge_status.py` (`derive_marker`, `live_work_refs()`,
+  `AnnotationReconciler.sweep()`), and its background-driver unit coverage is `tests/test_annotation_loop.py`; the
+  service-tier companion `tests/service/test_forge_status_service.py` proves the sweep starts only for an opted-in
+  source, browserless, against the real mock forge.
 
 ### test_checks_gate_e2e
 
-**Checks-gate enforcement** (#114): a graph whose `build` choice carries `requires_checks: true` proves the checks gate — not the worker's own judged choice — decides whether a red check bounces the attempt back to `build` and re-queues it, landing once the check goes green; a companion graph instead routes its failing check through a non-gated `fail` choice, proving that path is an ordinary judged transition and the gate never fires. Its component-tier companion, `test_checks_gate_agreement.py`, proves the runner's local gate and the hub's completion backstop reach the same verdict over a decision matrix; this module proves the resulting predicate end to end against the real forge + hub + runner instead. Reuses `test_acceptance_loop`'s live-stack scaffolding, skipping without `BLIZZARD_E2E=1` or a provisioned sibling `blizzard-mock` worktree + local winter source; no browser.
+**Checks-gate enforcement** (#114): a graph whose `build` choice carries `requires_checks: true` proves the checks gate
+— not the worker's own judged choice — decides whether a red check bounces the attempt back to `build` and re-queues it,
+landing once the check goes green; a companion graph instead routes its failing check through a non-gated `fail` choice,
+proving that path is an ordinary judged transition and the gate never fires. Its component-tier companion,
+`test_checks_gate_agreement.py`, proves the runner's local gate and the hub's completion backstop reach the same verdict
+over a decision matrix; this module proves the resulting predicate end to end against the real forge + hub + runner
+instead. Reuses `test_acceptance_loop`'s live-stack scaffolding, skipping without `BLIZZARD_E2E=1` or a provisioned
+sibling `blizzard-mock` worktree + local winter source; no browser.
 
-- `test_checks_gate_bounces_a_red_pass_then_lands_when_green` — the gated `pass` choice is bounced while its check is red, build runs again, and it lands once the check is green (AC 4).
-- `test_a_red_check_through_a_non_gated_fail_routes_normally` — a red check reported through the ungated `fail` choice routes back to `build` as an ordinary judged transition, the gate never firing, and the green re-entry lands (AC 5).
+- `test_checks_gate_bounces_a_red_pass_then_lands_when_green` — the gated `pass` choice is bounced while its check is
+  red, build runs again, and it lands once the check is green (AC 4).
+- `test_a_red_check_through_a_non_gated_fail_routes_normally` — a red check reported through the ungated `fail` choice
+  routes back to `build` as an ordinary judged transition, the gate never firing, and the green re-entry lands (AC 5).
 
 ### test_delivery_conflict_e2e
 
-**A delivery conflict at the default graph's `deliver` node lands zero repos** (#67): with the mock forge's `merge_conflict` lever armed, the PR the build node opened is not cleanly mergeable — nothing lands, the bounce routes back to `build` (#64), and the route is kept. Needs the sibling `blizzard-mock` worktree + a local winter source, skipping without `BLIZZARD_E2E=1`; no browser.
+**A delivery conflict at the default graph's `deliver` node lands zero repos** (#67): with the mock forge's
+`merge_conflict` lever armed, the PR the build node opened is not cleanly mergeable — nothing lands, the bounce routes
+back to `build` (#64), and the route is kept. Needs the sibling `blizzard-mock` worktree + a local winter source,
+skipping without `BLIZZARD_E2E=1`; no browser.
 
-- `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — the chunk's route holds at `build` with a `bounce-envelope` artifact recorded and its cause set to `conflict`, the conflicted PR stays open and unmerged at the forge, and bare `main` never moves.
+- `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — the chunk's route holds at `build`
+  with a `bounce-envelope` artifact recorded and its cause set to `conflict`, the conflicted PR stays open and unmerged
+  at the forge, and bare `main` never moves.
 
 ### test_delivery_pr_ci_e2e
 
-**Delivery policy lives in YAML, not code** (#67): its graph differs from the default only in `deliver`'s `run:` script and poll cadence, naming the same `land_pr_ci` script and choice names the shipped graph authors, yet drives every route below through the same generic `executor: hub` primitive. Needs the sibling `blizzard-mock` worktree + a local winter source, skipping without `BLIZZARD_E2E=1`; no browser.
+**Delivery policy lives in YAML, not code** (#67): its graph differs from the default only in `deliver`'s `run:` script
+and poll cadence, naming the same `land_pr_ci` script and choice names the shipped graph authors, yet drives every route
+below through the same generic `executor: hub` primitive. Needs the sibling `blizzard-mock` worktree + a local winter
+source, skipping without `BLIZZARD_E2E=1`; no browser.
 
-- `test_pr_ci_pends_on_blocked_then_lands_when_green` — a blocked PR pends over several polls with exactly one unchanging `delivery-findings` artifact (#232's D2/F1 wait path), then lands once the required check goes green.
-- `test_pr_ci_routes_failure_on_a_terminally_failed_check` — a terminally failed check routes `failure` back to `build` well inside the timeout budget, ruling out a `poll_timeout`-driven trigger; the findings content distinguishes a plain CI failure from a red base check ("not this change").
-- `test_pr_ci_self_heals_a_behind_branch_and_lands` — a behind-base PR fires `update-branch` and pends before healing, reaching `done` only once the `stale_branch` lever clears through that call.
-- `test_pr_ci_bounces_a_dirty_conflict_back_to_build` — a real merge conflict routes the first recorded bounce, cause `conflict`, back to `build`, with nothing merged at the forge.
+- `test_pr_ci_pends_on_blocked_then_lands_when_green` — a blocked PR pends over several polls with exactly one
+  unchanging `delivery-findings` artifact (#232's D2/F1 wait path), then lands once the required check goes green.
+- `test_pr_ci_routes_failure_on_a_terminally_failed_check` — a terminally failed check routes `failure` back to `build`
+  well inside the timeout budget, ruling out a `poll_timeout`-driven trigger; the findings content distinguishes a plain
+  CI failure from a red base check ("not this change").
+- `test_pr_ci_self_heals_a_behind_branch_and_lands` — a behind-base PR fires `update-branch` and pends before healing,
+  reaching `done` only once the `stale_branch` lever clears through that call.
+- `test_pr_ci_bounces_a_dirty_conflict_back_to_build` — a real merge conflict routes the first recorded bounce, cause
+  `conflict`, back to `build`, with nothing merged at the forge.
 
 ### test_glance_board_e2e
 
-**The mobile glance board** (#181 Phase 5) at a real ~390px width (`bzh:narrow-viewport-tier-rule`): `/board` routes to the glance shell, and a held-open `GET /api/chunks` proves the loading-vs-empty distinction — while the read is in flight the "Needs you" lane shows loading, never empty (AC 4). A second consumer of `bzh:narrow-viewport-tier-rule`'s `narrow_viewport` fixture. Needs the built bundle + the sibling `blizzard-mock` worktree + a local winter source + an installed Chromium, skipping cleanly without any of them, or without `BLIZZARD_E2E=1`.
+**The mobile glance board** (#181 Phase 5) at a real ~390px width (`bzh:narrow-viewport-tier-rule`): `/board` routes to
+the glance shell, and a held-open `GET /api/chunks` proves the loading-vs-empty distinction — while the read is in
+flight the "Needs you" lane shows loading, never empty (AC 4). A second consumer of `bzh:narrow-viewport-tier-rule`'s
+`narrow_viewport` fixture. Needs the built bundle + the sibling `blizzard-mock` worktree + a local winter source + an
+installed Chromium, skipping cleanly without any of them, or without `BLIZZARD_E2E=1`.
 
-- `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` — with the chunks read captured and held open, the glance shell renders `needs-you-loading` and no `needs-you-empty` row; releasing the held route lands the row and clears loading, the empty state never shown in between.
+- `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` — with the chunks read captured
+  and held open, the glance shell renders `needs-you-loading` and no `needs-you-empty` row; releasing the held route
+  lands the row and clears loading, the empty state never shown in between.
 
 ### test_transcript_tab_browser_e2e
 
-The **chunk board's Transcripts tab** (blizzard#248 Phase 3): a real Chromium over the served board, seeded by posting segments straight through `POST /api/fleet/transcripts` as a runner principal rather than through a live runner's own shipping lane (#246), which ships disabled by default (`[transcripts] ship = false`) and is covered at the component tier by `tests/test_transcript_pump.py` and `tests/test_transcript_drain.py`. What this scenario proves is the **tab**, so it seeds the hub the shortest honest way and asserts nothing about how a segment got there.
+The **chunk board's Transcripts tab** (blizzard#248 Phase 3): a real Chromium over the served board, seeded by posting
+segments straight through `POST /api/fleet/transcripts` as a runner principal rather than through a live runner's own
+shipping lane (#246), which ships disabled by default (`[transcripts] ship = false`) and is covered at the component
+tier by `tests/test_transcript_pump.py` and `tests/test_transcript_drain.py`. What this scenario proves is the **tab**,
+so it seeds the hub the shortest honest way and asserts nothing about how a segment got there.
 
-- `test_chunk_transcripts_tab_browser` — opens the tab on a bare-ingested chunk (no claim, lease, or transition) carrying one step's worth of segments, grouped under the tab's *unmatched* bucket rather than a history-matched step (`transcript-steps.spec.ts` proves that grouping unit-tested), opens the step's first segment (a collapsed-by-default thinking turn it expands, and a tool call it expands to reach the sidechain nested inline under it — `to_contain_text` reads `textContent`, populated even behind a closed `<details>`, so the card must actually open for the assertion to prove the nested content is reachable, not just present in the DOM), follows the continues-in link to the step's second segment, opens that segment's *unlinked* sidechain standalone and back again, then follows the continued-from link back to the first segment — proving the tab, the lazy per-segment fetch, the collapsed/expanding thinking render, the nested-vs-standalone sidechain split, and the resume-seam links all real, end to end.
+- `test_chunk_transcripts_tab_browser` — opens the tab on a bare-ingested chunk (no claim, lease, or transition)
+  carrying one step's worth of segments, grouped under the tab's *unmatched* bucket rather than a history-matched step
+  (`transcript-steps.spec.ts` proves that grouping unit-tested), opens the step's first segment (a collapsed-by-default
+  thinking turn it expands, and a tool call it expands to reach the sidechain nested inline under it — `to_contain_text`
+  reads `textContent`, populated even behind a closed `<details>`, so the card must actually open for the assertion to
+  prove the nested content is reachable, not just present in the DOM), follows the continues-in link to the step's
+  second segment, opens that segment's *unlinked* sidechain standalone and back again, then follows the continued-from
+  link back to the first segment — proving the tab, the lazy per-segment fetch, the collapsed/expanding thinking render,
+  the nested-vs-standalone sidechain split, and the resume-seam links all real, end to end.
 
-Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree (its forge-registered repo only — no runner is ever spawned) + a local winter source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source.
+Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree (its
+forge-registered repo only — no runner is ever spawned) + a local winter source + an installed Chromium; it skips
+cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source.
 
 ### test_spike_terminal_e2e
 
-**A non-code spike chunk** (MVP criterion 10's second sentence): a read-only `spike` node produces a `spike-notes` asset and routes into the same `deliver` node a code chunk uses; with nothing to land, the chunk derives `done` with no PR and asset artifacts only. Needs the sibling `blizzard-mock` worktree + a local winter source, skipping without `BLIZZARD_E2E=1`; no browser.
+**A non-code spike chunk** (MVP criterion 10's second sentence): a read-only `spike` node produces a `spike-notes` asset
+and routes into the same `deliver` node a code chunk uses; with nothing to land, the chunk derives `done` with no PR and
+asset artifacts only. Needs the sibling `blizzard-mock` worktree + a local winter source, skipping without
+`BLIZZARD_E2E=1`; no browser.
 
-- `test_spike_chunk_terminates_with_only_asset_artifacts` — the investigation write-up becomes the `spike-notes` asset's content, the chunk's artifacts carry no `git_commit` kind, the forge sees no PR ever opened, and bare `main` never moves.
+- `test_spike_chunk_terminates_with_only_asset_artifacts` — the investigation write-up becomes the `spike-notes` asset's
+  content, the chunk's artifacts carry no `git_commit` kind, the forge sees no PR ever opened, and bare `main` never
+  moves.
 
 ## Wave-by-wave coverage rollup
 
-The wave-1 **heartbeat/stall detection** (REAP staleness + `POST /api/fleet/runners/{id}/heartbeats` + `blizzard runner heartbeat`), **store-and-forward outbound buffer** (FIFO drain, seq-idempotent `POST /api/fleet/events` against the hub high-water mark), and **epoch fence** (lease-report keystone; zombie/stale-completion rejection) are covered by the component tier; the wave-2 **human loop** — ask/answer park→resume, graph and runner-config gate decisions, first-write-wins resolution, and requeue supersession, plus the `blizzard runner ask` / `blizzard hub answer` / `blizzard hub decisions` / `blizzard hub decide` / `blizzard hub requeue` CLI verbs — is covered by the component tier and, end to end, by `test_ask_answer_e2e` and `test_gate_decision_e2e`; the wave-3 **board + fleet ops** — the live SSE views, queue reorder/grouping, and the runner registry with its pause brake — is covered by the component tier (frontend vitest with a fetch-stubbed client; `test_runner_paused` / `test_runner_registry` / `test_queue_shaping` on the Python side) and, end to end through the browser, by `test_board_browser_e2e`. They join the P5 Python-QA/frontend/wheel rows and the P4 `blizzard-mock` rows as real.
+The wave-1 **heartbeat/stall detection** (REAP staleness + `POST /api/fleet/runners/{id}/heartbeats` +
+`blizzard runner heartbeat`), **store-and-forward outbound buffer** (FIFO drain, seq-idempotent `POST /api/fleet/events`
+against the hub high-water mark), and **epoch fence** (lease-report keystone; zombie/stale-completion rejection) are
+covered by the component tier; the wave-2 **human loop** — ask/answer park→resume, graph and runner-config gate
+decisions, first-write-wins resolution, and requeue supersession, plus the `blizzard runner ask` / `blizzard hub answer`
+/ `blizzard hub decisions` / `blizzard hub decide` / `blizzard hub requeue` CLI verbs — is covered by the component tier
+and, end to end, by `test_ask_answer_e2e` and `test_gate_decision_e2e`; the wave-3 **board + fleet ops** — the live SSE
+views, queue reorder/grouping, and the runner registry with its pause brake — is covered by the component tier (frontend
+vitest with a fetch-stubbed client; `test_runner_paused` / `test_runner_registry` / `test_queue_shaping` on the Python
+side) and, end to end through the browser, by `test_board_browser_e2e`. They join the P5 Python-QA/frontend/wheel rows
+and the P4 `blizzard-mock` rows as real.

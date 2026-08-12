@@ -1,7 +1,7 @@
 # Tooling
 
-The external tools a blizzard agent drives beyond the winter CLI, and the surface that owns each one.
-The winter CLI itself is workspace-owned (`workspace:/context/winter-cli/index.md`) and is not re-routed here.
+The external tools a blizzard agent drives beyond the winter CLI, and the surface that owns each one. The winter CLI
+itself is workspace-owned (`workspace:/context/winter-cli/index.md`) and is not re-routed here.
 
 Parent: [../index.md](../index.md).
 

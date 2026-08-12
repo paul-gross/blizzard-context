@@ -1,9 +1,12 @@
 # Standards
 
-The code-quality conventions a finished blizzard change is held to — consulted both while writing the affected code and when reviewing whether it is up to standard before it lands. Follow the row that matches what you are writing.
-Where [architecture/](../architecture/index.md) governs how code is *structured and designed*, this domain governs the *code-quality details* of the result.
+The code-quality conventions a finished blizzard change is held to — consulted both while writing the affected code and
+when reviewing whether it is up to standard before it lands. Follow the row that matches what you are writing. Where
+[architecture/](../architecture/index.md) governs how code is *structured and designed*, this domain governs the
+*code-quality details* of the result.
 
-The commands these standards name are proven by the verifiability matrix at [../verification/blizzard.md](../verification/blizzard.md).
+The commands these standards name are proven by the verifiability matrix at
+[../verification/blizzard.md](../verification/blizzard.md).
 
 Parent: [../index.md](../index.md).
 

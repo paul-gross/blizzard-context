@@ -1,23 +1,31 @@
 # blizzard-context
 
 Blizzard's conventions harness — the rules every piece of blizzard code and every blizzard agent context is held to.
-blizzard-context derives from **winter-canon**: the canon defines what any harness must be, and this repo is blizzard's instance of one.
-It follows `winter-harness` in **style** — domain-organized convention directories, routing hubs, a verifiability matrix, and architecture guidance — while carrying **blizzard's own rules**, not winter's.
-The repo is named for what it holds rather than for the concept: blizzard also drives *coding harnesses* (Claude Code, Codex, OpenCode — the adapter seam), and that seam keeps the word.
+blizzard-context derives from **winter-canon**: the canon defines what any harness must be, and this repo is blizzard's
+instance of one. It follows `winter-harness` in **style** — domain-organized convention directories, routing hubs, a
+verifiability matrix, and architecture guidance — while carrying **blizzard's own rules**, not winter's. The repo is
+named for what it holds rather than for the concept: blizzard also drives *coding harnesses* (Claude Code, Codex,
+OpenCode — the adapter seam), and that seam keeps the word.
 
 ## Path notation
 
-Files here are addressed with the `blizzard-context:` prefix — for example, `blizzard-context:/architecture/repository-access.md`.
-Resolve to the on-disk path via the `# Winter Extensions` block in workspace `CLAUDE.md`; the local directory name varies (`./.winter/ext/context/`, `./blizzard-context/`, …).
-The universal substrate this harness derives from is addressed with the `winter-canon:` prefix — e.g. `winter-canon:/harness-structure.md`.
+Files here are addressed with the `blizzard-context:` prefix — for example,
+`blizzard-context:/architecture/repository-access.md`. Resolve to the on-disk path via the `# Winter Extensions` block
+in workspace `CLAUDE.md`; the local directory name varies (`./.winter/ext/context/`, `./blizzard-context/`, …). The
+universal substrate this harness derives from is addressed with the `winter-canon:` prefix — e.g.
+`winter-canon:/harness-structure.md`.
 
 ## Rule ids
 
-Every blizzard-context rule carries a stable `bzh:<slug>` id in its heading — the citation handle a plan, a review finding, or a cross-reference uses.
-The `bzh:` scheme is this harness's own, parallel to the canon's `canon:<slug>` (`winter-canon:/rule-shape.md` owns the slot skeleton and the stable-id scheme both follow).
-A non-rule leaf — a procedure or taxonomy file (`winter-canon:/rule-shape.md` §File kinds) — carries a file-level `bzh:<slug>` id in its title instead.
-Ids are stable: citations depend on them, so renaming or removing a rule's id is a breaking change. A rule's heading is the id's single home — there is no separate id registry to keep in sync.
-That stability is why `bzh:` outlived the repo's old name: the prefix is historical, not an abbreviation of `blizzard-context`, and it stays as-is because blizzard's and blizzard-mock's code cite it. New rules take `bzh:` too — a second prefix would buy nothing and break the one-home rule.
+Every blizzard-context rule carries a stable `bzh:<slug>` id in its heading — the citation handle a plan, a review
+finding, or a cross-reference uses. The `bzh:` scheme is this harness's own, parallel to the canon's `canon:<slug>`
+(`winter-canon:/rule-shape.md` owns the slot skeleton and the stable-id scheme both follow). A non-rule leaf — a
+procedure or taxonomy file (`winter-canon:/rule-shape.md` §File kinds) — carries a file-level `bzh:<slug>` id in its
+title instead. Ids are stable: citations depend on them, so renaming or removing a rule's id is a breaking change. A
+rule's heading is the id's single home — there is no separate id registry to keep in sync. That stability is why `bzh:`
+outlived the repo's old name: the prefix is historical, not an abbreviation of `blizzard-context`, and it stays as-is
+because blizzard's and blizzard-mock's code cite it. New rules take `bzh:` too — a second prefix would buy nothing and
+break the one-home rule.
 
 ## Domains
 

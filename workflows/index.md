@@ -1,7 +1,8 @@
 # Workflows
 
-The multi-step processes toward a blizzard goal — what each sequence is, who drives it (the platform, or an agent), and what each participant owes.
-Each workflow owns only the ordering and the roles; the facts a step acts on — verification methods, delivery rules, release policy — stay with their owners, and the text points there.
+The multi-step processes toward a blizzard goal — what each sequence is, who drives it (the platform, or an agent), and
+what each participant owes. Each workflow owns only the ordering and the roles; the facts a step acts on — verification
+methods, delivery rules, release policy — stay with their owners, and the text points there.
 
 Parent: [../index.md](../index.md).
 

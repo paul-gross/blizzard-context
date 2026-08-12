@@ -1,14 +1,20 @@
 # Domain — blizzard
 
 Blizzard's **domain model**: what the concepts are, how they behave, and how they intertwine — with no technical detail.
-"No technical detail" means no *implementation* vocabulary: no store column or table names, wire models, service classes, or HTTP routes — those belong to [architecture/](../architecture/index.md) and [standards/](../standards/index.md), and a domain file points there rather than spelling them.
-The vocabulary an operator or graph author actually writes — a status name, an authored node's own keys — is domain vocabulary, and stays.
-Conforms to the `domain/` slot of the canon harness shape (`winter-canon:/harness-structure.md`).
-This is the correctness reference: read it when planning a change against intent, or when reviewing or verifying behavior against the model — where the companion [architecture/](../architecture/index.md) domain governs how the *code* is structured, this domain governs how the *concepts* work.
+"No technical detail" means no *implementation* vocabulary: no store column or table names, wire models, service
+classes, or HTTP routes — those belong to [architecture/](../architecture/index.md) and
+[standards/](../standards/index.md), and a domain file points there rather than spelling them. The vocabulary an
+operator or graph author actually writes — a status name, an authored node's own keys — is domain vocabulary, and stays.
+Conforms to the `domain/` slot of the canon harness shape (`winter-canon:/harness-structure.md`). This is the
+correctness reference: read it when planning a change against intent, or when reviewing or verifying behavior against
+the model — where the companion [architecture/](../architecture/index.md) domain governs how the *code* is structured,
+this domain governs how the *concepts* work.
 
-This domain owns the behavioral statement an agent plans and reviews against. Where it and the **code** disagree, the code is current and this file is the one to fix.
+This domain owns the behavioral statement an agent plans and reviews against. Where it and the **code** disagree, the
+code is current and this file is the one to fix.
 
-This tree is also the fixed home a domain-concept fact relocates to when code prose restates it (`bzh:one-prose-home`): the fact moves here, and the restating code sites reduce to a pointer at the section that now states it.
+This tree is also the fixed home a domain-concept fact relocates to when code prose restates it (`bzh:one-prose-home`):
+the fact moves here, and the restating code sites reduce to a pointer at the section that now states it.
 
 Parent: [../index.md](../index.md).
 

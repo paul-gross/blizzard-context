@@ -1,27 +1,52 @@
 # Work — the chunk and its lifecycle
 
-The unit of work at the center of the model: the chunk, the statuses it derives, the transition record it moves by, and the migration that re-pins it across graphs.
-Definitions, with the enforceable invariant written in the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
-Part of the [domain model](./index.md).
+The unit of work at the center of the model: the chunk, the statuses it derives, the transition record it moves by, and
+the migration that re-pins it across graphs. Definitions, with the enforceable invariant written in the slot skeleton
+owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`). Part of the [domain model](./index.md).
 
 ## Chunk
 
-The hub's unit of orchestrated work: it wraps one or more backlog items from the backing work source by work ref, travels a workflow graph, and accumulates artifacts, questions, and decisions as it goes.
+The hub's unit of orchestrated work: it wraps one or more backlog items from the backing work source by work ref,
+travels a workflow graph, and accumulates artifacts, questions, and decisions as it goes.
 
-- **The work item is the durable referent; the chunk is ephemeral.** An unacquired chunk may be discarded or grouped away, and re-ingesting the same item mints a fresh chunk — nothing of value lives only on an unstarted chunk. An item already wrapped by a live chunk cannot be ingested again.
+- **The work item is the durable referent; the chunk is ephemeral.** An unacquired chunk may be discarded or grouped
+  away, and re-ingesting the same item mints a fresh chunk — nothing of value lives only on an unstarted chunk. An item
+  already wrapped by a live chunk cannot be ingested again.
 - **The item's contents are never stored.** A chunk holds work refs; reads pass through to the backing work source.
-- **A landed chunk's work items are closed at their own source.** Once a chunk has landed, its work refs are closed through their own work source's binding — best effort and eventually convergent, not immediate or atomic with the landing itself, and independent of whether the chunk continues to run afterward. A chunk that never lands closes nothing, whether or not it is later abandoned; one that lands and is only later abandoned still closes, because it was in fact delivered.
-- **Pinned to exactly one immutable graph, once it has moved.** The pin is set at mint from a default and, while the chunk is unclaimed and has not yet moved, is a plain editable selection — the operator's pre-flight window to repin it, open across `not_ready` and unclaimed `ready` alike. Once the chunk has moved the pin is immutable and changes only when a [migration](#migration) applies — never silently. A chunk detached back to `ready` mid-graph is **past** that window, not back inside it: it stands on a node another graph need not contain, so only a migration, which resolves where it lands, can move it.
-- **The default model preference and effort are chunk properties alongside the graph pin.** Both are minted **empty** — a fresh chunk expresses no preference at all, so the runner's own default applies — and are editable for as long as the chunk is unclaimed, immutable thereafter: a wider window than the graph pin's, since a default names no node to be stranded on. Like the pin, plain properties rather than a fact log. They are *defaults*, not a selection: they say what a surface that declares nothing inherits, and a graph's own [declared session](./graphs.md#declared-sessions) outranks them field by field. The vocabulary is the declaration's — a prioritized preference list of capability tiers or harness-native names, and a single effort value — so what a chunk default expresses and what a session declaration expresses are the same kind of thing.
-- **The intended migration is a chunk property alongside the graph pin and the defaults.** Nullable — `null` when no migration is queued, otherwise an intent naming a mode (`auto` or `forced`), a target graph, and, for a forced intent, a target node. Unlike the graph pin's and the defaults' pre-flight windows, it is set, overwritten, or cleared by the operator at any non-terminal status. Applying it re-pins the chunk and clears the intent atomically, in the same write as the migration ([migration](#migration)).
-- **Nothing on it is a stored status.** Its current node derives from its newest accepted transition, and its status derives from its recorded facts (`bzh:facts-not-status` in [../architecture/system-shape.md](../architecture/system-shape.md)).
+- **A landed chunk's work items are closed at their own source.** Once a chunk has landed, its work refs are closed
+  through their own work source's binding — best effort and eventually convergent, not immediate or atomic with the
+  landing itself, and independent of whether the chunk continues to run afterward. A chunk that never lands closes
+  nothing, whether or not it is later abandoned; one that lands and is only later abandoned still closes, because it was
+  in fact delivered.
+- **Pinned to exactly one immutable graph, once it has moved.** The pin is set at mint from a default and, while the
+  chunk is unclaimed and has not yet moved, is a plain editable selection — the operator's pre-flight window to repin
+  it, open across `not_ready` and unclaimed `ready` alike. Once the chunk has moved the pin is immutable and changes
+  only when a [migration](#migration) applies — never silently. A chunk detached back to `ready` mid-graph is **past**
+  that window, not back inside it: it stands on a node another graph need not contain, so only a migration, which
+  resolves where it lands, can move it.
+- **The default model preference and effort are chunk properties alongside the graph pin.** Both are minted **empty** —
+  a fresh chunk expresses no preference at all, so the runner's own default applies — and are editable for as long as
+  the chunk is unclaimed, immutable thereafter: a wider window than the graph pin's, since a default names no node to be
+  stranded on. Like the pin, plain properties rather than a fact log. They are *defaults*, not a selection: they say
+  what a surface that declares nothing inherits, and a graph's own [declared session](./graphs.md#declared-sessions)
+  outranks them field by field. The vocabulary is the declaration's — a prioritized preference list of capability tiers
+  or harness-native names, and a single effort value — so what a chunk default expresses and what a session declaration
+  expresses are the same kind of thing.
+- **The intended migration is a chunk property alongside the graph pin and the defaults.** Nullable — `null` when no
+  migration is queued, otherwise an intent naming a mode (`auto` or `forced`), a target graph, and, for a forced intent,
+  a target node. Unlike the graph pin's and the defaults' pre-flight windows, it is set, overwritten, or cleared by the
+  operator at any non-terminal status. Applying it re-pins the chunk and clears the intent atomically, in the same write
+  as the migration ([migration](#migration)).
+- **Nothing on it is a stored status.** Its current node derives from its newest accepted transition, and its status
+  derives from its recorded facts (`bzh:facts-not-status` in
+  [../architecture/system-shape.md](../architecture/system-shape.md)).
 - **Held by at most one runner at a time** — see [execution.md](./execution.md) for acquisition, tenure, and fencing.
 
 ## Statuses
 
-The derived conditions a chunk can be in.
-A chunk has exactly one status at a time — the conditions are checked in a fixed precedence, and none is ever stored.
-The exact fact vocabulary and derivation queries live in the code. This table is the behavioral meaning.
+The derived conditions a chunk can be in. A chunk has exactly one status at a time — the conditions are checked in a
+fixed precedence, and none is ever stored. The exact fact vocabulary and derivation queries live in the code. This table
+is the behavioral meaning.
 
 | Status             | Meaning                                                                                                                                                                                                                                                                                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -35,47 +60,132 @@ The exact fact vocabulary and derivation queries live in the code. This table is
 | `stopped`          | Abandoned by an operator — terminal at any point after acquisition, artifacts and history retained.                                                                                                                                                                                                                                                    |
 | `done`             | Terminal — the chunk reached the graph's reserved terminal transition. Ordinarily this is immediate once the commit artifacts land, but a graph may instead route further runner work after landing before reaching it, so landing itself is not necessarily terminal ([artifacts.md](./artifacts.md) §Landing is not necessarily terminal).           |
 
-Discarding or grouping an unacquired chunk is not a status: the chunk is simply gone from every listing, because the work item remains the durable referent.
+Discarding or grouping an unacquired chunk is not a status: the chunk is simply gone from every listing, because the
+work item remains the durable referent.
 
 ## Transition
 
-One entry in a chunk's append-only movement record: the fact that a judgement at a node's exit selected an edge and the chunk moved along it.
+One entry in a chunk's append-only movement record: the fact that a judgement at a node's exit selected an edge and the
+chunk moved along it.
 
-- **Every transition is fully formed.** The judgement is what selects the edge — the worker's verdict, the hub's own machinery at a hub node, or a human's choice at a gate — so there is no unjudged movement and no transition without a judgement.
-- **At a gate there is no transition until the human decides.** The node-step's completion lands as an open decision, and the resolving choice writes the transition referencing it ([humans.md](./humans.md)).
-- **Atomic with the step's artifacts.** A node-step's transition and its artifacts are committed as one write — a rejected transition's artifacts never exist ([artifacts.md](./artifacts.md)).
-- **Fenced.** A transition carries its attempt's epoch and a stale one is rejected, never recorded (`bzh:epoch-fencing` in [execution.md](./execution.md)) — the movement record only ever advances on a live attempt's say-so.
-- **Authored by the holder.** The holding runner reports the chunk's transitions; the hub's own executor authors them for hub-executed nodes.
+- **Every transition is fully formed.** The judgement is what selects the edge — the worker's verdict, the hub's own
+  machinery at a hub node, or a human's choice at a gate — so there is no unjudged movement and no transition without a
+  judgement.
+- **At a gate there is no transition until the human decides.** The node-step's completion lands as an open decision,
+  and the resolving choice writes the transition referencing it ([humans.md](./humans.md)).
+- **Atomic with the step's artifacts.** A node-step's transition and its artifacts are committed as one write — a
+  rejected transition's artifacts never exist ([artifacts.md](./artifacts.md)).
+- **Fenced.** A transition carries its attempt's epoch and a stale one is rejected, never recorded (`bzh:epoch-fencing`
+  in [execution.md](./execution.md)) — the movement record only ever advances on a live attempt's say-so.
+- **Authored by the holder.** The holding runner reports the chunk's transitions; the hub's own executor authors them
+  for hub-executed nodes.
 
 ## A migration is never a transition (`bzh:migration-not-transition`)
 
-**Rule.** Movement between graphs, for a chunk that has moved at all, is a **migration** — its own recorded fact re-pinning the chunk — never a transition: a transition moves a chunk along an edge within its pinned graph, and no edge crosses graphs. While a chunk is unclaimed and has not yet moved, its graph pin (and its default model/effort) is a plain editable property, not a pin this rule governs — that window closes at the chunk's first movement.
+**Rule.** Movement between graphs, for a chunk that has moved at all, is a **migration** — its own recorded fact
+re-pinning the chunk — never a transition: a transition moves a chunk along an edge within its pinned graph, and no edge
+crosses graphs. While a chunk is unclaimed and has not yet moved, its graph pin (and its default model/effort) is a
+plain editable property, not a pin this rule governs — that window closes at the chunk's first movement.
 
-**Why.** Transitions are judged, fenced movement within one immutable definition; letting one span graphs would re-route in-flight work without the explicit intent, record, and fencing that migration provides. Before the chunk has moved at all, there is no in-flight attempt to re-route and nothing a migration's fencing protects — repinning is pre-flight selection, not movement, and the chunk stands on no node a re-pin could strand it away from.
+**Why.** Transitions are judged, fenced movement within one immutable definition; letting one span graphs would re-route
+in-flight work without the explicit intent, record, and fencing that migration provides. Before the chunk has moved at
+all, there is no in-flight attempt to re-route and nothing a migration's fencing protects — repinning is pre-flight
+selection, not movement, and the chunk stands on no node a re-pin could strand it away from.
 
-**Detect.** A design or change in which a transition's two nodes belong to different graphs, an edge targets a node of another graph, or a chunk **that has already moved** has its graph pin change with no migration record — a re-queued chunk resting `ready` included, which is where a status-only editability check lets one through.
+**Detect.** A design or change in which a transition's two nodes belong to different graphs, an edge targets a node of
+another graph, or a chunk **that has already moved** has its graph pin change with no migration record — a re-queued
+chunk resting `ready` included, which is where a status-only editability check lets one through.
 
-**Do.** Re-pin via a migration record — either immediately, as an authored judgement choice's own trigger, landing on the departed node's name-matched node or the target's entry node when no name matches; or later, deferred to the chunk's next transition, via its own `intended_migration` property, landing on that transition's own destination node or a named node for a forced intent — in neither case is a fresh epoch minted at migration time, and the landed node's own executor then governs the chunk's status exactly as it would for an ordinary transition (§Migration below). Edit an unmoved chunk's graph pin, or an unclaimed chunk's default model/effort, in place; no migration record applies to a chunk that has never moved.
+**Do.** Re-pin via a migration record — either immediately, as an authored judgement choice's own trigger, landing on
+the departed node's name-matched node or the target's entry node when no name matches; or later, deferred to the chunk's
+next transition, via its own `intended_migration` property, landing on that transition's own destination node or a named
+node for a forced intent — in neither case is a fresh epoch minted at migration time, and the landed node's own executor
+then governs the chunk's status exactly as it would for an ordinary transition (§Migration below). Edit an unmoved
+chunk's graph pin, or an unclaimed chunk's default model/effort, in place; no migration record applies to a chunk that
+has never moved.
 
-**Don't.** Add a cross-graph edge, or update the pinned graph of a chunk that has already moved in place with no record of the re-pin.
+**Don't.** Add a cross-graph edge, or update the pinned graph of a chunk that has already moved in place with no record
+of the re-pin.
 
 ## Migration
 
-The explicit re-pin of a chunk from one immutable graph to another, recorded as its own fact — never a transition (`bzh:migration-not-transition`).
+The explicit re-pin of a chunk from one immutable graph to another, recorded as its own fact — never a transition
+(`bzh:migration-not-transition`).
 
-- **Intent and fact are separate.** An authored judgement choice about to be taken, or a chunk's own standing intended migration (see [Chunk](#chunk)), is intent — not yet a movement; the migration *record* written when one actually applies is the fact. The intent is a plain mutable property, like the graph pin and the defaults, not a fact log: setting it overwrites whatever was set before, and setting it to nothing clears it, so a chunk holds at most one live intent at a time, with no history of superseded ones to reconcile.
-- **A judgement choice can trigger it immediately.** A node's authored judgement choice may target another graph rather than a sibling node (`to: graph:<name>` in [graphs.md](./graphs.md)); taking that choice is itself the trigger — the worker's verdict ends the attempt at that node and records one migration fact re-pinning the chunk (and, when the choice names a `model:`, re-pinning that as the chunk's default model preference) and landing it at the target's landing node (§Landing is by name below). The authored **choice** carries the cross-graph target, but when taken it records a **migration**, never a cross-graph transition, so `bzh:migration-not-transition` holds. A choice whose target names no enabled graph escalates the chunk to `needs_human` rather than dropping the movement.
-- **A gate-resolved migration still closes the gate's decision.** When a *human gate's* resolved choice is itself the migrating choice, the migration closes that decision — or, when its target is unresolvable and the chunk escalates instead, the escalation does. A migration records no transition (`bzh:migration-not-transition`), so without this the decision would derive open forever ([humans.md](./humans.md) §Gate decision) and the chunk would never leave the gate.
-- **A chunk's own intended migration can trigger one later, at its next transition.** Unlike an authored choice, which fires as its own verdict, a standing intent is consulted — never applied eagerly — when the chunk's next transition is judged, through the same path an ordinary worker verdict or a resolved gate decision takes; a chunk advancing through a hub node's own exit is not consulted this way, so an intent set on a chunk already in the hub's hands waits for its next worker-or-gate transition. An **auto** intent migrates only when that transition's own destination node name also exists on the target graph, landing on that same-named node; otherwise the transition applies unchanged on the current graph and the intent stays set for the transition after. A **forced** intent migrates unconditionally to its own named target node, regardless of what that transition's own destination would have been. When the intent's target graph cannot be resolved at consult time — never minted, or retired since the intent was set — the migration is skipped exactly like an auto no-match: the transition applies unchanged and the intent stays set, visible for the operator to cancel or re-aim.
-- **A graph can carry a standing follow-latest policy, which migrates chunks with nobody having asked.** A graph name is minted repeatedly — each mint a separate immutable definition — and a chunk stays pinned to the one it started on. **Follow-latest** is a standing policy saying chunks pinned to this graph drift to the newest enabled mint of the same *name* at their next transition, so a workflow edit reaches work already in flight instead of stranding it until each chunk is migrated by hand. It resolves at two levels: the graph's own setting where it states one, otherwise a fleet-wide default; a graph that states nothing inherits. The fleet-wide default is **off**, so adopting the policy is deliberate.
-  - **An operator's own intent outranks it.** A chunk carrying a standing intended migration is never moved by the policy — including on a transition where that `auto` intent falls through for want of a name match. Someone who aimed a chunk has said where it goes.
-  - **It only ever moves a chunk forward, and never past the end.** A chunk already on the newest mint, or one whose every newer mint is retired, is left alone — no error, no fact. Neither is a chunk whose own mint has been retired, where name resolution would otherwise hand back an *older* mint and rewind it. And a transition to the terminal is not followed at all: a chunk that has finished has no next node-step for a newer definition to govern, so following there would restart the whole workflow instead of completing it.
-  - **The policy governs one hop, not a lineage.** It is read off the mint a chunk is pinned to, and the chunk lands on a newer mint carrying its own (inherited-by-default) setting — so a graph-level policy applies once. Sustaining the drift across a lineage is what the fleet-wide default is for.
-- **Neither trigger interrupts the attempt that produced it, or mints a fresh epoch at migration time.** The verdict carrying a migrating transition is accepted exactly as an ordinary one would be, and nothing about the submitting attempt is fenced or redone — a fresh epoch is only ever minted by a later claim, the same as for any other route-released re-queue. No trigger does — the follow-latest policy included. They differ only in **where** they land — each anchors a different name, per §Landing is by name below: an authored choice lands on the departed node's own name-matched node because that node diverted rather than completed its own destination; a standing intent lands on the transition's own destination node (auto) or its own named node (forced), and the follow-latest policy on that same destination name, because in each of those the transition did complete normally and only where it lands is redirected.
-- **Landing is by name.** Landing resolves a node by **name** on the target graph (`bzh:ids-exact-names-correlate` in [graphs.md](./graphs.md)) — the trigger picks which name is the anchor: an authored choice anchors the departed node's name, falling back to the target's entry node when no match; a standing intent anchors the transition's own destination node name for `auto` (no entry fallback — an unmatched name just leaves the transition unchanged, per the bullet above), or the intent's own named node for `forced`; the follow-latest policy anchors that same destination name **with** the entry fallback, because unlike an intent it has nothing to stay set for — falling through would defer a standing policy forever, on exactly the graph whose shape changed enough to drop the node. **The landed node's own `executor` then governs exactly as it does for an ordinary transition** ([graphs.md](./graphs.md) §Node): landing on a hub-executed node derives `delivering`, not `ready` — the chunk stays in the hub's own hands, driven by the hub's own executor, same as any other arrival at that node — while landing on a runner node re-queues `ready`. This keys on the landed node's `executor`, never its name; the shipped `deliver` node is one hub-executed instance a migration can land on, not a special case.
-- **An `auto` intent is a per-chunk request; a follow-latest policy is not.** The two are the reason a migration records **what moved the chunk**, not just that it moved: an authored choice, an operator's intent, and the standing policy are otherwise indistinguishable in history, and the policy is the only one nobody asked for. Same-name is no tell either — an operator aiming an intent *by name* also lands on a newer same-name mint. So a chunk found on a graph it did not start on can always be traced to which of the three put it there.
+- **Intent and fact are separate.** An authored judgement choice about to be taken, or a chunk's own standing intended
+  migration (see [Chunk](#chunk)), is intent — not yet a movement; the migration *record* written when one actually
+  applies is the fact. The intent is a plain mutable property, like the graph pin and the defaults, not a fact log:
+  setting it overwrites whatever was set before, and setting it to nothing clears it, so a chunk holds at most one live
+  intent at a time, with no history of superseded ones to reconcile.
+- **A judgement choice can trigger it immediately.** A node's authored judgement choice may target another graph rather
+  than a sibling node (`to: graph:<name>` in [graphs.md](./graphs.md)); taking that choice is itself the trigger — the
+  worker's verdict ends the attempt at that node and records one migration fact re-pinning the chunk (and, when the
+  choice names a `model:`, re-pinning that as the chunk's default model preference) and landing it at the target's
+  landing node (§Landing is by name below). The authored **choice** carries the cross-graph target, but when taken it
+  records a **migration**, never a cross-graph transition, so `bzh:migration-not-transition` holds. A choice whose
+  target names no enabled graph escalates the chunk to `needs_human` rather than dropping the movement.
+- **A gate-resolved migration still closes the gate's decision.** When a *human gate's* resolved choice is itself the
+  migrating choice, the migration closes that decision — or, when its target is unresolvable and the chunk escalates
+  instead, the escalation does. A migration records no transition (`bzh:migration-not-transition`), so without this the
+  decision would derive open forever ([humans.md](./humans.md) §Gate decision) and the chunk would never leave the gate.
+- **A chunk's own intended migration can trigger one later, at its next transition.** Unlike an authored choice, which
+  fires as its own verdict, a standing intent is consulted — never applied eagerly — when the chunk's next transition is
+  judged, through the same path an ordinary worker verdict or a resolved gate decision takes; a chunk advancing through
+  a hub node's own exit is not consulted this way, so an intent set on a chunk already in the hub's hands waits for its
+  next worker-or-gate transition. An **auto** intent migrates only when that transition's own destination node name also
+  exists on the target graph, landing on that same-named node; otherwise the transition applies unchanged on the current
+  graph and the intent stays set for the transition after. A **forced** intent migrates unconditionally to its own named
+  target node, regardless of what that transition's own destination would have been. When the intent's target graph
+  cannot be resolved at consult time — never minted, or retired since the intent was set — the migration is skipped
+  exactly like an auto no-match: the transition applies unchanged and the intent stays set, visible for the operator to
+  cancel or re-aim.
+- **A graph can carry a standing follow-latest policy, which migrates chunks with nobody having asked.** A graph name is
+  minted repeatedly — each mint a separate immutable definition — and a chunk stays pinned to the one it started on.
+  **Follow-latest** is a standing policy saying chunks pinned to this graph drift to the newest enabled mint of the same
+  *name* at their next transition, so a workflow edit reaches work already in flight instead of stranding it until each
+  chunk is migrated by hand. It resolves at two levels: the graph's own setting where it states one, otherwise a
+  fleet-wide default; a graph that states nothing inherits. The fleet-wide default is **off**, so adopting the policy is
+  deliberate.
+  - **An operator's own intent outranks it.** A chunk carrying a standing intended migration is never moved by the
+    policy — including on a transition where that `auto` intent falls through for want of a name match. Someone who
+    aimed a chunk has said where it goes.
+  - **It only ever moves a chunk forward, and never past the end.** A chunk already on the newest mint, or one whose
+    every newer mint is retired, is left alone — no error, no fact. Neither is a chunk whose own mint has been retired,
+    where name resolution would otherwise hand back an *older* mint and rewind it. And a transition to the terminal is
+    not followed at all: a chunk that has finished has no next node-step for a newer definition to govern, so following
+    there would restart the whole workflow instead of completing it.
+  - **The policy governs one hop, not a lineage.** It is read off the mint a chunk is pinned to, and the chunk lands on
+    a newer mint carrying its own (inherited-by-default) setting — so a graph-level policy applies once. Sustaining the
+    drift across a lineage is what the fleet-wide default is for.
+- **Neither trigger interrupts the attempt that produced it, or mints a fresh epoch at migration time.** The verdict
+  carrying a migrating transition is accepted exactly as an ordinary one would be, and nothing about the submitting
+  attempt is fenced or redone — a fresh epoch is only ever minted by a later claim, the same as for any other
+  route-released re-queue. No trigger does — the follow-latest policy included. They differ only in **where** they land
+  — each anchors a different name, per §Landing is by name below: an authored choice lands on the departed node's own
+  name-matched node because that node diverted rather than completed its own destination; a standing intent lands on the
+  transition's own destination node (auto) or its own named node (forced), and the follow-latest policy on that same
+  destination name, because in each of those the transition did complete normally and only where it lands is redirected.
+- **Landing is by name.** Landing resolves a node by **name** on the target graph (`bzh:ids-exact-names-correlate` in
+  [graphs.md](./graphs.md)) — the trigger picks which name is the anchor: an authored choice anchors the departed node's
+  name, falling back to the target's entry node when no match; a standing intent anchors the transition's own
+  destination node name for `auto` (no entry fallback — an unmatched name just leaves the transition unchanged, per the
+  bullet above), or the intent's own named node for `forced`; the follow-latest policy anchors that same destination
+  name **with** the entry fallback, because unlike an intent it has nothing to stay set for — falling through would
+  defer a standing policy forever, on exactly the graph whose shape changed enough to drop the node. **The landed node's
+  own `executor` then governs exactly as it does for an ordinary transition** ([graphs.md](./graphs.md) §Node): landing
+  on a hub-executed node derives `delivering`, not `ready` — the chunk stays in the hub's own hands, driven by the hub's
+  own executor, same as any other arrival at that node — while landing on a runner node re-queues `ready`. This keys on
+  the landed node's `executor`, never its name; the shipped `deliver` node is one hub-executed instance a migration can
+  land on, not a special case.
+- **An `auto` intent is a per-chunk request; a follow-latest policy is not.** The two are the reason a migration records
+  **what moved the chunk**, not just that it moved: an authored choice, an operator's intent, and the standing policy
+  are otherwise indistinguishable in history, and the policy is the only one nobody asked for. Same-name is no tell
+  either — an operator aiming an intent *by name* also lands on a newer same-name mint. So a chunk found on a graph it
+  did not start on can always be traced to which of the three put it there.
 
 ## See also
 
-- [./graphs.md](./graphs.md) — the immutable definition a chunk travels, and the node/edge/executor shape a migration's landing keys on.
-- [./execution.md](./execution.md) — who holds a chunk, the lease behind each node-step attempt, and the epoch its transitions are fenced by.
+- [./graphs.md](./graphs.md) — the immutable definition a chunk travels, and the node/edge/executor shape a migration's
+  landing keys on.
+- [./execution.md](./execution.md) — who holds a chunk, the lease behind each node-step attempt, and the epoch its
+  transitions are fenced by.
