@@ -92,18 +92,21 @@ socket proves — framing and timing, not field shape.
 
 ### blizzard:restatement-sweep
 
-`uv run python scripts/restated_invariants.py check --strict --owners --context-root ../blizzard-context src tests docs README.md web/projects ../blizzard-mock/src`
-(`mise run restatement-check`) — fails when a fact in the committed census `scripts/restated-invariants.json` is stated
-at a site the census does not declare (`new`), when a declared site is no longer observed (`stale`), when a declared
-non-owner site carries no reason, or when a designated owner does not state its fact
-([../../standards/one-prose-home.md](../../standards/one-prose-home.md)). A `new`/`stale` finding is refreshed with
-`measure --write-sites` (rewrites `sites[]` to the observed tree, never by hand) plus a `reason` on any new non-owner
-site; `measure --write-sites` itself refuses to run against a partial scan (a file skipped as unreadable or unparsable),
-unless `--force`; `check` instead reports a skipped file as an informational `skipped` finding beside its verdict
-without failing, so a `restatement sweep: clean` next to a `skipped:` line claims only the files that were scanned.
-Local-only in its `--context-root` half: the sweep also reads the sibling `../blizzard-mock` checkout, but that one is
-already a CI sibling the upper-tiers workflow checks out for other tiers; `../blizzard-context` is not checked out
-anywhere in CI, which is the actual local-only cause. An unresolved `--context-root` refuses a green rather than
+```bash
+uv run python scripts/restated_invariants.py check --strict --owners --context-root ../blizzard-context src tests docs README.md web/projects ../blizzard-mock/src
+```
+
+The check (`mise run restatement-check` for short) fails when a fact in the committed census
+`scripts/restated-invariants.json` is stated at a site the census does not declare (`new`), when a declared site is no
+longer observed (`stale`), when a declared non-owner site carries no reason, or when a designated owner does not state
+its fact ([../../standards/one-prose-home.md](../../standards/one-prose-home.md)). A `new`/`stale` finding is refreshed
+with `measure --write-sites` (rewrites `sites[]` to the observed tree, never by hand) plus a `reason` on any new
+non-owner site; `measure --write-sites` itself refuses to run against a partial scan (a file skipped as unreadable or
+unparsable), unless `--force`; `check` instead reports a skipped file as an informational `skipped` finding beside its
+verdict without failing, so a `restatement sweep: clean` next to a `skipped:` line claims only the files that were
+scanned. Local-only in its `--context-root` half: the sweep also reads the sibling `../blizzard-mock` checkout, but that
+one is already a CI sibling the upper-tiers workflow checks out for other tiers; `../blizzard-context` is not checked
+out anywhere in CI, which is the actual local-only cause. An unresolved `--context-root` refuses a green rather than
 skipping silently.
 
 ### blizzard:gate
@@ -408,9 +411,13 @@ mounts the tab with a fixture chunk and, at 390px and 320px, asserts the work-it
 stack — three distinct `getBoundingClientRect().top` values at a common `left` — with no horizontal overflow; at 1024px
 it asserts node history's `left` sits at or past the work-item column's `right` (genuinely beside it, not below), while
 work item and issues keep two distinct `top`s in that shared column. Proven able to fail: moving node history's explicit
-grid placement into the work-item/issues column (`grid-column: 1; grid-row: 3`) collapses the 1024px case
-(`node history's left (8) is not beside the work-item column (right edge 508): expected 8 to be greater than or equal to 508`);
-restoring its own column passes again. The same spec's fourth case (blizzard#251) mounts a `needs_human` chunk carrying
+grid placement into the work-item/issues column (`grid-column: 1; grid-row: 3`) collapses the 1024px case:
+
+```text
+node history's left (8) is not beside the work-item column (right edge 508): expected 8 to be greater than or equal to 508
+```
+
+Restoring its own column passes again. The same spec's fourth case (blizzard#251) mounts a `needs_human` chunk carrying
 both a runner-composed wrapped takeover command and its raw resume fallback — realistically long strings, an absolute
 runtime dir and worktree path apiece. The tab's no-horizontal-overflow half is structural — `fleet-kit-panel`'s body
 clips horizontally (`kit-panel.ts` `overflow-x: hidden`), so no takeover CSS can widen it — which makes the load-bearing
@@ -432,9 +439,13 @@ under a stand-in for `App`'s own height-capped `.layout`. They exist because the
 via `TestBed.createComponent`, which never assembles the container's own box into the chain, and so could not see either
 round-2 regression. The sixth serves a 60-turn segment at 390×700 and asserts the tab's own box stays bounded by the
 viewport (a definite height reached it) and that `.tx-view` is a genuine scroll container (`scrollTop` round-trips
-past 0) — proven able to fail by deleting `ChunkTranscriptsContainer`'s `:host { display: contents }`
-(`the tab's own box is unbounded (5331.125px) — the flex/height chain never reached it: expected 5331.125 to be less than or equal to 700`);
-restoring it passes again. The sixth waits on its own bounded `pumpUntil` rather than the shared `settle()` helper, and
+past 0) — proven able to fail by deleting `ChunkTranscriptsContainer`'s `:host { display: contents }`:
+
+```text
+the tab's own box is unbounded (5331.125px) — the flex/height chain never reached it: expected 5331.125 to be less than or equal to 700
+```
+
+Restoring it passes again. The sixth waits on its own bounded `pumpUntil` rather than the shared `settle()` helper, and
 that difference is load-bearing rather than incidental: its segment-content read is second-order — enabled only once the
 *index* query has resolved and named the segment's finality — and a TanStack query enabled that late, after the app has
 already reported stable once, registers a pending task Angular's zoneless stability never retires. `whenStable()` then
@@ -445,9 +456,13 @@ throws if the content never renders. The seventh renders the D9 permission notic
 status line centers on the **tab's** box rather than the browser viewport's — measured as which of the two centers it
 sits nearer, since containment alone cannot tell them apart (the host fills the tab body, so the viewport's own center
 falls inside it too) and since `.status` is a `<p>` whose un-reset user-agent top margin offsets it from either center
-by a line. Proven able to fail by deleting `chunk-transcripts-tab.ts`'s own `:host { position: relative }`
-(`status line centered on 463, nearer the viewport's center (450) than the tab's own (506.5) — it has no positioned ancestor: expected 43.5 to be less than 13`);
-restoring it passes again. That mutation is why the case is measured this way: against the containment assertion it
+by a line. Proven able to fail by deleting `chunk-transcripts-tab.ts`'s own `:host { position: relative }`:
+
+```text
+status line centered on 463, nearer the viewport's center (450) than the tab's own (506.5) — it has no positioned ancestor: expected 43.5 to be less than 13
+```
+
+Restoring it passes again. That mutation is why the case is measured this way: against the containment assertion it
 originally shipped with, deleting `position: relative` left all seven cases green.
 
 `runner-view.shell-sweep.spec.ts` (blizzard#218) covers the runner registry's rate-limit pace bars (`RunnerPanelView`):
