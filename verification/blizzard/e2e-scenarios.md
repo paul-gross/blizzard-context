@@ -243,6 +243,19 @@ subprocesses.
   with its stub IdP + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned
   worktree/stub IdP, but takes no `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly
   instead of skipping.
+- `test_runner_session_reacquisition_e2e` (blizzard#312) — the runner webapp's own session-recovery seam, proven against
+  a **single** federated runner: a real Chromium authenticates into runner A's panel, then the runner is **restarted in
+  place** (same directory, same port, no re-registration) rather than reloaded or cookie-edited — its session secret is
+  minted fresh per start (`app.py`), so the restart invalidates the still-open tab's session while leaving the hub's own
+  session, and the tab itself, untouched, reproducing the redeploy that triggers this in practice. With no
+  `page.goto`/`page.reload` from the test, the panel's own polls hit the seam's interceptor, which silently drives
+  `GET /api/auth/login` through the still-live hub session and lands back with a fresh runner session — proven by that
+  request actually firing (not by a DOM-visibility check: the identity control's text is the same username before and
+  after, and the round trip against a still-live hub session completes fast enough that a hidden window in between is
+  too transient to reliably catch) and by the session cookie's value changing. Fails if `provideSessionRecovery()` is
+  removed from the runner app's `app.config.ts`. Needs the same built bundle + installed Chromium as
+  `test_multi_daemon_sso_bounce`, and skips the same way; no `blizzard-mock` stub IdP dependency beyond what
+  `_oauth_hub`/`require_stub_idp` already need.
 
 ### test_event_log_e2e
 
