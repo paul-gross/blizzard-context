@@ -480,6 +480,13 @@ with no horizontal overflow on either element or the panel as a whole, then moun
 panel overflow. Proven able to fail: adding `white-space: nowrap` to `.degrade-banner` reproduces exactly that overflow
 at both widths (`555 > 390`/`555 > 320`); restoring it passes again.
 
+`session-recovery-view.shell-sweep.spec.ts` (blizzard#312) covers the runner's session-recovery surface
+(`SessionRecoveryView`), rendered by the runner `App` in place of the whole panel when a federation bounce could not be
+silently completed — reachable at every width the shell itself is. At 390px and 320px it mounts the view standalone and
+asserts the headline/detail block (`session-recovery`) and the retry control (`session-recovery-retry`) both render,
+with no horizontal overflow on the view as a whole. Proven able to fail: adding `white-space: nowrap` to `.detail`
+reproduces exactly that overflow at 320px (`343 > 320`); restoring the wrap passes again.
+
 ### blizzard:journey
 
 `BLIZZARD_JOURNEY=1 uv run pytest -m journey tests/journey/` (`mise run journey`) — the **capstone acceptance-journey
