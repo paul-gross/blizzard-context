@@ -420,14 +420,14 @@ drives a **real** `blizzard-runner host` subprocess ticking its own reconciliati
 - `test_runner_panel_updates_live_over_sse_with_no_reload` — a real Chromium loads the runner's local panel once and
   never reloads it; the live loop's own FILL step claims the promoted chunk and mints a lease — a real `lease-changed`
   frame, not a fixture shortcut — and the panel's lease count and row move from `0 live` to `1 live` well inside the
-  panel's own 5-minute poll backstop (D7), so a passing assertion is necessarily SSE-driven; the scripted graph then
+  panel's own 1-minute poll backstop (D7), so a passing assertion is necessarily SSE-driven; the scripted graph then
   runs itself to `done` under the same live loop, each further transition a further `lease-changed` frame over the same
   open connection, and the panel settles back to `0 live` once `deliver` (a hub node, no runner lease) lands the chunk —
   proving the publish → stream → `local-panel`'s own `RunnerLiveUpdates` registry → re-read chain end to end, the runner
   counterpart of `test_board_browser_e2e`'s hub-side live-pause proof. Needs the built bundle the runner itself serves
-  (hence `mise run e2e`'s `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree
-  - a local winter source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without
-    the provisioned worktree, or without the winter source.
+  (hence `mise run e2e`'s `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree + a local winter
+  source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned
+  worktree, or without the winter source.
 
 ### test_spike_terminal_e2e
 
