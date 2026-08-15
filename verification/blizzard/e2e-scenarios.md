@@ -11,8 +11,9 @@ the canonical `build → review → deliver` delivery shape, its human-loop vari
 glance shell, the graph explorer, the authored post-merge edge, the cross-graph migration, node session-mode continuity,
 the browser login/session lifecycle, the multi-daemon runner SSO federation, the operational event log, resume-time
 spawn-preamble elision, the forge-status label projection, checks-gate enforcement, the YAML-authored delivery policies
-and their conflict path, the chunk board's Transcripts tab, and the non-code spike, each self-managing the forge + hub +
-runner over a minted `blizzard-mock` fixture (every seam real, no tokens/network).
+and their conflict path, the chunk board's Transcripts tab, the runner panel's own live SSE stream, and the non-code
+spike, each self-managing the forge + hub + runner over a minted `blizzard-mock` fixture (every seam real, no
+tokens/network).
 
 ### test_acceptance_loop
 
@@ -408,6 +409,25 @@ so it seeds the hub the shortest honest way and asserts nothing about how a segm
 Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree (its
 forge-registered repo only — no runner is ever spawned) + a local winter source + an installed Chromium; it skips
 cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source.
+
+### test_runner_panel_live_e2e
+
+**The runner panel's own live SSE stream** (blizzard#317 Phase 5): unlike every other in-process scenario, this one
+drives a **real** `blizzard-runner host` subprocess ticking its own reconciliation loop on a fast interval
+(`BZ_RUNNER_TICK_SECONDS=1`) rather than a synchronous `LoopWiring.tick_once()` — the one composer that threads a single
+`EventBroker` into both the served app and the ticked loop (D2) for real, not the harness's in-process stand-in.
+
+- `test_runner_panel_updates_live_over_sse_with_no_reload` — a real Chromium loads the runner's local panel once and
+  never reloads it; the live loop's own FILL step claims the promoted chunk and mints a lease — a real `lease-changed`
+  frame, not a fixture shortcut — and the panel's lease count and row move from `0 live` to `1 live` well inside the
+  panel's own 5-minute poll backstop (D7), so a passing assertion is necessarily SSE-driven; the scripted graph then
+  runs itself to `done` under the same live loop, each further transition a further `lease-changed` frame over the same
+  open connection, and the panel settles back to `0 live` once `deliver` (a hub node, no runner lease) lands the chunk —
+  proving the publish → stream → `local-panel`'s own `RunnerLiveUpdates` registry → re-read chain end to end, the runner
+  counterpart of `test_board_browser_e2e`'s hub-side live-pause proof. Needs the built bundle the runner itself serves
+  (hence `mise run e2e`'s `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree
+  - a local winter source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without
+    the provisioned worktree, or without the winter source.
 
 ### test_spike_terminal_e2e
 
