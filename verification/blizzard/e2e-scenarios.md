@@ -250,17 +250,19 @@ subprocesses.
   or cookie-edited — its session secret is minted fresh per start (`app.py`), so the restart invalidates the still-open
   tab's session while leaving the hub's own session, and the tab itself, untouched, reproducing the redeploy that
   triggers this in practice. With no `page.goto`/`page.reload` from the test, the trigger is the panel's own reconnect
-  to the restarted runner's SSE stream (`auth.query.ts` itself keeps no poll of its own since D9 — the stream's own
-  terminal `401` is what now stands in for it): once the stream reconnects and the restarted daemon's fresh session
-  secret invalidates the old cookie, the seam's interceptor silently drives `GET /api/auth/login` through the still-live
-  hub session and lands back with a fresh runner session — proven by that request actually firing (not by a
-  DOM-visibility check: the identity control's text is the same username before and after, and the round trip against a
-  still-live hub session completes fast enough that a hidden window in between is too transient to reliably catch) and
-  by the session cookie's value changing. The wait for that request is bounded loosely enough to clear `SseService`'s
-  own exponential reconnect backoff (1s/2s/4s/8s/16s/30s, `~30s` cumulative to a `401`) plus the restarted daemon's own
-  startup, rather than racing it. Fails if `provideSessionRecovery()` is removed from the runner app's `app.config.ts`.
-  Needs the same built bundle + installed Chromium as `test_multi_daemon_sso_bounce`, and skips the same way; no
-  `blizzard-mock` stub IdP dependency beyond what `_oauth_hub`/`require_stub_idp` already need.
+  to the restarted runner's SSE stream (`auth.query.ts` itself keeps no poll of its own since D9 — a reconnect's own
+  `401` is what catches exactly this restart case; an in-place expiry with no reconnect is instead caught by whichever
+  backstop-polled read next re-authenticates, since the runner's stream auth resolves once at connect, not per frame):
+  once the stream reconnects and the restarted daemon's fresh session secret invalidates the old cookie, the seam's
+  interceptor silently drives `GET /api/auth/login` through the still-live hub session and lands back with a fresh
+  runner session — proven by that request actually firing (not by a DOM-visibility check: the identity control's text is
+  the same username before and after, and the round trip against a still-live hub session completes fast enough that a
+  hidden window in between is too transient to reliably catch) and by the session cookie's value changing. The wait for
+  that request is bounded loosely enough to clear `SseService`'s own exponential reconnect backoff (1s/2s/4s/8s/16s/30s,
+  `~30s` cumulative to a `401`) plus the restarted daemon's own startup, rather than racing it. Fails if
+  `provideSessionRecovery()` is removed from the runner app's `app.config.ts`. Needs the same built bundle + installed
+  Chromium as `test_multi_daemon_sso_bounce`, and skips the same way; no `blizzard-mock` stub IdP dependency beyond what
+  `_oauth_hub`/`require_stub_idp` already need.
 
 ### test_event_log_e2e
 
