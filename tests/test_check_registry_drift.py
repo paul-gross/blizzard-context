@@ -19,6 +19,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "check-registry-drift.py"
@@ -163,10 +164,26 @@ class CheckB1Tests(unittest.TestCase):
         self.assertEqual(_shape(findings), [("B1", "fail")])
 
     def test_known_unmarked_exemption_warns_not_fails(self):
-        _write(self.blizzard / "tests" / "test_intended_migration_apply.py", "def test_x(): pass\n")
+        """``KNOWN_UNMARKED`` is a drainable registry — it is empty whenever every tracked
+        marker fix has landed — so the exemption branch is pinned against a fixture entry.
+        Naming a live entry instead couples this case to the registry's contents, and goes
+        red the day that entry is retired without the branch having changed at all."""
+        _write(self.blizzard / "tests" / "test_exempt.py", "def test_x(): pass\n")
         collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
-        findings = self._run("`tests/test_intended_migration_apply.py`", collect_cache)
+        exemption = {"tests/test_exempt.py": "is tracked by blizzard#000"}
+        with mock.patch.dict(drift.KNOWN_UNMARKED, exemption, clear=True):
+            findings = self._run("`tests/test_exempt.py`", collect_cache)
         self.assertEqual(_shape(findings), [("B1", "warn")])
+
+    def test_markerless_file_fails_when_the_registry_is_empty(self):
+        """The other side of the branch above, pinned against the same fixture path: with
+        no exemption in force a markerless file is a fail, so the warn above is the entry
+        doing the work rather than something about the path itself."""
+        _write(self.blizzard / "tests" / "test_exempt.py", "def test_x(): pass\n")
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
+        with mock.patch.dict(drift.KNOWN_UNMARKED, {}, clear=True):
+            findings = self._run("`tests/test_exempt.py`", collect_cache)
+        self.assertEqual(_shape(findings), [("B1", "fail")])
 
     def test_conftest_is_silent(self):
         _write(self.blizzard / "tests" / "conftest.py", "# fixtures\n")
