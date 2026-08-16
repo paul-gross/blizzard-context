@@ -407,9 +407,9 @@ and hit-testing are all genuine. Each spec — named `*.shell-sweep.spec.ts` and
 `ng test` run (`web/angular.json`'s per-project `test.exclude`), since jsdom cannot run it — mounts a real component
 tree.
 
-`app-nav-menu.shell-sweep.spec.ts` and `local-panel-layout.shell-sweep.spec.ts` cover the app's two shared header shells
-(`hub`'s `BoardHeader` + `AppNavMenu`, `local-panel`'s `LocalPanelLayout`) and, for every combination of viewport width
-(1400 down to 320px, straddling every breakpoint the header declares) and — for the runner shell only, the one with a
+`app-nav-menu.shell-sweep.spec.ts` and `app-header.shell-sweep.spec.ts` cover the app's two shared header shells
+(`hub`'s `BoardHeader` + `AppNavMenu`, `runner`'s `AppHeader`) and, for every combination of viewport width (1400 down
+to 320px, straddling every breakpoint the header declares) and — for the runner shell only, the one with a
 content-dependent header width — signed-in username length (authless through 64 characters), assert the profile menu
 trigger sits fully inside the viewport, `elementFromPoint` at the menu's own center hit-tests inside it, the header
 itself carries no horizontal overflow, and no page error fired. Proven able to fail (issue #171): reverting
@@ -423,8 +423,9 @@ anything (`board-header.ts`'s `.stats` rule and its own comment).
 
 `local-panel-mobile.shell-sweep.spec.ts` (issue #176) covers the runner's mobile chunk list — `LocalPanelMobile` →
 `ChunkCard`, the component the rule actually names (`local-panel.ts`'s `mode()` mounts `LocalPanelMobile` beneath the
-persistent `MobileTabBar`, the rule's "mobile shell's bottom nav"; the desktop `LocalPanelLayout` → `ChunkRow` pair
-`local-panel-layout.shell-sweep.spec.ts` covers is never reached below the mobile breakpoint). It mounts a chunk card
+persistent `MobileTabBar`, the rule's "mobile shell's bottom nav"; the desktop `LocalPanelLayout` → `ChunkRow` pair is
+never reached below the mobile breakpoint and has no `*.shell-sweep.spec.ts` of its own —
+`app-header.shell-sweep.spec.ts` mounts `AppHeader` alone, with no chunk rows in its tree). It mounts a chunk card
 carrying five work items and, at 390px and 320px, asserts the five per-line `-webkit-line-clamp: 2` `.wi` lines actually
 stack — five distinct `getBoundingClientRect().top` values — with no horizontal overflow (`scrollWidth <= clientWidth`)
 and no page error. Proven able to fail: forcing `.wi` back to `display: inline` inside a `white-space: nowrap` container
@@ -513,6 +514,21 @@ silently completed — reachable at every width the shell itself is. At 390px an
 asserts the headline/detail block (`session-recovery`) and the retry control (`session-recovery-retry`) both render,
 with no horizontal overflow on the view as a whole. Proven able to fail: adding `white-space: nowrap` to `.detail`
 reproduces exactly that overflow at 320px (`343 > 320`); restoring the wrap passes again.
+
+`app-nav.shell-sweep.spec.ts` (issue #313) covers the runner shell's own top tab strip (`AppNav`), the `Board`/`Events`
+routed tabs the desktop shell renders above `<router-outlet>`. `KitTabStrip`/`KitTab`'s chrome carries no `@container`
+rule of its own, so this is a narrower claim than the header sweeps beside it: across every width from 1400px down to
+320px it asserts only that both static labels render and that the strip never overflows its own width.
+
+`chunk-detail-page.shell-sweep.spec.ts` (issue #318) covers the runner-local chunk detail page (`ChunkDetailPage`),
+reachable from the machine panel's chunk rows. At 390px and 320px it walks all three tabs — General, Artifacts,
+Transcripts — and asserts each stacks its own sections (distinct `getBoundingClientRect().top` values) with no
+horizontal overflow, which is what evaluates the General tab's `@media (min-width: 720px)` two-column collapse and the
+Artifacts tab's long unbroken artifact key. Its second case pins the page-level error status against the back bar: the
+status line is `fleet-kit-async-state`'s absolutely-centered `placement="center"`, so centering it against a box whose
+only in-flow content is the 44px back bar paints `FAILED TO LOAD CHUNK` across `‹ Board` — it must resolve against the
+back row's sibling instead. Its third case asserts the issue pane's own error text stays within its section at phone
+widths.
 
 ### blizzard:journey
 
