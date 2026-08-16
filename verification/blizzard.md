@@ -348,8 +348,10 @@ what the component tier's replay-tail read shows (an event was **recorded**, not
 shape, which `blizzard:sse-contract` now covers instead of this method). Not hub-only (blizzard#317): the runner serves
 the identical stream shape at its own `GET /api/events/stream`, with its own reserved open-of-stream comment and its own
 keepalive cadence, so a probe run is scoped to **one daemon at a time** — nothing here needs both up at once. Setup: the
-daemon under test, hosted on a scratch port — `blizzard hub init` + `blizzard hub host`, or `blizzard runner init` +
-`blizzard runner host`, each `--dir`-scoped and `--port`-bound the same way.
+daemon under test, hosted on a scratch port — `blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`,
+or `blizzard runner init <dir>` then `blizzard runner host --dir <dir> --port <p>`. Both daemons take the same shape:
+`init` scopes by a **positional** directory (it has no `--dir`), `host` by either the positional or `--dir`, and only
+`host` binds `--port`.
 
 Steps:
 
