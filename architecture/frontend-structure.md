@@ -99,9 +99,10 @@ in **its own daemon's** SSE dispatch registry rather than a new `case` in a hand
 singular: the hub's board registers in `sse/fleet-live.ts`'s `EVENT_INVALIDATION_REGISTRY`, and the runner's local panel
 registers in its own, disjoint `RUNNER_EVENT_INVALIDATION_REGISTRY` (`local-panel/src/lib/runner-live-updates.ts`,
 blizzard#317 Phase 4) — one row in the registry that owns the daemon a feature actually reads from, never a case added
-to either `dispatch()`. What a sub-barrel exports is decided by **a consumer outside its own feature directory**, not by
-membership in that directory: a sibling only the feature's own components mount stays unexported, so the public surface
-names what is actually re-stackable rather than everything present.
+to the shared `LiveInvalidationSpine.dispatch()` (`fleet/sse/live-invalidation-spine.ts`) both registries drive. What a
+sub-barrel exports is decided by **a consumer outside its own feature directory**, not by membership in that directory:
+a sibling only the feature's own components mount stays unexported, so the public surface names what is actually
+re-stackable rather than everything present.
 
 **Why.** A single monolithic `public-api.ts` and a hand-written event-dispatch `switch` are both **guaranteed merge
 conflicts**: every feature that adds an export or a live-update path touches the same line range of the same file as
@@ -110,10 +111,11 @@ export line plus one table row" — additive, not contended. A second daemon gro
 into the first's keeps that guarantee: the hub's and the runner's registries never share a line range because they never
 share a file.
 
-**Detect.** A new top-level export added directly to `public-api.ts` instead of a feature sub-barrel; a new `case` added
-to a live-updates `dispatch()` — `fleet-live.ts`'s or `runner-live-updates.ts`'s — instead of a registry row; a live
-feature's invalidation logic added as a case in one daemon's registry for a query key that actually belongs to the
-other; a sub-barrel export no consumer outside its own feature directory imports.
+**Detect.** A new top-level export added directly to `public-api.ts` instead of a feature sub-barrel; a live feature's
+invalidation logic expressed as anything other than a row in its own daemon's registry — the shared
+`LiveInvalidationSpine.dispatch()` is the one place a `case` could physically be added, and it is private to
+`live-invalidation-spine.ts`; a live feature's invalidation logic added as a case in one daemon's registry for a query
+key that actually belongs to the other; a sub-barrel export no consumer outside its own feature directory imports.
 
 **Do.** `chunks/index.ts` re-exports every chunks-feature symbol a consumer outside `chunks/` imports; `public-api.ts`
 carries one `export * from './lib/chunks'` line for it. A sibling mounted only by its own feature — `chunk-detail/`'s
