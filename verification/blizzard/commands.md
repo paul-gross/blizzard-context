@@ -79,16 +79,26 @@ pinning field optionality): first the Python producer+parse half (`tests/test_ss
 `json.loads(event.data) == payload` (a producer-side field rename/add/drop goes red), then validates the same golden
 against its `blizzard.wire.sse` model (`extra="forbid"`, so an undeclared field also goes red) and round-trips it
 losslessly; then the board's half (`web/projects/fleet/src/lib/sse/sse-contract.spec.ts`, `web:unit-test`) — a stubbed
-`fetch` feeds every golden, framed exactly as the hub frames it (plus the reserved comment and an interleaved
-keepalive), through the **real** `SseService`/`FetchEventSource` byte-stream reader, asserting on what reaches
-`SseHandle.events` rather than a hand-parsed object; a compile-time `FRAME_FIELD_SPECS` descriptor (keyed off the six
-exported per-kind interfaces in `fleet-live.ts`) also fails to compile the moment an interface field is renamed or
-dropped, and its runtime half cross-checks each golden's key set against it. Both suites read the **same physical
-files** — no per-side copy — so moving a golden reddens whichever side has not caught up, and changing a side's shape
-without moving the golden reddens that side; the closure assertions on both sides (`contracts/sse/`'s on-disk kind set
-== `manifest.json`'s kind list == the broker's `EVENT_TYPES` tuple on the Python side, == `HUB_EVENT_TYPES` on the TS
-side) catch a new kind added without a golden. `blizzard:manual-sse-probe` remains the method for what only a live
-socket proves — framing and timing, not field shape.
+`fetch` feeds every golden, framed exactly as its owning daemon frames it (plus that daemon's own reserved comment and
+an interleaved keepalive), through the **real** `SseService`/`FetchEventSource` byte-stream reader, asserting on what
+reaches `SseHandle.events` rather than a hand-parsed object; a compile-time frame-field-spec descriptor per scope
+(`HUB_FRAME_FIELD_SPECS`, keyed off `fleet-live.ts`'s exported per-kind interfaces; `RUNNER_FRAME_FIELD_SPECS`, keyed
+off `runner-events.ts`'s, since blizzard#317 Phase 2) also fails to compile the moment either scope's interface field is
+renamed or dropped, and its runtime half cross-checks each golden's key set against its own scope's spec. Both suites
+read the **same physical files** — no per-side copy — so moving a golden reddens whichever side has not caught up, and
+changing a side's shape without moving the golden reddens that side.
+
+The golden corpus is **two self-contained scopes**, not one: the **hub** scope at `contracts/sse/`'s top level (eight
+frame kinds, `blizzard.hub.events.broker`) and the **runner** scope at `contracts/sse/runner/` (six frame kinds,
+`blizzard.runner.events.broker`), each with its own `manifest.json`, its own framing constants, and its own reserved
+open-of-stream comment — the two daemons' streams do not open with the same text. `tests/test_sse_contract.py` and
+`sse-contract.spec.ts` each drive **both** scopes; there is no separate runner-only test module or spec basename, so the
+method's surface — "exactly these two files" — is unchanged even though what they cover broadened. Each scope carries
+its own closure assertions (that scope's on-disk kind set == that scope's `manifest.json` kind list == that daemon's own
+`EVENT_TYPES` tuple on the Python side == that daemon's own event-type tuple on the TS side); a kind added to one daemon
+without a golden in that daemon's own scope goes red, and a golden misfiled under the wrong daemon's scope goes red on
+both sides too. `blizzard:manual-sse-probe` remains the method for what only a live socket proves — framing and timing,
+not field shape — over either daemon's stream.
 
 ### blizzard:restatement-sweep
 
@@ -208,16 +218,33 @@ levers; a **git-commit-covered** name is likewise **accepted** under `enforce`
 (`test_git_commit_covered_produces_name_is_accepted_under_enforce_over_the_wire`), the accept end of the hub/runner
 coverage agreement its unit-tier sibling `test_produces_coverage_agreement.py` pins — a name covered by a pushed commit
 carries `attached=False`, and the hub once fenced exactly that shape out over the wire even though the runner's nudge
-already treated it as satisfied). **SSE live fan-out** (issue #107) is proven at this tier and only at this tier: a
+already treated it as satisfied). **Hub SSE live fan-out** (issue #107) is proven at this tier and only at this tier: a
 subscriber connected to `GET /api/events/stream` *before* the act receives `queue-changed` the instant a fresh
 cross-graph migration re-queues a chunk, and receives **exactly one** across that migration and its duplicate-delivery
 replay (the mock runner's `replay` lever submits the byte-identical completion twice, so both land in one live window —
 the single count assertion fails at 0 if the publish is dropped and at 2 if the replay guard is). The component tier
 asserts publication by reading the broker's *replay tail*, which shows an event was **recorded**, not **delivered**; the
 publish → subscriber-queue → wire leg a live board depends on is real only here, via the `sse_tap` helper in
-`tests/service/support.py`. The **operational event feed** (issue #125, `test_event_log_service.py`) rides the same
-fan-out: the mock runner's `/_drive/report-event` verb drives one `event.recorded` fact, a subscriber connected before
-the act receives `event-logged` **exactly once**, and the folded event reads back off the live `GET /api/events`
+`tests/service/support.py`. **Runner SSE live fan-out** (blizzard#317) has the same shape at the same tier, over the
+runner's own stream and its own event vocabulary: `test_runner_stream_delivers_live_and_replays_from_last_event_id`
+proves a subscriber connected before a lease-mutating call receives the frame live and resumes from `Last-Event-ID`
+across a reconnect; `test_runner_stream_resumes_live_after_a_restart_reset_the_broker_ids` covers the reconnect shape
+that one cannot — a **second** daemon instance behind the same port, its own broker minting ids from zero, resuming a
+cursor the first instance minted, which a single-instance reconnect never presents (the clamp it exercises is pinned in
+isolation at the unit tier by `tests/test_foundation_events.py`; this is its route wiring, with the cursor arriving as a
+real `Last-Event-ID` header); `test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor` covers
+the half *that* one misses — the fresh broker already holds buffered events when the reconnect arrives, so the stale
+cursor reaches the **replay** read rather than only the live-dedup watermark, and an unresolved one silently empties the
+tail instead of merely dropping live frames; and
+`test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves a signal-driven shutdown still returns
+`server.run()` with a client held open (D3) — all in `tests/service/test_runner_service.py`, the runner counterpart of
+the hub proof above, not a re-derivation of it. `blizzard:e2e`'s `test_runner_panel_live_e2e` scenario
+([registry](./e2e-scenarios.md)) carries the same fan-out one tier further: a *real* `blizzard-runner host` subprocess,
+its own reconciliation loop actually minting and closing leases, observed through a real browser on the served panel —
+the one place the publish → stream → `local-panel`'s live-updates registry → re-read chain runs end to end with nothing
+stubbed on either side. The **operational event feed** (issue #125, `test_event_log_service.py`) rides the same fan-out:
+the mock runner's `/_drive/report-event` verb drives one `event.recorded` fact, a subscriber connected before the act
+receives `event-logged` **exactly once**, and the folded event reads back off the live `GET /api/events`
 (mock-runner→live-hub); a direct fixed-seq replay pins the fold's per-runner-seq idempotency. The real runner's own
 emission of these facts (and its store-and-forward buffering through a hub outage) is the runner's job, proven at the
 unit/component tiers where it lands. **Usage over the wire** (epic #57 / #59, `test_usage_service.py`) is proven in both

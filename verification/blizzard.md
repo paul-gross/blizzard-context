@@ -46,7 +46,7 @@ Verification that runs as a single command — exit 0 is the pass signal.
 | blizzard:typecheck         | `uv run pyright` ([../standards/python.md](../standards/python.md)).                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | blizzard:unit-test         | `uv run pytest -m unit` — one class or function in isolation ([tiers](#test-tiers)). Bare `uv run pytest` runs unit + component. *(more)*                                                                                                                                                                                                                                                                                                                                                                                                        |
 | blizzard:component-test    | `uv run pytest -m component` — a domain slice with real internal collaborators, doubles only at the seams ([tiers](#test-tiers)). *(more)*                                                                                                                                                                                                                                                                                                                                                                                                       |
-| blizzard:sse-contract      | `mise run sse-contract` — gates the SSE frame shape contract against the golden corpus `contracts/sse/`: the Python producer+parse half, then the board's transport spec. *(more)*                                                                                                                                                                                                                                                                                                                                                               |
+| blizzard:sse-contract      | `mise run sse-contract` — gates the SSE frame shape contract against the golden corpus `contracts/sse/`, both the hub's scope and (blizzard#317) the runner's own `runner/` scope: the Python producer+parse half, then the board's transport spec. *(more)*                                                                                                                                                                                                                                                                                     |
 | blizzard:prose-ratchet     | `mise run prose-check` (`uv run python scripts/prose_density.py check src tests ../blizzard-mock/src`) — fails when any root's comment/docstring prose grows over the committed baseline; `--blocks` additionally reports every block over its `bzh:prose-budget` cap ([../standards/prose-budget.md](../standards/prose-budget.md)).                                                                                                                                                                                                            |
 | blizzard:restatement-sweep | `mise run restatement-check` (`uv run python scripts/restated_invariants.py check --strict --owners --context-root ../blizzard-context src tests docs README.md web/projects ../blizzard-mock/src`) — fails when a fact in the committed census `scripts/restated-invariants.json` is stated at a site the census does not declare, or is otherwise unowned or unreasoned ([../standards/one-prose-home.md](../standards/one-prose-home.md)). Local-only: an unresolved `--context-root` refuses a green rather than skipping silently. *(more)* |
 | blizzard:gate              | `mise run gate` (`./scripts/ci-gate.sh`) — the local reproduction of the shared `gate` job. Not the full master merge gate. *(more)*                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -345,16 +345,23 @@ can show: **timing and framing over the wire** — the reserved open-of-stream c
 and the `id`/reconnect-replay behavior actually observed on a real `GET /api/events/stream` connection — distinct from
 what the component tier's replay-tail read shows (an event was **recorded**, not what a subscriber actually
 **received**) and from `blizzard:service-test`'s live-fan-out proof (count and timing of frames, not their field-level
-shape, which `blizzard:sse-contract` now covers instead of this method). Setup: a hub hosted on a scratch port
-(`blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`).
+shape, which `blizzard:sse-contract` now covers instead of this method). Not hub-only (blizzard#317): the runner serves
+the identical stream shape at its own `GET /api/events/stream`, with its own reserved open-of-stream comment and its own
+keepalive cadence, so a probe run is scoped to **one daemon at a time** — nothing here needs both up at once. Setup: the
+daemon under test, hosted on a scratch port — `blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`,
+or `blizzard runner init <dir>` then `blizzard runner host --dir <dir> --port <p>`. Both daemons take the same shape:
+`init` scopes by a **positional** directory (it has no `--dir`), `host` by either the positional or `--dir`, and only
+`host` binds `--port`.
 
 Steps:
 
-1. start the hub on the scratch port
-2. hold an SSE subscription open against `GET /api/events/stream` (`curl -N` or a streaming HTTP client) before driving
-   the act
-3. drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call under test
-4. assert the reserved comment opens the stream, a keepalive comment arrives on an idle connection within the documented
+1. start the daemon under test — hub or runner — on the scratch port
+2. hold an SSE subscription open against that daemon's `GET /api/events/stream` (`curl -N` or a streaming HTTP client)
+   before driving the act
+3. drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call under test, on the
+   same daemon
+4. assert the reserved comment opens the stream (the hub's and the runner's read different literal text — check the one
+   the daemon under test actually owns), a keepalive comment arrives on an idle connection within the documented
    cadence, and the frame(s)' `id`/reconnect-replay behavior on a live socket — the field-level shape of the frame
    `data:` itself is `blizzard:sse-contract`'s claim, not re-asserted here.
 

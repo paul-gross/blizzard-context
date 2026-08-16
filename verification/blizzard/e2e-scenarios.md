@@ -11,8 +11,9 @@ the canonical `build → review → deliver` delivery shape, its human-loop vari
 glance shell, the graph explorer, the authored post-merge edge, the cross-graph migration, node session-mode continuity,
 the browser login/session lifecycle, the multi-daemon runner SSO federation, the operational event log, resume-time
 spawn-preamble elision, the forge-status label projection, checks-gate enforcement, the YAML-authored delivery policies
-and their conflict path, the chunk board's Transcripts tab, and the non-code spike, each self-managing the forge + hub +
-runner over a minted `blizzard-mock` fixture (every seam real, no tokens/network).
+and their conflict path, the chunk board's Transcripts tab, the runner panel's own live SSE stream, and the non-code
+spike, each self-managing the forge + hub + runner over a minted `blizzard-mock` fixture (every seam real, no
+tokens/network).
 
 ### test_acceptance_loop
 
@@ -215,12 +216,17 @@ The **browser login dance + mid-stream session-expiry redirect** (#93, epic #89 
   Promote control is present; and finally, with every `sessions` row deleted (an unambiguous stand-in for expiry — the
   resolve path treats missing and expired identically) and the hub restarted, the restart **force-drops the open SSE
   stream** and the client's own reconnect — the fetch-based transport's one seam that can read a status code
-  (`sse.service.ts`, the `authFailed` channel) — receives **401 on that single reconnect attempt** and the app routes
-  back to `/login` **within one reconnect cycle**, proving the auth-failure channel end to end rather than an unbounded
-  retry loop (AC 5). Needs the built bundle `blizzard hub host` serves (hence `mise run e2e`'s
-  `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree with its stub IdP + an installed
-  Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned worktree/stub IdP, but takes no
-  `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly instead of skipping.
+  (`sse.service.ts`, the `authFailed` channel) — receives a **401** and the app routes back to `/login`, proving the
+  auth-failure channel end to end rather than an unbounded retry loop (AC 5). That redirect's wait is bounded loosely
+  (45s, its own named constant rather than the file's 20s default) to clear `SseService`'s backoff ladder
+  (1s/2s/4s/8s/16s/30s, ~30s cumulative) plus the restarted hub's startup — the same reconnect-driven shape
+  `test_runner_session_reacquisition_e2e` bounds at its own, separately-chosen 40s inline literal: the reconnects racing
+  a daemon that is still coming up are refused rather than answered `401`, so **which** attempt carries the 401 is not
+  fixed, and a deadline under the ladder fails a working redirect. Needs the built bundle `blizzard hub host` serves
+  (hence `mise run e2e`'s `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree with its stub
+  IdP + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned worktree/stub IdP,
+  but takes no `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly instead of
+  skipping.
 
 ### test_runner_federation_e2e
 
@@ -248,12 +254,20 @@ subprocesses.
   panel, then the runner is **restarted in place** (same directory, same port, no re-registration) rather than reloaded
   or cookie-edited — its session secret is minted fresh per start (`app.py`), so the restart invalidates the still-open
   tab's session while leaving the hub's own session, and the tab itself, untouched, reproducing the redeploy that
-  triggers this in practice. With no `page.goto`/`page.reload` from the test, the panel's own polls hit the seam's
-  interceptor, which silently drives `GET /api/auth/login` through the still-live hub session and lands back with a
-  fresh runner session — proven by that request actually firing (not by a DOM-visibility check: the identity control's
+  triggers this in practice. With no `page.goto`/`page.reload` from the test, the trigger is the panel's own reconnect
+  to the restarted runner's SSE stream (`auth.query.ts` itself keeps no poll of its own since D9 — a reconnect's own
+  `401` is what catches exactly this restart case; an in-place expiry with no reconnect is instead caught by whichever
+  backstop-polled read next re-authenticates, since the runner's stream auth resolves once at connect, not per frame):
+  once the stream reconnects and the restarted daemon's fresh session secret invalidates the old cookie, the stream's
+  `401` drives `SessionRecovery.recoverFromUnauthenticated()` directly — the shared seam the generated-client
+  interceptor also calls on its own `401`, invoked here without one since the stream's transport is a raw `fetch` the
+  interceptor never sees — silently through `GET /api/auth/login` against the still-live hub session, landing back with
+  a fresh runner session — proven by that request actually firing (not by a DOM-visibility check: the identity control's
   text is the same username before and after, and the round trip against a still-live hub session completes fast enough
-  that a hidden window in between is too transient to reliably catch) and by the session cookie's value changing. Fails
-  if `provideSessionRecovery()` is removed from the runner app's `app.config.ts`. Needs the same built bundle +
+  that a hidden window in between is too transient to reliably catch) and by the session cookie's value changing. The
+  wait for that request is bounded loosely enough to clear `SseService`'s own exponential reconnect backoff
+  (1s/2s/4s/8s/16s/30s, `~30s` cumulative to a `401`) plus the restarted daemon's own startup, rather than racing it.
+  Fails if `provideSessionRecovery()` is removed from the runner app's `app.config.ts`. Needs the same built bundle +
   installed Chromium as `test_multi_daemon_sso_bounce`, and skips the same way; no `blizzard-mock` stub IdP dependency
   beyond what `_oauth_hub`/`require_stub_idp` already need.
 
@@ -408,6 +422,28 @@ so it seeds the hub the shortest honest way and asserts nothing about how a segm
 Needs the built bundle `blizzard hub host` serves + the sibling provisioned `blizzard-mock` worktree (its
 forge-registered repo only — no runner is ever spawned) + a local winter source + an installed Chromium; it skips
 cleanly without `BLIZZARD_E2E=1`, without Chromium, without the provisioned worktree, or without the winter source.
+
+### test_runner_panel_live_e2e
+
+**The runner panel's own live SSE stream** (blizzard#317 Phase 5): unlike every other in-process scenario, this one
+drives a **real** `blizzard-runner host` subprocess ticking its own reconciliation loop on a fast interval
+(`BZ_RUNNER_TICK_SECONDS=1`) rather than a synchronous `LoopWiring.tick_once()` — the one composer that threads a single
+`EventBroker` into both the served app and the ticked loop (D2) for real, not the harness's in-process stand-in.
+
+- `test_runner_panel_updates_live_over_sse_with_no_reload` — a real Chromium loads the runner's local panel once and
+  never reloads it; the live loop's own FILL step claims the promoted chunk and mints a lease — a real `lease-changed`
+  frame, not a fixture shortcut — and the panel's lease count and row move from `0 live` to `1 live` well inside the
+  panel's own 1-minute poll backstop (D7), so this first flip's passing assertion is necessarily SSE-driven — the
+  scenario's one load-bearing SSE-specific proof; the scripted graph then runs itself to `done` under the same live
+  loop, each further transition a further `lease-changed` frame over the same open connection, and the panel settles
+  back to `0 live` once `deliver` (a hub node, no runner lease) lands the chunk, asserted with a generous timeout equal
+  to the D7 backstop itself — so, unlike the first flip, this closing settle does not on its own rule out the backstop
+  having carried it; it proves the scenario completes end to end, not that every intermediate flip was SSE-driven.
+  Together they prove the publish → stream → `local-panel`'s own `RunnerLiveUpdates` registry → re-read chain, the
+  runner counterpart of `test_board_browser_e2e`'s hub-side live-pause proof. Needs the built bundle the runner itself
+  serves (hence `mise run e2e`'s `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree + a local
+  winter source + an installed Chromium; it skips cleanly without `BLIZZARD_E2E=1`, without Chromium, without the
+  provisioned worktree, or without the winter source.
 
 ### test_spike_terminal_e2e
 
