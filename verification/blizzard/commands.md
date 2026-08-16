@@ -232,30 +232,33 @@ across a reconnect; `test_runner_stream_resumes_live_after_a_restart_reset_the_b
 that one cannot — a **second** daemon instance behind the same port, its own broker minting ids from zero, resuming a
 cursor the first instance minted, which a single-instance reconnect never presents (the clamp it exercises is pinned in
 isolation at the unit tier by `tests/test_foundation_events.py`; this is its route wiring, with the cursor arriving as a
-real `Last-Event-ID` header); and `test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves a
-signal-driven shutdown still returns `server.run()` with a client held open (D3) — all in
-`tests/service/test_runner_service.py`, the runner counterpart of the hub proof above, not a re-derivation of it.
-`blizzard:e2e`'s `test_runner_panel_live_e2e` scenario ([registry](./e2e-scenarios.md)) carries the same fan-out one
-tier further: a *real* `blizzard-runner host` subprocess, its own reconciliation loop actually minting and closing
-leases, observed through a real browser on the served panel — the one place the publish → stream → `local-panel`'s
-live-updates registry → re-read chain runs end to end with nothing stubbed on either side. The **operational event
-feed** (issue #125, `test_event_log_service.py`) rides the same fan-out: the mock runner's `/_drive/report-event` verb
-drives one `event.recorded` fact, a subscriber connected before the act receives `event-logged` **exactly once**, and
-the folded event reads back off the live `GET /api/events` (mock-runner→live-hub); a direct fixed-seq replay pins the
-fold's per-runner-seq idempotency. The real runner's own emission of these facts (and its store-and-forward buffering
-through a hub outage) is the runner's job, proven at the unit/component tiers where it lands. **Usage over the wire**
-(epic #57 / #59, `test_usage_service.py`) is proven in both directions: runner→mock-hub, a real runner's
-`usage.recorded` facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once;
-mock-runner→live-hub, usage facts pushed through the hub's real `POST /api/fleet/events` become per-node-step usage +
-the derived chunk total (`ChunkUsageView` / `ChunkUsageTotalView`, `cost_partial` when a row's cost is absent) read back
-off the live `GET /api/chunks/{id}` and `GET /api/chunks`, idempotent on a replayed seq. **OAuth login dance** (epic #89
-/ issue #92, `test_auth_login_service.py`) is proven at this tier and only at this tier: a running hub under
-`auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` **stub IdP** (`tool:mock-fleet`, `blizzard-mock-idp`
-— both provider shapes at one origin) and whose `callback` exchanges the stub's code over the real wire, ending in a
-resolving `bz_session` cookie and a working `GET /api/me`, for **both** the `oidc` (issuer discovery + RS256 `id_token`
-verification) and `github` (code flow + `/user` + verified primary email) conformers; a two-provider hub lists both from
-`GET /api/auth/providers`; `POST /api/auth/logout` deletes the session row so `/api/me` 401s; and the stub's
-`refuse_callback` lever surfaces as the `login_failed` response over the real wire. The component tier
+real `Last-Event-ID` header); `test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor` covers
+the half *that* one misses — the fresh broker already holds buffered events when the reconnect arrives, so the stale
+cursor reaches the **replay** read rather than only the live-dedup watermark, and an unresolved one silently empties the
+tail instead of merely dropping live frames; and
+`test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves a signal-driven shutdown still returns
+`server.run()` with a client held open (D3) — all in `tests/service/test_runner_service.py`, the runner counterpart of
+the hub proof above, not a re-derivation of it. `blizzard:e2e`'s `test_runner_panel_live_e2e` scenario
+([registry](./e2e-scenarios.md)) carries the same fan-out one tier further: a *real* `blizzard-runner host` subprocess,
+its own reconciliation loop actually minting and closing leases, observed through a real browser on the served panel —
+the one place the publish → stream → `local-panel`'s live-updates registry → re-read chain runs end to end with nothing
+stubbed on either side. The **operational event feed** (issue #125, `test_event_log_service.py`) rides the same fan-out:
+the mock runner's `/_drive/report-event` verb drives one `event.recorded` fact, a subscriber connected before the act
+receives `event-logged` **exactly once**, and the folded event reads back off the live `GET /api/events`
+(mock-runner→live-hub); a direct fixed-seq replay pins the fold's per-runner-seq idempotency. The real runner's own
+emission of these facts (and its store-and-forward buffering through a hub outage) is the runner's job, proven at the
+unit/component tiers where it lands. **Usage over the wire** (epic #57 / #59, `test_usage_service.py`) is proven in both
+directions: runner→mock-hub, a real runner's `usage.recorded` facts ride the store-and-forward buffer, survive a hub
+outage, and flush exactly once; mock-runner→live-hub, usage facts pushed through the hub's real `POST /api/fleet/events`
+become per-node-step usage + the derived chunk total (`ChunkUsageView` / `ChunkUsageTotalView`, `cost_partial` when a
+row's cost is absent) read back off the live `GET /api/chunks/{id}` and `GET /api/chunks`, idempotent on a replayed seq.
+**OAuth login dance** (epic #89 / issue #92, `test_auth_login_service.py`) is proven at this tier and only at this tier:
+a running hub under `auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` **stub IdP** (`tool:mock-fleet`,
+`blizzard-mock-idp` — both provider shapes at one origin) and whose `callback` exchanges the stub's code over the real
+wire, ending in a resolving `bz_session` cookie and a working `GET /api/me`, for **both** the `oidc` (issuer discovery +
+RS256 `id_token` verification) and `github` (code flow + `/user` + verified primary email) conformers; a two-provider
+hub lists both from `GET /api/auth/providers`; `POST /api/auth/logout` deletes the session row so `/api/me` 401s; and
+the stub's `refuse_callback` lever surfaces as the `login_failed` response over the real wire. The component tier
 (`test_auth_login_api.py`) drives the same routes against an in-repo fake provider (bad `state` + `login_failed` fact,
 the linking rule, the no-token-cookie shape); this method is the only one exercising a **real HTTP
 authorize→token→userinfo exchange**. **Runner SSO federation — the JWT/JWKS wire leg** (epic #89 / issue #95,
