@@ -37,15 +37,10 @@ a legacy null-`forge` row reading back as `""`). The harvest spans **every** bou
 `test_advance_harvests_git_commits_from_every_bound_environment` pins that a chunk holding two environments delivers
 both, the loss a `bindings[0]` read made silent. Reporting an unverified declaration rather than only dropping it is
 deliberate: non-coverage alone was the whole backstop until the coverage check could not see the `git_commit` spec, at
-which point nothing was left to notice and a chunk reached `done` having delivered nothing. **The docket-fold agreement
-guard** (issue #259, `test_packaged_docket_fold.py`) pins advanced-development-workflow's findings docket against the
-prompts that restate it: `docket.md`, `build.from-review.md`, and `plan.from-plan-review.md` agree that a superseded
-round's undisposed findings are abandoned by design, and `docket.md` and `retrospective.md` agree the fold closes an
-unmatched finding whose target is an immutable artifact `accepted-wont-fix` rather than filing it — so an edit that
-drops either agreement from one restating file without the other fails here rather than shipping a silent contradiction.
-**Four sweep guards** landed with the 2608 gardening epic, each the mechanical signature of a class review had been
-catching by hand: `test_openapi_descriptions.py` (issue #278) scans both committed specs — and the `wire/` models no
-spec reaches — for prose an external API consumer cannot resolve (`bzh:comment-locality`'s generated-docstring clause);
+which point nothing was left to notice and a chunk reached `done` having delivered nothing. **Four sweep guards** landed
+with the 2608 gardening epic, each the mechanical signature of a class review had been catching by hand:
+`test_openapi_descriptions.py` (issue #278) scans both committed specs — and the `wire/` models no spec reaches — for
+prose an external API consumer cannot resolve (`bzh:comment-locality`'s generated-docstring clause);
 `test_no_duplicate_test_bodies.py` (issue #275) fails on two cases sharing a body, module constants folded into the key
 so two files reading their own same-named constant are not duplicates (`bzh:case-pins-its-own-name`);
 `test_config_keys_reach_a_gating_tier.py` (issue #276) fails on a key of **any** operator-written config dataclass — the
