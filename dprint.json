@@ -1,6 +1,5 @@
 {
   "markdown": {
-    // prose hard-wraps at the same 120-column ceiling the Python toolchain enforces; tables, fences, and headings keep their own formatting
     "textWrap": "always",
     "lineWidth": 120,
     "emphasisKind": "asterisks",
