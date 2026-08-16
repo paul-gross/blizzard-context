@@ -216,12 +216,16 @@ The **browser login dance + mid-stream session-expiry redirect** (#93, epic #89 
   Promote control is present; and finally, with every `sessions` row deleted (an unambiguous stand-in for expiry — the
   resolve path treats missing and expired identically) and the hub restarted, the restart **force-drops the open SSE
   stream** and the client's own reconnect — the fetch-based transport's one seam that can read a status code
-  (`sse.service.ts`, the `authFailed` channel) — receives **401 on that single reconnect attempt** and the app routes
-  back to `/login` **within one reconnect cycle**, proving the auth-failure channel end to end rather than an unbounded
-  retry loop (AC 5). Needs the built bundle `blizzard hub host` serves (hence `mise run e2e`'s
-  `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree with its stub IdP + an installed
-  Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned worktree/stub IdP, but takes no
-  `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly instead of skipping.
+  (`sse.service.ts`, the `authFailed` channel) — receives a **401** and the app routes back to `/login`, proving the
+  auth-failure channel end to end rather than an unbounded retry loop (AC 5). That redirect's wait is bounded loosely
+  (45s, its own named constant rather than the file's 20s default) to clear `SseService`'s backoff ladder
+  (1s/2s/4s/8s/16s/30s, ~30s cumulative) plus the restarted hub's startup, the same bound
+  `test_runner_session_reacquisition_e2e` states for the same reconnect-driven shape: the reconnects racing a daemon
+  that is still coming up are refused rather than answered `401`, so **which** attempt carries the 401 is not fixed, and
+  a deadline under the ladder fails a working redirect. Needs the built bundle `blizzard hub host` serves (hence
+  `mise run e2e`'s `depends = ["web-build"]`) + the sibling provisioned `blizzard-mock` worktree with its stub IdP + an
+  installed Chromium; it skips cleanly without `BLIZZARD_E2E=1` or without the provisioned worktree/stub IdP, but takes
+  no `chromium_available` guard — a missing Chromium or an unbuilt bundle both fail loudly instead of skipping.
 
 ### test_runner_federation_e2e
 
