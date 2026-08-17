@@ -108,7 +108,8 @@ the chunk's current node:
   table naming each entry's kind and the fleet-protocol verb that declares it
   ([standards/worker-nodes.md](../standards/worker-nodes.md)).
 - **The chunk's relevant artifacts** — earlier steps' outputs, resolved newest-first from the artifact series
-  ([artifacts.md](./artifacts.md)).
+  ([artifacts.md](./artifacts.md)). Its graph mint's own declarations travel too, but as something to fetch rather than
+  content to read here — a node that wants one asks for it by name ([artifacts.md](./artifacts.md) §Artifact).
 - **The runner's machine-local context** — which environments the chunk holds and where they live on this machine; the
   hub contributes none of this.
 

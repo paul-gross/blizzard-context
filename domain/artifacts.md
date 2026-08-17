@@ -1,12 +1,22 @@
 # Artifacts and delivery
 
-What work produces and how it lands: the artifact kinds, the chunk's artifact series, and delivery. Definitions, with
-the enforceable invariant written in the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`). Part
-of the [domain model](./index.md).
+What work produces and how it lands, what a graph declares for its workers to read, and delivery: the artifact scopes
+and kinds, the chunk's artifact series, and the delivery model. Definitions, with the enforceable invariant written in
+the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`). Part of the [domain model](./index.md).
 
 ## Artifact
 
-A node-step's durable output, stored at the hub and fed into later nodes' work. Two kinds:
+Work the `artifact` verb group reads, and — at node scope only — writes, in one of two **scopes**:
+
+- **Node scope.** A node-step's durable output, stored at the hub and fed into later nodes' work.
+- **Graph scope.** Definition text a graph's top-level `artifacts:` map bakes into the mint once
+  ([graphs.md](./graphs.md)); every chunk pinned to that mint reads back the identical, immutable content, and no worker
+  ever produces it. A node reads it on demand through the same lease-scoped verbs, scope-qualified
+  ([standards/worker-nodes.md](../standards/worker-nodes.md)) — never injected as prompt content
+  ([execution.md](./execution.md)). What that read costs is `bzh:graph-scope-reads-local` in
+  [architecture/system-shape.md](../architecture/system-shape.md).
+
+Two kinds — commit pointer and asset — though a graph-scope entry is always the asset kind (`bzh:never-code` below):
 
 | Kind           | Carries                                                                                                                                                                                                                             |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -16,7 +26,9 @@ A node-step's durable output, stored at the hub and fed into later nodes' work. 
 - **The hash is authoritative.** Branches move, so the hash pins the state that was actually verified; the branch name
   serves only to detect work committed ahead of it. There is deliberately no fencing at the branch ref: a zombie
   clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing` in [execution.md](./execution.md)).
-- **Self-describing provenance.** An artifact knows the chunk, the exact node, and the attempt that produced it.
+- **Provenance is the scope discriminator.** A node-scope artifact is self-describing — it knows the chunk, the exact
+  node, and the attempt that produced it. A graph-scope artifact carries none of that: its only provenance is the graph
+  mint that baked it, identical for every chunk and every attempt pinned to that mint.
 
 ## Never code (`bzh:never-code`)
 
@@ -32,19 +44,28 @@ to see — what the agent actually did — exists nowhere else once a runner's m
 and the permission gate are what keep that exception from reintroducing the size and exposure the rule exists to
 prevent.
 
+**Scope.** A graph's `artifacts:` declaration is authored definition text, not work product — the same class of thing as
+an inlined `prompt:`, prose the graph mint already stores. The rule is not engaged by baking it in, but the boundary
+still binds: the *name* "artifact" invites treating a diff or a generated patch as declarable content, and that is
+exactly the work-product this rule bars.
+
 **Detect.** A design or schema persisting file contents, diffs, or patches at the hub; an artifact carrying code or a
 transcript instead of a pointer to it; a work item's contents stored rather than read through; transcript content
-reaching the hub **outside** the lane — uncapped, unpermissioned, or attached to something other than a segment.
+reaching the hub **outside** the lane — uncapped, unpermissioned, or attached to something other than a segment; a
+graph's `artifacts:` entry holding a diff, a patch, or other generated output rather than authored prose.
 
 **Do.** Push the branch to the forge, then submit the repository, branch, and commit hash as the pointer artifact. Let
 the transcript lane carry conversation, on its own caps.
 
 **Don't.** Attach a diff or the worker's transcript as an asset artifact "for review convenience" — the review reads the
-pushed branch, and the conversation is already on the lane.
+pushed branch, and the conversation is already on the lane. Declare `artifacts: {fix: ./fix.diff}` naming a diff as a
+graph's baked-in content — the graph mint stores only what its author wrote, never work a chunk produced.
 
 ## The chunk's artifact series
 
-A chunk's artifacts accumulate as an **append-only, versioned series** per node and artifact name.
+A **node-scope** artifact accumulates as an **append-only, versioned series** per node and artifact name — append and
+resolve-newest, exactly as the rules below state. A **graph-scope** artifact carries no series at all: the mint bakes
+each declared entry once, immutable for that mint's whole life, superseded only by a fresh mint under a new `graph_id`.
 
 - **Committed with the step, atomically.** A worker step's artifacts land in the same fenced write as the movement they
   belong to — its transition, its gate decision, or the migration recorded in place of a transition when that step takes
@@ -54,8 +75,8 @@ A chunk's artifacts accumulate as an **append-only, versioned series** per node 
   repo of five must leave a durable trace of that before any transition exists to carry it.
 - **Append, never overwrite.** Re-running a node adds new entries under the new attempt; earlier entries remain as
   history.
-- **Reads resolve to the newest entry.** Later nodes fetching an artifact by name get the latest attempt's version; the
-  shadowed history stays available.
+- **Reads resolve to the newest entry.** Later nodes fetching a node-scope artifact by name get the latest attempt's
+  version; the shadowed history stays available.
 - **Series key on the node *name*.** After a migration or a re-published graph, a re-run of `build` keeps appending to
   the same series (`bzh:ids-exact-names-correlate` in [graphs.md](./graphs.md)); the exact producing node is on each
   artifact's provenance.

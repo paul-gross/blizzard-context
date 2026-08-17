@@ -1,9 +1,10 @@
 # Worker command nodes
 
 The authoring contract for a worker node — `executor: runner` (the default, [../domain/graphs.md](../domain/graphs.md)
-§Node) — that declares a `produces:` entry: the declaration instruction its prompt owes the worker
-(`blizzard runner artifact create` for an asset, `blizzard runner artifact commit` for a git commit), the fallback and
-hub-side backstop that exist when it doesn't, and the identity env the worker's declaration calls read.
+§Node) — that declares a `produces:` entry or points its worker at a graph-scoped declaration: the declaration
+instruction its prompt owes the worker (`blizzard runner artifact create` for an asset,
+`blizzard runner artifact commit` for a git commit), the fallback and hub-side backstop that exist when it doesn't, the
+identity env the worker's declaration calls read, and the fallback a pointer at a graph artifact owes.
 [../domain/graphs.md](../domain/graphs.md) §Node and [../domain/artifacts.md](../domain/artifacts.md) own the concepts —
 the node-level `produces:` list and the asset artifact kind; this file owns the prompt-authoring obligation and hub
 backstop a graph author is held to, the same relationship [./hub-nodes.md](./hub-nodes.md) has to `executor: hub`. Each
@@ -154,7 +155,13 @@ author never has to carry or leak a lease id or token into authored prose.
 `heartbeat`, `session-end`, every `artifact`/`chunk` verb). `BLIZZARD_LEASE_TOKEN` is narrower but not
 declaration-specific either: every lease-scoped `artifact` verb (`create`, `commit`, `list`, `get`, `staged`) and
 `chunk` verb (`history`) sends it as `X-Blizzard-Lease-Token` to authorize the call — `create`/`commit` are not the only
-two that read it, only the two that durably record content rather than read it back.
+two that read it, only the two that durably record content rather than read it back. `--scope node|graph` is a separate
+axis the `artifact` verbs do not all share. `list` serves either scope and reads both at once when the flag is omitted.
+`get` reads both too, but only while `--node` is absent: a graph declaration has no producing node, so naming one
+narrows the search to node scope on its own and graph scope is never consulted. `staged` is a read verb as well, but
+node-scoped **by construction** — it reads back this node-step's own not-yet-published submissions, and a graph
+declaration is never staged — so it refuses `--scope graph` exactly as the write verbs `create` and `commit` do: a
+graph's declarations are baked at mint and read-only, so naming `graph` on any of the three reaches no call at all.
 
 **Detect.** A node prompt instructing the worker to pass a lease id, runner URL, or token explicitly — there is nothing
 in either declaration CLI's own signature (`src/blizzard/runner/cli.py`) for such an argument to bind to.
@@ -165,6 +172,42 @@ URL, and token itself.
 
 **Don't.** *"run `blizzard runner artifact create --name <name> --lease <lease-id>`"* — no such flag exists; the worker
 cannot supply an identity the CLI already has.
+
+## A graph-artifact pointer carries its own fallback (`bzh:graph-artifact-pointer-fallback`)
+
+**Rule.** A prompt that points a worker at a graph-scoped declaration —
+`blizzard runner artifact get <name> --scope graph` — must also tell it what to do when that read does not answer, and
+the instruction must carry the node-step to completion without the declaration's text. The pointer is therefore always
+**additive**: whatever the worker needs in order to finish is stated in the prompt itself, and the declaration is the
+fuller source it reads when it can.
+
+**Why.** A pinned mint's declarations reach the runner's own store at spawn, so a lease already in flight when a runner
+restarts onto a build that introduces a declaration holds a pin with nothing in it — the accepted window
+`bzh:graph-scope-reads-local` ([../architecture/system-shape.md](../architecture/system-shape.md)) and the runner's
+graph-artifact mirror entry in [../architecture/crash-correctness.md](../architecture/crash-correctness.md) bound. A
+worker whose only copy of a rule is behind that read has no way to finish its turn correctly.
+
+**Scope.** Every prompt naming a graph-scope read, on a worker node or its judgement prompt alike. It says nothing about
+node-scope reads: a node-scope miss means an upstream node produced nothing, which is a real condition of the chunk
+rather than a window in the runner's own state.
+
+**Detect.** A prompt whose graph-scope read has no adjacent clause covering a read that does not answer; a fallback
+written only for an **empty** result. The two verbs that serve graph scope fail differently —
+`artifact list --scope graph` answers empty, while `artifact get <name> --scope graph` exits **non-zero** with a `404`
+named on stderr (`blizzard/src/blizzard/runner/api/artifacts.py`, raised by the worker CLI's shared call helper in
+`blizzard/src/blizzard/runner/cli_worker.py`) — so a fallback conditioned on "comes back empty" leaves the `get` case,
+the one a pointer at a named declaration actually takes, uncovered.
+
+**Do.** *"The full docket this restates is retrievable directly:
+`blizzard runner artifact get docket --scope graph --content`. If that read fails or comes back empty, proceed on the
+restatement above."* — the restated slice stays in the prompt, so a worker that never runs the command, or runs it into
+the window, still reads everything it needs.
+
+**Don't.** *"The rules for folding findings are in the `docket` graph artifact — read it before you fold."* — the prompt
+has delegated its own content to a read that can fail, and a worker inside the window has no rules at all.
+
+**See also.** [`../architecture/system-shape.md`](../architecture/system-shape.md) `bzh:graph-scope-reads-local` — the
+read path this defends and why it is local to the runner, and the accepted window that makes the defense necessary.
 
 ## See also
 

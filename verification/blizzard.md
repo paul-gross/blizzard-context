@@ -46,7 +46,7 @@ Verification that runs as a single command — exit 0 is the pass signal.
 | blizzard:typecheck         | `uv run pyright` ([../standards/python.md](../standards/python.md)).                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | blizzard:unit-test         | `uv run pytest -m unit` — one class or function in isolation ([tiers](#test-tiers)). Bare `uv run pytest` runs unit + component. *(more)*                                                                                                                                                                                                                                                                                                                                                                                                        |
 | blizzard:component-test    | `uv run pytest -m component` — a domain slice with real internal collaborators, doubles only at the seams ([tiers](#test-tiers)). *(more)*                                                                                                                                                                                                                                                                                                                                                                                                       |
-| blizzard:sse-contract      | `mise run sse-contract` — gates the SSE frame shape contract against the golden corpus `contracts/sse/`, both the hub's scope and (blizzard#317) the runner's own `runner/` scope: the Python producer+parse half, then the board's transport spec. *(more)*                                                                                                                                                                                                                                                                                     |
+| blizzard:sse-contract      | `mise run sse-contract` — gates the SSE frame shape contract against the golden corpus `contracts/sse/`, both the hub's scope and the runner's own `runner/` scope: the Python producer+parse half, then the board's transport spec. *(more)*                                                                                                                                                                                                                                                                                                    |
 | blizzard:prose-ratchet     | `mise run prose-check` (`uv run python scripts/prose_density.py check src tests ../blizzard-mock/src`) — fails when any root's comment/docstring prose grows over the committed baseline; `--blocks` additionally reports every block over its `bzh:prose-budget` cap ([../standards/prose-budget.md](../standards/prose-budget.md)).                                                                                                                                                                                                            |
 | blizzard:restatement-sweep | `mise run restatement-check` (`uv run python scripts/restated_invariants.py check --strict --owners --context-root ../blizzard-context src tests docs README.md web/projects ../blizzard-mock/src`) — fails when a fact in the committed census `scripts/restated-invariants.json` is stated at a site the census does not declare, or is otherwise unowned or unreasoned ([../standards/one-prose-home.md](../standards/one-prose-home.md)). Local-only: an unresolved `--context-root` refuses a green rather than skipping silently. *(more)* |
 | blizzard:gate              | `mise run gate` (`./scripts/ci-gate.sh`) — the local reproduction of the shared `gate` job. Not the full master merge gate. *(more)*                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -127,27 +127,27 @@ bind are owned by `blizzard-mock` (P4); the tier *rules* below are the standard 
   (it hands the fake's opaque token back on the next call), not the position codec, the shared batch budget, or the
   past-EOF clamps inside `ClaudeCodeTranscriptSource.turns_since` itself — those three are pinned at no tier at all.
   `blizzard:service-test`'s
-  `tests/service/test_runner_service.py::test_transcript_route_failure_never_blocks_the_fact_lane` proves D6's lane
+  `tests/service/test_runner_service.py::test_transcript_route_failure_never_blocks_the_fact_lane` proves the two lanes'
   independence (a wedged transcript route buffers rather than blocking the fact lane, and drains clean on recovery), but
   its only transcript-lane assertions are a buffer-depth threshold satisfied by `record_closure`'s own-segment final
   marker alone; it witnesses no delta content, cursor, or carry-forward, so it proves lane independence, not this claim.
   The panel's `read_turns` (`blizzard/src/blizzard/runner/transcripts/internal/projected_transcript_repository.py`), by
   contrast, still calls `turns_since(..., since=None)` exactly once per read and never loops on the position it mints —
   that read path's own carry-forward remains unexercised. Dogfooding exercises neither by default: the lane ships
-  disabled (`[transcripts] ship = false`, plan D5) even with `#247`'s hub-side segment store now landed — turning it on
-  is a separate rollout decision. **`blizzard runner transcript backfill` and `blizzard runner transcript reship`
-  (blizzard#250) are the lane's second and third consumers, and the heaviest exercise of exactly the three unpinned
-  pieces above.** Both call the same `TranscriptPump.drain_segment` with `deadline=None` against a *complete historical
-  file from offset 0*, looping until the source reports it caught up — so a real run drives the position codec, the
-  shared batch budget, and the past-EOF clamps harder than the tick's per-segment window ever does. Its own
-  `blizzard:component-test` (`tests/test_transcript_backfill.py`) inherits the same `FakeTranscriptSource` limitation as
-  the pump's, so it proves the backfill's classification, dedupe, resume, and finalize-only-when-caught-up decisions —
-  not those three pieces either. The verb is also the first path that *requires* `ship = true` (it refuses otherwise),
-  so running it against a real `~/.claude/projects` is the "turn it on" event this bullet says has not happened; an
-  operator who runs it has exercised the forward-read lane for real, and that run is evidence no tier here records.
-  Exactly which shapes, and why, is stated once — `src/blizzard_mock/harness/README.md` §"Conversation transcripts", not
-  restated here. A documented gap, not invented around: do not add a real-corpus CI tier reading a developer's
-  `~/.claude/projects` (neither hermetic nor reproducible) to close it.
+  disabled (`[transcripts] ship = false`) even with the hub-side segment store now landed — turning it on is a separate
+  rollout decision. **`blizzard runner transcript backfill` and `blizzard runner transcript reship` (blizzard#250) are
+  the lane's second and third consumers, and the heaviest exercise of exactly the three unpinned pieces above.** Both
+  call the same `TranscriptPump.drain_segment` with `deadline=None` against a *complete historical file from offset 0*,
+  looping until the source reports it caught up — so a real run drives the position codec, the shared batch budget, and
+  the past-EOF clamps harder than the tick's per-segment window ever does. Its own `blizzard:component-test`
+  (`tests/test_transcript_backfill.py`) inherits the same `FakeTranscriptSource` limitation as the pump's, so it proves
+  the backfill's classification, dedupe, resume, and finalize-only-when-caught-up decisions — not those three pieces
+  either. The verb is also the first path that *requires* `ship = true` (it refuses otherwise), so running it against a
+  real `~/.claude/projects` is the "turn it on" event this bullet says has not happened; an operator who runs it has
+  exercised the forward-read lane for real, and that run is evidence no tier here records. Exactly which shapes, and
+  why, is stated once — `src/blizzard_mock/harness/README.md` §"Conversation transcripts", not restated here. A
+  documented gap, not invented around: do not add a real-corpus CI tier reading a developer's `~/.claude/projects`
+  (neither hermetic nor reproducible) to close it.
 - **One-sided service tests use the mock counterpart.** Runner service tests run against the mock hub; hub service tests
   against the mock runner — edge cases come from driving the mock's levers, not from contriving the real daemon into
   rare states.
@@ -312,6 +312,14 @@ bind are owned by `blizzard-mock` (P4); the tier *rules* below are the standard 
   to its guard, each reachability claim to its dispatch site, each failure claim to its raising path — and a claim a fix
   commit *writes* owes the same walk as one it edits. A documented gap, not invented around: do not add a doc-linting
   tier that would score prose without reading the code.
+- **Per-block prose caps are enforced by hand, not by the ratchet (`bzh:prose-budget`).** `mise run prose-check` gates
+  each root's prose *total* against the committed baseline; the per-block caps are reported only under `--blocks`, and
+  nothing runs that automatically. The two measures are independent — a change can hold every total and still carry an
+  over-cap block, and a baseline re-record absorbs the total while leaving the block standing. Gating `--blocks`
+  repo-wide is not the fix: it scopes to every block in the tree rather than the ones a change wrote, so it fails on
+  prose the change never touched and stops being read. Until a method that scopes to a diff exists, a change owes a
+  `--blocks` run and a check that no block it added or edited is over cap, and a re-record is warranted only once that
+  holds.
 - **Crash correctness is an orthogonal dimension, not a fifth tier** — the kill-9 sweep (`blizzard:crash-sweep`) and the
   architectural requirements it exercises are
   [../architecture/crash-correctness.md](../architecture/crash-correctness.md). The unit tier covers each step
@@ -345,11 +353,11 @@ can show: **timing and framing over the wire** — the reserved open-of-stream c
 and the `id`/reconnect-replay behavior actually observed on a real `GET /api/events/stream` connection — distinct from
 what the component tier's replay-tail read shows (an event was **recorded**, not what a subscriber actually
 **received**) and from `blizzard:service-test`'s live-fan-out proof (count and timing of frames, not their field-level
-shape, which `blizzard:sse-contract` now covers instead of this method). Not hub-only (blizzard#317): the runner serves
-the identical stream shape at its own `GET /api/events/stream`, with its own reserved open-of-stream comment and its own
-keepalive cadence, so a probe run is scoped to **one daemon at a time** — nothing here needs both up at once. Setup: the
-daemon under test, hosted on a scratch port — `blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`,
-or `blizzard runner init <dir>` then `blizzard runner host --dir <dir> --port <p>`. Both daemons take the same shape:
+shape, which `blizzard:sse-contract` now covers instead of this method). Not hub-only: the runner serves the identical
+stream shape at its own `GET /api/events/stream`, with its own reserved open-of-stream comment and its own keepalive
+cadence, so a probe run is scoped to **one daemon at a time** — nothing here needs both up at once. Setup: the daemon
+under test, hosted on a scratch port — `blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`, or
+`blizzard runner init <dir>` then `blizzard runner host --dir <dir> --port <p>`. Both daemons take the same shape:
 `init` scopes by a **positional** directory (it has no `--dir`), `host` by either the positional or `--dir`, and only
 `host` binds `--port`.
 

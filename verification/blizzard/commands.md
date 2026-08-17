@@ -10,25 +10,36 @@ Full per-method detail for the [../blizzard.md](../blizzard.md) Commands table r
 ### blizzard:unit-test
 
 `uv run pytest -m unit` — the unit tier: one class or function in isolation ([tiers](../blizzard.md#test-tiers)). Bare
-`uv run pytest` runs the unit + component default suite. **The packaged-prompt declaration guard** (issue #113 phase 6,
-kind-branched by issue #143 Phase 5, `test_packaged_prompts_attach.py`) is the criterion-7 prompt-content check: for
-every packaged graph (`src/blizzard/hub/graphs/*/graph.yaml`), every runner node declaring a `produces:` entry must have
-its inlined prompt text name the **kind-appropriate** current declaration verb — an `asset` entry names
+`uv run pytest` runs the unit + component default suite. **The packaged-prompt declaration guard**
+(`test_packaged_prompts_attach.py`) is the criterion-7 prompt-content check: for every packaged graph
+(`src/blizzard/hub/graphs/*/graph.yaml`), every runner node declaring a `produces:` entry must have its inlined prompt
+text name the **kind-appropriate** current declaration verb — an `asset` entry names
 `blizzard runner artifact create --name <that-exact-name>`, a `git_commit` entry (the build nodes, now that the worker
 pushes and declares its own commits) names `blizzard runner artifact commit` — and **no** packaged prompt may name the
 deprecated `blizzard runner attach` alias. So a prompt edit that drops or mistypes the declaration instruction, or
 reverts to the deprecated `attach` spelling (silently defeating the declare→completion-assembly path in favour of the
 git-commit fallback), fails here rather than shipping green, a regression no graph-load or validation test catches
-because the prompt is opaque prose to the parser. **The produces-coverage agreement guard** (issue #113,
-`test_produces_coverage_agreement.py`) drives the hub's backstop (`check_produces`) and the runner's nudge check
-(`_missing_produces`) over **one** scenario matrix and asserts the two return the same verdict for every scenario — the
-anti-drift guard on the shared `wire.completion.produces_coverage` predicate, which calls the internal name-coverage
-helper `satisfied_produces_names`. It exists because the bug it closes was a *disagreement*, not a wrong answer on
-either side alone (the hub rejecting a git-commit-covered name under `produces_mode=enforce` that the runner already
-treated as satisfied), and neither side's own tests can observe one: `test_produces_auth.py` sees only the hub,
-`test_runner_nudge.py` only the runner. Each scenario also asserts the *expected* verdict, so two sides that re-forked
-into the same wrong answer fail too rather than agreeing with each other. **The git-commit declare-and-verify round
-trip** (issue #143 Phase 4, `test_artifacts_storage.py` + the `_verify_and_collect_git_commits` coverage in
+because the prompt is opaque prose to the parser. **The packaged graph-artifact guard** (`test_adw_docket.py`) is that
+same species over the same `src/blizzard/hub/graphs/*` surface, aimed at the graph-scope half rather than the
+`produces:` one: for the adv-dwf graph it pins that `graph.yaml` declares its `docket` under the top-level `artifacts:`
+map — a sibling of `nodes:`/`sessions:`, not a node facet — that the loader `PACKAGED` exercises bakes the referenced
+file's text into the doc verbatim rather than leaving the path as the content, and that every prompt restating a slice
+of the findings-docket format also names `blizzard runner artifact get docket --scope graph`, so a restatement that
+drops the pointer to the full docket fails here. The prompt set is a vocabulary match against raw prompt text rather
+than an authored list, which makes a prompt that grows docket vocabulary without the pointer red rather than silently
+out of scope, and `test_the_docket_vocabulary_census_is_exactly_ten_files` fixes that matched set by name — the guard on
+the guard, since a vocabulary pattern that stopped matching would otherwise let the parametrized case pass vacuously.
+What no assertion here reaches is agreement of *content*: editing the docket format obliges re-checking each restatement
+against `docket.md` by hand. **The produces-coverage agreement guard** (`test_produces_coverage_agreement.py`) drives
+the hub's backstop (`check_produces`) and the runner's nudge check (`_missing_produces`) over **one** scenario matrix
+and asserts the two return the same verdict for every scenario — the anti-drift guard on the shared
+`wire.completion.produces_coverage` predicate, which calls the internal name-coverage helper `satisfied_produces_names`.
+It exists because the bug it closes was a *disagreement*, not a wrong answer on either side alone (the hub rejecting a
+git-commit-covered name under `produces_mode=enforce` that the runner already treated as satisfied), and neither side's
+own tests can observe one: `test_produces_auth.py` sees only the hub, `test_runner_nudge.py` only the runner. Each
+scenario also asserts the *expected* verdict, so two sides that re-forked into the same wrong answer fail too rather
+than agreeing with each other. **The git-commit declare-and-verify round trip** (issue #143 Phase 4,
+`test_artifacts_storage.py` + the `_verify_and_collect_git_commits` coverage in
 `test_runner_loop.py`/`test_runner_gates.py`) pins the worker-declares/runner-verifies split: a fake
 `IWorktreeGit.verify` drives ADVANCE's collection (verified → a `GIT_COMMIT` `SubmittedArtifact` carrying the origin the
 environment's repo manifest named; unverified → dropped *and* reported as a `command-failed` the worker can act on,
@@ -78,10 +89,10 @@ losslessly; then the board's half (`web/projects/fleet/src/lib/sse/sse-contract.
 an interleaved keepalive), through the **real** `SseService`/`FetchEventSource` byte-stream reader, asserting on what
 reaches `SseHandle.events` rather than a hand-parsed object; a compile-time frame-field-spec descriptor per scope
 (`HUB_FRAME_FIELD_SPECS`, keyed off `fleet-live.ts`'s exported per-kind interfaces; `RUNNER_FRAME_FIELD_SPECS`, keyed
-off `runner-events.ts`'s, since blizzard#317 Phase 2) also fails to compile the moment either scope's interface field is
-renamed or dropped, and its runtime half cross-checks each golden's key set against its own scope's spec. Both suites
-read the **same physical files** — no per-side copy — so moving a golden reddens whichever side has not caught up, and
-changing a side's shape without moving the golden reddens that side.
+off `runner-events.ts`'s) also fails to compile the moment either scope's interface field is renamed or dropped, and its
+runtime half cross-checks each golden's key set against its own scope's spec. Both suites read the **same physical
+files** — no per-side copy — so moving a golden reddens whichever side has not caught up, and changing a side's shape
+without moving the golden reddens that side.
 
 The golden corpus is **two self-contained scopes**, not one: the **hub** scope at `contracts/sse/`'s top level (eight
 frame kinds, `blizzard.hub.events.broker`) and the **runner** scope at `contracts/sse/runner/` (six frame kinds,
@@ -185,31 +196,39 @@ with `gh run list --repo paul-gross/blizzard`; inspect a failure with
 runner daemon's HTTP API exercised from outside the process (HTTP against a mock counterpart), seams bound to the mock
 fleet — distinct from `blizzard:e2e`, which drives the loop in-process one tick at a time (and, in
 `test_board_browser_e2e.py` and `test_board_cost_live_e2e.py`, drives the served board through a real browser). The
-runner runs against the **mock hub** (`unreachable`→buffered, `drop_ack`→idempotent, `stale_envelope` → **tolerated**,
-the chunk still landing because the runner fences on its own lease epoch rather than on the envelope it was handed
-(`test_stale_envelope_is_tolerated_and_the_chunk_still_lands`), and a fourth scenario —
-`test_transcript_is_read_back_through_the_runner_http_api` — drives a chunk through the real fleet, then reads
-`GET /api/leases` and `GET /api/leases/{lease_id}/transcript` back through the runner's own local HTTP API, asserting an
-`env` turn, `Edit`/`Bash` tool turns with `tool_output` populated, and an `asst` verdict turn, with the `Bash` turn's
-`tool_output` cross-checked against the real commit sha read independently off the bare origin — unsatisfiable by a
-fixture; and a fifth — `test_a_closed_leases_transcript_resolves_to_the_hub_through_the_runner_api` (blizzard#249) —
-walking that same route's three D1 homes in one run against a real `build_hosted_app` daemon: `provenance: "local"`
-while the lease is open, `"archived"` once it closes and the mock hub holds its segments — with the shipped `thinking`
-turn read back intact, the loss a narrowing read would show (still `"archived"` after the local file is deleted mid-run,
-the rotation criterion), and `hub_unreachable: true` once the mock-hub subprocess is gone and local cannot answer either
-— the runner's **outbound** fleet-plane read, whose URL and headers no other tier drives against a real counterpart,
-since the unit tier binds a stubbed transport and `test_transcript_segments_service.py` drives the hub-side route with
-raw httpx); the hub against the **mock runner** + **mock forge** (a claim followed by a completion **advances the
-chunk** over the wire (`test_claim_and_completion_advance_the_chunk_over_the_wire`), stale-epoch rejection, **queue
-shaping over the wire** — `test_queue_shaping_group_and_reorder_reflected_in_peek` drives `POST /api/chunks/{id}/group`
-and `PUT /api/queue` against the running hub and reads the result back off `GET /api/queue`, so a grouping or reorder
-that the domain applies but the wire does not surface fails here; its component-tier sibling
-`tests/test_queue_shaping.py` asserts the same shaping without the wire — route-token authz under
-`route_token_mode=enforce`, and — issue #113 phase 5 — **produces-artifact authz** under `produces_mode=enforce`: a
-completion for a node declaring `produces:` is fenced out over the wire, chunk unadvanced, unless it carries an explicit
-`attached=True` artifact for every declared name, while a fallback-only completion still applies under the default
-`warn`, driven by the mock runner's `/_drive/complete` `artifacts` field — the produces analogue of the route-token
-levers; a **git-commit-covered** name is likewise **accepted** under `enforce`
+runner runs against the **mock hub**:
+
+- `unreachable` → buffered, and `drop_ack` → idempotent.
+- `stale_envelope` → **tolerated**: the chunk still lands, because the runner fences on its own lease epoch rather than
+  on the envelope it was handed (`test_stale_envelope_is_tolerated_and_the_chunk_still_lands`).
+- `test_transcript_is_read_back_through_the_runner_http_api` drives a chunk through the real fleet, then reads
+  `GET /api/leases` and `GET /api/leases/{lease_id}/transcript` back through the runner's own local HTTP API, asserting
+  an `env` turn, `Edit`/`Bash` tool turns with `tool_output` populated, and an `asst` verdict turn, with the `Bash`
+  turn's `tool_output` cross-checked against the real commit sha read independently off the bare origin — unsatisfiable
+  by a fixture.
+- `test_a_closed_leases_transcript_resolves_to_the_hub_through_the_runner_api` walks that same route's three provenance
+  homes in one run against a real `build_hosted_app` daemon: `provenance: "local"` while the lease is open, `"archived"`
+  once it closes and the mock hub holds its segments — with the shipped `thinking` turn read back intact, the loss a
+  narrowing read would show (still `"archived"` after the local file is deleted mid-run, the rotation criterion), and
+  `hub_unreachable: true` once the mock-hub subprocess is gone and local cannot answer either — the runner's
+  **outbound** fleet-plane read, whose URL and headers no other tier drives against a real counterpart, since the unit
+  tier binds a stubbed transport and `test_transcript_segments_service.py` drives the hub-side route with raw httpx.
+- `test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable` is the first service-tier
+  exercise of a lease-token-authorized worker-lane **read** route, proving a `--scope graph` read resolves from the
+  runner's own mint-time mirror with the mock hub down while the same lease's node-scope read still 503s, over a
+  reusable worker-credential seam (`_worker_credential`, minting and storing a lease token directly against the store
+  rather than intercepting a spawned worker's environment).
+
+The hub runs against the **mock runner** + **mock forge** (a claim followed by a completion **advances the chunk** over
+the wire (`test_claim_and_completion_advance_the_chunk_over_the_wire`), stale-epoch rejection, **queue shaping over the
+wire** — `test_queue_shaping_group_and_reorder_reflected_in_peek` drives `POST /api/chunks/{id}/group` and
+`PUT /api/queue` against the running hub and reads the result back off `GET /api/queue`, so a grouping or reorder that
+the domain applies but the wire does not surface fails here; its component-tier sibling `tests/test_queue_shaping.py`
+asserts the same shaping without the wire — route-token authz under `route_token_mode=enforce`, and **produces-artifact
+authz** under `produces_mode=enforce`: a completion for a node declaring `produces:` is fenced out over the wire, chunk
+unadvanced, unless it carries an explicit `attached=True` artifact for every declared name, while a fallback-only
+completion still applies under the default `warn`, driven by the mock runner's `/_drive/complete` `artifacts` field —
+the produces analogue of the route-token levers; a **git-commit-covered** name is likewise **accepted** under `enforce`
 (`test_git_commit_covered_produces_name_is_accepted_under_enforce_over_the_wire`), the accept end of the hub/runner
 coverage agreement its unit-tier sibling `test_produces_coverage_agreement.py` pins — a name covered by a pushed commit
 carries `attached=False`, and the hub once fenced exactly that shape out over the wire even though the runner's nudge
@@ -220,40 +239,40 @@ replay (the mock runner's `replay` lever submits the byte-identical completion t
 the single count assertion fails at 0 if the publish is dropped and at 2 if the replay guard is). The component tier
 asserts publication by reading the broker's *replay tail*, which shows an event was **recorded**, not **delivered**; the
 publish → subscriber-queue → wire leg a live board depends on is real only here, via the `sse_tap` helper in
-`tests/service/support.py`. **Runner SSE live fan-out** (blizzard#317) has the same shape at the same tier, over the
-runner's own stream and its own event vocabulary: `test_runner_stream_delivers_live_and_replays_from_last_event_id`
-proves a subscriber connected before a lease-mutating call receives the frame live and resumes from `Last-Event-ID`
-across a reconnect; `test_runner_stream_resumes_live_after_a_restart_reset_the_broker_ids` covers the reconnect shape
-that one cannot — a **second** daemon instance behind the same port, its own broker minting ids from zero, resuming a
-cursor the first instance minted, which a single-instance reconnect never presents (the clamp it exercises is pinned in
-isolation at the unit tier by `tests/test_foundation_events.py`; this is its route wiring, with the cursor arriving as a
-real `Last-Event-ID` header); `test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor` covers
-the half *that* one misses — the fresh broker already holds buffered events when the reconnect arrives, so the stale
-cursor reaches the **replay** read rather than only the live-dedup watermark, and an unresolved one silently empties the
-tail instead of merely dropping live frames; and
-`test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves a signal-driven shutdown still returns
-`server.run()` with a client held open (D3) — all in `tests/service/test_runner_service.py`, the runner counterpart of
-the hub proof above, not a re-derivation of it. `blizzard:e2e`'s `test_runner_panel_live_e2e` scenario
-([registry](./e2e-scenarios.md)) carries the same fan-out one tier further: a *real* `blizzard-runner host` subprocess,
-its own reconciliation loop actually minting and closing leases, observed through a real browser on the served panel —
-the one place the publish → stream → `local-panel`'s live-updates registry → re-read chain runs end to end with nothing
-stubbed on either side. The **operational event feed** (issue #125, `test_event_log_service.py`) rides the same fan-out:
-the mock runner's `/_drive/report-event` verb drives one `event.recorded` fact, a subscriber connected before the act
-receives `event-logged` **exactly once**, and the folded event reads back off the live `GET /api/events`
-(mock-runner→live-hub); a direct fixed-seq replay pins the fold's per-runner-seq idempotency. The real runner's own
-emission of these facts (and its store-and-forward buffering through a hub outage) is the runner's job, proven at the
-unit/component tiers where it lands. **Usage over the wire** (epic #57 / #59, `test_usage_service.py`) is proven in both
-directions: runner→mock-hub, a real runner's `usage.recorded` facts ride the store-and-forward buffer, survive a hub
-outage, and flush exactly once; mock-runner→live-hub, usage facts pushed through the hub's real `POST /api/fleet/events`
-become per-node-step usage + the derived chunk total (`ChunkUsageView` / `ChunkUsageTotalView`, `cost_partial` when a
-row's cost is absent) read back off the live `GET /api/chunks/{id}` and `GET /api/chunks`, idempotent on a replayed seq.
-**OAuth login dance** (epic #89 / issue #92, `test_auth_login_service.py`) is proven at this tier and only at this tier:
-a running hub under `auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` **stub IdP** (`tool:mock-fleet`,
-`blizzard-mock-idp` — both provider shapes at one origin) and whose `callback` exchanges the stub's code over the real
-wire, ending in a resolving `bz_session` cookie and a working `GET /api/me`, for **both** the `oidc` (issuer discovery +
-RS256 `id_token` verification) and `github` (code flow + `/user` + verified primary email) conformers; a two-provider
-hub lists both from `GET /api/auth/providers`; `POST /api/auth/logout` deletes the session row so `/api/me` 401s; and
-the stub's `refuse_callback` lever surfaces as the `login_failed` response over the real wire. The component tier
+`tests/service/support.py`. **Runner SSE live fan-out** has the same shape at the same tier, over the runner's own
+stream and its own event vocabulary: `test_runner_stream_delivers_live_and_replays_from_last_event_id` proves a
+subscriber connected before a lease-mutating call receives the frame live and resumes from `Last-Event-ID` across a
+reconnect; `test_runner_stream_resumes_live_after_a_restart_reset_the_broker_ids` covers the reconnect shape that one
+cannot — a **second** daemon instance behind the same port, its own broker minting ids from zero, resuming a cursor the
+first instance minted, which a single-instance reconnect never presents (the clamp it exercises is pinned in isolation
+at the unit tier by `tests/test_foundation_events.py`; this is its route wiring, with the cursor arriving as a real
+`Last-Event-ID` header); `test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor` covers the
+half *that* one misses — the fresh broker already holds buffered events when the reconnect arrives, so the stale cursor
+reaches the **replay** read rather than only the live-dedup watermark, and an unresolved one silently empties the tail
+instead of merely dropping live frames; and `test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream`
+proves a signal-driven shutdown still returns `server.run()` with a client held open — all in
+`tests/service/test_runner_service.py`, the runner counterpart of the hub proof above, not a re-derivation of it.
+`blizzard:e2e`'s `test_runner_panel_live_e2e` scenario ([registry](./e2e-scenarios.md)) carries the same fan-out one
+tier further: a *real* `blizzard-runner host` subprocess, its own reconciliation loop actually minting and closing
+leases, observed through a real browser on the served panel — the one place the publish → stream → `local-panel`'s
+live-updates registry → re-read chain runs end to end with nothing stubbed on either side. The **operational event
+feed** (issue #125, `test_event_log_service.py`) rides the same fan-out: the mock runner's `/_drive/report-event` verb
+drives one `event.recorded` fact, a subscriber connected before the act receives `event-logged` **exactly once**, and
+the folded event reads back off the live `GET /api/events` (mock-runner→live-hub); a direct fixed-seq replay pins the
+fold's per-runner-seq idempotency. The real runner's own emission of these facts (and its store-and-forward buffering
+through a hub outage) is the runner's job, proven at the unit/component tiers where it lands. **Usage over the wire**
+(epic #57 / #59, `test_usage_service.py`) is proven in both directions: runner→mock-hub, a real runner's
+`usage.recorded` facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once;
+mock-runner→live-hub, usage facts pushed through the hub's real `POST /api/fleet/events` become per-node-step usage +
+the derived chunk total (`ChunkUsageView` / `ChunkUsageTotalView`, `cost_partial` when a row's cost is absent) read back
+off the live `GET /api/chunks/{id}` and `GET /api/chunks`, idempotent on a replayed seq. **OAuth login dance** (epic #89
+/ issue #92, `test_auth_login_service.py`) is proven at this tier and only at this tier: a running hub under
+`auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` **stub IdP** (`tool:mock-fleet`, `blizzard-mock-idp`
+— both provider shapes at one origin) and whose `callback` exchanges the stub's code over the real wire, ending in a
+resolving `bz_session` cookie and a working `GET /api/me`, for **both** the `oidc` (issuer discovery + RS256 `id_token`
+verification) and `github` (code flow + `/user` + verified primary email) conformers; a two-provider hub lists both from
+`GET /api/auth/providers`; `POST /api/auth/logout` deletes the session row so `/api/me` 401s; and the stub's
+`refuse_callback` lever surfaces as the `login_failed` response over the real wire. The component tier
 (`test_auth_login_api.py`) drives the same routes against an in-repo fake provider (bad `state` + `login_failed` fact,
 the linking rule, the no-token-cookie shape); this method is the only one exercising a **real HTTP
 authorize→token→userinfo exchange**. **Runner SSO federation — the JWT/JWKS wire leg** (epic #89 / issue #95,
@@ -273,7 +292,7 @@ S256 PKCE) to a browserless scripted "browser" — the same `httpx.Client` carry
 `follow_redirects=False` — which captures the delivered single-use code from **both** the ephemeral
 `127.0.0.1:<port>/callback` loopback-redirect form (a 302 query-string *code*, never a token) and the out-of-band
 paste-code page, then redeems it with its PKCE verifier at `POST /api/auth/cli/token` for a hub-minted **session token**
-(decision D6 — never a runner-style JWT); a bare bearer client with no cookie jar — the CLI's own shape, exactly what
+(never a runner-style JWT); a bare bearer client with no cookie jar — the CLI's own shape, exactly what
 `blizzard hub status` sends — then authenticates `GET /api/me` off that token alone, and `POST /api/auth/logout`
 presenting the same bearer (the `blizzard hub logout` path) **revokes it server-side** so a byte-identical retry 401s,
 proving AC 4's "the hub session stops resolving" over the real wire rather than a mere local file delete. The CLI never
@@ -314,15 +333,15 @@ runner keeps its envs and its ADVANCE poll drives the landed hub node to `done` 
 #124, is swept on the same `migrate.` point by `test_kill9_at_migrate_crash_point_for_an_intended_migration` — its
 component- and unit-tier coverage is `tests/test_intended_migration_apply.py`, `tests/test_chunk_edit_api.py`, and
 `tests/test_hub_cli_chunk.py`, since e2e's `test_migration_e2e.py` exercises only the #90 authored-choice migration),
-and `attach.` (the worker artifact-attach durability window, #113 — armed on the **runner**, swept by
+and `attach.` (the worker artifact-attach durability window — armed on the **runner**, swept by
 `test_kill9_at_attach_crash_point`: the runner's local `POST /api/leases/{id}/attachments` records the attachment in one
 committed txn, then `kill -9`s in the after-record-before-response window, and the durable row — with full provenance —
-is still readable via `attachments_for_lease` against the same store after an unarmed restart, the fact Phase 3's
-completion assembly / the recovering ADVANCE tick re-derives (criterion 3). Unlike the loop-driven families this is an
-out-of-band HTTP write no loop step drives, so its scenario stands up a real runner daemon alone — no hub, no forge —
-seeding a parked lease + its capability token, since the durability property is loop-independent; the invariant checker
-runs over the runner store only), and `nudge.` (the produces-unmet nudge-once window, #113 Phase 4 — armed on the
-**runner**, swept by `test_kill9_at_nudge_crash_point` over both members `nudge.after-fired-fact.before-resume` and
+is still readable via `attachments_for_lease` against the same store after an unarmed restart, the fact completion
+assembly / the recovering ADVANCE tick re-derives (criterion 3). Unlike the loop-driven families this is an out-of-band
+HTTP write no loop step drives, so its scenario stands up a real runner daemon alone — no hub, no forge — seeding a
+parked lease + its capability token, since the durability property is loop-independent; the invariant checker runs over
+the runner store only), and `nudge.` (the produces-unmet nudge-once window — armed on the **runner**, swept by
+`test_kill9_at_nudge_crash_point` over both members `nudge.after-fired-fact.before-resume` and
 `nudge.after-resume.before-reassemble`: a `produces:` name with neither a git commit nor an attachment gets exactly one
 resumed nudge in `_advance_exited_worker`, gated on a durable `(lease, epoch)` fact recorded **before** the resume it
 guards so at-most-once is structural — a `kill -9` after the fact is durable can never re-nudge on recovery because the
@@ -456,11 +475,11 @@ asserts the step nav's `top` sits above the segment body's own (genuinely stacke
 overflow. Proven able to fail: forcing `.tx-tab`'s base `flex-direction` to `row` (the wide-viewport rule with no
 narrow-viewport collapse) fails the stacking assertion; restoring the narrow-first default passes again.
 
-The same spec's sixth and seventh cases (blizzard#248, `review:F1`/`F2`) cover the same tab through its **composed
-chain** — `ChunkPage` → `ChunkTranscriptsContainer` → `ChunkTranscriptsTab`, routed for real via `RouterTestingHarness`
-under a stand-in for `App`'s own height-capped `.layout`. They exist because the fifth case mounts the tab standalone
-via `TestBed.createComponent`, which never assembles the container's own box into the chain, and so could not see either
-round-2 regression. The sixth serves a 60-turn segment at 390×700 and asserts the tab's own box stays bounded by the
+The same spec's sixth and seventh cases (blizzard#248) cover the same tab through its **composed chain** — `ChunkPage` →
+`ChunkTranscriptsContainer` → `ChunkTranscriptsTab`, routed for real via `RouterTestingHarness` under a stand-in for
+`App`'s own height-capped `.layout`. They exist because the fifth case mounts the tab standalone via
+`TestBed.createComponent`, which never assembles the container's own box into the chain, and so could see neither
+regression below. The sixth serves a 60-turn segment at 390×700 and asserts the tab's own box stays bounded by the
 viewport (a definite height reached it) and that `.tx-view` is a genuine scroll container (`scrollTop` round-trips
 past 0) — proven able to fail by deleting `ChunkTranscriptsContainer`'s `:host { display: contents }`:
 
@@ -475,7 +494,7 @@ already reported stable once, registers a pending task Angular's zoneless stabil
 waits forever even though change detection has gone quiet and the DOM has rendered, which is what hung this case before.
 Established by removing the gate so the read fires immediately, which makes the same case pass under `settle()`
 unchanged — a one-off diagnostic, not a standing test. No layout claim is relaxed by waiting the other way — `pumpUntil`
-throws if the content never renders. The seventh renders the D9 permission notice and asserts its absolutely-centered
+throws if the content never renders. The seventh renders the permission notice and asserts its absolutely-centered
 status line centers on the **tab's** box rather than the browser viewport's — measured as which of the two centers it
 sits nearer, since containment alone cannot tell them apart (the host fills the tab body, so the viewport's own center
 falls inside it too) and since `.status` is a `<p>` whose un-reset user-agent top margin offsets it from either center

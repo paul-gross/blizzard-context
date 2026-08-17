@@ -83,15 +83,15 @@ nothing to arm, and that must be a *stated* position, not an implicit one (the "
 *safe without arming it* — this is the distinct case of there being *no window at all*). Record such a decision here
 when a change adds durable state that a reviewer would otherwise expect a sweep point for:
 
-- **The runner's jti replay cache (issue #95, decision D4).** The runner-store table
-  `jwt_jti_seen(jti PK, aud, expires_at)` backs single-use of a hub-signed federation JWT across a restart within the
-  60s token window. Its "check-not-seen → insert → mint session" path is **one transaction under the `jti` primary
-  key**, so no interleaving admits a replay: a crash *after* the insert but *before* the session mint loses only the
-  runner-domain session, forcing a fresh, harmless re-bounce through the hub (a liveness annoyance, never a safety break
-  — the row that would reject a replay is already durable). There is therefore **no `bzh:crash-point-registry` entry**
-  for it, and **no new `bzh:invariant-checker` assertion**: jti uniqueness is a store-level PK constraint the engine
-  enforces, not a derived cross-fact invariant the checker must recompute. This cache is not a loop step, so the
-  loop-driven sweep families never reach it, and correctly so.
+- **The runner's jti replay cache (issue #95).** The runner-store table `jwt_jti_seen(jti PK, aud, expires_at)` backs
+  single-use of a hub-signed federation JWT across a restart within the 60s token window. Its "check-not-seen → insert →
+  mint session" path is **one transaction under the `jti` primary key**, so no interleaving admits a replay: a crash
+  *after* the insert but *before* the session mint loses only the runner-domain session, forcing a fresh, harmless
+  re-bounce through the hub (a liveness annoyance, never a safety break — the row that would reject a replay is already
+  durable). There is therefore **no `bzh:crash-point-registry` entry** for it, and **no new `bzh:invariant-checker`
+  assertion**: jti uniqueness is a store-level PK constraint the engine enforces, not a derived cross-fact invariant the
+  checker must recompute. This cache is not a loop step, so the loop-driven sweep families never reach it, and correctly
+  so.
 
 - **The runner's git-commit verify (issue #143, Phase 4).** The worker pushes its branch and declares it; ADVANCE's own
   git surface is a **read-only** re-derivation (`git ls-remote` against the origin the environment's repo manifest
@@ -191,39 +191,39 @@ when a change adds durable state that a reviewer would otherwise expect a sweep 
 - **The transcript pump's truncation-outcome writes (issue #246).** A record-cap shrink (`record_cap_exceeded`) or an
   unshippable record (`record_unshippable`) fires two SEPARATE transactions in sequence: `record_transcript_deltas` (the
   delta(s) themselves), then `mark_transcript_record_truncated` (the segment's own reason field, latched per (segment,
-  reason)) — with `OutboundFacts.transcript_truncated` (the fact-lane `warning` event D4 promises is never silent)
-  following as a third, separate write again. A chunk-budget breach (`chunk_budget_exceeded`) is a DIFFERENT shape, not
-  the same one with a different reason string: neither of `TranscriptPump._pump_one`'s two call sites ever writes a
-  delta to the store — the pre-read guard returns before the source is even read, and the post-read (tipping) guard
-  builds the record(s) in memory but never calls `record_transcript_deltas`. Each fires
-  `stop_transcript_segment_shipping` (the reason field) then the same fact-lane warning; the write count on the tipping
-  guard's branch is not fixed at two, though, since its own already-read batch can also carry a dropped sidechain,
-  adding that warning's own latch write and fact-lane enqueue to the same branch. Neither the delta-then-reason-field
-  window (record-cap/unshippable only) nor the budget breach's own reason-field write needs a registry entry: the former
-  loses at most one occurrence's own note — `truncated_reason` is a worst-of display field, not a complete per-event log
-  (`mark_transcript_record_truncated`'s own guard: the warning latches per reason, but the DISPLAYED reason keeps moving
-  to whichever severity is highest so far) — and the delta write's own transaction already made the cursor/content
-  durable regardless; the latter is re-derived from `chunk_transcript_shipped_bytes` fresh on every tick independent of
-  any per-event write, so a `kill -9` before `stop_transcript_segment_shipping` lands simply leaves the segment
-  un-stopped one tick longer, which re-evaluates the same still-over-budget total and retries the same write — no state
-  lost, only delayed. The reason-field-write → fact-lane-enqueue window, by contrast, is real for all three reasons and
-  is the one window this entry does not claim is safe: a `kill -9` there leaves the segment durably marked but the
-  operator-facing warning permanently unsent, since neither write's own guard fires again on a later tick to retry a
-  warning for a reason the segment already warned about. It stays out of `bzh:crash-point-registry` on a narrower ground
-  than "no window" — nothing durable is ever wrong or lost, only an operator-convenience notification, recoverable by
-  direct inspection of the segment field itself (e.g. via `blizzard runner artifact`/a future read surface) rather than
-  by automatic retry — and closing it would mean a fourth transaction merging the reason-field write and the warning
-  atomically, at a cost this slice does not spend given `[transcripts] ship = false` by default (plan D5). The pump's
-  **unlinked-sidechain warning** (`_warn_sidechains_dropped`) is the same shape one degree further, with its own
-  two-write sequence: `mark_sidechain_dropped_warned` (a durable per-(segment, agent_id) latch, so a recurring unlinked
-  subagent warns once, not every tick) then the fact-lane enqueue. A `kill -9` between the two permanently loses that
-  one warning — the latch already reads as "warned" on the next tick, so nothing re-fires it. On the two budget-stop
-  branches, this pair fires with no cursor write of its own at all (both return before any store write past the reason
-  field). It is accepted on the same narrower ground and for the same price: an informational fact-lane event, the #125
-  exemption's shape, on a lane `[transcripts] ship = false` keeps cold by default. There is therefore **no new
-  `bzh:crash-point-registry` entry**: the delta-then-reason-field and budget-breach windows degrade rather than break,
-  matching the #137/#216/#230 exemptions above, and the last two are named, accepted gaps, recoverable by inspection
-  rather than automatic retry, not windows this repo claims to have no exposure to at all.
+  reason)) — with `OutboundFacts.transcript_truncated` (the fact-lane `warning` event, never silent) following as a
+  third, separate write again. A chunk-budget breach (`chunk_budget_exceeded`) is a DIFFERENT shape, not the same one
+  with a different reason string: neither of `TranscriptPump._pump_one`'s two call sites ever writes a delta to the
+  store — the pre-read guard returns before the source is even read, and the post-read (tipping) guard builds the
+  record(s) in memory but never calls `record_transcript_deltas`. Each fires `stop_transcript_segment_shipping` (the
+  reason field) then the same fact-lane warning; the write count on the tipping guard's branch is not fixed at two,
+  though, since its own already-read batch can also carry a dropped sidechain, adding that warning's own latch write and
+  fact-lane enqueue to the same branch. Neither the delta-then-reason-field window (record-cap/unshippable only) nor the
+  budget breach's own reason-field write needs a registry entry: the former loses at most one occurrence's own note —
+  `truncated_reason` is a worst-of display field, not a complete per-event log (`mark_transcript_record_truncated`'s own
+  guard: the warning latches per reason, but the DISPLAYED reason keeps moving to whichever severity is highest so far)
+  — and the delta write's own transaction already made the cursor/content durable regardless; the latter is re-derived
+  from `chunk_transcript_shipped_bytes` fresh on every tick independent of any per-event write, so a `kill -9` before
+  `stop_transcript_segment_shipping` lands simply leaves the segment un-stopped one tick longer, which re-evaluates the
+  same still-over-budget total and retries the same write — no state lost, only delayed. The reason-field-write →
+  fact-lane-enqueue window, by contrast, is real for all three reasons and is the one window this entry does not claim
+  is safe: a `kill -9` there leaves the segment durably marked but the operator-facing warning permanently unsent, since
+  neither write's own guard fires again on a later tick to retry a warning for a reason the segment already warned
+  about. It stays out of `bzh:crash-point-registry` on a narrower ground than "no window" — nothing durable is ever
+  wrong or lost, only an operator-convenience notification, recoverable by direct inspection of the segment field itself
+  (e.g. via `blizzard runner artifact`/a future read surface) rather than by automatic retry — and closing it would mean
+  a fourth transaction merging the reason-field write and the warning atomically, at a cost this slice does not spend
+  given `[transcripts] ship = false` by default. The pump's **unlinked-sidechain warning** (`_warn_sidechains_dropped`)
+  is the same shape one degree further, with its own two-write sequence: `mark_sidechain_dropped_warned` (a durable
+  per-(segment, agent_id) latch, so a recurring unlinked subagent warns once, not every tick) then the fact-lane
+  enqueue. A `kill -9` between the two permanently loses that one warning — the latch already reads as "warned" on the
+  next tick, so nothing re-fires it. On the two budget-stop branches, this pair fires with no cursor write of its own at
+  all (both return before any store write past the reason field). It is accepted on the same narrower ground and for the
+  same price: an informational fact-lane event, the #125 exemption's shape, on a lane `[transcripts] ship = false` keeps
+  cold by default. There is therefore **no new `bzh:crash-point-registry` entry**: the delta-then-reason-field and
+  budget-breach windows degrade rather than break, matching the #137/#216/#230 exemptions above, and the last two are
+  named, accepted gaps, recoverable by inspection rather than automatic retry, not windows this repo claims to have no
+  exposure to at all.
 
 - **The runner's transcript backfill (blizzard#250).** `TranscriptBackfill`
   (`blizzard/src/blizzard/runner/loop/transcript_backfill.py`) is an operator verb, not a loop step, so no sweep family
@@ -319,6 +319,46 @@ when a change adds durable state that a reviewer would otherwise expect a sweep 
   enforces, not a derived cross-fact invariant the checker must recompute — the same shape as the #95 jti, #125
   event-emission, #149 preamble-fingerprint, #137 promote-then-tail-stamp, #216 delivery-closure-sweep, #230
   marker-token, and blizzard#250 backfill exemptions above.
+
+- **The runner's graph-artifact mirror write.** `Spawner._mint` (`blizzard/src/blizzard/runner/loop/spawn.py`) records
+  the pinned mint's graph-scope declarations into the runner's own `graph_artifacts` table, insert-if-absent keyed on
+  `graph_id`, immediately before `record_lease` — a position a reviewer would reasonably expect a sweep point for, since
+  the write lands ahead of the lease it exists to serve. There is no dangerous window, and what closes it is that the
+  presence check and every insert behind it are **one transaction**: a mint's declarations land all or none, so the
+  `graph_id`-granular check can never read a half-written set as a complete one and skip the remainder for the mint's
+  whole life. A `kill -9` between the two writes therefore leaves only a complete orphan set keyed to an immutable mint,
+  and the retry that re-attempts the mint writes the identical rows again — insert-if-absent makes the retry a no-op
+  past the first success — before it reaches `record_lease` a second time. No lease **this path mints** can therefore
+  hold a mint whose declarations are absent or partial, and no crash ever loses a row such a lease depends on. There is
+  therefore **no `bzh:crash-point-registry` entry** for it and **no new `bzh:invariant-checker` assertion**: the row is
+  a durable fact about an immutable mint, never revised once written, so read-after-crash agreement is structural rather
+  than a cross-fact invariant to recompute — the same shape as the jti-replay and the other durable-fact exemptions
+  above.
+
+  The guarantee reaches exactly as far as the mint, and the window past it is **accepted, not repaired**. A lease
+  already in flight when the runner restarts resumes through `Spawner.preamble` — from `Dormant._wake` and
+  `Judgement._elicit` — which re-mints only the capability token and never re-enters `_mint`, so a lease carried across
+  a deploy that introduces this write is resumed without ever acquiring a pin;
+  `IReadRunnerStore.graph_artifacts_for_graph` (`blizzard/src/blizzard/runner/store/repository.py`) states the same
+  thing from the read side, reading empty for a mint pinned before the runner ever recorded one. Three properties bound
+  it. Only leases live across the upgrade are affected. The two verbs that serve graph scope answer that empty pin
+  differently (`blizzard/src/blizzard/runner/api/artifacts.py`): `artifact list --scope graph` returns the empty set,
+  the same answer a graph declaring nothing gives, while `artifact get <name> --scope graph` is a `404` naming the
+  pinned mint, which the worker CLI raises as a `ClickException` (`blizzard/src/blizzard/runner/cli_worker.py`) — a
+  non-zero exit with the miss on stderr, not an empty answer. And it self-heals, since the presence check is keyed on
+  `graph_id` — the next mint against that graph writes the whole set, which the still-running lease then reads through
+  its own `graph_id` like any other.
+
+  A named command failure rather than an empty answer is what the acceptance rests on, and it holds: no engine code path
+  reads a graph declaration at all — the runner's only reader is that worker-facing route — so no admission, routing,
+  epoch, or completion decision can observe the window, and the one reader that can is a worker mid-turn, for which a
+  failure it can see and name is something to act on rather than a wrong answer to proceed from. What carries it through
+  is the fallback every prompt pointing at a graph declaration owes (`bzh:graph-artifact-pointer-fallback`,
+  [../standards/worker-nodes.md](../standards/worker-nodes.md)), which is written against a failed read and not only an
+  empty one. Should a graph-scope read ever become something the engine gates on, the window turns from accepted into a
+  repair: no fallback in authored prose can stand in for a decision the engine makes for itself. Backfilling on resume
+  would close only the stretch before that next mint, and would buy it by making a second call site write a table whose
+  sole writer being the mint is what the paragraph above rests on.
 
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 

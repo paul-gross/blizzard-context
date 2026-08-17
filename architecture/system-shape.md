@@ -155,9 +155,12 @@ abstraction "this node verifies its work", never on a concrete verification comm
 accepting the fork in exchange for the engine enforcing "checks are green" mechanically instead of trusting the worker's
 self-report — a cost worth paying only where the fleet drives one known application.
 
-**Scope.** Governs authored graph YAML and its prompts. The **fleet protocol** is not application knowledge and stays in
-the graph: `blizzard runner artifact create --name <n>` (an asset), `blizzard runner artifact commit` (a git commit),
-`blizzard runner artifact list`/`get` (reading declared inputs back), `blizzard runner ask`, the work-item proxy
+**Scope.** Governs authored graph YAML, its prompts, and the `artifacts:` content a mint bakes in — a third class of
+authored text that reaches a worker session verbatim, fetched by name rather than carried in the prompt, and held to the
+same reusability bar as prompt prose. The **fleet protocol** is not application knowledge and stays in the graph:
+`blizzard runner artifact create --name <n>` (an asset), `blizzard runner artifact commit` (a git commit),
+`blizzard runner artifact list`/`get` (reading declared inputs back, narrowed to node or graph scope with `--scope`;
+`bzh:graph-scope-reads-local` below owns what a graph-scope read costs), `blizzard runner ask`, the work-item proxy
 (`blizzard runner work-items`), and `blizzard runner chunk history` (the chunk's own transition/migration/bounce
 timeline) are blizzard's own surface, identical across every application it drives. `blizzard runner attach` is a
 deprecated alias for `artifact create` ([../standards/worker-nodes.md](../standards/worker-nodes.md)
@@ -176,9 +179,10 @@ than a mechanic (`--force-with-lease` over a bare `--force`), or when it names a
 **Detect.** In a graph meant to be **reusable**: a concrete toolchain command in `checks:` or prompt text
 (`mise run test`, `npm run lint`, `pytest`); a prompt naming a language, framework, directory layout, or branch-naming
 convention; a graph whose name or prose ties it to one application; a node instructing a specific file path inside the
-application. In a **single-application** graph a deliberate `checks:` is **not** this violation — it is the sanctioned,
-enforced opt-in below; what still violates even there is smuggling toolchain specifics into *prompt prose* rather than
-the `checks:` field, or a prompt naming a file path inside the application.
+application; a baked `artifacts:` entry doing any of the same, which reads to the worker exactly as prompt prose does.
+In a **single-application** graph a deliberate `checks:` is **not** this violation — it is the sanctioned, enforced
+opt-in below; what still violates even there is smuggling toolchain specifics into *prompt prose* rather than the
+`checks:` field, or a prompt naming a file path inside the application.
 
 **Do.** For a reusable graph, instruct the *obligation* and let the repo supply the specifics — "verify the change
 through the methods this repository declares, and treat a missing method as a gap to surface"; a competent agent reads
@@ -192,6 +196,39 @@ applications, or a prompt telling the worker to run named toolchain commands —
 tooling, the reusability the rule protects. The engine executes `checks:` and gates on them, so the enforcement is real
 — but so is the per-application fork it imposes, which is precisely why it belongs only in a single-application graph,
 never a reusable one.
+
+## A graph-scope artifact read never leaves the runner (`bzh:graph-scope-reads-local`)
+
+**Rule.** A graph's baked-in `artifacts:` declarations reach the worker with no hub call in the read path: the mint
+stores each entry's already-inlined content, the node envelope carries the whole set, `Spawner._mint` pins that set into
+the runner's own store as it mints the lease, and the worker's `--scope graph` read is answered from that pin alone,
+keyed on the lease's `graph_id`. Node scope keeps its hub-proxied forward — the worker holds no hub credential of its
+own — so only the graph half is local.
+
+**Why.** A mint is immutable, so the hub never holds a newer answer worth fetching, and a declaration authored to be
+consulted repeatedly (a docket, a rubric) would otherwise put a round-trip — and a hub outage — in the path of prose the
+runner is already holding. Keying the pin on `graph_id` rather than the lease is what lets one copy serve every chunk
+and every attempt on that mint, including a lease pinned to a mint the graph's name has since moved past.
+
+**Scope.** The declarations' path only — envelope → mint-time pin → the worker's read route. The mint itself is the
+hub's, and node-scope artifacts are unaffected: they are produced per attempt, so the hub is the only place their newest
+version exists.
+
+**Detect.** A graph-scope read path that consults the hub — a proxy forward, an envelope re-fetch, or a "re-read the
+declarations" call; a design that leaves the declarations off the envelope and has the runner ask the hub for them at
+spawn or at read time; a graph-scope read that fails when the hub is unreachable.
+
+**Do.** `_graph_rows` (`blizzard/src/blizzard/runner/api/artifacts.py`) resolves the rows through
+`IReadRunnerStore.graph_artifacts_for_graph(lease.graph_id)` and reaches no `HubProxy`;
+`blizzard/tests/service/test_runner_service.py::test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable`
+holds that with the hub unreachable, beside a node-scope read of the same lease that `503`s under the same outage.
+
+**Don't.** Answer graph scope through the same `HubProxy` forward node scope uses, on the grounds that one read path is
+simpler than two — every declaration read then fails with the hub, which is the property this rule exists to buy.
+
+**See also.** [`../standards/worker-nodes.md`](../standards/worker-nodes.md) `bzh:graph-artifact-pointer-fallback` — the
+fallback a prompt pointing at a declaration owes, because a lease pinned before the runner recorded the mint's
+declarations reads an empty pin.
 
 ## Git mutation lives in the worker seam (`bzh:git-write-in-worker-seam`)
 
