@@ -109,6 +109,14 @@ bind are owned by `blizzard-mock` (P4); the tier *rules* below are the standard 
   documented gap, not invented around: do not add a real-token tier to close it. The companion finding is that **effort
   is not sticky** in the same CLI — measured, not assumed — which is why effort is reasserted on every invocation while
   model is not.
+- **Compaction is covered by evidence, not by a tier (blizzard#343).** The declared window travels to the harness as a
+  per-invocation flag (`--autocompact`, reasserted like effort, never sticky-by-omission), but whether it actually
+  compacts a session's context near that value is *effective* harness behavior no CI tier can see: the mock façade sees
+  argv and nothing else, so the mock-visible tiers (`blizzard:unit-test`'s command-list pins, `blizzard:component-test`'s
+  wire/stamp round-trip) prove only that the flag is built and threaded, never that it does anything. Closing that gap
+  is `blizzard:manual-autocompact-window`, the same shape as `blizzard:manual-external-usage-probe` below: a live
+  procedure, not a placeholder for a future tier — the thing it proves (an external harness's live compaction behavior)
+  is structurally outside a hermetic, network-free CI tier's reach.
 - **Sidechain and thinking-turn *normalization* is proven only against hand-authored fixtures (blizzard#245).** Pinned
   at `blizzard:unit-test` and by the component-tier projection golden tests, both fed by the same hand-authored record
   fixtures; `blizzard-mock`'s `ClaudeTranscriptWriter`
@@ -415,6 +423,33 @@ structurally outside what a hermetic, network-free CI tier can ever see. (`blizz
 similar case; issue #235's `blizzard:sse-contract` has since automated its field-shape half, leaving only framing/timing
 manual — a reminder that "structurally unreachable by CI" should be checked afresh each time a surface like this comes
 up, not assumed permanent by analogy.)
+
+### blizzard:manual-autocompact-window — a declared window compacts a real session, not the model maximum
+
+Surface: no CI tier can observe *effective* harness behavior here — the same structural gap the session-stickiness tier
+rule above describes (the mock façade sees argv, never actual context accounting) — so what only a live session can
+prove is the flag's own **effect**, not its presence: a session spawned with a declared `--autocompact <window>`
+compacts near that value rather than growing toward the model's own maximum context. Setup: a real Claude Code CLI
+(`claude 2.1.234` or newer, the version this feature's tested assumptions were measured against), a workdir it can run
+non-interactively in (`-p`), and turns substantial enough to grow context by tens of thousands of tokens each (e.g.
+asking it to read and summarize a large file), so a handful of turns crosses a low declared window.
+
+Steps:
+
+1. Mint a session with a low window near the CLI's own floor — `claude --autocompact 100k -p "<turn 1>"
+   --output-format json` — and record the printed session id.
+2. Resume it repeatedly with the flag reasserted each time — `claude --resume <session-id> --autocompact 100k -p
+   "<turn N>" --output-format json` — each turn large enough to add tens of thousands of tokens, until cumulative
+   context should exceed 100k.
+3. After each turn, read that turn's context size the same way the runner already does: the main-chain record's
+   `message.usage.input_tokens + cache_read_input_tokens + cache_creation_input_tokens` in
+   `~/.claude/projects/<project>/<session-id>.jsonl` (`ClaudeCodeTranscriptSource.context_tokens`,
+   `claude_code_transcript.py`).
+4. Repeat steps 1-3 with `--autocompact` omitted, same prompts, same turn count.
+
+Pass: the declared-window run's context size drops sharply — back toward a small fraction of 100k — within a turn or
+two of first crossing it, and stays down on the next turn; the undeclared run's context size keeps climbing past 100k
+without dropping. That contrast is the compaction event itself: no other mechanism resets a session's context mid-lineage.
 
 ### blizzard:manual-standing-idp — auth-gated behavior verified live, in a running env
 
