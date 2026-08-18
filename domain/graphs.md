@@ -41,7 +41,7 @@ and a node second — so a declaration whose name collides with a node's is reje
 declarations *only*: `fresh` always mints, and a session minted at another node is not in this node's implicit lineage,
 so a node name there would name nothing.
 
-A declaration carries three things, all optional:
+A declaration carries four things, all optional:
 
 - **A prioritized model preference.** An ordered list of opaque preference strings — a namespaced capability *tier*
   (`blizzard:frontier` / `blizzard:advanced` / `blizzard:basic`) or a harness-native model name. The graph states a
@@ -54,11 +54,18 @@ A declaration carries three things, all optional:
 - **An effort.** Model's twin, as a single value rather than a list — every harness can map an ordinal somewhere, so
   there is no "unrecognized, try the next" case. `low|medium|high|max` is the well-known vocabulary, extended by runner
   configuration.
+- **A compaction window (blizzard#343).** A tuning knob, not a preference — an opaque string a harness's own adapter
+  interprets and passes straight through (Claude Code's `--autocompact <auto|tokens>`), never resolved or validated
+  hub-side. Like `effort` and unlike `model`, it is reasserted on every invocation rather than trusted to survive a
+  resume. Shaped like rotation bounds below rather than like model/effort: declaration-only, with no chunk-level default
+  to fall back to.
 - **Rotation bounds.** What makes a lineage finite. A pool's current session is continued only while every declared
   bound it can measure is under threshold; past one, the next member starts a new session in the same pool. Bounds are
   stated over context size, transcript size, and **harness invocations** — the last counting spawns, resumes, judgements
   and nudges, so one node-step spends two or three of them. A bound that cannot be measured is not a breach: a missing
-  measurement leaves the session standing.
+  measurement leaves the session standing. A compaction window and a rotation bound are not independent: compaction
+  shrinks a session's context **in step**, rotation ends a lineage **across steps**, and a window at or above the
+  rotation bound can never fire first — a graph declaring both keeps the window below the bound.
 
 A pool holds **one session at a time**. `fresh:<session>` is a *forced rotation point* — it always starts a new one,
 which every later `resume:<session>` member then continues — so a cyclic graph re-entering that node begins each
