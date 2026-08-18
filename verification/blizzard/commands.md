@@ -552,22 +552,24 @@ widths.
 composition sites — `BoardCardComponent`, `ChunkTimeline`'s history rows, and `ChunkArtifacts`'s artifact rows — the
 first spec proving a computed-style claim rather than a layout one: a real pointer (`userEvent.hover`,
 Playwright-backed) distinguishes a hovered element's resolved `background-color` from its resting one, and — on the
-board card, the one composition site carrying both states at once — from a selected-but-unhovered card's own. It also
-pins the artifact list's asymmetry: hovering a `.artifact-link` washes its row, hovering a contentless `.artifact-plain`
-row (nothing an expand would reveal — no control to hover) does not. Proven able to fail on all four assertions:
-dropping the `background: var(--tint-hover)` half of `board-card.ts`'s `.card:hover` rule reproduces
+board card, and again on `ChunkTimeline` once blizzard#315 gave it a `selected` row of its own (`activatable`,
+`selectedKey`) — from a selected-but-unhovered row's own. It also pins the artifact list's asymmetry: hovering a
+`.artifact-link` washes its row, hovering a contentless `.artifact-plain` row (nothing an expand would reveal — no
+control to hover) does not. Proven able to fail on all five assertions: dropping the `background: var(--tint-hover)`
+half of `board-card.ts`'s `.card:hover` rule reproduces
 `hover produced no background
 change from resting (rgba(0, 0, 0, 0.25))`; pointing `.card.selected`'s background at
 `--tint-hover` instead of `--tint-selected` reproduces
 `a selected card (...) reads identical to a hovered-but-unselected one (...)`; dropping the same half of
-`chunk-timeline.ts`'s `.step:hover` rule reproduces the same shape of failure on the history row; and re-scoping
-`chunk-artifacts.ts`'s `:has()` selector from `.artifact-link:hover` to `.artifact-plain:hover` reproduces it on the
-artifact row while the plain-row half stops distinguishing at all. Restoring each rule passes again. The design tokens
-are a global stylesheet (`web/projects/fleet/src/lib/design/tokens.css`), loaded by every app's own build but never by a
-standalone component test — a plain module import of the `.css` file does not reach the document either under this
-builder (it lands as an unreferenced lazy chunk); the spec instead reads the sheet's real text through
-`commands.readFile`, the vitest browser command this builder exposes for exactly this, and injects it as a `<style>`
-element itself.
+`chunk-timeline.ts`'s `.step:hover` rule reproduces the same shape of failure on the history row; pointing
+`.step.selected`'s background at `--tint-hover` instead of `--tint-selected` reproduces the same
+selected-reads-identical-to-hovered failure there too; and re-scoping `chunk-artifacts.ts`'s `:has()` selector from
+`.artifact-link:hover` to `.artifact-plain:hover` reproduces it on the artifact row while the plain-row half stops
+distinguishing at all. Restoring each rule passes again. The design tokens are a global stylesheet
+(`web/projects/fleet/src/lib/design/tokens.css`), loaded by every app's own build but never by a standalone component
+test — a plain module import of the `.css` file does not reach the document either under this builder (it lands as an
+unreferenced lazy chunk); the spec instead reads the sheet's real text through `commands.readFile`, the vitest browser
+command this builder exposes for exactly this, and injects it as a `<style>` element itself.
 
 ### blizzard:journey
 
