@@ -410,16 +410,20 @@ with **no exemptions**.
 
 ### web:shell-sweep
 
-`npm run shell-sweep` in `web/` (`web/scripts/shell-sweep.js`) — the tooled proof behind the narrow-viewport tier rule
+`npm run shell-sweep` in `web/` (`web/scripts/shell-sweep.js`) — the tooled proof behind two classes of claim jsdom
+cannot evaluate. The first, and the method's original reason to exist, is the narrow-viewport tier rule
 (`bzh:narrow-viewport-tier-rule`, [tier rules](../blizzard.md#tier-rules)) for components reachable from the mobile
-shell's bottom nav. jsdom (`web:unit-test`'s environment) parses `@container`/media-query rules without evaluating them
-and never actually lays out or clamps text, so no jsdom spec can prove a real collapse; this method runs its specs under
-`@angular/build:unit-test`'s real-browser mode instead (`--browsers=ChromiumHeadless`, backed by the
+shell's bottom nav: jsdom (`web:unit-test`'s environment) parses `@container`/media-query rules without evaluating them
+and never actually lays out or clamps text, so no jsdom spec can prove a real collapse. The second is a computed-style
+claim no viewport width changes — most concretely a `:hover`/`:focus-visible` rule, since jsdom parses a pseudo-class
+selector without ever resolving it against a simulated pointer, so no jsdom spec can prove a hovered element reads
+differently from a resting or a selected one either. Both classes share the same gap and the same fix: this method runs
+its specs under `@angular/build:unit-test`'s real-browser mode instead (`--browsers=ChromiumHeadless`, backed by the
 `@vitest/browser-playwright` + `playwright` dev dependencies, pinned to the same `1.61.x` release the Python
 `tests/e2e/` tier already caches a Chromium build for), where layout, `@container`/media-query collapse, line-clamping,
-and hit-testing are all genuine. Each spec — named `*.shell-sweep.spec.ts` and excluded from its project's default
-`ng test` run (`web/angular.json`'s per-project `test.exclude`), since jsdom cannot run it — mounts a real component
-tree.
+computed style, and hit-testing are all genuine. Each spec — named `*.shell-sweep.spec.ts` and excluded from its
+project's default `ng test` run (`web/angular.json`'s per-project `test.exclude`), since jsdom cannot run it — mounts a
+real component tree.
 
 `app-nav-menu.shell-sweep.spec.ts` and `app-header.shell-sweep.spec.ts` cover the app's two shared header shells
 (`hub`'s `BoardHeader` + `AppNavMenu`, `runner`'s `AppHeader`) and, for every combination of viewport width (1400 down
@@ -543,6 +547,29 @@ status line is `fleet-kit-async-state`'s absolutely-centered `placement="center"
 only in-flow content is the 44px back bar paints `FAILED TO LOAD CHUNK` across `‹ Board` — it must resolve against the
 back row's sibling instead. Its third case asserts the issue pane's own error text stays within its section at phone
 widths.
+
+`hover-tint.shell-sweep.spec.ts` covers the shared `--tint-hover`/`--tint-selected` design tokens across their three
+composition sites — `BoardCardComponent`, `ChunkTimeline`'s history rows, and `ChunkArtifacts`'s artifact rows — the
+first spec proving a computed-style claim rather than a layout one: a real pointer (`userEvent.hover`,
+Playwright-backed) distinguishes a hovered element's resolved `background-color` from its resting one, and — on the
+board card, and again on `ChunkTimeline` once blizzard#315 gave it a `selected` row of its own (`activatable`,
+`selectedKey`) — from a selected-but-unhovered row's own. It also pins the artifact list's asymmetry: hovering a
+`.artifact-link` washes its row, hovering a contentless `.artifact-plain` row (nothing an expand would reveal — no
+control to hover) does not. Proven able to fail on all five assertions: dropping the `background: var(--tint-hover)`
+half of `board-card.ts`'s `.card:hover` rule reproduces
+`hover produced no background
+change from resting (rgba(0, 0, 0, 0.25))`; pointing `.card.selected`'s background at
+`--tint-hover` instead of `--tint-selected` reproduces
+`a selected card (...) reads identical to a hovered-but-unselected one (...)`; dropping the same half of
+`chunk-timeline.ts`'s `.step:hover` rule reproduces the same shape of failure on the history row; pointing
+`.step.selected`'s background at `--tint-hover` instead of `--tint-selected` reproduces the same
+selected-reads-identical-to-hovered failure there too; and re-scoping `chunk-artifacts.ts`'s `:has()` selector from
+`.artifact-link:hover` to `.artifact-plain:hover` reproduces it on the artifact row while the plain-row half stops
+distinguishing at all. Restoring each rule passes again. The design tokens are a global stylesheet
+(`web/projects/fleet/src/lib/design/tokens.css`), loaded by every app's own build but never by a standalone component
+test — a plain module import of the `.css` file does not reach the document either under this builder (it lands as an
+unreferenced lazy chunk); the spec instead reads the sheet's real text through `commands.readFile`, the vitest browser
+command this builder exposes for exactly this, and injects it as a `<style>` element itself.
 
 ### blizzard:journey
 
