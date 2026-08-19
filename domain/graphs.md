@@ -65,9 +65,12 @@ A declaration carries four things, all optional:
   and nudges, so one node-step spends two or three of them. A bound that cannot be measured is not a breach: a missing
   measurement leaves the session standing. A compaction window and `rotate.max_context_tokens` are not independent — the
   one commensurable pair, both counted in tokens: compaction shrinks a session's context **in step**, rotation ends a
-  lineage **across steps**, and a window at or above `max_context_tokens` can never fire first. A graph declaring both
-  keeps the window below that bound specifically, not below `max_invocations` or `max_transcript_bytes`, which measure
-  different things.
+  lineage **across steps**. Their order picks which of the two actually bounds an ordinary lineage, so a graph declaring
+  both chooses that order deliberately. Below the bound, compaction fires first and keeps firing — the lineage survives,
+  but the worker pays working context mid-task once per firing. At or above it, rotation ends the lineage first and the
+  window survives only as a ceiling on the one invocation that outgrows it before the next resume is measured. Neither
+  ordering is the default. The comparison is against `max_context_tokens` specifically, not `max_invocations` or
+  `max_transcript_bytes`, which measure different things.
 
 A pool holds **one session at a time**. `fresh:<session>` is a *forced rotation point* — it always starts a new one,
 which every later `resume:<session>` member then continues — so a cyclic graph re-entering that node begins each
