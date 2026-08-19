@@ -353,13 +353,18 @@ the **runner**, swept by `test_kill9_at_checks_crash_point` over both members `c
 `checks_ran` marker, so a `kill -9` in the fired-before-marker window leaves the marker unset and recovery re-runs the
 checks (latest-wins overwrite), while after the marker recovery reads the recorded results back and judges —
 `runner:checks-recorded-when-marked` green after each recovery, the chunk landing exactly once; its bounded-CI
-representative is the recovery-critical `checks.after-results.before-marker`) alongside the ungrouped generic
-`build → deliver` sweep points, most of which fire in the runner loop — `claim.` (the route-claim boundary between
-persisting the route + its capability-token fact and the runner reading the plaintext token back) is the first of those
-ungrouped points armed on the **hub** process instead, recovered generically by the runner's own interrupted-claim
-adoption rather than a dedicated scenario. Local-only like `blizzard:e2e` — needs the sibling `blizzard-mock` worktree
-and a winter source; skipped without `BLIZZARD_CRASH_SWEEP=1`. **In CI** both the `pr` and `push` workflows run the
-**bounded CI profile** — `BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -m crash_sweep tests/crash/`
+representative is the recovery-critical `checks.after-results.before-marker`), and `preempt.` (the operator-restart
+teardown window, #370 — armed on the **runner**, swept by `test_kill9_at_preempt_crash_point`: an operator restarts a
+running chunk and the runner `kill -9`s between killing the displaced worker and recording the `preempted` closure, so
+recovery must re-derive the same preempt off the hub's still-standing fence — the lease closes `preempted`, never
+`reaped` or `failed`, which would spend the retry budget the move exists to protect, and the chunk lands exactly once)
+alongside the ungrouped generic `build → deliver` sweep points, most of which fire in the runner loop — `claim.` (the
+route-claim boundary between persisting the route + its capability-token fact and the runner reading the plaintext token
+back) is the first of those ungrouped points armed on the **hub** process instead, recovered generically by the runner's
+own interrupted-claim adoption rather than a dedicated scenario. Local-only like `blizzard:e2e` — needs the sibling
+`blizzard-mock` worktree and a winter source; skipped without `BLIZZARD_CRASH_SWEEP=1`. **In CI** both the `pr` and
+`push` workflows run the **bounded CI profile** —
+`BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -m crash_sweep tests/crash/`
 (`mise run crash-sweep-ci`): one representative crash point per boundary family plus the whole-process cases and the
 recovery-critical windows, ~75s on a GitHub runner, so the sweep is a real gate at bounded runtime. The subset is
 intersected with the live registry and asserts each named point still exists (`bzh:crash-point-registry`), so a rename

@@ -7,12 +7,15 @@ The default posture is human-**on**-the-loop: the default graph has no human tou
 main. Every human entry is either **opt-in** (asks, gates) or **exceptional** (escalation, takeover); adding and
 removing gates is the dial between reviewing every step and supervising outcomes.
 
-| Entry         | Who initiates                                              | Parks the chunk as                                                                                 | Resolved by                                                                                             |
-| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Ask           | The worker, mid-step                                       | `waiting_on_human`                                                                                 | The first answer; the session resumes around it                                                         |
-| Gate decision | The workflow (a human-judged node) or runner configuration | `waiting_on_human`                                                                                 | A person picking one of the choices; the resolving transition follows                                   |
-| Escalation    | The system, on exhausted failure                           | `needs_human`                                                                                      | Supersession — a requeue makes the chunk leasable again, or the chunk ends; there is no resolution fact |
-| Takeover      | A person, entering a held session                          | Nothing of its own — the chunk keeps the condition it was already in, plus human-in-session detail | Explicit hand-back — requeue — or the chunk ending while still held                                     |
+| Entry         | Who initiates                                              | Parks the chunk as                                                                                 | Resolved by                                  |
+| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Ask           | The worker, mid-step                                       | `waiting_on_human`                                                                                 | [§Ask and answer](#ask-and-answer)           |
+| Gate decision | The workflow (a human-judged node) or runner configuration | `waiting_on_human`                                                                                 | [§Gate decision](#gate-decision)             |
+| Escalation    | The system, on exhausted failure                           | `needs_human`                                                                                      | [§Escalation](#escalation) — by supersession |
+| Takeover      | A person, entering a held session                          | Nothing of its own — the chunk keeps the condition it was already in, plus human-in-session detail | [§Takeover](#takeover)                       |
+
+Each entry's own section owns what resolves it, and what an operator's restart ([work.md](./work.md) §Restart) does to
+it — the column above routes rather than restating, so a new resolving path is one edit, not two.
 
 The two parked conditions differ by cause: `waiting_on_human` is **invited** input — the model expects a person and
 stops the reap clock; `needs_human` is **failure** — the system ran out of moves and a person must act. Both derive from
@@ -28,6 +31,11 @@ the chunk parks.
   said.
 - **The session resumes around the answer** — the dormant agent session continues with the answer delivered into it, and
   the resume restarts the reap clock.
+- **An operator's restart consumes an open one.** Forcing the chunk onto a node ([work.md](./work.md) §Restart) answers
+  the question with a fixed system answer saying the step was superseded, since the step that asked it is gone. The
+  *write* is an ordinary answer, so the first-write rule above is unchanged: a person who already answered still wins.
+  The *return trip* is deliberately never made — the session that would have heard it was preempted in the same move, so
+  the question stays answered-and-never-delivered, and that pair is the honest record of what happened to it.
 - **The delivery is itself a fact, and the question carries it.** Answered and delivered are distinct derived states:
   answered says a person decided, delivered says the resume actually ran and the agent heard. A question row surfaces
   both, so the return trip is visible to whoever answered rather than inferred from the chunk moving.
@@ -40,9 +48,13 @@ written its transition, carrying the step's artifacts so the deciding human sees
 - **The choices are the node's judgement choices** ([graphs.md](./graphs.md)) — what the board and chat bot render as
   buttons.
 - **Pending derives**: a decision no resolving fact references is open, and the chunk derives `waiting_on_human` from it
-  — no live lease while parked. The resolving fact is normally the transition the holding runner writes (below); when
-  the resolved choice migrates cross-graph it is the migration record instead — or, if that migration's target is
-  unresolvable, the escalation — since a migration writes no transition ([work.md](./work.md) §Migration).
+  — no live lease while parked. Which fact resolves it:
+  - **The transition the holding runner writes** (below) — the ordinary case.
+  - **The migration record**, when the resolved choice migrates cross-graph, since a migration writes no transition
+    ([work.md](./work.md) §Migration).
+  - **The escalation**, when that migration's target is unresolvable.
+  - **An operator's restart**, which moves the chunk off the gate without deciding it: the move itself closes the
+    decision, and no choice is invented for the runner to then transition along.
 - **Resolution is recorded once** — first write wins, like an answer — and the holding runner then writes the ordinary
   transition referencing the decision: the runner still advances the chunk.
 - **Gates arrive two ways**: structurally, as a human-judged node in the graph; or by **runner configuration** selecting
@@ -67,7 +79,7 @@ a migrating choice's target graph fails to resolve, or when a node's bounce cap 
   this chunk, with a session behind its most recent lease — never what the escalation itself carries. An escalation
   carrying neither command can still be takeable on that basis; carrying nothing only means nothing was composed for
   display.
-- **There are four genuinely distinct reasons the wrapped verb can be missing:**
+- **The genuinely distinct reasons the wrapped verb can be missing:**
   - **Hub-authored** — the hub itself escalates (cross-graph-unresolvable, or a node's bounce cap crossed); it has no
     runner runtime to compose a wrapped command from, so the wrapped verb is always missing here. A
     cross-graph-unresolvable escalation reached through a worker's own live transition carries operator guidance in
@@ -94,13 +106,17 @@ a migrating choice's target graph fails to resolve, or when a node's bounce cap 
   operator lands in the configuration the fleet was using rather than whichever one a fresh resolution would produce
   now. A session that predates the record simply carries none of them, and the command stays bare rather than guessing.
 - A present wrapped verb is the supported entry point (§Takeover below).
-- It **closes by supersession, never resolution** — there is no "resolved" fact to write. Two things supersede one.
-  Requeueing makes the chunk leasable again, and the next attempt's lease closes it. **The chunk ending** also closes it
-  — stopped or done: a human who finished the work outside the fleet and abandoned the chunk has resolved the hold, and
-  a chunk requeued away and landed by another runner has had it resolved for them. Neither is ever followed by a lease
-  mint on the escalating runner, so without this arm the escalation would stand forever. A runner that raised the
-  escalation learns the stop on its next reconciliation and mirrors it locally, so its own list and panel drop the chunk
-  too — meaning the runner-side close lags the hub's by a tick, and by a redeploy on a runner too old to sweep.
+- It **closes by supersession, never resolution** — there is no "resolved" fact to write. What supersedes one:
+  - **A requeue**, which makes the chunk leasable again.
+  - **The next attempt's lease**, whenever one is minted on that chunk.
+  - **An operator's restart** ([work.md](./work.md) §Restart), which hands the work back the same way at its own fresh
+    epoch.
+  - **The chunk ending** — stopped or done: a human who finished the work outside the fleet and abandoned the chunk has
+    resolved the hold, and a chunk requeued away and landed by another runner has had it resolved for them. Neither is
+    ever followed by a lease mint on the escalating runner, so without this arm the escalation would stand forever.
+- **The runner-side close lags the hub's**, by a tick and by a redeploy on a runner too old to sweep: the runner that
+  raised the escalation learns of the supersession on its next reconciliation and only then drops the chunk from its own
+  list and panel.
 - An open escalation also **appears as one `needs-human` event** in the unified operational event log
   ([operations.md](./operations.md)), projected at read time — its own fact and supersession rule are unchanged; the log
   just gives `needs_human` one home alongside the other operational events rather than a separate surface.
@@ -120,7 +136,10 @@ that attempt has already submitted its outcome: a fence minted behind a queued s
   `artifact …`) reach the runner: it authorizes them against the reference lease it names, active or already closed,
   rather than minting or reopening a lease of its own.
 - **No attempt runs during a takeover** — the chunk keeps whatever condition it was in, with human-in-session detail,
-  until it is explicitly requeued or the chunk itself ends.
+  until it is explicitly requeued or the chunk itself ends. An operator's restart ([work.md](./work.md) §Restart) is the
+  one move that can be *recorded* against a chunk in this state, and it deliberately does not take effect: the hub keeps
+  no takeover state to refuse it with, so the runner holding the session defers the teardown instead — indefinitely,
+  while the person works on at the now-stale epoch. Ending the takeover is what lets the move land.
 - **Hand-back is ordinarily explicit**: the person requeues the chunk. The one exception is the chunk ending — stopped
   or done — while a takeover is still open: nothing infers a *person* is done, but the hub's own terminal fact closes
   the takeover fact regardless, the same shape an escalation's own hub-ends-it closer (§Escalation above) already uses.
