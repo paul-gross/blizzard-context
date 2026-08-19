@@ -381,14 +381,6 @@ unstaged diff in `openapi/`.
 - a `max-lines` ceiling over every Angular component file (the ~400-line cap,
   [../../architecture/frontend-structure.md](../../architecture/frontend-structure.md)
   `bzh:frontend-container-presentational`);
-- a grep sweep asserting the retired chrome blocks appear only under `fleet/lib/kit/` — which classes those are is
-  [../../architecture/frontend-structure.md](../../architecture/frontend-structure.md) `bzh:frontend-kit-floor`'s
-  Detect, reached from the toolchain side by `bzh:frontend-kit`;
-- an empty-state-without-the-kit sweep (blizzard#181,
-  [../../architecture/frontend-structure.md](../../architecture/frontend-structure.md) `bzh:frontend-empty-state-gated`)
-  — a component outside `fleet/lib/kit/` rendering a `*-empty` `data-testid` must also reference `fleet-kit-async-state`
-  in the same file, unless named in `EMPTY_STATE_EXEMPT_FILES` alongside the one-line reason the view is reachable only
-  after a parent's own triad has already resolved;
 - a real-timer sweep (issue #275) over the specs the `test` target actually runs, failing a `setTimeout`/`setInterval`
   whose delay is a **non-zero integer literal** — a real second spent inside the merge gate, and a window guessed rather
   than chosen. A delay held in a variable or expression is outside the pattern; `setTimeout(…, 0)` is the
@@ -398,7 +390,7 @@ unstaged diff in `openapi/`.
   cadence. The tree is clean of the shape today, so this check alone would pass with its detector deleted — it carries a
   fixture self-test (`assertRealTimerDetectorWorks`, must-catch and must-pass shapes including a nested call in the
   callback) that refuses to run the gate at all if the detector stops classifying them, which is what keeps it a guard
-  rather than a decoration (`bzh:case-pins-its-own-name`). The remaining checks fire on real files today and need no
+  rather than a decoration (`bzh:case-pins-its-own-name`). The remaining check fires on real files today and needs no
   equivalent.
 
 The `max-lines` half armed in phase 3 of the WEBARCH epic (blizzard#77) once the chunk-detail decomposition (#79) and

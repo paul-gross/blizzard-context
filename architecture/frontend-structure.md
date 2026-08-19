@@ -24,9 +24,9 @@ presentational sibling. The slot itself is the composition boundary the host (`B
 container/presentational split below it buys no testability the plain-kit template doesn't already have, only an extra
 file. This is narrow: the moment such a component grows a row, card, or form, it re-enters the rule.
 
-**Detect.** A component file that both calls an `inject*Query`/`inject*Mutation` and carries a multi-line `template:`
-with domain markup (rows, cards, forms) rather than delegating to a child; a presentational component that itself calls
-`inject*Query`.
+**Detect.** A component file that both calls an `inject*Query`/`inject*Mutation` and whose sibling `.html` template
+carries domain markup (rows, cards, forms) rather than delegating to a child; a presentational component that itself
+calls `inject*Query`.
 
 **Do.** `chunk-detail.ts` (the container: owns the query, maps `pmItems`/`actionError`, forwards `detail`) renders
 `chunk-detail-panel.ts` (the presentational panel), passing data down and re-emitting its outputs up unchanged. Under
@@ -49,9 +49,9 @@ habit — every future panel composes the kit instead of re-inventing the `.pane
 fix (a token, a state message) lands once. The kit sits *under* every container and presentational component in the
 dependency graph; nothing in the kit may depend upward on a feature.
 
-**Detect.** A new component's style block declaring `.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl` (the retired chrome
-classes, `web:structural-gate`'s grep sweep) outside `fleet/lib/kit/`; a kit component (`fleet/lib/kit/*`) importing a
-query, mutation, or the generated API client.
+**Detect.** A new component's sibling `.css` file declaring `.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl` (the retired
+chrome classes) outside `fleet/lib/kit/` — caught in review, not by a tool; a kit component (`fleet/lib/kit/*`)
+importing a query, mutation, or the generated API client.
 
 **Do.** A new panel imports `KitPanel`/`KitAsyncState`/`KitBadge` from `fleet` and composes them; a status message
 renders through `KitAsyncState`'s `loading`/`error`/`empty` states rather than a local `<p class="status">`.
@@ -76,10 +76,9 @@ refetch (a poll, an SSE-driven invalidation) from regressing an already-rendered
 property `query-state.ts`'s own doc comment asserts directly.
 
 **Detect.** A component rendering a `data-testid` matching `*-empty` that does not also reference
-`fleet-kit-async-state` in the same file (`web:structural-gate`'s third check, `EMPTY_STATE_EXEMPT_FILES` naming the
-views a one-time sweep confirmed are reachable only after a parent's own triad has already resolved); a container
-reading `query.isFetching()` where `isPending()` belongs; a conditional query's "nothing selected" state expressed as a
-branch *after* (rather than before) the triad.
+`fleet-kit-async-state` in the same file — caught in review, not by a tool; a container reading `query.isFetching()`
+where `isPending()` belongs; a conditional query's "nothing selected" state expressed as a branch *after* (rather than
+before) the triad.
 
 **Do.** `board-page.ts` derives `asyncState(chunksQuery, chunks().length === 0)` and hands it to `board-shell.ts`'s
 `state` input, which renders `fleet-kit-async-state` in place of a bare length check. `chunk-detail.ts` branches on
@@ -133,7 +132,8 @@ registries, each exhaustive over its own daemon's event union, never one growing
 
 - [../standards/frontend.md](../standards/frontend.md) — the kit adoption rule (`bzh:frontend-kit`) cites
   `bzh:frontend-kit-floor` rather than restating it; the toolchain (lint/test/generated-client) rules live there.
-- [../verification/blizzard.md](../verification/blizzard.md) — `web:structural-gate`, the tooled grep sweep that
-  enforces both `bzh:frontend-kit-floor`'s Detect and `bzh:frontend-empty-state-gated`'s.
+- [../verification/blizzard.md](../verification/blizzard.md) — `web:structural-gate`, whose `max-lines` ceiling is the
+  one tooled Detect in this file; `bzh:frontend-kit-floor`'s and `bzh:frontend-empty-state-gated`'s are review
+  questions.
 - [./clean-architecture.md](./clean-architecture.md) — the daemon-side dependency-inversion this doc is the frontend's
   counterpart to.

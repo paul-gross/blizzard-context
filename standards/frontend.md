@@ -48,16 +48,16 @@ then land invisibly and installs need a codegen toolchain.
 ## New panel chrome uses the kit (`bzh:frontend-kit`)
 
 **Rule.** A component style resolves any overlay wash through a `design/tokens.css` `--overlay-*` token, never a raw
-`rgba(0, 0, 0, …)` literal, and `web:structural-gate` (`npm run structural-gate` in `web/`,
-[../verification/blizzard.md](../verification/blizzard.md)) is the tooled enforcement this file names for that ban plus
-the retired-chrome-class Detect below. The substantive rule this tooling enforces — a panel builds its chrome from
+`rgba(0, 0, 0, …)` literal — this ban and the retired-chrome-class Detect below are both caught in review; neither is
+tooled by `web:structural-gate` (`npm run structural-gate` in `web/`,
+[../verification/blizzard.md](../verification/blizzard.md)). The substantive rule here — a panel builds its chrome from
 `fleet/lib/kit/` rather than a re-typed local copy — is owned by
 [`../architecture/frontend-structure.md`](../architecture/frontend-structure.md) `bzh:frontend-kit-floor`
 (`canon:one-owner`); this entry is the toolchain-facing pointer to it, not a restatement.
 
-**Detect.** A component style block declaring one of the retired chrome classes — `bzh:frontend-kit-floor`'s own Detect
-names them — outside `fleet/lib/kit/`; a raw `rgba(0, 0, 0, …)` in a component style. The gate named in the Rule above
-runs the chrome-class half of this Detect on every push.
+**Detect.** A component's sibling `.css` file declaring one of the retired chrome classes — `bzh:frontend-kit-floor`'s
+own Detect names them — outside `fleet/lib/kit/`; a raw `rgba(0, 0, 0, …)` in a component style. Neither half is
+tool-checked; both are a review question.
 
 **Do.** `<fleet-kit-panel [label]="…" [count]="…">` for a panel shell; `<fleet-kit-async-state [state]="…">` for the
 loading/error/empty triad; `var(--overlay-25)` for a panel-head wash.
