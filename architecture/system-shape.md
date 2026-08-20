@@ -56,7 +56,24 @@ reviewer does not have to re-derive the same judgement:
   store *is* the item's system of record, not a cache of an external one, so there is no external system for a config
   entry to point at. The concrete wiring stays at the composition root (`hub/app.py::build_hosted_app`) exactly as
   `bzh:dependency-injection` requires for every other binding — only the walk that seats it differs (outside the
-  configured-entry loop, in `WorkSourceEntry.registry`), not the seam itself.
+  configured-entry loop, in `WorkSourceEntry.registry`), not the seam itself. Its **editor** capability (`IWorkEditor`,
+  blizzard#358) is seated the same way and carries the same judgement one step further, on two counts.
+
+  First, *why it is structural rather than an opt-in*: `annotate`/`close` are each a configured source's own opt-in key,
+  but no `[[work_source]]` field could ever opt a source into editing. The reason is not that editing reaches the hub's
+  own store — `annotate`/`close` are configured opt-ins that also write to an external store, so store locality alone
+  doesn't distinguish editing from them. What actually closes the seam is the *return type*: all five `IWorkEditor`
+  methods return `WorkItemRecord`, the hub repository's own record type (a `wi_<ulid>` id, a hub-user-or-fleet author, a
+  closure) — unlike `IWorkSource.fetch`, which returns a seam-local `WorkItem` dataclass any binding can answer.
+  `editor(name) is None` is therefore *structurally never edited* for every source but `hub`, not merely *not opted in*
+  — a capability seated with no flag at all is still one seam, one composition root, no different in kind from the
+  source itself.
+
+  Second, *why the same gate also covers `list`/`get`* (the read half) rather than only the three write verbs:
+  `IWorkSource` itself declares no enumeration method at all, so today no non-`hub` binding — including the configured
+  GitHub adapter, whose `fetch` answers one pointer at a time — has any way to serve `list()`/`get()` regardless of the
+  editor gate. Gating reads alongside writes changes nothing observable while that holds; the day a binding gains a real
+  enumeration capability, the read half is what splits out of `IWorkEditor`, not before.
 
 ## Store facts, derive status (`bzh:facts-not-status`)
 
