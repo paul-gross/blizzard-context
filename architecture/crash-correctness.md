@@ -370,13 +370,13 @@ when a change adds durable state that a reviewer would otherwise expect a sweep 
   `hub_exec_slot`). A `kill -9` mid-write leaves neither row durable — no orphan item with no chunk, no orphan chunk
   with no item — and the caller sees the write fail rather than a partial success to retry against. The one narrower
   window this entry does name, and accepts: `WorkItemEditService.create` allocates the item's `ref`
-  (`WorkItemStore.allocate_ref`) *before* that transaction opens, under `_next_ref`'s own already-accepted gap-tolerant
-  contract (a first-allocation optimistic-insert-then-increment, the same shape this file's #95 jti exemption describes
-  for a different table) — a crash between the allocation and the transaction burns that one `ref`, never reused,
-  exactly the price a bare `allocate_ref` call already pays with no chunk attached. There is therefore **no new
-  `bzh:crash-point-registry` entry** for the composite write, and **no new `bzh:invariant-checker` assertion**: the
-  pairing is a single-transaction insert, not a derived cross-fact invariant to recompute — the same shape as the #95
-  jti-replay and the other durable-fact exemptions above.
+  (`WorkItemStore.allocate_ref`) *before* that transaction opens, under that allocator's own already-accepted
+  gap-tolerant contract (a first-allocation optimistic-insert-then-increment, the same shape this file's #95 jti
+  exemption describes for a different table) — a crash between the allocation and the transaction burns that one `ref`,
+  never reused, exactly the price a bare `allocate_ref` call already pays with no chunk attached. There is therefore
+  **no new `bzh:crash-point-registry` entry** for the composite write, and **no new `bzh:invariant-checker` assertion**:
+  the pairing is a single-transaction insert, not a derived cross-fact invariant to recompute — the same shape as the
+  durable-fact exemptions above, the issue-#95 jti-replay included.
 
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 
