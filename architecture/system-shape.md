@@ -56,7 +56,12 @@ reviewer does not have to re-derive the same judgement:
   store *is* the item's system of record, not a cache of an external one, so there is no external system for a config
   entry to point at. The concrete wiring stays at the composition root (`hub/app.py::build_hosted_app`) exactly as
   `bzh:dependency-injection` requires for every other binding — only the walk that seats it differs (outside the
-  configured-entry loop, in `WorkSourceEntry.registry`), not the seam itself.
+  configured-entry loop, in `WorkSourceEntry.registry`), not the seam itself. Its **editor** capability (`IWorkEditor`,
+  blizzard#358) is seated the same way and carries the same judgement one step further: `annotate`/`close` are each a
+  configured source's own opt-in key, but no `[[work_source]]` field could ever opt a source into editing, because
+  editing reaches the hub's own store rather than an external one. `editor(name) is None` is therefore *structurally
+  never edited* for every source but `hub`, not merely *not opted in* — a capability seated with no flag at all is still
+  one seam, one composition root, no different in kind from the source itself.
 
 ## Store facts, derive status (`bzh:facts-not-status`)
 
