@@ -54,6 +54,8 @@ environment identifier is opaque to the hub — it knows *which* environment, ne
 - **A restart keeps the route too, and discards the attempt.** Forcing a chunk onto a node ([work.md](./work.md)
   §Restart) leaves route, tenure and environments exactly where they are — only the lease, epoch and session are given
   up — so the holding runner re-enters the node in the same environments rather than the chunk going back to the queue.
+  That holds when the move crosses a graph: the migration it records re-pins the chunk without re-queuing it, so it is
+  not one of the releasing writes above.
 - **Pause is detach's deliberate counterpart: it keeps the route.** A per-chunk pause kills the chunk's live worker but
   leaves the lease, route, epoch, environments, and retry budget untouched, so resume respawns the session in place
   under the unchanged lease/epoch/session id ([work.md](./work.md) §Statuses); detach is the lever that gives the claim

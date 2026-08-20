@@ -36,10 +36,11 @@ travels a workflow graph, and accumulates artifacts, questions, and decisions as
   migration is queued, otherwise an intent naming a mode (`auto` or `forced`), a target graph, and, for a forced intent,
   a target node. Unlike the graph pin's and the defaults' pre-flight windows, it is set, overwritten, or cleared by the
   operator at any non-terminal status. Applying it re-pins the chunk and clears the intent atomically, in the same write
-  as the migration ([migration](#migration)).
-- **Nothing on it is a stored status.** Its current node derives from its newest accepted transition, and its status
-  derives from its recorded facts (`bzh:facts-not-status` in
-  [../architecture/system-shape.md](../architecture/system-shape.md)).
+  as the migration ([migration](#migration)); an eager cross-graph [restart](#restart) clears it in its own write the
+  same way, by superseding it rather than firing it.
+- **Nothing on it is a stored status.** Its current node derives from its newest movement fact — a transition, a
+  [migration](#migration)'s landing, or a [restart](#restart)'s target — and its status derives from its recorded facts
+  (`bzh:facts-not-status` in [../architecture/system-shape.md](../architecture/system-shape.md)).
 - **Held by at most one runner at a time** — see [execution.md](./execution.md) for acquisition, tenure, and fencing.
 
 ## Statuses
@@ -89,8 +90,10 @@ plain editable property, not a pin this rule governs — that window closes at t
 
 **Why.** Transitions are judged, fenced movement within one immutable definition; letting one span graphs would re-route
 in-flight work without the explicit intent, record, and fencing that migration provides. Before the chunk has moved at
-all, there is no in-flight attempt to re-route and nothing a migration's fencing protects — repinning is pre-flight
-selection, not movement, and the chunk stands on no node a re-pin could strand it away from.
+all, an *edit* re-routes no in-flight attempt and nothing a migration's fencing protects — repinning is pre-flight
+selection, not movement, and the chunk stands on no node a re-pin could strand it away from. A chunk on its first
+node-step has moved nowhere yet is claimed and running, which is why an eager restart re-pinning it is movement and
+records one.
 
 **Detect.** A design or change in which a transition's two nodes belong to different graphs, an edge targets a node of
 another graph, or a chunk **that has already moved** has its graph pin change with no migration record — a re-queued
@@ -99,10 +102,12 @@ chunk resting `ready` included, which is where a status-only editability check l
 **Do.** Re-pin via a migration record — either immediately, as an authored judgement choice's own trigger, landing on
 the departed node's name-matched node or the target's entry node when no name matches; or later, deferred to the chunk's
 next transition, via its own `intended_migration` property, landing on that transition's own destination node or a named
-node for a forced intent — in neither case is a fresh epoch minted at migration time, and the landed node's own executor
-then governs the chunk's status exactly as it would for an ordinary transition (§Migration below). Edit an unmoved
-chunk's graph pin, or an unclaimed chunk's default model/effort, in place; no migration record applies to a chunk that
-has never moved.
+node for a forced intent; or, for an operator's eager cross-graph restart, now, on the node that restart resolves
+(§Restart below) — only the last of those mints a fresh epoch, and in every case the landed node's own executor then
+governs the chunk's status exactly as it would for an ordinary transition (§Migration below). Edit an unmoved chunk's
+graph pin, or an unclaimed chunk's default model/effort, in place — that editing path writes no migration record. An
+operator's eager restart is not that path: it is movement whatever the chunk has done before, so it records the re-pin
+even for a chunk that has never moved.
 
 **Don't.** Add a cross-graph edge, or update the pinned graph of a chunk that has already moved in place with no record
 of the re-pin.
@@ -138,7 +143,9 @@ The explicit re-pin of a chunk from one immutable graph to another, recorded as 
   target node, regardless of what that transition's own destination would have been. When the intent's target graph
   cannot be resolved at consult time — never minted, or retired since the intent was set — the migration is skipped
   exactly like an auto no-match: the transition applies unchanged and the intent stays set, visible for the operator to
-  cancel or re-aim.
+  cancel or re-aim. An operator's eager cross-graph restart clears a standing intent in the same write that re-pins the
+  chunk, the way a fired intent clears itself: an eager move supersedes a parked one rather than leaving it to fire
+  again later.
 - **A graph can carry a standing follow-latest policy, which migrates chunks with nobody having asked.** A graph name is
   minted repeatedly — each mint a separate immutable definition — and a chunk stays pinned to the one it started on.
   **Follow-latest** is a standing policy saying chunks pinned to this graph drift to the newest enabled mint of the same
@@ -157,42 +164,56 @@ The explicit re-pin of a chunk from one immutable graph to another, recorded as 
   - **The policy governs one hop, not a lineage.** It is read off the mint a chunk is pinned to, and the chunk lands on
     a newer mint carrying its own (inherited-by-default) setting — so a graph-level policy applies once. Sustaining the
     drift across a lineage is what the fleet-wide default is for.
-- **Neither trigger interrupts the attempt that produced it, or mints a fresh epoch at migration time.** The verdict
-  carrying a migrating transition is accepted exactly as an ordinary one would be, and nothing about the submitting
-  attempt is fenced or redone — a fresh epoch is only ever minted by a later claim, the same as for any other
-  route-released re-queue. No trigger does — the follow-latest policy included. They differ only in **where** they land
-  — each anchors a different name, per §Landing is by name below: an authored choice lands on the departed node's own
-  name-matched node because that node diverted rather than completed its own destination; a standing intent lands on the
-  transition's own destination node (auto) or its own named node (forced), and the follow-latest policy on that same
-  destination name, because in each of those the transition did complete normally and only where it lands is redirected.
+- **No transition-borne trigger interrupts the attempt that produced it, or mints a fresh epoch at migration time.** The
+  verdict carrying a migrating transition is accepted exactly as an ordinary one would be, and nothing about the
+  submitting attempt is fenced or redone — a fresh epoch is only ever minted by a later claim, the same as for any other
+  route-released re-queue. That holds for an authored choice, a standing intent and the follow-latest policy alike. They
+  differ only in **where** they land — each anchors a different name, per §Landing is by name below: an authored choice
+  lands on the departed node's own name-matched node because that node diverted rather than completed its own
+  destination; a standing intent lands on the transition's own destination node (auto) or its own named node (forced),
+  and the follow-latest policy on that same destination name, because in each of those the transition did complete
+  normally and only where it lands is redirected.
+- **The operator's eager cross-graph restart is the one trigger that does both.** It is not borne by a transition at
+  all: it fences the running attempt out and mints its own epoch, because that is what a restart is (§Restart below).
+  The re-pin is still a migration record — that is the half this section owns — and the forced clean re-entry is the
+  restart's own fact beside it, both written in one store transaction, so a crash can never leave a chunk re-pinned but
+  not moved, or moved but not re-pinned. Where it lands is the anchor question below, not this bullet's to answer.
 - **Landing is by name.** Landing resolves a node by **name** on the target graph (`bzh:ids-exact-names-correlate` in
   [graphs.md](./graphs.md)) — the trigger picks which name is the anchor: an authored choice anchors the departed node's
   name, falling back to the target's entry node when no match; a standing intent anchors the transition's own
   destination node name for `auto` (no entry fallback — an unmatched name just leaves the transition unchanged, per the
-  bullet above), or the intent's own named node for `forced`; the follow-latest policy anchors that same destination
-  name **with** the entry fallback, because unlike an intent it has nothing to stay set for — falling through would
-  defer a standing policy forever, on exactly the graph whose shape changed enough to drop the node. **The landed node's
-  own `executor` then governs exactly as it does for an ordinary transition** ([graphs.md](./graphs.md) §Node): landing
-  on a hub-executed node derives `delivering`, not `ready` — the chunk stays in the hub's own hands, driven by the hub's
-  own executor, same as any other arrival at that node — while landing on a runner node re-queues `ready`. This keys on
-  the landed node's `executor`, never its name; the shipped `deliver` node is one hub-executed instance a migration can
-  land on, not a special case.
+  bullet above), or the intent's own named node for `forced`; an operator's eager restart anchors its own named node,
+  else the chunk's **current** node name — with no entry fallback either way, because an operator naming where a chunk
+  goes is told when that name is not there, and the one chunk that legally resolves to an entry node is one that has not
+  moved at all (§Restart below); the follow-latest policy anchors that same destination name **with** the entry
+  fallback, because unlike an intent it has nothing to stay set for — falling through would defer a standing policy
+  forever, on exactly the graph whose shape changed enough to drop the node. **The landed node's own `executor` then
+  governs exactly as it does for an ordinary transition** ([graphs.md](./graphs.md) §Node): landing on a hub-executed
+  node derives `delivering`, not `ready` — the chunk stays in the hub's own hands, driven by the hub's own executor,
+  same as any other arrival at that node — while landing on a runner node re-queues `ready`. This keys on the landed
+  node's `executor`, never its name; the shipped `deliver` node is one hub-executed instance a migration can land on,
+  not a special case.
 - **An `auto` intent is a per-chunk request; a follow-latest policy is not.** The two are the reason a migration records
-  **what moved the chunk**, not just that it moved: an authored choice, an operator's intent, and the standing policy
-  are otherwise indistinguishable in history, and the policy is the only one nobody asked for. Same-name is no tell
-  either — an operator aiming an intent *by name* also lands on a newer same-name mint. So a chunk found on a graph it
-  did not start on can always be traced to which of the three put it there.
+  **what moved the chunk**, not just that it moved: an authored choice, an operator's intent, an operator's eager
+  restart, and the standing policy are otherwise indistinguishable in history, and the policy is the only one nobody
+  asked for. Same-name is no tell either — an operator aiming an intent *by name* also lands on a newer same-name mint.
+  So a chunk found on a graph it did not start on can always be traced to what put it there.
 
 ## Restart
 
-An operator's forced move of a chunk onto a node of its own graph, **now** — its own recorded fact, neither a transition
-nor a migration.
+An operator's forced move of a chunk onto a node, **now** — its own recorded fact, neither a transition nor a migration.
 
 - **It is an event, not an intent.** Unlike a standing intended migration (§Migration above), consulted at the chunk's
   next transition, a restart has already happened when the call returns: there is nothing to cancel and nothing to
   overwrite, and a second one is a second move rather than a replacement of the first.
-- **It stays inside one graph.** *Where* a chunk is on its graph is a restart's to change; *which* graph it is on is a
-  migration's alone. Crossing graphs and starting clean is one of each, in that order.
+- **It can cross graphs, and re-pinning is still migration's job.** *Where* a chunk stands is a restart's to change;
+  *which* graph it is on is a migration's to record. So a restart that names another graph is **both**: one migration
+  fact for the re-pin and one restart fact for the forced clean re-entry, written together in a single store
+  transaction, at one instant and one epoch, with the restart the newer of the two — so the chunk stands where the
+  restart put it, on the graph the migration pinned it to, and no crash can land one half without the other. Naming no
+  other graph, it is the restart fact alone. Either way there is nothing to wait for: unlike an intended migration, the
+  move has happened when the call returns, so a chunk standing mid-graph on a superseded mint reaches the current one
+  without first running a node-step to manufacture the transition an intent would need.
 - **Raising the fence is how it preempts.** The epoch the move mints belongs to [execution.md](./execution.md) §Lease
   and epoch; what follows from it here is that the displaced attempt's next state-advancing write is rejected as stale
   (`bzh:epoch-fencing`) and the holding runner tears the attempt down on its next reconciliation. Nothing relies on the
@@ -212,24 +233,30 @@ nor a migration.
   node is entered on a new session rather than the one its declaration would have resumed, under the target node's
   currently declared configuration — the second override of the node's own `session` facet ([graphs.md](./graphs.md)
   §Node). That freshness derives from the move's own fact, so it holds for every re-entry into the forced visit, not
-  only the first.
-- **Whatever parked the chunk is consumed with the move.** An open ask is answered — exactly one answer ever exists, so
-  a person who already answered still wins — an open gate decision is closed by the move itself, and an open escalation
-  is superseded exactly as a requeue supersedes one ([humans.md](./humans.md)). Nothing may survive to re-park the chunk
-  at a node it is no longer standing on.
+  only the first. Across graphs, "the target node's" means the **target graph's**: the re-entry is stamped with the
+  model, effort and compaction window the graph it landed on declares, never the departed graph's.
+- **Whatever parked or re-aimed the chunk is consumed with the move.** An open ask is answered — exactly one answer ever
+  exists, so a person who already answered still wins — an open gate decision is closed by the move itself, and an open
+  escalation is superseded exactly as a requeue supersedes one ([humans.md](./humans.md)). A cross-graph move also
+  clears any standing intended migration (§Migration above). Nothing may survive to re-park or re-aim the chunk at a
+  node it is no longer standing on.
 - **The landed node's own `executor` governs**, exactly as it does for an ordinary transition or a migration's landing
   ([graphs.md](./graphs.md) §Node).
-- **Where it lands.** A named node is resolved **by name** against the chunk's own graph, the way §Migration resolves
-  its own forced landing. Unnamed, the move lands on the chunk's current node — restart this step, on clean context, is
-  the common case.
+- **Where it lands.** A named node is resolved **by name** against the graph the move lands on — the named target graph
+  when it crosses, the chunk's own otherwise — the way §Migration resolves its own forced landing. Unnamed, the move
+  lands on the chunk's current node: restart this step, on clean context, is the common case, and across graphs that
+  same node **name** is matched onto the target, which is `auto` migration's own landing rule.
 - **What it refuses**, writing nothing either way:
   - **A terminal chunk** — there is nothing to re-enter.
-  - **A named node the chunk's graph does not carry.** A restart crosses no graph, so an unmatched name is a mistake
-    rather than a landing to fall back from.
+  - **A named node the landing graph does not carry**, and, when it crosses, **a current node name the target graph does
+    not match**. The operator said where the chunk goes; an unmatched name is a mistake rather than a landing to fall
+    back from, and the target's entry node is never quietly substituted for it.
   - **A chunk standing on a node its own graph does not carry**, with no node named. Rewinding it to the entry would
     discard a real position rather than resolve it; naming a reachable node is the way out. The one chunk that legally
-    resolves to the entry is one that has **not moved at all** — it stands on nowhere, and the entry is where it would
-    have started.
+    resolves to an entry node is one that has **not moved at all** — it stands on nowhere, and the entry of whichever
+    graph it lands on is where it would have started.
+  - **A target graph that is unknown, retired, or the chunk's own current pin.** The last of those is the plain
+    same-graph restart, asked for with a redundant flag rather than a move to make.
 - **Two conditions suppress it, and neither refuses it.** A chunk **pause** outranks it: the chunk stays parked and the
   move is honored on the tick after the pause lifts. An open **takeover** defers it indefinitely — the person is inside
   that session, and killing it out from under them is worse than leaving the move pending. The hub holds no takeover
