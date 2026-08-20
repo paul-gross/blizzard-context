@@ -87,12 +87,12 @@
       "what": "the derived chunk statuses `scenario board` seeds across",
       "noun": "statuses",
       "line_requires": "derived status|seeded|scenario board|spreads",
-      "owner": "blizzard-mock/src/blizzard_mock/mock_data/domain/scenario_seed.py `_STATUS_ORDER`",
+      "owner": "blizzard-mock/src/blizzard_mock/mock_data/domain/hub/scenario_seed.py `STATUS_ORDER`",
       "probe": {
         "kind": "py-tuple-len",
         "repo": "blizzard-mock",
-        "file": "src/blizzard_mock/mock_data/domain/scenario_seed.py",
-        "name": "_STATUS_ORDER"
+        "file": "src/blizzard_mock/mock_data/domain/hub/scenario_seed.py",
+        "name": "STATUS_ORDER"
       },
       "sites": [
         {
@@ -105,7 +105,7 @@
           "repo": "blizzard-mock",
           "file": "src/blizzard_mock/mock_data/README.md",
           "role": "allowed",
-          "reason": "the tool's own user-facing contract doc, whose reader is running the CLI rather than reading _STATUS_ORDER — §Exception class 1"
+          "reason": "the tool's own user-facing contract doc, whose reader is running the CLI rather than reading STATUS_ORDER — §Exception class 1"
         }
       ]
     },

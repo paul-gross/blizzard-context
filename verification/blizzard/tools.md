@@ -57,14 +57,23 @@ contract is `blizzard-mock`'s own `src/blizzard_mock/idp/README.md`, driven by `
 The mock-data CLI (`blizzard-mock-data`) — seed the hub and runner stores into a known world, entirely by reflecting the
 live schema at runtime (no `blizzard` import). `reset --store hub\|runner` (FK-safe delete-all) is the workhorse every
 scenario starts from; `create` is a group of per-concept verbs, one per seedable concept — among them `chunk`, the root
-verb, composing the exact fact rows `derive_chunk_status` reads, never a status column; `scenario board` composes purely
-on top of them into one ready-to-view board per command. Every write runs a drift guard first: a schema drift (a table,
-or a column, the live store no longer carries as this tool expects) fails loud with `SchemaDriftError` naming the table
-and column(s), never a silently-wrong row. The `fixture list\|apply` subgroup remains a stub — `scenario` is the named,
-one-command preset surface this tool delivers, not a stopgap for it. How to reach for the verb surface — the direct
-store-seed path recommended for board development, versus the real work-source/ingest wire path — is
-[../../tooling/store-seeding.md](../../tooling/store-seeding.md); this tool's own full flag-by-flag contract, including
-exactly what `scenario board`/`--stress` seed, is the `blizzard-mock` repo's `src/blizzard_mock/mock_data/README.md`.
+verb, composing the exact fact rows `derive_chunk_status` reads, never a status column, and `lease`/`usage`, each
+store-polymorphic (`--store hub\|runner` selects a different composer where the two schemas differ). `scenario` seeds a
+whole world per command: `board` builds on the hub-store `create` verbs' own composers — a graph, a chunk spread across
+the derived statuses, a cost and artifact spread, a ceiling-paused runner, and a mixed event log; `fleet` composes a
+`board` and mirrors it into the runner store under one pinned runner id, adding runner-store shapes of its own that no
+`create` verb exposes — sharing the board's chunk ids, its graph id, and its `build` node's id/name/epoch (the mirror
+mints its own ask/question ids, not the hub board's), so the runner's own local panel renders
+leases/asks/escalations/takeovers/environments/facts alongside the seeded board (usage and transcript segments also
+land, for store-level coherence only — no panel surface exists for either). `fleet` names the hub and runner stores as
+two independent, required targets — nothing here defaults one from the other. Every write runs a drift guard first: a
+schema drift (a table, or a column, the live store no longer carries as this tool expects) fails loud with
+`SchemaDriftError` naming the table and column(s), never a silently-wrong row. The `fixture list\|apply` subgroup
+remains a stub — `scenario` is the named, one-command preset surface this tool delivers, not a stopgap for it. How to
+reach for the verb surface — the direct store-seed path recommended for board development, versus the real
+work-source/ingest wire path — is [../../tooling/store-seeding.md](../../tooling/store-seeding.md); this tool's own full
+flag-by-flag contract, including exactly what `scenario board`/`--stress`/`scenario fleet` seed, is the `blizzard-mock`
+repo's `src/blizzard_mock/mock_data/README.md`.
 
 ### tool:fixture-workspace
 
