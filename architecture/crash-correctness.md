@@ -360,6 +360,24 @@ when a change adds durable state that a reviewer would otherwise expect a sweep 
   would close only the stretch before that next mint, and would buy it by making a second call site write a table whose
   sole writer being the mint is what the paragraph above rests on.
 
+- **The hub's item-creation chunk mint (blizzard#359).** `POST /api/work-sources/hub/items` now writes the item's
+  `work_items` row and its resting `not_ready` chunk's rows (`chunks` + `chunk_work_refs`) together — a position a
+  reviewer would reasonably expect a sweep point for, since the two tables land through two different repository
+  adapters (`WorkItemStore`, `ChunkStore`) reached via two different domain seams. There is no dangerous window: both
+  inserts run on the **same connection inside one `engine.begin()`** (`WorkItemStore.create_with_chunk`, folding in
+  `ChunkStore`'s own row-insert body via the shared `insert_chunk_rows` helper), the same one-transaction shape
+  `ChunkStore.record_stop` already carries for its own cross-table write (`chunk_stopped` + `route_released` +
+  `hub_exec_slot`). A `kill -9` mid-write leaves neither row durable — no orphan item with no chunk, no orphan chunk
+  with no item — and the caller sees the write fail rather than a partial success to retry against. The one narrower
+  window this entry does name, and accepts: `WorkItemEditService.create` allocates the item's `ref`
+  (`WorkItemStore.allocate_ref`) *before* that transaction opens, under `_next_ref`'s own already-accepted gap-tolerant
+  contract (a first-allocation optimistic-insert-then-increment, the same shape this file's #95 jti exemption describes
+  for a different table) — a crash between the allocation and the transaction burns that one `ref`, never reused,
+  exactly the price a bare `allocate_ref` call already pays with no chunk attached. There is therefore **no new
+  `bzh:crash-point-registry` entry** for the composite write, and **no new `bzh:invariant-checker` assertion**: the
+  pairing is a single-transaction insert, not a derived cross-fact invariant to recompute — the same shape as the #95
+  jti-replay and the other durable-fact exemptions above.
+
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 
 **Rule.** A checker of assertions evaluated over both stores' facts after any crash → restart → recover cycle holds the
