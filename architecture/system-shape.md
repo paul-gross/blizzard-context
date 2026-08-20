@@ -48,6 +48,16 @@ Code / GitHub, tests bind the `blizzard-mock` fleet.
 **Don't.** A FILL step that shells out to `claude -p` directly — the loop can no longer be exercised against the mock
 harness and every service test now needs real tokens.
 
+**Recorded positions** — a case that looks like it might need a configured, external binding but does not, stated so a
+reviewer does not have to re-derive the same judgement:
+
+- **The built-in `hub` work source (issue #357).** `HubWorkSource` still implements `IWorkSource` — the seam this rule
+  requires — but its binding is in-process and always seated, never a `[[work_source]]` entry with a credential: its own
+  store *is* the item's system of record, not a cache of an external one, so there is no external system for a config
+  entry to point at. The concrete wiring stays at the composition root (`hub/app.py::build_hosted_app`) exactly as
+  `bzh:dependency-injection` requires for every other binding — only the walk that seats it differs (outside the
+  configured-entry loop, in `WorkSourceEntry.registry`), not the seam itself.
+
 ## Store facts, derive status (`bzh:facts-not-status`)
 
 **Rule.** Both daemons' stores hold only durable **facts** — a thing that definitely happened at a definite time (a
@@ -82,6 +92,13 @@ does not have to re-derive the same judgement:
   detected and re-derived by the standing sweep rather than silently going stale, the same crash-safety shape
   `bzh:crash-point-registry`'s own recorded exemptions ([./crash-correctness.md](./crash-correctness.md)) use for a
   converging reconciler with no state between passes.
+
+- **Hub-owned work item closure (issue #357).** `work_items.closed_at`/`closure` are a plain nullable column pair on the
+  item row, both unset while open and set together once on close — not an append-only fact table, and not exempt from
+  this rule either: `work_items` is a **mutable entity** (title, body, and `edited_at` change in place, the same shape
+  `chunks.graph_id` carries), not a fact log, so its closure is itself recorded state rather than a derivable condition
+  — no query over other rows can produce it, the same terminal-instant shape `hub_exec_slot.released_at` already uses
+  (`schema.py`, null while live).
 
 ## An open fact declares what closes it on a terminal chunk (`bzh:open-facts-declare-closure`)
 
