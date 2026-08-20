@@ -362,21 +362,26 @@ when a change adds durable state that a reviewer would otherwise expect a sweep 
 
 - **The hub's item-creation chunk mint (blizzard#359).** `POST /api/work-sources/hub/items` now writes the item's
   `work_items` row and its resting `not_ready` chunk's rows (`chunks` + `chunk_work_refs`) together — a position a
-  reviewer would reasonably expect a sweep point for, since the two tables land through two different repository
-  adapters (`WorkItemStore`, `ChunkStore`) reached via two different domain seams. There is no dangerous window: both
-  inserts run on the **same connection inside one `engine.begin()`** (`WorkItemStore.create_with_chunk`, folding in
-  `ChunkStore`'s own row-insert body via the shared `insert_chunk_rows` helper), the same one-transaction shape
+  reviewer would reasonably expect a sweep point for, since the pairing spans two tables `ChunkStore` otherwise owns.
+  There is no dangerous window: both inserts run on the **same connection inside one `engine.begin()`**
+  (`WorkItemStore.create_with_chunk`), through **one repository adapter** — `WorkItemStore`, the sole implementor of
+  `IWriteWorkItemRepository` — which reaches into `ChunkStore`'s own row-insert body via the shared `insert_chunk_rows`
+  free function rather than going through `IWriteChunkRepository`'s seam. That bypass is deliberate, not a layering gap:
+  it is what lets a single caller open a single transaction over both tables at all, the same one-transaction shape
   `ChunkStore.record_stop` already carries for its own cross-table write (`chunk_stopped` + `route_released` +
-  `hub_exec_slot`). A `kill -9` mid-write leaves neither row durable — no orphan item with no chunk, no orphan chunk
-  with no item — and the caller sees the write fail rather than a partial success to retry against. The one narrower
-  window this entry does name, and accepts: `WorkItemEditService.create` allocates the item's `ref`
-  (`WorkItemStore.allocate_ref`) *before* that transaction opens, under that allocator's own already-accepted
-  gap-tolerant contract (a first-allocation optimistic-insert-then-increment, the same shape this file's #95 jti
-  exemption describes for a different table) — a crash between the allocation and the transaction burns that one `ref`,
-  never reused, exactly the price a bare `allocate_ref` call already pays with no chunk attached. There is therefore
-  **no new `bzh:crash-point-registry` entry** for the composite write, and **no new `bzh:invariant-checker` assertion**:
-  the pairing is a single-transaction insert, not a derived cross-fact invariant to recompute — the same shape as the
-  durable-fact exemptions above, the issue-#95 jti-replay included.
+  `hub_exec_slot`), just reached from the item side instead of the chunk side. A `kill -9` mid-write leaves neither row
+  durable — no orphan item with no chunk, no orphan chunk with no item — and the caller sees the write fail rather than
+  a partial success to retry against. The one narrower window this entry does name, and accepts:
+  `WorkItemEditService.create` allocates the item's `ref` (`WorkItemStore.allocate_ref`) *before* that transaction
+  opens, under that allocator's own already-accepted gap-tolerant contract (a first-allocation optimistic-insert, a
+  losing concurrent first allocation falling through to an increment-and-`RETURNING` path on the now-present row) — a
+  crash between the allocation and the transaction burns that one `ref`, never reused, exactly the price a bare
+  `allocate_ref` call already pays with no chunk attached. That allocator's shape is its own thing, not this file's #95
+  jti exemption's check-then-insert-under-a-primary-key sequence — the two share only the conclusion that a burned
+  identifier is an accepted cost, not the mechanism. There is therefore **no new `bzh:crash-point-registry` entry** for
+  the composite write, and **no new `bzh:invariant-checker` assertion**: the pairing is a single-transaction insert, not
+  a derived cross-fact invariant to recompute — the same shape as the durable-fact exemptions above, minus the jti
+  exemption's particular mechanism.
 
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 
