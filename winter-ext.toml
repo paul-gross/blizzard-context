@@ -4,11 +4,14 @@ prefix = "bzh"
 # blizzard-context is blizzard's instance of a harness. It derives from
 # winter-canon — the universal substrate every harness builds on — so it
 # declares that dependency, keeping winter-canon strictly below it in the
-# graph. Its conventions are addressed via the `blizzard-context:` path
+# graph. It also routes agents into winter-github for the `gh` issue surface
+# (tooling/index.md), so that is declared too — a reference this repo hands an
+# agent must resolve wherever the repo is installed, not only here.
+# Its conventions are addressed via the `blizzard-context:` path
 # notation (e.g. `blizzard-context:/architecture/repository-access.md`).
 # `prefix` stays `bzh` — it matches the repo's historical rule-id scheme
 # (index.md §"Rule ids"), which is stable across the rename.
-requires = ["winter-canon"]
+requires = ["winter-canon", "winter-github"]
 
 # `winter lint` contribution: runs the repo-local markdown style gates
 # (dprint format, rumdl lint) over every scoped repo carrying their configs.
