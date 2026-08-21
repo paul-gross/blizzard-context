@@ -62,9 +62,12 @@ reviewer does not have to re-derive the same judgement:
   First, *why it is structural rather than an opt-in*: `annotate`/`close` are each a configured source's own opt-in key,
   but no `[[work_source]]` field could ever opt a source into editing. The reason is not that editing reaches the hub's
   own store — `annotate`/`close` are configured opt-ins that also write to an external store, so store locality alone
-  doesn't distinguish editing from them. What actually closes the seam is the *return type*: all five `IWorkEditor`
-  methods return `WorkItemRecord`, the hub repository's own record type (a `wi_<ulid>` id, a hub-user-or-fleet author, a
-  closure) — unlike `IWorkSource.fetch`, which returns a seam-local `WorkItem` dataclass any binding can answer.
+  doesn't distinguish editing from them. What actually closes the seam is the *return type*: every `IWorkEditor` method
+  returns the hub repository's own record type or a value built from it — `WorkItemRecord` (a `wi_<ulid>` id, a
+  hub-user-or-fleet author, a closure) for `list`/`get`/`edit`/`withdraw`, and `create`'s own `CreatedWorkItem`
+  (blizzard#359) for `create` — the pairing `create` alone needs, since only it also mints a chunk no external binding
+  could ever supply a `Graph` parameter for. Unlike `IWorkSource.fetch`, which returns a seam-local `WorkItem` dataclass
+  any binding can answer, nothing here is renderable by a binding with no hub-owned store behind it.
   `editor(name) is None` is therefore *structurally never edited* for every source but `hub`, not merely *not opted in*
   — a capability seated with no flag at all is still one seam, one composition root, no different in kind from the
   source itself.
