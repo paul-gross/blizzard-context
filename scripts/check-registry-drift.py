@@ -604,13 +604,22 @@ def check_B2(
 # --------------------------------------------------------------------------
 
 
+def _module_site(
+    module_sites: dict[str, list[tuple[str, int]]], hub_relfile: str, module: str
+) -> tuple[str, int | None]:
+    """A module's first heading, or the hub when no file homes it at all."""
+    sites = module_sites.get(module)
+    return sites[0] if sites else (hub_relfile, None)
+
+
 def check_C(
     e2e_files: list[tuple[str, str]],
     collect_cache: dict[str, list[str] | None],
 ) -> list[Finding]:
     """`e2e_files` is (relfile, text) for the registry hub and every spoke under it —
     the roster is spread across the spokes, so a module documented in any one of them
-    counts as documented, and a module missing from all of them is reported at the hub."""
+    counts as documented, a module homed in two of them is a finding, and a module
+    missing from all of them is reported at the hub."""
     findings: list[Finding] = []
     e2e_nodes = collect_cache.get("e2e")
     if e2e_nodes is None:
@@ -627,9 +636,11 @@ def check_C(
     hub_relfile = e2e_files[0][0]
 
     documented: set[tuple[str, str]] = set()
-    # Where each module's own heading sits, so a finding about it points at the spoke
-    # that owns it rather than at the hub that merely routes to it.
-    module_site: dict[str, tuple[str, int]] = {}
+    # Every heading each module has, so a finding about it points at the spoke that owns
+    # it rather than at the hub that merely routes to it — and so a module homed twice is
+    # caught: `documented` is a set, so a section copied into a second spoke agrees with
+    # itself and would otherwise pass green.
+    module_sites: dict[str, list[tuple[str, int]]] = {}
     orphans: list[tuple[str, int, str]] = []
 
     for relfile, text in e2e_files:
@@ -645,7 +656,7 @@ def check_C(
             body_end = all_headings[i + 1].start() if i + 1 < len(all_headings) else len(text)
             body = text[body_start:body_end]
             if level == 2:
-                module_site.setdefault(heading_text, (relfile, text.count("\n", 0, m.start()) + 1))
+                module_sites.setdefault(heading_text, []).append((relfile, text.count("\n", 0, m.start()) + 1))
                 for bm in bullet_re.finditer(body):
                     documented.add((heading_text, bm.group(1)))
             else:
@@ -653,8 +664,25 @@ def check_C(
                     line = text.count("\n", 0, body_start + bm.start()) + 1
                     orphans.append((relfile, line, bm.group(1)))
 
+    documented_modules = {module for module, _func in documented}
+    for module, sites in sorted(module_sites.items()):
+        if module not in documented_modules or len(sites) < 2:
+            continue
+        relfile, line = sites[0]
+        findings.append(
+            Finding(
+                "C",
+                "fail",
+                f"module {module} is documented in more than one file: "
+                + ", ".join(f"{f}:{n}" for f, n in sites),
+                relfile,
+                line,
+                "Keep one home per module and route to it from the others.",
+            )
+        )
+
     for module, func in sorted(actual - documented):
-        relfile, line = module_site.get(module, (hub_relfile, None))
+        relfile, line = _module_site(module_sites, hub_relfile, module)
         findings.append(
             Finding(
                 "C",
@@ -667,7 +695,7 @@ def check_C(
         )
 
     for module, func in sorted(documented - actual):
-        relfile, line = module_site.get(module, (hub_relfile, None))
+        relfile, line = _module_site(module_sites, hub_relfile, module)
         findings.append(
             Finding(
                 "C",

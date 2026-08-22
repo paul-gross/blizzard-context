@@ -5,8 +5,10 @@ in the same commit for that not to happen.
 
 ## An e2e change extends the registry (`bzh:e2e-change-extends-registry`)
 
-**Rule.** Adding, renaming, or deleting a `tests/e2e/` test lands its matching entry in the e2e scenario registry,
-[`./e2e-scenarios.md`](./e2e-scenarios.md), in the same change — never as a follow-up.
+**Rule.** Adding, renaming, or deleting a `tests/e2e/` test lands its matching entry in the e2e scenario registry, in
+the same change — never as a follow-up. The entry belongs in the spoke under [`./e2e-scenarios/`](./e2e-scenarios/) that
+owns the reader question the scenario answers; the registry hub [`./e2e-scenarios.md`](./e2e-scenarios.md) routes to it
+and carries no entries itself.
 
 **Detect.** `blizzard-context:registry-drift` is the mechanical companion that catches a missing registry entry.
 

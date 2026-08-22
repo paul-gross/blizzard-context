@@ -307,6 +307,38 @@ class CheckCTests(unittest.TestCase):
         )
         self.assertEqual(findings, [])
 
+    def test_a_module_homed_in_two_spokes_fails(self):
+        # `documented` is a set, so a module section copied into a second spoke agrees
+        # with itself: without this check the duplicate reads as green, and the registry's
+        # one-home-per-module rule would rest on nothing.
+        collect_cache = {"e2e": ["tests/e2e/module_a.py::test_a"]}
+        spoke = "# one\n\n## module_a\n\n- `test_a` — covers a.\n"
+        findings = drift.check_C(
+            [
+                (self.HUB, "# roster\n\n## Routing\n\nrouting table.\n"),
+                ("verification/blizzard/e2e-scenarios/one.md", spoke),
+                ("verification/blizzard/e2e-scenarios/two.md", spoke),
+            ],
+            collect_cache,
+        )
+        self.assertEqual(_shape(findings), [("C", "fail")])
+        self.assertIn("more than one file", findings[0].message)
+        self.assertIn("one.md", findings[0].message)
+        self.assertIn("two.md", findings[0].message)
+
+    def test_a_shared_non_module_heading_is_not_a_duplicate_home(self):
+        # Only a heading carrying function bullets homes a module; two spokes may share
+        # an ordinary section heading without that reading as a second home.
+        collect_cache = {"e2e": ["tests/e2e/module_a.py::test_a"]}
+        findings = drift.check_C(
+            [
+                ("verification/blizzard/e2e-scenarios/one.md", "# one\n\n## Setup\n\ntext\n\n## module_a\n\n- `test_a` — a.\n"),
+                ("verification/blizzard/e2e-scenarios/two.md", "# two\n\n## Setup\n\ntext\n"),
+            ],
+            collect_cache,
+        )
+        self.assertEqual(findings, [])
+
     def test_parametrized_nodes_documented_by_one_bare_bullet_is_silent(self):
         spoke_text = "## module_a\n\n- `test_param` — covers both cases.\n"
         collect_cache = {
