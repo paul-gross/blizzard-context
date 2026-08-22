@@ -184,8 +184,9 @@ fuller source it reads when it can.
 **Why.** A pinned mint's declarations reach the runner's own store at spawn, so a lease already in flight when a runner
 restarts onto a build that introduces a declaration holds a pin with nothing in it — the accepted window
 `bzh:graph-scope-reads-local` ([../architecture/system-shape.md](../architecture/system-shape.md)) and the runner's
-graph-artifact mirror entry in [../architecture/crash-correctness.md](../architecture/crash-correctness.md) bound. A
-worker whose only copy of a rule is behind that read has no way to finish its turn correctly.
+graph-artifact mirror entry in
+[../architecture/crash-correctness/runner.md](../architecture/crash-correctness/runner.md) bound. A worker whose only
+copy of a rule is behind that read has no way to finish its turn correctly.
 
 **Scope.** Every prompt naming a graph-scope read, on a worker node or its judgement prompt alike. It says nothing about
 node-scope reads: a node-scope miss means an upstream node produced nothing, which is a real condition of the chunk

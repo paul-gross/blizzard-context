@@ -110,7 +110,7 @@ does not have to re-derive the same judgement:
   assumed — the paired `transcript_event_derivations` marker records a content fingerprint of what a derivation saw, so
   a segment whose stored content later changes underneath it (a rejected record accepted, a late record landing) is
   detected and re-derived by the standing sweep rather than silently going stale, the same crash-safety shape
-  `bzh:crash-point-registry`'s own recorded exemptions ([./crash-correctness.md](./crash-correctness.md)) use for a
+  `bzh:crash-point-registry`'s own recorded exemptions ([./crash-correctness/](./crash-correctness/)) use for a
   converging reconciler with no state between passes.
 
 - **Hub-owned work item closure (issue #357).** `work_items.closed_at`/`closure` are a plain nullable column pair on the
