@@ -118,9 +118,10 @@ Runner SSE live fan-out has the same shape over the runner's own stream and voca
 - `test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves a signal-driven shutdown still
   returns `server.run()` with a client held open.
 
-`blizzard:e2e`'s `test_runner_panel_live_e2e` scenario ([`../e2e-scenarios.md`](../e2e-scenarios.md)) carries fan-out
-one tier further: a real `blizzard-runner host` subprocess observed through a real browser on the served panel — the one
-end-to-end fan-out chain with nothing stubbed.
+`blizzard:e2e`'s `test_runner_panel_live_e2e` scenario
+([`../e2e-scenarios/runner-panel.md`](../e2e-scenarios/runner-panel.md)) carries fan-out one tier further: a real
+`blizzard-runner host` subprocess observed through a real browser on the served panel — the one end-to-end fan-out chain
+with nothing stubbed.
 
 Usage over the wire (`test_usage_service.py`) runs both directions: runner-to-mock-hub, a real runner's `usage.recorded`
 facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once; mock-runner-to-live-hub, usage

@@ -33,7 +33,8 @@ chunk resumed without takeover; each landed file reachable from bare `main` exac
 (`blizzard dev check-invariants` clean); and `blizzard hub status` truthful for every chunk.
 
 Beyond `blizzard:e2e`'s `test_escalation_e2e`
-([`../e2e-scenarios.md#test_escalation_e2e`](../e2e-scenarios.md#test_escalation_e2e)), the journey adds the process
-boundary: the takeover command is composed by a runner spawned as its own OS process, not by the loop's tick function
-called inside the test process. Deliberately unstressed: a simultaneous hub-and-runner crash inside a build's base turn
-before the commit is submitted — the reboot targets a latched fleet, so no chunk is mid-build.
+([`../e2e-scenarios/human-loop.md#test_escalation_e2e`](../e2e-scenarios/human-loop.md#test_escalation_e2e)), the
+journey adds the process boundary: the takeover command is composed by a runner spawned as its own OS process, not by
+the loop's tick function called inside the test process. Deliberately unstressed: a simultaneous hub-and-runner crash
+inside a build's base turn before the commit is submitted — the reboot targets a latched fleet, so no chunk is
+mid-build.

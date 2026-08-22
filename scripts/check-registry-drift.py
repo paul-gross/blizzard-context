@@ -29,9 +29,9 @@ Emits NDJSON findings on stdout, one object per line, following the
 `winter lint` finding contract (`check`, `status` in {pass, warn, fail},
 optional `message`/`file`/`line`/`remediation`). Exits 0 by default; with
 `--gate`, exits 1 on any `fail` finding, on any registry input missing
-(`blizzard.md`, `commands.md` and its `commands/` spokes, `e2e-scenarios.md`,
-`registry-copies.json`, or an empty `verification/` sweep), or on any check that
-did not actually run to
+(`blizzard.md`, `commands.md` and its `commands/` spokes, `e2e-scenarios.md` and
+its `e2e-scenarios/` spokes, `registry-copies.json`, or an empty `verification/`
+sweep), or on any check that did not actually run to
 completion against its full required inputs — an unresolved interpreter, a
 marker whose `pytest --collect-only` failed, or an unreadable `mise.toml`/
 `package.json` all count as *not run*, never as a silent pass. A check
@@ -605,10 +605,12 @@ def check_B2(
 
 
 def check_C(
-    e2e_relfile: str,
-    e2e_text: str,
+    e2e_files: list[tuple[str, str]],
     collect_cache: dict[str, list[str] | None],
 ) -> list[Finding]:
+    """`e2e_files` is (relfile, text) for the registry hub and every spoke under it —
+    the roster is spread across the spokes, so a module documented in any one of them
+    counts as documented, and a module missing from all of them is reported at the hub."""
     findings: list[Finding] = []
     e2e_nodes = collect_cache.get("e2e")
     if e2e_nodes is None:
@@ -622,67 +624,70 @@ def check_C(
         actual.add((module, func))
 
     bullet_re = re.compile(r"^- `(test_[A-Za-z0-9_]+)`", re.MULTILINE)
-    all_headings = list(_HEADING_RE.finditer(e2e_text))
+    hub_relfile = e2e_files[0][0]
 
     documented: set[tuple[str, str]] = set()
-    module_heading_line: dict[str, int] = {}
-    orphans: list[tuple[int, str]] = []
+    # Where each module's own heading sits, so a finding about it points at the spoke
+    # that owns it rather than at the hub that merely routes to it.
+    module_site: dict[str, tuple[str, int]] = {}
+    orphans: list[tuple[str, int, str]] = []
 
-    first_start = all_headings[0].start() if all_headings else len(e2e_text)
-    for bm in bullet_re.finditer(e2e_text[:first_start]):
-        line = e2e_text.count("\n", 0, bm.start()) + 1
-        orphans.append((line, bm.group(1)))
+    for relfile, text in e2e_files:
+        all_headings = list(_HEADING_RE.finditer(text))
+        first_start = all_headings[0].start() if all_headings else len(text)
+        for bm in bullet_re.finditer(text[:first_start]):
+            orphans.append((relfile, text.count("\n", 0, bm.start()) + 1, bm.group(1)))
 
-    for i, m in enumerate(all_headings):
-        level = len(m.group(1))
-        heading_text = m.group(2).strip()
-        body_start = m.end()
-        body_end = all_headings[i + 1].start() if i + 1 < len(all_headings) else len(e2e_text)
-        body = e2e_text[body_start:body_end]
-        if level == 3:
-            module_heading_line[heading_text] = e2e_text.count("\n", 0, m.start()) + 1
-            for bm in bullet_re.finditer(body):
-                documented.add((heading_text, bm.group(1)))
-        else:
-            for bm in bullet_re.finditer(body):
-                line = e2e_text.count("\n", 0, body_start + bm.start()) + 1
-                orphans.append((line, bm.group(1)))
+        for i, m in enumerate(all_headings):
+            level = len(m.group(1))
+            heading_text = m.group(2).strip()
+            body_start = m.end()
+            body_end = all_headings[i + 1].start() if i + 1 < len(all_headings) else len(text)
+            body = text[body_start:body_end]
+            if level == 2:
+                module_site.setdefault(heading_text, (relfile, text.count("\n", 0, m.start()) + 1))
+                for bm in bullet_re.finditer(body):
+                    documented.add((heading_text, bm.group(1)))
+            else:
+                for bm in bullet_re.finditer(body):
+                    line = text.count("\n", 0, body_start + bm.start()) + 1
+                    orphans.append((relfile, line, bm.group(1)))
 
     for module, func in sorted(actual - documented):
-        line = module_heading_line.get(module)
+        relfile, line = module_site.get(module, (hub_relfile, None))
         findings.append(
             Finding(
                 "C",
                 "fail",
-                f"tests/e2e/{module}.py::{func} is collected but not described under ### {module} in the registry",
-                e2e_relfile,
+                f"tests/e2e/{module}.py::{func} is collected but not described under ## {module} in the registry",
+                relfile,
                 line,
-                "Add a bullet naming this function under its module heading.",
+                "Add a bullet naming this function under its module heading, in the spoke that owns the module.",
             )
         )
 
     for module, func in sorted(documented - actual):
-        line = module_heading_line.get(module)
+        relfile, line = module_site.get(module, (hub_relfile, None))
         findings.append(
             Finding(
                 "C",
                 "fail",
-                f"registry bullet `{func}` under ### {module} has no matching collected e2e node",
-                e2e_relfile,
+                f"registry bullet `{func}` under ## {module} has no matching collected e2e node",
+                relfile,
                 line,
                 "Fix the function/module name or remove the stale bullet.",
             )
         )
 
-    for line, func in orphans:
+    for relfile, line, func in orphans:
         findings.append(
             Finding(
                 "C",
                 "fail",
-                f"bullet `{func}` cited with no owning ### module heading",
-                e2e_relfile,
+                f"bullet `{func}` cited with no owning ## module heading",
+                relfile,
                 line,
-                "Move the bullet under its module's ### heading.",
+                "Move the bullet under its module's ## heading.",
             )
         )
 
@@ -1264,7 +1269,7 @@ def _probe_md_table_rows(path: Path, section: str) -> int:
     return rows
 
 
-def _probe_md_heading_count(path: Path, level: int, exclude: list[str]) -> int:
+def _count_md_headings(path: Path, level: int, exclude: list[str]) -> int:
     text = path.read_text(errors="replace")
     marker = "#" * level + " "
     count = 0
@@ -1277,8 +1282,25 @@ def _probe_md_heading_count(path: Path, level: int, exclude: list[str]) -> int:
         if bare in exclude or title in exclude:
             continue
         count += 1
+    return count
+
+
+def _probe_md_heading_count(path: Path, level: int, exclude: list[str]) -> int:
+    count = _count_md_headings(path, level, exclude)
     if count == 0:
         raise CopyRegistryError(f"no level-{level} headings found in {path}")
+    return count
+
+
+def _probe_md_heading_count_glob(root: Path, glob: str, level: int, exclude: list[str]) -> int:
+    """A registry spread across a hub's spokes: the cardinality is the sum over the set,
+    which no single-file probe can reach."""
+    paths = sorted(p for p in root.glob(glob) if p.is_file() and not any(d in p.parts for d in PRUNE_DIRS))
+    if not paths:
+        raise CopyRegistryError(f"probe glob {glob!r} matched no file under {root}")
+    count = sum(_count_md_headings(path, level, exclude) for path in paths)
+    if count == 0:
+        raise CopyRegistryError(f"no level-{level} headings found under {root}/{glob}")
     return count
 
 
@@ -1340,6 +1362,10 @@ def _resolve_probe(probe: dict, roots: dict[str, Path]) -> int:
         return _probe_md_heading_count(
             _probe_file(root, probe["file"]), int(probe.get("level", 2)), probe.get("exclude", [])
         )
+    if kind == "md-heading-count-glob":
+        return _probe_md_heading_count_glob(
+            root, probe["glob"], int(probe.get("level", 2)), probe.get("exclude", [])
+        )
     if kind == "regex-count":
         return _probe_regex_count(_probe_file(root, probe["file"]), probe["pattern"])
     if kind == "py-tuple-len":
@@ -1361,6 +1387,7 @@ _SITE_ROLES = {"owner", "allowed"}
 _PROBE_REQUIRED_KEYS = {
     "md-table-rows": ("repo", "file", "section"),
     "md-heading-count": ("repo", "file"),
+    "md-heading-count-glob": ("repo", "glob"),
     "regex-count": ("repo", "file", "pattern"),
     "py-tuple-len": ("repo", "file", "name"),
     "dir-file-count": ("repo", "dir"),
@@ -1714,11 +1741,21 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
         registry_input_missing = True
         command_docs = []
 
+    # The e2e roster is a hub plus its spokes: the hub routes and the spokes hold the
+    # scenarios, so check C reads the whole set and a spoke-less hub is a missing input,
+    # not an empty roster reported as every scenario undocumented.
     e2e_path = verification_dir / "blizzard" / "e2e-scenarios.md"
     e2e_relfile = _relpath(e2e_path, repo_root)
-    e2e_text = e2e_path.read_text(errors="replace") if e2e_path.is_file() else ""
-    if not e2e_text:
-        findings.append(Finding("A", "warn", f"expected registry input not found: {e2e_relfile} — check C skipped"))
+    e2e_spokes = _md_files(verification_dir / "blizzard" / "e2e-scenarios")
+    e2e_files: list[tuple[str, str]] = []
+    if e2e_path.is_file() and e2e_spokes:
+        e2e_files.append((e2e_relfile, e2e_path.read_text(errors="replace")))
+        for path in e2e_spokes:
+            e2e_files.append((_relpath(path, repo_root), path.read_text(errors="replace")))
+    else:
+        findings.append(
+            Finding("A", "warn", f"expected registry input not found: {e2e_relfile} and its spokes — check C skipped")
+        )
         registry_input_missing = True
 
     # Effectiveness, not attempt: a check enters `executed` only when the
@@ -1749,8 +1786,8 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
                 findings += check_B2(relfile, text, checkouts["blizzard"], collect_cache)
             if tier_markers_ok:
                 executed.add("B2")
-        if e2e_text:
-            findings += check_C(e2e_relfile, e2e_text, collect_cache)
+        if e2e_files:
+            findings += check_C(e2e_files, collect_cache)
             if e2e_marker_ok:
                 executed.add("C")
         if command_docs:

@@ -157,10 +157,10 @@
       "line_requires": "e2e|full-stack|standing",
       "owner": "verification/blizzard/e2e-scenarios.md",
       "probe": {
-        "kind": "md-heading-count",
+        "kind": "md-heading-count-glob",
         "repo": "blizzard-context",
-        "file": "verification/blizzard/e2e-scenarios.md",
-        "level": 3,
+        "glob": "verification/blizzard/e2e-scenarios/*.md",
+        "level": 2,
         "exclude": [
           "See also"
         ]

@@ -240,16 +240,23 @@ class CheckB2Tests(unittest.TestCase):
 
 
 class CheckCTests(unittest.TestCase):
+    HUB = "verification/blizzard/e2e-scenarios.md"
+    SPOKE = "verification/blizzard/e2e-scenarios/spoke.md"
+
     def test_both_directions_and_orphan_bullet(self):
-        e2e_text = (
+        hub_text = (
             "# roster\n\n"
             "lead paragraph.\n\n"
-            "### module_a\n\n"
-            "- `test_documented_a` — covers a.\n\n"
-            "### module_b\n\n"
-            "- `test_stale_bullet` — no longer real.\n\n"
             "## Wave-by-wave coverage rollup\n\n"
-            "- `test_orphan` — has no owning module heading.\n"
+            "prose only.\n"
+        )
+        spoke_text = (
+            "# spoke\n\n"
+            "- `test_orphan` — cited before any module heading.\n\n"
+            "## module_a\n\n"
+            "- `test_documented_a` — covers a.\n\n"
+            "## module_b\n\n"
+            "- `test_stale_bullet` — no longer real.\n"
         )
         collect_cache = {
             "e2e": [
@@ -258,7 +265,7 @@ class CheckCTests(unittest.TestCase):
                 "tests/e2e/module_c.py::test_undocumented_c",
             ]
         }
-        findings = drift.check_C("verification/e2e-scenarios.md", e2e_text, collect_cache)
+        findings = drift.check_C([(self.HUB, hub_text), (self.SPOKE, spoke_text)], collect_cache)
         checks = _shape(findings)
         self.assertEqual(len(checks), 4)
         self.assertTrue(all(c == ("C", "fail") for c in checks))
@@ -267,29 +274,54 @@ class CheckCTests(unittest.TestCase):
         self.assertIn("test_undocumented_c", messages)
         self.assertIn("test_stale_bullet", messages)
         self.assertIn("test_orphan", messages)
-        self.assertIn("no owning ### module heading", messages)
+        self.assertIn("no owning ## module heading", messages)
 
-    def test_matching_roster_is_silent(self):
-        e2e_text = "### module_a\n\n- `test_a` — covers a.\n"
-        collect_cache = {"e2e": ["tests/e2e/module_a.py::test_a"]}
-        findings = drift.check_C("verification/e2e-scenarios.md", e2e_text, collect_cache)
+    def test_a_module_is_reported_at_the_spoke_that_owns_it(self):
+        """The hub routes and the spokes own, so a finding has to send its reader to the
+        spoke carrying the module — not to the hub every module is missing from."""
+        hub_text = "# roster\n\n## Routing\n\nrouting table.\n"
+        spoke_text = "# spoke\n\n## module_a\n\n- `test_a` — covers a.\n"
+        collect_cache = {
+            "e2e": [
+                "tests/e2e/module_a.py::test_a",
+                "tests/e2e/module_a.py::test_missing",
+                "tests/e2e/module_unhomed.py::test_unhomed",
+            ]
+        }
+        findings = drift.check_C([(self.HUB, hub_text), (self.SPOKE, spoke_text)], collect_cache)
+        by_func = {f.message.split("::")[1].split(" ")[0]: f for f in findings}
+        self.assertEqual(by_func["test_missing"].file, self.SPOKE)
+        self.assertEqual(by_func["test_unhomed"].file, self.HUB)
+
+    def test_a_module_documented_in_any_spoke_is_silent(self):
+        collect_cache = {
+            "e2e": ["tests/e2e/module_a.py::test_a", "tests/e2e/module_b.py::test_b"],
+        }
+        findings = drift.check_C(
+            [
+                (self.HUB, "# roster\n\n## Routing\n\nrouting table.\n"),
+                ("verification/blizzard/e2e-scenarios/one.md", "# one\n\n## module_a\n\n- `test_a` — covers a.\n"),
+                ("verification/blizzard/e2e-scenarios/two.md", "# two\n\n## module_b\n\n- `test_b` — covers b.\n"),
+            ],
+            collect_cache,
+        )
         self.assertEqual(findings, [])
 
     def test_parametrized_nodes_documented_by_one_bare_bullet_is_silent(self):
-        e2e_text = "### module_a\n\n- `test_param` — covers both cases.\n"
+        spoke_text = "## module_a\n\n- `test_param` — covers both cases.\n"
         collect_cache = {
             "e2e": [
                 "tests/e2e/module_a.py::test_param[1]",
                 "tests/e2e/module_a.py::test_param[2]",
             ]
         }
-        findings = drift.check_C("verification/e2e-scenarios.md", e2e_text, collect_cache)
+        findings = drift.check_C([(self.SPOKE, spoke_text)], collect_cache)
         self.assertEqual(findings, [])
 
     def test_parametrized_node_with_no_bullet_names_the_bare_function(self):
-        e2e_text = "### module_a\n\nlead paragraph, no bullets yet.\n"
+        spoke_text = "## module_a\n\nlead paragraph, no bullets yet.\n"
         collect_cache = {"e2e": ["tests/e2e/module_a.py::test_param[1]"]}
-        findings = drift.check_C("verification/e2e-scenarios.md", e2e_text, collect_cache)
+        findings = drift.check_C([(self.SPOKE, spoke_text)], collect_cache)
         self.assertEqual(_shape(findings), [("C", "fail")])
         self.assertIn("test_param", findings[0].message)
         self.assertNotIn("test_param[1]", findings[0].message)
@@ -436,6 +468,7 @@ class RunRegistryInputAndGateTests(unittest.TestCase):
         _write(self.repo_root / "verification" / "blizzard.md", "# blizzard\n")
         _write(self.repo_root / "verification" / "blizzard" / "commands.md", "# commands\n")
         _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios.md", "# e2e\n")
+        _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios" / "loop.md", "# loop\n")
         self.blizzard_mock = Path(self.tmp.name) / "blizzard-mock"
         self.blizzard_mock.mkdir()
         # Never a real checkout — keeps every check gated behind `if "blizzard"
@@ -486,6 +519,7 @@ class RunEffectivenessGateTests(unittest.TestCase):
             "### blizzard:unit-test\n\n`uv run pytest -m unit` — the unit tier.\n",
         )
         _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios.md", "# e2e\n")
+        _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios" / "loop.md", "# loop\n")
         self.blizzard_mock = Path(self.tmp.name) / "blizzard-mock"
         self.blizzard_mock.mkdir()
         self.blizzard = Path(self.tmp.name) / "blizzard"
@@ -849,6 +883,17 @@ class ProbeTests(unittest.TestCase):
         )
         self.assertEqual(drift._probe_md_heading_count(path, 2, ["See also"]), 2)
 
+    def test_md_heading_count_glob_sums_across_the_matched_files(self):
+        # A registry spread across a hub's spokes has no single file to count.
+        spokes = self.root / "spokes"
+        _write(spokes / "a.md", "# A\n\n## one\n\ntext\n\n## two\n\ntext\n")
+        _write(spokes / "b.md", "# B\n\n## three\n\ntext\n\n## See also\n\n- x\n")
+        self.assertEqual(drift._probe_md_heading_count_glob(self.root, "spokes/*.md", 2, ["See also"]), 3)
+
+    def test_md_heading_count_glob_refuses_a_glob_matching_nothing(self):
+        with self.assertRaises(drift.CopyRegistryError):
+            drift._probe_md_heading_count_glob(self.root, "gone/*.md", 2, [])
+
     def test_py_tuple_len_reads_a_module_level_literal(self):
         path = _write(self.root / "seed.py", "X = 1\n_ORDER: tuple[str, ...] = (\n 'a',\n 'b',\n 'c',\n)\n")
         self.assertEqual(drift._probe_py_tuple_len(path, "_ORDER"), 3)
@@ -1201,6 +1246,7 @@ class CopyRegistryLoadTests(unittest.TestCase):
             ("dir-file-count", "dir"),
             ("glob-count", "glob"),
             ("md-heading-count", "file"),
+            ("md-heading-count-glob", "glob"),
         ):
             probe = {"kind": kind, "repo": "blizzard-context", "file": "f.md", "section": "S",
                      "pattern": "p", "name": "N", "dir": "d", "glob": "*.md"}
