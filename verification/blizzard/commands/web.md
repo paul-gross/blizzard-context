@@ -93,6 +93,13 @@ mounts a real component tree.
     centers on the tab's box rather than the browser viewport's, measured as which of the two centers it sits nearer —
     containment cannot tell them apart, since the host fills the tab body and the viewport's center falls inside it too.
     Proven able to fail by deleting `chunk-transcripts-tab.ts`'s own `:host { position: relative }`.
+- `chunk-artifacts-tab-layout.shell-sweep.spec.ts` covers the hub Artifacts tab's composed chain — `ChunkPage` →
+  `ChunkArtifactsTab` → `ChunkArtifactsPanel` — through a real router, proving `.art-tab`'s `height: 100%` resolves
+  against a definite containing block and that an overflowing artifact nav list genuinely scrolls.
+- `chunk-facts-alignment.shell-sweep.spec.ts` covers the chunk detail facts/usage table pair — `ChunkFacts` with
+  `ChunkTokenBreakdown` content-projected as its sibling `<dl class="kv">`, composed as `chunk-detail-panel.html`
+  composes them: a real-Chromium geometry check that the shared `--kv-label-col`/`--chunk-facts-pad` custom properties
+  keep the two tables' columns aligned when a long wrapped Runner value gives them different content widths.
 - `chunk-detail-page.shell-sweep.spec.ts` covers the runner-local chunk detail page (`ChunkDetailPage`), reachable from
   the machine panel's chunk rows: at 390px and 320px it walks the General, Artifacts, and Transcripts tabs, asserting
   each stacks its own sections with no horizontal overflow — evaluating the General tab's `@media (min-width: 720px)`
