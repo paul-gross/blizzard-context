@@ -45,12 +45,12 @@ any route-released re-queue.
 
 ### Authored choice
 
-A node's authored judgement choice may target another graph (`to: graph:<name>`, [../graphs.md](../graphs.md)); taking
-it is the trigger — the verdict ends the attempt there and records one migration fact re-pinning the chunk. The landing
-anchors the departed node's name — that node diverted rather than completed its own destination — falling back to the
-target's entry node when nothing matches. A choice whose target names no enabled graph escalates the chunk to
-`needs_human` rather than dropping the movement. A migrating choice naming a model re-pins that too, as the chunk's
-default model preference.
+A node's authored judgement choice may target another graph (`to: graph:<name>`,
+[../graphs/edges.md](../graphs/edges.md)); taking it is the trigger — the verdict ends the attempt there and records one
+migration fact re-pinning the chunk. The landing anchors the departed node's name — that node diverted rather than
+completed its own destination — falling back to the target's entry node when nothing matches. A choice whose target
+names no enabled graph escalates the chunk to `needs_human` rather than dropping the movement. A migrating choice naming
+a model re-pins that too, as the chunk's default model preference.
 
 When a human gate's resolved choice is the migrating choice, the migration closes the gate's decision — the escalation
 does when the target is unresolvable — since a migration records no transition, nothing else would ever close it
@@ -101,8 +101,9 @@ resolves to an entry node.
 ## Landing
 
 Every landing resolves a node by name on the target graph (`bzh:ids-exact-names-correlate`,
-[../graphs.md](../graphs.md)); the trigger picks the anchoring name. The landed node's own executor then governs,
-exactly as for an ordinary transition ([../graphs.md#node](../graphs.md#node)), and status after landing keys on that
-executor, never the node's name — the shipped deliver node is one hub-executed instance, not a special case. Landed off
-a transition-borne trigger, a hub-executed node derives `delivering` — the chunk stays in the hub's hands — while a
-runner node re-queues `ready`; how an eager restart's landing re-enters its node is [./restart.md](./restart.md)'s own.
+[../graphs/ids-and-names.md](../graphs/ids-and-names.md)); the trigger picks the anchoring name. The landed node's own
+executor then governs, exactly as for an ordinary transition ([../graphs/nodes.md](../graphs/nodes.md)), and status
+after landing keys on that executor, never the node's name — the shipped deliver node is one hub-executed instance, not
+a special case. Landed off a transition-borne trigger, a hub-executed node derives `delivering` — the chunk stays in the
+hub's hands — while a runner node re-queues `ready`; how an eager restart's landing re-enters its node is
+[./restart.md](./restart.md)'s own.

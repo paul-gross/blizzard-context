@@ -35,7 +35,7 @@ a node another graph need not contain, so only a migration can move it.
 The default model preference and default effort are chunk properties beside the graph pin, minted empty — no preference
 expressed, so the runner's own default applies. They share the session declaration's vocabulary: a prioritized
 preference list of capability tiers or harness-native names, plus one effort value; a graph's declared session
-([../graphs.md#declared-sessions](../graphs.md#declared-sessions)) outranks the chunk defaults field by field. The
+([../graphs/declared-sessions.md](../graphs/declared-sessions.md)) outranks the chunk defaults field by field. The
 defaults are editable while the chunk is unclaimed and immutable thereafter — a wider window than the pin's.
 
 ### Intended migration

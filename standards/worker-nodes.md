@@ -1,33 +1,33 @@
 # Worker command nodes
 
-The authoring contract for a worker node — `executor: runner` (the default, [../domain/graphs.md](../domain/graphs.md)
-§Node) — that declares a `produces:` entry or points its worker at a graph-scoped declaration: the declaration
-instruction its prompt owes the worker (`blizzard runner artifact create` for an asset,
-`blizzard runner artifact commit` for a git commit), the fallback and hub-side backstop that exist when it doesn't, the
-identity env the worker's declaration calls read, and the fallback a pointer at a graph artifact owes.
-[../domain/graphs.md](../domain/graphs.md) §Node and [../domain/artifacts.md](../domain/artifacts.md) own the concepts —
-the node-level `produces:` list and the asset artifact kind; this file owns the prompt-authoring obligation and hub
-backstop a graph author is held to, the same relationship [./hub-nodes.md](./hub-nodes.md) has to `executor: hub`. Each
-rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+The authoring contract for a worker node — `executor: runner` (the default,
+[../domain/graphs/nodes.md](../domain/graphs/nodes.md)) — that declares a `produces:` entry or points its worker at a
+graph-scoped declaration: the declaration instruction its prompt owes the worker (`blizzard runner artifact create` for
+an asset, `blizzard runner artifact commit` for a git commit), the fallback and hub-side backstop that exist when it
+doesn't, the identity env the worker's declaration calls read, and the fallback a pointer at a graph artifact owes.
+[../domain/graphs/nodes.md](../domain/graphs/nodes.md) and [../domain/artifacts.md](../domain/artifacts.md) own the
+concepts — the node-level `produces:` list and the asset artifact kind; this file owns the prompt-authoring obligation
+and hub backstop a graph author is held to, the same relationship [./hub-nodes.md](./hub-nodes.md) has to
+`executor: hub`. Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## The declaration instruction (`bzh:worker-node-attach-instruction`)
 
 **Rule.** A worker node's `produces:` list names artifacts the *worker* is expected to submit
-([../domain/graphs.md](../domain/graphs.md) §Node); for every name on that list, the node's prompt (and its judgement
-prompt, when the two disagree on where the instruction lands) must instruct the worker to declare it. An `asset`-kind
-name is declared by running `blizzard runner artifact create --name <exact-produces-name>`, reading the asset's content
-from stdin. A `git_commit`-kind name (a build node's `produces: [{name: commit, kind: git_commit}]`) is declared by
-running `blizzard runner artifact commit --repo <r> --branch <b> --commit <sha>` after pushing the branch, plus
-`--env <id>` when the chunk holds more than one environment (with one, the runner infers it; with several, the same repo
-has a worktree in each and it is refused rather than guessed). `--repo <r>` is the repo's **name in the environment's
-repo manifest**, never an `owner/name` slug, a path, or a URL — the runner looks it up there to find both the worktree
-and the origin to verify against, and a name the manifest does not list is **rejected at declare time** with a `400`
-naming the repos it does, while the worker is still alive to re-run the verb. There is deliberately no `--forge`: the
-origin comes from the manifest, so a worker cannot supply it and cannot supply the wrong one. A `git_commit` declaration
-is satisfied by **kind** match, not name match — any `git_commit` artifact the worker declares covers the node's
-`git_commit`-kind name, whatever the declaration is called. A node declaring several asset names declares each under its
-own name — one `artifact create` call per name — rather than leaning on the judgement-assessment fallback
-(`bzh:worker-node-attach-fallback` below) to cover more than one.
+([../domain/graphs/nodes.md](../domain/graphs/nodes.md)); for every name on that list, the node's prompt (and its
+judgement prompt, when the two disagree on where the instruction lands) must instruct the worker to declare it. An
+`asset`-kind name is declared by running `blizzard runner artifact create --name <exact-produces-name>`, reading the
+asset's content from stdin. A `git_commit`-kind name (a build node's `produces: [{name: commit, kind: git_commit}]`) is
+declared by running `blizzard runner artifact commit --repo <r> --branch <b> --commit <sha>` after pushing the branch,
+plus `--env <id>` when the chunk holds more than one environment (with one, the runner infers it; with several, the same
+repo has a worktree in each and it is refused rather than guessed). `--repo <r>` is the repo's **name in the
+environment's repo manifest**, never an `owner/name` slug, a path, or a URL — the runner looks it up there to find both
+the worktree and the origin to verify against, and a name the manifest does not list is **rejected at declare time**
+with a `400` naming the repos it does, while the worker is still alive to re-run the verb. There is deliberately no
+`--forge`: the origin comes from the manifest, so a worker cannot supply it and cannot supply the wrong one. A
+`git_commit` declaration is satisfied by **kind** match, not name match — any `git_commit` artifact the worker declares
+covers the node's `git_commit`-kind name, whatever the declaration is called. A node declaring several asset names
+declares each under its own name — one `artifact create` call per name — rather than leaning on the judgement-assessment
+fallback (`bzh:worker-node-attach-fallback` below) to cover more than one.
 
 **Why.** The completion assembly has no file convention for an artifact — it can only submit what the worker explicitly
 declares or, failing that, alias the whole node's judgement assessment to a name — so an un-instructed worker silently
@@ -108,13 +108,13 @@ running `produces_mode = "enforce"` — expect every completion from that node t
 ## The `requires_checks` gate (`bzh:worker-node-checks-gate`)
 
 **Rule.** A choice may declare `requires_checks: true`; selecting it while any of the node's `checks:` is red (the
-runner runs them at worker exit — [../domain/graphs.md](../domain/graphs.md) §Judgement and choices, #114) is treated as
-a **failure, not a judgement** — the engine consumes a retry and re-queues a fresh attempt rather than accepting the
-edge, the red evidence injected into the re-attempt's judgement. Unlike `produces_mode`, this needs **no config flag**:
-gating applies iff a choice declares `requires_checks`, so a graph that declares none is unaffected. It is enforced
-twice off one shared predicate (`wire.completion.checks_gate_violated`) — the runner's own gate and the hub's completion
-backstop, the same runner-gate-plus-hub-backstop shape `bzh:worker-node-produces-backstop` has — so a runner that skips
-its gate is still fenced by the hub. A red check reported through a **non-gated** choice (`fail`) routes normally, its
+runner runs them at worker exit — [../domain/graphs/edges.md](../domain/graphs/edges.md), #114) is treated as a
+**failure, not a judgement** — the engine consumes a retry and re-queues a fresh attempt rather than accepting the edge,
+the red evidence injected into the re-attempt's judgement. Unlike `produces_mode`, this needs **no config flag**: gating
+applies iff a choice declares `requires_checks`, so a graph that declares none is unaffected. It is enforced twice off
+one shared predicate (`wire.completion.checks_gate_violated`) — the runner's own gate and the hub's completion backstop,
+the same runner-gate-plus-hub-backstop shape `bzh:worker-node-produces-backstop` has — so a runner that skips its gate
+is still fenced by the hub. A red check reported through a **non-gated** choice (`fail`) routes normally, its
 context-rich fix path intact.
 
 **Why.** Without the gate, enforcement of "checks are green" is social (prompt prose + the worker's honest self-report),
@@ -124,8 +124,8 @@ worker's non-gated choices allow.
 
 **Detect.** A custom single-application graph that wants "a green build cannot be routed to delivery" but leaves its
 `pass` choice ungated — the worker can still select `pass` over a red check, exactly the drift the gate closes. (The
-mint-time validator already rejects the ill-formed shapes — [../domain/graphs.md](../domain/graphs.md) §Judgement and
-choices owns which — so they never reach here.)
+mint-time validator already rejects the ill-formed shapes — [../domain/graphs/edges.md](../domain/graphs/edges.md) owns
+which — so they never reach here.)
 
 **Do.** On a single-application graph (never a reusable one — `checks:` makes a graph application-specific,
 `bzh:app-agnostic-graphs`), declare the node's `checks:` and set `requires_checks: true` on the choice that must not be
@@ -213,8 +213,8 @@ that makes the defense necessary.
 
 ## See also
 
-- [../domain/graphs.md](../domain/graphs.md) — the conceptual node model: the `executor` facet and the node-level
-  `produces:` list this file's prompt obligation declares.
+- [../domain/graphs/nodes.md](../domain/graphs/nodes.md) — the conceptual node model: the `executor` facet and the
+  node-level `produces:` list this file's prompt obligation declares.
 - [../domain/artifacts.md](../domain/artifacts.md) — the asset artifact kind `artifact create` submits, and the
   commit-pointer kind `artifact commit` declares.
 - [./hub-nodes.md](./hub-nodes.md) — the parallel authoring contract for `executor: hub`, including the Scope note

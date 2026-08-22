@@ -10,9 +10,9 @@ Work the `artifact` verb group reads, and — at node scope only — writes, in 
 
 - **Node scope.** A node-step's durable output, stored at the hub and fed into later nodes' work.
 - **Graph scope.** Definition text a graph's top-level `artifacts:` map bakes into the mint once
-  ([graphs.md](./graphs.md)); every chunk pinned to that mint reads back the identical, immutable content, and no worker
-  ever produces it. A node reads it on demand through the same lease-scoped verbs, scope-qualified
-  ([standards/worker-nodes.md](../standards/worker-nodes.md)) — never injected as prompt content
+  ([graphs/declared-artifacts.md](./graphs/declared-artifacts.md)); every chunk pinned to that mint reads back the
+  identical, immutable content, and no worker ever produces it. A node reads it on demand through the same lease-scoped
+  verbs, scope-qualified ([standards/worker-nodes.md](../standards/worker-nodes.md)) — never injected as prompt content
   ([execution.md](./execution.md)). What that read costs is `bzh:graph-scope-reads-local` in
   [architecture/system-shape/graphs.md](../architecture/system-shape/graphs.md).
 
@@ -78,18 +78,18 @@ each declared entry once, immutable for that mint's whole life, superseded only 
 - **Reads resolve to the newest entry.** Later nodes fetching a node-scope artifact by name get the latest attempt's
   version; the shadowed history stays available.
 - **Series key on the node *name*.** After a migration or a re-published graph, a re-run of `build` keeps appending to
-  the same series (`bzh:ids-exact-names-correlate` in [graphs.md](./graphs.md)); the exact producing node is on each
-  artifact's provenance.
+  the same series (`bzh:ids-exact-names-correlate` in [graphs/ids-and-names.md](./graphs/ids-and-names.md)); the exact
+  producing node is on each artifact's provenance.
 
 ## Delivery
 
 Delivery is not built-in engine machinery — it is graph-authored content, a generic hub command node (`executor: hub` +
-`run:`, [graphs.md](./graphs.md) §Node) like any other, whose declared script IS the delivery policy. Several policies
-ship, and which one a chunk gets is a fact about the graph it travels rather than about the engine: the shipped lanes'
-`deliver` nodes either fast-forward each repo's base branch onto the chunk's own commit, or open a pull request per repo
-and watch each to a clean merge. Even chunk-atomicity — checking every repo merges before pushing any — is one script's
-construction, not a property of delivery: the fast-forward policy advances repos one at a time and accepts a partial
-land, and the per-repo reconciliation below is what recovers it.
+`run:`, [graphs/nodes.md](./graphs/nodes.md)) like any other, whose declared script IS the delivery policy. Several
+policies ship, and which one a chunk gets is a fact about the graph it travels rather than about the engine: the shipped
+lanes' `deliver` nodes either fast-forward each repo's base branch onto the chunk's own commit, or open a pull request
+per repo and watch each to a clean merge. Even chunk-atomicity — checking every repo merges before pushing any — is one
+script's construction, not a property of delivery: the fast-forward policy advances repos one at a time and accepts a
+partial land, and the per-repo reconciliation below is what recovers it.
 
 - **Fleet-wide serialization is a generic fact, not a delivery-only lane.** One fleet-wide execution slot admits one
   chunk's hub node — any hub node, not delivery specifically — at a time; a chunk finding it held elsewhere simply tries
@@ -111,12 +111,12 @@ land, and the per-repo reconciliation below is what recovers it.
 
 ## Landing is not necessarily terminal
 
-A hub node's script authors its outcome choices exactly like a worker node's judgement ([graphs.md](./graphs.md)
-§Judgement and choices). A `deliver` node's `landed` choice may route straight to the graph's reserved terminal — but
-that routing is authored, not fixed, and every shipped lane in fact routes it into a further **runner** node, run in the
-holding runner's still-held environment after every repo has merged, before that node's own choice finally reaches the
-terminal. Landing is therefore informational, not itself a terminal condition — only the graph's reserved terminal
-(`done`, [work/statuses.md](./work/statuses.md)) is.
+A hub node's script authors its outcome choices exactly like a worker node's judgement
+([graphs/edges.md](./graphs/edges.md)). A `deliver` node's `landed` choice may route straight to the graph's reserved
+terminal — but that routing is authored, not fixed, and every shipped lane in fact routes it into a further **runner**
+node, run in the holding runner's still-held environment after every repo has merged, before that node's own choice
+finally reaches the terminal. Landing is therefore informational, not itself a terminal condition — only the graph's
+reserved terminal (`done`, [work/statuses.md](./work/statuses.md)) is.
 
 ## See also
 

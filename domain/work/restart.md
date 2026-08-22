@@ -29,10 +29,10 @@ the node with the work already on disk. A chunk with no claim moves just as well
 
 The re-entry starts on a freshly minted session — handing the step clean context is the point — not the session the
 node's declaration would have resumed, under the target node's currently declared configuration (its session facet,
-[../graphs.md#node](../graphs.md#node)). Freshness derives from the move's own fact: every re-entry into the forced
+[../graphs/nodes.md](../graphs/nodes.md)). Freshness derives from the move's own fact: every re-entry into the forced
 visit is fresh, not only the first. Across graphs the re-entry is stamped with the model, effort, and compaction window
 the landing graph declares, never the departed graph's. The landed node's own executor governs, exactly as for an
-ordinary transition or a migration's landing ([../graphs.md#node](../graphs.md#node)).
+ordinary transition or a migration's landing ([../graphs/nodes.md](../graphs/nodes.md)).
 
 The move consumes whatever parked or re-aimed the chunk: an open ask is answered (exactly one answer ever exists — an
 earlier answerer still wins), an open gate decision closes, and an open escalation is superseded as by a requeue

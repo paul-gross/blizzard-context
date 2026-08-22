@@ -2,10 +2,10 @@
 
 The authoring contract for `executor: hub` — the generic hub command node primitive: the `run:` step shape, the env-var
 interface a step's command reads, the outcome protocol that maps a step's stdout/exit code to a routed edge, and the
-per-step idempotence a `run:` command must honor. [../domain/graphs.md](../domain/graphs.md) §Node owns the concept — a
-node's `executor` facet, and that a hub node is structurally agentless; this file owns the technical schema a change to
-a `run:` script or a new hub node is held to, the same relationship [./wire.md](./wire.md) has to a route's timestamp
-fields. Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+per-step idempotence a `run:` command must honor. [../domain/graphs/nodes.md](../domain/graphs/nodes.md) owns the
+concept — a node's `executor` facet, and that a hub node is structurally agentless; this file owns the technical schema
+a change to a `run:` script or a new hub node is held to, the same relationship [./wire.md](./wire.md) has to a route's
+timestamp fields. Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## The `run:` step shape (`bzh:hub-node-run-shape`)
 
@@ -14,8 +14,8 @@ worker interprets: each step is a `command` string, an optional human-readable `
 position), and an optional `produces` — a marker name the executor itself records once the step exits 0, and the signal
 a later re-run skips that step on (`bzh:hub-node-step-idempotence` below). `run:` is legal only on `executor: hub`; a
 hub node must not declare `prompt`, `checks`, or `judgement.prompt`, and must declare a judgement — its outcome choices
-are authored exactly like a worker node's own ([../domain/graphs.md](../domain/graphs.md) §Judgement and choices). No
-node kind runs an agent turn here or anywhere else in this shape (`bzh:deterministic-shell` in
+are authored exactly like a worker node's own ([../domain/graphs/edges.md](../domain/graphs/edges.md)). No node kind
+runs an agent turn here or anywhere else in this shape (`bzh:deterministic-shell` in
 [../architecture/system-shape.md](../architecture/system-shape.md)).
 
 **Why.** A declared command list is replayable and reviewable text, never a generated one — the same property that makes
@@ -23,9 +23,9 @@ the coordinator's own loop deterministic extends to the one node kind the hub ru
 fields on a hub node keeps "structurally agentless" enforceable rather than a convention a node could quietly violate.
 
 **Scope.** The step-level `produces` is a different fact from the node-level `produces:` list
-([../domain/graphs.md](../domain/graphs.md) §Node) — the node-level list names artifacts a *worker* node is expected to
-submit; a hub step's `produces` names a completion marker the executor records on its own, with no content the step
-chooses.
+([../domain/graphs/nodes.md](../domain/graphs/nodes.md)) — the node-level list names artifacts a *worker* node is
+expected to submit; a hub step's `produces` names a completion marker the executor records on its own, with no content
+the step chooses.
 
 **Detect.** `run:` authored on a node whose `executor` isn't `hub`; a hub node also declaring `prompt`, `checks`, or
 `judgement.prompt`; a hub node with no judgement at all.
@@ -96,7 +96,7 @@ chunk back, exactly as an authored edge to a non-terminal node does while any of
 follow: both record a bounce fact and re-route through the node's `failure` edge, escalating to `needs_human` once the
 node's `bounce_cap` (default 5, overridable per node) is crossed. Pending itself spends no retry and no bounce budget;
 only a timeout or an incomplete-delivery crossing does. The resulting choice routes through the node's authored edges
-exactly like a worker's judged choice ([../domain/graphs.md](../domain/graphs.md) §Judgement and choices).
+exactly like a worker's judged choice ([../domain/graphs/edges.md](../domain/graphs/edges.md)).
 
 **Why.** A subprocess has no structured return channel but stdout and an exit code; fixing "last stdout line, or a
 reserved literal" as the entire vocabulary lets a script report freely to a human on stderr while still selecting
@@ -143,8 +143,9 @@ the step from the top and pushes the first repo a second time.
 
 ## See also
 
-- [../domain/graphs.md](../domain/graphs.md) — the conceptual node model this file's schema instantiates: the `executor`
-  facet, judgement and choices, and the ids-exact/names-correlate rule an artifact series and a migration key on.
+- [../domain/graphs.md](../domain/graphs.md) — the conceptual model this file's schema instantiates: the node's
+  `executor` facet, its judgement and choices, and the ids-exact/names-correlate rule an artifact series and a migration
+  key on.
 - [../architecture/system-shape.md](../architecture/system-shape.md) — `bzh:deterministic-shell`, the invariant a hub
   node's agentlessness realizes.
 - [../architecture/crash-correctness.md](../architecture/crash-correctness.md) — `bzh:crash-point-registry`, the

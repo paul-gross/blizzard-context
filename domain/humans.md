@@ -45,8 +45,8 @@ the chunk parks.
 A **decision** is a gate's parking row: a durable multiple-choice ask written where a worker-judged node would have
 written its transition, carrying the step's artifacts so the deciding human sees what they are judging.
 
-- **The choices are the node's judgement choices** ([graphs.md](./graphs.md)) — what the board and chat bot render as
-  buttons.
+- **The choices are the node's judgement choices** ([graphs/edges.md](./graphs/edges.md)) — what the board and chat bot
+  render as buttons.
 - **Pending derives**: a decision no resolving fact references is open, and the chunk derives `waiting_on_human` from it
   — no live lease while parked. Which fact resolves it:
   - **The transition the holding runner writes** (below) — the ordinary case.
