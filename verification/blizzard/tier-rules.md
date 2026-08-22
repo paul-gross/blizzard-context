@@ -55,7 +55,7 @@ collapse, because jsdom parses `@container` and media-query rules without ever e
 
 **Do.** The `wide_viewport` and `narrow_viewport` fixtures in `tests/e2e/conftest.py` give any browser scenario a real
 ~390px page to assert against, and `web:shell-sweep` proves the real-Chromium layout claims jsdom cannot — the surfaces
-it covers and what each of its specs asserts are stated in [`./commands.md`](./commands.md#webshell-sweep).
+it covers and what each of its specs asserts are stated in [`./commands.md`](./commands/web.md#webshell-sweep).
 
 **Don't.** Treat a component with no narrow-width handling of its own as a defect to fix in place. It is a gap to close
 with a narrow-width proof in whichever narrow-width method fits the surface.

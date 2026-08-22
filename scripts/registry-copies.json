@@ -142,7 +142,7 @@
       "what": "the web:shell-sweep spec inventory",
       "noun": "specs?",
       "line_requires": "shell-sweep|real-Chromium",
-      "owner": "verification/blizzard/commands.md#webshell-sweep",
+      "owner": "verification/blizzard/commands/web.md#webshell-sweep",
       "probe": {
         "kind": "glob-count",
         "repo": "blizzard",

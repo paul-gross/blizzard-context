@@ -1,7 +1,7 @@
 # The by-hand sweeps before you push (`bzh:matrix-pre-push`)
 
 A local gate cannot reach every surface. This file owns the sweeps that stand in for the ones it leaves unchecked; which
-tiers `blizzard:gate` cannot run is stated in its own row at [`./commands.md`](./commands.md#blizzardgate).
+tiers `blizzard:gate` cannot run is stated in its own row at [`./commands.md`](./commands/packaging.md#blizzardgate).
 
 ## Sweep the release-only tiers before you push (`bzh:sweep-release-only-tiers`)
 

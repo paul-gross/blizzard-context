@@ -478,6 +478,13 @@ class RunEffectivenessGateTests(unittest.TestCase):
         self.repo_root = Path(self.tmp.name) / "repo"
         _write(self.repo_root / "verification" / "blizzard.md", "# blizzard\n")
         _write(self.repo_root / "verification" / "blizzard" / "commands.md", "# commands\n")
+        # The hub routes only; B2 and C2 read their `### <method-id>` sections
+        # from the spokes beside it, so a fixture with no spoke leaves both with
+        # nothing to read and lands them in `skipped`.
+        _write(
+            self.repo_root / "verification" / "blizzard" / "commands" / "test-tiers.md",
+            "### blizzard:unit-test\n\n`uv run pytest -m unit` — the unit tier.\n",
+        )
         _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios.md", "# e2e\n")
         self.blizzard_mock = Path(self.tmp.name) / "blizzard-mock"
         self.blizzard_mock.mkdir()
@@ -655,6 +662,20 @@ class RunEffectivenessGateTests(unittest.TestCase):
         self.assertTrue(
             any(f.check == "F" and f.status == "fail" and "census unusable" in (f.message or "") for f in findings)
         )
+
+    def test_a_hub_with_no_spoke_sections_skips_b2_and_c2(self):
+        # The hub file existing is not the input B2/C2 need — the sections are.
+        # Without the guard, deleting every spoke leaves both checks reporting
+        # an empty finding list and the run gating green having checked nothing.
+        self._write_stub_interpreter()
+        (self.repo_root / "verification" / "blizzard" / "commands" / "test-tiers.md").unlink()
+        findings, exit_code = drift.run(self.repo_root, self.blizzard, self.blizzard_mock, gate=True)
+        self.assertEqual(exit_code, 1)
+        skipped = [f for f in findings if f.check == "skipped"]
+        self.assertEqual(len(skipped), 1)
+        named = skipped[0].message.split(": ")[1].split(", ")
+        self.assertIn("B2", named)
+        self.assertIn("C2", named)
 
     def test_fully_effective_run_gates_zero(self):
         # C4 — pins the green path: a fully effective run against a fixture

@@ -29,8 +29,9 @@ Emits NDJSON findings on stdout, one object per line, following the
 `winter lint` finding contract (`check`, `status` in {pass, warn, fail},
 optional `message`/`file`/`line`/`remediation`). Exits 0 by default; with
 `--gate`, exits 1 on any `fail` finding, on any registry input missing
-(`blizzard.md`, `commands.md`, `e2e-scenarios.md`, `registry-copies.json`,
-or an empty `verification/` sweep), or on any check that did not actually run to
+(`blizzard.md`, `commands.md` and its `commands/` spokes, `e2e-scenarios.md`,
+`registry-copies.json`, or an empty `verification/` sweep), or on any check that
+did not actually run to
 completion against its full required inputs — an unresolved interpreter, a
 marker whose `pytest --collect-only` failed, or an unreadable `mise.toml`/
 `package.json` all count as *not run*, never as a silent pass. A check
@@ -39,10 +40,10 @@ list came back empty.
 
 Declared limitations (stated here rather than discovered later):
 
-- Tier association is read from `commands.md`'s `### <method-id>` sections
-  only. A test file cited in the free-prose rule spokes under
-  `verification/blizzard/` gets
-  checks A and B1 but not B2 — associating a tier from running prose is not
+- Tier association is read from the `### <method-id>` sections under
+  `verification/blizzard/commands/` only. A test file cited in the free-prose
+  rule spokes under `verification/blizzard/` gets checks A and B1 but not B2 —
+  associating a tier from running prose is not
   mechanizable; that half stays a `blizzard-context:manual-reference-check`
   item.
 - B1 and B2 run against the **blizzard checkout only**. `blizzard-mock`
@@ -1682,6 +1683,9 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
         )
         registry_input_missing = True
 
+    # The command detail is a routing hub plus one spoke per group of methods,
+    # and the `### <method-id>` sections B2/C2 parse live in the spokes. Both
+    # checks run per file, so a finding keeps the spoke's own path and line.
     commands_path = verification_dir / "blizzard" / "commands.md"
     commands_relfile = _relpath(commands_path, repo_root)
     commands_text = commands_path.read_text(errors="replace") if commands_path.is_file() else ""
@@ -1690,6 +1694,25 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
             Finding("A", "warn", f"expected registry input not found: {commands_relfile} — checks B2, C2 skipped")
         )
         registry_input_missing = True
+
+    command_docs: list[tuple[str, str]] = []
+    for spoke in sorted((verification_dir / "blizzard" / "commands").glob("*.md")):
+        spoke_text = spoke.read_text(errors="replace")
+        if spoke_text:
+            command_docs.append((_relpath(spoke, repo_root), spoke_text))
+    if commands_text and not any(_sections(text, "###") for _, text in command_docs):
+        # The hub carries no sections of its own, so an empty spoke directory
+        # leaves B2/C2 with nothing to read while every input still "exists".
+        findings.append(
+            Finding(
+                "A",
+                "warn",
+                "expected registry input not found: verification/blizzard/commands/*.md "
+                "`### <method-id>` sections — checks B2, C2 skipped",
+            )
+        )
+        registry_input_missing = True
+        command_docs = []
 
     e2e_path = verification_dir / "blizzard" / "e2e-scenarios.md"
     e2e_relfile = _relpath(e2e_path, repo_root)
@@ -1721,16 +1744,18 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
         findings += check_B1(verification_files, checkouts["blizzard"], collect_cache)
         if all_markers_ok:
             executed.add("B1")
-        if commands_text:
-            findings += check_B2(commands_relfile, commands_text, checkouts["blizzard"], collect_cache)
+        if command_docs:
+            for relfile, text in command_docs:
+                findings += check_B2(relfile, text, checkouts["blizzard"], collect_cache)
             if tier_markers_ok:
                 executed.add("B2")
         if e2e_text:
             findings += check_C(e2e_relfile, e2e_text, collect_cache)
             if e2e_marker_ok:
                 executed.add("C")
-        if commands_text:
-            findings += check_C2(commands_relfile, commands_text, checkouts["blizzard"])
+        if command_docs:
+            for relfile, text in command_docs:
+                findings += check_C2(relfile, text, checkouts["blizzard"])
             executed.add("C2")
 
         mise_tasks_readable = _load_mise_tasks(checkouts["blizzard"]) is not None

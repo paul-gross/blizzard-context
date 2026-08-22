@@ -21,7 +21,7 @@ the service tier that exists to catch a wire regression tests nothing new.
 
 **Detect.** `blizzard`'s `tests/service/test_parity_guard.py` mechanically diffs `IHubClient` against the mock hub's
 served routes, and `blizzard-mock`'s `tests/test_wire_parity.py` covers the shape half from the other side by reading
-the sibling `blizzard` worktree — its detail is at [`./commands.md`](./commands.md#blizzard-mockunit-test). The other
-direction has no such check: the mock runner's `/_drive/*` plane is checked only against a hardcoded declared-set
+the sibling `blizzard` worktree — its detail is at [`./commands.md`](./commands/mock.md#blizzard-mockunit-test). The
+other direction has no such check: the mock runner's `/_drive/*` plane is checked only against a hardcoded declared-set
 snapshot flagging a grown or shrunk verb, `IHubGateway` is never independently diffed against a real contract, and that
 direction therefore rests on this rule rather than on anything mechanical.
