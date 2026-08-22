@@ -105,10 +105,10 @@ bind are owned by `blizzard-mock` (P4); the tier *rules* below are the standard 
   Claude Code CLI 2.1.220 plus source reads of opencode 1.18.8 and codex, recorded in the issue. A stickiness regression
   in a future CLI would therefore run a whole mechanical lineage on the wrong model with every tier green — and each
   harness additionally has a *configuration* that defeats stickiness (`ANTHROPIC_MODEL` env, an opencode agent model
-  pin, a codex `config.toml` model), which is why `docs/deployment.md` states them as deployment requirements. A
-  documented gap, not invented around: do not add a real-token tier to close it. The companion finding is that **effort
-  is not sticky** in the same CLI — measured, not assumed — which is why effort is reasserted on every invocation while
-  model is not.
+  pin, a codex `config.toml` model), which is why `docs/deployment/worker-spawn.md` states them as deployment
+  requirements. A documented gap, not invented around: do not add a real-token tier to close it. The companion finding
+  is that **effort is not sticky** in the same CLI — measured, not assumed — which is why effort is reasserted on every
+  invocation while model is not.
 - **Compaction is covered by evidence, not by a tier (blizzard#343).** The declared window travels to the harness as a
   per-invocation flag (`--autocompact`, reasserted like effort, never sticky-by-omission), but whether it actually
   compacts a session's context near that value is *effective* harness behavior no CI tier can see: the mock façade sees
