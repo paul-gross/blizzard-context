@@ -48,7 +48,7 @@ in one is linked from the others, never restated.
 | [`tier-rules.md`](./blizzard/tier-rules.md)               | …you are writing or reviewing a test at any tier — hermeticity, mock counterparts, store, viewport, log sinks. |
 | [`companion-changes.md`](./blizzard/companion-changes.md) | …your change touches a `tests/e2e/` case or a hub↔runner wire surface, which each owe a companion landing.     |
 | [`evidence.md`](./blizzard/evidence.md)                   | …you are judging whether a green run actually pins the behavior its name claims.                               |
-| [`pre-push.md`](./blizzard/pre-push.md)                   | …you are about to push — the surfaces `blizzard:gate` cannot reach and the sweeps that stand in for them.      |
+| [`pre-push.md`](./blizzard/pre-push.md)                   | …you are about to push — the sweeps that stand in for what a local gate cannot reach.                          |
 | [`gaps.md`](./blizzard/gaps.md)                           | …you are tempted to add a tier for something no tier covers — read what already stands in for one, and why.    |
 
 ## Commands
@@ -112,10 +112,10 @@ Verification no single command performs. Full per-method surface, setup, steps, 
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | blizzard:manual                      | The acceptance loop end-to-end. **Automated as of P6** — run it as `blizzard:e2e` rather than by hand. |
 | blizzard:manual-sse-probe            | The live SSE wire probe — framing and timing on a real socket, hub or runner, one daemon at a time.    |
-| blizzard:manual-rollback-drill       | The compose deployment's rollback promise, walked for real against two published image tags.           |
+| blizzard:manual-standing-idp         | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture.        |
 | blizzard:manual-external-usage-probe | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`.             |
 | blizzard:manual-autocompact-window   | A declared `--autocompact` window compacting a real session, rather than the model's own maximum.      |
-| blizzard:manual-standing-idp         | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture.        |
+| blizzard:manual-rollback-drill       | The compose deployment's rollback promise, walked for real against two published image tags.           |
 | blizzard-mock:manual                 | The winter-wired mock forge fronting a real fixture workspace's bare origins.                          |
 | blizzard-mock:manual-seeded-board    | A realistic board rendered from a direct store seed — no work source configured, no hub restart.       |
 | blizzard-mock:manual-seeded-fleet    | A seeded runner panel beside a seeded board, still coherent after the daemon's first reconciling tick. |

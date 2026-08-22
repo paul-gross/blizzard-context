@@ -1,54 +1,58 @@
-# Pre-push sweeps — the tiers `blizzard:gate` cannot run (`bzh:matrix-pre-push`)
+# The by-hand sweeps before you push (`bzh:matrix-pre-push`)
 
-What a local gate leaves unchecked, and what to sweep by hand before pushing.
+A local gate cannot reach every surface. This file owns the sweeps that stand in for the ones it leaves unchecked; which
+tiers `blizzard:gate` cannot run is stated in its own row at [`./commands.md`](./commands.md#blizzardgate).
 
-- **Sweep the release-only tiers before you push (`bzh:sweep-release-only-tiers`).** The
-  [`blizzard:gate`](./commands.md#blizzardgate) row names *which* tiers that command cannot run; this is what that blind
-  spot actually bites. Those tiers are the only ones reading two surfaces nothing else type-checks: **board
-  `data-testid`s and `data-*` attributes** (`tests/e2e/`) and **wire field names off a live API response**
-  (`tests/service/`). A rename of either therefore ships green and breaks them where you will not see it. Grep before
-  pushing, then run what the change touched:
+## Sweep the release-only tiers before you push (`bzh:sweep-release-only-tiers`)
 
-  ```bash
-  grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
-  ```
+**Rule.** Before you push, sweep the release-only tiers for every handle or field the change renamed or removed, then
+run whatever the change touched.
 
-  The `demo/` directory is in that list because the tiers are no longer the only readers: the board's kiosk demo mode
-  (`?demo=true`) steers on four board handles from **production** code — `chunk-detail`/`detail-id` and
-  `artifacts-tab-artifact`/`artifacts-tab-artifact-key`. It fails *quietly* where a scenario fails loudly (the wait
-  times out, the scroll is skipped, the screen holds still), so each half is pinned on the producing side: the first
-  pair by `tests/e2e/test_board_browser_e2e.py`, the second by
-  `web/projects/hub/src/app/board/chunk/chunk-artifacts-tab.spec.ts`. Note the second pair is unreachable by grep from
-  the component side at all — `artifacts-tab-artifact-key` is never a literal there, only synthesized as
-  `` `${testid()}-key` `` — which is why it has a named spec rather than a sweep.
+**Why.** Those tiers are the only readers of surfaces nothing else type-checks — board `data-testid` and `data-*`
+attributes in `tests/e2e/`, and wire field names off a live API response in `tests/service/` — so renaming either ships
+green and breaks them where you will not see it.
 
-  That grep catches a handle you **removed**. A handle you **added** breaks these tiers just as hard and the grep is
-  blind to it: a `data-testid` is only a usable locator while exactly one component renders it, so a second component
-  claiming an existing name makes every `get_by_test_id` for it ambiguous and the scenario dies on
-  `strict mode violation: … resolved to 2 elements`. A new component that renders a concept an existing one already
-  renders (the same chunk's open question, in a rail *and* in the detail dock) is the case to watch — give it its own
-  prefixed handles. Check a new handle is unique before you add it:
+**Do.**
 
-  ```bash
-  grep -rn 'data-testid="<new-testid>"' web/projects/   # expect exactly one component
-  ```
+```bash
+grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
+```
 
-  The browser scenarios drive the **built** bundle `blizzard hub host` serves out of `src/blizzard/static/`, never the
-  sources. `mise run e2e` therefore `depends = ["web-build"]` — do not reach past it with a bare `pytest tests/e2e/`.
-  The hazard is not the unbuilt tree (that fails loudly, before the first assertion); it is a bundle that is **present
-  but stale**, which fails *quietly* — the scenario exercises the previous UI and can go **green against a layout that
-  no longer exists**, reporting coverage of a change it never loaded. This is a rule rather than a note because the same
-  blind spot has landed three times, most recently against a board-layout rewrite whose geometry assertion would have
-  passed against the old layout had a second, unrelated failure not tripped first.
+`demo/` is in that sweep because the tiers are not the only readers of those handles: the board's kiosk demo mode
+(`?demo=true`) steers on `chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key` from
+production code, and it fails quietly where a scenario fails loudly.
 
-- **A red drift check means stage the regenerated output, not the check is noisy — never substitute `lint`/`test` for it
-  (`bzh:drift-stage-not-route-around`).** `web:client-drift` and the OpenAPI half of `blizzard:gate` diff the working
-  tree against the index, not against `HEAD`, so `git add` the regenerated `openapi/` and `web/` output before running
-  the gate — an *unstaged* regeneration is what fails, not an uncommitted one. `npm run lint` and `npm run test`
-  type-check and unit-test different surfaces; neither exercises codegen, so substituting them for a red drift step
-  reports coverage the gate never ran and leaves the drift unguarded. This is a rule rather than a note because the same
-  blind spot has landed at least three times in one build, once as exactly that substitution. Scope: the rule binds the
-  evidence a verification claim rests on, not the inner loop — a tight dev-test iteration may run narrower checks
-  (`ng test <project> --include='**/<touched>.spec.ts'`, a single pytest module) or defer a gate entirely, so long as
-  the full declared method runs green before the work is called verified; a narrowed run is a dev-loop convenience,
-  never claim evidence.
+## Board test handles
+
+Check a new handle is unique before adding it, expecting exactly one component:
+
+```bash
+grep -rn 'data-testid="<new-testid>"' web/projects/
+```
+
+A `data-testid` is a usable locator only while exactly one component renders it, so a duplicate name makes every
+`get_by_test_id` for it ambiguous and the scenario dies on `strict mode violation: … resolved to 2 elements`; a new
+component rendering a concept an existing one already renders gets its own prefixed handles.
+
+`artifacts-tab-artifact-key` is unreachable by grep from the component side, where it is never a literal but only
+synthesized as `` `${testid()}-key` ``, so it carries a named spec —
+`web/projects/hub/src/app/board/chunk/chunk-artifacts-tab.spec.ts` — rather than a sweep.
+
+## The browser tiers run the built bundle
+
+The browser scenarios drive the built bundle `blizzard hub host` serves out of `src/blizzard/static/`, never the
+sources, so `mise run e2e` carries `depends = ["web-build"]` and must not be reached past with a bare
+`pytest tests/e2e/`. The hazard is not an unbuilt tree, which fails loudly before the first assertion, but a bundle
+present and stale, which fails quietly: the scenario exercises the previous UI and can go green against a layout that no
+longer exists.
+
+## A red drift check means stage the output (`bzh:drift-stage-not-route-around`)
+
+**Rule.** A red drift check means stage the regenerated output, and never substitute `lint` or `test` for it.
+
+**Why.** `npm run lint` and `npm run test` type-check and unit-test different surfaces and neither exercises codegen, so
+substituting them for a red drift step reports coverage the gate never ran and leaves the drift unguarded.
+
+**Do.** `web:client-drift` and the OpenAPI half of `blizzard:gate` diff the working tree against the index rather than
+against `HEAD`, so `git add` the regenerated `openapi/` and `web/` output before running the gate — an unstaged
+regeneration is what fails, not an uncommitted one.

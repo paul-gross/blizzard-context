@@ -91,8 +91,8 @@ if lease.epoch < current_epoch:
 
 - `bzh:docstring-prose-authoring` in [`./python.md`](./python.md) — the markdown-authoring principles a docstring's
   prose is additionally held to.
-- `bzh:mutation-review-selection` in [`../verification/blizzard.md`](../verification/blizzard.md) — why a
-  comment-defended decision is the first thing to mutate, and what the pinning test must name.
+- `bzh:mutation-review-selection` in [`../verification/blizzard/evidence.md`](../verification/blizzard/evidence.md) —
+  why a comment-defended decision is the first thing to mutate, and what the pinning test must name.
 - `canon:one-owner` in `winter-canon:/principles.md` — the one-canonical-owner principle this rule applies to code
   prose.
 - `bzh:comment-encapsulation` in [`./comment-encapsulation.md`](./comment-encapsulation.md) — the boundary discipline an
