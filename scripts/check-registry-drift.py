@@ -40,7 +40,8 @@ list came back empty.
 Declared limitations (stated here rather than discovered later):
 
 - Tier association is read from `commands.md`'s `### <method-id>` sections
-  only. A test file cited in `blizzard.md`'s free-prose tier rules gets
+  only. A test file cited in the free-prose rule spokes under
+  `verification/blizzard/` gets
   checks A and B1 but not B2 — associating a tier from running prose is not
   mechanizable; that half stays a `blizzard-context:manual-reference-check`
   item.

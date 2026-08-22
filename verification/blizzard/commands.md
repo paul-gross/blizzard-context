@@ -135,8 +135,8 @@ regeneration passes and an unstaged one fails the gate (`web:client-drift`). It 
 this command does not run `blizzard:service-test` or the bounded `blizzard:crash-sweep` CI profile
 (`mise run crash-sweep-ci`); the `pr` workflow runs both as separate real gate jobs alongside `gate`, the same jobs the
 `push` workflow runs, so a PR that breaks either tier fails its own check before it can merge. Run both locally too
-before pushing for faster feedback than waiting on CI. The `bzh:sweep-release-only-tiers` tier rule (in
-[tier rules](../blizzard.md#tier-rules)) names which surfaces this blind spot actually bites.
+before pushing for faster feedback than waiting on CI. The `bzh:sweep-release-only-tiers` rule
+([pre-push sweeps](./pre-push.md)) names which surfaces this blind spot actually bites.
 
 ### blizzard:wheel
 
@@ -409,13 +409,13 @@ with **no exemptions**.
 
 `npm run shell-sweep` in `web/` (`web/scripts/shell-sweep.js`) — the tooled proof behind two classes of claim jsdom
 cannot evaluate. The first, and the method's original reason to exist, is the narrow-viewport tier rule
-(`bzh:narrow-viewport-tier-rule`, [tier rules](../blizzard.md#tier-rules)) for components reachable from the mobile
-shell's bottom nav: jsdom (`web:unit-test`'s environment) parses `@container`/media-query rules without evaluating them
-and never actually lays out or clamps text, so no jsdom spec can prove a real collapse. The second is a computed-style
-claim no viewport width changes — most concretely a `:hover`/`:focus-visible` rule, since jsdom parses a pseudo-class
-selector without ever resolving it against a simulated pointer, so no jsdom spec can prove a hovered element reads
-differently from a resting or a selected one either. Both classes share the same gap and the same fix: this method runs
-its specs under `@angular/build:unit-test`'s real-browser mode instead (`--browsers=ChromiumHeadless`, backed by the
+(`bzh:narrow-viewport-tier-rule`, [tier rules](./tier-rules.md)) for components reachable from the mobile shell's bottom
+nav: jsdom (`web:unit-test`'s environment) parses `@container`/media-query rules without evaluating them and never
+actually lays out or clamps text, so no jsdom spec can prove a real collapse. The second is a computed-style claim no
+viewport width changes — most concretely a `:hover`/`:focus-visible` rule, since jsdom parses a pseudo-class selector
+without ever resolving it against a simulated pointer, so no jsdom spec can prove a hovered element reads differently
+from a resting or a selected one either. Both classes share the same gap and the same fix: this method runs its specs
+under `@angular/build:unit-test`'s real-browser mode instead (`--browsers=ChromiumHeadless`, backed by the
 `@vitest/browser-playwright` + `playwright` dev dependencies, pinned to the same `1.61.x` release the Python
 `tests/e2e/` tier already caches a Chromium build for), where layout, `@container`/media-query collapse, line-clamping,
 computed style, and hit-testing are all genuine. Each spec — named `*.shell-sweep.spec.ts` and excluded from its

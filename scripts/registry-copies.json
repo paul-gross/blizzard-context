@@ -97,7 +97,7 @@
       "sites": [
         {
           "repo": "blizzard-context",
-          "file": "verification/blizzard.md",
+          "file": "verification/blizzard/manual-mock.md",
           "role": "allowed",
           "reason": "a manual method's own step, whose count is the assertion the operator performs — §Exception class 2, applied to a manual method rather than a pinning test"
         },

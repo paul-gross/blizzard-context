@@ -26,13 +26,30 @@ pass-through test; and 13 (delivery-conflict reconcile) by the component-tier pa
 **Gap.** The tag `release` workflow's full-suite tiers reuse the push-verified multi-repo setup but have not yet been
 exercised under a real `v*` tag.
 
-Full per-method detail lives in the spokes below, one `### <method-id>` section per row marked *(more)*, in table order:
+Full detail lives under [./blizzard/](./blizzard/), one file per reader question. Each is a single owner; a fact stated
+in one is linked from the others, never restated.
 
-| Spoke                                                      | Holds                                                                   |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [./blizzard/commands.md](./blizzard/commands.md)           | Full detail for the Commands table rows below, except `blizzard:e2e`    |
-| [./blizzard/e2e-scenarios.md](./blizzard/e2e-scenarios.md) | The standing e2e scenario registry — read for what each scenario proves |
-| [./blizzard/tools.md](./blizzard/tools.md)                 | Full detail for the Tools table rows below                              |
+## Routing
+
+### The inventory, row by row
+
+| File                                              | Read when…                                                                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [`commands.md`](./blizzard/commands.md)           | …you need what a Commands row below actually runs, asserts, and cannot see — every row marked *(more)*.      |
+| [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md) | …you are adding, renaming, or reading a `blizzard:e2e` scenario — the standing registry of what each proves. |
+| [`manual.md`](./blizzard/manual.md)               | …you are performing a `blizzard:` manual method: its surface, setup, steps, and pass condition.              |
+| [`manual-mock.md`](./blizzard/manual-mock.md)     | …you are performing a `blizzard-mock:` manual method — the live forge, the seeded board, the seeded fleet.   |
+| [`tools.md`](./blizzard/tools.md)                 | …you are standing up the state a verification needs — every Tools row marked *(more)*.                       |
+
+### The standard a test is held to
+
+| File                                                      | Read when…                                                                                                     |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| [`tier-rules.md`](./blizzard/tier-rules.md)               | …you are writing or reviewing a test at any tier — hermeticity, mock counterparts, store, viewport, log sinks. |
+| [`companion-changes.md`](./blizzard/companion-changes.md) | …your change touches a `tests/e2e/` case or a hub↔runner wire surface, which each owe a companion landing.     |
+| [`evidence.md`](./blizzard/evidence.md)                   | …you are judging whether a green run actually pins the behavior its name claims.                               |
+| [`pre-push.md`](./blizzard/pre-push.md)                   | …you are about to push — the surfaces `blizzard:gate` cannot reach and the sweeps that stand in for them.      |
+| [`gaps.md`](./blizzard/gaps.md)                           | …you are tempted to add a tier for something no tier covers — read what already stands in for one, and why.    |
 
 ## Commands
 
@@ -75,7 +92,8 @@ Verification that runs as a single command — exit 0 is the pass signal.
 ## Test tiers
 
 Four tiers, all used — each answers a different question, and none substitutes for another. The mocks the upper tiers
-bind are owned by `blizzard-mock` (P4); the tier *rules* below are the standard those tests are held to.
+bind are owned by `blizzard-mock` (P4); the standard those tests are held to is
+[./blizzard/tier-rules.md](./blizzard/tier-rules.md).
 
 | Tier          | Method                    | Scope                                                                                                                      | Tooling                                                                                                                                                                                                                                                                                                                                      |
 | ------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -84,576 +102,23 @@ bind are owned by `blizzard-mock` (P4); the tier *rules* below are the standard 
 | **Service**   | `blizzard:service-test`   | A running hub or runner's HTTP API exercised from outside, seams bound to the mock fleet.                                  | pytest + HTTP                                                                                                                                                                                                                                                                                                                                |
 | **E2E**       | `blizzard:e2e`            | The full system — hub, runner, web app — through the browser and CLI, fully local with every seam bound to the mock fleet. | pytest, driving the in-process loop + a real Chromium via Playwright — the [registry](./blizzard/e2e-scenarios.md) states each browser-driven scenario's actual guard, since they are not uniform: some skip cleanly on a missing built bundle or a missing Chromium, some fail loudly instead, and one is only conditionally browser-driven |
 
-### Tier rules
-
-- **Service and e2e tests never spend real tokens and never touch the network.** The harness seam binds a mock coding
-  harness; the work-source and delivery seams bind the mock GitHub forge; the workspace seam binds mocks or local
-  fixtures.
-- **Real-forge worker-push is covered by dogfooding, not CI (issue #143, R6).** Since Phase 4 the worker — not the
-  runner — pushes its branch before declaring it (`blizzard runner artifact commit`); CI's `blizzard:e2e` and
-  `blizzard:crash-sweep` rows only ever exercise that push against the `file://` mock origins the fixture workspace
-  mints, never a real forge. A push failure specific to a real remote (auth, a real GitHub branch-protection rule,
-  network) is therefore a gap no CI tier closes — it is exercised only by the dogfood deployment
-  (`workspace:/context/project/local-instance.md`), whose build transcripts already show the worker pushing to real
-  GitHub. A documented gap, not invented around: do not add a real-forge CI tier to close it.
-- **Harness session stickiness is covered by evidence, not by a tier (issue #144).** The mint-only model contract — a
-  session's model applied where the session is minted and on no resume after it — rests on the harness *restoring* a
-  resumed session's own model. No tier asserts the **effective** model a harness ran under: the mock façade sees argv
-  and nothing else, so `blizzard:e2e`'s named assertion in `test_session_modes_e2e.py`'s
-  `test_a_named_pool_threads_one_session_across_nodes_and_applies_model_at_mint_only` asserts the **flag** (mint carries
-  a model, resumes carry none) and stops there. What backs the underlying claim is a one-time empirical observation of
-  Claude Code CLI 2.1.220 plus source reads of opencode 1.18.8 and codex, recorded in the issue. A stickiness regression
-  in a future CLI would therefore run a whole mechanical lineage on the wrong model with every tier green — and each
-  harness additionally has a *configuration* that defeats stickiness (`ANTHROPIC_MODEL` env, an opencode agent model
-  pin, a codex `config.toml` model), which is why `docs/deployment/worker-spawn.md` states them as deployment
-  requirements. A documented gap, not invented around: do not add a real-token tier to close it. The companion finding
-  is that **effort is not sticky** in the same CLI — measured, not assumed — which is why effort is reasserted on every
-  invocation while model is not.
-- **Compaction is covered by evidence, not by a tier (blizzard#343).** The declared window travels to the harness as a
-  per-invocation flag (`--autocompact`, reasserted like effort, never sticky-by-omission), but whether it actually
-  compacts a session's context near that value is *effective* harness behavior no CI tier can see: the mock façade sees
-  argv and nothing else, so the mock-visible tiers (`blizzard:unit-test`'s command-list pins,
-  `blizzard:component-test`'s wire/stamp round-trip) prove only that the flag is built and threaded, never that it does
-  anything. Closing that gap is `blizzard:manual-autocompact-window`, the same shape as
-  `blizzard:manual-external-usage-probe` below: a live procedure, not a placeholder for a future tier — the thing it
-  proves (an external harness's live compaction behavior) is structurally outside a hermetic, network-free CI tier's
-  reach.
-- **Sidechain and thinking-turn *normalization* is proven only against hand-authored fixtures (blizzard#245).** Pinned
-  at `blizzard:unit-test` and by the component-tier projection golden tests, both fed by the same hand-authored record
-  fixtures; `blizzard-mock`'s `ClaudeTranscriptWriter`
-  (`blizzard-mock/src/blizzard_mock/harness/facades/_transcript.py`) deliberately mints none of the shapes involved, so
-  no mock-driven `blizzard:service-test` or `blizzard:e2e` tier exercises the *normalizer* against them, and each could
-  in principle drift from a future Claude Code CLI with every one of those tiers still green.
-  `test_transcript_tab_browser_e2e` (blizzard#248) does not close this gap: it proves the board's *rendering* of
-  thinking turns and both sidechain shapes end to end, but seeds them as hand-authored `TurnSegmentView` JSON posted
-  straight to `POST /api/fleet/transcripts`, so no normalizer output ever reaches it. The forward-read lane's own
-  consumer is `turns_since(since=<position>)` called through the transcript outbound lane's pump (issue #246) —
-  `TranscriptPump` (`blizzard/src/blizzard/runner/loop/transcript_pump.py`) calls it every tick per open segment and
-  carries the returned `next_position` forward as the next call's `since`. What `blizzard:component-test`
-  (`tests/test_transcript_pump.py`) actually proves is narrower than that sounds: it binds a scriptable
-  `FakeTranscriptSource` (`blizzard/tests/runner_fakes.py`) that returns canned batches by session id, never calling
-  `Position.of`, `FileRead.forward`, or the past-EOF clamp — so the test proves the pump's own cursor-carry *plumbing*
-  (it hands the fake's opaque token back on the next call), not the position codec, the shared batch budget, or the
-  past-EOF clamps inside `ClaudeCodeTranscriptSource.turns_since` itself — those three are pinned at no tier at all.
-  `blizzard:service-test`'s
-  `tests/service/test_runner_service.py::test_transcript_route_failure_never_blocks_the_fact_lane` proves the two lanes'
-  independence (a wedged transcript route buffers rather than blocking the fact lane, and drains clean on recovery), but
-  its only transcript-lane assertions are a buffer-depth threshold satisfied by `record_closure`'s own-segment final
-  marker alone; it witnesses no delta content, cursor, or carry-forward, so it proves lane independence, not this claim.
-  The panel's `read_turns` (`blizzard/src/blizzard/runner/transcripts/internal/projected_transcript_repository.py`), by
-  contrast, still calls `turns_since(..., since=None)` exactly once per read and never loops on the position it mints —
-  that read path's own carry-forward remains unexercised. Dogfooding exercises neither by default: the lane ships
-  disabled (`[transcripts] ship = false`) even with the hub-side segment store now landed — turning it on is a separate
-  rollout decision. **`blizzard runner transcript backfill` and `blizzard runner transcript reship` (blizzard#250) are
-  the lane's second and third consumers, and the heaviest exercise of exactly the three unpinned pieces above.** Both
-  call the same `TranscriptPump.drain_segment` with `deadline=None` against a *complete historical file from offset 0*,
-  looping until the source reports it caught up — so a real run drives the position codec, the shared batch budget, and
-  the past-EOF clamps harder than the tick's per-segment window ever does. Its own `blizzard:component-test`
-  (`tests/test_transcript_backfill.py`) inherits the same `FakeTranscriptSource` limitation as the pump's, so it proves
-  the backfill's classification, dedupe, resume, and finalize-only-when-caught-up decisions — not those three pieces
-  either. The verb is also the first path that *requires* `ship = true` (it refuses otherwise), so running it against a
-  real `~/.claude/projects` is the "turn it on" event this bullet says has not happened; an operator who runs it has
-  exercised the forward-read lane for real, and that run is evidence no tier here records. Exactly which shapes, and
-  why, is stated once — `src/blizzard_mock/harness/README.md` §"Conversation transcripts", not restated here. A
-  documented gap, not invented around: do not add a real-corpus CI tier reading a developer's `~/.claude/projects`
-  (neither hermetic nor reproducible) to close it.
-- **One-sided service tests use the mock counterpart.** Runner service tests run against the mock hub; hub service tests
-  against the mock runner — edge cases come from driving the mock's levers, not from contriving the real daemon into
-  rare states.
-- **An e2e test change lands its registry entry in the same change (`bzh:e2e-change-extends-registry`).** Adding,
-  renaming, or deleting a `tests/e2e/` test lands the matching entry in
-  `blizzard-context:/verification/blizzard/e2e-scenarios.md` in the same change, not as a follow-up —
-  `blizzard-context:registry-drift` is the mechanical companion that catches the miss.
-- **A hub↔runner wire change extends the mock counterpart and the service tier in the same change
-  (`bzh:wire-change-extends-mock`).** `blizzard-mock`'s mock hub and mock runner are that mock counterpart — a new or
-  changed `/api/fleet/...` route, `_drive/*` verb, or wire-visible `IHubClient`/`IHubGateway` method that lands on the
-  real daemon but not its mock leaves the counterpart silently unserved, so the service tier that exists to catch a wire
-  regression tests nothing new. The guards below cover the directions unevenly, each reaching a different half:
-
-  - `blizzard`'s `tests/service/test_parity_guard.py` mechanically diffs `IHubClient` against the mock hub's served
-    routes.
-  - The mock runner's `/_drive/*` drive plane is only checked against a hardcoded declared-set snapshot that flags a
-    grown or shrunk verb — `IHubGateway` itself is never independently diffed against a real contract.
-  - `blizzard-mock`'s `tests/test_wire_parity.py` (issue #277) covers the shape half from the other side, reading the
-    sibling `blizzard` worktree: mirror field sets against the committed `openapi/hub.openapi.json` with each model's
-    omissions declared, the batched `/events` fact vocabulary against `wire/facts.py`, and a keyword-only sweep over the
-    mirror entry points. Local-only and fail-closed — an unresolvable sibling refuses a green rather than skipping. Full
-    detail: [./blizzard/commands.md](./blizzard/commands.md#blizzard-mockunit-test).
-
-  This rule is those guards' human-facing companion, and it carries more of the weight on the runner/`IHubGateway` side
-  precisely because neither guard mechanically diffs it there: plan and land the mock's route or verb and the
-  service-tier test that drives it in the same change that adds the wire surface, not as a follow-up the guard is left
-  to chase down alone.
-
-- **Test data is set up through the mock-data CLI and fixtures** (`tool:mock-data`), not ad-hoc SQL.
-- **Tests run against sqlite.** Postgres support is a configuration concern held by staying inside SQLAlchemy's portable
-  surface (`bzh:sql-portable`), not a second test matrix.
-- **Sweep the release-only tiers before you push (`bzh:sweep-release-only-tiers`).** The `blizzard:gate` row names
-  *which* tiers that command cannot run; this is what that blind spot actually bites. Those tiers are the only ones
-  reading two surfaces nothing else type-checks: **board `data-testid`s and `data-*` attributes** (`tests/e2e/`) and
-  **wire field names off a live API response** (`tests/service/`). A rename of either therefore ships green and breaks
-  them where you will not see it. Grep before pushing, then run what the change touched:
-
-  ```bash
-  grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
-  ```
-
-  The `demo/` directory is in that list because the tiers are no longer the only readers: the board's kiosk demo mode
-  (`?demo=true`) steers on four board handles from **production** code — `chunk-detail`/`detail-id` and
-  `artifacts-tab-artifact`/`artifacts-tab-artifact-key`. It fails *quietly* where a scenario fails loudly (the wait
-  times out, the scroll is skipped, the screen holds still), so each half is pinned on the producing side: the first
-  pair by `tests/e2e/test_board_browser_e2e.py`, the second by
-  `web/projects/hub/src/app/board/chunk/chunk-artifacts-tab.spec.ts`. Note the second pair is unreachable by grep from
-  the component side at all — `artifacts-tab-artifact-key` is never a literal there, only synthesized as
-  `` `${testid()}-key` `` — which is why it has a named spec rather than a sweep.
-
-  That grep catches a handle you **removed**. A handle you **added** breaks these tiers just as hard and the grep is
-  blind to it: a `data-testid` is only a usable locator while exactly one component renders it, so a second component
-  claiming an existing name makes every `get_by_test_id` for it ambiguous and the scenario dies on
-  `strict mode violation: … resolved to 2 elements`. A new component that renders a concept an existing one already
-  renders (the same chunk's open question, in a rail *and* in the detail dock) is the case to watch — give it its own
-  prefixed handles. Check a new handle is unique before you add it:
-
-  ```bash
-  grep -rn 'data-testid="<new-testid>"' web/projects/   # expect exactly one component
-  ```
-
-  The browser scenarios drive the **built** bundle `blizzard hub host` serves out of `src/blizzard/static/`, never the
-  sources. `mise run e2e` therefore `depends = ["web-build"]` — do not reach past it with a bare `pytest tests/e2e/`.
-  The hazard is not the unbuilt tree (that fails loudly, before the first assertion); it is a bundle that is **present
-  but stale**, which fails *quietly* — the scenario exercises the previous UI and can go **green against a layout that
-  no longer exists**, reporting coverage of a change it never loaded. This is a rule rather than a note because the same
-  blind spot has landed three times, most recently against a board-layout rewrite whose geometry assertion would have
-  passed against the old layout had a second, unrelated failure not tripped first.
-
-- **A red drift check means stage the regenerated output, not the check is noisy — never substitute `lint`/`test` for it
-  (`bzh:drift-stage-not-route-around`).** `web:client-drift` and the OpenAPI half of `blizzard:gate` diff the working
-  tree against the index, not against `HEAD`, so `git add` the regenerated `openapi/` and `web/` output before running
-  the gate — an *unstaged* regeneration is what fails, not an uncommitted one. `npm run lint` and `npm run test`
-  type-check and unit-test different surfaces; neither exercises codegen, so substituting them for a red drift step
-  reports coverage the gate never ran and leaves the drift unguarded. This is a rule rather than a note because the same
-  blind spot has landed at least three times in one build, once as exactly that substitution. Scope: the rule binds the
-  evidence a verification claim rests on, not the inner loop — a tight dev-test iteration may run narrower checks
-  (`ng test <project> --include='**/<touched>.spec.ts'`, a single pytest module) or defer a gate entirely, so long as
-  the full declared method runs green before the work is called verified; a narrowed run is a dev-loop convenience,
-  never claim evidence.
-
-- **A spawned daemon's output goes to a file, never to a pipe nothing drains (`bzh:daemon-stdout-to-file`).** The tiers
-  that run real daemons — `blizzard:crash-sweep`, `blizzard:service`, `blizzard:e2e`, `blizzard:journey` — start them
-  with `subprocess.Popen`, and `stdout=subprocess.PIPE` on a process no one reads from is a deadlock on a timer: the
-  daemon runs until its output fills the ~64 KiB pipe buffer, then blocks in `write` forever. It does not die, so
-  `poll()` still says alive and the port still answers `connect`; it simply stops serving mid-tick, and every wait
-  against it times out. Pass an append-mode file instead, which has no ceiling and leaves the log readable after a
-  failure rather than discarded with the pipe. `tests/support.py`'s `daemon_log_sink` is that file, and every
-  daemon-running tier spawns through it — a daemon with a runtime dir logs to `daemon.log` beside its store, the mock
-  fleet's dirless daemons to `shared_daemon_log_dir()`. `tests/test_daemon_spawn_sink.py` fails the unit tier on any new
-  `stdout=subprocess.PIPE`, so the rule is enforced rather than remembered. This is a rule rather than a note because
-  the symptom points nowhere near the cause: it first surfaced as the journey's *escalate* chunk sitting in `running` —
-  a chunk whose path touched nothing the change had altered, three assertions after the ones that had already passed on
-  the same wedged hub. Volume is what arms it, so any change that adds daemon logging shortens the fuse on a suite that
-  was passing; suspect this before suspecting the scenario.
-
-- **A change to a component reachable from the mobile shell's bottom nav must be exercised at ≥1 narrow width
-  (`bzh:narrow-viewport-tier-rule`, issue #171).** Neither `web:unit-test` (jsdom parses `@container`/media-query rules
-  without evaluating them) nor a browser e2e scenario run at Playwright's default 1280×720 can see a layout collapse —
-  the two defect classes this rule exists for both shipped past every other tier: the profile menu pushed off-screen at
-  a narrow header width (issues #161/#163) and the Events grid collapsing to ~104,000px of scroll below ~640px (issues
-  #153–155). Two methods now close it: `web:shell-sweep` proves the real-Chromium layout claims jsdom cannot, spec by
-  spec — [its own registry](./blizzard/commands.md#webshell-sweep) states which surfaces it covers and what each one
-  asserts; `tests/e2e/`'s `wide_viewport`/`narrow_viewport` fixtures (`tests/e2e/conftest.py`) give any browser scenario
-  a real ~390px page to assert against, first used by `test_event_log_e2e.py`'s narrow-viewport Events assertion. A
-  component with no narrow-width handling of its own (this rule's whole point) is not itself a gap to fix here — it is a
-  gap to close with a narrow-width proof in whichever of the two methods fits the surface, the same way #171 closed the
-  two above.
-- **Mutation selection: a long-comment-defended decision is a decision to mutate, an idempotent-looking write is only
-  provably idempotent once re-read, and a mutation claim is admissible only per-assertion
-  (`bzh:mutation-review-selection`, issues #149/#157/#158).** Reading a diff line by line cannot tell which lines the
-  suite actually catches a regression on — mutating a candidate line (flip a condition, drop a guard, invert a
-  comparison) and re-running the suite is the only way to find out, but mutating every line doesn't scale, so selection
-  matters: a decision defended by a comment long enough to argue for itself is exactly the decision easiest to silently
-  revert, so mutate it first; and a write that looks idempotent from the code alone is only provably idempotent once the
-  suite actually performs it twice and re-reads the resulting state — inspecting the code is not a substitute for
-  driving the write and observing what landed. Once a mutation is run, the claim it supports is only as good as the
-  specific assertion that caught it: "the suite fails against the pre-fix code" is a claim about the aggregate exit
-  code, and an aggregate red can be true because an unrelated assertion tripped while the one that matters keeps passing
-  — name the assertion that fired, not the suite's exit status, or the claim is vacuous for the case it was meant to
-  cover (#157/#158). The same litmus generalizes past test suites to any verification check — a runbook step, a CI gate,
-  a deploy health probe: ask whether the check would still pass had the change never happened, and if it would, it is a
-  surviving mutant, not evidence.
-- **Plan against the claims a change falsifies, not only the files it touches (`bzh:falsified-claims-grep`, issue
-  #149).** A plan's surface inventory — which files does this change touch — answers a different question than which
-  existing claims does this change make false: a doc statement, a comment, a field name, or a test's premise can go
-  stale in a file the change never touches directly. Enumerate the claims the change invalidates, then grep each
-  phrasing across the app and the harness, opening every hit rather than stopping at the first:
-
-  ```bash
-  grep -rn '<falsified phrasing>' src/ docs/ openapi/ web/
-  grep -rn '<falsified phrasing>' <blizzard-context worktree>   # resolve via the workspace's `# Winter Extensions` block
-  ```
-
-  This is a rule rather than a note because four of five plan rounds on issue #149 died on exactly this miss, before the
-  plan node derived the fix — this grep — unaided.
-- **A case pins what its own name claims (`bzh:case-pins-its-own-name`, issue #275).** A test whose body matches a
-  sibling's asserts only what the sibling already asserts, so its name is a claim nothing observes and the behavior that
-  name promises goes unpinned — the shape that left `enable`'s idempotence and the plain closed-lease case uncovered
-  while both read as covered. `tests/test_no_duplicate_test_bodies.py` fails on any two cases sharing a body (module
-  constants folded into the key, so two files reading their own same-named constant are not duplicates); a deliberate
-  cross-tier re-run is declared there rather than tolerated. The companion habits are the same sweep's other two shapes:
-  a negative assertion is worth only the window it is made over (a fixed sleep shorter than the subject's own cadence
-  proves nothing), and a guard test that passes with its guard deleted is not a guard — mutate to find out, per
-  `bzh:mutation-review-selection`.
-- **A production path the gate never drives is unpinned, whatever the upper tiers show
-  (`bzh:gating-tier-pins-production-paths`, issue #276).** `blizzard:e2e` and `blizzard:journey` gate no PR and no push,
-  so a path covered only there can be deleted with every merge gate green — and a config key read from the operator's
-  toml and dropped before its consumer changes nothing *any* tier can see. Where production takes route A and the gating
-  tests drive a test-convenient route B, extend a gating case onto route A rather than trusting the upper tier.
-  `tests/test_config_keys_reach_a_gating_tier.py` is the floor for the config-key half — every key of every
-  operator-written config dataclass, nested blocks included, must be named by a gating-tier test
-  ([the guard's own inventory](./blizzard/commands.md#blizzardunit-test)) — and it is only a floor: naming a key is
-  weaker than pinning its threading, which `tests/test_runner_loop_build.py` does case by case for the keys it covers.
-- **Operator-doc control-flow accuracy is a documented gap, not a method (`bzh:operator-doc-claims-unverified`, issue
-  #279).** `docs/` states reachability, precondition, and failure claims about daemon behavior, and nothing mechanical
-  can judge whether one is *true*: `blizzard:restatement-sweep` checks a fact has one home rather than that it is
-  correct, and `blizzard-context:registry-drift` proves agreement, never adequacy. Two hand-walks in a row have found
-  inverted or invented claims (a `kill -9` described as costing in-flight agent context when the daemon re-attaches it;
-  a runner-scoped ceiling described as raising a chunk escalation; adapters named that are not in the tree). Until a
-  method exists, a change to daemon control flow owes a walk of the `docs/` claims it touches — trace each precondition
-  to its guard, each reachability claim to its dispatch site, each failure claim to its raising path — and a claim a fix
-  commit *writes* owes the same walk as one it edits. A documented gap, not invented around: do not add a doc-linting
-  tier that would score prose without reading the code.
-- **Per-block prose caps are enforced by hand, not by the ratchet (`bzh:prose-budget`).** `mise run prose-check` gates
-  each root's prose *total* against the committed baseline; the per-block caps are reported only under `--blocks`, and
-  nothing runs that automatically. The two measures are independent — a change can hold every total and still carry an
-  over-cap block, and a baseline re-record absorbs the total while leaving the block standing. Gating `--blocks`
-  repo-wide is not the fix: it scopes to every block in the tree rather than the ones a change wrote, so it fails on
-  prose the change never touched and stops being read. Until a method that scopes to a diff exists, a change owes a
-  `--blocks` run and a check that no block it added or edited is over cap, and a re-record is warranted only once that
-  holds.
-- **Crash correctness is an orthogonal dimension, not a fifth tier** — the kill-9 sweep (`blizzard:crash-sweep`) and the
-  architectural requirements it exercises are
-  [../architecture/crash-correctness.md](../architecture/crash-correctness.md). The unit tier covers each step
-  function's idempotency in isolation; the component tier drives steps in-process against the virtual clock; the sweep
-  is the only piece needing real subprocesses and real signals.
-
 ## Manual testing
 
-### blizzard:manual — the acceptance loop end-to-end
+Verification no single command performs. Full per-method surface, setup, steps, and pass condition:
+[./blizzard/manual.md](./blizzard/manual.md) for the `blizzard:` rows,
+[./blizzard/manual-mock.md](./blizzard/manual-mock.md) for the `blizzard-mock:` rows.
 
-Surface: the walking skeleton — one chunk traveling ingest → acquire → mock-scripted commit → deliver → landed in a bare
-origin, with `done` derived from facts. Setup: a fixture-workspace env (`tool:fixture-workspace`) with the hub, the
-runner, and the mock fleet bound; sqlite up via each daemon's embedded store (`tool:service-up` also brings up postgres,
-unused in P6). Pass: the chunk lands in the bare origin and the hub's facts derive `done`, run fully locally with no
-tokens and no network. **Automated as of P6** — this loop *is* the walking skeleton and now runs (extended in P7 wave 1
-to the full `build → review → deliver` shape, joined by the review-fail-cycle and escalation scenarios, in wave 2 by the
-ask/answer and human-gate scenarios, and in wave 3 by the browser-driven board scenario) as the standing smoke suite
-`blizzard:e2e` (`mise run e2e`), which self-manages the stack; run it there rather than by hand. Two live-service ways
-to drive it manually: (a) `winter service up <env> --wait` (forge + hub + runner), then mint a fixture
-(`blizzard-mock-fixture reset --env <env>`), drop the harness fence marker in its `workspace/`, file a forge issue, and
-`POST /api/chunks` — the hosted runner ticks it to `done`; (b) read the `mise run e2e` source for the exact in-process
-sequence. The P4 precursor `blizzard-mock:e2e` still exercises the ingest-less push→PR→merge→land arc with the mock
-fleet alone (no `blizzard` code).
-
-### blizzard:manual-sse-probe — the live SSE wire probe
-
-Surface: **narrowed by issue #235** — `blizzard:sse-contract` now gates frame-level shape statically (every optional
-field's presence-vs-omission, `event-logged`'s present-`null` `chunk_id`, and both sides' agreement on the field set)
-against the golden corpus `contracts/sse/`, so this method's remaining, load-bearing surface is what only a live socket
-can show: **timing and framing over the wire** — the reserved open-of-stream comment, the periodic keepalive comment,
-and the `id`/reconnect-replay behavior actually observed on a real `GET /api/events/stream` connection — distinct from
-what the component tier's replay-tail read shows (an event was **recorded**, not what a subscriber actually
-**received**) and from `blizzard:service-test`'s live-fan-out proof (count and timing of frames, not their field-level
-shape, which `blizzard:sse-contract` now covers instead of this method). Not hub-only: the runner serves the identical
-stream shape at its own `GET /api/events/stream`, with its own reserved open-of-stream comment and its own keepalive
-cadence, so a probe run is scoped to **one daemon at a time** — nothing here needs both up at once. Setup: the daemon
-under test, hosted on a scratch port — `blizzard hub init <dir>` then `blizzard hub host --dir <dir> --port <p>`, or
-`blizzard runner init <dir>` then `blizzard runner host --dir <dir> --port <p>`. Both daemons take the same shape:
-`init` scopes by a **positional** directory (it has no `--dir`), `host` by either the positional or `--dir`, and only
-`host` binds `--port`.
-
-Steps:
-
-1. start the daemon under test — hub or runner — on the scratch port
-2. hold an SSE subscription open against that daemon's `GET /api/events/stream` (`curl -N` or a streaming HTTP client)
-   before driving the act
-3. drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call under test, on the
-   same daemon
-4. assert the reserved comment opens the stream (the hub's and the runner's read different literal text — check the one
-   the daemon under test actually owns), a keepalive comment arrives on an idle connection within the documented
-   cadence, and the frame(s)' `id`/reconnect-replay behavior on a live socket — the field-level shape of the frame
-   `data:` itself is `blizzard:sse-contract`'s claim, not re-asserted here.
-
-Pass: the framing/timing behavior above holds over a real connection, for every call driven.
-
-### blizzard:manual-rollback-drill — the compose deployment's rollback promise, run for real
-
-Surface: `docs/rollback.md` (the `blizzard` app repo's own doc) walked verbatim against a live compose deployment
-(`docs/install.md`, same repo) — stop the hub, `docker compose run --rm hub blizzard-hub migrate --dir … --down <rev>`
-on the **still-current (new)** image (it carries the `downgrade()` steps the older image's tree never heard of), then
-swap to the previous image tag and bring the hub back up — proving the operator-facing procedure actually works, not
-just that the underlying downgrade code does. Setup: a running compose stack (`docker compose up -d`,
-`packaging/docker/compose.yaml`) on at least two published image tags (or two locally-built ones), so there is a real
-"previous" tag to roll back to. Pass: after the drill, the hub serves at the previous tag's version (`GET /api/health` →
-the older `version`) and `GET /api/ready` reports `ready: true` — the store landed at exactly the older revision, not
-merely "some earlier one". The downgrade mechanism itself — that every shipped revision has a working `downgrade()` — is
-proven mechanically and continuously by `blizzard:unit-test`'s
-`tests/test_store_migrations.py::test_migrate_up_and_down`; this drill is the operator-facing procedure wrapped around
-that guarantee, run by hand since no CI tier stands up a real compose deployment. Run it at least once per DISTRIB slice
-landing (issue #191/#192); re-run whenever `docs/rollback.md`'s commands change.
-
-### blizzard:manual-external-usage-probe — the vendor's real OAuth-usage response shape, proven live
-
-Surface: no CI tier can prove the vendor's real `/api/oauth/usage` response shape — the tier rules forbid service/e2e
-tests from touching the network at all, and the endpoint is undocumented and unversioned, so its shape can drift under
-blizzard with no changelog to catch it. Every CI-tier test exercises Claude Code's external-subscription-usage sampling
-against a stubbed transport (the fixtures the unit/component tiers bind); this manual method is what ties that stub back
-to what the vendor actually returns. Setup: the runner machine's own real Claude Code OAuth credentials
-(`~/.claude/.credentials.json`), a working `blizzard runner` binary.
-
-Steps:
-
-1. run `blizzard runner external-usage probe` (issue #218's phase-1 diagnostic subcommand — read-only, no store write,
-   no enqueue)
-2. separately run `claude`'s own `/usage` command against the same account
-3. compare the two.
-
-Pass: the probe's parsed 5h/7d utilization percentages and reset times match what `claude /usage` itself reports for the
-same account, within the natural few-second sampling skew. This is a deliberately-built method closing a real, permanent
-gap, not a placeholder for a future CI tier — the same shape as `blizzard:manual-rollback-drill` above: no tier will
-ever be added to replace it, because the thing it proves (an external vendor's live, undocumented response shape) is
-structurally outside what a hermetic, network-free CI tier can ever see. (`blizzard:manual-sse-probe` above was once a
-similar case; issue #235's `blizzard:sse-contract` has since automated its field-shape half, leaving only framing/timing
-manual — a reminder that "structurally unreachable by CI" should be checked afresh each time a surface like this comes
-up, not assumed permanent by analogy.)
-
-### blizzard:manual-autocompact-window — a declared window compacts a real session, not the model maximum
-
-Surface: no CI tier can observe *effective* harness behavior here — the same structural gap the session-stickiness tier
-rule above describes (the mock façade sees argv, never actual context accounting) — so what only a live session can
-prove is the flag's own **effect**, not its presence: a session spawned with a declared `--autocompact <window>`
-compacts near that value rather than growing toward the model's own maximum context. Setup: a real Claude Code CLI
-(`claude 2.1.234` or newer, the version this feature's tested assumptions were measured against), a workdir it can run
-non-interactively in (`-p`), and turns substantial enough to grow context by tens of thousands of tokens each (e.g.
-asking it to read and summarize a large file), so a handful of turns crosses a low declared window.
-
-Steps:
-
-1. Mint a session with a low window near the CLI's own floor —
-   `claude --autocompact 100k -p "<turn 1>"
-   --output-format json` — and record the printed session id.
-2. Resume it repeatedly with the flag reasserted each time —
-   `claude --resume <session-id> --autocompact 100k -p
-   "<turn N>" --output-format json` — each turn large enough to
-   add tens of thousands of tokens, until cumulative context should exceed 100k.
-3. After each turn, read that turn's context size the same way the runner already does: the main-chain record's
-   `message.usage.input_tokens + cache_read_input_tokens + cache_creation_input_tokens` in
-   `~/.claude/projects/<project>/<session-id>.jsonl` (`ClaudeCodeTranscriptSource.context_tokens`,
-   `claude_code_transcript.py`).
-4. Repeat steps 1-3 with `--autocompact` omitted, same prompts, same turn count.
-
-Pass: the declared-window run's context size drops sharply — back toward a small fraction of 100k — within a turn or two
-of first crossing it, and stays down on the next turn; the undeclared run's context size keeps climbing past 100k
-without dropping. That contrast is the compaction event itself: no other mechanism resets a session's context
-mid-lineage.
-
-### blizzard:manual-standing-idp — auth-gated behavior verified live, in a running env
-
-Surface: `blizzard:e2e`'s login-session scenario proves the full OAuth dance and its role-dependent UI, but only for a
-pytest fixture's lifetime — the process pair it stands up is gone the moment the test returns. No method proves the same
-behavior against a **standing** hub a human or a `frontend-verifier` agent can point a real browser at outside a test
-run, in a provisioned feature env (`auth.mode = "none"` is the default a `winter service up <env>`-started hub scaffolds
-via `blizzard hub init`, so a running env's own service stack serves everything unauthenticated unless this method's
-setup is applied to it). This is what closes that gap.
-
-Setup:
-
-1. start the stub IdP standing (`blizzard-mock/src/blizzard_mock/idp/README.md`'s "Standing instance" section —
-   `blizzard-mock-idp --host 127.0.0.1 --port <idp-port>`, confirm `GET /healthz`)
-2. a hub runtime dir — a scratch dir, or a provisioned env's own `$BZ_HUB_RUNTIME` if you intend that env's hub to run
-   in `oauth` mode — with `[auth] mode = "oauth"` and one `[[auth.oauth.provider]] type = "oidc"` entry pointing
-   `issuer` at the standing IdP (`hub/config.py`'s `AUTH_MODE_OAUTH`; note the mode is `"oauth"`, not `"oidc"` — `oidc`
-   is the provider `type`)
-3. `mise run web-build` so the hub serves the built board.
-
-Steps:
-
-1. start the hub (`blizzard hub host --dir <hub-dir> --port <hub-port>`)
-2. drive a real browser to `http://127.0.0.1:<hub-port>/`, confirm the `/login` gate renders the configured provider's
-   button, click it, and confirm the dance lands authenticated (a fresh identity mints `pending`)
-3. `PUT /_levers/profile` on the IdP before a login to script a specific identity, or flip it between two logins (fresh
-   browser context each time) to prove two distinct identities
-4. set a role directly in `<hub-dir>/data/hub.db`'s `users` table (the same seam `blizzard:e2e`'s login-session scenario
-   uses ahead of a role-assignment API) and reload (same session cookie, no re-login) to confirm role-dependent UI —
-   e.g. a seeded not-ready chunk's Promote control present for `contributor`, absent for `guest`.
-
-Pass: the browser reaches an authenticated board through the standing IdP, and at least two roles are observed rendering
-visibly different UI on the same underlying state. This is a manual method by the matrix's own bootstrap convention
-(line 9 above): no automated tier drives a real browser against a standing, out-of-fixture process pair, and building
-one would mean giving the e2e tier a persistent-process mode it does not otherwise need — the cost is not worth it for a
-surface a human or a `frontend-verifier` agent can already reach by hand. Whether this method's setup becomes a
-standing, opt-in feature of the winter workspace's own per-env service stack (rather than assembled by hand each time)
-is a workspace-manifest question outside any project repo's scope — see blizzard#236's comment for the follow-on
-discussion.
-
-### blizzard-mock:manual — the live wired-service forge over a real fixture
-
-Surface: the winter-wired mock forge (`tool:service-up`, band `+1`) fronting a real fixture workspace's per-env bare
-origins — the same single git truth the daemons will bind to, exercised out of process rather than in-test. Setup — mint
-a fixture at the path the forge reads (`$BZ_FORGE_REPOS_DIR = ${BLIZZARD_MOCK_SCRATCH_ROOT}/${WINTER_ENV}/origins`),
-then bring the stack up. Run from the workspace root:
-
-```bash
-BLIZZARD_MOCK_SCRATCH_ROOT=/tmp/blizzard-mock/fixtures WINTER_ENV=alpha \
-  sh -c 'cd alpha/blizzard-mock && uv run blizzard-mock-fixture mint --env alpha'
-winter service up alpha --wait
-```
-
-The fixture's winter source resolves by walking up from the `blizzard-mock` worktree to the workspace root — **do not
-pass `--winter-source $PWD`**: inside a `cd … && …` subshell `$PWD` expands *after* the `cd`, so it names the
-`blizzard-mock` checkout (which has no `tools/winter-cli`) and minting fails. Let the walk-up default resolve it, or set
-`$BLIZZARD_MOCK_WINTER_SOURCE` to the workspace root explicitly. Pass:
-`curl -fs localhost:${BZ_FORGE_PORT:-4421}/healthz` returns `ok`, and
-`curl -fs localhost:${BZ_FORGE_PORT:-4421}/repos/blizzard/toy-api` returns `200` with `"default_branch": "main"` — the
-live forge fronts the minted origins. Leave services down after (`winter service down alpha`; remove the fixture with
-`blizzard-mock-fixture destroy --env alpha`).
-
-### blizzard-mock:manual-seeded-board — a realistic board with zero work sources and no hub restart
-
-Surface: `blizzard-mock-data scenario board` (`tool:mock-data`,
-[../tooling/store-seeding.md](../tooling/store-seeding.md)) as the direct store-seed path a human actually renders —
-proving a fresh env's hub serves a realistic, fully-populated board from data written straight into its store, with no
-work source ever configured and the hub daemon never restarted between the seed and the view. `blizzard:service-test`'s
-`test_mock_data_seeding_service.py` already proves the two machine-checkable halves of this claim (the seeder's intended
-per-chunk status agrees with the hub's own `derive_chunk_status`, and the hub reads the seeded rows with no restart) —
-this method covers only what a human eye is needed for: does the board actually *render* the seeded facts correctly.
-Setup: a human, or a `frontend-verifier` agent, driving a real browser against the board — this method's whole pass
-condition is a rendered view, the same executor precedent `blizzard:manual-standing-idp` names. A freshly provisioned,
-not-yet-seeded env, its shell vars sourced (see [../tooling/store-seeding.md](../tooling/store-seeding.md)'s §Running it
-for why a plain shell needs `source <(winter env <env>)` before `$BZ_HUB_RUNTIME`/`$BZ_HUB_WEB_PORT` resolve):
-
-```bash
-winter provision alpha
-winter service up alpha --wait
-source <(winter env alpha)
-```
-
-Confirm the env's hub runtime config carries zero `[[work_source]]` blocks (`cat $BZ_HUB_RUNTIME/blizzard-hub.toml` — a
-fresh `hub init` scaffold emits the work-source block as a commented-out example only, never live) and that no forge
-fixture has been minted for the env (`blizzard-mock-fixture` never run against it — `tool:mock-fleet`'s forge is up but
-fronts no origins).
-
-Steps:
-
-1. seed a stress board straight into the running env's own hub store:
-   `cd alpha/blizzard-mock && uv run blizzard-mock-data scenario board --chunks 9 --stress --dir "$BZ_HUB_RUNTIME"` —
-   `--chunks 9` (not the `--chunks 6` default) is deliberate here: fewer than nine only covers a prefix of
-   `blizzard-mock/src/blizzard_mock/mock_data/domain/hub/scenario_seed.py`'s `STATUS_ORDER`, and step 3 below needs
-   every one of the nine derived statuses actually seeded
-2. without restarting the hub, open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`
-3. confirm the seeded chunk cards render across all nine derived statuses
-4. confirm the cost column shows the cost-partial chunk `scenario board` always seeds (a `NULL cost_usd` usage fact) as
-   partial, not as `$0.00`
-5. open the Events tab and confirm the seeded mixed-severity rows render
-6. open the multi-question `--stress` chunk's detail dock and confirm its two extra independent question trails render
-   in the dock's trail
-7. open the `ready` chunk's (census index 0) chunk page at `http://localhost:${BZ_HUB_WEB_PORT}/board/chunk/<chunk-id>`
-   and confirm its Artifacts tab shows the seeded artifact, then the same for the `waiting_on_human` chunk (census index
-   3), confirming the spread reaches more than one chunk. The tabs live on the **chunk page**, not on the board's
-   desktop dock — the dock renders one flat Artifacts section and a non-activatable timeline, so it carries no per-step
-   panel at all; the page is the mobile drill-down, and its URL resolves from any viewport
-8. open the `done` chunk's (census index 4) chunk page: confirm its Artifacts tab shows both seeded artifacts, then
-   confirm its Node history tab shows two node-steps and that picking each in turn shows that step's own artifact —
-   `build.build-log.1` under the `build` step, `deliver.release-commit.1` under the `deliver` step — in the per-step
-   Artifacts panel beside the timeline.
-
-Pass: every check in steps 3–8 holds, observed against the same hub process `service up` started — no restart, reset, or
-re-init between the seed command and the view.
-
-### blizzard-mock:manual-seeded-fleet — a seeded runner panel beside a seeded board, coherent, live
-
-Surface: `blizzard-mock-data scenario fleet` (`tool:mock-data`,
-[../tooling/store-seeding.md](../tooling/store-seeding.md)'s §Seeding both stores together) — proving a fresh env's
-runner panel renders the leases, asks, escalations, takeovers, environments, and facts written straight into the runner
-store, coherent with a hub board seeded the same invocation, with the runner daemon already up. The seeded runner-store
-`usage_facts` and `transcript_segments` are checked in the store, not on the panel: the local API exposes no surface for
-either (`/api/dashboard` carries neither, and the per-lease transcript route projects parsed conversation turns, never
-reading `transcript_segments` itself), so a rendered check cannot reach them. `blizzard runner host` is the only serve
-mode — the reconciliation loop and the local API are one process — so unlike `blizzard-mock:manual-seeded-board`'s hub
-half there is no "never restarted" variant to check: the daemon reconciles against exactly this seed every tick, and
-this method's pass condition is that reconciliation leaving every seeded section populated and the board unchanged.
-
-**Gap.** Unlike `blizzard-mock:manual-seeded-board`, no automated tier covers this method's own claim.
-`blizzard:service-test`'s `test_mock_data_seeding_service.py` exercises only unpinned `scenario board` — it never
-invokes `scenario fleet`'s pinned mode, which is exactly where the seeder's own belief about a chunk's derived status
-and the hub's actual derivation can part ways. This method's only machine-checkable proof of the pinned path is the
-mock's own composer tests, which restate the seeder's belief rather than checking it against a live hub — this rendered
-check is this claim's sole check against reality.
-
-Setup: a human, or a `frontend-verifier` agent, driving a real browser against the runner panel — the same executor
-precedent `blizzard:manual-standing-idp` names. A freshly provisioned, seeded-clean env with the runner daemon up:
-
-```bash
-winter provision alpha
-winter service up alpha --wait
-source <(winter env alpha)
-```
-
-Seed **after** `winter service up`, never before: `--runner-dir` has no `blizzard-runner.toml` to resolve `db_url`/
-`runner_id` from until the runner's first start writes it ([../tooling/store-seeding.md](../tooling/store-seeding.md)'s
-§Seeding both stores together owns why).
-
-Steps:
-
-1. reset both stores, then seed one coherent fleet:
-
-   ```bash
-   cd alpha/blizzard-mock
-   uv run blizzard-mock-data reset --store hub --dir "$BZ_HUB_RUNTIME"
-   uv run blizzard-mock-data reset --store runner --dir "$BZ_RUNNER_RUNTIME"
-   uv run blizzard-mock-data scenario fleet --chunks 6 --seed 1 \
-     --hub-dir "$BZ_HUB_RUNTIME" --runner-dir "$BZ_RUNNER_RUNTIME"
-   ```
-
-2. open the board at `http://localhost:${BZ_HUB_WEB_PORT}/` and confirm the six seeded chunks render, statuses included,
-   and note the census
-3. open the runner panel at `http://localhost:${BZ_RUNNER_WEB_PORT}/` — the **BOARD** tab — and confirm: its **ACTIVE
-   LEASES** panel shows the one *parked* lease (`PARKED`, `pid —`); its **ENVIRONMENTS** panel shows the two held
-   bindings, each naming its chunk, beside the env's own unheld workspace environment; its **CHUNKS ON THIS MACHINE ·
-   DERIVED STATUS** list shows both mirrored chunks, one `WAITING · ASK` and one `HUMAN IN SESSION`; and its **LOCAL
-   ASKS** panel shows the open ask with its question text. The closed, escalated lease is **not** in ACTIVE LEASES: that
-   panel lists live leases only. **Do not check the HUB panel's `link`/`loop` rows yet** — step 1's
-   `reset --store runner` deleted the `hub_control` row (the table itself survives — `reset` only clears rows), and only
-   the runner's next tick re-inserts it via `Pull._sync_registry`; checked before that first tick, `link` reads
-   `UNREACHABLE` regardless of the seed. Step 7 is where that check belongs
-4. select the `HUMAN IN SESSION` chunk in that list and confirm the detail pane renders the mirrored escalation: the
-   closed lease and its session id, then an **ESCALATED — RESUME SESSION** block whose resume command is built from the
-   escalation's own lease session id and the chunk's bound workdir. The mirrored takeover has no rendering of its own in
-   this pane — its only rendered trace is the `HUMAN IN SESSION` header label already confirmed in step 3 (the derived
-   status folds an open takeover ahead of the escalation)
-5. open the **EVENTS** tab and confirm its **LOCAL FACT LOG** shows the two seeded facts — `question.asked` and
-   `escalation.recorded`, each against its mirrored chunk and ticked as acked
-6. **do not clear the local pause from the panel** — the same no-tamper condition `blizzard-mock:manual-seeded-board`
-   pins for the board's own no-restart requirement: one click unbrakes FILL, which claims the board's `ready` chunk and
-   spawns real workers
-7. wait at least one tick (30 seconds by default — watch the runner's log for `tick end` to confirm one has landed),
-   then re-check every panel from steps 3–5, plus now the **HUB** panel: it should read a `link` row valued `CONNECTED`
-   and a `loop` row valued `PAUSED` — the seeded local brake — now that the runner's own registry sync has recreated
-   `hub_control` on this first tick. Every other seeded row still renders, unchanged. The **LOCAL FACT LOG** may grow:
-   step 1's `reset --store runner` empties `external_usage_samples`, so its cadence anchor (`max(sampled_at)`) is `None`
-   and the interval gate does not apply on this first tick — the sampler runs unconditionally, and an
-   `external_subscription_usage.sampled` fact lands only if it returns a snapshot (only when an access token is
-   readable). Whether or not it lands, the seeded two facts must still be there and still ticked
-8. re-open the board from step 2 and confirm every chunk's status and the overall census are unchanged.
-
-Pass: every panel checked in steps 3–5 renders populated (the HUB panel's `link`/`loop` rows excepted, first checked in
-step 7), and after step 7's tick every seeded row still renders unchanged (the fact log's daemon-appended rows excepted)
-with the HUB panel now reading `link` `CONNECTED` and `loop` `PAUSED`, and the board's chunk statuses and census from
-step 2 are unchanged in step 8 — the daemon reconciled the mirrored fleet without altering either store's seeded shape.
-
-The seeded runner-store `usage_facts` and `transcript_segments` have no panel surface (see Surface above); check them in
-the store instead —
-`sqlite3 "$BZ_RUNNER_RUNTIME/data/runner.db" 'select chunk_id from usage_facts; select chunk_id from
-transcript_segments;'`
-names the same two mirrored chunk ids.
+| Method                               | Exercises                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| blizzard:manual                      | The acceptance loop end-to-end. **Automated as of P6** — run it as `blizzard:e2e` rather than by hand. |
+| blizzard:manual-sse-probe            | The live SSE wire probe — framing and timing on a real socket, hub or runner, one daemon at a time.    |
+| blizzard:manual-rollback-drill       | The compose deployment's rollback promise, walked for real against two published image tags.           |
+| blizzard:manual-external-usage-probe | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`.             |
+| blizzard:manual-autocompact-window   | A declared `--autocompact` window compacting a real session, rather than the model's own maximum.      |
+| blizzard:manual-standing-idp         | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture.        |
+| blizzard-mock:manual                 | The winter-wired mock forge fronting a real fixture workspace's bare origins.                          |
+| blizzard-mock:manual-seeded-board    | A realistic board rendered from a direct store seed — no work source configured, no hub restart.       |
+| blizzard-mock:manual-seeded-fleet    | A seeded runner panel beside a seeded board, still coherent after the daemon's first reconciling tick. |
 
 ## Tools
 
