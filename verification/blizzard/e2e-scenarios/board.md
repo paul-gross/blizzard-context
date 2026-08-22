@@ -32,13 +32,14 @@ The browser half of the e2e tier: a real Chromium driven by Playwright over the 
   claiming the grouped plural-pointer survivor first, both honored. It also proves a parked chunk's question is answered
   from the board and the chunk resumes to `done`. It proves a running chunk is paused directly from its chunk detail
   dock — the claim-keeping, one-chunk lever, distinct from the runner-level brake: the chip flips to `paused` live with
-  no reload (the one status a pause-parked chunk's chip shows — [domain/work.md](../../../domain/work.md) §Statuses
-  ranks `paused` below the human-gated statuses, so the proof needs a chunk caught genuinely running, not already parked
-  on a question), the chunk relocates to the WAIT/HUMAN column, the claim survives the runner killing the worker and
-  parking the lease, the dock names who paused it, and resuming from the dock returns it to a live, progressing status.
-  And it proves the runner registry's pause/resume brake stops and then restarts new claims (MVP criterion 11), engaged
-  before the survivor lands because the landing frees the runner's only agent slot in the same tick — FILL's reconcile
-  releases the survivor's binding — so from that instant the brake alone holds the remaining ready chunk in the lane.
+  no reload (the one status a pause-parked chunk's chip shows —
+  [domain/work/statuses.md](../../../domain/work/statuses.md) ranks `paused` below the human-gated statuses, so the
+  proof needs a chunk caught genuinely running, not already parked on a question), the chunk relocates to the WAIT/HUMAN
+  column, the claim survives the runner killing the worker and parking the lease, the dock names who paused it, and
+  resuming from the dock returns it to a live, progressing status. And it proves the runner registry's pause/resume
+  brake stops and then restarts new claims (MVP criterion 11), engaged before the survivor lands because the landing
+  frees the runner's only agent slot in the same tick — FILL's reconcile releases the survivor's binding — so from that
+  instant the brake alone holds the remaining ready chunk in the lane.
 
 ## test_board_cost_live_e2e
 

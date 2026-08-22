@@ -116,7 +116,7 @@ A hub node's script authors its outcome choices exactly like a worker node's jud
 that routing is authored, not fixed, and every shipped lane in fact routes it into a further **runner** node, run in the
 holding runner's still-held environment after every repo has merged, before that node's own choice finally reaches the
 terminal. Landing is therefore informational, not itself a terminal condition — only the graph's reserved terminal
-(`done`, [work.md](./work.md) §Statuses) is.
+(`done`, [work/statuses.md](./work/statuses.md)) is.
 
 ## See also
 

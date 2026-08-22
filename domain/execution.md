@@ -21,7 +21,7 @@ epochs, and what failure does to each. Definitions, with the enforceable invaria
   so an in-flight chunk halts at its next step boundary instead, and neither a stalled worker's reap nor an exhausted
   attempt's escalation fires until it lifts. Effective paused is their OR, each cleared only where it was set.
   **Per-chunk** pause is a third, independent lever targeting one chunk rather than the whole runner, and it does kill
-  that chunk's in-flight worker while keeping its claim — see [work.md](./work.md) §Statuses (`paused`) for what
+  that chunk's in-flight worker while keeping its claim — see [work/statuses.md](./work/statuses.md) (`paused`) for what
   survives and how resume recovers it.
 
 A runner's registry entry derives everything observable: liveness derives from its most recent contact, and each brake
@@ -44,24 +44,24 @@ environment identifier is opaque to the hub — it knows *which* environment, ne
   is fenced out by the next claim. **Stop** releases it too, but terminally — there is no next claim to fence. So does a
   **hub** node landing the chunk's terminal.
 - **A terminal chunk may still hold a live route, and holding one grants nothing.** A terminal transition authored by a
-  **runner** node — the shape [work.md](./work.md) §Statuses (`done`) allows, where a graph routes further runner work
-  after landing — releases no route, so a `done` chunk can go on carrying the route of the runner that finished it. That
-  is untidy, not unsafe: the claim path refuses a terminal chunk outright, so a retained route confers no tenure on
-  anyone. What it does mean is that **route liveness is not a proxy for "being worked"** — a consumer folding routes
-  into live occupancy must key on status, which is why the chunk summary reports a terminal chunk as unrouted for the
-  fleet registry's claim lines and slot bar, while the chunk detail keeps the raw route fact for the "where was this
-  worked" read.
-- **A restart keeps the route too, and discards the attempt.** Forcing a chunk onto a node ([work.md](./work.md)
-  §Restart) leaves route, tenure and environments exactly where they are — only the lease, epoch and session are given
-  up — so the holding runner re-enters the node in the same environments rather than the chunk going back to the queue.
-  That holds when the move crosses a graph: the migration it records re-pins the chunk without re-queuing it, so it is
-  not one of the releasing writes above.
+  **runner** node — the shape [work/statuses.md](./work/statuses.md) (`done`) allows, where a graph routes further
+  runner work after landing — releases no route, so a `done` chunk can go on carrying the route of the runner that
+  finished it. That is untidy, not unsafe: the claim path refuses a terminal chunk outright, so a retained route confers
+  no tenure on anyone. What it does mean is that **route liveness is not a proxy for "being worked"** — a consumer
+  folding routes into live occupancy must key on status, which is why the chunk summary reports a terminal chunk as
+  unrouted for the fleet registry's claim lines and slot bar, while the chunk detail keeps the raw route fact for the
+  "where was this worked" read.
+- **A restart keeps the route too, and discards the attempt.** Forcing a chunk onto a node
+  ([work/restart.md](./work/restart.md)) leaves route, tenure and environments exactly where they are — only the lease,
+  epoch and session are given up — so the holding runner re-enters the node in the same environments rather than the
+  chunk going back to the queue. That holds when the move crosses a graph: the migration it records re-pins the chunk
+  without re-queuing it, so it is not one of the releasing writes above.
 - **Pause is detach's deliberate counterpart: it keeps the route.** A per-chunk pause kills the chunk's live worker but
   leaves the lease, route, epoch, environments, and retry budget untouched, so resume respawns the session in place
-  under the unchanged lease/epoch/session id ([work.md](./work.md) §Statuses); detach is the lever that gives the claim
-  away, pause is the one that holds it exactly where it is. That is a statement about what the *pause* changes, not a
-  freeze on the chunk: an operator restart recorded while it is paused still mints its own epoch, and the resume then
-  re-enters the moved node instead of the parked session ([work.md](./work.md) §Restart).
+  under the unchanged lease/epoch/session id ([work/statuses.md](./work/statuses.md)); detach is the lever that gives
+  the claim away, pause is the one that holds it exactly where it is. That is a statement about what the *pause*
+  changes, not a freeze on the chunk: an operator restart recorded while it is paused still mints its own epoch, and the
+  resume then re-enters the moved node instead of the parked session ([work/restart.md](./work/restart.md)).
 - **The hub, as claim arbiter, refuses a registry-paused runner's claim outright.** A claim from a runner the registry
   marks paused is denied before the claim race is even run — a distinct `403` denial, not the `409` a claim loses to
   another claimant on an exactly-once race. The hub enforces this itself, independent of whether the runner has already
@@ -77,9 +77,9 @@ contrast to acquisition, the contended grant at the hub. Distinct concepts: acqu
 the lease records *one attempt at one node*.
 
 Each lease mints a fresh **epoch** — a counter that only rises across a chunk's attempts — and the epoch is the fence
-every state-advancing write is checked against. An operator's **restart** ([work.md](./work.md) §Restart) mints one too,
-with no attempt behind it: the fence has to rise the instant the move lands, ahead of the re-entry's own lease, or the
-attempt it displaces would still be able to advance the chunk.
+every state-advancing write is checked against. An operator's **restart** ([work/restart.md](./work/restart.md)) mints
+one too, with no attempt behind it: the fence has to rise the instant the move lands, ahead of the re-entry's own lease,
+or the attempt it displaces would still be able to advance the chunk.
 
 The worker's **heartbeat** is a side effect of its tool use — no agent cooperation required — and is what keeps its
 lease alive.
@@ -89,8 +89,9 @@ lease alive.
 **Rule.** Every state-advancing write for a chunk — a transition, a decision, its artifacts — carries an epoch, and a
 write below the chunk's newest epoch is rejected, never recorded; a terminal fact (stopped, delivered) rejects every
 later state-advancing write regardless of epoch. The epoch is ordinarily the producing lease's, but the fence is the
-chunk's, not any lease's: an operator restart ([work.md](./work.md) §Restart) mints one with no lease behind it, and is
-itself a **fencing** write rather than a fenced one — it decides the new floor rather than being checked against it.
+chunk's, not any lease's: an operator restart ([work/restart.md](./work/restart.md)) mints one with no lease behind it,
+and is itself a **fencing** write rather than a fenced one — it decides the new floor rather than being checked against
+it.
 
 **Why.** A worker presumed dead can wake and write after its successor started; fencing makes the successor
 authoritative — the zombie's late writes bounce — so a zombie can lose work but never land wrong work, without requiring
@@ -101,13 +102,13 @@ is really dead instead of fencing it out, or a migration recorded at the submitt
 it rather than on next-claim fencing; the epoch check skipped once a chunk is terminal.
 
 **Do.** Every fresh claim of a re-queued chunk — a reassignment, or a route-released re-queue such as a detach or a
-migration ([work.md](./work.md) §Migration) — mints new leases above the **hub-supplied** epoch floor: the chunk's
-newest epoch as the hub knows it, carried on the claim, not whatever local history the claiming runner happens to hold.
-A runner that never drove the chunk (no local floor of its own) still mints strictly above every prior attempt, so the
-old holder's in-flight submission is rejected on arrival. Derive a fencing write's own epoch inside the transaction that
-records it, never from a read the write is no longer holding. And read the fence generously on the party that must
-*honor* it: the hub's floor lags every lease it has not yet been told about, so a fencing write can land level with the
-attempt it displaces, and level is displaced.
+migration ([work/migration.md](./work/migration.md)) — mints new leases above the **hub-supplied** epoch floor: the
+chunk's newest epoch as the hub knows it, carried on the claim, not whatever local history the claiming runner happens
+to hold. A runner that never drove the chunk (no local floor of its own) still mints strictly above every prior attempt,
+so the old holder's in-flight submission is rejected on arrival. Derive a fencing write's own epoch inside the
+transaction that records it, never from a read the write is no longer holding. And read the fence generously on the
+party that must *honor* it: the hub's floor lags every lease it has not yet been told about, so a fencing write can land
+level with the attempt it displaces, and level is displaced.
 
 **Don't.** Accept a transition because the submitting runner still holds the route — route tenure is not attempt
 fencing.
@@ -130,8 +131,8 @@ the chunk's current node:
 Prompting is **two-phase**: the envelope's content instructs the work, and when the worker declares done, the judgement
 prompt is delivered into the same session to elicit the verdict ([graphs.md](./graphs.md) §Judgement and choices). The
 envelope is also how change reaches a worker rather than being inferred: a migration shows up as the next envelope's new
-graph and node ([work.md](./work.md) §Migration), and an answered ask re-enters as the session resuming with the answer
-delivered into it ([humans.md](./humans.md)).
+graph and node ([work/migration.md](./work/migration.md)), and an answered ask re-enters as the session resuming with
+the answer delivered into it ([humans.md](./humans.md)).
 
 ## Failure and recovery
 

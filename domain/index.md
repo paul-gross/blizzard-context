@@ -20,7 +20,7 @@ Parent: [../index.md](../index.md).
 
 | Doc                                | When to read                                                                                                                                                                                                |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [./work.md](./work.md)             | Reasoning about a unit of work — what a chunk is, the statuses it can be in, and the movement facts that carry it: transitions, migrations, and an operator's restart                                       |
+| [./work.md](./work.md)             | Reasoning about a unit of work — what a chunk is, the status it derives, or a fact that moves it within or across graphs                                                                                    |
 | [./graphs.md](./graphs.md)         | Reasoning about the workflow definition — graphs and their immutability, nodes, edges, judgements and choices, and the ids-exact/names-correlate philosophy                                                 |
 | [./execution.md](./execution.md)   | Reasoning about who runs a chunk — the hub/runner responsibility split, acquisition and routes, leases and epochs, what a worker session is primed with, and how tenure survives failure                    |
 | [./artifacts.md](./artifacts.md)   | Reasoning about an artifact — what work produces and how it lands, what a graph declares beside its nodes for workers to read, the never-code rule, and delivery as graph-authored hub-command-node content |

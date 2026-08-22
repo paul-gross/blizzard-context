@@ -39,7 +39,7 @@ captures; the hub adds the ones only it is positioned to see:
 | `command-failed`              | `warning`  | A captured spawn / git-push / environment-prep command failed, carrying the command and its stderr tail                                                                                            |
 | `needs-human`                 | `critical` | A standing open escalation (see below)                                                                                                                                                             |
 | `hub-node-unroutable-outcome` | `critical` | A hub node produced an outcome its graph authors no edge for — nothing routes, so the chunk re-polls that same outcome until someone authors one. Announced once per node visit, not once per poll |
-| `work-item-closed`            | `info`     | A landed chunk's work item was closed at its own source ([work.md](./work.md) §Chunk)                                                                                                              |
+| `work-item-closed`            | `info`     | A landed chunk's work item was closed at its own source ([work/chunk.md](./work/chunk.md))                                                                                                         |
 | `work-item-close-failed`      | `warning`  | That closure attempt failed; a later sweep retries it                                                                                                                                              |
 
 A deliberately-deferred failure — a runner that has told its operator it will start no processes — surfaces **nothing**:
