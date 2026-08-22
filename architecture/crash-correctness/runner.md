@@ -23,7 +23,8 @@ invariant to recompute.
 ADVANCE's git surface only re-derives, read-only, what the worker already made durable: the worker pushes its branch and
 declares it into `git_commit_declarations` (`blizzard/src/blizzard/runner/store/schema.py`), and ADVANCE runs
 `git ls-remote` against the origin the environment's repo manifest names. ADVANCE never pushes, because git mutation
-belongs to the worker seam (`bzh:git-write-in-worker-seam`, [`../system-shape.md`](../system-shape.md)).
+belongs to the worker seam (`bzh:git-write-in-worker-seam`,
+[`../system-shape/worker-boundary.md`](../system-shape/worker-boundary.md)).
 
 A `kill -9` anywhere in the git verify loses nothing durable, and the next ADVANCE pass re-reads and re-verifies the
 declaration from scratch, converging on the same result every time.

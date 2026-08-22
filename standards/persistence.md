@@ -1,9 +1,9 @@
 # Persistence
 
 The rules a store schema and its migrations are held to. These sit under the facts-only store invariant
-(`bzh:facts-not-status`, [../architecture/system-shape.md](../architecture/system-shape.md)); this file governs the *SQL
-surface* and the *migration policy* that invariant is realized through. Each rule follows the slot skeleton owned by
-`winter-canon:/rule-shape.md` (`canon:rule-shape`).
+(`bzh:facts-not-status`, [../architecture/system-shape/store-facts.md](../architecture/system-shape/store-facts.md));
+this file governs the *SQL surface* and the *migration policy* that invariant is realized through. Each rule follows the
+slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## Stay inside SQLAlchemy's portable surface (`bzh:sql-portable`)
 

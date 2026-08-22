@@ -6,7 +6,7 @@ graph, and accumulates artifacts, questions, and decisions as it goes. Spoke of 
 At most one runner holds a chunk at a time; [../execution.md](../execution.md) owns acquisition, tenure, and fencing. A
 chunk stores no status: the current node derives from the newest movement fact — a transition, a migration's landing, or
 a restart's target — and status derives from recorded facts (`bzh:facts-not-status`,
-[../../architecture/system-shape.md](../../architecture/system-shape.md)).
+[../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md)).
 
 ## Work refs
 

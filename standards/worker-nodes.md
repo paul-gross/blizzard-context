@@ -183,8 +183,8 @@ fuller source it reads when it can.
 
 **Why.** A pinned mint's declarations reach the runner's own store at spawn, so a lease already in flight when a runner
 restarts onto a build that introduces a declaration holds a pin with nothing in it — the accepted window
-`bzh:graph-scope-reads-local` ([../architecture/system-shape.md](../architecture/system-shape.md)) and the runner's
-graph-artifact mirror entry in
+`bzh:graph-scope-reads-local` ([../architecture/system-shape/graphs.md](../architecture/system-shape/graphs.md)) and the
+runner's graph-artifact mirror entry in
 [../architecture/crash-correctness/runner.md](../architecture/crash-correctness/runner.md) bound. A worker whose only
 copy of a rule is behind that read has no way to finish its turn correctly.
 
@@ -207,8 +207,9 @@ the window, still reads everything it needs.
 **Don't.** *"The rules for folding findings are in the `docket` graph artifact — read it before you fold."* — the prompt
 has delegated its own content to a read that can fail, and a worker inside the window has no rules at all.
 
-**See also.** [`../architecture/system-shape.md`](../architecture/system-shape.md) `bzh:graph-scope-reads-local` — the
-read path this defends and why it is local to the runner, and the accepted window that makes the defense necessary.
+**See also.** [`../architecture/system-shape/graphs.md`](../architecture/system-shape/graphs.md)
+`bzh:graph-scope-reads-local` — the read path this defends and why it is local to the runner, and the accepted window
+that makes the defense necessary.
 
 ## See also
 

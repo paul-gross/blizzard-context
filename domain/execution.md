@@ -26,7 +26,7 @@ epochs, and what failure does to each. Definitions, with the enforceable invaria
 
 A runner's registry entry derives everything observable: liveness derives from its most recent contact, and each brake
 from the newest fact in its own stream — never stored flags (`bzh:facts-not-status` in
-[../architecture/system-shape.md](../architecture/system-shape.md)).
+[../architecture/system-shape/store-facts.md](../architecture/system-shape/store-facts.md)).
 
 ## Acquisition and the route
 

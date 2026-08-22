@@ -14,7 +14,7 @@ Work the `artifact` verb group reads, and — at node scope only — writes, in 
   ever produces it. A node reads it on demand through the same lease-scoped verbs, scope-qualified
   ([standards/worker-nodes.md](../standards/worker-nodes.md)) — never injected as prompt content
   ([execution.md](./execution.md)). What that read costs is `bzh:graph-scope-reads-local` in
-  [architecture/system-shape.md](../architecture/system-shape.md).
+  [architecture/system-shape/graphs.md](../architecture/system-shape/graphs.md).
 
 Two kinds — commit pointer and asset — though a graph-scope entry is always the asset kind (`bzh:never-code` below):
 
