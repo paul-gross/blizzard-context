@@ -76,19 +76,31 @@ set.
 Prefix a new point `pull.after-pause-kill.before-park` because that's where its `.reached()` call sits, instead of
 `pause.after-kill.before-park` for the scenario whose window it actually guards.
 
-### Recorded exemptions — durable state with no dangerous window
+### Recorded exemptions — durable state the sweep does not arm
 
-Not every durable write opens a window this registry must name; a write with **no unsafe partial-write window** has
-nothing to arm, and that must be a *stated* position, not an implicit one (the "Don't" above bars asserting a window
-*safe without arming it* — this is the distinct case of there being *no window at all*). Record such a decision in the
-file below that owns the writer when a change adds durable state that a reviewer would otherwise expect a sweep point
-for.
+Not every durable write earns a point in this registry, and which reason applies must be a *stated* position rather than
+an implicit one (the "Don't" above bars asserting a window *safe without arming it*; these are the distinct cases of a
+window that need not be armed). Two grounds are admitted:
 
-| File                                                                     | Holds                                                                                                                                                                                 |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`crash-correctness/runner.md`](./crash-correctness/runner.md)           | The runner's own writes — the jti replay cache, git-commit verify, event emission, preamble fingerprint, escalation and takeover closures, context samples, the graph-artifact mirror |
-| [`crash-correctness/hub.md`](./crash-correctness/hub.md)                 | The hub's writes — promote-then-tail-stamp, the delivery closure sweep, the marker-write capability token, the item-creation chunk mint                                               |
-| [`crash-correctness/transcripts.md`](./crash-correctness/transcripts.md) | The transcript lane — the pump read, its truncation-outcome writes, the backfill verb, and the hub's event-derivation sweep                                                           |
+- **No window at all.** The write has no unsafe partial-write span — it is one transaction, or its halves are
+  independently harmless — so there is nothing for the sweep to arm.
+- **A real window whose whole loss is accepted and named.** The span exists and a crash inside it loses something, but
+  what it loses is bounded, non-durable in consequence, and recoverable by other means. An entry on this ground states
+  the loss, why it is tolerable, and how an operator reaches what was lost — a bar the first ground does not owe.
+
+Either way the write earns no `bzh:crash-point-registry` entry, and earns a new `bzh:invariant-checker` assertion only
+when it introduces a derived cross-fact invariant; a constraint the engine enforces, or a single-transaction insert, is
+not one. Record the decision in the file below that owns the writer when a change adds durable state a reviewer would
+otherwise expect a sweep point for.
+
+The transcript lane is split out of both daemon files: a runner-side or hub-side write that belongs to it is recorded in
+`transcripts.md`, not in the daemon's own register.
+
+| File                                                                     | Read when the write you are judging is…            |
+| ------------------------------------------------------------------------ | -------------------------------------------------- |
+| [`crash-correctness/runner.md`](./crash-correctness/runner.md)           | …the runner's own, outside the transcript lane     |
+| [`crash-correctness/hub.md`](./crash-correctness/hub.md)                 | …the hub's own, outside the transcript lane        |
+| [`crash-correctness/transcripts.md`](./crash-correctness/transcripts.md) | …anywhere in the transcript lane, on either daemon |
 
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 
