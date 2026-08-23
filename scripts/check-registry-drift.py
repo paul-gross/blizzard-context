@@ -1738,9 +1738,11 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
         )
         registry_input_missing = True
 
-    # The command detail is a routing hub plus one spoke per group of methods,
-    # and the `### <method-id>` sections B2/C2 parse live in the spokes. Both
-    # checks run per file, so a finding keeps the spoke's own path and line.
+    # The command detail is a routing hub plus a spoke tree — a group's spoke may
+    # itself be a hub over per-method spokes a directory down — and the
+    # `### <method-id>` sections B2/C2 parse live in the leaves. The walk is
+    # recursive for that reason. Both checks run per file, so a finding keeps the
+    # spoke's own path and line.
     commands_path = verification_dir / "blizzard" / "commands.md"
     commands_relfile = _relpath(commands_path, repo_root)
     commands_text = commands_path.read_text(errors="replace") if commands_path.is_file() else ""
@@ -1751,7 +1753,7 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
         registry_input_missing = True
 
     command_docs: list[tuple[str, str]] = []
-    for spoke in sorted((verification_dir / "blizzard" / "commands").glob("*.md")):
+    for spoke in _md_files(verification_dir / "blizzard" / "commands"):
         spoke_text = spoke.read_text(errors="replace")
         if spoke_text:
             command_docs.append((_relpath(spoke, repo_root), spoke_text))
@@ -1762,7 +1764,7 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
             Finding(
                 "A",
                 "warn",
-                "expected registry input not found: verification/blizzard/commands/*.md "
+                "expected registry input not found: verification/blizzard/commands/**/*.md "
                 "`### <method-id>` sections — checks B2, C2 skipped",
             )
         )

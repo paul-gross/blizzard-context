@@ -50,8 +50,8 @@ every merge gate green.
 **Detect.** A config key read from the operator's toml and dropped before its consumer changes nothing any tier can see.
 `tests/test_config_keys_reach_a_gating_tier.py` is the floor for the config-key half — every key of every
 operator-written config dataclass, nested blocks included, must be named by a gating-tier test, and the guard's own
-inventory is at [`./commands.md`](./commands/test-tiers.md#blizzardunit-test). Naming a key is weaker than pinning its
-threading, which `tests/test_runner_loop_build.py` does case by case for the keys it covers.
+inventory is at [`./commands.md`](./commands/test-tiers/unit.md#blizzardunit-test). Naming a key is weaker than pinning
+its threading, which `tests/test_runner_loop_build.py` does case by case for the keys it covers.
 
 **Do.** Where production takes one route and the gating tests drive a test-convenient other route, extend a gating case
 onto the production route rather than trusting the upper tier.
