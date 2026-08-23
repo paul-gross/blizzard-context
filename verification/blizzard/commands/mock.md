@@ -28,5 +28,5 @@ default path) and fails rather than skips when it cannot resolve one — parity 
 
 ### blizzard-mock:e2e
 
-`uv run pytest -m e2e` — the fleet acceptance proof: a scripted prompt lands a commit the mock forge merges to bare
-`main` — the **P4 exit criterion**.
+`uv run pytest -m e2e` — the fleet acceptance proof and the **P4 exit criterion**: a scripted prompt lands a commit the
+mock forge merges to bare `main`.

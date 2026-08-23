@@ -10,9 +10,9 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 ### web:typecheck
 
 `npm run build` in `web/` — a real AOT compile of both Angular apps, the type check `web:unit-test`'s esbuild-based
-vitest never performs. Run after any change adding or narrowing a required field on a shared interface, or changing an
-exported function/method signature — the construction sites those changes can break stay green under every other web
-tier.
+vitest never performs. Run it after any change that adds or narrows a required field on a shared interface, or that
+changes an exported function or method signature: the construction sites those changes break stay green under every
+other web tier.
 
 ### web:client-drift
 
