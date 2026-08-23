@@ -52,7 +52,7 @@ then land invisibly and installs need a codegen toolchain.
 tooled by `web:structural-gate` (`npm run structural-gate` in `web/`,
 [../verification/blizzard.md](../verification/blizzard.md)). The substantive rule here — a panel builds its chrome from
 `fleet/lib/kit/` rather than a re-typed local copy — is owned by
-[`../architecture/frontend-structure.md`](../architecture/frontend-structure.md) `bzh:frontend-kit-floor`
+[`../architecture/frontend-structure/kit.md`](../architecture/frontend-structure/kit.md) `bzh:frontend-kit-floor`
 (`canon:one-owner`); this entry is the toolchain-facing pointer to it, not a restatement.
 
 **Detect.** A component's sibling `.css` file declaring one of the retired chrome classes — `bzh:frontend-kit-floor`'s
@@ -65,7 +65,9 @@ loading/error/empty triad; `var(--overlay-25)` for a panel-head wash.
 **Don't.** A new panel's own `.panel { background: linear-gradient(...); border: 1px solid var(--bezel); }` plus a
 hand-rolled `@if isPending() { <p class="status">…</p> }` triad — both already exist once in the kit.
 
-**See also.** [`../architecture/frontend-structure.md`](../architecture/frontend-structure.md) `bzh:frontend-kit-floor`,
+**See also.** [`../architecture/frontend-structure/kit.md`](../architecture/frontend-structure/kit.md)
+`bzh:frontend-kit-floor`, and
+[`../architecture/frontend-structure/containers.md`](../architecture/frontend-structure/containers.md)
 `bzh:frontend-container-presentational`.
 
 ## Time, id, and status formatting resolve through the shared owner (`bzh:frontend-formatters`)

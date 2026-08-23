@@ -27,8 +27,9 @@ regeneration already `git add`ed passes.
 
 `npm run structural-gate` in `web/` (`web/scripts/structural-gate.js`); every check it carries is live. A `max-lines`
 ceiling — the ~400-line cap — holds over every Angular component file with no exemptions (`MAX_LINES_EXEMPT_FILES` is
-empty); owner [`../../../../architecture/frontend-structure.md`](../../../../architecture/frontend-structure.md), rule
-`bzh:frontend-container-presentational`.
+empty); owner
+[`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md),
+rule `bzh:frontend-container-presentational`.
 
 A real-timer sweep covers the specs the `test` script (`npm run test`) actually runs, failing any
 `setTimeout`/`setInterval` whose delay is a non-zero integer literal — a literal delay is a real second spent inside the
