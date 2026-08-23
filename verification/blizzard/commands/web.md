@@ -7,6 +7,13 @@
 Read [`../../blizzard.md`](../../blizzard.md) first for the short command and the method-id inventory;
 [`../commands.md`](../commands.md) routes to the other methods' detail.
 
+### web:typecheck
+
+`npm run build` in `web/` — a real AOT compile of both Angular apps, the type check `web:unit-test`'s esbuild-based
+vitest never performs. Run after any change adding or narrowing a required field on a shared interface, or changing an
+exported function/method signature — the construction sites those changes can break stay green under every other web
+tier.
+
 ### web:client-drift
 
 `npm run generate:client` in `web/` — openapi-ts codegen from `openapi/{hub,runner}.openapi.json` — then fail on any

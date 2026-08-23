@@ -10,7 +10,7 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 ### blizzard:unit-test
 
 `uv run pytest -m unit` — one class or function in isolation. Bare `uv run pytest` runs the unit-plus-component default
-suite; the tier roster is [`../../blizzard.md#test-tiers`](../../blizzard.md#test-tiers).
+suite; the tier roster is [`../tier-rules.md`](../tier-rules.md#test-tiers).
 
 The git-commit declare-and-verify round trip (`test_artifacts_storage.py`, plus the `_verify_and_collect_git_commits`
 coverage in `test_runner_loop.py`/`test_runner_gates.py`) pins the worker-declares/runner-verifies split: a fake

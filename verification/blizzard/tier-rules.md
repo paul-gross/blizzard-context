@@ -1,8 +1,21 @@
-# Writing a test at any tier (`bzh:matrix-tier-rules`)
+# The test tiers, and writing a test at one (`bzh:matrix-tier-rules`)
 
-Every tier in [`../blizzard.md`](../blizzard.md#test-tiers)'s tier table writes its tests to the standard below. What a
-change owes as a companion landing is [`./companion-changes.md`](./companion-changes.md)'s; whether a green run counts
-as evidence at all is [`./evidence.md`](./evidence.md)'s.
+The tier roster, and the standard every tier writes its tests to. The command each tier runs is its row in
+[`../blizzard.md`](../blizzard.md)'s Commands table. What a change owes as a companion landing is
+[`./companion-changes.md`](./companion-changes.md)'s; whether a green run counts as evidence at all is
+[`./evidence.md`](./evidence.md)'s.
+
+## Test tiers
+
+Four tiers, all used — each answers a different question, and none substitutes for another. The mocks the upper tiers
+bind are owned by `blizzard-mock` (P4); the standard those tests are held to is the rest of this file.
+
+| Tier          | Method                    | Scope                                                                                                                      | Tooling                                                                                                                                                                                                                                                                                                                             |
+| ------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**      | `blizzard:unit-test`      | One class or function in isolation.                                                                                        | pytest                                                                                                                                                                                                                                                                                                                              |
+| **Component** | `blizzard:component-test` | A domain slice or subsystem wired with real internal collaborators, test doubles only at the seams.                        | pytest                                                                                                                                                                                                                                                                                                                              |
+| **Service**   | `blizzard:service-test`   | A running hub or runner's HTTP API exercised from outside, seams bound to the mock fleet.                                  | pytest + HTTP                                                                                                                                                                                                                                                                                                                       |
+| **E2E**       | `blizzard:e2e`            | The full system — hub, runner, web app — through the browser and CLI, fully local with every seam bound to the mock fleet. | pytest, driving the in-process loop + a real Chromium via Playwright — the [registry](./e2e-scenarios.md) states each browser-driven scenario's actual guard, since they are not uniform: some skip cleanly on a missing built bundle or a missing Chromium, some fail loudly instead, and one is only conditionally browser-driven |
 
 ## Hermetic by construction
 

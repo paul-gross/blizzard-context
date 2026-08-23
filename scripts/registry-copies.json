@@ -15,17 +15,17 @@
       "what": "the test-tier roster",
       "noun": "tiers?",
       "line_requires": "test tier|tiers, all used",
-      "owner": "verification/blizzard.md#test-tiers",
+      "owner": "verification/blizzard/tier-rules.md#test-tiers",
       "probe": {
         "kind": "md-table-rows",
         "repo": "blizzard-context",
-        "file": "verification/blizzard.md",
+        "file": "verification/blizzard/tier-rules.md",
         "section": "Test tiers"
       },
       "sites": [
         {
           "repo": "blizzard-context",
-          "file": "verification/blizzard.md",
+          "file": "verification/blizzard/tier-rules.md",
           "role": "owner",
           "reason": "the roster's own home — checked so its lead sentence and its table cannot disagree"
         },

@@ -25,3 +25,8 @@ and sweeps the mirror service entry points for two adjacent same-typed positiona
 
 The guard is local-only and fail-closed: it reads the sibling `blizzard` worktree (`$BLIZZARD_SOURCE` overrides the
 default path) and fails rather than skips when it cannot resolve one — parity never checked is not a green.
+
+### blizzard-mock:e2e
+
+`uv run pytest -m e2e` — the fleet acceptance proof: a scripted prompt lands a commit the mock forge merges to bare
+`main` — the **P4 exit criterion**.
