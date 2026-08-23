@@ -21,7 +21,7 @@ around it races the orchestrator it works under and produces the double-work the
   ([../verification/blizzard.md](../verification/blizzard.md)) before it exits — its output reported as facts and
   artifacts, never a self-landed merge.
 - **The hub** executes delivery itself — the merge-queue landing is a hub-executed node, no agent's role
-  ([../domain/artifacts.md](../domain/artifacts.md)).
+  ([../domain/artifacts/delivery.md](../domain/artifacts/delivery.md)).
 - **A human** enters only where invited or where failure parks the chunk — asks, gate decisions, takeover
   ([../domain/humans.md](../domain/humans.md)).
 

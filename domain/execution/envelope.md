@@ -10,9 +10,9 @@ current node.
 - The node's prompt and configuration: base prompt plus the taken edge's arrival context
   ([../graphs/nodes.md](../graphs/nodes.md)).
 - The chunk's relevant artifacts: earlier steps' outputs, newest-first from the artifact series
-  ([../artifacts.md](../artifacts.md)).
+  ([../artifacts/series.md](../artifacts/series.md)).
 - Graph-mint declarations as fetchable, not inlined content: a node asks for one by name
-  ([../artifacts.md#artifact](../artifacts.md#artifact)).
+  ([../artifacts/model.md](../artifacts/model.md)).
 - For a node declaring `produces:`, a generated required-artifacts table: each entry's kind and the fleet-protocol verb
   declaring it ([../../standards/worker-nodes/declarations.md](../../standards/worker-nodes/declarations.md)).
 - The runner's machine-local context: which environments the chunk holds and where they live on that machine.

@@ -27,7 +27,7 @@ un-stop, no un-complete. With both a `chunk.stopped` and a `chunk.completed` fac
 favoring completion.
 
 Landing is not itself terminal: a graph may route further runner work after it before `done`
-([../artifacts.md#landing-is-not-necessarily-terminal](../artifacts.md#landing-is-not-necessarily-terminal)).
+([../artifacts/delivery.md#landing-is-not-necessarily-terminal](../artifacts/delivery.md#landing-is-not-necessarily-terminal)).
 
 Discarding or grouping an unacquired chunk is not a status: the chunk simply vanishes from every listing, the work item
 remaining the durable referent.
