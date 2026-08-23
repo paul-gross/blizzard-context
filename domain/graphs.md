@@ -160,13 +160,13 @@ outgoing edge; its description is what sharpens a worker's judgement and what a 
 - **A choice may target another graph.** A choice's `to:` normally names a sibling node or the reserved terminal; it may
   instead name `graph:<name>` — a cross-graph **migration** target. Taking that choice re-pins the chunk to the named
   graph and lands it at the target's landing node (name-matched, else the target's entry), the landed node's disposition
-  governed by [work/migration.md](./work/migration.md) §Landing is by name — recording a migration fact, never a
-  transition — so `bzh:migration-not-transition` in [work/migration.md](./work/migration.md) still holds (the authored
-  choice carries the target; the *movement* is a migration, not an edge to another graph's node, which stays forbidden).
-  A choice may also carry an optional `model:` — a single model name the migration re-pins as the chunk's **default
-  model preference**, the value an undeclared surface inherits. The target is resolved by **name** when taken
-  (late-bound, the same binding ingest uses, `bzh:ids-exact-names-correlate`), so authoring a choice whose target graph
-  is not yet minted is a mint-time warning, not an error.
+  governed by [work/migration.md](./work/migration.md) §Landing — recording a migration fact, never a transition — so
+  `bzh:migration-not-transition` in [work/migration.md](./work/migration.md) still holds (the authored choice carries
+  the target; the *movement* is a migration, not an edge to another graph's node, which stays forbidden). A choice may
+  also carry an optional `model:` — a single model name the migration re-pins as the chunk's **default model
+  preference**, the value an undeclared surface inherits. The target is resolved by **name** when taken (late-bound, the
+  same binding ingest uses, `bzh:ids-exact-names-correlate`), so authoring a choice whose target graph is not yet minted
+  is a mint-time warning, not an error.
 
 ## Ids are exact, names correlate (`bzh:ids-exact-names-correlate`)
 
