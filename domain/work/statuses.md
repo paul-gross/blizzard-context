@@ -13,7 +13,7 @@ fact vocabulary and derivation queries live in the code.
 - **`paused`** — held on an operator's per-chunk pause fact: on a live route the runner kills the worker but keeps the
   lease, route, epoch, environments, and retry budget so resume respawns in place, while an unclaimed chunk is withheld
   from the queue. Ranks below the human-gated statuses and above `delivering` and `running`
-  ([../execution.md](../execution.md)).
+  ([../execution/pause.md](../execution/pause.md)).
 - **`waiting_on_human`** — parked on invited human input — an open ask or unresolved gate decision
   ([../humans/asks.md](../humans/asks.md), [../humans/gates.md](../humans/gates.md)); the reap clock stops.
 - **`needs_human`** — parked on failure: the system ran out of moves, runner- or hub-authored, and a person must requeue

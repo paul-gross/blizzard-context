@@ -20,12 +20,11 @@ entry node — standing nowhere, the entry is where it would have started.
 
 ## What it does
 
-It preempts by raising the fence: the minted epoch belongs to
-[../execution.md#lease-and-epoch](../execution.md#lease-and-epoch), the displaced attempt's next state-advancing write
-is rejected as stale (`bzh:epoch-fencing`), and the holding runner tears it down at next reconciliation — nothing relies
-on the worker having really died. The claim survives
-([../execution.md#acquisition-and-the-route](../execution.md#acquisition-and-the-route)), so the same runner re-enters
-the node with the work already on disk. A chunk with no claim moves just as well and waits in the queue at its new node.
+It preempts by raising the fence: the minted epoch belongs to [../execution/fencing.md](../execution/fencing.md), the
+displaced attempt's next state-advancing write is rejected as stale (`bzh:epoch-fencing`), and the holding runner tears
+it down at next reconciliation — nothing relies on the worker having really died. The claim survives
+([../execution/acquisition.md](../execution/acquisition.md)), so the same runner re-enters the node with the work
+already on disk. A chunk with no claim moves just as well and waits in the queue at its new node.
 
 The re-entry starts on a freshly minted session — handing the step clean context is the point — not the session the
 node's declaration would have resumed, under the target node's currently declared configuration (its session facet,

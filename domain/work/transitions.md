@@ -13,6 +13,6 @@ human's resolving choice writes one referencing that decision ([../humans/gates.
 Two guards hold at the write:
 
 - A transition carries its attempt's epoch, and a stale one is rejected rather than recorded (`bzh:epoch-fencing`,
-  [../execution.md](../execution.md)).
+  [../execution/fencing.md](../execution/fencing.md)).
 - A node-step's transition and its artifacts are committed as one write, so a rejected transition's artifacts never
   exist ([../artifacts.md](../artifacts.md)).

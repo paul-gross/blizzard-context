@@ -111,8 +111,9 @@ winter service restart <env>/hub
 ```
 
 For the epoch a fresh claim/lease carries and how the runner's outbound buffer sequences its facts, see
-`domain/execution.md` §Lease and epoch (`bzh:epoch-fencing`) and `architecture/crash-correctness.md`'s
-gapless-outbound-seq invariant — this guide doesn't restate them.
+[../domain/execution/fencing.md](../domain/execution/fencing.md) (`bzh:epoch-fencing`) and
+[../architecture/crash-correctness.md](../architecture/crash-correctness.md)'s gapless-outbound-seq invariant — this
+guide doesn't restate them.
 
 ## Don't
 

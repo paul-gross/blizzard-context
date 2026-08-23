@@ -15,9 +15,9 @@ closed, without minting or reopening one.
 ## Forced entry
 
 A forced entry into a still-worked chunk kills the live worker and fences the attempt's epoch, so the displaced worker's
-late submission bounces (`bzh:epoch-fencing`, [../execution.md](../execution.md)). After a forced entry the chunk keeps
-deriving `running`, not `needs_human` — nothing failed and nothing was invited. Forced entry is refused once the attempt
-has already submitted its outcome: a fence minted behind a queued submission would never take effect.
+late submission bounces (`bzh:epoch-fencing`, [../execution/fencing.md](../execution/fencing.md)). After a forced entry
+the chunk keeps deriving `running`, not `needs_human` — nothing failed and nothing was invited. Forced entry is refused
+once the attempt has already submitted its outcome: a fence minted behind a queued submission would never take effect.
 
 ## While a person holds the session
 
