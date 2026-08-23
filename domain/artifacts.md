@@ -13,8 +13,8 @@ Work the `artifact` verb group reads, and — at node scope only — writes, in 
   ([graphs/declared-artifacts.md](./graphs/declared-artifacts.md)); every chunk pinned to that mint reads back the
   identical, immutable content, and no worker ever produces it. A node reads it on demand through the same lease-scoped
   verbs, scope-qualified ([standards/worker-nodes/declarations.md](../standards/worker-nodes/declarations.md)) — never
-  injected as prompt content ([execution.md](./execution.md)). What that read costs is `bzh:graph-scope-reads-local` in
-  [architecture/system-shape/graphs.md](../architecture/system-shape/graphs.md).
+  injected as prompt content ([execution/envelope.md](./execution/envelope.md)). What that read costs is
+  `bzh:graph-scope-reads-local` in [architecture/system-shape/graphs.md](../architecture/system-shape/graphs.md).
 
 Two kinds — commit pointer and asset — though a graph-scope entry is always the asset kind (`bzh:never-code` below):
 
@@ -25,7 +25,8 @@ Two kinds — commit pointer and asset — though a graph-scope entry is always 
 
 - **The hash is authoritative.** Branches move, so the hash pins the state that was actually verified; the branch name
   serves only to detect work committed ahead of it. There is deliberately no fencing at the branch ref: a zombie
-  clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing` in [execution.md](./execution.md)).
+  clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing` in
+  [execution/fencing.md](./execution/fencing.md)).
 - **Provenance is the scope discriminator.** A node-scope artifact is self-describing — it knows the chunk, the exact
   node, and the attempt that produced it. A graph-scope artifact carries none of that: its only provenance is the graph
   mint that baked it, identical for every chunk and every attempt pinned to that mint.
@@ -99,7 +100,7 @@ partial land, and the per-repo reconciliation below is what recovers it.
   each push; a re-run — after a crash, or a kicked-back redelivery — skips every repo whose marker is already durable.
   The engine imposes no per-repo landing *shape* of its own — a differently-authored script could land however it
   chooses — but it does read the `merged/<repo>` marker convention to tell a fully-landed continuation apart from a
-  genuinely incomplete delivery ([standards/hub-nodes.md](../standards/hub-nodes.md)).
+  genuinely incomplete delivery ([standards/hub-nodes/outcome-protocol.md](../standards/hub-nodes/outcome-protocol.md)).
 - **Conflict is a judged, authored outcome, never an engine special case.** A dirty repo is one of the script's own
   outcome choices, routed like any other node's choice to whatever edge the graph authors — ordinarily back into
   `build`, carrying the retained partial lands for the next attempt's reconciliation.

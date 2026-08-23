@@ -43,9 +43,9 @@ Per-ref close-once is a store-level uniqueness constraint on `(chunk_id, source,
 A crash mid-step orphans the land script the step spawned, leaving it holding a token minted by a process that no longer
 exists, so its later marker-write POSTs fail against the restarted process's fresh, empty authority. That rejection is
 safe rather than a gap: the executor's at-least-once-per-step contract (`bzh:hub-node-step-idempotence`,
-[`../../standards/hub-nodes.md`](../../standards/hub-nodes.md)) re-runs that exact step from its own first command on
-the next hub-advance, minting a fresh token and re-recording the marker idempotently, and no crash-sweep assertion
-depends on an orphan's rejected write landing.
+[`../../standards/hub-nodes/step-idempotence.md`](../../standards/hub-nodes/step-idempotence.md)) re-runs that exact
+step from its own first command on the next hub-advance, minting a fresh token and re-recording the marker idempotently,
+and no crash-sweep assertion depends on an orphan's rejected write landing.
 
 The token needs neither mechanism because it is in-memory, credential-shaped state with no durable form and no
 partial-write window of its own.
