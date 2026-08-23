@@ -1,79 +1,72 @@
-# Every prose block has a hard budget (`bzh:prose-budget`)
+# Keep every comment and docstring inside its line cap (`bzh:prose-budget`)
 
-Follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), at file-per-rule granularity.
+The room a block of code prose gets, and what to do when it overruns, in the Rule/Why/Detect/Do/Don't slot skeleton
+owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## Rule
 
-A comment or docstring block fits the cap for its host below; a block over cap is pruned, not defended — the burden of
-proof sits on every line kept, never on deleting one. A docstring block counts its physical span in lines, blank lines
-included; a `#` block counts its consecutive comment lines.
-
-| Host                                    | Cap     |
-| --------------------------------------- | ------- |
-| Module docstring                        | 6 lines |
-| Class, dataclass, or Protocol docstring | 4 lines |
-| Function or method docstring            | 5 lines |
-| Test docstring                          | 3 lines |
-| Field, column, or constant `#` comment  | 1 line  |
-| Inline `#` comment block                | 2 lines |
+A block fits the cap for its host and, over cap, is pruned rather than defended: the burden of proof sits on every line
+kept, not on deleting one. Content that cannot fit moves the excess to its one prose home (`bzh:one-prose-home` in
+[./one-prose-home.md](./one-prose-home.md)) — the seam, the pinning test, or an owning doc — leaving a capped statement
+plus a pointer.
 
 ## Why
 
-No author judges its own writing as too long, so without a numeric bound every keep-category of `bzh:comment-locality`
-is elastic and any paragraph survives by framing itself as rationale. A hard cap turns pruning from a judgment call into
-a trigger.
-
-## Exception
-
-A block whose owned content genuinely cannot fit moves the excess to its one prose home (`bzh:one-prose-home`) — the
-seam, the pinning test, or an owning doc — and keeps a capped statement plus a pointer in place. There is no in-place
-waiver.
+No author judges their own writing too long, so without a numeric bound every keep-category of `bzh:comment-locality`
+stays elastic; the cap turns pruning from a judgment call into a trigger.
 
 ## Scope
 
-Binds the same trees as `bzh:comment-locality`; `blizzard-context`'s `exemplars/` files are expository teaching
-artifacts and are not bound. A change is held to the caps on every block it adds or edits; the pre-existing surface is
-worked down by pruning passes and the ratchet, never blocked on an incidentally-touched file. The measurable half is
-`mise run prose-check` in the `blizzard` repo (`blizzard:prose-ratchet`) — a per-root growth ratchet against the
-committed baseline; `check --blocks` additionally names each over-cap block as file:line.
+Binds the same trees as `bzh:comment-locality`; `blizzard-context`'s `exemplars/` files are teaching artifacts and are
+not bound. A change is held to the caps on every block it adds or edits, while the pre-existing surface is worked down
+by pruning passes and the ratchet, never blocking an incidentally-touched file. The distinction is per block: a new
+class in an old module qualifies, a fuller docstring on an untouched one does not.
 
-The ratchet's only teeth are that committed number, so **re-recording it (`measure --write-baseline`) is a deliberate
-act, not a step in going green.** A re-record upward is warranted only when the growth is prose **newly added code** had
-to carry — a new module, guard, class, or method whose blocks are each under cap — and the change says so where it
-lands. Rewriting the baseline to absorb prose grown on code that already existed reads as passing the gate while
-defeating it: prune to the old number instead. The distinction is per block, not per file, so a new class in an old
-module qualifies and a fuller docstring on an untouched one does not. Re-record **once**, at the tip of the work, rather
-than per commit — the baseline is a generated snapshot, and several commits each re-recording it conflict on rebase by
-construction.
+## The caps
+
+| Block                                   | Lines |
+| --------------------------------------- | ----- |
+| Module docstring                        | 6     |
+| Class, dataclass, or Protocol docstring | 4     |
+| Function or method docstring            | 5     |
+| Test docstring                          | 3     |
+| Field, column, or constant `#` comment  | 1     |
+| Inline `#` comment block                | 2     |
+
+A docstring block counts its physical span in lines, blank lines included; a `#` block counts its consecutive comment
+lines. Both count lines as wrapped under `bzh:docstring-prose-authoring` in [./python.md](./python.md), which owns that
+regime.
 
 ## Detect
 
-- Any block over its cap — `scripts/prose_density.py check --blocks` names the file and line.
-- A parameter-by-parameter docstring: one paragraph per field.
-- A prune that tightens wording to keep every fact — under-cap is reached by dropping content, not compressing it.
+- `mise run prose-check` (`blizzard:prose-ratchet`), whose `scripts/prose_density.py check --blocks` names each over-cap
+  block as `file:line`.
+- A parameter-by-parameter docstring, one paragraph per field.
+- A prune that tightens wording to keep every fact: under-cap is reached by dropping content, not compressing it.
+
+## Re-recording the baseline
+
+`prose-check` ratchets per-root growth against a committed baseline, and that committed number is the ratchet's only
+teeth — so re-recording it (`measure --write-baseline`) is deliberate, never a step in going green, and warranted only
+when the growth is prose newly added code had to carry — a new module, guard, class, or method, each block under cap —
+and the change says so where it lands. Re-record once at the tip of the work, not per commit: the baseline is a
+generated snapshot, and several re-records conflict on rebase.
 
 ## Do
 
 ```python
-Column("ordinal", Integer, nullable=False),  # authored `sessions:` position, display-only
+lease_expires_at = Column(UtcDateTime)  # When the current holder's claim lapses.
 ```
 
 ## Don't
 
 ```python
-# The declaration's 0-based position in the authored `sessions:` map. Order carries no
-# semantics — every lookup is by name — but it is what the graph explorer renders, and
-# the composite primary key above makes an index scan (name order) the natural plan for
-# the by-graph read, so authored order has to be a persisted fact rather than an
-# insertion-order accident to survive the round trip.
-Column("ordinal", Integer, nullable=False),
+# The deadline the current holder's claim lapses at, set when the claim is taken and
+# cleared on release; a null here means the row has never been claimed.
+lease_expires_at = Column(UtcDateTime)
 ```
 
 ## See also
 
-- `bzh:comment-locality` in [`./comments.md`](./comments.md) — which facts a block may state at all; this rule bounds
-  how much room stating them gets.
-- `bzh:one-prose-home` in [`./one-prose-home.md`](./one-prose-home.md) — where over-cap content moves instead of being
-  re-wrapped in place.
-- `bzh:docstring-prose-authoring` in [`./python.md`](./python.md) — the wrap regime each tree's prose lines follow,
-  which the caps count over.
+- `bzh:comment-locality` in [./comments.md](./comments.md) — which facts a block may state at all; this rule bounds the
+  room they get.
