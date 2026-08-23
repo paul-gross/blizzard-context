@@ -113,8 +113,8 @@ answering emptily: `artifact get <name> --scope graph` is a `404` naming the pin
 a non-zero `ClickException` (`blizzard/src/blizzard/runner/api/artifacts.py`,
 `blizzard/src/blizzard/runner/cli_worker.py`). What carries a worker through an empty pin is the fallback every prompt
 pointing at a graph declaration owes (`bzh:graph-artifact-pointer-fallback`,
-[`../../standards/worker-nodes.md`](../../standards/worker-nodes.md)), which is written against a failed read and not
-only an empty one.
+[`../../standards/worker-nodes/graph-artifact-pointers.md`](../../standards/worker-nodes/graph-artifact-pointers.md)),
+which is written against a failed read and not only an empty one.
 
 Should a graph-scope read ever become something the engine gates on, this accepted window turns into a repair owed,
 because no fallback in authored prose can stand in for a decision the engine makes for itself.

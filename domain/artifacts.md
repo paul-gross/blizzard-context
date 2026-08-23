@@ -12,16 +12,16 @@ Work the `artifact` verb group reads, and — at node scope only — writes, in 
 - **Graph scope.** Definition text a graph's top-level `artifacts:` map bakes into the mint once
   ([graphs/declared-artifacts.md](./graphs/declared-artifacts.md)); every chunk pinned to that mint reads back the
   identical, immutable content, and no worker ever produces it. A node reads it on demand through the same lease-scoped
-  verbs, scope-qualified ([standards/worker-nodes.md](../standards/worker-nodes.md)) — never injected as prompt content
-  ([execution.md](./execution.md)). What that read costs is `bzh:graph-scope-reads-local` in
+  verbs, scope-qualified ([standards/worker-nodes/declarations.md](../standards/worker-nodes/declarations.md)) — never
+  injected as prompt content ([execution.md](./execution.md)). What that read costs is `bzh:graph-scope-reads-local` in
   [architecture/system-shape/graphs.md](../architecture/system-shape/graphs.md).
 
 Two kinds — commit pointer and asset — though a graph-scope entry is always the asset kind (`bzh:never-code` below):
 
-| Kind           | Carries                                                                                                                                                                                                                             |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| commit pointer | A repository, a branch name, and a commit hash — the branch is pushed to the forge **before** the artifact is submitted, so the pointer never dangles. A chunk touching five repos submits five pointers.                           |
-| asset          | Text or a blob — a review's findings, a spike write-up. A worker node's asset is normally submitted by an explicit worker declaration, per the node's `produces:` list ([standards/worker-nodes.md](../standards/worker-nodes.md)). |
+| Kind           | Carries                                                                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| commit pointer | A repository, a branch name, and a commit hash — the branch is pushed to the forge **before** the artifact is submitted, so the pointer never dangles. A chunk touching five repos submits five pointers.                                                     |
+| asset          | Text or a blob — a review's findings, a spike write-up. A worker node's asset is normally submitted by an explicit worker declaration, per the node's `produces:` list ([standards/worker-nodes/declarations.md](../standards/worker-nodes/declarations.md)). |
 
 - **The hash is authoritative.** Branches move, so the hash pins the state that was actually verified; the branch name
   serves only to detect work committed ahead of it. There is deliberately no fencing at the branch ref: a zombie

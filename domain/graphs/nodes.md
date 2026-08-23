@@ -30,7 +30,8 @@ The facets:
   are necessarily toolchain commands (`bzh:app-agnostic-graphs` in
   [../../architecture/system-shape.md](../../architecture/system-shape.md)).
 - **`produces`** — names the artifacts the node must submit ([../artifacts.md](../artifacts.md)); a worker node's prompt
-  must instruct submitting each by name ([../../standards/worker-nodes.md](../../standards/worker-nodes.md)).
+  must instruct submitting each by name
+  ([../../standards/worker-nodes/declarations.md](../../standards/worker-nodes/declarations.md)).
 - **`retries`** — the bounded failure budget — crashes, verdict-less exits, reaps — and where exhaustion escalates; a
   judged failure edge never consumes it.
 - **`judgement`** — how the exit is judged and the choices it produces — owned by [./edges.md](./edges.md).

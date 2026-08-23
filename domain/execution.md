@@ -121,7 +121,7 @@ the chunk's current node:
 - **The node's prompt and configuration** — the base prompt plus the taken edge's arrival context
   ([graphs/nodes.md](./graphs/nodes.md)), plus, when the node declares `produces:`, a procedurally-generated
   required-artifacts table naming each entry's kind and the fleet-protocol verb that declares it
-  ([standards/worker-nodes.md](../standards/worker-nodes.md)).
+  ([standards/worker-nodes/declarations.md](../standards/worker-nodes/declarations.md)))
 - **The chunk's relevant artifacts** — earlier steps' outputs, resolved newest-first from the artifact series
   ([artifacts.md](./artifacts.md)). Its graph mint's own declarations travel too, but as something to fetch rather than
   content to read here — a node that wants one asks for it by name ([artifacts.md](./artifacts.md) §Artifact).

@@ -28,9 +28,10 @@ prose. The fleet protocol is not application knowledge and stays in any graph: t
 `artifact create`, `artifact commit`, `artifact list` and `get` (with node or graph `--scope`), `ask`, `work-items`, and
 chunk history — are blizzard's own surface, identical across every application it drives (`blizzard runner attach` is a
 deprecated alias for `artifact create` — `bzh:worker-node-attach-instruction` in
-[../../standards/worker-nodes.md](../../standards/worker-nodes.md) owns it). Naming a git or gh operation directly is
-likewise permitted — VCS and forge mechanics are as invariant across applications as the fleet protocol — but permitted
-is not warranted: state the check, and name the incantation only where the choice it encodes is the instruction.
+[../../standards/worker-nodes/declarations.md](../../standards/worker-nodes/declarations.md) owns it). Naming a git or
+gh operation directly is likewise permitted — VCS and forge mechanics are as invariant across applications as the fleet
+protocol — but permitted is not warranted: state the check, and name the incantation only where the choice it encodes is
+the instruction.
 
 **Detect.** In a graph meant to be reusable: a concrete toolchain command in `checks:` or prompt text (`mise run test`,
 `pytest`); a prompt naming a language, framework, directory layout, or branch-naming convention; a graph whose name or
@@ -81,5 +82,6 @@ unreachable.
 is simpler than two — every declaration read then fails with the hub, which is the property the rule exists to buy.
 
 **See also.** `bzh:graph-artifact-pointer-fallback` in
-[../../standards/worker-nodes.md](../../standards/worker-nodes.md) owns the fallback a prompt pointing at a baked
-declaration owes, because a lease pinned before the runner recorded the declarations reads an empty pin.
+[../../standards/worker-nodes/graph-artifact-pointers.md](../../standards/worker-nodes/graph-artifact-pointers.md) owns
+the fallback a prompt pointing at a baked declaration owes, because a lease pinned before the runner recorded the
+declarations reads an empty pin.
