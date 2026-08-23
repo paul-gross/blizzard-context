@@ -47,12 +47,12 @@ the failure is deferred, not an outcome to act on.
 
 ## Escalation is one kind, not a separate surface
 
-An **escalation** ([humans.md](./humans.md) §Escalation) is still its own fact with its own supersession rule; the
-operational log does **not** re-model it. Instead the read **unifies** the two: every currently-open escalation projects
-into the feed as a `needs-human` / `critical` event, so `needs_human` is one row in one surface rather than a place an
-operator has to look separately. The granular per-attempt events (`worker-lost` records *this attempt died*) and the
-standing escalation projection (*retries are now exhausted*) are complementary, distinct kinds — the terminal failure is
-not double-counted.
+An **escalation** ([humans/escalation.md](./humans/escalation.md)) is still its own fact with its own supersession rule;
+the operational log does **not** re-model it. Instead the read **unifies** the two: every currently-open escalation
+projects into the feed as a `needs-human` / `critical` event, so `needs_human` is one row in one surface rather than a
+place an operator has to look separately. The granular per-attempt events (`worker-lost` records *this attempt died*)
+and the standing escalation projection (*retries are now exhausted*) are complementary, distinct kinds — the terminal
+failure is not double-counted.
 
 ## How the operational log is read
 

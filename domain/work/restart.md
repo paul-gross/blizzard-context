@@ -36,7 +36,8 @@ ordinary transition or a migration's landing ([../graphs/nodes.md](../graphs/nod
 
 The move consumes whatever parked or re-aimed the chunk: an open ask is answered (exactly one answer ever exists — an
 earlier answerer still wins), an open gate decision closes, and an open escalation is superseded as by a requeue
-([../humans.md](../humans.md)). A cross-graph move also clears any standing intended migration
+([../humans/asks.md](../humans/asks.md), [../humans/gates.md](../humans/gates.md),
+[../humans/escalation.md](../humans/escalation.md)). A cross-graph move also clears any standing intended migration
 ([./migration.md](./migration.md)); nothing survives to re-park or re-aim the chunk at a node it no longer stands on.
 
 It spends no retry budget: the budget counts failed attempts and a preempted attempt was superseded, not failed —
@@ -56,7 +57,7 @@ A pause suppresses rather than refuses it: the chunk stays parked and the move i
 lifts. An open takeover also suppresses it indefinitely — the person is inside that session, and killing it under them
 is worse than a pending move. The hub holds no takeover state to refuse with — deferral at the runner is the whole
 mechanism — and the chunk reads as moved while the human works at the stale epoch
-([../humans.md#takeover](../humans.md#takeover)).
+([../humans/takeover.md](../humans/takeover.md)).
 
 ## What it refuses
 

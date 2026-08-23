@@ -27,8 +27,8 @@ default model preference, what undeclared surfaces inherit.
 
 Worker judgement is the default: elicited when the worker declares done, informed by the injected check results, the
 worker selecting exactly one of the node's choices. Human judgement is the structural mark of a gate: the person picks
-from the same choices, presented as buttons ([../humans.md](../humans.md)). A hub-executed node's `run:` steps judge for
-it, selecting an authored choice by exit code and stdout — the same fused choice/edge shape.
+from the same choices, presented as buttons ([../humans/gates.md](../humans/gates.md)). A hub-executed node's `run:`
+steps judge for it, selecting an authored choice by exit code and stdout — the same fused choice/edge shape.
 
 ## Failure, not judgement
 

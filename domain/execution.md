@@ -132,7 +132,7 @@ Prompting is **two-phase**: the envelope's content instructs the work, and when 
 prompt is delivered into the same session to elicit the verdict ([graphs/edges.md](./graphs/edges.md)). The envelope is
 also how change reaches a worker rather than being inferred: a migration shows up as the next envelope's new graph and
 node ([work/migration.md](./work/migration.md)), and an answered ask re-enters as the session resuming with the answer
-delivered into it ([humans.md](./humans.md)).
+delivered into it ([humans/asks.md](./humans/asks.md)).
 
 ## Failure and recovery
 
@@ -142,11 +142,11 @@ delivered into it ([humans.md](./humans.md)).
   blizzard#284): the runner never observes a worker's exit status at all, so there is no code to branch on instead — the
   backstop is exit-status-independent, a node's declared `produces:` plus the delivery-time empty-delivery refusal
   catching what an errored exit failed to produce. Reap ends the **attempt** — retry, or escalate on exhaustion
-  ([humans.md](./humans.md)) — never by itself the chunk's tenure or its environments.
+  ([humans/escalation.md](./humans/escalation.md)) — never by itself the chunk's tenure or its environments.
 - **Requeue** is two operations sharing one name. The **hub's** supersedes the escalation *and* releases the route,
   returning the chunk to the queue for whoever claims it next. The **holding runner's** — the hand-back after a takeover
-  ([humans.md](./humans.md) §Takeover) — keeps route, environments and tenure, and simply re-attempts the current node
-  in place against the retry budget it already had.
+  ([humans/takeover.md](./humans/takeover.md)) — keeps route, environments and tenure, and simply re-attempts the
+  current node in place against the retry budget it already had.
 - **Reassignment** moves a held chunk to another runner — the supported exception to stickiness: the new runner rebuilds
   the environment from the chunk's commit artifacts, mints leases above the hub-supplied epoch floor, and may adopt
   unsubmitted in-progress work it finds ahead of the last submitted artifact commit.

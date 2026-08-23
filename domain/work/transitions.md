@@ -8,7 +8,7 @@ verdict, the hub's own machinery at a hub node, or a human's choice at a gate â€
 
 Transitions are authored by the holder: the holding runner reports them, and the hub's own executor authors them for
 hub-executed nodes. At a gate the node-step's completion lands as an open decision, and no transition exists until the
-human's resolving choice writes one referencing that decision ([../humans.md](../humans.md)).
+human's resolving choice writes one referencing that decision ([../humans/gates.md](../humans/gates.md)).
 
 Two guards hold at the write:
 

@@ -54,7 +54,7 @@ a model re-pins that too, as the chunk's default model preference.
 
 When a human gate's resolved choice is the migrating choice, the migration closes the gate's decision — the escalation
 does when the target is unresolvable — since a migration records no transition, nothing else would ever close it
-([../humans.md#gate-decision](../humans.md#gate-decision)).
+([../humans/gates.md](../humans/gates.md)).
 
 ### Standing intent
 
