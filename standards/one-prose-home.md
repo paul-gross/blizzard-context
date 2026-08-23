@@ -32,12 +32,13 @@ reader has no source tree, per §Rule — takes the public-URL form regardless o
 
 - Same-repo, repo-root-relative: `` `src/blizzard/wire/chunk.py` `` — never a short form dropping the `src/...` prefix.
 - Cross-repo, repo-name-qualified: `` `blizzard/src/blizzard/wire/chunk.py` ``, `` `blizzard-mock/src/...` ``.
-- A harness target: `` `blizzard-context:/domain/humans/escalation.md` §Escalation `` — a prose pointer names the
-  section with `§Section`, the human-readable form, not the `#anchor` slug. This form is in-tree only: it resolves
-  through the `# Winter Extensions` block in workspace `CLAUDE.md`, which a published surface's reader cannot read. The
-  registry's own `owner` field is a separate citation form: it is machine-resolved (`scripts/restated_invariants.py`'s
-  `resolve_md_scope`), so it always uses the lowercase, hyphenated `#anchor` slug `slug()` produces from the heading
-  text, e.g. `blizzard-context:/domain/humans/escalation.md#escalation`.
+- A harness target: `` `blizzard-context:/domain/humans/escalation.md` §The commands an escalation carries `` — a prose
+  pointer names the section with `§Section`, the human-readable form, not the `#anchor` slug. This form is in-tree only:
+  it resolves through the `# Winter Extensions` block in workspace `CLAUDE.md`, which a published surface's reader
+  cannot read. The registry's own `owner` field is a separate citation form: it is machine-resolved
+  (`scripts/restated_invariants.py`'s `resolve_md_scope`), so it always uses the lowercase, hyphenated `#anchor` slug
+  `slug()` produces from the heading text, e.g.
+  `blizzard-context:/domain/humans/escalation.md#the-commands-an-escalation-carries`.
 - A published-surface target: a public URL to the owning file, section-anchored where the fact lives in one —
   ``[`blizzard-context`'s `verification/blizzard.md`](https://github.com/paul-gross/blizzard-context/blob/master/verification/blizzard.md)``.
   Branch-pinned on `master`, not a commit permalink: the pointer is meant to age forward with its target, and a

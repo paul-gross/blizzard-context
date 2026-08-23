@@ -1,25 +1,32 @@
 # Takeover
 
-A person may enter a held chunk's session interactively; the entry and exit are recorded facts. Spoke of the
-[human-entry hub](../humans.md). Ordinarily the chunk is already parked `needs_human` and there is no live attempt to
-displace. A **forced** entry into a chunk still being worked is allowed too: it kills the live worker and fences that
-attempt's epoch, so the displaced worker's late submission bounces (`bzh:epoch-fencing` in
-[execution.md](../execution.md)) — and, since nothing failed and nothing was invited, the chunk keeps deriving `running`
-rather than becoming `needs_human`. It is refused, rather than forced, when that attempt has already submitted its
-outcome: a fence minted behind a queued submission would never take effect.
+A takeover is a person entering a held chunk's session interactively; the entry and exit are recorded facts. Spoke of
+the human-entry hub, [../humans.md](../humans.md).
 
-- **Entering through the wrapped takeover verb, when the escalation carries one ([escalation.md](./escalation.md)),
-  records the takeover fact with the daemon before it resumes anything** — so no loop step can respawn or judge the held
-  session while a person holds it. That same fact is also what lets the resumed session's own verbs (`attach`, `ask`,
-  `artifact …`) reach the runner: it authorizes them against the reference lease it names, active or already closed,
-  rather than minting or reopening a lease of its own.
-- **No attempt runs during a takeover** — the chunk keeps whatever condition it was in, with human-in-session detail,
-  until it is explicitly requeued or the chunk itself ends. An operator's restart
-  ([work/restart.md](../work/restart.md)) is the one move that can be *recorded* against a chunk in this state, and it
-  deliberately does not take effect: the hub keeps no takeover state to refuse it with, so the runner holding the
-  session defers the teardown instead — indefinitely, while the person works on at the now-stale epoch. Ending the
-  takeover is what lets the move land.
-- **Hand-back is ordinarily explicit**: the person requeues the chunk. The one exception is the chunk ending — stopped
-  or done — while a takeover is still open: nothing infers a *person* is done, but the hub's own terminal fact closes
-  the takeover fact regardless, the same shape an escalation's own hub-ends-it closer ([escalation.md](./escalation.md))
-  already uses.
+Ordinarily the chunk is already parked `needs_human`, so no live attempt is displaced.
+
+## Entering
+
+Entering through the wrapped verb ([./escalation.md](./escalation.md)) records the takeover fact with the daemon before
+anything resumes, so no loop step can respawn or judge the held session while a person holds it. The same fact
+authorizes the resumed session's verbs — `attach`, `ask`, `artifact …` — against the reference lease it names, active or
+closed, without minting or reopening one.
+
+## Forced entry
+
+A forced entry into a still-worked chunk kills the live worker and fences the attempt's epoch, so the displaced worker's
+late submission bounces (`bzh:epoch-fencing`, [../execution.md](../execution.md)). After a forced entry the chunk keeps
+deriving `running`, not `needs_human` — nothing failed and nothing was invited. Forced entry is refused once the attempt
+has already submitted its outcome: a fence minted behind a queued submission would never take effect.
+
+## While a person holds the session
+
+No attempt runs during a takeover: the chunk keeps its condition plus human-in-session detail until explicitly requeued
+or ended. An operator's restart ([../work/restart.md](../work/restart.md)) can be recorded against a taken-over chunk
+yet deliberately takes no effect — the hub keeps no takeover state to refuse it, so the holding runner defers the
+teardown indefinitely while the person works at the now-stale epoch; ending the takeover lets the move land.
+
+## Ending
+
+Hand-back is ordinarily explicit: the person requeues the chunk. A chunk ending — stopped or done — while a takeover is
+open closes the takeover fact through the hub's own terminal fact, though nothing infers a person is done.
