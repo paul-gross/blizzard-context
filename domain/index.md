@@ -1,28 +1,22 @@
-# Domain — blizzard
+# Domain model
 
-Blizzard's **domain model**: what the concepts are, how they behave, and how they intertwine — with no technical detail.
-"No technical detail" means no *implementation* vocabulary: no store column or table names, wire models, service
-classes, or HTTP routes — those belong to [architecture/](../architecture/index.md) and
-[standards/](../standards/index.md), and a domain file points there rather than spelling them. The vocabulary an
-operator or graph author actually writes — a status name, an authored node's own keys — is domain vocabulary, and stays.
-Conforms to the `domain/` slot of the canon harness shape (`winter-canon:/harness-structure.md`). This is the
-correctness reference: read it when planning a change against intent, or when reviewing or verifying behavior against
-the model — where the companion [architecture/](../architecture/index.md) domain governs how the *code* is structured,
-this domain governs how the *concepts* work.
+Blizzard's domain-model hub: the concepts, how they behave, and how they intertwine — with no technical detail. It is
+the correctness reference — read it when planning against intent or verifying behavior against the model;
+[`architecture/`](../architecture/index.md) owns code structure, this tree owns concept behavior. The tree fills the
+`domain/` slot of the harness shape at `winter-canon:/harness-structure.md`. Parent hub: [../index.md](../index.md).
 
-This domain owns the behavioral statement an agent plans and reviews against. Where it and the **code** disagree, the
-code is current and this file is the one to fix.
+Technical detail means implementation vocabulary — store columns and tables, wire models, service classes, HTTP routes.
+It belongs to [`architecture/`](../architecture/index.md) and [`standards/`](../standards/index.md), and a domain file
+points there instead of carrying it. Vocabulary an operator or graph author writes — a status name, an authored node's
+own keys — is domain vocabulary and stays. Per `bzh:one-prose-home`, a domain-concept fact restated in code prose
+relocates here for good, the code sites reducing to pointers at its section; and where domain and code disagree, code is
+current — fix the domain file.
 
-This tree is also the fixed home a domain-concept fact relocates to when code prose restates it (`bzh:one-prose-home`):
-the fact moves here, and the restating code sites reduce to a pointer at the section that now states it.
-
-Parent: [../index.md](../index.md).
-
-| Doc                                | When to read                                                                                                                                                                                                |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [./work.md](./work.md)             | Reasoning about a unit of work — what a chunk is, the status it derives, or a fact that moves it within or across graphs                                                                                    |
-| [./graphs.md](./graphs.md)         | Reasoning about, or authoring, the immutable workflow definition a chunk travels — the hub routing into its parts                                                                                           |
-| [./execution.md](./execution.md)   | Reasoning about who runs a chunk, or what an operator's lever does to one in flight — the hub routing into its parts                                                                                        |
-| [./artifacts.md](./artifacts.md)   | Reasoning about an artifact — what work produces and how it lands, what a graph declares beside its nodes for workers to read, the never-code rule, and delivery as graph-authored hub-command-node content |
-| [./humans.md](./humans.md)         | Reasoning about where a person enters the loop, or about a chunk parked on one                                                                                                                              |
-| [./operations.md](./operations.md) | Reasoning about operational visibility — the durable, typed, severity-ranked operational event log that surfaces worker/runner failures, and how escalation appears in it as one unified event kind         |
+| File                             | When to read                                                                                                                                                                                        |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [work.md](./work.md)             | Reasoning about a unit of work — what a chunk is, its derived status, or a fact moving it within or across graphs                                                                                   |
+| [graphs.md](./graphs.md)         | Reasoning about, or authoring, the immutable workflow definition a chunk travels — itself a hub over parts                                                                                          |
+| [execution.md](./execution.md)   | Reasoning about who runs a chunk, or what an operator's lever does to one in flight — itself a hub over parts                                                                                       |
+| [artifacts.md](./artifacts.md)   | Reasoning about an artifact — what work produces and how it lands, what a graph declares beside its nodes for workers, the never-code rule, and delivery as graph-authored hub-command-node content |
+| [humans.md](./humans.md)         | Reasoning about where a person enters the loop, or a chunk parked on one                                                                                                                            |
+| [operations.md](./operations.md) | Reasoning about operational visibility — the durable, typed, severity-ranked operational event log of worker/runner failures, escalation appearing as one unified event kind                        |

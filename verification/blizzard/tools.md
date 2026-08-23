@@ -1,81 +1,61 @@
-# Blizzard tool detail (`bzh:matrix-tool-detail`)
+# Tool detail (`bzh:matrix-tool-detail`)
 
-<!-- the flat `###` shape is this file's stated contract, shared with its sibling spokes. -->
+Full per-tool detail for the Tools rows of [../blizzard.md](../blizzard.md) marked "(more)" — one flat `###` section per
+tool id, in table order.
+
+<!-- The flat `###` shape is a contract shared with the sibling spokes; this directive suppresses the MD001 lint it trips. -->
+
 <!-- rumdl-disable MD001 -->
-
-Full per-tool detail for the [../blizzard.md](../blizzard.md) Tools table rows marked *(more)* — one `### <tool-id>`
-section per row, in table order.
 
 ### tool:service-up
 
-`winter service up <env> --wait` — bring up the verification stack for a feature env, port-band isolated. **As of P3**
-this brings up a **per-env postgres** (its own container + band port, `--wait` gated on a real `pg_isready`
-healthcheck); **as of P4** it also brings up the **mock GitHub forge** (band `+1`, from the env's `blizzard-mock`
-worktree, `--wait` gated on the forge's uvicorn ready-line log probe, fronting `$BZ_FORGE_REPOS_DIR` — the fixture
-workspace's per-env bare origins). Parallel envs isolate with zero port collisions. As of **P6** the `blizzard hub`
-(band `+2`) and `blizzard runner` (band `+3`) tmux slots are **live**: `service-up` brings the whole verification stack
-up in order (forge → hub → runner via `depends_on`), each health-gated, over each daemon's embedded sqlite store
-(postgres runs too but is unused in P6). The runner is wired to drive the per-env `blizzard-mock` fixture workspace and
-spawn the fenced `mock-claude-code` façade. Parallel envs isolate with zero port collisions.
+`winter service up <env> --wait` brings the env's verification stack up in order (forge → hub → runner via
+`depends_on`), each service health-gated on a real readiness check, port-band isolated so parallel envs never collide.
+The stack: per-env postgres on its own band port, the mock GitHub forge at band +1 from the env's blizzard-mock worktree
+fronting `$BZ_FORGE_REPOS_DIR` (the fixture workspace's per-env bare origins), and the blizzard hub (band +2) and runner
+(band +3) in tmux slots. Hub and runner run on their embedded sqlite stores; the per-env postgres runs but the daemons
+do not use it. The runner drives the per-env blizzard-mock fixture workspace and spawns the fenced mock-claude-code
+façade.
 
 ### tool:mock-fleet
 
-The `blizzard-mock` fleet. **As of P4** the mock GitHub forge (bare git repos, `blizzard-mock-forge`), the
-fixture-workspace scaffold, and the mock coding harness (prompt-is-the-program,
-`mock-claude-code`/`mock-codex`/`mock-opencode`) are built and bound at the seams so a scenario runs with no tokens or
-network. **As of P7 (wave 4)** the **mock hub** (`blizzard-mock-hub`) and **mock runner** (`blizzard-mock-runner`) — the
-counterpart mocks the one-sided *service* tier (`blizzard:service-test`) drives the real daemon against — are built too,
-each with a first-class `_levers` plane — response-distorting levers (`delay`, `drop_ack`, `conflicting_fact`,
-`unreachable`, `replay`, `stale_envelope`/`stale_epoch`), a request-capture lever on the mock hub, and outbound-token
-levers (`stale_route_token`, `omit_route_token`) on the mock runner; the full catalog is each mock's own `README.md` to
-own, not duplicated here — and a control/drive plane for seeding scenarios. The whole fleet is now real. **As of issue
-#144** the `claude_code` façade also accepts and **records** the `--model`/`--effort` flags each turn was launched with,
-onto its per-session state — the mock acts on neither, but what each turn received is the observable a fleet-tier
-scenario asserts blizzard's mint-only model contract against; the recorded shape is `blizzard-mock`'s own contract at
-`src/blizzard_mock/harness/README.md`. The `claude_code` façade also mints a real Claude-Code-shaped JSONL transcript
-for every run — the mechanism (record shapes, `BZ_TRANSCRIPTS_ROOT` resolution, which invocations mint one, and why
-`codex`/`opencode` mint nothing — a scoping fact, not a gap, since only `claude_code` has a reader in `blizzard`) is the
-`blizzard-mock` repo's contract, documented at `src/blizzard_mock/harness/README.md` §"Conversation transcripts". A
-scenario can therefore drive a chunk through the fleet and assert the runner's transcript endpoint
-(`GET /api/leases/{lease_id}/transcript`) serves turns read back from a file the mock actually produced, not a
-hand-authored fixture — proven today at the service tier (`blizzard:service-test`), the tier that reaches the runner's
-own local HTTP API without the heavier delivery/browser machinery `blizzard:e2e` carries. The façade also **executes the
-`--settings` document's hook commands** as real subprocesses, so a fleet-tier worker fires them on its own — the seam,
-the two wired events, the execution semantics, and the exits that fire nothing are the `blizzard-mock` repo's contract,
-documented at `src/blizzard_mock/harness/README.md` §"Hook execution". **As of epic #89 (issue #92)** the fleet also
-ships the **stub OAuth IdP** (`blizzard-mock-idp`) — a standalone HTTP counterpart standing in for a real OAuth/OIDC
-provider so the hub's `hub/auth/oauth/` seam can be login-danced over a real wire with no tokens or network: it serves
-both provider shapes at one origin (oidc discovery + RS256-signed `id_token` + JWKS; github-style
-`authorize`/`access_token`/`GET /user`/`GET /user/emails`), shows no login UI (`authorize` redirects straight back with
-a code for the levered `Profile`), and carries a `/_levers` plane (`profile` to script the resolved identity / an
-unverified email / a handle rename, `refuse_callback`, `reset`) mirroring the forge/mock-hub control surface; its full
-contract is `blizzard-mock`'s own `src/blizzard_mock/idp/README.md`, driven by `blizzard:service-test`'s
-`test_auth_login_service.py`.
+The blizzard-mock fleet: the mock GitHub forge (blizzard-mock-forge), the fixture-workspace scaffold, and the
+prompt-is-the-program harness mocks (mock-claude-code, mock-codex, mock-opencode), bound at the seams so scenarios run
+with no tokens or network. It also has the mock hub (blizzard-mock-hub) and mock runner (blizzard-mock-runner), the
+counterparts `blizzard:service-test` drives the real daemons against. Each mock carries a `_levers`
+response-distortion/capture plane and a control/drive plane for seeding; each mock's README.md owns its lever catalog.
 
-### tool:mock-data
+The claude_code façade records each turn's `--model`/`--effort` flags on per-session state, acting on neither — the
+observable for asserting blizzard's mint-only model contract; the shape is owned at
+`src/blizzard_mock/harness/README.md`. It executes the `--settings` document's hook commands as real subprocesses, so a
+fleet-tier worker fires its own hooks; semantics owned at `src/blizzard_mock/harness/README.md` §"Hook execution". It
+also mints a real Claude-Code-shaped JSONL transcript per run; the mechanism, and why codex/opencode mint nothing, is
+owned at `src/blizzard_mock/harness/README.md` §"Conversation transcripts". A scenario can therefore assert
+`GET /api/leases/{lease_id}/transcript` serves turns from a mock-produced file — at `blizzard:service-test`, which
+reaches the runner's local HTTP API without `blizzard:e2e`'s delivery/browser machinery.
 
-The mock-data CLI (`blizzard-mock-data`) — seed the hub and runner stores into a known world, entirely by reflecting the
-live schema at runtime (no `blizzard` import). `reset --store hub\|runner` (FK-safe delete-all) is the workhorse every
-scenario starts from; `create` is a group of per-concept verbs, one per seedable concept — among them `chunk`, the root
-verb, composing the exact fact rows `derive_chunk_status` reads, never a status column, and `lease`/`usage`, each
-store-polymorphic (`--store hub\|runner` selects a different composer where the two schemas differ). `scenario` seeds a
-whole world per command: `board` builds on the hub-store `create` verbs' own composers — a graph, a chunk spread across
-the derived statuses, a cost and artifact spread, a ceiling-paused runner, and a mixed event log; `fleet` composes a
-`board` and mirrors it into the runner store under one pinned runner id, adding runner-store shapes of its own that no
-`create` verb exposes — sharing the board's chunk ids, its graph id, and its `build` node's id/name/epoch (the mirror
-mints its own ask/question ids, not the hub board's), so the runner's own local panel renders
-leases/asks/escalations/takeovers/environments/facts alongside the seeded board (usage and transcript segments also
-land, for store-level coherence only — no panel surface exists for either). `fleet` names the hub and runner stores as
-two independent, required targets — nothing here defaults one from the other. Every write runs a drift guard first: a
-schema drift (a table, or a column, the live store no longer carries as this tool expects) fails loud with
-`SchemaDriftError` naming the table and column(s), never a silently-wrong row. The `fixture list\|apply` subgroup
-remains a stub — `scenario` is the named, one-command preset surface this tool delivers, not a stopgap for it. How to
-reach for the verb surface — the direct store-seed path recommended for board development, versus the real
-work-source/ingest wire path — is [../../tooling/store-seeding.md](../../tooling/store-seeding.md); this tool's own full
-flag-by-flag contract, including exactly what `scenario board`/`--stress`/`scenario fleet` seed, is the `blizzard-mock`
-repo's `src/blizzard_mock/mock_data/README.md`.
+The stub OAuth IdP (blizzard-mock-idp) login-dances the hub's `hub/auth/oauth/` seam over a real wire with no tokens or
+network: both provider shapes (OIDC and github-style) at one origin, no login UI (authorize redirects straight back with
+a code for the levered profile), and a `/_levers` identity-scripting plane; contract at
+`src/blizzard_mock/idp/README.md`.
 
 ### tool:fixture-workspace
 
-The fixture-workspace scaffold (`blizzard-mock-fixture`) — mints bare `file://` origins plus a generated, disposable
-winter workspace, the environment the service and e2e tiers and the sweep run against. **Built (P4).**
+The blizzard-mock-fixture scaffold: mints bare `file://` origins plus a generated disposable winter workspace — the
+environment the service tier, e2e tier, and sweep run against.
+
+### tool:mock-data
+
+The blizzard-mock-data CLI seeds hub and runner stores into a known world by reflecting the live schema at runtime,
+importing nothing from blizzard. Every write runs a drift guard: schema drift fails loud with `SchemaDriftError` naming
+the table and columns. Whether to seed the store directly versus drive the real work-source/ingest wire path is a choice
+owned by [../../tooling/store-seeding.md](../../tooling/store-seeding.md).
+
+- `reset --store hub|runner` is an FK-safe delete-all, the workhorse every scenario starts from.
+- `create` has one verb per seedable concept; the root verb `chunk` composes the exact fact rows `derive_chunk_status`
+  reads, never a status column; `lease`/`usage` switch composer per `--store` where the schemas differ.
+- `scenario` seeds a whole world per command: `board` (hub store) and `fleet` (composes a board and mirrors it into the
+  runner store under one pinned runner id, so the runner's local panel renders beside it); the exact contents,
+  `--stress` included, are owned at `src/blizzard_mock/mock_data/README.md`. `scenario fleet` takes hub and runner
+  stores as two independent required targets; neither defaults from the other.
+- `fixture list|apply` is a stub; `scenario` is the delivered preset surface.
