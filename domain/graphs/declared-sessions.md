@@ -1,54 +1,56 @@
 # Declared sessions
 
-The agent-context lineage several nodes of one graph share, and the policy it runs under. Part of the graph definition
-([../graphs.md](../graphs.md)).
+A graph may declare named sessions — a top-level sibling of the node set, not a node facet (graph definition:
+[../graphs.md](../graphs.md)). A declaration names one shared lineage of agent context and its policy; nodes reference
+it via `fresh:<session>` and `resume:<session>`. All four declaration fields are optional: model preference, effort,
+compaction window, rotation bounds. Definitional — a taxonomy of those fields and their resolution (`canon:rule-shape`
+§File kinds). Part of the [domain model](../index.md).
 
-A graph may declare **named sessions** beside its nodes — a top-level sibling of the node set, not a node facet. A
-declaration names one **lineage of agent context** that several nodes share, and states the policy that lineage runs
-under; nodes reference it by name with `fresh:<session>` / `resume:<session>`. A graph declaring none is complete: the
-bare `fresh`/`resume`/`resume:<node>` vocabulary needs no declaration and is unaffected.
+## Resolution and pools
 
-Session names and node names share **one reference namespace** — `resume:<name>` resolves to a declared session first
-and a node second — so a declaration whose name collides with a node's is rejected. `fresh:<name>` resolves against
-declarations *only*: `fresh` always mints, and a session minted at another node is not in this node's implicit lineage,
-so a node name there would name nothing.
+Session and node names share one namespace: `resume:<name>` resolves declared-session first, node second, and a
+declaration colliding with a node name is rejected. `fresh:<name>` resolves against declarations only — fresh always
+mints, so a node name would name nothing there. `fresh:<session>` is a forced rotation point — it starts a new session
+that later `resume:<session>` members continue — so a cycle re-entering it begins each iteration on clean context while
+downstream members stay on that lineage.
 
-A declaration carries four things, all optional:
+A pool holds one session at a time, scoped to one chunk on one runner; a chunk picked up elsewhere starts with empty
+pools.
 
-- **A prioritized model preference.** An ordered list of opaque preference strings — a namespaced capability *tier*
-  (`blizzard:frontier` / `blizzard:advanced` / `blizzard:basic`) or a harness-native model name. The graph states a
-  preference; it never states a model the fleet must have. Which name a tier resolves to is each runner's own
-  configuration, which is what keeps a graph harness-agnostic (`bzh:app-agnostic-graphs`) — a runner driving a different
-  coding harness maps the same tiers to its own models. Resolution is left-to-right, an entry that resolves nowhere is
-  skipped rather than failing a spawn, and a list that resolves nowhere at all falls back to the runner's default. The
-  tiers are **unordered roles, not a scale**: nothing substitutes downward, so the list is the only fallback mechanism
-  and every degradation is author-written.
-- **An effort.** Model's twin, as a single value rather than a list — every harness can map an ordinal somewhere, so
-  there is no "unrecognized, try the next" case. `low|medium|high|max` is the well-known vocabulary, extended by runner
-  configuration.
-- **A compaction window (blizzard#343).** A tuning knob, not a preference — an opaque string a harness's own adapter
-  interprets and passes straight through (Claude Code's `--autocompact <auto|tokens>`). Like `effort`, the hub checks
-  only well-formedness (non-empty), never the vocabulary itself — that recognition is the adapter's alone. Reasserted on
-  every invocation, unlike `model`'s mint-only trust in a resume. Shaped like rotation bounds below rather than like
-  model/effort: declaration-only, with no chunk-level default to fall back to.
-- **Rotation bounds.** What makes a lineage finite. A pool's current session is continued only while every declared
-  bound it can measure is under threshold; past one, the next member starts a new session in the same pool. Bounds are
-  stated over context size, transcript size, and **harness invocations** — the last counting spawns, resumes, judgements
-  and nudges, so one node-step spends two or three of them. A bound that cannot be measured is not a breach: a missing
-  measurement leaves the session standing. A compaction window and `rotate.max_context_tokens` are not independent — the
-  one commensurable pair, both counted in tokens: compaction shrinks a session's context **in step**, rotation ends a
-  lineage **across steps**. Their order picks which of the two actually bounds an ordinary lineage, so a graph declaring
-  both chooses that order deliberately. Below the bound, compaction fires first and keeps firing — the lineage survives,
-  but the worker pays working context mid-task once per firing. At or above it, rotation ends the lineage first and the
-  window survives only as a ceiling on the one invocation that outgrows it before the next resume is measured. Neither
-  ordering is the default. The comparison is against `max_context_tokens` specifically, not `max_invocations` or
-  `max_transcript_bytes`, which measure different things.
+## Model preference
 
-A pool holds **one session at a time**. `fresh:<session>` is a *forced rotation point* — it always starts a new one,
-which every later `resume:<session>` member then continues — so a cyclic graph re-entering that node begins each
-iteration on clean context while its downstream members stay on the iteration's own lineage. A pool is scoped to one
-chunk on one runner; a chunk another runner picks up starts its pools empty.
+The model preference is an ordered list of opaque strings — namespaced capability tiers (`blizzard:frontier`,
+`blizzard:advanced`, `blizzard:basic`) or harness-native model names. Tiers are unordered roles, not a scale — nothing
+substitutes downward — so the list is the only fallback and every degradation is author-written. The graph states a
+preference, never a model the fleet must have: tier-to-model mapping is runner configuration, keeping a graph
+harness-agnostic (`bzh:app-agnostic-graphs` in
+[../../architecture/system-shape.md](../../architecture/system-shape.md)).
 
-Model changes take effect **only where a pool starts a session**, never on a resume. A declaration edited mid-chunk
-rotates the pool at its next member rather than switching a running session's model, so the cost of a model change is
-paid where fresh context is being built anyway.
+Model resolution is left-to-right; an unresolvable entry is skipped, and a wholly unresolvable list falls back to the
+runner's default. Model changes take effect only where a pool starts a session, never on a resume: a mid-chunk edit
+rotates the pool at its next member rather than switching a running session's model.
+
+## Effort
+
+Effort is a single value, not a list — every harness maps an ordinal somewhere. `low|medium|high|max` is the well-known
+vocabulary, extended by runner configuration.
+
+## Compaction window
+
+The compaction window is a tuning knob, not a preference: an opaque string the harness adapter passes straight through
+(Claude Code's `--autocompact`), hub-checked only for non-emptiness, reasserted on every invocation — unlike model,
+trusted only at mint — and declaration-only, with no chunk-level default.
+
+The window is commensurable only with `rotate.max_context_tokens` (both in tokens, unlike the other bounds): compaction
+shrinks context within a step, rotation ends the lineage across steps. A window below `max_context_tokens` means
+compaction fires first and keeps firing — the lineage survives, but the worker pays working context mid-task per firing.
+A window at or above `max_context_tokens` means rotation ends the lineage first; the window survives only as a ceiling
+on the one invocation outgrowing it before the next resume is measured. Their relative order decides which of the pair
+bounds an ordinary lineage — declaring both chooses that deliberately, and neither ordering is a default.
+
+## Rotation bounds
+
+Rotation bounds make a lineage finite: a session continues only while every measurable declared bound is under
+threshold; past one, the next member starts a new session in the same pool. Bounds cover context size, transcript size,
+and harness invocations — the last counting spawns, resumes, judgements, and nudges, so a node-step spends two or three.
+An unmeasurable bound is not a breach; a missing measurement leaves the session standing.

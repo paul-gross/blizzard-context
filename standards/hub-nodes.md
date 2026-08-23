@@ -143,9 +143,11 @@ the step from the top and pushes the first repo a second time.
 
 ## See also
 
-- [../domain/graphs.md](../domain/graphs.md) — the conceptual model this file's schema instantiates: the node's
-  `executor` facet, its judgement and choices, and the ids-exact/names-correlate rule an artifact series and a migration
-  key on.
+- [../domain/graphs/nodes.md](../domain/graphs/nodes.md) — the conceptual node model this file's schema instantiates,
+  and the `executor` facet that makes a node the hub's to run.
+- [../domain/graphs/edges.md](../domain/graphs/edges.md) — the judgement and choices a hub node's script selects from.
+- [../domain/graphs/ids-and-names.md](../domain/graphs/ids-and-names.md) — the ids-exact/names-correlate rule an
+  artifact series and a migration key on.
 - [../architecture/system-shape.md](../architecture/system-shape.md) — `bzh:deterministic-shell`, the invariant a hub
   node's agentlessness realizes.
 - [../architecture/crash-correctness.md](../architecture/crash-correctness.md) — `bzh:crash-point-registry`, the

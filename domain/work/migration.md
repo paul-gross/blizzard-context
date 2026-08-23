@@ -72,12 +72,12 @@ unchanged and the intent stays set, visible to cancel or re-aim.
 
 ### Follow-latest
 
-Follow-latest is a standing policy under which chunks pinned to a graph drift to the newest enabled mint of the same
-name at their next transition, so a workflow edit reaches work already in flight. It resolves at two levels — the
-graph's own setting where it states one, otherwise a fleet-wide default a silent graph inherits — and the fleet-wide
-default is off, so adopting the policy is deliberate. It governs one hop, not a lineage: it is read off the pinned mint,
-and the chunk lands on a newer mint with that mint's own inherited-by-default setting — the fleet-wide default is what
-sustains drift across a lineage.
+Follow-latest ([../graphs/identity.md](../graphs/identity.md) owns the surface itself) is a standing policy under which
+chunks pinned to a graph drift to the newest enabled mint of the same name at their next transition, so a workflow edit
+reaches work already in flight. It resolves at two levels — the graph's own setting where it states one, otherwise a
+fleet-wide default a silent graph inherits — and the fleet-wide default is off, so adopting the policy is deliberate. It
+governs one hop, not a lineage: it is read off the pinned mint, and the chunk lands on a newer mint with that mint's own
+inherited-by-default setting — the fleet-wide default is what sustains drift across a lineage.
 
 The landing anchors the transition's same destination name with the entry fallback: the policy has nothing to stay set
 for, and falling through would defer it forever on exactly the graph that changed enough to drop the node.

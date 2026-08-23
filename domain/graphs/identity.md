@@ -1,27 +1,26 @@
 # Graph identity
 
-One graph's identity and the two operational surfaces beside it. The definition itself — its nodes, edges, sessions, and
-artifacts — is routed from [../graphs.md](../graphs.md).
+A graph pairs an immutable definition with mutable operational metadata; every edit creates a new graph rather than
+changing an existing one, so anything pinned to one can trust it forever. Definitional — a taxonomy of a graph's
+identity and its mutable operational surfaces (`canon:rule-shape` §File kinds); the definition's content is routed from
+[../graphs.md](../graphs.md). Part of the [domain model](../index.md).
 
-One identity, two parts:
+## Standalone graphs
 
-- **An immutable definition** — the nodes, edges, prompts, and judgements. Every edit creates a new graph; an existing
-  definition never changes, so anything pinned to it can trust it forever.
-- **Mutable operational metadata beside it** — `enabled` and `follow-latest`, the graph's only mutable surfaces. Both
-  are set, and re-set, without touching the definition.
+There is no graph family or version tree: graphs are standalone, and nothing links a graph to a successor. Any graph may
+migrate its chunks to any graph so long as the node mapping gets them over — apparent workflow versions are just
+migrations onto a graph sharing the name, emergent rather than modeled. [../work/migration.md](../work/migration.md)
+owns how and when a chunk migrates and what `follow-latest` actually does.
 
-There is **no graph family or version tree**: graphs are standalone, and any graph may migrate its chunks to any graph
-so long as the node mapping gets them over. What looks like "versions of a workflow" is emergent, not modeled: nothing
-on a graph links it to a successor — a migration is what moves a chunk onto another graph that happens to share its name
-(which one, when several do, is the `enabled` bullet below) ([work/migration.md](../work/migration.md) owns how and when
-a chunk migrates).
+## Operational surfaces
 
-- **`follow-latest` states whether this graph's chunks drift to newer mints of its name.** Three-valued: it may say yes,
-  say no, or **say nothing** — the last being the default for every graph, and meaning it defers to the fleet-wide
-  setting. Saying either of the first two overrides that setting for the chunks pinned to this graph. It is orthogonal
-  to `enabled`: a graph can be retired and re-enabled any number of times without that saying anything about whether its
-  chunks follow. [work/migration.md](../work/migration.md) owns what the policy actually does to a chunk.
-- **`enabled` gates being resolved as a migration target.** A retired graph is excluded from every name-based resolution
-  (the default pin at mint, an authored choice's `graph:<name>` target, a migration's target-by-name lookup) and refuses
-  an explicit id-named target too — its own chunks continue undisturbed; only new targeting is blocked. Among the
-  enabled graphs sharing a name, resolution picks the **newest**. Graphs are created enabled.
+`enabled` and `follow-latest` are the only mutable surfaces, set and re-set without touching the definition. They are
+orthogonal: retiring and re-enabling says nothing about whether chunks follow.
+
+- **`enabled`** gates resolution as a migration target: a retired graph is excluded from every name-based resolution and
+  refuses an explicitly id-named target too. Retiring blocks only new targeting — the retired graph's own chunks
+  continue undisturbed. Graphs are created enabled, and among enabled graphs sharing a name, resolution picks the
+  newest.
+- **`follow-latest`** states whether the graph's chunks drift to newer mints of its name. It is three-valued — yes, no,
+  or unset. Unset is the default and defers to the fleet-wide setting; an explicit value overrides that setting for this
+  graph's chunks.
