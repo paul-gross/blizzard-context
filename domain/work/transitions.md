@@ -14,5 +14,6 @@ Two guards hold at the write:
 
 - A transition carries its attempt's epoch, and a stale one is rejected rather than recorded (`bzh:epoch-fencing`,
   [../execution/fencing.md](../execution/fencing.md)).
-- A node-step's transition and its artifacts are committed as one write, so a rejected transition's artifacts never
-  exist ([../artifacts.md](../artifacts.md)).
+- A node-step's transition, its artifacts, and its proposed work items ([../graphs/nodes.md](../graphs/nodes.md)) are
+  committed as one write, so a rejected transition's artifacts and proposals never exist
+  ([../artifacts.md](../artifacts.md)).
