@@ -68,3 +68,25 @@ pays with no chunk attached.
 
 The pairing owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
+
+## Chunk delete, then hub-item withdrawal
+
+`WorkItemStore.delete_chunk_and_withdraw_hub_items` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`)
+writes the chunk's `chunk_deleted` row and closes every open `hub:`-source item it holds as withdrawn, both on one
+`engine.begin()` connection — the same single-transaction shape `create_with_chunk` above uses for its own pairing. The
+`chunk_deleted` insert runs through `record_deleted_row` (`blizzard/src/blizzard/hub/store/internal/chunk_store.py`), a
+free function reaching into `ChunkStore`'s row-insert body the same way `insert_chunk_rows` does for the mint side; the
+`work_items` closures reuse `WorkItemStore._close_conn`, the same connection-scoped update `close` itself calls. A
+`forge:`-sourced pointer on the same chunk is left untouched — only `hub:`-source items close.
+
+`DeleteService.delete` (`blizzard/src/blizzard/hub/domain/delete.py`) reaches this write from both a direct chunk delete
+and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, always inside the same `threading.Lock`
+`ClaimService`/`EditService`/`RestartService` already shared before this feature
+(`blizzard/src/blizzard/hub/composition.py`) — the guard-check and the composite write happen under one held lock, so a
+claim cannot land on a chunk this write is mid-way through deleting. That lock closes a same-process concurrency race,
+not a crash window: the call sequence it guards only reads (`load_facts`) before acting, with no write of its own ahead
+of the one atomic transaction — unlike `create_with_chunk`'s own sibling gap, `allocate_ref` running in its own
+transaction before the insert it feeds, there is no narrower window here to name and accept.
+
+The pairing owes the checker nothing because it is a single-transaction insert-plus-update, not a derived cross-fact
+invariant to recompute.
