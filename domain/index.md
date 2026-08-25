@@ -14,7 +14,7 @@ current — fix the domain file.
 
 | File                             | When to read                                                                                                                                                                                        |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [work.md](./work.md)             | Reasoning about a unit of work — what a chunk is, its derived status, or a fact moving it within or across graphs                                                                                   |
+| [work.md](./work.md)             | Reasoning about a unit of work — what a chunk is, its derived status, a fact moving it within or across graphs, or how the `not_ready` list or `ready` queue is ordered                             |
 | [graphs.md](./graphs.md)         | Reasoning about, or authoring, the immutable workflow definition a chunk travels — itself a hub over parts                                                                                          |
 | [execution.md](./execution.md)   | Reasoning about who runs a chunk, or what an operator's lever does to one in flight — itself a hub over parts                                                                                       |
 | [artifacts.md](./artifacts.md)   | Reasoning about an artifact — what work produces and how it lands, what a graph declares beside its nodes for workers, the never-code rule, and delivery as graph-authored hub-command-node content |

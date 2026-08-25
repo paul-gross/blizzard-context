@@ -48,7 +48,8 @@ rows.
 Four things produce no activity-feed row:
 
 - direct chunk edits — in-place mutation, with no durable fact behind it;
-- ready-queue reorders — per-chunk rows carrying no news;
+- reorders of the `not_ready` list or the `ready` queue ([./work/ranking.md](./work/ranking.md)) — per-chunk rows
+  carrying no news;
 - runner registration and heartbeats — no durable fact, and muted liveness noise;
 - a runner's subscription-usage sample — rate-limit telemetry for its registry row, not fleet activity.
 
