@@ -1,8 +1,8 @@
 # Work
 
-The unit of work at the model's center: the chunk, its derived statuses, and the movement facts carrying it — in-graph
-transitions, cross-graph migrations, and an operator's restart. Part of the domain model; parent hub:
-[./index.md](./index.md).
+The unit of work at the model's center: the chunk, its derived statuses, the movement facts carrying it — in-graph
+transitions, cross-graph migrations, and an operator's restart — and how it ranks against others resting in the same
+list. Part of the domain model; parent hub: [./index.md](./index.md).
 
 | File                                         | When to read                                                                                                    |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -11,6 +11,7 @@ transitions, cross-graph migrations, and an operator's restart. Part of the doma
 | [work/transitions.md](./work/transitions.md) | You need how a chunk moves along an edge within its pinned graph                                                |
 | [work/migration.md](./work/migration.md)     | You need how a chunk changes graphs — what triggers a re-pin, and where it lands                                |
 | [work/restart.md](./work/restart.md)         | You need what an operator's forced move onto a node does, defers, or refuses                                    |
+| [work/ranking.md](./work/ranking.md)         | You need how the `not_ready` list or the `ready` queue is ordered, or why the two never rank together           |
 
 ## See also
 
