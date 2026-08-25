@@ -18,6 +18,25 @@ A landed chunk's work refs are closed at their own source through its binding �
 atomic with the landing, and independent of whether the chunk keeps running. A chunk that lands and is only later
 abandoned still closes its work items, because it was in fact delivered.
 
+## Materialization
+
+A node-step's completion may carry proposed work items (`proposes_work_items`, [../graphs/nodes.md](../graphs/nodes.md))
+— a `create` (a new item's title, body, and stated priority) or an `update` (an open item's pointer plus evidence to
+append) — riding the completion alongside its artifacts. They accumulate inertly through the graph: nothing reads a
+proposal row until the chunk delivers.
+
+Delivery is the same predicate as Work refs' own closure: it turns every accumulated proposal of a chunk that has
+actually delivered into a real work item, best-effort, eventually convergent, and not atomic with the landing. A
+`create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk, and node — resting on its own
+fresh `not_ready` chunk, exactly as a human-filed item does. An `update` appends its evidence to the pointed-at item's
+body and stamps its last-edit instant, when that item is open and its source can be edited; closed, withdrawn,
+nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason instead, and delivery is never blocked
+by it. Every proposal is judged exactly once — replaying the same delivery mints no duplicate item and appends no
+duplicate evidence — but carries no epoch filter: two proposals from two epochs of the same node both materialize, since
+both rode a fence-accepted completion. A chunk that lands and is only later abandoned still materializes its proposals,
+the same did-it-deliver reading Work refs takes; a chunk an operator marks done by hand, or one that never reaches
+delivery, never does.
+
 ## Deletion
 
 Deletion is gated on the same unacquired predicate as grouping — `not_ready` or unclaimed `ready` — so a chunk any
