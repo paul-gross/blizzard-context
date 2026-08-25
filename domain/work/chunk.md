@@ -18,6 +18,19 @@ A landed chunk's work refs are closed at their own source through its binding �
 atomic with the landing, and independent of whether the chunk keeps running. A chunk that lands and is only later
 abandoned still closes its work items, because it was in fact delivered.
 
+## Deletion
+
+Deletion is gated on the same unacquired predicate as grouping — `not_ready` or unclaimed `ready` — so a chunk any
+runner holds, a chunk parked on human input, or a chunk at a terminal status all refuse it alike; a deleted chunk is
+ephemeral exactly as a grouped one is, leaving every read the moment the fact lands — the same vanishing Work refs
+describes for a discarded or grouped chunk.
+
+A hub item and its chunk live and die together, in both directions. Deleting a chunk withdraws every open `hub:`-source
+pointer it holds — any `forge:`-source pointer on the same chunk survives untouched, since a chunk can carry pointers
+from more than one source — and withdrawing a hub item deletes its unacquired holder chunk in the same stroke rather
+than refusing the withdrawal. A genuinely acquired, still-live holder refuses the withdrawal exactly as before,
+unchanged; a terminal holder's withdrawal is unaffected either way, deleting nothing.
+
 ## Operator-editable properties
 
 The graph pin, the model/effort defaults, and the intended migration are plain mutable properties, not fact logs.

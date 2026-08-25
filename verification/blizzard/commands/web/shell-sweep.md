@@ -106,3 +106,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   whole panel when a federation bounce could not complete silently: at 390px and 320px its headline/detail block and
   retry control must render with no view-wide horizontal overflow; proven able to fail by adding `white-space: nowrap`
   to `.detail`.
+- `board-card-control-row.shell-sweep.spec.ts` covers `BoardCardComponent`'s control row (D8, issue #364): mounted as a
+  `not_ready` card with `canControl` true — the one status PROMOTE and DELETE render on together, and so the denser case
+  than `ready`'s DELETE-alone row — at 390px and 320px the two controls must sit side by side, non-overlapping, with
+  DELETE's own right edge staying inside the card's, rather than collapsing into an overlapping or overflowing pair at
+  the board right rail's narrow width; a real CSS flex-row layout claim jsdom cannot make.
