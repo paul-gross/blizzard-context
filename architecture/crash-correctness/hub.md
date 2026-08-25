@@ -90,3 +90,16 @@ transaction before the insert it feeds, there is no narrower window here to name
 
 The pairing owes the checker nothing because it is a single-transaction insert-plus-update, not a derived cross-fact
 invariant to recompute.
+
+## Proposed work items, riding the completion's own write
+
+`ApplyService.apply` (`blizzard/src/blizzard/hub/domain/apply.py`) inserts a node-step's proposed work items
+(`work_item_proposals`) on the same connection, inside the same `engine.begin()`, as the transition or migration fact
+they accompany — `ChunkStore.record_transition`/`record_migration`
+(`blizzard/src/blizzard/hub/store/internal/chunk_store.py`) each take the step's proposal rows alongside its
+`ArtifactRow`s and insert both through the same shared helper. A crash before that commit loses the whole completion,
+proposals included, exactly as it already loses the transition and its artifacts; a crash after it has nothing left to
+lose. Nothing reads a proposal row yet, so there is no derived fact it could leave inconsistent either way.
+
+The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
+recompute.
