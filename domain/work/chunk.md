@@ -11,7 +11,7 @@ a restart's target — and status derives from recorded facts (`bzh:facts-not-st
 ## Work refs
 
 A chunk never stores item contents: it holds work refs, and reads pass through to the backing work source. The work item
-is the durable referent and the chunk is ephemeral — an unacquired chunk may be discarded or grouped away, and
+is the durable referent and the chunk is ephemeral — an unacquired chunk may be grouped away or deleted, and
 re-ingesting the same item mints a fresh chunk. An item already wrapped by a live chunk cannot be ingested again.
 
 A landed chunk's work refs are closed at their own source through its binding — best-effort, eventually convergent, not
@@ -23,7 +23,7 @@ abandoned still closes its work items, because it was in fact delivered.
 Deletion is gated on the same unacquired predicate as grouping — `not_ready` or unclaimed `ready` — so a chunk any
 runner holds, a chunk parked on human input, or a chunk at a terminal status all refuse it alike; a deleted chunk is
 ephemeral exactly as a grouped one is, leaving every read the moment the fact lands — the same vanishing Work refs
-describes for a discarded or grouped chunk.
+describes for a grouped chunk.
 
 A hub item and its chunk live and die together, in both directions. Deleting a chunk withdraws every open `hub:`-source
 pointer it holds — any `forge:`-source pointer on the same chunk survives untouched, since a chunk can carry pointers
