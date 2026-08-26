@@ -25,8 +25,8 @@ A node-step's completion may carry proposed work items (`proposes_work_items`, [
 append) — riding the completion alongside its artifacts. They accumulate inertly through the graph: nothing reads a
 proposal row until the chunk delivers.
 
-Delivery is the same predicate as Work refs' own closure: it turns every accumulated proposal of a chunk that has
-actually delivered into a real work item, best-effort, eventually convergent, and not atomic with the landing. A
+Delivery is the same predicate as Work refs' own closure: it turns every accumulated, unstruck proposal of a chunk that
+has actually delivered into a real work item, best-effort, eventually convergent, and not atomic with the landing. A
 `create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk, and node — resting on its own
 fresh `not_ready` chunk, exactly as a human-filed item does. An `update` appends its evidence to the pointed-at item's
 body and stamps its last-edit instant, when that item is open and its source can be edited; closed, withdrawn,
@@ -36,6 +36,15 @@ duplicate evidence — but carries no epoch filter: two proposals from two epoch
 both rode a fence-accepted completion. A chunk that lands and is only later abandoned still materializes its proposals,
 the same did-it-deliver reading Work refs takes; a chunk an operator marks done by hand, or one that never reaches
 delivery, never does.
+
+An operator resolving a runner-config gate may strike some of the chunk's pending proposals — its proposals carrying
+neither a materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded
+with the resolving identity and decision inside the resolution's own first-write-wins write, never a mutation of the
+proposal's own row and never a materialization outcome: it is a refusal *before* materialization ever judges the
+proposal, permanent and exclusive of the judgment a `create`/`update`/unresolved outcome represents. A struck proposal
+never materializes, on any later delivery; the loser of a concurrent resolution strikes nothing at all, the same
+first-write-wins reading its choice takes. Striking is explicit — a resolution naming none passes every one of the
+chunk's pending proposals, unstruck.
 
 ## Deletion
 
