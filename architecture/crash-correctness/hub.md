@@ -124,9 +124,12 @@ Its two write paths are each a single atomic transaction, not a read-then-write 
   It inherits that section's one named gap unchanged: `allocate_ref` still runs in its own transaction before this one
   opens, so a crash in between still burns one `ref`, never reused.
 - **Append.** `WorkItemStore.materialize_update` appends the proposal's evidence to the item's body, stamps `edited_at`,
-  and inserts the outcome row, all on one `engine.begin()` connection — the append is one SQL-level concatenation
-  (`body || evidence`) rather than a read-then-write pair, so there is no gap between reading the old body and writing
-  the new one for a crash, or a concurrent editor, to land inside.
+  and inserts the outcome row, all on one `engine.begin()` connection, reaching `work_items`' own update and
+  `work_item_materializations`' insert through one repository adapter — the same seam bypass §The item-creation chunk
+  mint and §Chunk delete, then hub-item withdrawal both name as deliberate, not a layering gap, since it is what lets a
+  single caller open one transaction over both. The append itself is one SQL-level concatenation (`body || evidence`)
+  rather than a read-then-write pair, so there is no gap between reading the old body and writing the new one for a
+  crash, or a concurrent editor, to land inside.
 
 Each composite's own idempotency guard — checking the outcome row's existence before minting or appending — is what
 makes a replayed sweep write nothing a second time; a crash after either transaction commits leaves the proposal already
