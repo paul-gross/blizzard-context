@@ -61,31 +61,38 @@ daemon with a runtime dir logs to `daemon.log` beside its store, and the mock fl
 ## A visual change is proved by a real render (`bzh:visual-change-needs-a-render`)
 
 **Rule.** Verify a change whose observable effect is visual — layout, styling, what a component renders — by at least
-one artifact from a real render of the running app: a `web:shell-sweep` run, a browser e2e assertion against the served
-bundle (the `wide_viewport`/`narrow_viewport` fixtures give it a real page), or a screenshot from a live environment
-(`blizzard-mock:manual-seeded-board` stands a realistic board up to render). A jsdom-tier green is inadmissible as
-visual evidence.
+one artifact from a real render **that covers the changed surface**: a `web:shell-sweep` spec that mounts the changed
+component (add one to the roster when none does), a browser e2e assertion against that surface in the served bundle (the
+`wide_viewport`/`narrow_viewport` fixtures in `tests/e2e/conftest.py` give it a real page), or a screenshot of it from a
+live environment (`blizzard-mock:manual-seeded-board` stands a realistic board up to render). A jsdom-tier green is
+inadmissible as visual evidence — and so is a render green whose specs never mount the changed component.
 
 **Why.** jsdom parses `@container` and media-query rules without ever evaluating layout, so
 `bzh:mutation-review-selection`'s litmus applies to the whole unit tier at once: a suite that stays green when the
 layout breaks is not evidence.
 
-**Detect.** A diff touching `*.html` templates, `*.scss`, or a component's render logic whose verification claim cites
-only `web:unit-test`.
+**Detect.** A diff touching `*.html` templates or `*.css` component styles whose verification claim cites only
+`web:unit-test`. For a `.ts`-only diff the reviewer's question is: does the change alter what the template emits, or how
+it lays out? If yes, the same claim standard applies.
 
-**Do.** Actually run the app and look at pixels it served: `npm run shell-sweep` in `web/`, a browser e2e scenario
-asserting the changed surface, or a screenshot of the seeded board from a live env, attached as the claim's artifact.
+**Do.** An admissible claim names the artifact *and* the changed surface it rendered:
+*"`<component>.shell-sweep.spec.ts` asserts the changed grid stacks at 390px"*, or *"screenshot: seeded board, the
+changed cost column, 1280px"*.
 
-**Don't.** Ship a template or SCSS change on a full-suite unit green alone — every one of those specs rendered into a
-DOM that never evaluated the rules the change touched.
+**Don't.** Ship a template or CSS change on a full-suite unit green alone — every one of those specs rendered into a DOM
+that never evaluated the rules the change touched.
+
+**See also.** `bzh:narrow-viewport-tier-rule` below — the mobile-shell case of this rule, adding that narrow widths are
+part of the claim.
 
 ## Narrow width is proved by a test (`bzh:narrow-viewport-tier-rule`)
 
 **Rule.** A change to a component reachable from the mobile shell's bottom nav is exercised at a narrow width by at
 least one test.
 
-**Why.** Neither `web:unit-test` nor a browser e2e scenario at Playwright's default 1280x720 viewport can see a layout
-collapse, because jsdom parses `@container` and media-query rules without ever evaluating them.
+**Why.** The jsdom blindness is `bzh:visual-change-needs-a-render`'s ground, above; what this rule adds is that a
+browser scenario at Playwright's default 1280x720 viewport cannot see a narrow collapse either — the width is part of
+the claim.
 
 **Do.** The `wide_viewport` and `narrow_viewport` fixtures in `tests/e2e/conftest.py` give any browser scenario a real
 ~390px page to assert against, and `web:shell-sweep` proves the real-Chromium layout claims jsdom cannot — the surfaces
@@ -94,3 +101,5 @@ it covers and what each of its specs asserts are stated in
 
 **Don't.** Treat a component with no narrow-width handling of its own as a defect to fix in place. It is a gap to close
 with a narrow-width proof in whichever narrow-width method fits the surface.
+
+**See also.** `bzh:visual-change-needs-a-render` above — the general rule this one narrows.

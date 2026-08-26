@@ -15,3 +15,9 @@ Blizzard's conventions harness — the rules every piece of blizzard code and ev
 | [exemplars/python/repo_pattern.py](./exemplars/python/repo_pattern.py) | Building a repository — the reference shape for the Protocol-seam + internal-adapter + injected-error pattern the architecture rules require                                          |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)                                   | Committing to this repo — commit format, delivery, and the pre-push expectation                                                                                                       |
 | [verifiability.md](./verifiability.md)                                 | Verifying a change to **this repo** itself — the declared verification methods and their ids                                                                                          |
+
+## Rule ids
+
+Every rule here carries a stable `bzh:<slug>` id in its heading, per `winter-canon:/rule-shape.md`'s scheme. This repo
+keeps no id registry: an id resolves by grepping the tree for its slug — a deliberate trade while the rule count stays
+greppable, revisited if resolution ever misses. Adding or renaming an id updates every citation in the same change.

@@ -42,9 +42,8 @@ blizzard hub init <dir> && blizzard hub host --dir <dir> --port <p>
 blizzard runner init <dir> && blizzard runner host --dir <dir> --port <p>
 ```
 
-The probe is not hub-only — the runner serves the identical stream shape at its own `GET /api/events/stream`; only the
-reserved open-of-stream comment's text differs per daemon — so a run is scoped to one daemon at a time and never needs
-both up.
+The probe is not hub-only — the runner serves the identical stream shape at its own `GET /api/events/stream` — so a run
+is scoped to one daemon at a time and never needs both up.
 
 **Steps.**
 

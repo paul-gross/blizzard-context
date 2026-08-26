@@ -13,14 +13,17 @@ method-id inventory; [`../../commands.md`](../../commands.md) routes to the othe
 <!-- The `*.shell-sweep.spec.ts` names cited in this section are a bidirectional machine-checked roster against the on-disk set under `web/projects/` — every cited name must stay cited here, every new spec file must be added, and no numeral or number-word count of the set may be stated anywhere. -->
 
 `npm run shell-sweep` in `web/` (`web/scripts/shell-sweep.js`) — the tooled proof behind the classes of claim jsdom
-cannot evaluate. One class is the narrow-viewport tier rule (`bzh:narrow-viewport-tier-rule`, owner
-[`../../tier-rules.md`](../../tier-rules.md)) for components reachable from the mobile shell's bottom nav: jsdom,
-`web:unit-test`'s environment, parses `@container` and media-query rules without evaluating them and never lays out or
-clamps text, so no jsdom spec can prove a real collapse. The other is a computed-style claim no viewport width changes —
-most concretely a `:hover`/`:focus-visible` rule, which jsdom parses without resolving against a pointer. Both classes
-get the same fix: shell-sweep specs run under `@angular/build:unit-test`'s real-browser mode
-(`--browsers=ChromiumHeadless`, backed by the `@vitest/browser-playwright` and `playwright` dev dependencies), where
-layout, container/media collapse, line-clamping, computed style, and hit-testing are genuine.
+cannot evaluate; the blindness itself — jsdom parses `@container` and media-query rules without evaluating them, never
+lays out, never clamps text — is `bzh:visual-change-needs-a-render`'s ground (owner
+[`../../tier-rules.md`](../../tier-rules.md)). One class is the narrow-viewport tier rule
+(`bzh:narrow-viewport-tier-rule`, same owner) for components reachable from the mobile shell's bottom nav, where no
+jsdom spec can prove a real collapse. Another is a computed-style claim no viewport width changes — most concretely a
+`:hover`/`:focus-visible` rule, which jsdom parses without resolving against a pointer. And any other visual change
+routes here the same way — `bzh:visual-change-needs-a-render` admits a sweep run as render evidence only when a spec
+mounts the changed surface, adding one to the roster below when none does. Every class gets the same fix: shell-sweep
+specs run under `@angular/build:unit-test`'s real-browser mode (`--browsers=ChromiumHeadless`, backed by the
+`@vitest/browser-playwright` and `playwright` dev dependencies), where layout, container/media collapse, line-clamping,
+computed style, and hit-testing are genuine.
 
 Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is excluded from its project's default
 `ng test` run via `web/angular.json`'s per-project `test.exclude`, because jsdom cannot run it. The roster:

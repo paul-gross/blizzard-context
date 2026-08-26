@@ -81,5 +81,5 @@ seen_at = as_utc(row.seen_at)
 - `bzh:one-prose-home` in [./one-prose-home.md](./one-prose-home.md) — where a fact's one full statement lives.
 - `bzh:prose-budget` in [./prose-budget.md](./prose-budget.md) — the measurable half this rule is enforced by: the
   per-block caps and the growth ratchet.
-- `bzh:mutation-review-selection` in [../verification/blizzard/evidence.md](../verification/blizzard/evidence.md) — why
-  a comment-defended decision is the first thing to mutate, and what the pinning test must name.
+- `bzh:mutation-review-selection` in [../verification/blizzard/evidence.md](../verification/blizzard/evidence.md) — how
+  to choose the mutation candidate, and what the pinning test must name.
