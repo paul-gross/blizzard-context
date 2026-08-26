@@ -18,21 +18,33 @@ chunk sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always f
 explicit-position float assigned to another chunk, so it still reaches the tail of the ready queue and the window
 degrades rather than breaks.
 
-## The delivery closure sweep
+## The close-intent drain sweep
 
-`DeliveryClosureReconciler.sweep()` (`blizzard/src/blizzard/hub/domain/work_closure.py`) is not a loop step any sweep
-family reaches, and it holds no state between passes, re-deriving its candidate set every time from
-`closable_work_refs()` — a chunk's own landing facts and node artifacts — and each ref's own `work_item_closures` rows.
-A ref a crash left unreached is retried on the next pass, with an idempotent forge close, converging on the outcome an
-uninterrupted run would have reached.
+`CloseIntentDrainer.sweep()` (`blizzard/src/blizzard/hub/domain/work_closure.py`, blizzard#383) retires pending
+`close_intents` rows a landing or completion transaction enqueued. Its two dangerous windows are both registered:
+`close.after-enqueue.before-drain` (a landing marker and its intents are durable; no drain has run yet) and
+`close.after-close.before-record` (a close attempt returned; its outcome is not yet recorded and its intent not yet
+retired), swept by a dedicated scenario driving the built-in `hub` work source with no forge
+(`tests/crash/test_kill9_sweep.py::test_kill9_at_close_crash_point`). This entry records the one span inside that second
+window `close.after-close.before-record` does not itself arm — a real window whose whole loss is accepted and named, per
+this file's own admitted ground.
 
-Within one ref's attempt the outcome fact (`record_work_item_closure`) and its dedupe-gated `event_log` row are two
-separate writes rather than one transaction, so a crash between them loses only the informational, append-only event,
-never the fact. A later sweep calling `record_work_item_closure` against an already-recorded outcome returns `False` and
-emits nothing, so neither a duplicate event nor a silently-missing durable record follows.
+Within one intent's own attempt, past that point, three things happen as separate writes rather than one transaction:
+the outcome fact (`record_work_item_closure`), the intent's own retirement (`retire_close_intent`, `closed`/`gone` only
+— a `failed` outcome retires nothing), and the outcome's dedupe-gated `event_log` row. A crash between the first two
+leaves the intent transiently pending against an already-terminal ref — the exact shape
+`hub:no-pending-intent-against-terminal-ref` flags — lost only until the next drain pass, which reaches it again:
+`record_work_item_closure` replays as a no-op (the outcome already carries this exact key), and `retire_close_intent`
+finishes what the crash interrupted. A crash between the second and third loses only the informational, append-only
+event, never the fact or the retirement.
 
-Per-ref close-once is a store-level uniqueness constraint on `(chunk_id, source, ref, outcome)`, mirroring
-`record_hub_artifact`'s own idempotent-bool contract, not a derived cross-fact invariant.
+Per-ref close-once is `record_work_item_closure`'s own store-level uniqueness constraint on
+`(chunk_id, source, ref,
+outcome)`, mirroring `record_hub_artifact`'s own idempotent-bool contract; per-intent
+retire-once is `retire_close_intent`'s own idempotent no-op, the same shape — neither is a derived cross-fact invariant.
+`hub:no-double-terminal-closure` and `hub:no-pending-intent-against-terminal-ref` are: the first catches a broken
+idempotency guard letting a ref carry both `closed` and `gone`, the second catches a stuck retirement past the point a
+legal history ever leaves one.
 
 ## The marker-write capability token
 
@@ -124,8 +136,8 @@ recompute.
 `WorkItemMaterializationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/work_item_materialization.py`) re-derives
 its candidate set — every not-yet-judged proposal of a chunk that has delivered
 ([`../../domain/work/chunk.md`](../../domain/work/chunk.md) §Materialization) — from the store on every pass and holds
-no state between passes, the same ground `DeliveryClosureReconciler`'s own sweep stands on above. A crash mid-pass loses
-only that pass's remaining work; the next pass re-reads the same candidate set minus whatever the crashed pass already
+no state between passes: no durable outbox of its own, unlike the close-intent drain above. A crash mid-pass loses only
+that pass's remaining work; the next pass re-reads the same candidate set minus whatever the crashed pass already
 committed, and converges the same way a re-run always would. No new dangerous window opens, so this sweep earns no
 `bzh:crash-point-registry` entry of its own.
 
