@@ -58,6 +58,27 @@ lands far from the cause — suspect the wedge before the test.
 daemon with a runtime dir logs to `daemon.log` beside its store, and the mock fleet's dirless daemons log to
 `shared_daemon_log_dir()`.
 
+## A visual change is proved by a real render (`bzh:visual-change-needs-a-render`)
+
+**Rule.** Verify a change whose observable effect is visual — layout, styling, what a component renders — by at least
+one artifact from a real render of the running app: a `web:shell-sweep` run, a browser e2e assertion against the served
+bundle (the `wide_viewport`/`narrow_viewport` fixtures give it a real page), or a screenshot from a live environment
+(`blizzard-mock:manual-seeded-board` stands a realistic board up to render). A jsdom-tier green is inadmissible as
+visual evidence.
+
+**Why.** jsdom parses `@container` and media-query rules without ever evaluating layout, so
+`bzh:mutation-review-selection`'s litmus applies to the whole unit tier at once: a suite that stays green when the
+layout breaks is not evidence.
+
+**Detect.** A diff touching `*.html` templates, `*.scss`, or a component's render logic whose verification claim cites
+only `web:unit-test`.
+
+**Do.** Actually run the app and look at pixels it served: `npm run shell-sweep` in `web/`, a browser e2e scenario
+asserting the changed surface, or a screenshot of the seeded board from a live env, attached as the claim's artifact.
+
+**Don't.** Ship a template or SCSS change on a full-suite unit green alone — every one of those specs rendered into a
+DOM that never evaluated the rules the change touched.
+
 ## Narrow width is proved by a test (`bzh:narrow-viewport-tier-rule`)
 
 **Rule.** A change to a component reachable from the mobile shell's bottom nav is exercised at a narrow width by at

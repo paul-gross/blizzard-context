@@ -16,8 +16,12 @@ twice and re-reads the resulting state.
 
 **Rule.** Mutate a candidate line — flip a condition, drop a guard, invert a comparison — and re-run the suite; reading
 a diff line by line cannot tell you which lines the suite would catch a regression on. A guard test that passes with its
-guard deleted is not a guard, so mutate it to find out, and reach first for a decision defended by a comment long enough
-to argue for itself, which is the decision easiest to silently revert.
+guard deleted is not a guard, so mutate it to find out. In pre-existing code, reach first for a decision defended by a
+comment long enough to argue for itself, which is the decision easiest to silently revert; in code the change
+introduces, reach for the change's own load-bearing new decision — the branch or predicate the acceptance criteria turn
+on, a decision defended by the plan rather than by any comment. Either way, a mutation's justification must name the
+same symbol the mutation targets: a justification citing a different function than the one mutated is a defect in the
+plan, not a stylistic quibble.
 
 **Why.** The same litmus generalizes to any verification check — a runbook step, a CI gate, a deploy health probe: ask
 whether it would still pass had the change never happened, and if it would, it is a surviving mutant rather than

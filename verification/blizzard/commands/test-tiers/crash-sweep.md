@@ -22,10 +22,11 @@ skipped without `BLIZZARD_CRASH_SWEEP=1`.
 In CI the `pr` and `push` workflows run the bounded CI profile —
 `BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -m crash_sweep tests/crash/` (`mise run crash-sweep-ci`)
 — one representative point per boundary family plus the whole-process cases and the recovery-critical windows, roughly
-75 seconds on a GitHub runner. The bounded subset is intersected with the live registry and asserts each named point
-still exists (`bzh:crash-point-registry`), so a rename fails loudly; the FULL sweep stays the documented local command
-above and runs in the tag `release` workflow. Both CI workflows run it as a real gate over a multi-repo checkout —
-`blizzard`, `blizzard-mock`, and the public `blizzard-workspace` (the winter source) as siblings,
+five to six minutes of wall time on a GitHub runner (measured across consecutive `push` runs) — bounded, but a real
+fraction of the CI budget, not a fast check. The bounded subset is intersected with the live registry and asserts each
+named point still exists (`bzh:crash-point-registry`), so a rename fails loudly; the FULL sweep stays the documented
+local command above and runs in the tag `release` workflow. Both CI workflows run it as a real gate over a multi-repo
+checkout — `blizzard`, `blizzard-mock`, and the public `blizzard-workspace` (the winter source) as siblings,
 `BLIZZARD_MOCK_WINTER_SOURCE` pointed at the last.
 
 The registry's boundary families are `resume.`, `abandon.`, `pause.`, `hubnode.` (the generic hub command node's
