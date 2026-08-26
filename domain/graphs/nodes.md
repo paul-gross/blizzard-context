@@ -33,9 +33,9 @@ The facets:
   must instruct submitting each by name
   ([../../standards/worker-nodes/declarations.md](../../standards/worker-nodes/declarations.md)).
 - **`proposes_work_items`** — whether this node's completion may carry proposed work items — new items to create, or
-  evidence to append to an existing one — riding the completion inert, alongside its artifacts
-  ([../work/transitions.md](../work/transitions.md)). Legal only on a worker-judged runner node: a hub-executed node has
-  no worker to author one, and a human gate's exit is the resolving transition, which carries no payload of its own.
+  evidence to append to an existing one — riding the completion alongside its artifacts, materialized at the chunk's
+  delivery ([../work/chunk.md](../work/chunk.md)). Legal only on a worker-judged runner node: a hub-executed node has no
+  worker to author one, and a human gate's exit is the resolving transition, which carries no payload of its own.
 - **`retries`** — the bounded failure budget — crashes, verdict-less exits, reaps — and where exhaustion escalates; a
   judged failure edge never consumes it.
 - **`judgement`** — how the exit is judged and the choices it produces — owned by [./edges.md](./edges.md).

@@ -99,8 +99,41 @@ A node-step's proposed work items (`work_item_proposals`) ride whichever write a
 inside the same `engine.begin()`, as the transition, migration, or decision fact they accompany. Only the proposal
 insert runs through a shared `_insert_proposals` helper — each write's own `ArtifactRow`s stay their own separate inline
 loop. A crash before that commit loses the whole write, proposals included, exactly as it already loses the fact and its
-artifacts; a crash after it has nothing left to lose. Nothing reads a proposal row yet, so there is no derived fact it
-could leave inconsistent either way.
+artifacts; a crash after it has nothing left to lose. A consumer now reads these rows — the delivery-materialization
+sweep below — but only once the chunk delivers, well after this write's own transaction has closed one way or the other,
+so that consumer changes nothing about this write's own correctness.
 
 The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
+
+## The delivery-materialization sweep
+
+`WorkItemMaterializationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/work_item_materialization.py`) re-derives
+its candidate set — every not-yet-judged proposal of a chunk that has delivered
+([`../../domain/work/chunk.md`](../../domain/work/chunk.md) §Materialization) — from the store on every pass and holds
+no state between passes, the same ground `DeliveryClosureReconciler`'s own sweep stands on above. A crash mid-pass loses
+only that pass's remaining work; the next pass re-reads the same candidate set minus whatever the crashed pass already
+committed, and converges the same way a re-run always would. No new dangerous window opens, so this sweep earns no
+`bzh:crash-point-registry` entry of its own.
+
+Its two write paths are each a single atomic transaction, not a read-then-write pair a crash could split:
+
+- **Mint.** `WorkItemStore.materialize_create` inserts the proposal's `work_item_materializations` outcome row, the
+  item's `work_items` row, and its resting `not_ready` chunk's rows, all on one `engine.begin()` connection — the same
+  shape §The item-creation chunk mint's `create_with_chunk` uses, plus the outcome row folded into the same transaction.
+  It inherits that section's one named gap unchanged: `allocate_ref` still runs in its own transaction before this one
+  opens, so a crash in between still burns one `ref`, never reused.
+- **Append.** `WorkItemStore.materialize_update` appends the proposal's evidence to the item's body, stamps `edited_at`,
+  and inserts the outcome row, all on one `engine.begin()` connection, reaching `work_items`' own update and
+  `work_item_materializations`' insert through one repository adapter — the same seam bypass §The item-creation chunk
+  mint and §Chunk delete, then hub-item withdrawal both name as deliberate, not a layering gap, since it is what lets a
+  single caller open one transaction over both. The append itself is one SQL-level concatenation (`body || evidence`)
+  rather than a read-then-write pair, so there is no gap between reading the old body and writing the new one for a
+  crash, or a concurrent editor, to land inside.
+
+Each composite's own idempotency guard — checking the outcome row's existence before minting or appending — is what
+makes a replayed sweep write nothing a second time; a crash after either transaction commits leaves the proposal already
+judged, and the next pass's candidate read excludes it.
+
+Both write paths owe the checker nothing because each is a single-transaction insert (plus, for the append, one update),
+not a derived cross-fact invariant to recompute.
