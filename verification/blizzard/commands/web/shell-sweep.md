@@ -22,8 +22,8 @@ real-browser mode (`--browsers=ChromiumHeadless`, backed by the `@vitest/browser
 dependencies), where layout, container/media collapse, line-clamping, computed style, and hit-testing are genuine.
 
 No gate runs the sweep: it is in no CI workflow, in no `mise` task, and not in `blizzard:gate`, and its specs are
-excluded from `ng test` by design. So it is a by-hand method throughout — run when a change owes render evidence, and
-re-run over the roster whenever a swept surface moves, since nothing else re-runs it.
+excluded from `ng test` by design. Every run of it is therefore one you invoke — run it when a change owes render
+evidence, and re-run it over the roster whenever a swept surface moves, since nothing else will.
 
 Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is excluded from its project's default
 `ng test` run via `web/angular.json`'s per-project `test.exclude`, because jsdom cannot run it. The roster:

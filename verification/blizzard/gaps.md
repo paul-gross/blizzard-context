@@ -20,10 +20,12 @@ score prose without reading the code.
 
 ## Per-block prose caps
 
-`bzh:prose-budget`'s `mise run prose-check` gates each root's prose total against the committed baseline, while the
-per-block caps are reported only under `--blocks` and nothing runs that automatically. The two are independent: a change
-can hold every total and still carry an over-cap block, and a baseline re-record absorbs the total while leaving the
-block standing.
+`bzh:prose-budget`'s `mise run prose-check` fails each root's prose total against the committed baseline, and the
+per-block caps are reported only under `--blocks`. Neither half runs automatically: the command is in no CI workflow and
+not in `blizzard:gate`, so a total drifts on `master` unratcheted until the next change re-records the baseline and
+absorbs it — `blizzard:restatement-sweep` is invoked the same way, by hand. The two halves are independent: a change can
+hold every total and still carry an over-cap block, and a baseline re-record absorbs the total while leaving the block
+standing.
 
 Standing in for a tier: a change owes a `--blocks` run and a check that no block it added or edited is over cap, and a
 baseline re-record is warranted only once that holds. Gating `--blocks` repo-wide is not the fix, because it scopes to

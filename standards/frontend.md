@@ -4,6 +4,10 @@ The enforceable toolchain and API-client rules for the Angular apps. The framewo
 settled, readable from the code, and not revisited here. Every rule follows the Rule/Why/Detect/Do/Don't slot skeleton
 owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`) and carries its stable `bzh:` id in its heading.
 
+What a change here owes as proof is the verification matrix's, not this file's: a change whose observable effect is
+visual owes an artifact from a real render rather than a jsdom green — `bzh:visual-change-needs-a-render` in
+[../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
+
 ## Toolchain (`bzh:frontend-toolchain`)
 
 **Rule.** TypeScript and Angular code is linted with eslint and unit/component-tested with vitest, and there is no

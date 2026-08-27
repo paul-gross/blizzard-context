@@ -29,7 +29,15 @@ test module or spec basename exists — the method's surface is exactly these tw
 
 Per-scope compile-time frame-field-spec descriptors — `HUB_FRAME_FIELD_SPECS` off `fleet-live.ts`'s exported per-kind
 interfaces, `RUNNER_FRAME_FIELD_SPECS` off `runner-events.ts`'s — stop compiling when an interface field is renamed or
-dropped, and at runtime cross-check each golden's key set against its scope's spec.
+dropped, and at runtime cross-check each golden's key set against its scope's spec. The compile-time half holds only
+because each slot is authored through the spec's own exactness helper: a bare `Record<Keys<T>, true>` degrades to `{}`
+when a kind has no fields in that slot, and TypeScript excess-property-checks nothing against `{}`, so a stale key there
+would otherwise compile clean.
+
+The runner scope carries a third assertion the hub scope has no counterpart for: each case of a kind that carries a
+`cause` is named for that cause and must actually carry it. Four runner kinds' cases are key-set-identical, so the
+key-set check alone cannot tell one from another and the case name would pin nothing
+([`../evidence.md`](../evidence.md), `bzh:case-pins-its-own-name`).
 
 `blizzard:manual-sse-probe` remains the method for what only a live socket proves — framing and timing, not field shape
 — over either daemon's stream.
