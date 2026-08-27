@@ -52,9 +52,9 @@ is scoped to one daemon at a time and never needs both up.
    driving the act.
 3. Drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call under test.
 4. Assert that the reserved comment opens the stream, that a keepalive comment arrives on an idle connection within the
-   documented cadence, and that the frames' `id`/reconnect-replay behavior holds on a live socket. The hub's and the
-   runner's reserved open-of-stream comments carry different literal text, so check the one the daemon under test
-   actually owns.
+   cadence `src/blizzard/foundation/events/stream.py`'s `DEFAULT_KEEPALIVE_SECONDS` declares, and that the frames'
+   `id`/reconnect-replay behavior holds on a live socket. The hub's and the runner's reserved open-of-stream comments
+   carry different literal text, so check the one the daemon under test actually owns.
 
 **Passes when.** That framing and timing behavior holds over a real connection for every call driven.
 

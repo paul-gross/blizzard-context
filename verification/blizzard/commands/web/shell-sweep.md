@@ -13,17 +13,17 @@ method-id inventory; [`../../commands.md`](../../commands.md) routes to the othe
 <!-- The `*.shell-sweep.spec.ts` names cited in this section are a bidirectional machine-checked roster against the on-disk set under `web/projects/` — every cited name must stay cited here, every new spec file must be added, and no numeral or number-word count of the set may be stated anywhere. -->
 
 `npm run shell-sweep` in `web/` (`web/scripts/shell-sweep.js`) — the tooled proof behind the classes of claim jsdom
-cannot evaluate; the blindness itself — jsdom parses `@container` and media-query rules without evaluating them, never
-lays out, never clamps text — is `bzh:visual-change-needs-a-render`'s ground (owner
-[`../../tier-rules.md`](../../tier-rules.md)). One class is the narrow-viewport tier rule
-(`bzh:narrow-viewport-tier-rule`, same owner) for components reachable from the mobile shell's bottom nav, where no
-jsdom spec can prove a real collapse. Another is a computed-style claim no viewport width changes — most concretely a
-`:hover`/`:focus-visible` rule, which jsdom parses without resolving against a pointer. And any other visual change
-routes here the same way — `bzh:visual-change-needs-a-render` admits a sweep run as render evidence only when a spec
-mounts the changed surface, adding one to the roster below when none does. Every class gets the same fix: shell-sweep
-specs run under `@angular/build:unit-test`'s real-browser mode (`--browsers=ChromiumHeadless`, backed by the
-`@vitest/browser-playwright` and `playwright` dev dependencies), where layout, container/media collapse, line-clamping,
-computed style, and hit-testing are genuine.
+cannot evaluate. Why jsdom cannot, and when a sweep run is admissible as a visual change's evidence, are
+`bzh:visual-change-needs-a-render`'s (owner [`../../tier-rules.md`](../../tier-rules.md)); the classes that route here
+are the narrow-viewport tier rule (`bzh:narrow-viewport-tier-rule`, same owner), a computed-style claim no viewport
+width changes — most concretely a `:hover`/`:focus-visible` rule, which jsdom parses without resolving against a pointer
+— and any other visual change. Every class gets the same fix: shell-sweep specs run under `@angular/build:unit-test`'s
+real-browser mode (`--browsers=ChromiumHeadless`, backed by the `@vitest/browser-playwright` and `playwright` dev
+dependencies), where layout, container/media collapse, line-clamping, computed style, and hit-testing are genuine.
+
+No gate runs the sweep: it is in no CI workflow, in no `mise` task, and not in `blizzard:gate`, and its specs are
+excluded from `ng test` by design. So it is a by-hand method throughout — run when a change owes render evidence, and
+re-run over the roster whenever a swept surface moves, since nothing else re-runs it.
 
 Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is excluded from its project's default
 `ng test` run via `web/angular.json`'s per-project `test.exclude`, because jsdom cannot run it. The roster:
@@ -34,9 +34,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   characters, the profile menu trigger must sit fully inside the viewport, `elementFromPoint` at its center must hit
   inside it, with no horizontal overflow and no page error. The sweep's shape follows `BoardHeader`'s geometry: a stat
   strip and trailing cluster sharing equal flex-shrink priority squeeze the menu near the strip's 1150px breakpoint —
-  which is why the already-clipping stat strip carries an outsized `flex-shrink` (`board-header.ts`'s `.stats` rule),
+  which is why the already-clipping stat strip carries an outsized `flex-shrink` (`board-header.css`'s `.stats` rule),
   and why the swept widths straddle that breakpoint. The specs are proven able to fail by reverting `BoardHeader`'s
-  `.trailing` shrink fix (`flex: 0 1 auto; min-width: 0`, `board-header.ts`), which reproduces the off-screen-menu
+  `.trailing` shrink fix (`flex: 0 1 auto; min-width: 0`, `board-header.css`), which reproduces the off-screen-menu
   symptom.
 - `app-nav.shell-sweep.spec.ts` covers the runner's top tab strip (`AppNav`). Its `KitTabStrip`/`KitTab` chrome carries
   no `@container` rule, so the claim is narrower: from 1400px to 320px both static labels render and the strip never
@@ -60,7 +60,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
     `whenStable()` hang though the DOM rendered, while `pumpUntil` still throws if content never renders.
   - Centering: renders the permission notice — its absolutely-centered status line must center on the tab's box, not the
     browser viewport, measured as the nearer center since the host fills the tab body; proven able to fail by deleting
-    `chunk-transcripts-tab.ts`'s `:host { position: relative }`.
+    `chunk-transcripts-tab.css`'s `:host { position: relative }`.
   - Error status: `fleet-kit-async-state`'s absolutely-centered `placement="center"` must resolve against the back row's
     sibling rather than paint across the 44px back bar, and the issue pane's error text must stay inside its section at
     phone widths.
@@ -79,8 +79,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   global stylesheet `web/projects/fleet/src/lib/design/tokens.css`, loaded by every app build but by no standalone
   component test, so the spec reads the sheet's real text via `commands.readFile` — the vitest browser command exposed
   for exactly this — and injects it as a `<style>` element. Every assertion is proven able to fail by reverting its own
-  rule: the `:hover` tint backgrounds in `board-card.ts` and `chunk-timeline.ts`, the selected-row backgrounds pointed
-  at `--tint-hover` instead of `--tint-selected`, and `chunk-artifacts.ts`'s `:has()` re-scoped to
+  rule: the `:hover` tint backgrounds in `board-card.css` and `chunk-timeline.css`, the selected-row backgrounds pointed
+  at `--tint-hover` instead of `--tint-selected`, and `chunk-artifacts.css`'s `:has()` re-scoped to
   `.artifact-plain:hover`.
 - `local-panel-mobile.shell-sweep.spec.ts` covers the runner's mobile chunk list — `LocalPanelMobile` then `ChunkCard`,
   the component the narrow-viewport tier rule actually names, mounted beneath the persistent `MobileTabBar` (the rule's

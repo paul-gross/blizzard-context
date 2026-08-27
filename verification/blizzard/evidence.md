@@ -19,7 +19,8 @@ a diff line by line cannot tell you which lines the suite would catch a regressi
 guard deleted is not a guard, so mutate it to find out. Choose the candidate by who authored the load-bearing decision:
 when the change authored it, mutate the change's own new branch or predicate — the one the acceptance criteria turn on,
 defended by the plan; when it pre-exists the change, reach first for a decision defended by a comment long enough to
-argue for itself, which is the decision easiest to silently revert.
+argue for itself, which is the decision easiest to silently revert. Justify the mutation against the symbol you actually
+mutated, whichever you picked.
 
 **Why.** The same litmus generalizes to any verification check — a runbook step, a CI gate, a deploy health probe: ask
 whether it would still pass had the change never happened, and if it would, it is a surviving mutant rather than

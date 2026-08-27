@@ -10,16 +10,16 @@ A `*(more)*` marker on a row flags that a spoke carries the row's fuller detail:
 [`./blizzard/tools.md`](./blizzard/tools.md) for Tools rows — the route when standing up the state a verification needs.
 Full detail lives under `./blizzard/`, one file per reader question.
 
-| Spoke                                                         | Read when…                                                                                                                          |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| [`tier-rules.md`](./blizzard/tier-rules.md)                   | The tier roster, or writing a test at a tier — hermeticity, mocks, log sinks, and the render/viewport evidence a visual change owes |
-| [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md)             | Adding, renaming, or reading a `blizzard:e2e` scenario — what each one proves                                                       |
-| [`markers.md`](./blizzard/markers.md)                         | A row carries a `P3`–`P7` or **Gap** marker, or its method does not exist yet                                                       |
-| [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims                                                              |
-| [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing                                            |
-| [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                                                        |
-| [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                                                  |
-| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers — what stands in for one, and why                                                |
+| Spoke                                                         | Read when…                                                                                         |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`tier-rules.md`](./blizzard/tier-rules.md)                   | The tier roster, or writing a test at a tier — what each tier answers, and what a test at one owes |
+| [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md)             | Adding, renaming, or reading a `blizzard:e2e` scenario — what each one proves                      |
+| [`markers.md`](./blizzard/markers.md)                         | A row carries a `P3`–`P7` or **Gap** marker, or its method does not exist yet                      |
+| [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims                             |
+| [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing           |
+| [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                       |
+| [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                 |
+| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers — what stands in for one, and why               |
 
 ## Commands
 

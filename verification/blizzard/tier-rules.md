@@ -94,6 +94,10 @@ least one test.
 browser scenario at Playwright's default 1280x720 viewport cannot see a narrow collapse either — the width is part of
 the claim.
 
+**Detect.** A change to a component the mobile shell's bottom nav reaches, whose verification claim names no width at or
+below ~390px. The parent rule's `*.html`/`*.css` signature does not answer the reachability half — walk the bottom nav's
+routes to settle it, since a `.ts`-only change to a reached component is in scope too.
+
 **Do.** The `wide_viewport` and `narrow_viewport` fixtures in `tests/e2e/conftest.py` give any browser scenario a real
 ~390px page to assert against, and `web:shell-sweep` proves the real-Chromium layout claims jsdom cannot — the surfaces
 it covers and what each of its specs asserts are stated in

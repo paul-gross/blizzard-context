@@ -49,8 +49,10 @@ either reached by check F or dispositioned by hand against its named owner.
 **Gap.** Check F's residual classes, enumerated by `scripts/check-registry-drift.py`'s own Declared limitations block,
 reach into the `blizzard/` and `blizzard-mock/` trees no method covers and this by-hand pass does not open.
 
-**Gap.** Check F's sibling-repo half has no trigger where its sites live — the census declares sites in `blizzard/` and
-`blizzard-mock/`, yet neither repo runs the check, so those sites are swept only when blizzard-context itself changes.
+**Gap.** No check reaching into the sibling trees has a trigger where its sites live — check F's census declares sites
+in `blizzard/` and `blizzard-mock/`, and check C2's spec roster is bidirectional against `blizzard/`, so a spec added
+there owes an edit here. Neither sibling repo runs the check, so those sites are swept only when blizzard-context itself
+changes.
 
 ### `blizzard-context:manual-cold-eval`
 

@@ -9,8 +9,8 @@ prefix = "bzh"
 # agent must resolve wherever the repo is installed, not only here.
 # Its conventions are addressed via the `blizzard-context:` path
 # notation (e.g. `blizzard-context:/architecture/repository-access.md`).
-# `prefix` stays `bzh` — it matches the repo's historical rule-id scheme
-# (index.md §"Rule ids"), which is stable across the rename.
+# `prefix` stays `bzh` — it matches the repo's historical rule-id scheme,
+# owned by CONTRIBUTING.md §"Authoring conventions".
 requires = ["winter-canon", "winter-github"]
 
 # `winter lint` contribution: runs the repo-local markdown style gates
