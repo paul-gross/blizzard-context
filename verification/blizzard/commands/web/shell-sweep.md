@@ -37,7 +37,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   which is why the already-clipping stat strip carries an outsized `flex-shrink` (`board-header.css`'s `.stats` rule),
   and why the swept widths straddle that breakpoint. The specs are proven able to fail by reverting `BoardHeader`'s
   `.trailing` shrink fix (`flex: 0 1 auto; min-width: 0`, `board-header.css`), which reproduces the off-screen-menu
-  symptom.
+  symptom. `app-header.shell-sweep.spec.ts` additionally sweeps the connection cell's `degraded` state (blizzard#333) —
+  the longest string that cell ever renders — over the same width range with a fixed username, asserting the cell reads
+  `degraded`, the profile menu stays on-viewport, and the header itself carries no horizontal overflow.
 - `app-nav.shell-sweep.spec.ts` covers the runner's top tab strip (`AppNav`). Its `KitTabStrip`/`KitTab` chrome carries
   no `@container` rule, so the claim is narrower: from 1400px to 320px both static labels render and the strip never
   overflows its own width.
