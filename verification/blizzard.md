@@ -46,10 +46,10 @@ A command method passes when its command exits 0.
 | `blizzard:wheel-smoke`       | The serve smoke on the built wheel in a node-free venv — the **P5 exit criterion** *(more)*               |
 | `blizzard:image-smoke`       | `mise run image-smoke` — the hub image booted on an empty data volume *(more)*                            |
 | `blizzard:compose-smoke`     | `mise run compose-smoke` — the reference compose deployment on a local image *(more)*                     |
-| `web:lint`                   | `npm run lint` in `web/` — eslint over the Angular workspace                                              |
+| `web:lint`                   | `npm run lint` in `web/` — eslint over the Angular workspace, including the `max-lines` ceiling *(more)*  |
 | `web:typecheck`              | `npm run build` in `web/` — a real AOT compile of both Angular apps *(more)*                              |
 | `web:unit-test`              | `npm run test` in `web/` — vitest, the frontend unit/component tier                                       |
-| `web:structural-gate`        | `npm run structural-gate` in `web/` — the `max-lines` ceiling and the real-timer sweep *(more)*           |
+| `web:structural-gate`        | `npm run structural-gate` in `web/` — the real-timer sweep *(more)*                                       |
 | `web:shell-sweep`            | `npm run shell-sweep` in `web/` — the real-Chromium proof for what jsdom cannot evaluate *(more)*         |
 | `web:client-drift`           | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`) *(more)*     |
 | `blizzard-mock:build`        | `uv sync` in the `blizzard-mock` repo                                                                     |

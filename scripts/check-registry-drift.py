@@ -76,9 +76,10 @@ Declared limitations (stated here rather than discovered later):
   comment inside a `bzh:one-prose-home`-bound tree is outside every sweep:
   `blizzard:restatement-sweep` matches marker phrases and a bare count carries
   none. Two live instances: `blizzard-mock/src/blizzard_mock/mock_data/cli.py`'s
-  "all nine derived statuses", and `blizzard/web/scripts/structural-gate.js`'s
-  own "Four checks, all live" — the latter in a `.js` file, which
-  `blizzard:restatement-sweep` does not read either (its `_EXTS` is `.py`/`.ts`/`.md`).
+  "all nine derived statuses", and `blizzard/web/scripts/shell-sweep.js`'s own
+  "The thirteen specs" (restating its `SWEEPS` array's own length) — the latter
+  in a `.js` file, which `blizzard:restatement-sweep` does not read either (its
+  `_EXTS` is `.py`/`.ts`/`.md`).
 - The number vocabulary is `two` through `twenty` plus digits. A registry of one
   member, one above twenty, or a copy written as a hyphenated compound
   ("twenty-two scenarios") is not matched — the compound is refused outright
