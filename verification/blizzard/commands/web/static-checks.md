@@ -13,9 +13,11 @@ structural gate — under the Angular workspace hub, [`../web.md`](../web.md). R
 
 `npm run lint` in `web/` (`ng lint`, eslint over all four Angular projects). Carries a `max-lines` ceiling — the
 ~400-line cap, `skipBlankLines`/`skipComments` both off — over every `.ts` file each project's own config reads (spec
-files at an 800-line ceiling instead, a runaway guard rather than design pressure); owner
-[`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md),
-rule `bzh:frontend-container-presentational`.
+files at an 800-line ceiling instead, a runaway guard rather than design pressure). No architecture doc declares the
+number itself; in practice the files it has caught were also
+[`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
+`bzh:frontend-container-presentational` splits, since an oversized component is often evidence of merged
+container/presentational concerns, but the ceiling now reaches every `.ts` file this config reads, not only components.
 
 ### web:typecheck
 

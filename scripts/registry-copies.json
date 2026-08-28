@@ -110,20 +110,6 @@
       ]
     },
     {
-      "id": "structural-gate-checks",
-      "what": "the web:structural-gate sweeps",
-      "noun": "checks",
-      "line_requires": "structural-gate|sweep",
-      "owner": "blizzard/web/scripts/structural-gate.js",
-      "probe": {
-        "kind": "regex-count",
-        "repo": "blizzard",
-        "file": "web/scripts/structural-gate.js",
-        "pattern": "const [A-Za-z]+Violations = \\[\\];"
-      },
-      "sites": []
-    },
-    {
       "id": "verification-spokes",
       "what": "the verification/blizzard/ spokes",
       "noun": "spokes?",
