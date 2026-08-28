@@ -1,0 +1,31 @@
+# Routines and scopes
+
+A **scope** is an operator-named bucket — a slug and a description. A **routine** is an operator-named pointer at a
+graph its runs will execute, a default scope, and default run preferences (model, effort). Neither runs anything yet: a
+routine names the graph and defaults a run would use, and a scope names a bucket findings and proposals will later be
+grouped into. Part of the [domain model](./index.md).
+
+## Mint-on-name
+
+A scope comes into existence the moment its slug is first named — either an operator naming it directly, or a routine
+naming a default scope no scope yet holds. Naming an already-existing slug again is not an error and does not overwrite
+what is already recorded against it: minting is idempotent, and a scope's description is changed only by explicitly
+editing it.
+
+## The name is a routine's lineage
+
+A routine's name, not its id, is what a run, a finding, or a proposal is understood to belong to across the routine's
+whole life. The name is fixed at mint and never changes; editing a routine may change which graph it points at, its
+default scope, or its run preferences, but never what it is named.
+
+## The retired brake
+
+A scope carries the same reversible, append-only retirement brake a graph does: retiring one and re-enabling it are both
+facts recorded over time, never a destructive edit, and either direction leaves the scope's slug and description
+untouched.
+
+## What the hub does not do
+
+The hub stores a scope's slug and hands it back — to a routine's default, to a list, to a lookup — without ever
+interpreting what the slug names. Resolving a scope into whatever it actually denotes is entirely outside the hub's
+knowledge.
