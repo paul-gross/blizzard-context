@@ -35,7 +35,11 @@ the chunk lands because the runner fences on its own lease epoch, not the envelo
 the loss a `bindings[0]` read makes silent.
 `test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable` is the first service-tier exercise
 of a lease-token-authorized worker-lane read route: a `--scope graph` read resolves from the runner's own mint-time
-mirror with the mock hub down while the same lease's node-scope read still 503s (the `_worker_credential` seam).
+mirror with the mock hub down while the same lease's node-scope read still 503s (the `_worker_credential` seam). A
+seeded chunk driven to `stopped` over `POST /_seed/stop` (blizzard-mock#18) exercises PULL's two terminal-fact paths
+over a real hub response rather than `FakeHub`:
+`test_pull_abandons_the_active_lease_when_the_hub_reports_the_chunk_stopped` (issue #118) and
+`test_pull_closes_the_local_escalation_when_the_hub_reports_the_chunk_stopped` (blizzard#292, #293).
 
 **Usage over the wire** (`test_usage_service.py`) runs both directions. Runner-to-mock-hub, a real runner's
 `usage.recorded` facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once.
