@@ -10,7 +10,7 @@ evaluated without a browser.
 
 ## Routing
 
-| File                                         | Read when…                                                                                                                                       |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`static-checks.md`](./web/static-checks.md) | …you are running `web:typecheck`, `web:client-drift`, or `web:structural-gate` — the checks that read the source and need no browser.            |
-| [`shell-sweep.md`](./web/shell-sweep.md)     | …you are running `web:shell-sweep`, or adding a `*.shell-sweep.spec.ts` — the real-Chromium method and the roster every spec is checked against. |
+| File                                         | Read when…                                                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`static-checks.md`](./web/static-checks.md) | …you are running `web:lint`, `web:typecheck`, `web:client-drift`, or `web:structural-gate` — the checks that read the source and need no browser. |
+| [`shell-sweep.md`](./web/shell-sweep.md)     | …you are running `web:shell-sweep`, or adding a `*.shell-sweep.spec.ts` — the real-Chromium method and the roster every spec is checked against.  |
