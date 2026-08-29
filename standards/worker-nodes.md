@@ -12,4 +12,4 @@ Parent: [./index.md](./index.md).
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | [declarations.md](./worker-nodes/declarations.md)                       | The node declares a `produces:` entry, or a completion arrived without one |
 | [checks-gate.md](./worker-nodes/checks-gate.md)                         | A choice must not be selectable while the node's `checks:` are red         |
-| [graph-artifact-pointers.md](./worker-nodes/graph-artifact-pointers.md) | The prompt points the worker at a graph-scoped declaration                 |
+| [graph-artifact-pointers.md](./worker-nodes/graph-artifact-pointers.md) | The prompt points the worker at a graph-scoped or system-scoped read       |
