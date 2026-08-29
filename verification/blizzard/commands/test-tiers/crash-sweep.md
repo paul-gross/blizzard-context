@@ -54,11 +54,11 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   is still readable via `attachments_for_lease` after an unarmed restart. `attach.` is an out-of-band HTTP write no loop
   step drives, so its scenario stands up a real runner daemon alone — no hub, no forge — seeding a parked lease and its
   capability token, the invariant checker running over the runner store only.
-- `nudge.`, the produces-unmet nudge-once window armed on the runner, is swept by `test_kill9_at_nudge_crash_point` over
-  both of its members: a `produces:` name with neither commit nor attachment gets exactly one resumed nudge in
-  `_advance_exited_worker`, gated on a durable `(lease, epoch)` fact recorded before the resume it guards, so
-  at-most-once is structural — recovery consults the fact, never the resume's outcome; the window fires inside ADVANCE,
-  so a real hub stands up too.
+- `nudge.`, the produces-unmet resume-once window armed on the runner, is swept by `test_kill9_at_nudge_crash_point`: an
+  exit with a `produces:` name covered by neither commit nor attachment is resumed rather than judged — no verdict
+  elicited, no `checks:` run — gated on a durable `(lease, epoch)` fact recorded before the resume it guards, so
+  at-most-once is structural — recovery consults the fact, never the resume's outcome; the window fires inside
+  `Judgement.run`, ahead of `checks()`, so a real hub stands up too.
 - `checks.`, the checks-at-exit windows armed on the runner, is swept by `test_kill9_at_checks_crash_point` over both of
   its members: the runner runs a node's `checks:` at worker exit, recording each result row then a `checks_ran` marker;
   a kill before the marker leaves it unset and recovery re-runs the checks with latest-wins overwrite, while after the
