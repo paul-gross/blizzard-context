@@ -88,12 +88,14 @@ disabled (`[transcripts] ship = false`).
 `tests/test_finding_store.py`'s `test_list_for_query_plans_as_an_index_search` and
 `test_count_by_class_query_plans_as_an_index_search` (blizzard#390) assert `EXPLAIN QUERY PLAN` on sqlite — the backend
 every component test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
-`ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan. No tier runs the same assertion
-against postgres, so whether the portable index declaration actually earns an index scan under postgres's own planner
-stays unproven.
+`ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan.
+`tests/test_chunk_fact_table_indexes.py` (blizzard#421) asserts the same shape over the twenty-one `chunk_id`-filtered
+fact tables the `20260829_1930_fact_tables_chunk_id_index` revision indexes. No tier runs either assertion against
+postgres, so whether the portable index declarations actually earn an index scan under postgres's own planner stays
+unproven.
 
-Standing in for a tier: the index declaration is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
-sqlite-specific construct — so a postgres planner choosing a table scan over it would be a planner-statistics anomaly
+Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
+sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
 (e.g. an empty table) rather than a declaration defect. Do not add a postgres-backed component tier to close this; the
 dogfood deployment's postgres store is the evidence a real-scale table would surface a genuine regression against.
 
