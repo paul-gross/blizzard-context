@@ -14,8 +14,8 @@ therefore always additive: the declaration is only the fuller source of what the
 **Why.** The read can miss because a pinned mint's declarations reach the runner's own store at spawn: a lease already
 in flight when a runner restarts onto a build that introduces a declaration holds a pin with nothing in it. That
 accepted window is bounded by `bzh:graph-scope-reads-local`
-([../../architecture/system-shape/graphs.md](../../architecture/system-shape/graphs.md)) and by the runner's
-graph-artifact mirror entry in
+([../../architecture/system-shape/artifact-scopes.md](../../architecture/system-shape/artifact-scopes.md)) and by the
+runner's graph-artifact mirror entry in
 [../../architecture/crash-correctness/runner.md](../../architecture/crash-correctness/runner.md).
 
 **Scope.** Binds every prompt naming a graph-scope read, on a worker node or its judgement prompt alike. It says nothing

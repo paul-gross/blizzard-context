@@ -4,12 +4,13 @@ Blizzard's macro-shape architecture invariants: this file states the two rules e
 routes the rest to spoke files by the reader's task. The parent hub is [./index.md](./index.md). Every rule here follows
 the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
-| Spoke                                                                            | Read when…                                                                                         |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [system-shape/store-facts.md](./system-shape/store-facts.md)                     | Designing a store schema — what may be persisted, and what closes an open fact                     |
-| [system-shape/worker-boundary.md](./system-shape/worker-boundary.md)             | Changing what crosses the runner–worker seam — the spawned child's environment, and git mutation   |
-| [system-shape/graphs.md](./system-shape/graphs.md)                               | Authoring or minting a workflow graph — what it may know, and where its declarations are read from |
-| [system-shape/transcript-read-plane.md](./system-shape/transcript-read-plane.md) | Adding or widening a read of transcript data for runner consumption — which plane may serve it     |
+| Spoke                                                                            | Read when…                                                                                                                   |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [system-shape/store-facts.md](./system-shape/store-facts.md)                     | Designing a store schema — what may be persisted, and what closes an open fact                                               |
+| [system-shape/worker-boundary.md](./system-shape/worker-boundary.md)             | Changing what crosses the runner–worker seam — the spawned child's environment, and git mutation                             |
+| [system-shape/graphs.md](./system-shape/graphs.md)                               | Authoring or minting a workflow graph — what it may know, and where its declarations are read from                           |
+| [system-shape/artifact-scopes.md](./system-shape/artifact-scopes.md)             | Reading or writing an artifact through `--scope system`, or reasoning about why a graph-scope and a system-scope read differ |
+| [system-shape/transcript-read-plane.md](./system-shape/transcript-read-plane.md) | Adding or widening a read of transcript data for runner consumption — which plane may serve it                               |
 
 ## Deterministic shell (`bzh:deterministic-shell`)
 
