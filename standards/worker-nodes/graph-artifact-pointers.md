@@ -18,9 +18,11 @@ accepted window is bounded by `bzh:graph-scope-reads-local`
 runner's graph-artifact mirror entry in
 [../../architecture/crash-correctness/runner.md](../../architecture/crash-correctness/runner.md).
 
-**Scope.** Binds every prompt naming a graph-scope read, on a worker node or its judgement prompt alike. It says nothing
-about node-scope reads: a node-scope miss means an upstream node produced nothing — a real condition of the chunk rather
-than a window in the runner's own state.
+**Scope.** Binds every prompt naming a graph-scope read, on a worker node or its judgement prompt alike, and every
+prompt naming a system-scope read the same way: a system-scope read crosses the hub on every call
+(`bzh:system-scope-reads-live`), so it can fail on a hub outage where a graph-scope read cannot — a different failure
+mode, but the same fallback obligation. It says nothing about node-scope reads: a node-scope miss means an upstream node
+produced nothing — a real condition of the chunk rather than a window in the runner's own state.
 
 **Detect.** A fallback conditioned only on an empty result. The two verbs that serve graph scope fail differently —
 `artifact list --scope graph` answers empty, while `artifact get <name> --scope graph` exits non-zero with a `404` named
