@@ -141,6 +141,29 @@ or two of first crossing it and stays down, while the undeclared run's context s
 dropping. That contrast is the compaction event itself, because no other mechanism resets a session's context
 mid-lineage.
 
+### `blizzard:manual-worker-deny-list`
+
+**Surface.** `WorkerSettings.document`'s `permissions.deny` list reaching the harness and actually closing off the
+denied tools — no mock-driven tier can observe whether `claude -p` itself honors a `permissions.deny` entry, only that
+the runner built and threaded the file ([`./gaps.md`](./gaps.md#the-worker-deny-list)).
+
+**Setup.** A real Claude Code CLI (`claude 2.1.251` or newer, the version its tested assumptions were measured against)
+and a scratch workdir it can run non-interactively in with `-p`.
+
+**Steps.**
+
+1. Write the settings document `WorkerSettings.of().json` renders to a scratch file.
+2. Spawn a worker against it,
+   `claude -p --settings <file> "<a prompt that would naturally reach a denied tool, e.g.
+   'schedule a wakeup for 60 seconds from now'>"`,
+   and confirm the denied name does not appear in the session's tool list — `ToolSearch` for it turns up nothing, and a
+   direct call is refused.
+3. Repeat for `TaskOutput`, `TaskStop`, and a backgrounded `Bash` invocation, confirming each still succeeds under the
+   same settings file.
+
+**Passes when.** Every name in `WorkerSettings.DENIED_TOOLS` is unreachable under the emitted settings document, and
+`TaskOutput`, `TaskStop`, and backgrounded `Bash` remain reachable under the same document.
+
 ### `blizzard:manual-rollback-drill`
 
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
