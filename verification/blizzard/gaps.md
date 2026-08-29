@@ -55,6 +55,17 @@ Standing in for a tier: `blizzard:manual-autocompact-window` closes this as a li
 [`blizzard:manual-external-usage-probe`](./manual.md#blizzardmanual-external-usage-probe) — an external harness's live
 compaction behavior sits outside a hermetic, network-free CI tier's reach.
 
+## The worker deny list
+
+`WorkerSettings.document`'s `permissions.deny` list travels to the harness as a JSON settings file on every worker
+invocation path. The mock-visible tiers — `blizzard:unit-test`'s exact-list pin and `blizzard:component-test`'s
+prefix-parity check — prove only that the file is built and threaded, never that `claude -p` itself honors a
+`permissions.deny` entry.
+
+Standing in for a tier: `blizzard:manual-worker-deny-list` closes this as a live procedure, the same shape as
+[`blizzard:manual-autocompact-window`](./manual.md#blizzardmanual-autocompact-window) — an external harness's live
+permission enforcement sits outside a hermetic, network-free CI tier's reach.
+
 ## Transcript normalization
 
 `blizzard-mock`'s `ClaudeTranscriptWriter` (`blizzard-mock/src/blizzard_mock/harness/facades/_transcript.py`)

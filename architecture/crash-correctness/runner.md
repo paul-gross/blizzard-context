@@ -118,3 +118,15 @@ which is written against a failed read and not only an empty one.
 
 Should a graph-scope read ever become something the engine gates on, this accepted window turns into a repair owed,
 because no fallback in authored prose can stand in for a decision the engine makes for itself.
+
+## The retired nudge-resume reassembly window
+
+`nudge.after-resume.before-reassemble` (`blizzard/src/blizzard/runner/loop/judgement.py`) guarded a synchronous in-turn
+nudge: `Judgement.run` resumed the session with the judge verb, then re-read attachments and reassembled the completion
+in the same method call. Resolving the premature-exit defect (issue #422) replaced that shape with
+`DormantSession.resume_on_unmet_produces`, a fire-and-forget dormant-session wake `Judgement.run` returns from
+immediately — no re-read, no reassembly, nothing after the resume in that call at all. The window the retired point
+guarded no longer exists in code, so it earns the **no window at all** ground rather than a replacement point: the next
+exit under the same lease is a fresh `Judgement.run` call, reconciling `produces:` from the durable store from scratch.
+The remaining `nudge.after-fired-fact.before-resume` point still guards the one real span in this path — the guard
+fact's own durability ahead of the resume it caps.

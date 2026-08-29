@@ -82,6 +82,7 @@ live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows 
 | `blizzard:manual-standing-idp`         | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture    |
 | `blizzard:manual-external-usage-probe` | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`         |
 | `blizzard:manual-autocompact-window`   | A declared `--autocompact` window compacting a real session, rather than the model's own maximum  |
+| `blizzard:manual-worker-deny-list`     | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness |
 | `blizzard:manual-rollback-drill`       | The compose deployment's rollback promise, walked for real against two published image tags       |
 | `blizzard:manual-fleet-read-latency`   | `GET /api/chunks` wall-clock latency, before/after a read-path change, at fleet scale             |
 | `blizzard-mock:manual`                 | The winter-wired mock forge fronting a real fixture workspace's bare origins                      |
