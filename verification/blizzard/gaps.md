@@ -83,6 +83,20 @@ requires `ship = true`, so an operator running it against a real `~/.claude/proj
 forward-read lane that no tier records — which dogfooding does not supply by default, since the transcript lane ships
 disabled (`[transcripts] ship = false`).
 
+## The finding table's postgres query plan
+
+`tests/test_finding_store.py`'s `test_list_for_query_plans_as_an_index_search` and
+`test_count_by_class_query_plans_as_an_index_search` (blizzard#390) assert `EXPLAIN QUERY PLAN` on sqlite — the backend
+every component test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
+`ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan. No tier runs the same assertion
+against postgres, so whether the portable index declaration actually earns an index scan under postgres's own planner
+stays unproven.
+
+Standing in for a tier: the index declaration is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
+sqlite-specific construct — so a postgres planner choosing a table scan over it would be a planner-statistics anomaly
+(e.g. an empty table) rather than a declaration defect. Do not add a postgres-backed component tier to close this; the
+dogfood deployment's postgres store is the evidence a real-scale table would surface a genuine regression against.
+
 ## The worker's push to a real forge
 
 The worker, not the runner, pushes its branch before declaring it (`blizzard runner artifact commit`), and
