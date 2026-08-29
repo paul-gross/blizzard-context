@@ -159,3 +159,41 @@ image carries the `downgrade()` steps the older image's tree never heard of.
 **Passes when.** The hub then serves at the previous tag's version — `GET /api/health` reports the older `version` — and
 `GET /api/ready` reports `ready: true`, proving the store landed at exactly the older revision rather than merely some
 earlier one.
+
+### `blizzard:manual-fleet-read-latency`
+
+**Surface.** `GET /api/chunks` wall-clock latency at fleet scale, before and after a change to its read path
+(blizzard#421). No CI tier measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the
+*shape* of the cost, not its duration — so a read-path change reports this by hand.
+
+**Blind spot.** A local sqlite store does not reproduce the hosted postgres deployment's per-query network round trip,
+so an absolute reading here says nothing about the hosted hub's own latency. What it measures instead is the **ratio**
+between two readings of the *same* store, before and after the code change — a ratio a sqlite round trip's smaller,
+proportionally-similar per-query cost still tracks. The hosted reading is separate: operator inspection against
+`https://blizzard.grosscode.net` after the change has redeployed there, never a dev surface pointed at it
+(`workspace:/context/project/hub-data-modes.md` owns why).
+
+**Setup.** A fleet-scale hub store that is not the live fleet — `workspace:/context/project/hub-data-modes.md`'s mode 2
+(a migrated snapshot copy) or mode 3 (seeded synthetic) — or, for a reading taken mid-change before a fresh store
+exists, a scratch `tests.support.build_hub` instance seeded to the same chunk count via a throwaway script, as
+`blizzard:manual-fleet-read-latency`'s own blizzard#421 baseline used.
+
+**Steps.**
+
+1. Seed or point at a store holding a known chunk count `N`.
+2. Warm the connection (one untimed `GET /api/chunks`), then time several repeated calls and record the mean.
+3. Repeat step 2 against the same store, unchanged, on the other side of the code change — the "before" reading taken
+   ahead of the change landing (the baseline is unmeasurable once it has), the "after" reading once it has.
+
+**Passes when.** Both readings are recorded together, against the same store and the same `N`.
+
+**blizzard#421 reading** (scratch `build_hub` store, N=173, 5 warmed reps, mean wall-clock and total SQL query count for
+one `GET /api/chunks`):
+
+| Reading                                                                  | Queries | Mean latency |
+| ------------------------------------------------------------------------ | ------- | ------------ |
+| Before (`73db0967`)                                                      | 5026    | 339.2ms      |
+| After (`load_all_facts`/`load_all_routes` list read, fact-table indexes) | 40      | 10.4ms       |
+
+A ~125x query-count reduction and ~33x latency reduction on the same local sqlite store. The hosted postgres reading is
+owed separately, by an operator, once this change has redeployed there.

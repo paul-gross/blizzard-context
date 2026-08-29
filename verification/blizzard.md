@@ -83,6 +83,7 @@ live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows 
 | `blizzard:manual-external-usage-probe` | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`         |
 | `blizzard:manual-autocompact-window`   | A declared `--autocompact` window compacting a real session, rather than the model's own maximum  |
 | `blizzard:manual-rollback-drill`       | The compose deployment's rollback promise, walked for real against two published image tags       |
+| `blizzard:manual-fleet-read-latency`   | `GET /api/chunks` wall-clock latency, before/after a read-path change, at fleet scale             |
 | `blizzard-mock:manual`                 | The winter-wired mock forge fronting a real fixture workspace's bare origins                      |
 | `blizzard-mock:manual-seeded-board`    | A realistic board rendered from a direct store seed: no work source configured, no hub restart    |
 | `blizzard-mock:manual-seeded-fleet`    | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick   |
