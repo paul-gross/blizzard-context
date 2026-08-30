@@ -25,7 +25,7 @@ read route.
 design leaving the declarations off the envelope; or a graph-scope read that fails when the hub is unreachable.
 
 **Do.** `_graph_rows` in `src/blizzard/runner/api/artifacts.py` resolves the rows through
-`IReadRunnerStore.graph_artifacts_for_graph(lease.graph_id)` with no `HubProxy`; the service test
+`IReadGraphArtifactRepository.graph_artifacts_for_graph(lease.graph_id)` with no `HubProxy`; the service test
 `test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable` holds that read with the hub
 unreachable.
 
