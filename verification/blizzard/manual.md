@@ -220,3 +220,13 @@ one `GET /api/chunks`):
 
 A ~125x query-count reduction and ~33x latency reduction on the same local sqlite store. The hosted postgres reading is
 owed separately, by an operator, once this change has redeployed there.
+
+**Queue-peek reading** (same method, `GET /api/queue`; scratch `build_hub` store, N=173 promoted chunks, 5 warmed reps):
+
+| Reading                                            | Queries | Mean latency |
+| -------------------------------------------------- | ------- | ------------ |
+| Before (per-chunk `_status` over `list_all`)       | 4677    | 312.7ms      |
+| After (`load_all_facts` bulk read in `list_ready`) | 34      | 8.9ms        |
+
+`GET /api/backlog` and the runner's own `GET /api/fleet/queue/peek` share `list_ready`/`list_not_ready`, so the same
+reading covers all three. The hosted reading is owed separately, as above.
