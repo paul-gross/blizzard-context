@@ -96,13 +96,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   overflow, exercising the General tab's `@media (min-width: 720px)` collapse and a long unbroken artifact key. Only
   General's own sections (`section-`-prefixed testids) are checked for stacking; Node history, Artifacts, and
   Transcripts (`runner-node-grouped-transcripts` Phase 4 — the shared `fleet-chunk-transcripts-container`
-  nav-plus-viewer pane) are each one nav-plus-viewer pane rather than a stack of independent panels, so the
-  overflow check alone stands in for that tab. Its takeover case mounts a `needs_human` chunk with a wrapped
-  takeover command and raw resume fallback.
-  `fleet-kit-panel`'s body clips horizontally (`overflow-x: hidden`), so no takeover CSS can widen the tab; the claim is
-  the opposite — at 320px each over-wide command must be reachable by scrolling its own box (`scrollLeft` round-trips
-  past 0), or the clip amputates the string the operator must paste whole. Proven able to fail per half by dropping
-  `overflow-x: auto` from `.takeover .cmd` and `.raw-fallback .cmd`.
+  nav-plus-viewer pane) are each one nav-plus-viewer pane rather than a stack of independent panels, so the overflow
+  check alone stands in for that tab. Its takeover case mounts a `needs_human` chunk with a wrapped takeover command and
+  raw resume fallback. `fleet-kit-panel`'s body clips horizontally (`overflow-x: hidden`), so no takeover CSS can widen
+  the tab; the claim is the opposite — at 320px each over-wide command must be reachable by scrolling its own box
+  (`scrollLeft` round-trips past 0), or the clip amputates the string the operator must paste whole. Proven able to fail
+  per half by dropping `overflow-x: auto` from `.takeover .cmd` and `.raw-fallback .cmd`.
 - `runner-view.shell-sweep.spec.ts` covers the runner registry's rate-limit pace bars (`RunnerPanelView`): a row
   carrying two sampled windows, each a stacked utilization/elapsed bar pair, must at the board right rail's ~390px width
   stack both windows' bars within the fleet panel's width, with no overflow and no page error.
