@@ -24,15 +24,15 @@ operator-plane transcript endpoint instead of its own store or the runner-scoped
 
 **Do.** Serve a runner-context transcript read from the runner's own store, keyed
 `(chunk_id, node_id, epoch,
-generation)` (`blizzard/src/blizzard/runner/store/schema.py:486`). The node-grouped read is served by the runner-plane
-`GET /api/chunks/{chunk_id}/transcripts` segment index and `GET /api/chunks/{chunk_id}/transcripts/{segment_id}` content
-route (`blizzard/src/blizzard/runner/api/transcript_segments.py`), resolved through
-`TranscriptService.segments_for_chunk`/`segment_content`
-(`blizzard/src/blizzard/runner/transcripts/service.py:103,110`) — the same seam `for_lease` resolves behind, never a
-second resolution path. A cross-lease read instead goes through the runner-scoped
-`GET /api/fleet/chunks/{chunk_id}/transcript-segments` route, gated by `_demand_lease_owner`
-(`blizzard/src/blizzard/hub/api/fleet.py:111,570`). `TranscriptService.for_lease`
-(`blizzard/src/blizzard/runner/transcripts/service.py:44`) already resolves local-versus-hub per lease behind that same
+generation)` (`blizzard/src/blizzard/runner/store/schema.py:486`). The node-grouped read is
+served by the runner-plane `GET /api/chunks/{chunk_id}/transcripts` segment index and
+`GET /api/chunks/{chunk_id}/transcripts/{segment_id}` content route
+(`blizzard/src/blizzard/runner/api/transcript_segments.py`), resolved through
+`TranscriptService.segments_for_chunk`/`segment_content` (`blizzard/src/blizzard/runner/transcripts/service.py:104,111`)
+— the same seam `for_lease` resolves behind, never a second resolution path. A cross-lease read instead goes through the
+runner-scoped `GET /api/fleet/chunks/{chunk_id}/transcript-segments` route, gated by `_demand_lease_owner`
+(`blizzard/src/blizzard/hub/api/fleet.py:113,585`). `TranscriptService.for_lease`
+(`blizzard/src/blizzard/runner/transcripts/service.py:64`) already resolves local-versus-hub per lease behind that same
 seam — extend it for a future cross-runner requirement rather than opening the operator router.
 
 **Don't.** Relax or bypass `reject_runner_principal` on `blizzard/src/blizzard/hub/api/transcripts.py:36`'s router to
