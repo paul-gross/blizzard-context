@@ -116,3 +116,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   DELETE-alone row — at the full 390px and 320px viewport widths (not a board column's own narrower fractional share of
   one) the two controls must sit side by side, non-overlapping, with DELETE's own right edge staying inside the card's,
   rather than collapsing into an overlapping or overflowing pair; a real CSS flex-row layout claim jsdom cannot make.
+- `graph-detail.shell-sweep.spec.ts` covers the graphs container/presentational split's two Phase-2 children,
+  `GraphDetailHeader` and `GraphDetailEdges`, mounted directly with plain inputs. `GraphDetailHeader`'s identity row,
+  lifecycle actions, action-error line, and entry line — four blocks that were direct children of `.body`'s own
+  `flex-direction: column; gap: 10px` (`graph-detail.css`) before the split — must genuinely stack with a real gap,
+  proving `graph-detail-header.css`'s own `:host` flex column reproduces that spacing now that the container hands them
+  only one flex slot; proven able to fail by setting that `:host`'s `gap` to `0`. `GraphDetailEdges`'s per-node edge
+  blocks must likewise stack, with a prompt addendum resolving in flow below its own edge row.
