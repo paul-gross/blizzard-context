@@ -42,6 +42,25 @@ key-set check alone cannot tell one from another and the case name would pin not
 `blizzard:manual-sse-probe` remains the method for what only a live socket proves — framing and timing, not field shape
 — over either daemon's stream.
 
+### blizzard:cli-contract
+
+`uv run pytest tests/test_cli_surface_contract.py` gates the `blizzard hub` and `blizzard runner` command trees against
+the golden corpus `contracts/cli/`: one `<root>.json` per root group, each holding every command node recursively
+reached from it — its full path, help text, short help, and its parameters' spellings, kinds, types, and required/hidden
+flags, in declaration order.
+
+Both the corpus and the live tree the test diffs it against are built by the same walker, `blizzard.tools.cli_surface`,
+over plain `click` introspection (`click.Group.commands`, `click.Command.params`) — no invocation, no I/O. `build()`
+recurses a root group into a nested `path`/`help`/`short_help`/`params`/`commands` shape; `export()` writes `hub.json`
+and `runner.json` from it, and `uv run python -m blizzard.tools.cli_surface` is the regeneration entry point after a
+deliberate CLI change. A command's raw `.help` is `inspect.cleandoc`'d the same way click's own renderer does, so the
+corpus is not the interpreter-version-dependent artifact a docstring literal's compile-time dedent (3.13+) versus its
+absence (earlier) would otherwise make it.
+
+The guard is a pure equality check with no forward-compatibility carve-out — unlike the SSE corpus's consumer-tolerance
+policy, an unknown field or a reordered parameter is exactly the drift this method exists to catch, ahead of the CLI's
+decomposition into by-concept packages: the surface must render identically at every step of that move.
+
 ### blizzard:restatement-sweep
 
 The check fails on a census fact (`scripts/restated-invariants.json`) stated at an undeclared site (`new`), a declared
