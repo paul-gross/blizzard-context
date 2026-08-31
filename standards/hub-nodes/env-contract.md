@@ -9,20 +9,25 @@ Parent: [../hub-nodes.md](../hub-nodes.md).
 **Rule.** The injected env vars below are the only channel a `run:` step's command has into the chunk's identity, prior
 work, and the forge credential — a script referencing any field this contract does not list is reading nothing.
 
-| Variable                                           | Carries                                                                                                                                                                                                |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `BZ_HUB_CHUNK_ID`                                  | The chunk's id                                                                                                                                                                                         |
-| `BZ_HUB_NODE_ID`, `BZ_HUB_NODE_NAME`               | The node's id and the node's name                                                                                                                                                                      |
-| `BZ_HUB_EPOCH`                                     | The current attempt's epoch, as a string                                                                                                                                                               |
-| `BZ_HUB_BASE_BRANCH`                               | The branch the chunk's work lands against                                                                                                                                                              |
-| `BZ_HUB_FEATURE_TITLE`                             | The prose PR/merge title resolved from the chunk's primary work item; absent when it cannot be resolved                                                                                                |
-| `BZ_HUB_WORKDIR`                                   | The per-chunk hub workdir — also the working directory each step's command runs in — persisting across a node's steps and across a re-run of the same node                                             |
-| `BZ_HUB_GIT_COMMITS`                               | A JSON list of `{repo, branch, commit}` — the chunk's latest commit-pointer artifacts                                                                                                                  |
-| `BZ_HUB_ARTIFACT_NAMES`                            | A JSON list of artifact names already recorded for this node — a script's own re-run-skip input, alongside the executor's step-level skip                                                              |
-| `BZ_HUB_EXPECT_GIT_COMMITS`                        | `"1"` when some node in the chunk's graph declares a `git_commit`-kind `produces:`, `"0"` when none does                                                                                               |
-| `BZ_FORGE_URL`, `BZ_FORGE_TOKEN`, `BZ_FORGE_OWNER` | The hub's own configured forge credential, present only when the hub is configured with one                                                                                                            |
-| `BZ_HUB_MARKER_CALLBACK_URL`                       | Records a marker mid-run via `POST {name, content}`; the CLI wrapper is `blizzard hub record-marker NAME [CONTENT]`                                                                                    |
-| `BZ_HUB_MARKER_TOKEN`                              | The capability token authorizing the marker POST, sent back as the `X-Blizzard-Marker-Token` header — minted per `(chunk, node, epoch)` before the node visit's steps run, revoked once the visit ends |
+| Variable                                           | Carries                                                                                                                                                                                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BZ_HUB_CHUNK_ID`                                  | The chunk's id                                                                                                                                                                                                                 |
+| `BZ_HUB_NODE_ID`, `BZ_HUB_NODE_NAME`               | The node's id and the node's name                                                                                                                                                                                              |
+| `BZ_HUB_EPOCH`                                     | The current attempt's epoch, as a string                                                                                                                                                                                       |
+| `BZ_HUB_BASE_BRANCH`                               | The branch the chunk's work lands against                                                                                                                                                                                      |
+| `BZ_HUB_FEATURE_TITLE`                             | The prose PR/merge title resolved from the chunk's primary work item; absent when it cannot be resolved                                                                                                                        |
+| `BZ_HUB_WORKDIR`                                   | The per-chunk hub workdir — also the working directory each step's command runs in — persisting across a node's steps and across a re-run of the same node                                                                     |
+| `BZ_HUB_GIT_COMMITS`                               | A JSON list of `{repo, branch, commit}` — the chunk's latest commit-pointer artifacts                                                                                                                                          |
+| `BZ_HUB_ARTIFACT_NAMES`                            | A JSON list of artifact names already recorded for this node — a script's own re-run-skip input, alongside the executor's step-level skip                                                                                      |
+| `BZ_HUB_EXPECT_GIT_COMMITS`                        | `"1"` when some node in the chunk's graph declares a `git_commit`-kind `produces:`, `"0"` when none does                                                                                                                       |
+| `BZ_FORGE_URL`, `BZ_FORGE_TOKEN`, `BZ_FORGE_OWNER` | The hub's own configured forge credential, present only when the hub is configured with one                                                                                                                                    |
+| `BZ_HUB_MARKER_CALLBACK_URL`                       | Records a marker mid-run via `POST {name, content}`; the CLI wrapper is `blizzard hub record-marker NAME [CONTENT]`                                                                                                            |
+| `BZ_HUB_MARKER_TOKEN`                              | The capability token authorizing the marker POST, sent back as the `X-Blizzard-Marker-Token` header — minted per `(chunk, node, epoch)` before the node visit's steps run, revoked once the visit ends                         |
+| `BZ_HUB_GARDEN_DELIVERY_URL`                       | Submits a garden run's delta via `POST {delta, proposals}`, read only by `garden_deliver.py`, present only when the hub's marker-callback base URL is configured (the same condition `BZ_HUB_MARKER_CALLBACK_URL` is gated by) |
+
+A platform-owned script may be handed a hub callback beyond the marker one — `BZ_HUB_GARDEN_DELIVERY_URL` is one — but
+it still reaches the hub only over HTTP, authorized by the same `X-Blizzard-Marker-Token` this node visit already
+minted.
 
 A non-2xx response to the marker-write POST is fatal — the script must raise rather than swallow it and proceed. Beyond
 the injected keys a step inherits the hub daemon's own environment, and the executor prepends the hub interpreter's own
@@ -47,6 +52,9 @@ unauthorized write is swallowed and the script proceeds to report success anyway
   script is the policy.
 - `land_common.MarkerWriter` — the one marker channel every land script holds, as `LandRun.markers` — treats any non-2xx
   as fatal, raising rather than returning, so a merge can never land with no durable record of it.
+- `garden_deliver.py` reads `BZ_HUB_GARDEN_DELIVERY_URL` for its one delta-submission POST, and falls back to
+  `land_common.MarkerWriter` only to record the failure text when that POST reports `invalid` — the second reference
+  script for this contract, alongside `land_default.py`.
 
 **Don't.** A script that posts the marker write and moves on without inspecting the response — a non-2xx there means the
 write never happened, and printing a success choice anyway reports success over an unrecorded merge.
