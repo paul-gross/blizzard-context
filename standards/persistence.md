@@ -51,6 +51,8 @@ inside this rule while making instants UTC-aware.
   stores' release cadences uncoupled.
 - Every revision has explicit `upgrade()` and `downgrade()`; applying is idempotent at the revision level, and migration
   scripts stay inside `bzh:sql-portable`'s surface so one tree serves both backends.
+- SQLite has no `ALTER` for a CHECK constraint, so widening one goes through Alembic's `batch_alter_table` table-copy
+  recreate — load-bearing there, not a style choice, wherever a revision touches one.
 - `blizzard hub init <dir>` creates and migrates the runtime environment and is idempotent; `blizzard hub migrate`
   applies pending revisions and `migrate --down <rev>` reverses; the same verbs exist under `blizzard runner`.
 
