@@ -87,6 +87,37 @@ pays with no chunk attached.
 The pairing owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
 
+## The routine-run mint
+
+`POST /api/routines/{routine_id}/run` (blizzard#392) writes the run item's `work_items` row, its resting chunk's rows —
+`chunks` plus one `chunk_work_refs` row per work ref — the promote-then-tail-stamp pair (`chunk_promoted` plus
+`queue_positions`), and the run's own identity row (`work_item_runs`, blizzard#393), together: five inserts spanning six
+tables `WorkItemStore`/`ChunkStore`/`RunContextStore` otherwise own across three repositories. All five run on the same
+connection inside one `engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
+(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing `insert_chunk_rows`, the free function
+`insert_promote_rows` it was extracted alongside (`blizzard/src/blizzard/hub/store/internal/chunk_store.py`), and
+`insert_run_context_row` (`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape
+§The item-creation chunk mint already takes, widened from one table to three: what lets a single caller open one
+transaction over all six at once. `work_item_runs` is what garden delivery's own read
+(`blizzard/src/blizzard/hub/domain/run_context.py`) resolves a chunk's run identity through; landing it outside this
+transaction would reopen exactly the window this section exists to close.
+
+The tail position itself is computed before the write, by the same rule `PromoteService.promote` stamps by
+(`tail_position`, `blizzard/src/blizzard/hub/domain/promote.py`) — the already-accepted check-then-act shape §Promote,
+then tail-stamp names, widened to a second caller rather than copied.
+
+Two narrower windows are named and accepted here. `RunService.run` (`blizzard/src/blizzard/hub/domain/routine_run.py`)
+allocates the run's `ref` through `WorkItemStore.allocate_ref` before this transaction opens, identical in shape to §The
+item-creation chunk mint's own: under the allocator's own already-accepted gap-tolerant contract, a crash in between
+burns that one `ref`, never reused. It also resolves the run's effective scope through `ScopeRegistry.ensure`
+(`blizzard/src/blizzard/hub/domain/scopes.py`) before the same transaction opens, its own separate write when the slug
+is unseen; a crash between that mint and this transaction leaves an idempotently-minted scope with no run against it —
+mint-on-name means the next attempt at the same name reuses it rather than re-minting, so nothing is burned, only a
+retry owed.
+
+The composite owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
+recompute.
+
 ## Chunk delete, then hub-item withdrawal
 
 `WorkItemStore.delete_chunk_and_withdraw_hub_items` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`)
