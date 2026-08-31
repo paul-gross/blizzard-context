@@ -119,6 +119,33 @@ which is written against a failed read and not only an empty one.
 Should a graph-scope read ever become something the engine gates on, this accepted window turns into a repair owed,
 because no fallback in authored prose can stand in for a decision the engine makes for itself.
 
+## The elicitation relaunch record-before-launch gap
+
+`Judgement._relaunch` (`blizzard/src/blizzard/runner/loop/judgement.py`) re-launches a
+detached verdict elicitation whose prior attempt exited without writing anything readable
+(blizzard#443, D5) — the loss-recovery counterpart to the ordinary first launch, whose own
+record-before-launch gap earns the `advance.after-elicit-record.before-launch` /
+`advance.after-elicit-launch` registry points because the generic sweep scenario reaches it
+on every ordinary judgement. A relaunch's own gap does not: it opens only once a prior
+elicitation has already been launched, exited, and left an unreadable output file — a
+condition the generic scenario never creates, so `bzh:crash-point-registry`'s family-coverage
+concern applies (D2) and this write earns a recorded decision instead of a dedicated family.
+
+A `kill -9` between `record_elicitation_relaunch` (pid cleared, a fresh `output_path`,
+`relaunch_count` incremented) and the new process actually starting leaves the in-flight
+record with `pid` unset — the same shape `Judgement.collect` already reads as "not running" on
+every ordinary poll. The next `Judgement.collect` pass over this lease therefore reads the
+still-empty output at the new path, finds no running process, and calls `_lost` again: it
+relaunches once more if under the staleness bound, or fails the attempt if past it — the exact
+recovery a live relaunch takes, replayed. The write earns **no window at all**: its halves are
+independently harmless, because the record's own read path already treats an unset pid as "not
+yet running" rather than as evidence a process must exist, so nothing downstream needs the two
+writes to have landed atomically. The one cost a crash in this gap can add is one extra wasted
+relaunch attempt should the killed process have actually started before the crash — bounded by
+the same staleness threshold (`ELICITATION_STALENESS_THRESHOLD`, 15 minutes) every ordinary
+relaunch already accepts, and never durable in consequence since the orphaned attempt's own
+output file is simply never read once a newer `output_path` supersedes it.
+
 ## The retired nudge-resume reassembly window
 
 `nudge.after-resume.before-reassemble` (`blizzard/src/blizzard/runner/loop/judgement.py`) guarded a synchronous in-turn
