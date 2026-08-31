@@ -168,3 +168,28 @@ judged, and the next pass's candidate read excludes it.
 
 Both write paths owe the checker nothing because each is a single-transaction insert (plus, for the append, one update),
 not a derived cross-fact invariant to recompute.
+
+## Garden delivery, marker folded into its own transaction
+
+`GardenDeliveryStore.deliver` (`blizzard/src/blizzard/hub/store/internal/garden_delivery_store.py`, blizzard#393) writes
+a garden run's whole delta in one `store.write("deliver")` transaction: the run's new `findings`, `finding_facts`,
+`finding_sets`, `garden_proposals`, and `garden_proposal_findings` rows, plus the delivery's own `garden-delivered`
+marker artifact row, all on the same connection — five candidate tables and the marker land together or not at all.
+
+Unlike most of this register's writes, the marker here is not the executor's own after-the-fact `produces:` bookkeeping
+— it is checked for existence and, if absent, inserted as this same transaction's last statement. That is what makes a
+replay safe on either side of the commit: a crash before commit loses the whole write, findings and marker alike, with
+nothing yet durable for a re-run to collide with; a crash after commit leaves the marker already present, so the next
+`garden_deliver.py` POST (`bzh:hub-node-step-idempotence`,
+[`../../standards/hub-nodes/step-idempotence.md`](../../standards/hub-nodes/step-idempotence.md)) finds it on its own
+idempotence check and returns `recorded` having minted nothing a second time.
+
+The window this leaves is between `deliver`'s own commit and the hub-node executor's separate step-completion
+bookkeeping — already `hubnode.after-step.before-marker` in `bzh:crash-point-registry`, and already covered: the next
+hub-advance re-runs the step from its own first command, and the in-transaction marker's own idempotence is what absorbs
+that re-run, so this write opens no window `hubnode.after-step.before-marker` doesn't already name.
+
+The write owes the checker nothing because it is a single-transaction, multi-table insert, not a derived cross-fact
+invariant to recompute — and, unlike most of this register's writes, whose idempotence marker rides the executor's own
+after-the-fact bookkeeping, this one's marker is folded into its own transaction, which is what gives its replay
+idempotence in the first place.
