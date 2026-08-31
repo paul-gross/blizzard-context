@@ -24,7 +24,19 @@ honest without asking anything of an agent's discipline.
 
 Whether a finding is live is never a stored state; it is the newest thing a run said about it. A run reporting a finding
 **gone** does not close it — it flags the finding for a person, because leaving the live set is a human judgment, never
-a pass's word alone. A later run observing the same finding again restores it.
+a pass's word alone. A later run observing the same finding again restores it — but only while it is merely `gone`. Once
+a person has exited it, a run's own ops go no further: a run cannot revive what a person closed, only a person's own
+`reopened` can, the same authority that closed it in the first place.
+
+A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
+**not-a-finding**, **superseded** — and **reopened** undoes any of them, the same append-only fact the way `gone` and
+`observed` already are: never a stored column, always a newest-fact-wins read. The five split into two kinds of exit.
+**Outflow** — resolved, gone-confirmed — is the ground itself changing: work landed, or a person confirmed by hand that
+the finding no longer reproduces, the same kind of event a `gone` fact already reports, just said with a person's
+authority instead of a run's. **Withdrawn** — wont-fix, not-a-finding, superseded — is a judgment call about the finding
+itself, never the code: the ground hasn't moved, a person has decided the finding doesn't merit standing regardless.
+Both are exits and both leave the live set for good — the split exists because what a fleet later reports about outflow
+and withdrawal answers different questions, not because one exit outranks another.
 
 ## `class` and `locus` are opaque
 
