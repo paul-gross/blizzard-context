@@ -28,6 +28,17 @@ agreement (unit-tier sibling `test_produces_coverage_agreement.py`): a name cove
 failing a shaping the domain applies but the wire does not surface; its component-tier sibling
 `tests/test_queue_shaping.py` asserts the same shaping without the wire.
 
+**A finding's exits and a routine's trend** (`test_finding_exits_service.py`) is the tier's only two-edge finding proof:
+findings are minted the way a routine mints them — a real routine run, the mock runner submitting the run's `delta`
+artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb plus `reopen`
+is then driven twice, once as raw HTTP and once through the real `blizzard hub finding` binary against the running
+daemon. It pins what an in-process client cannot: the note requirement refusing at both edges (a blank note is 422 on
+the wire and a non-zero exit in the CLI), one call exiting many ids, the D3 guard rejecting a later delta op that names
+an exited finding while a `gone`-flagged one is still a live target, the `GET /api/routines/trend` per-period
+created/exit counts with their outflow-vs-withdrawn roll-ups and introduced-age cut rendered identically by
+`blizzard hub routine trend`, and the Phase 3 hook end to end — an accepted garden proposal's minted item, landed by a
+`merged/` marker, resolving that proposal's findings through the daemon's own close-intent drain.
+
 **Runner against mock hub.** `unreachable` buffers, `drop_ack` proves idempotency, and a `stale_envelope` is tolerated —
 the chunk lands because the runner fences on its own lease epoch, not the envelope
 (`test_stale_envelope_is_tolerated_and_the_chunk_still_lands`).
