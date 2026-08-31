@@ -1,9 +1,9 @@
 # Routines and scopes
 
-A **scope** is an operator-named bucket — a slug and a description. A **routine** is an operator-named pointer at a
-graph its runs will execute, a default scope, and default run preferences (model, effort). Neither runs anything yet: a
-routine names the graph and defaults a run would use, and a scope names a bucket findings and proposals will later be
-grouped into. Part of the [domain model](./index.md).
+A **scope** is an operator-named bucket — a slug and a description, findings and proposals grouped into it. A
+**routine** is an operator-named pointer at a graph its runs execute, a default scope, and default run preferences
+(model, effort); a run is the routine acting, addressed at itself and an effective scope. Part of the
+[domain model](./index.md).
 
 ## Mint-on-name
 
@@ -23,6 +23,14 @@ default scope, or its run preferences, but never what it is named.
 A scope carries the same reversible, append-only retirement brake a graph does: retiring one and re-enabling it are both
 facts recorded over time, never a destructive edit, and either direction leaves the scope's slug and description
 untouched.
+
+## A run is an act of the pair
+
+`blizzard hub routine run <name>` mints, ingests, and promotes a work item in one act, addressed at the routine and an
+effective scope — the routine's own default, or an explicit override minted the same way a bare scope name is. A `full`
+run always proceeds; a `delta` run runs against the routine/scope pair's own recorded revision, and downgrades to `full`
+— on the record, never refused — when the pair has recorded none yet. What the pair carries between runs is
+`blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's behavior over it.
 
 ## What the hub does not do
 

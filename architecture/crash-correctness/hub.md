@@ -87,6 +87,29 @@ pays with no chunk attached.
 The pairing owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
 
+## The routine-run mint
+
+`POST /api/routines/{routine_id}/run` (blizzard#392) writes the run item's `work_items` row, its resting chunk's rows,
+and the promote-then-tail-stamp pair — `chunk_promoted` plus `queue_positions` — together, spanning three tables
+`WorkItemStore`/`ChunkStore` otherwise own across two repositories. All four inserts run on the same connection inside
+one `engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
+(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing `insert_chunk_rows` and the free function
+`insert_promote_rows` it was extracted alongside (`blizzard/src/blizzard/hub/store/internal/chunk_store.py`) — the same
+seam-bypass shape §The item-creation chunk mint already takes, widened from one table to two: what lets a single caller
+open one transaction over all three at once.
+
+The tail position itself is computed before the write, by the same rule `PromoteService.promote` stamps by
+(`tail_position`, `blizzard/src/blizzard/hub/domain/promote.py`) — the already-accepted check-then-act shape §Promote,
+then tail-stamp names, widened to a second caller rather than copied.
+
+One narrower window is named and accepted here, identical in shape to §The item-creation chunk mint's own:
+`RunService.run` (`blizzard/src/blizzard/hub/domain/routine_run.py`) allocates the run's `ref` through
+`WorkItemStore.allocate_ref` before this transaction opens, under the allocator's own already-accepted gap-tolerant
+contract, so a crash in between burns that one `ref`, never reused.
+
+The composite owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
+recompute.
+
 ## Chunk delete, then hub-item withdrawal
 
 `WorkItemStore.delete_chunk_and_withdraw_hub_items` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`)
