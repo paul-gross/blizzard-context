@@ -232,15 +232,15 @@ idempotence in the first place.
 `garden_proposal_closures` row in its own `store.write` transaction, checking the proposal's existing closure first as
 its own idempotence guard — the same shape §The delivery-materialization sweep's outcome-row check uses. A crash before
 commit loses the whole write, with nothing yet durable for a retried close to collide with; a crash after it leaves the
-closure already recorded, and a re-attempted close reads it back through `get` and refuses as already-closed, exactly
-as a live race would.
+closure already recorded, and a re-attempted close reads it back through `get` and refuses as already-closed, exactly as
+a live race would.
 
 The accept-with-mint path is a second writer of the same table: `WorkItemStore.accept_create`
-(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the accepted-and-minted `garden_proposal_closures`
-row, the item's `work_items` row, and its resting `not_ready` chunk's rows, all on one `engine.begin()` connection — the
-same shape §The delivery-materialization sweep's mint path uses, plus the closure row in place of the materialization
-outcome row, reaching `insert_garden_proposal_closure_row` the same way that mint path reaches
-`insert_materialization_row`. The closure row is checked and inserted first, so an already-closed proposal mints
+(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the accepted-and-minted
+`garden_proposal_closures` row, the item's `work_items` row, and its resting `not_ready` chunk's rows, all on one
+`engine.begin()` connection — the same shape §The delivery-materialization sweep's mint path uses, plus the closure row
+in place of the materialization outcome row, reaching `insert_garden_proposal_closure_row` the same way that mint path
+reaches `insert_materialization_row`. The closure row is checked and inserted first, so an already-closed proposal mints
 nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `WorkItemEditService._prepare_mint`'s
 `allocate_ref` still runs in its own transaction before this one opens, so a crash in between still burns one `ref`,
 never reused.
