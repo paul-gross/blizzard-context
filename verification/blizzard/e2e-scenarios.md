@@ -27,6 +27,7 @@ Taken together the scenarios cover:
 - the chunk board's Transcripts tab
 - the runner panel's own live SSE stream
 - the non-code spike
+- the packaged garden-routine graph's four run paths
 
 Scenario detail lives under `./e2e-scenarios/`, one spoke file per reader question. Each scenario module is a `##`
 section homed in exactly one spoke — check C of `blizzard-context:/scripts/check-registry-drift.py` parses this hub and
@@ -42,3 +43,4 @@ no module sections; the routing table below is the routing map and the discovery
 | [auth.md](./e2e-scenarios/auth.md)                       | The hub login dance and the multi-daemon runner SSO bounce                                                               |
 | [board.md](./e2e-scenarios/board.md)                     | The browser proofs over the hub-served web app — board views, live SSE updates, the graph explorer                       |
 | [runner-panel.md](./e2e-scenarios/runner-panel.md)       | The panel a runner serves itself                                                                                         |
+| [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden-routine graph's run paths — findings, proposals, and the rejected-delivery bounce                    |
