@@ -45,6 +45,20 @@ A garden proposal and a work-item proposal (`domain/work.md`) are unrelated enti
 are always named in full — `garden proposal` for this one — so neither inherits an unqualified `proposal` the other
 could be mistaken for.
 
+## Closing a proposal: pass or accept
+
+A garden proposal carries two closing verbs, and both leave a durable record — closure is terminal, exactly like a work
+item's own (`domain/work.md`). **Passing** is not a dismissal: it is the note that stops a later run raising the same
+response as though it were new, and it wants a reason more than accepting does. **Accepting** records agreement, and
+most acceptances mint work — a self-sourced hub work item, linked to the proposal in the same act, carrying the
+proposal's own body unless the accept supplies a different one. Minting stays the default; declining to mint is the
+deliberate act, because a spurious backlog item is visible and deletable while a real commission that silently mints
+nothing is a decision nobody can find again.
+
+Acceptance does not promote the item it mints — it rests behind the ordinary promote gate a person still has to open —
+and it does not move the findings behind the proposal: work being under way is not an observation that the ground
+changed, so an accepted proposal's findings stay live until a run reports them gone or a person withdraws them.
+
 ## What the hub does not do
 
 The hub never resolves what a class or a locus means, never judges whether a finding is worth having, and never turns a
