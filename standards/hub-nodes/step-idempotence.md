@@ -28,5 +28,10 @@ neither a `produces` marker nor internal `record-marker` granularity; a multi-it
 them, records a `merged/<repo>` marker via the callback immediately after each push, and treats a PR a re-run finds
 already merged as success rather than a fresh conflict.
 
+`garden_deliver.py` is a second shape: its idempotence key is a `garden-delivered` marker written by the hub itself,
+inside the same transaction as the delta it materializes, rather than by the executor's own `produces` bookkeeping
+afterward — a re-run's POST finds that marker already durable and returns `recorded` having minted nothing a second
+time, with no separate re-run-skip logic in the script at all.
+
 **Don't.** A step that pushes every repo in a loop with no per-repo marker — a crash between two repos' pushes re-runs
 the step from the top and pushes the first repo a second time.
