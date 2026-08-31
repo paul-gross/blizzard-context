@@ -146,6 +146,30 @@ the same staleness threshold (`ELICITATION_STALENESS_THRESHOLD`, 15 minutes) eve
 relaunch already accepts, and never durable in consequence since the orphaned attempt's own
 output file is simply never read once a newer `output_path` supersedes it.
 
+## The elicitation-clear-after-collect ordering (review round 1, F3/F4)
+
+`Judgement.collect` (`blizzard/src/blizzard/runner/loop/judgement.py`) clears the in-flight
+elicitation record, and sweeps its output files, only AFTER a collected reply is fully
+processed — never before. An earlier draft cleared the record first, opening two windows the
+build's own first review round caught: a crash between the clear and `_judged` completing would
+have left a lease with no elicitation record and no buffered outcome, re-entering the ordinary
+judge path and launching a **second, redundant** elicitation (double-billing the attempt's
+usage, not merely wasting one); and the staleness-exceeded branch inside the old `_lost` cleared
+the record before calling `Attempt.fail`, so a crash in that gap silently reset D5's
+never-resettable staleness baseline on the next pass's fresh `_launch`.
+
+Both are closed by ordering, not by a registry point: `collect` now clears the record and sweeps
+the files only once `_judged` returns, and the staleness-exceeded branch calls `Attempt.fail`
+directly, which kills and clears the record itself (D7) as one link in its own already-audited
+closing sequence — no separate write of `collect`'s own precedes either. The residual gap this
+still leaves — `Attempt.fail`'s own kill-then-close sequence, unchanged by this build — is the
+same one the worker-pid kill above it has always carried ("best-effort hygiene; the epoch fence
+is the guarantee"): a crash between the kill and the closure lands the lease back in the
+ordinary judge path with no elicitation record, so at most one elicitation is spent again from
+the point the staleness bound was already past. That is bounded and self-healing, not a fresh
+window `bzh:crash-point-registry` owes a point to, and no worse than the pre-#443 worker case the
+same comment already accepted.
+
 ## The retired nudge-resume reassembly window
 
 `nudge.after-resume.before-reassemble` (`blizzard/src/blizzard/runner/loop/judgement.py`) guarded a synchronous in-turn
