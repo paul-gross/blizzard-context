@@ -241,9 +241,8 @@ The accept-with-mint path is a second writer of the same table: `WorkItemStore.a
 `engine.begin()` connection — the same shape §The delivery-materialization sweep's mint path uses, plus the closure row
 in place of the materialization outcome row, reaching `insert_garden_proposal_closure_row` the same way that mint path
 reaches `insert_materialization_row`. The closure row is checked and inserted first, so an already-closed proposal mints
-nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `WorkItemEditService._prepare_mint`'s
-`allocate_ref` still runs in its own transaction before this one opens, so a crash in between still burns one `ref`,
-never reused.
+nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref` still runs
+in its own transaction before this one opens, so a crash in between still burns one `ref`, never reused.
 
 Two adapters writing one table is deliberate, not a layering gap: only the item's own adapter can enclose the item and
 chunk inserts in the accept-with-mint transaction, so that path could never fold into `GardenProposalClosureStore`
