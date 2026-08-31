@@ -119,6 +119,57 @@ which is written against a failed read and not only an empty one.
 Should a graph-scope read ever become something the engine gates on, this accepted window turns into a repair owed,
 because no fallback in authored prose can stand in for a decision the engine makes for itself.
 
+## The elicitation relaunch record-before-launch gap
+
+`Judgement._relaunch` (`blizzard/src/blizzard/runner/loop/judgement.py`) re-launches a
+detached verdict elicitation whose prior attempt exited without writing anything readable
+(blizzard#443, D5) — the loss-recovery counterpart to the ordinary first launch, whose own
+record-before-launch gap earns the `advance.after-elicit-record.before-launch` /
+`advance.after-elicit-launch` registry points because the generic sweep scenario reaches it
+on every ordinary judgement. A relaunch's own gap does not: it opens only once a prior
+elicitation has already been launched, exited, and left an unreadable output file — a
+condition the generic scenario never creates, so `bzh:crash-point-registry`'s family-coverage
+concern applies (D2) and this write earns a recorded decision instead of a dedicated family.
+
+A `kill -9` between `record_elicitation_relaunch` (pid cleared, a fresh `output_path`,
+`relaunch_count` incremented) and the new process actually starting leaves the in-flight
+record with `pid` unset — the same shape `Judgement.collect` already reads as "not running" on
+every ordinary poll. The next `Judgement.collect` pass over this lease therefore reads the
+still-empty output at the new path, finds no running process, and calls `_lost` again: it
+relaunches once more if under the staleness bound, or fails the attempt if past it — the exact
+recovery a live relaunch takes, replayed. The write earns **no window at all**: its halves are
+independently harmless, because the record's own read path already treats an unset pid as "not
+yet running" rather than as evidence a process must exist, so nothing downstream needs the two
+writes to have landed atomically. The one cost a crash in this gap can add is one extra wasted
+relaunch attempt should the killed process have actually started before the crash — bounded by
+the same staleness threshold (`ELICITATION_STALENESS_THRESHOLD`, 15 minutes) every ordinary
+relaunch already accepts, and never durable in consequence since the orphaned attempt's own
+output file is simply never read once a newer `output_path` supersedes it.
+
+## The elicitation-clear-after-collect ordering (review round 1, F3/F4)
+
+`Judgement.collect` (`blizzard/src/blizzard/runner/loop/judgement.py`) clears the in-flight
+elicitation record, and sweeps its output files, only AFTER a collected reply is fully
+processed — never before. An earlier draft cleared the record first, opening two windows the
+build's own first review round caught: a crash between the clear and `_judged` completing would
+have left a lease with no elicitation record and no buffered outcome, re-entering the ordinary
+judge path and launching a **second, redundant** elicitation (double-billing the attempt's
+usage, not merely wasting one); and the staleness-exceeded branch inside the old `_lost` cleared
+the record before calling `Attempt.fail`, so a crash in that gap silently reset D5's
+never-resettable staleness baseline on the next pass's fresh `_launch`.
+
+Both are closed by ordering, not by a registry point: `collect` now clears the record and sweeps
+the files only once `_judged` returns, and the staleness-exceeded branch calls `Attempt.fail`
+directly, which kills and clears the record itself (D7) as one link in its own already-audited
+closing sequence — no separate write of `collect`'s own precedes either. The residual gap this
+still leaves — `Attempt.fail`'s own kill-then-close sequence, unchanged by this build — is the
+same one the worker-pid kill above it has always carried ("best-effort hygiene; the epoch fence
+is the guarantee"): a crash between the kill and the closure lands the lease back in the
+ordinary judge path with no elicitation record, so at most one elicitation is spent again from
+the point the staleness bound was already past. That is bounded and self-healing, not a fresh
+window `bzh:crash-point-registry` owes a point to, and no worse than the pre-#443 worker case the
+same comment already accepted.
+
 ## The retired nudge-resume reassembly window
 
 `nudge.after-resume.before-reassemble` (`blizzard/src/blizzard/runner/loop/judgement.py`) guarded a synchronous in-turn
