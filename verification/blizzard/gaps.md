@@ -32,16 +32,19 @@ baseline re-record is warranted only once that holds. Gating `--blocks` repo-wid
 every block in the tree rather than the ones a change wrote, so it fails on prose the change never touched and stops
 being read.
 
-## Session stickiness and the effective model
+## Session stickiness, effective model, and context accounting
 
 The mint-only model contract — a session's model applied where the session is minted and on no resume after it — rests
-on the harness restoring a resumed session's own model. No tier asserts the effective model or the effective context
-accounting a harness ran under, because the mock façade sees argv and nothing else. `blizzard:e2e`'s
+on the harness restoring a resumed session's own model. The live OpenCode compatibility diagnostic now checks that the
+requested provider/model and variant survive fresh and resumed exports, but it deliberately supplies them on every
+invocation and therefore does not assert effective model stickiness when they are omitted. No tier asserts the effective
+context accounting a harness ran under, because the mock façade sees argv and nothing else. `blizzard:e2e`'s
 `test_session_modes_e2e.py::test_a_named_pool_threads_one_session_across_nodes_and_applies_model_at_mint_only` asserts
 the flag — mint carries a model, resumes carry none — and stops there.
 
-Standing in for a tier: what backs the stickiness claim is a one-time empirical observation of Claude Code CLI 2.1.220
-plus source reads of opencode 1.18.8 and codex. Each harness also has a configuration that defeats stickiness, which
+Standing in for a tier: what backs the surrounding export behavior is a one-time empirical observation of Claude Code
+CLI 2.1.220 and the retained live OpenCode `1.18.25` compatibility evidence. Neither observation proves OpenCode session
+stickiness when model flags are omitted; each harness also has a configuration that can defeat stickiness, which
 `docs/deployment/worker-spawn.md` states as deployment requirements. Do not add a real-token tier to close this gap.
 
 ## The declared compaction window
@@ -54,6 +57,19 @@ compacts anything.
 Standing in for a tier: `blizzard:manual-autocompact-window` closes this as a live procedure, the same shape as
 [`blizzard:manual-external-usage-probe`](./manual.md#blizzardmanual-external-usage-probe) — an external harness's live
 compaction behavior sits outside a hermetic, network-free CI tier's reach.
+
+## OpenCode's compaction tail marker
+
+The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
+retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
+otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under
+`blizzard/contracts/opencode/1.18.25/` carries it — the pinned live runs never compacted. A wrong spelling parses as
+absent, so the fallback silently stops firing rather than failing.
+
+Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
+for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
+Re-run `blizzard:manual-opencode-compatibility` long enough to force a compaction before treating the fallback as
+proven, and do not add a tier that would assert a hand-authored spelling against itself.
 
 ## The worker deny list
 

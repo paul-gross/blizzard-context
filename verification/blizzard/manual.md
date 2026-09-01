@@ -105,6 +105,24 @@ own `/usage` command against the same account, and compare the two.
 **Passes when.** The probe's parsed 5h/7d utilization percentages and reset times match what `claude /usage` reports for
 the same account, within the natural few-second sampling skew.
 
+### `blizzard:manual-opencode-compatibility`
+
+**Surface.** The live CLI/provider compatibility surface for OpenCode `1.18.25` with ChatGPT `5.6 Luna`
+(`openai/gpt-5.6-luna`) at `max`, covering the diagnostic's:
+
+- `fresh_turn`, `resume`, `process_control`, `judgement`, `root_hook`, `permission`, and `model_variant`
+- `usage_cost`, `takeover`, `transcript_read`, `transcript_cursor`, `child_sessions`, and `configuration_isolation`
+
+**Procedure.** Follow the public operator procedure at `blizzard/docs/deployment/opencode-compatibility.md` for
+prerequisites, invocation, live opt-in, credential and evidence handling, failure conditions, and interpretation.
+
+**Retained evidence.** Retain the diagnostic output and the sanitized `report.json` and `runtime.json` files from the
+evidence directory.
+
+**Passes when.** The command exits zero, the output reports OpenCode version `1.18.25` and ends with
+`compatibility: supported` or `compatibility: degraded`, and `report.json` records `complete: true` and
+`admissible: true`. This diagnostic result is not production adapter availability or a harness-selection decision.
+
 ### `blizzard:manual-autocompact-window`
 
 **Surface.** The `--autocompact` flag's effect rather than its presence: a session spawned with a declared

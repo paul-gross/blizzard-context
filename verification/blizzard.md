@@ -76,19 +76,20 @@ live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows 
 [`./blizzard/manual-mock.md`](./blizzard/manual-mock.md) — the live forge, the seeded board and fleet — for the
 `blizzard-mock:` rows.
 
-| Method                                 | Surface                                                                                           |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `blizzard:manual`                      | The acceptance loop end-to-end; **automated as of P6** — run it as `blizzard:e2e`, not by hand    |
-| `blizzard:manual-sse-probe`            | The live SSE wire probe: framing and timing on a real socket, hub or runner, one daemon at a time |
-| `blizzard:manual-standing-idp`         | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture    |
-| `blizzard:manual-external-usage-probe` | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`         |
-| `blizzard:manual-autocompact-window`   | A declared `--autocompact` window compacting a real session, rather than the model's own maximum  |
-| `blizzard:manual-worker-deny-list`     | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness |
-| `blizzard:manual-rollback-drill`       | The compose deployment's rollback promise, walked for real against two published image tags       |
-| `blizzard:manual-fleet-read-latency`   | `GET /api/chunks` wall-clock latency, before/after a read-path change, at fleet scale             |
-| `blizzard-mock:manual`                 | The winter-wired mock forge fronting a real fixture workspace's bare origins                      |
-| `blizzard-mock:manual-seeded-board`    | A realistic board rendered from a direct store seed: no work source configured, no hub restart    |
-| `blizzard-mock:manual-seeded-fleet`    | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick   |
+| Method                                   | Surface                                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `blizzard:manual`                        | The acceptance loop end-to-end; **automated as of P6** — run it as `blizzard:e2e`, not by hand    |
+| `blizzard:manual-sse-probe`              | The live SSE wire probe: framing and timing on a real socket, hub or runner, one daemon at a time |
+| `blizzard:manual-standing-idp`           | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture    |
+| `blizzard:manual-external-usage-probe`   | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`         |
+| `blizzard:manual-opencode-compatibility` | OpenCode `1.18.25` with ChatGPT `5.6 Luna` at `max`, live CLI/provider compatibility diagnostic   |
+| `blizzard:manual-autocompact-window`     | A declared `--autocompact` window compacting a real session, rather than the model's own maximum  |
+| `blizzard:manual-worker-deny-list`       | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness |
+| `blizzard:manual-rollback-drill`         | The compose deployment's rollback promise, walked for real against two published image tags       |
+| `blizzard:manual-fleet-read-latency`     | `GET /api/chunks` wall-clock latency, before/after a read-path change, at fleet scale             |
+| `blizzard-mock:manual`                   | The winter-wired mock forge fronting a real fixture workspace's bare origins                      |
+| `blizzard-mock:manual-seeded-board`      | A realistic board rendered from a direct store seed: no work source configured, no hub restart    |
+| `blizzard-mock:manual-seeded-fleet`      | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick   |
 
 ## Tools
 
