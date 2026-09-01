@@ -12,11 +12,11 @@ The browser scenarios are skipped in the `gate`/`pr` single-repo checkout; the t
 tier headless over the multi-repo checkout (Chromium via `uv run playwright install --with-deps chromium`; locally,
 `uv run playwright install chromium`).
 
-Except for the graphs-diagram module, every browser scenario here needs the built bundle `blizzard hub host` serves, the
-sibling provisioned `blizzard-mock` worktree (the transcript module needing only its forge-registered repo, never
-spawning a runner), a local winter source, and installed Chromium, skipping cleanly without any of them or without
-`BLIZZARD_E2E=1`; the in-process event-log function needs only the worktree and winter source; for the board-browser and
-cost modules an unbuilt bundle fails loudly instead of skipping.
+Except for the graphs-diagram and gardening-run-dialog modules, every browser scenario here needs the built bundle
+`blizzard hub host` serves, the sibling provisioned `blizzard-mock` worktree (the transcript module needing only its
+forge-registered repo, never spawning a runner), a local winter source, and installed Chromium, skipping cleanly without
+any of them or without `BLIZZARD_E2E=1`; the in-process event-log function needs only the worktree and winter source;
+for the board-browser and cost modules an unbuilt bundle fails loudly instead of skipping.
 
 ## test_board_browser_e2e
 
@@ -128,3 +128,17 @@ cleanly without `BLIZZARD_E2E=1` or without Chromium, but an unbuilt bundle fail
   so a new one is covered the day it lands, and a shipped graph rendering the diagram-unavailable fallback is admitted
   only when it routes an edge out of the graph — the one shape `layoutGraph` documents refusing, today the triage router
   — and is a layout regression otherwise.
+
+## test_gardening_run_dialog_browser_e2e
+
+The gardening run dialog (blizzard#392 D6), opened from the routines list's provisional Run action (D7). Needs no runner
+or forge traffic — a routine's own `run` mints a queued chunk, never executed here — so, like the graphs-diagram module,
+it stands up only the served hub, needing just the built bundle and an installed Chromium.
+
+- `test_gardening_run_dialog_browser` — mints a routine with a never-swept default scope, opens the dialog, and proves
+  the delta-steering rule (D5) renders for real: the never-swept note shows and the delta radio is disabled. Mints a new
+  scope through the dialog (D3), typing its slug and required description, and proves the CLI verb line names the live
+  `blizzard hub routine run` invocation. Submits and proves the create-then-run ordering landed against the live hub —
+  `GET /api/scopes` shows the new slug once the confirmation renders — and that the confirmation names a real
+  `ch_`-prefixed chunk id and links to `/board/chunk/<id>`, rendering no board of its own. Closing the confirmation
+  tears the dialog down back to the routines list.
