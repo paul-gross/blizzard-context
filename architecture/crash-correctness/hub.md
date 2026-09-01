@@ -250,3 +250,19 @@ alone.
 
 Both write paths owe the checker nothing because each is a single-transaction insert (plus, for accept-with-mint, the
 item and chunk inserts), not a derived cross-fact invariant to recompute.
+
+## Delivery-triggered finding resolution, riding the close-intent drain
+
+`HubWorkSource.close` (`blizzard/src/blizzard/hub/work_sources/internal/hub_work_source.py`, blizzard#394 Phase 3) is
+`IWorkCloser`'s own hub-native implementation, reached by §The close-intent drain sweep the same way any other closer
+is: `WorkItemEditService.deliver` writes the item's `closed_at`/`closure` first, then, as a second write,
+`GardenProposalDeliveryResolution.resolve_for_item` appends the accepted proposal's `resolved` `finding_facts` rows, if
+the delivered item minted from one.
+
+A crash between those two writes leaves the item delivered with its proposal's findings still live — not a gap, the same
+shape §The close-intent drain sweep's own `close.after-close.before-record` window already covers: the intent's own
+retirement fact has not landed either, so the sweep retries `close` for the same ref, `deliver` replays as the store's
+own `closed_at IS NULL` no-op, and `resolve_for_item` runs again. Its own gate is `has_resolution_for_proposal` (a
+`finding_facts` row already carrying the proposal's id), not any one finding's current state, so that retry completes an
+interrupted resolution exactly once and a finding a person reopens afterward is never silently re-resolved by a later,
+unrelated repeat of the same close.
