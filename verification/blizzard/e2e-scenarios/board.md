@@ -12,11 +12,12 @@ The browser scenarios are skipped in the `gate`/`pr` single-repo checkout; the t
 tier headless over the multi-repo checkout (Chromium via `uv run playwright install --with-deps chromium`; locally,
 `uv run playwright install chromium`).
 
-Except for the graphs-diagram and gardening-run-dialog modules, every browser scenario here needs the built bundle
-`blizzard hub host` serves, the sibling provisioned `blizzard-mock` worktree (the transcript module needing only its
-forge-registered repo, never spawning a runner), a local winter source, and installed Chromium, skipping cleanly without
-any of them or without `BLIZZARD_E2E=1`; the in-process event-log function needs only the worktree and winter source;
-for the board-browser and cost modules an unbuilt bundle fails loudly instead of skipping.
+Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
+without either or without `BLIZZARD_E2E=1`; for the board-browser and cost modules an unbuilt bundle fails loudly
+instead of skipping. Except for the graphs-diagram and gardening-run-dialog modules, every scenario also needs the
+sibling provisioned `blizzard-mock` worktree (the transcript module needing only its forge-registered repo, never
+spawning a runner) and a local winter source. The in-process event-log function needs only the worktree and winter
+source, no built bundle or Chromium.
 
 ## test_board_browser_e2e
 
