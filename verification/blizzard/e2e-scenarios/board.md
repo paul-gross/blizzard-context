@@ -131,9 +131,10 @@ cleanly without `BLIZZARD_E2E=1` or without Chromium, but an unbuilt bundle fail
 
 ## test_gardening_run_dialog_browser_e2e
 
-The gardening run dialog (blizzard#399 D6), opened from the routines list's provisional Run action (D7). Needs no runner
-or forge traffic — a routine's own `run` mints a queued chunk, never executed here — so, like the graphs-diagram module,
-it stands up only the served hub, needing just the built bundle and an installed Chromium.
+The gardening run dialog (blizzard#399 D6), opened from the selected routine's own panel — the reachability surface
+blizzard#397's routine-record panel superseded D7's provisional routines-list trigger with. Needs no runner or forge
+traffic — a routine's own `run` mints a queued chunk, never executed here — so, like the graphs-diagram module, it
+stands up only the served hub, needing just the built bundle and an installed Chromium.
 
 - `test_gardening_run_dialog_browser` — mints a routine with a never-swept default scope, opens the dialog, and proves
   the delta-steering rule (D5) renders for real: the never-swept note shows and the delta radio is disabled. Mints a new
