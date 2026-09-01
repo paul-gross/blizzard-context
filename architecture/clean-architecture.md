@@ -34,9 +34,9 @@ the store, forge, harness, or workspace adapter satisfies it.
 **Detect.** A domain service importing a concrete adapter, or a Protocol defined in the adapter package and imported
 inward.
 
-**Do.** `blizzard/src/blizzard/hub/domain/work.py` declares `IReadChunkRepository` and `IWriteChunkRepository`;
-`ChunkStore` in `blizzard/src/blizzard/hub/store/internal/chunk_store.py` implements them, and the domain never imports
-it.
+**Do.** `blizzard/src/blizzard/hub/domain/chunks/` declares 15 per-concept read/write Protocol pairs (for example
+`IReadChunkRecordRepository` and `IWriteChunkRecordRepository`); `ChunkStore` in
+`blizzard/src/blizzard/hub/store/internal/chunk_store.py` implements them structurally, and the domain never imports it.
 
 **Don't.** A domain module that imports `ChunkStore` directly.
 
