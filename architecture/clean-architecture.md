@@ -35,10 +35,11 @@ the store, forge, harness, or workspace adapter satisfies it.
 inward.
 
 **Do.** `blizzard/src/blizzard/hub/domain/chunks/` declares 15 per-concept read/write Protocol pairs (for example
-`IReadChunkRecordRepository` and `IWriteChunkRecordRepository`); `ChunkStore` in
-`blizzard/src/blizzard/hub/store/internal/chunk_store.py` implements them structurally, and the domain never imports it.
+`IReadChunkRecordRepository` and `IWriteChunkRecordRepository`); `ChunkRecordStore` in
+`blizzard/src/blizzard/hub/store/internal/chunk_record_store.py` implements that pair structurally, one adapter per
+seam, and the domain never imports any of them.
 
-**Don't.** A domain module that imports `ChunkStore` directly.
+**Don't.** A domain module that imports `ChunkRecordStore` directly.
 
 **See also.** [`../exemplars/python/repo_pattern.py`](../exemplars/python/repo_pattern.py) — the runnable reference for
 this seam, its `internal/` adapter placement, and its factory-injected error wrapping; read it when building a
@@ -61,7 +62,7 @@ singleton read directly.
 `blizzard/src/blizzard/runner/app.py`, and `blizzard/src/blizzard/runner/loop/build.py` wire every seam once and hand
 collaborators down in a frozen dataclass like `HubServices`.
 
-**Don't.** A coordinator that calls `ChunkStore()` or `datetime.now()` inside a method.
+**Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
 
 ## Screaming architecture (`bzh:screaming-architecture`)
 
