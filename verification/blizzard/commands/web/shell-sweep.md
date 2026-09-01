@@ -146,3 +146,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   behind it does not (`scrollTop` round-trips on the panel, stays `0` on `document.scrollingElement`), and
   `CdkTrapFocus`/`cdkTrapFocusAutoCapture` keep focus inside the panel on open and across eight real `Tab` presses —
   layout and real focus-management claims jsdom cannot make.
+- `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields (blizzard#392 D6),
+  mounted directly with plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio
+  rows must genuinely stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying
+  inside the panel's, the delta baseline block's finding-set-id line must sit above its per-repo landed-since lines, and
+  the new-scope near-match warning must render below both new-scope inputs rather than overlapping them — real CSS
+  layout claims jsdom cannot make.
