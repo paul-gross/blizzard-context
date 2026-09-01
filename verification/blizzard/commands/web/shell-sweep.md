@@ -140,13 +140,13 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   proving `graph-detail-header.css`'s own `:host` flex column reproduces that spacing now that the container hands them
   only one flex slot; proven able to fail by setting that `:host`'s `gap` to `0`. `GraphDetailEdges`'s per-node edge
   blocks must likewise stack, with a prompt addendum resolving in flow below its own edge row.
-- `kit-dialog.shell-sweep.spec.ts` covers `KitDialog` (blizzard#392 D6), the workspace's first modal shell: the scrim
+- `kit-dialog.shell-sweep.spec.ts` covers `KitDialog` (blizzard#399 D6), the workspace's first modal shell: the scrim
   genuinely covers the full viewport (`getBoundingClientRect` against `window.inner*`, not merely the panel's own box),
   the panel centres itself (near-equal left/right gaps) and its own `.body` scrolls a tall projection while the page
   behind it does not (`scrollTop` round-trips on the panel, stays `0` on `document.scrollingElement`), and
   `CdkTrapFocus`/`cdkTrapFocusAutoCapture` keep focus inside the panel on open and across eight real `Tab` presses —
   layout and real focus-management claims jsdom cannot make.
-- `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields (blizzard#392 D6),
+- `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields (blizzard#399 D6),
   mounted directly with plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio
   rows must genuinely stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying
   inside the panel's, the delta baseline block's finding-set-id line must sit above its per-repo landed-since lines, and

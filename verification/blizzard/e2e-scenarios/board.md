@@ -131,7 +131,7 @@ cleanly without `BLIZZARD_E2E=1` or without Chromium, but an unbuilt bundle fail
 
 ## test_gardening_run_dialog_browser_e2e
 
-The gardening run dialog (blizzard#392 D6), opened from the routines list's provisional Run action (D7). Needs no runner
+The gardening run dialog (blizzard#399 D6), opened from the routines list's provisional Run action (D7). Needs no runner
 or forge traffic — a routine's own `run` mints a queued chunk, never executed here — so, like the graphs-diagram module,
 it stands up only the served hub, needing just the built bundle and an installed Chromium.
 
