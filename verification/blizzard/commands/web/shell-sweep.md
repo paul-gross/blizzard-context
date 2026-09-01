@@ -119,6 +119,20 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   DELETE-alone row — at the full 390px and 320px viewport widths (not a board column's own narrower fractional share of
   one) the two controls must sit side by side, non-overlapping, with DELETE's own right edge staying inside the card's,
   rather than collapsing into an overlapping or overflowing pair; a real CSS flex-row layout claim jsdom cannot make.
+- `routine-panel.shell-sweep.spec.ts` covers the gardening tab's routine panel (`FleetRoutinePanel`) — the record,
+  strategy, trend, measurement, and last-swept blocks, mounted with a representative view model whose last-swept row
+  carries two long per-repository revision hashes. At 1280px, 390px, and 320px every block must genuinely stack —
+  distinct `top`s — with no horizontal overflow of the panel itself, and the last-swept table's own `scrollWidth` must
+  stay within its `clientWidth` rather than the long hashes forcing it wider. Proven able to fail by dropping
+  `table-layout: fixed`/`overflow-wrap: anywhere` from `routine-panel.css`'s table rule, which lets a long hash push the
+  table past its section. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
+  (`bzh:narrow-viewport-tier-rule`).
+- `gardening-routines-page.shell-sweep.spec.ts` covers the container's own `.gr-layout` list-beside-panel grid, which
+  `routine-panel.shell-sweep.spec.ts` never mounts since it stands `FleetRoutinePanel` up alone. At 1280px the list and
+  panel must sit side by side; at 390px and 320px `.gr-layout`'s `@media (max-width: 480px)` rule must collapse them
+  into a single stacked column, with no horizontal overflow of the layout itself. Proven able to fail by dropping that
+  media rule from `gardening-routines-page.css`. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths
+  bind (`bzh:narrow-viewport-tier-rule`).
 - `graph-detail.shell-sweep.spec.ts` covers the graphs container/presentational split's two Phase-2 children,
   `GraphDetailHeader` and `GraphDetailEdges`, mounted directly with plain inputs. `GraphDetailHeader`'s identity row,
   lifecycle actions, action-error line, and entry line — four blocks that were direct children of `.body`'s own
