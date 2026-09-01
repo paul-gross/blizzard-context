@@ -32,7 +32,7 @@ autoincrement behavior; no postgres-side test exists because there is no postgre
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit
 total `order_by`.
 
-**Do.** `chunk_store.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
+**Do.** `ChunkFactsStore.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
 because a consumer reads the newest pause fact via `[-1]`.
 
 **Don't.** The same `select(s.chunk_pause_facts).where(...)` with the `order_by` dropped — sqlite's rowid order hides

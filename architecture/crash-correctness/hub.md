@@ -27,7 +27,7 @@ degrades rather than breaks.
 by one dedicated scenario driving the built-in `hub` work source with no forge
 (`tests/crash/test_kill9_sweep.py::test_kill9_at_close_crash_point`).
 
-Every `_enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_store.py`) rides its own
+Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) rides its own
 caller's own transaction, the same way the marker path does — none has a window of its own. The marker path is the only
 one this register names a crash point for because it is the only one live today:
 `record_delivery_repo_landed`/`record_delivery_landed`/`finalize_delivery` have no caller in `blizzard/src/` (grep
@@ -71,13 +71,13 @@ partial-write window of its own.
 ## The item-creation chunk mint
 
 `POST /api/work-sources/hub/items` writes the item's `work_items` row and its resting `not_ready` chunk's rows —
-`chunks` plus `chunk_work_refs` — together, a pairing spanning two tables `ChunkStore` otherwise owns. Both of those
-inserts run on the same connection inside one `engine.begin()` in `WorkItemStore.create_with_chunk`
-(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), through one repository adapter, which reaches into
-`ChunkStore`'s row-insert body through the shared `insert_chunk_rows`
-(`blizzard/src/blizzard/hub/store/internal/chunk_store.py`) free function rather than through `IWriteChunkRepository`'s
-seam. That seam bypass is deliberate rather than a layering gap: it is what lets a single caller open one transaction
-over both tables at all.
+`chunks` plus `chunk_work_refs` — together, a pairing spanning two tables `ChunkRecordStore` and `ChunkWorkRefsStore`
+otherwise split between them. Both of those inserts run on the same connection inside one `engine.begin()` in
+`WorkItemStore.create_with_chunk` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), through one
+repository adapter, which reaches into the shared `insert_chunk_rows`
+(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) free function rather than through the chunk-seam adapters'
+own write methods. That seam bypass is deliberate rather than a layering gap: it is what lets a single caller open one
+transaction over both tables at all.
 
 One narrower window is named and accepted here: `WorkItemEditService.create` allocates the item's `ref` through
 `WorkItemStore.allocate_ref` before that transaction opens, under the allocator's own already-accepted gap-tolerant
@@ -92,10 +92,10 @@ recompute.
 `POST /api/routines/{routine_id}/run` (blizzard#392) writes the run item's `work_items` row, its resting chunk's rows —
 `chunks` plus one `chunk_work_refs` row per work ref — the promote-then-tail-stamp pair (`chunk_promoted` plus
 `queue_positions`), and the run's own identity row (`work_item_runs`, blizzard#393), together: five inserts spanning six
-tables `WorkItemStore`/`ChunkStore`/`RunContextStore` otherwise own across three repositories. All five run on the same
-connection inside one `engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
+tables `WorkItemStore`/the chunk-seam adapters/`RunContextStore` otherwise own across three repositories. All five run
+on the same connection inside one `engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
 (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing `insert_chunk_rows`, the free function
-`insert_promote_rows` it was extracted alongside (`blizzard/src/blizzard/hub/store/internal/chunk_store.py`), and
+`insert_promote_rows` it was extracted alongside (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`), and
 `insert_run_context_row` (`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape
 §The item-creation chunk mint already takes, widened from one table to three: what lets a single caller open one
 transaction over all six at once. `work_item_runs` is what garden delivery's own read
@@ -123,10 +123,10 @@ recompute.
 `WorkItemStore.delete_chunk_and_withdraw_hub_items` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`)
 writes the chunk's `chunk_deleted` row and closes every open `hub:`-source item it holds as withdrawn, both on one
 `engine.begin()` connection — the same single-transaction shape `create_with_chunk` above uses for its own pairing. The
-`chunk_deleted` insert runs through `record_deleted_row` (`blizzard/src/blizzard/hub/store/internal/chunk_store.py`), a
-free function reaching into `ChunkStore`'s row-insert body the same way `insert_chunk_rows` does for the mint side; the
-`work_items` closures reuse `WorkItemStore._close_conn`, the same connection-scoped update `close` itself calls. A
-`forge:`-sourced pointer on the same chunk is left untouched — only `hub:`-source items close.
+`chunk_deleted` insert runs through `record_deleted_row` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`), a
+free function shared the same way `insert_chunk_rows` is for the mint side; the `work_items` closures reuse
+`WorkItemStore._close_conn`, the same connection-scoped update `close` itself calls. A `forge:`-sourced pointer on the
+same chunk is left untouched — only `hub:`-source items close.
 
 `DeleteService.delete` (`blizzard/src/blizzard/hub/domain/delete.py`) reaches this write from both a direct chunk delete
 and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, always inside the same `threading.Lock`
@@ -143,22 +143,24 @@ invariant to recompute.
 ## Proposed work items, riding the completion's own write
 
 A node-step's proposed work items (`work_item_proposals`) ride whichever write already carries its artifacts:
-`ChunkStore.record_transition`, `record_migration`, and `record_decision`
-(`blizzard/src/blizzard/hub/store/internal/chunk_store.py`) each take the step's proposal rows on the same connection,
-inside the same `engine.begin()`, as the transition, migration, or decision fact they accompany. Only the proposal
-insert runs through a shared `_insert_proposals` helper — each write's own `ArtifactRow`s stay their own separate inline
-loop. A crash before that commit loses the whole write, proposals included, exactly as it already loses the fact and its
-artifacts; a crash after it has nothing left to lose. A consumer now reads these rows — the delivery-materialization
-sweep below — but only once the chunk delivers, well after this write's own transaction has closed one way or the other,
-so that consumer changes nothing about this write's own correctness.
+`ChunkMovementStore.record_transition`/`record_migration`
+(`blizzard/src/blizzard/hub/store/internal/chunk_movement_store.py`) and `ChunkDecisionsStore.record_decision`
+(`blizzard/src/blizzard/hub/store/internal/chunk_decisions_store.py`) each take the step's proposal rows on the same
+connection, inside the same `engine.begin()`, as the transition, migration, or decision fact they accompany. Only the
+proposal insert runs through a shared `insert_proposals` helper
+(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — each write's own `ArtifactRow`s stay their own separate
+inline loop. A crash before that commit loses the whole write, proposals included, exactly as it already loses the fact
+and its artifacts; a crash after it has nothing left to lose. A consumer now reads these rows — the
+delivery-materialization sweep below — but only once the chunk delivers, well after this write's own transaction has
+closed one way or the other, so that consumer changes nothing about this write's own correctness.
 
 The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
 
 ## A gate resolution's strike, riding the resolution's own write
 
-`ChunkStore.record_decision_resolution` (`blizzard/src/blizzard/hub/store/internal/chunk_store.py`) inserts each struck
-proposal's `work_item_strikes` row on the same connection, inside the same `engine.begin()`, as the
+`ChunkDecisionsStore.record_decision_resolution` (`blizzard/src/blizzard/hub/store/internal/chunk_decisions_store.py`)
+inserts each struck proposal's `work_item_strikes` row on the same connection, inside the same `engine.begin()`, as the
 `decision_resolutions` row it accompanies — the same one-transaction shape §Proposed work items above takes for a step's
 own proposals. A crash before that commit loses the whole write, strikes included, exactly as it already loses the
 resolution; a crash after it has nothing left to lose. The delivery-materialization sweep below reads

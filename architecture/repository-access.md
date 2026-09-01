@@ -16,8 +16,14 @@ narrowest one its job needs.
 **Detect.** One repository Protocol exposing both queries and mutations, or a read-path service holding a write-capable
 one.
 
-**Do.** `blizzard/src/blizzard/hub/domain/work.py` pairs `IReadChunkRepository` with `IWriteChunkRepository`, the write
-variant extending the read one; the composition root binds the write variant only where mutation is required.
+**Scope.** A seam whose reads only project other concepts' own fact tables, with no mutation of its own, stays read-only
+rather than pairing with an empty write half: `blizzard/src/blizzard/hub/domain/chunks/facts.py`'s
+`IReadChunkFactsRepository` has no write counterpart because `load_facts`/`load_all_facts` project the union of the
+other seams' own writes, and splitting that projection per concept would turn one bounded read into fifteen.
+
+**Do.** `blizzard/src/blizzard/hub/domain/chunks/record.py` pairs `IReadChunkRecordRepository` with
+`IWriteChunkRecordRepository`, the write variant extending the read one; the composition root binds the write variant
+only where mutation is required.
 
 **Don't.** One combined repository injected everywhere, handing a controller that only lists chunks the power to delete
 them.
