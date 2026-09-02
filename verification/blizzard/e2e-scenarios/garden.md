@@ -23,6 +23,8 @@ a live hub, one chunk per authored path.
   converging as an `observed` on the finding already live — still exactly one `excessive-scope` row — before the
   hand-out proposal cites it; and `invalid` has delivery reject an unknown `fin_` id, write the
   `garden-delivery-failure` artifact, and bounce to reconcile, where the corrected delta exists only if the `invalid`
-  edge's `prompt_addendum` actually threaded into re-entry. Session policy is asserted off the runner's own store:
-  reconcile never shares survey's session, propose resumes the match head its reconcile minted, and the bounced re-entry
-  mints a fresh one.
+  edge's `prompt_addendum` actually threaded into re-entry. After `found` delivers, `GET /api/runs` reports its row
+  (routine, scope, mode, `done` outcome, and the delivered finding-set it published) and `GET /api/runs/{chunk_id}`
+  reads its delta back as the two `stale-docstring` findings, an `added` group with empty `observed`/`gone`. Session
+  policy is asserted off the runner's own store: reconcile never shares survey's session, propose resumes the match head
+  its reconcile minted, and the bounced re-entry mints a fresh one.
