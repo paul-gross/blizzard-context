@@ -35,8 +35,8 @@ run always proceeds; a `delta` run runs against the routine/scope pair's own rec
 ## A run is readable independent of delivery
 
 A run is enumerable the moment it is minted, whether or not it ever delivers — an escalated run that never wrote a
-finding is as much a run as a delivered one, and both are read from the same act's own record, never from what
-delivery produced. A run's outcome is the same derived chunk status every other chunk carries
+finding is as much a run as a delivered one, and both are read from the same act's own record, never from what delivery
+produced. A run's outcome is the same derived chunk status every other chunk carries
 (`architecture/system-shape/store-facts.md`'s `bzh:facts-not-status`), not a garden-specific status of its own. A
 fanned-out survey's run can deliver more than one finding set in the same act — several scopes swept together, several
 lists published — and each stays its own set, distinguishable from the others, never merged into one.
