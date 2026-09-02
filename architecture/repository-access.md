@@ -19,7 +19,7 @@ one.
 **Scope.** A seam whose reads only project other concepts' own fact tables, with no mutation of its own, stays read-only
 rather than pairing with an empty write half: `blizzard/src/blizzard/hub/domain/chunks/facts.py`'s
 `IReadChunkFactsRepository` has no write counterpart because `load_facts`/`load_all_facts` project the union of the
-other seams' own writes, and splitting that projection per concept would turn one bounded read into fifteen.
+other seams' own writes, and splitting that projection per concept would turn one bounded read into one per seam.
 
 **Do.** `blizzard/src/blizzard/hub/domain/chunks/record.py` pairs `IReadChunkRecordRepository` with
 `IWriteChunkRecordRepository`, the write variant extending the read one; the composition root binds the write variant

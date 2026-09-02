@@ -253,6 +253,38 @@ alone.
 Both write paths owe the checker nothing because each is a single-transaction insert (plus, for accept-with-mint, the
 item and chunk inserts), not a derived cross-fact invariant to recompute.
 
+## Dependency edge declare and release
+
+`ChunkDependenciesStore.declare`/`.release` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`,
+blizzard#456) each write `chunk_dependencies` in one `store.write` transaction — `declare` a single insert of the fresh
+edge row, `release` a read of the standing row followed by its `released_at`/`released_by` update on the same
+connection, inside the one transaction. Neither has a partial-write span for a crash to land inside: `declare`'s insert
+either lands whole or not at all, and `release`'s read-then-write has nothing outside the transaction observing the read
+before the write commits.
+
+`DependencyService` (`blizzard/src/blizzard/hub/domain/dependencies.py`) holds both writes under the same
+`threading.Lock` `ClaimService`/`EditService`/`RestartService` already share
+(`blizzard/src/blizzard/hub/composition.py`) — the same concurrency guard §Chunk delete, then hub-item withdrawal
+already takes for its own composite write, not a crash-window mechanism: it serializes two racing declarations, a
+declaration racing a release, or a declaration racing `DeleteService.delete`'s own hold of the same lock (the
+prerequisite deleted between the caller's resolve and `declare`'s hold of the lock). `declare`'s own under-lock read of
+the dependent's re-derived status runs before its one atomic transaction, the same shape §Chunk delete, then hub-item
+withdrawal states for its own guard-check-then-write, rather than protecting against a crash mid-transaction. The
+prerequisite's re-derived ephemerality read is not closed the same way: `GroupService`
+(`blizzard/src/blizzard/hub/domain/queue.py`) takes no claim lock at all, so the read only narrows, rather than closes,
+that window. The accepted residual — a standing edge landing onto a prerequisite grouped away between the caller's
+resolve and `declare`'s hold of the lock — is caught after the fact by `bzh:invariant-checker`'s
+`NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`).
+
+Neither write earns a `bzh:crash-point-registry` entry — the "no window at all" ground: `declare`'s insert and
+`release`'s read-then-write are each whole inside their own single transaction. `declare` alone introduces two derived
+cross-fact invariants the engine enforces no constraint behind: a standing edge could close a cycle in the dependency
+graph, or duplicate an already-standing ordered pair, with no schema-level constraint stopping either — so it earns two
+new `bzh:invariant-checker` assertions: `NoStandingDependencyCycle` (`hub:no-standing-dependency-cycle`) and
+`NoDuplicateStandingDependency` (`hub:no-duplicate-standing-dependency`), `blizzard/src/blizzard/tools/invariants.py`.
+`release` only sets `released_at`/`released_by` on an already-standing row, inside that same single transaction: it can
+only shrink the standing set and can never close a cycle, so it introduces no derived invariant of its own.
+
 ## Delivery-triggered finding resolution, riding the close-intent drain
 
 `HubWorkSource.close` (`blizzard/src/blizzard/hub/work_sources/internal/hub_work_source.py`, blizzard#394 Phase 3) is

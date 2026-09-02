@@ -34,7 +34,7 @@ the store, forge, harness, or workspace adapter satisfies it.
 **Detect.** A domain service importing a concrete adapter, or a Protocol defined in the adapter package and imported
 inward.
 
-**Do.** `blizzard/src/blizzard/hub/domain/chunks/` declares 14 per-concept read/write Protocol pairs (for example
+**Do.** `blizzard/src/blizzard/hub/domain/chunks/` declares per-concept read/write Protocol pairs (for example
 `IReadChunkRecordRepository` and `IWriteChunkRecordRepository`) plus one read-only-only seam (`facts`);
 `ChunkRecordStore` in `blizzard/src/blizzard/hub/store/internal/chunk_record_store.py` implements that pair
 structurally, one adapter per seam, and the domain never imports any of them.
