@@ -152,3 +152,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   inside the panel's, the delta baseline block's finding-set-id line must sit above its per-repo landed-since lines, and
   the new-scope near-match warning must render below both new-scope inputs rather than overlapping them — real CSS
   layout claims jsdom cannot make.
+- `garden-runs.shell-sweep.spec.ts` covers the gardening runs-and-findings tab's two presentational components
+  (blizzard#397 Phase 3), each mounted directly with plain inputs. `FleetRunList`'s escalated row, at 390px, must carry
+  a genuinely different computed `background-color` and `border-left-color` from a normal row — a computed-style claim
+  no viewport width changes, since jsdom would accept the `rl-row--escalated` class name without ever evaluating it
+  against `run-list.css`; proven able to fail by dropping that rule's `background`/`border-left-color` declarations.
+  `FleetRunDelta`, at 390px, must stack its two finding-set blocks with distinct `top`s, and, within the first set,
+  stack its added/observed/gone groups in that order with no overlap and no horizontal overflow of the delta itself;
+  proven able to fail by forcing `run-delta.css`'s `.rd-groups` `flex-direction` to `row`. Gardening sits in the hub's
+  mobile bottom tab bar, so the narrow width binds (`bzh:narrow-viewport-tier-rule`).
