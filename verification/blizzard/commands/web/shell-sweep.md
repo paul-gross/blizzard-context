@@ -161,3 +161,27 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   stack its added/observed/gone groups in that order with no overlap and no horizontal overflow of the delta itself;
   proven able to fail by forcing `run-delta.css`'s `.rd-groups` `flex-direction` to `row`. Gardening sits in the hub's
   mobile bottom tab bar, so the narrow width binds (`bzh:narrow-viewport-tier-rule`).
+- `gardening-proposals-page.shell-sweep.spec.ts` covers the garden proposal docket container's own `.gp-layout`
+  list-beside-panel grid: the list and panel sit side by side above 480px, and genuinely collapse into a single stacked
+  column at 390px and 320px, with no horizontal overflow of the layout itself, and the detail panel's own evidence-row
+  locus (`.pp-finding-locus`) wraps a long, unbroken path rather than widening the panel past its column.
+- `gardening-proposal-pass-dialog.shell-sweep.spec.ts` covers the Pass dialog's own view, mounted directly with plain
+  inputs: at 390px and 1024px the footer's Cancel/Pass buttons must genuinely sit side by side, neither overflowing the
+  dialog panel.
+- `gardening-proposal-accept-dialog.shell-sweep.spec.ts` covers the Accept dialog's own view, mounted directly with
+  plain inputs: at 390px and 1024px the mint/decline radiogroup must genuinely stack its two options, the decline reason
+  field must render below them once decline is chosen, and the footer's Cancel/Accept buttons must sit side by side,
+  neither overflowing the dialog panel.
+- `gardening-findings-triage.shell-sweep.spec.ts` covers the findings triage list (`FleetFindingList`), mounted directly
+  with plain inputs. With every row selected through the real select-all checkbox (never by poking the component's own
+  selection signal), the bulk bar's own buttons must, at 1400px, 390px, and 320px, stay inside the viewport and never
+  overlap each other, and the list itself must carry no horizontal overflow — real CSS layout claims jsdom cannot make.
+  Separately, a `gone`-flagged row (D8) must carry a genuinely different computed `background-color` and
+  `border-left-color` from a plain row — a computed-style claim no viewport width changes, since jsdom would accept the
+  `fl-row--gone` class name without ever evaluating it against `finding-list.css`. Gardening sits in the hub's mobile
+  bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `gardening-finding-triage-dialog.shell-sweep.spec.ts` covers the findings triage bulk-action dialog's own view,
+  mounted directly with plain inputs, once per verb that carries a distinct field shape. At 1400px, 390px, and 320px the
+  note field must render without overflowing the dialog panel, the `supersede` verb's extra absorbing-finding field must
+  render below or beside the note field with no overlap, and the footer's Cancel/submit buttons must sit side by side
+  without overflowing the panel — real CSS layout claims jsdom cannot make.
