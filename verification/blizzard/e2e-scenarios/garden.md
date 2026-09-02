@@ -26,5 +26,5 @@ a live hub, one chunk per authored path.
   edge's `prompt_addendum` actually threaded into re-entry. After `found` delivers, `GET /api/runs` reports its row
   (routine, scope, mode, `done` outcome, and the delivered finding-set it published) and `GET /api/runs/{chunk_id}`
   reads its delta back as the two `stale-docstring` findings, an `added` group with empty `observed`/`gone`. Session
-  policy is asserted off the runner's own store: reconcile never shares survey's session, propose resumes the match
-  head its reconcile minted, and the bounced re-entry mints a fresh one.
+  policy is asserted off the runner's own store: reconcile never shares survey's session, propose resumes the match head
+  its reconcile minted, and the bounced re-entry mints a fresh one.
