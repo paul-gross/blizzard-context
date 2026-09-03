@@ -31,3 +31,18 @@ Landing is not itself terminal: a graph may route further runner work after it b
 
 Deleting or grouping an unacquired chunk is not a status: the chunk simply vanishes from every listing, the work item
 remaining the durable referent.
+
+## The blocked marking
+
+A chunk with a standing dependency edge whose prerequisite has not reached `done` carries a **blocked marking** —
+a nullable field naming that one prerequisite, read beside `status` on the chunk read and on the queue and backlog
+listings. It is not a status and never gates one: a blocked chunk keeps the status it derives, the rank it holds, and
+the list it lives in, and stays exactly as groupable, deletable, and editable as it was a moment earlier. The marking
+names its immediate prerequisite only — where that prerequisite is itself blocked, the chain is not walked, so an
+operator following the root follows the naming one hop at a time.
+
+Only a dependent read at `not_ready` or `ready` — `PRE_CLAIM_STATUSES` — derives a marking. The marking answers why a
+chunk cannot yet be claimed, and that question stops applying the moment a chunk is claimed, running, delivering,
+human-gated, paused, or terminal — even though a standing edge declared while it was still pre-claim persists
+unreleased through all of that. Declaring is itself only ever admitted in that same window, so the gate does not
+shrink what a marking can name; it only stops repeating the answer once the question no longer holds.
