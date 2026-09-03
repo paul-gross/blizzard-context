@@ -27,7 +27,7 @@ Taken together the scenarios cover:
 - the chunk board's Transcripts tab
 - the runner panel's own live SSE stream
 - the non-code spike
-- the packaged garden-routine graph's four run paths
+- the packaged garden-routine graph's six run paths
 
 Scenario detail lives under `./e2e-scenarios/`, one spoke file per reader question. Each scenario module is a `##`
 section homed in exactly one spoke — check C of `blizzard-context:/scripts/check-registry-drift.py` parses this hub and

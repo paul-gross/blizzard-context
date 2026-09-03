@@ -135,3 +135,35 @@ workspace mints, never against a real forge.
 Standing in for a tier: a push failure specific to a real remote — auth, a GitHub branch-protection rule, network — is
 exercised by the dogfood deployment (`workspace:/context/project/local-instance.md`), whose build transcripts show the
 worker pushing to real GitHub. Do not add a real-forge CI tier.
+
+## A garden node prompt's wording
+
+The packaged `garden-routine` prompts carry the routine's whole method: `survey.md` resolves the routine's name as an
+axis against the target project's gardening-axes registry, follows that entry's Criteria pointer, and records its
+declared Measurement, and `propose.md` rules what a proposal's `findings` may cite and how its `class` is spelled. The
+declared methods reach the mechanical half only — `blizzard:unit-test`'s packaged-prompt byte bars
+(`blizzard/tests/test_prompt_byte_bars.py`) and its `blizzard hub` verb guard, `blizzard:component-test`'s graph mint
+and choice-edge resolution, and `blizzard:e2e`'s `test_garden_routine_runs_end_to_end_on_all_six_paths`, whose scripted
+node bodies deliberately exercise no model at all. That `survey` actually resolves its axis from the target's registry
+rather than improvising a yardstick, or that `propose` actually cites the refs its own run just minted, is asserted by
+nothing: a prompt is an input to a model no tier runs.
+
+Standing in for a tier: a live routine run against a real fleet, whose delivered finding set and docket are read back
+and judged against what the axis entry declares — the dogfood deployment
+(`workspace:/context/project/local-instance.md`) is where that evidence is produced, and a prompt rewrite owes one
+before its wording is treated as proven. Do not answer this with a tier that scores prompt prose against a rubric, and
+do not read the scripted e2e path as evidence about the model: it asserts the machinery a model's output flows through,
+which is the half that already has a tier.
+
+## A garden proposal's `class` spelling across runs
+
+A garden routine's findings side has a live cross-run read: `reconcile` fetches the routine's own bucket, and every
+finding in it carries its `class`, so a worker can see how a prior run spelled one. Proposals have no equivalent read —
+`propose` runs on a resumed session that sees only this run, and the one cross-run verb any prompt names,
+`blizzard runner garden findings`, returns findings, never proposals. Nothing lets a worker see how a prior run spelled
+a proposal `class`, so the store's own grouping by that field can drift run over run with no pass ever positioned to
+notice.
+
+Standing in for a tier: nothing does, and nothing should invent a proposals read to close it — that is surface this gap
+does not license. A person reading the docket sheet grouped by `class` is the only place a drifted spelling would
+surface, and only by inspection.

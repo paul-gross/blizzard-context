@@ -26,8 +26,8 @@ prompt prose rather than the `checks:` field, or naming an application file path
 the worker verbatim, fetched by name rather than carried in the prompt, and held to the same reusability bar as prompt
 prose. The fleet protocol is not application knowledge and stays in any graph: the `blizzard runner` verbs —
 `artifact create`, `artifact commit`, `artifact list` and `get` (with node, graph, or system `--scope`), `ask`,
-`work-items`, and chunk history — are blizzard's own surface, identical across every application it drives
-(`blizzard runner attach` is a deprecated alias for `artifact create` — `bzh:worker-node-attach-instruction` in
+`work-items`, `garden findings`, and chunk history — are blizzard's own surface, identical across every application it
+drives (`blizzard runner attach` is a deprecated alias for `artifact create` — `bzh:worker-node-attach-instruction` in
 [../../standards/worker-nodes/declarations.md](../../standards/worker-nodes/declarations.md) owns it). Naming a git or
 gh operation directly is likewise permitted — VCS and forge mechanics are as invariant across applications as the fleet
 protocol — but permitted is not warranted: state the check, and name the incantation only where the choice it encodes is
