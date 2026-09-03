@@ -46,3 +46,7 @@ chunk cannot yet be claimed, and that question stops applying the moment a chunk
 human-gated, paused, or terminal — even though a standing edge declared while it was still pre-claim persists unreleased
 through all of that. Declaring is itself only ever admitted in that same window, so the gate does not shrink what a
 marking can name; it only stops repeating the answer once the question no longer holds.
+
+A chunk currently named as another's blocked-marking prerequisite cannot itself be deleted while that edge stands —
+deletion refuses 409, naming the dependents (issue #460). Deleting the *dependent* chunk is unaffected by this and
+stays exactly as deletable as the sentence above already promises.

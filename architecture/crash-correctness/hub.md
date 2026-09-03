@@ -137,8 +137,13 @@ not a crash window: the call sequence it guards only reads (`load_facts`) before
 of the one atomic transaction — unlike `create_with_chunk`'s own sibling gap, `allocate_ref` running in its own
 transaction before the insert it feeds, there is no narrower window here to name and accept.
 
-The pairing owes the checker nothing because it is a single-transaction insert-plus-update, not a derived cross-fact
-invariant to recompute.
+The same transaction also releases the deleted chunk's own standing outgoing dependency edges, via
+`release_outgoing_edges_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) called on the
+same `conn` right after `record_deleted_row` (issue #460) — still inside the one `engine.begin()`, so a deleted
+dependent's own edges never survive it.
+
+The pairing owes the checker nothing because it is a single-transaction insert-plus-update(s), not a derived
+cross-fact invariant to recompute.
 
 ## Proposed work items, riding the completion's own write
 
