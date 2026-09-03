@@ -133,9 +133,10 @@ and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, alwa
 `ClaimService`/`EditService`/`RestartService` already shared before this feature
 (`blizzard/src/blizzard/hub/composition.py`) — the guard-check and the composite write happen under one held lock, so a
 claim cannot land on a chunk this write is mid-way through deleting. That lock closes a same-process concurrency race,
-not a crash window: the call sequence it guards only reads (`load_facts`) before acting, with no write of its own ahead
-of the one atomic transaction — unlike `create_with_chunk`'s own sibling gap, `allocate_ref` running in its own
-transaction before the insert it feeds, there is no narrower window here to name and accept.
+not a crash window: the call sequence it guards only reads — `load_facts` and, since issue #460, `list_standing_edges()`
+— before acting, with no write of its own ahead of the one atomic transaction — unlike `create_with_chunk`'s own sibling
+gap, `allocate_ref` running in its own transaction before the insert it feeds, there is no narrower window here to name
+and accept.
 
 The same transaction also releases the deleted chunk's own standing outgoing dependency edges, via
 `release_outgoing_edges_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) called on the
@@ -294,19 +295,19 @@ only shrink the standing set and can never close a cycle, so it introduces no de
 ### A fold's edge rewrite, riding its own `chunk_grouped` write
 
 `ChunkDependenciesStore.record_fold` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`,
-blizzard#460) records a folded chunk's `chunk_grouped` row — via `record_grouped_row_conn`
-(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — and releases/mints its own dependency edges, all on one
-connection inside one `engine.begin()`, the same shape `WorkItemStore.delete_chunk_and_withdraw_hub_items` reaches for
-its own delete-plus-withdrawal pairing above. It earns no `bzh:crash-point-registry` entry on the same "no window at
-all" ground: there is nothing for a crash to land partway through. `GroupService.group`
-(`blizzard/src/blizzard/hub/domain/queue.py`) calls it once per folded chunk, each call its own transaction —
-`add_work_refs` stays its own separate write ahead of it, pre-existing and not widened by this change. The window
-between one target's `add_work_refs` and `record_fold` — and between one target's `record_fold` and the next target's,
-for a multi-chunk fold — is the same pre-existing per-target span grouping already carried before dependency edges
-entered the picture, unwidened here. A crash inside it leaves some targets folded and others not; re-running the fold
-against the survivor converges rather than compounds, since the edge-rewrite's own duplicate-detection (D3) treats a
-pair already resulting — carried by an earlier, already-landed target — as nothing further to mint, so replaying an
-interrupted fold cannot double-mint an edge it already carried.
+blizzard#460) takes every target a fold carries and records each one's `chunk_grouped` row — via
+`record_grouped_row_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — plus its own release/mint edge
+rewrite, all targets on one connection inside one `engine.begin()`, the same shape
+`WorkItemStore.delete_chunk_and_withdraw_hub_items` reaches for its own delete-plus-withdrawal pairing above.
+`GroupService.group` (`blizzard/src/blizzard/hub/domain/queue.py`) calls it exactly once per fold, covering every target
+the fold carries in that one transaction, so no target's `chunk_grouped` row can ever commit ahead of a sibling target's
+own edge release/mint — the condition `hub:no-standing-dependency-onto-ephemeral-chunk` forbids: a standing edge naming
+an already-grouped-away chunk. It earns no `bzh:crash-point-registry` entry on the "no window at all" ground: there is
+nothing left for a crash to land partway through, across the whole fold. `add_work_refs` stays its own separate write
+ahead of the fold's one dependency transaction, per target. A crash inside that narrower window leaves some targets'
+work refs unmerged and none of them grouped yet; re-running the fold against the survivor converges rather than
+compounds, since the edge-rewrite's own duplicate-detection (D3) treats a pair already resulting as nothing further to
+mint, so replaying an interrupted fold cannot double-mint an edge it already carried.
 
 ## Delivery-triggered finding resolution, riding the close-intent drain
 
