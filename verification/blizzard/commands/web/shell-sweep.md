@@ -185,3 +185,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   note field must render without overflowing the dialog panel, the `supersede` verb's extra absorbing-finding field must
   render below or beside the note field with no overlap, and the footer's Cancel/submit buttons must sit side by side
   without overflowing the panel — real CSS layout claims jsdom cannot make.
+- `board-card-blocked.shell-sweep.spec.ts` covers `BoardCardComponent`'s blocked marking (issue #461): mounted once with
+  no `blockedOn` and once with one, at 800px (wider than any real board column) and at 390px/320px
+  (`bzh:narrow-viewport-tier-rule`), the marking must render directly below the status row without moving the status's
+  own position and without its own right edge overflowing the card — a real CSS layout claim jsdom cannot make, since
+  `ChunkBlocked` mounts outside the card's own open button (a nested interactive element inside it is invalid HTML).
