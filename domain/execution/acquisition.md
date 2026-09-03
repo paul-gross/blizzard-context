@@ -8,6 +8,11 @@ fleet exactly-once is upheld. The claim is claim-by-route: the runner peeks the 
 environments, and posts the complete route; the hub accepts exactly one claim per chunk. The environment identifier is
 opaque to the hub — it knows which environment, never what an environment is.
 
+Which entry a runner claims out of a peek carrying a [blocked marking](../work/statuses.md#the-blocked-marking) is that
+runner's own choice, not the hub's: by default it reaches past a marked entry for the first unmarked one, rather than
+spending an attempt on one it already knows is not yet claimable. An operator may instead configure a runner to hold at
+a marked entry and claim nothing that tick — strictness the runner chooses, not a fleet-wide rule.
+
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 
 ## The route
