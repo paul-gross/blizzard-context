@@ -142,8 +142,8 @@ The same transaction also releases the deleted chunk's own standing outgoing dep
 same `conn` right after `record_deleted_row` (issue #460) — still inside the one `engine.begin()`, so a deleted
 dependent's own edges never survive it.
 
-The pairing owes the checker nothing because it is a single-transaction insert-plus-update(s), not a derived
-cross-fact invariant to recompute.
+The pairing owes the checker nothing because it is a single-transaction insert-plus-update(s), not a derived cross-fact
+invariant to recompute.
 
 ## Proposed work items, riding the completion's own write
 
