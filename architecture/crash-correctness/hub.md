@@ -133,11 +133,17 @@ and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, alwa
 `ClaimService`/`EditService`/`RestartService` already shared before this feature
 (`blizzard/src/blizzard/hub/composition.py`) — the guard-check and the composite write happen under one held lock, so a
 claim cannot land on a chunk this write is mid-way through deleting. That lock closes a same-process concurrency race,
-not a crash window: the call sequence it guards only reads (`load_facts`) before acting, with no write of its own ahead
-of the one atomic transaction — unlike `create_with_chunk`'s own sibling gap, `allocate_ref` running in its own
-transaction before the insert it feeds, there is no narrower window here to name and accept.
+not a crash window: the call sequence it guards only reads — `load_facts` and, since issue #460, `list_standing_edges()`
+— before acting, with no write of its own ahead of the one atomic transaction — unlike `create_with_chunk`'s own sibling
+gap, `allocate_ref` running in its own transaction before the insert it feeds, there is no narrower window here to name
+and accept.
 
-The pairing owes the checker nothing because it is a single-transaction insert-plus-update, not a derived cross-fact
+The same transaction also releases the deleted chunk's own standing outgoing dependency edges, via
+`release_outgoing_edges_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) called on the
+same `conn` right after `record_deleted_row` (issue #460) — still inside the one `engine.begin()`, so a deleted
+dependent's own edges never survive it.
+
+The pairing owes the checker nothing because it is a single-transaction insert-plus-update(s), not a derived cross-fact
 invariant to recompute.
 
 ## Proposed work items, riding the completion's own write
@@ -270,20 +276,38 @@ declaration racing a release, or a declaration racing `DeleteService.delete`'s o
 prerequisite deleted between the caller's resolve and `declare`'s hold of the lock). `declare`'s own under-lock read of
 the dependent's re-derived status runs before its one atomic transaction, the same shape §Chunk delete, then hub-item
 withdrawal states for its own guard-check-then-write, rather than protecting against a crash mid-transaction. The
-prerequisite's re-derived ephemerality read is not closed the same way: `GroupService`
-(`blizzard/src/blizzard/hub/domain/queue.py`) takes no claim lock at all, so the read only narrows, rather than closes,
-that window. The accepted residual — a standing edge landing onto a prerequisite grouped away between the caller's
-resolve and `declare`'s hold of the lock — is caught after the fact by `bzh:invariant-checker`'s
-`NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`).
+prerequisite's re-derived ephemerality read is now closed the same way, fully: `GroupService`
+(`blizzard/src/blizzard/hub/domain/queue.py`) holds the same shared lock for its whole fold as of blizzard#460, so
+`declare`'s ephemerality read is serialized against every writer that can make a prerequisite ephemeral — grouping
+included, not merely narrowed against it. `NoStandingDependencyOntoEphemeralChunk`
+(`hub:no-standing-dependency-onto-ephemeral-chunk`) remains a `bzh:invariant-checker` assertion, but now as a backstop
+against a regression in that serialization, not a guard against a known-live gap.
 
-Neither write earns a `bzh:crash-point-registry` entry — the "no window at all" ground: `declare`'s insert and
-`release`'s read-then-write are each whole inside their own single transaction. `declare` alone introduces two derived
-cross-fact invariants the engine enforces no constraint behind: a standing edge could close a cycle in the dependency
-graph, or duplicate an already-standing ordered pair, with no schema-level constraint stopping either — so it earns two
-new `bzh:invariant-checker` assertions: `NoStandingDependencyCycle` (`hub:no-standing-dependency-cycle`) and
+Neither `declare` nor `release` earns a `bzh:crash-point-registry` entry — the "no window at all" ground: `declare`'s
+insert and `release`'s read-then-write are each whole inside their own single transaction. `declare` alone introduces
+two derived cross-fact invariants the engine enforces no constraint behind: a standing edge could close a cycle in the
+dependency graph, or duplicate an already-standing ordered pair, with no schema-level constraint stopping either — so it
+earns two new `bzh:invariant-checker` assertions: `NoStandingDependencyCycle` (`hub:no-standing-dependency-cycle`) and
 `NoDuplicateStandingDependency` (`hub:no-duplicate-standing-dependency`), `blizzard/src/blizzard/tools/invariants.py`.
 `release` only sets `released_at`/`released_by` on an already-standing row, inside that same single transaction: it can
 only shrink the standing set and can never close a cycle, so it introduces no derived invariant of its own.
+
+### A fold's edge rewrite, riding its own `chunk_grouped` write
+
+`ChunkDependenciesStore.record_fold` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`,
+blizzard#460) takes every target a fold carries and records each one's `chunk_grouped` row — via
+`record_grouped_row_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — plus its own release/mint edge
+rewrite, all targets on one connection inside one `engine.begin()`, the same shape
+`WorkItemStore.delete_chunk_and_withdraw_hub_items` reaches for its own delete-plus-withdrawal pairing above.
+`GroupService.group` (`blizzard/src/blizzard/hub/domain/queue.py`) calls it exactly once per fold, covering every target
+the fold carries in that one transaction, so no target's `chunk_grouped` row can ever commit ahead of a sibling target's
+own edge release/mint — the condition `hub:no-standing-dependency-onto-ephemeral-chunk` forbids: a standing edge naming
+an already-grouped-away chunk. It earns no `bzh:crash-point-registry` entry on the "no window at all" ground: there is
+nothing left for a crash to land partway through, across the whole fold. `add_work_refs` stays its own separate write
+ahead of the fold's one dependency transaction, per target. A crash inside that narrower window leaves some targets'
+work refs unmerged and none of them grouped yet; re-running the fold against the survivor converges rather than
+compounds, since the edge-rewrite's own duplicate-detection (D3) treats a pair already resulting as nothing further to
+mint, so replaying an interrupted fold cannot double-mint an edge it already carried.
 
 ## Delivery-triggered finding resolution, riding the close-intent drain
 
