@@ -197,3 +197,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   by side, and at 700px, 390px, and 320px they genuinely stack with no horizontal overflow of the layout — real CSS
   layout claims jsdom cannot make. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
   (`bzh:narrow-viewport-tier-rule`).
+- `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row (issue #461 round 3), mounted with every
+  control live at once — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real
+  dock share) and at 390px/320px (`bzh:narrow-viewport-tier-rule`): none of Pause, Complete, the prerequisite field,
+  Declare, Release, the route/Detach group, or the close button may overflow the header's own right edge — a real CSS
+  flex-wrap layout claim jsdom cannot make.
