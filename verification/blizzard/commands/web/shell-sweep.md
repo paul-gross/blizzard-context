@@ -114,11 +114,6 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   whole panel when a federation bounce could not complete silently: at 390px and 320px its headline/detail block and
   retry control must render with no view-wide horizontal overflow; proven able to fail by adding `white-space: nowrap`
   to `.detail`.
-- `board-card-control-row.shell-sweep.spec.ts` covers `BoardCardComponent`'s control row: mounted as a `not_ready` card
-  with `canControl` true — the one status PROMOTE and DELETE render on together, and so the denser case than `ready`'s
-  DELETE-alone row — at the full 390px and 320px viewport widths (not a board column's own narrower fractional share of
-  one) the two controls must sit side by side, non-overlapping, with DELETE's own right edge staying inside the card's,
-  rather than collapsing into an overlapping or overflowing pair; a real CSS flex-row layout claim jsdom cannot make.
 - `routine-panel.shell-sweep.spec.ts` covers the gardening tab's routine panel (`FleetRoutinePanel`) — the record,
   strategy, trend, measurement, and last-swept blocks, mounted with a representative view model whose last-swept row
   carries two long per-repository revision hashes. At 1280px, 390px, and 320px every block must genuinely stack —
@@ -133,13 +128,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   into a single stacked column, with no horizontal overflow of the layout itself. Proven able to fail by dropping that
   media rule from `gardening-routines-page.css`. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths
   bind (`bzh:narrow-viewport-tier-rule`).
-- `graph-detail.shell-sweep.spec.ts` covers the graphs container/presentational split's two Phase-2 children,
-  `GraphDetailHeader` and `GraphDetailEdges`, mounted directly with plain inputs. `GraphDetailHeader`'s identity row,
-  lifecycle actions, action-error line, and entry line — four blocks that were direct children of `.body`'s own
+- `graph-detail.shell-sweep.spec.ts` covers the graphs container/presentational split's `GraphDetailLifecycle`, mounted
+  directly with plain inputs. Its action-error line and entry line — blocks that were direct children of `.body`'s own
   `flex-direction: column; gap: 10px` (`graph-detail.css`) before the split — must genuinely stack with a real gap,
-  proving `graph-detail-header.css`'s own `:host` flex column reproduces that spacing now that the container hands them
-  only one flex slot; proven able to fail by setting that `:host`'s `gap` to `0`. `GraphDetailEdges`'s per-node edge
-  blocks must likewise stack, with a prompt addendum resolving in flow below its own edge row.
+  proving `graph-detail-lifecycle.css`'s own `:host` flex column reproduces that spacing now that the container hands
+  them only one flex slot; proven able to fail by setting that `:host`'s `gap` to `0`.
 - `kit-dialog.shell-sweep.spec.ts` covers `KitDialog` (blizzard#399 D6), the workspace's first modal shell: the scrim
   genuinely covers the full viewport (`getBoundingClientRect` against `window.inner*`, not merely the panel's own box),
   the panel centres itself (near-equal left/right gaps) and its own `.body` scrolls a tall projection while the page
@@ -199,6 +192,20 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`bzh:narrow-viewport-tier-rule`).
 - `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row (issue #461 round 3), mounted with every
   control live at once — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real
-  dock share) and at 390px/320px (`bzh:narrow-viewport-tier-rule`): none of Pause, Complete, the prerequisite field,
-  Declare, Release, the route/Detach group, or the close button may overflow the header's own right edge — a real CSS
-  flex-wrap layout claim jsdom cannot make.
+  dock share) and at 390px/320px (`bzh:narrow-viewport-tier-rule`): none of Pause, Complete, Delete, the prerequisite
+  field, Declare, Release, the route/Detach group, or the close button may overflow the header's own right edge — a real
+  CSS flex-wrap layout claim jsdom cannot make. The spec asserts its swept selector list against an exact count, so a
+  control added to the row without being added to the list fails the fixture rather than passing unmeasured.
+- `chunk-artifact-structured.shell-sweep.spec.ts` covers the two structured readings of a garden asset artifact —
+  `ChunkArtifactDelta` and `ChunkArtifactSurvey` — mounted through `ChunkArtifactBody` inside a height-capped flex
+  column. Each must bound itself at the cap and scroll its own overflow (`.rd-body`'s `scrollHeight` exceeding its
+  `clientHeight`, its own bottom staying inside the capped page) rather than growing to its content, proving the
+  flex/`min-height: 0` chain that runs from the body's host through the renderer's host and `.fd`/`.fs` column to the
+  disclosure shell actually resolves. Both shapes are swept, never one: they render in the same slot, and a sizing rule
+  naming only one of them is exactly the defect this catches. Proven able to fail by dropping either host tag from
+  `chunk-artifact-body.css`'s shared sizing rule.
+- `graph-explorer-list.shell-sweep.spec.ts` covers the explorer's two row levels once rebuilt on `KitSelectRow`, with
+  the first lineage genuinely expanded so the nested level lays out. At 520px, 390px, and 320px a long graph name, its
+  version count, its right-anchored short id, the version badge, and the retired filter chip must all stay inside the
+  list's own right edge — a real layout claim, since both levels now render their content projected into another
+  component's button rather than into a box this stylesheet owns.
