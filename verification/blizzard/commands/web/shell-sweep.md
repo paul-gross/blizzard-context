@@ -209,3 +209,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   version count, its right-anchored short id, the version badge, and the retired filter chip must all stay inside the
   list's own right edge — a real layout claim, since both levels now render their content projected into another
   component's button rather than into a box this stylesheet owns.
+- `chunk-neighborhood.shell-sweep.spec.ts` covers `ChunkNeighborhood`'s satisfied-vs-unmet edge marking (issue #462),
+  mounted directly with plain inputs, reading `design/tokens.css`'s real text and injecting it as a `<style>` element
+  the way `hover-tint.shell-sweep.spec.ts` does, since a standalone component test never loads the global stylesheet its
+  `var(--green)`/`var(--amber-hi)` badge colors resolve against. A satisfied prerequisite's badge must carry a genuinely
+  different computed `color` from an unmet one's — a computed-style claim no viewport width changes, since jsdom would
+  accept `[tone]="satisfiedTone(n)"` without ever resolving it against `kit-badge.ts`'s color ladder. Separately, at
+  390px and 320px several neighbors in each direction must wrap onto their own lines within the panel's own right edge,
+  with no horizontal overflow — the surface this mounts on is reachable from the mobile board
+  (`bzh:narrow-viewport-tier-rule`).
