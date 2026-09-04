@@ -54,3 +54,15 @@ exactly as deletable as the sentence above already promises.
 Folding a chunk away carries its standing edges onto the survivor rather than releasing them outright — the blocked
 marking a dependent carries continues to resolve through the survivor after the fold, never left naming a chunk that no
 longer exists.
+
+## The neighborhood
+
+A chunk's **neighborhood** is its own standing dependency edges one hop each way — `prerequisites` and `dependents` —
+read beside the chunk itself rather than confined to the blocked marking's pre-claim window: present, and possibly
+non-empty in either direction, for a chunk at any status. Each entry names a neighbor's own id, its derived status, and
+whether the edge is **satisfied** — never stored, derived fresh the same way the blocked marking is: a prerequisite edge
+is satisfied when that neighbor reads `done`; a dependent edge is satisfied when the chunk itself does, so every
+dependent reads the same satisfaction as one another. A neighbor absent from the fleet's statuses — the same residual
+race the blocked marking's conservative read guards against — still draws, unsatisfied, with a null status, rather than
+being dropped. Like the blocked marking, the neighborhood takes no further hop past its own edges: a prerequisite's own
+prerequisites are not walked into it.
