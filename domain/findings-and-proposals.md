@@ -62,10 +62,11 @@ could be mistaken for.
 A garden proposal carries two closing verbs, and both leave a durable record — closure is terminal, exactly like a work
 item's own (`domain/work.md`). **Passing** is not a dismissal: it is the note that stops a later run raising the same
 response as though it were new, and it wants a reason more than accepting does. **Accepting** records agreement, and
-most acceptances mint work — a self-sourced hub work item, linked to the proposal in the same act, carrying the
-proposal's own body unless the accept supplies a different one. Minting stays the default; declining to mint is the
-deliberate act, because a spurious backlog item is visible and deletable while a real commission that silently mints
-nothing is a decision nobody can find again.
+most acceptances mint work — a self-sourced hub work item, linked to the proposal in the same act, its body the
+proposal's own (or the accept's override) wrapped in a template naming the findings behind it, so the worker the item
+reaches can tell which findings it answers. Minting stays the default; declining to mint is the deliberate act, because
+a spurious backlog item is visible and deletable while a real commission that silently mints nothing is a decision
+nobody can find again.
 
 Acceptance does not promote the item it mints — it rests behind the ordinary promote gate a person still has to open —
 and it does not move the findings behind the proposal: work being under way is not an observation that the ground
