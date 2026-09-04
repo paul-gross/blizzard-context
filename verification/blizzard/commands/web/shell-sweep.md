@@ -190,3 +190,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`bzh:narrow-viewport-tier-rule`), the marking must render directly below the status row without moving the status's
   own position and without its own right edge overflowing the card — a real CSS layout claim jsdom cannot make, since
   `ChunkBlocked` mounts outside the card's own open button (a nested interactive element inside it is invalid HTML).
+- `gardening-page-grids.shell-sweep.spec.ts` covers the three gardening sub-tabs that arrived with the five-way tab
+  split and share one claim rather than each carrying its own file — Scopes, Runs, and Findings — each scoping the same
+  `grid-template-columns` master/detail split and the same `@media (max-width: 720px)` collapse that Routines and
+  Proposals each already carry a sweep for. Table-driven over the three pages: above 720px the list and detail sit side
+  by side, and at 700px, 390px, and 320px they genuinely stack with no horizontal overflow of the layout — real CSS
+  layout claims jsdom cannot make. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
+  (`bzh:narrow-viewport-tier-rule`).
