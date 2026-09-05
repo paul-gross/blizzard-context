@@ -31,8 +31,9 @@ caller's transaction, so none has a window of its own — each leaves its intent
 enqueued them. The callers are:
 
 - a landing-marker artifact write, in whichever store records it;
-- the `delivery_repo_landed` and `delivery_landed` writes;
-- the terminal delivery transition;
+- the `delivery_repo_landed` write, on the hub node's landing step;
+- the `delivery_landed` write and the `finalize_delivery` terminal transition — seam methods no live path calls, so a
+  chunk reaches the terminal without either enqueuing anything;
 - an operator's hand-completion.
 
 The only span open past any of them is the window between that commit and the drain, which
@@ -98,13 +99,13 @@ one `chunk_work_refs` row per work ref — the promote-then-tail-stamp pair (`ch
 the run's own identity row (`work_item_runs`), together: five inserts spanning six tables `WorkItemStore`/the chunk-seam
 adapters/`RunContextStore` otherwise own across three repositories. All five run on the same connection inside one
 `engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
-(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing `insert_chunk_rows`, the free function
-`insert_promote_rows` it was extracted alongside (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`), and
-`insert_run_context_row` (`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape
-§The item-creation chunk mint already takes, widened from one table to three: what lets a single caller open one
-transaction over all six at once. `work_item_runs` is what garden delivery's own read
-(`blizzard/src/blizzard/hub/domain/run_context.py`) resolves a chunk's run identity through; landing it outside this
-transaction would reopen exactly the window this section exists to close.
+(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing the shared free functions `insert_chunk_rows`
+and `insert_promote_rows` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) and `insert_run_context_row`
+(`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape §The item-creation chunk
+mint already takes, widened from one table to three: what lets a single caller open one transaction over all six at
+once. `work_item_runs` is what garden delivery's own read (`blizzard/src/blizzard/hub/domain/run_context.py`) resolves a
+chunk's run identity through; landing it outside this transaction would reopen exactly the window this section exists to
+close.
 
 The tail position itself is computed before the write, by the same rule `PromoteService.promote` stamps by
 (`tail_position`, `blizzard/src/blizzard/hub/domain/promote.py`) — the already-accepted check-then-act shape §Promote,

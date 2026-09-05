@@ -146,18 +146,20 @@ consequence since the orphaned attempt's own output file is simply never read on
 `Judgement.collect` (`blizzard/src/blizzard/runner/loop/judgement.py`) clears the in-flight elicitation record, and
 sweeps its output files, only AFTER a collected reply is fully processed — never before. Clearing first would open two
 windows. A crash between the clear and `_judged` completing would leave a lease with no elicitation record and no
-buffered outcome, re-entering the ordinary judge path and launching a **second, redundant** elicitation — double-billing
-the attempt's usage, not merely wasting one. And a staleness-exceeded branch that cleared the record before calling
-`Attempt.fail` would let a crash in that gap silently reset the never-resettable staleness baseline on the next pass's
-fresh `_launch`.
+buffered outcome, re-entering the ordinary judge path and launching a **second, redundant** elicitation — a second model
+turn spent on a verdict already in hand, and one the usage ledger cannot show, since `judge` usage is keyed
+`(lease, generation, kind)` and a judge elicitation opens no new generation, so the ledger ends with one `judge` fact
+either way. And a staleness-exceeded branch that cleared the record before calling `Attempt.fail` would let a crash in
+that gap silently reset the never-resettable staleness baseline on the next pass's fresh `_launch`.
 
-Both are closed by ordering, not by a registry point: `collect` clears the record and sweeps the files only once
-`_judged` returns, and the staleness-exceeded branch calls `Attempt.fail` directly, which kills and clears the record
-itself as one link in its own closing sequence — no separate write of `collect`'s own precedes either. The residual gap
-this leaves is inside `Attempt.fail` (`blizzard/src/blizzard/runner/loop/attempt.py`), between the elicitation record's
-clear and the lease's closure: a crash there lands the lease back in the ordinary judge path with no elicitation record,
-so at most one elicitation is spent again from a point the staleness bound was already past. That is the accepted-loss
-ground: the loss is one re-spent elicitation, tolerable because it is bounded by the same threshold and self-healing on
-the next pass, and its only durable trace is the `elicitation past its staleness bound — failing attempt` warning the
-failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
-one records the generation's only sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.
+The first window is closed by ordering, not by a registry point: `collect` clears the record and sweeps the files only
+once `_judged` returns. The second is narrowed rather than closed: the staleness-exceeded branch calls `Attempt.fail`
+directly, which kills and clears the record itself as one link in its own closing sequence — no separate write of
+`collect`'s own precedes it — so the only span left is inside `Attempt.fail`
+(`blizzard/src/blizzard/runner/loop/attempt.py`), between the elicitation record's clear and the lease's closure. A
+crash there lands the lease back in the ordinary judge path with no elicitation record, so at most one elicitation is
+spent again, on a fresh baseline, from a point the staleness bound was already past. That is the accepted-loss ground:
+the loss is one re-spent elicitation, tolerable because it is bounded by the same threshold and self-healing on the next
+pass, and its only durable trace is the `elicitation past its staleness bound — failing attempt` warning the failing
+pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh one
+records the generation's only `judge` sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.

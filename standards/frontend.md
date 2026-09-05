@@ -1,8 +1,8 @@
 # Frontend
 
 The enforceable toolchain and API-client rules for the Angular apps. The framework and library choices themselves are
-settled, readable from the code, and not revisited here. Every rule follows the Rule/Why/Detect/Do/Don't slot skeleton
-owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`) and carries its stable `bzh:` id in its heading.
+settled, readable from the code, and not revisited here. Every rule follows the slot skeleton owned by
+`winter-canon:/rule-shape.md` (`canon:rule-shape`) and carries its stable `bzh:` id in its heading.
 
 What a change here owes as proof is the verification matrix's, not this file's: a change whose observable effect is
 visual owes an artifact from a real render rather than a jsdom green — `bzh:visual-change-needs-a-render` in
@@ -16,9 +16,8 @@ prettier — any formatting concern that matters is expressed as an eslint rule.
 **Why.** One linter that also owns formatting keeps the gate one command and avoids a second formatter fighting eslint,
 churning the tree on whichever ran last.
 
-**Scope.** Binds the unit/component tier's tooling only. The service and e2e tiers' tooling is the matrix's to name —
-[../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md) — and only the e2e tier is
-browser-driven.
+**Scope.** Binds the unit/component tier's tooling only; the service and e2e tiers' tooling is the matrix's to name —
+[../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
 
 **Detect.** A prettier dependency, a `.prettierrc`, or a `format` script in the Angular workspace; a second test runner
 beside vitest in the unit/component tier.

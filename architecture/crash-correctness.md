@@ -95,9 +95,8 @@ otherwise expect a sweep point for.
 
 A register record is a standing statement about the write as it currently stands — the writer, the shape of its
 transaction, and the ground claimed, with whatever that ground owes — and carries no provenance for the change that
-added or reshaped it (`canon:no-process-refs`, `canon:no-retro`). A record that reads as the story of a build is
-rewritten as a statement of the write, and a record whose write a change has since removed leaves with it, deleted
-rather than kept to say it was retired.
+added or reshaped it (`canon:no-process-refs`, `canon:no-retro`). A record whose write a change has since removed leaves
+with it, deleted rather than kept to say it was retired.
 
 The transcript lane is split out of both daemon files: a runner-side or hub-side write that belongs to it is recorded in
 `transcripts.md`, not in the daemon's own register.
