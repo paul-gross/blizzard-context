@@ -10,10 +10,19 @@ the same change — never as a follow-up. The entry belongs in the spoke under [
 owns the reader question the scenario answers; the registry hub [`./e2e-scenarios.md`](./e2e-scenarios.md) routes to it
 and carries no entries itself.
 
+**Why.** The registry is what the drift check reads, so a scenario landed without its entry turns that check red for
+every change behind it, and the entry ends up written by an author who never built the scenario.
+
 **Detect.** `blizzard-context:registry-drift` is the mechanical companion that catches a missing registry entry.
 
-**Don't.** Land a new `tests/e2e/` scenario with its registry entry deferred to a follow-up — the drift check goes red
-for every change behind it, and the next author writes the entry for a scenario they never built.
+**Don't.** A `blizzard` commit that adds a browser scenario with this message, and no companion `blizzard-context`
+change under `verification/blizzard/e2e-scenarios/`:
+
+```text
+test(e2e): drive the pause banner through the browser
+
+Registry entry to follow once the spoke it belongs in is settled.
+```
 
 ## A wire change extends the mock (`bzh:wire-change-extends-mock`)
 

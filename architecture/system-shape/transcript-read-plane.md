@@ -41,9 +41,7 @@ feature.
 
 ### Recorded positions
 
-Stated so a reviewer need not re-derive them:
-
-- Chunk-scoping the runner-scoped fleet route gains no completeness over the runner's own `transcript_segments` table:
-  it inherits the same runner confinement `_demand_lease_owner` and the runner-scoped store already apply, so it returns
-  the same view at the cost of a hub round-trip. Only relaxing `reject_runner_principal` is complete across runner
-  hands, and the `Don't` above owns why that is not taken.
+Stated so a reviewer need not re-derive it: chunk-scoping the runner-scoped fleet route gains no completeness over the
+runner's own `transcript_segments` table. It inherits the same runner confinement `_demand_lease_owner` and the
+runner-scoped store already apply, so it returns the same view at the cost of a hub round-trip. Only relaxing
+`reject_runner_principal` is complete across runner hands, and the `Don't` above owns why that is not taken.

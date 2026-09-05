@@ -154,9 +154,10 @@ fresh `_launch`.
 Both are closed by ordering, not by a registry point: `collect` clears the record and sweeps the files only once
 `_judged` returns, and the staleness-exceeded branch calls `Attempt.fail` directly, which kills and clears the record
 itself as one link in its own closing sequence — no separate write of `collect`'s own precedes either. The residual gap
-this leaves — `Attempt.fail`'s own kill-then-close sequence — is the same one the worker-pid kill above it carries
-("best-effort hygiene; the epoch fence is the guarantee"): a crash between the kill and the closure lands the lease back
-in the ordinary judge path with no elicitation record, so at most one elicitation is spent again from the point the
-staleness bound was already past. That is the accepted-loss ground: the loss is one re-spent elicitation past a bound
-already crossed, tolerable because it is bounded and self-healing, and an operator reaches it in the attempt's usage
-facts — the same loss the worker-pid kill accepts, not a fresh window `bzh:crash-point-registry` owes a point to.
+this leaves is inside `Attempt.fail` (`blizzard/src/blizzard/runner/loop/attempt.py`), between the elicitation record's
+clear and the lease's closure: a crash there lands the lease back in the ordinary judge path with no elicitation record,
+so at most one elicitation is spent again from a point the staleness bound was already past. That is the accepted-loss
+ground: the loss is one re-spent elicitation, tolerable because it is bounded by the same threshold and self-healing on
+the next pass, and its only durable trace is the `elicitation past its staleness bound — failing attempt` warning the
+failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
+one records the generation's only sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.

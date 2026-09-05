@@ -26,12 +26,18 @@ landing marker and its intents are durable; no drain has run yet) and `close.aft
 returned; the outcome-and-retirement write has not landed yet), swept by one dedicated scenario driving the built-in
 `hub` work source with no forge (`tests/crash/test_kill9_sweep.py::test_kill9_at_close_crash_point`).
 
-Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — a landing-marker
-artifact write in whichever store records it, the `delivery_repo_landed` and `delivery_landed` writes, the terminal
-delivery transition, and an operator's hand-completion — rides its own caller's own transaction, so none has a window of
-its own: each leaves its intents durable together with the fact that enqueued them, and the only span open past any of
-them is the window between that commit and the drain, which the registered `close.` points arm. That window is armed
-once, on the marker path, rather than once per enqueuing caller, because every caller opens the identical span.
+Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) rides its own
+caller's transaction, so none has a window of its own — each leaves its intents durable together with the fact that
+enqueued them. The callers are:
+
+- a landing-marker artifact write, in whichever store records it;
+- the `delivery_repo_landed` and `delivery_landed` writes;
+- the terminal delivery transition;
+- an operator's hand-completion.
+
+The only span open past any of them is the window between that commit and the drain, which
+`close.after-enqueue.before-drain` arms — once, on the marker path, rather than once per enqueuing caller, because every
+caller opens the identical span.
 
 Within one intent's own attempt, past `close.after-close.before-record`, one transaction — `record_work_item_closure` —
 writes the outcome fact and, for a `closed`/`gone` outcome, retires the intent together; a second, separate write
