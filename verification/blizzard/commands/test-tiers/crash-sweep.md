@@ -30,10 +30,10 @@ command above and runs in the tag `release` workflow. Both CI workflows run it a
 `BLIZZARD_MOCK_WINTER_SOURCE` pointed at the last.
 
 The registry's boundary families are `resume.`, `abandon.`, `pause.`, `hubnode.` (the generic hub command node's
-per-step and pending-poll windows), `migrate.`, `attach.`, `nudge.`, `checks.`, `preempt.`, and `close.` (the
-close-intent outbox's enqueue-then-drain windows), plus ungrouped generic build-to-deliver points that mostly fire in
-the runner loop (`bzh:crash-point-registry`). No case count is kept — the predicate is the membership test, not a number
-that drifts.
+per-step and pending-poll windows), `migrate.`, `attach.`, `declare-commit.`, `nudge.`, `checks.`, `preempt.`, and
+`close.` (the close-intent outbox's enqueue-then-drain windows), plus ungrouped generic build-to-deliver points that
+mostly fire in the runner loop (`bzh:crash-point-registry`). No case count is kept — the predicate is the membership
+test, not a number that drifts.
 
 `claim.` — the route-claim boundary between persisting the route with its capability-token fact and the runner reading
 the plaintext token back — is the first ungrouped point armed on the hub, recovered generically by the runner's
@@ -54,6 +54,10 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   is still readable via `attachments_for_lease` after an unarmed restart. `attach.` is an out-of-band HTTP write no loop
   step drives, so its scenario stands up a real runner daemon alone — no hub, no forge — seeding a parked lease and its
   capability token, the invariant checker running over the runner store only.
+- `declare-commit.`, the worker git-commit declaration's record-before-response window armed on the runner, is swept by
+  `test_kill9_at_declare_commit_crash_point`: `attach.`'s sibling on the runner's out-of-band declare endpoint, standing
+  up a real runner daemon alone the same way, the kill landing right after the declaration is recorded, and the
+  declaration readable with full provenance against the same store after an unarmed restart.
 - `nudge.`, the produces-unmet resume-once window armed on the runner, is swept by `test_kill9_at_nudge_crash_point`: an
   exit with a `produces:` name covered by neither commit nor attachment is resumed rather than judged — no verdict
   elicited, no `checks:` run — gated on a durable `(lease, epoch)` fact recorded before the resume it guards, so

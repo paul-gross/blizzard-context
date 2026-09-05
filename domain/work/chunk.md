@@ -33,9 +33,11 @@ item's body and stamps its last-edit instant, when that item is open and its sou
 nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason instead, and delivery is never blocked
 by it. Every proposal is judged exactly once — replaying the same delivery mints no duplicate item and appends no
 duplicate evidence — but carries no epoch filter: two proposals from two epochs of the same node both materialize, since
-both rode a fence-accepted completion. A chunk that lands and is only later abandoned still materializes its proposals;
-a chunk an operator marks done by hand, or one that never reaches delivery, never does — a narrower predicate than Work
-refs' closure, so a hand-completed chunk that never delivered closes its refs and materializes nothing.
+both rode a fence-accepted completion. Materialization keys on the graph's reserved terminal transition, however the
+chunk reached it, while Work refs' closure keys on the chunk landing or being marked done by hand, so the two gates
+diverge: a chunk that lands and is only later abandoned materializes its proposals; a chunk an operator marks done by
+hand closes its refs and materializes nothing; a chunk routed to the terminal with no landing behind it materializes and
+closes nothing.
 
 An operator resolving a gate may strike some of the chunk's pending proposals — its proposals carrying neither a
 materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded with the
@@ -56,8 +58,8 @@ describes for a grouped chunk.
 A hub item and its chunk live and die together, in both directions. Deleting a chunk withdraws every open `hub:`-source
 pointer it holds — any `forge:`-source pointer on the same chunk survives untouched, since a chunk can carry pointers
 from more than one source — and withdrawing a hub item deletes its unacquired holder chunk in the same stroke rather
-than refusing the withdrawal. The withdrawal is refused where the deletion would be: a live holder outside the pre-claim
-statuses — claimed, paused, parked on a person, or delivering — and an unacquired holder that stands as another chunk's
+than refusing the withdrawal. For a live holder the withdrawal is refused where the deletion would be: one at `running`,
+`delivering`, `waiting_on_human`, `needs_human`, or `paused`, and an unacquired one that stands as another chunk's
 prerequisite ([./statuses.md](./statuses.md) §The blocked marking). A terminal holder is no live holder at all, so its
 item withdraws and nothing is deleted.
 

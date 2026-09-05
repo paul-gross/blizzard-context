@@ -19,12 +19,11 @@ churning the tree on whichever ran last.
 **Detect.** A prettier dependency, a `.prettierrc`, or a `format` script in the Angular workspace; a second test runner
 beside vitest in the unit/component tier.
 
-**Do.** The two gates:
+**Do.** The two gates — Playwright owns the service and e2e tiers, per
+[../verification/blizzard.md](../verification/blizzard.md), so neither is one of them:
 
 - **Lint** — `npm run lint`: eslint over the Angular workspace.
 - **Test** — `npm run test`: vitest, the unit/component tier.
-
-Playwright owns the service and e2e tiers, per [../verification/blizzard.md](../verification/blizzard.md).
 
 **Don't.**
 

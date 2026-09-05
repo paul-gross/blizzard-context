@@ -157,5 +157,6 @@ itself as one link in its own closing sequence — no separate write of `collect
 this leaves — `Attempt.fail`'s own kill-then-close sequence — is the same one the worker-pid kill above it carries
 ("best-effort hygiene; the epoch fence is the guarantee"): a crash between the kill and the closure lands the lease back
 in the ordinary judge path with no elicitation record, so at most one elicitation is spent again from the point the
-staleness bound was already past. That is bounded and self-healing, not a fresh window `bzh:crash-point-registry` owes a
-point to, and the same loss the worker-pid kill accepts.
+staleness bound was already past. That is the accepted-loss ground: the loss is one re-spent elicitation past a bound
+already crossed, tolerable because it is bounded and self-healing, and an operator reaches it in the attempt's usage
+facts — the same loss the worker-pid kill accepts, not a fresh window `bzh:crash-point-registry` owes a point to.
