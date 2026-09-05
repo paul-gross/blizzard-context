@@ -56,8 +56,9 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   capability token, the invariant checker running over the runner store only.
 - `declare-commit.`, the worker git-commit declaration's record-before-response window armed on the runner, is swept by
   `test_kill9_at_declare_commit_crash_point`: `attach.`'s sibling on the runner's out-of-band declare endpoint, standing
-  up a real runner daemon alone the same way, the kill landing right after the declaration is recorded, and the
-  declaration readable with full provenance against the same store after an unarmed restart.
+  up a real runner daemon alone the same way, the kill landing right after the declaration is recorded, the declaration
+  read back with full provenance straight after the kill, and still readable against the same store after an unarmed
+  restart.
 - `nudge.`, the produces-unmet resume-once window armed on the runner, is swept by `test_kill9_at_nudge_crash_point`: an
   exit with a `produces:` name covered by neither commit nor attachment is resumed rather than judged — no verdict
   elicited, no `checks:` run — gated on a durable `(lease, epoch)` fact recorded before the resume it guards, so
