@@ -58,9 +58,13 @@ module globals.
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
 singleton read directly.
 
-**Do.** Blizzard has no DI container: `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`,
-`blizzard/src/blizzard/runner/app.py`, and `blizzard/src/blizzard/runner/loop/build.py` wire every seam once and hand
-collaborators down in a frozen dataclass like `HubServices`.
+**Do.** Blizzard has no DI container. Six modules are its composition roots, each wiring every seam once and handing
+collaborators down in a frozen dataclass like `HubServices`: `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`,
+`build_services` in `blizzard/src/blizzard/hub/composition.py`, `build_hosted_app` in
+`blizzard/src/blizzard/runner/app.py`, and `LoopWiring.context` in `blizzard/src/blizzard/runner/loop/build.py`.
+`blizzard/src/blizzard/runner/cli/runtime.py` and `blizzard/src/blizzard/runner/cli/external_usage.py` are roots too: a
+`click` command is a short-lived process with no server loop to hand a dataclass through, so wiring its concrete
+collaborators once, inline, at the top of the command body is that process's composition root.
 
 **Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
 
