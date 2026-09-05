@@ -32,7 +32,9 @@ the store, forge, harness, or workspace adapter satisfies it.
 (`bzh:pluggable-seams`) touches only the adapter, and tests substitute fakes by type.
 
 **Detect.** A domain service importing a concrete adapter, or a Protocol defined in the adapter package and imported
-inward.
+inward. `tests/test_layering.py` fails the unit tier when a `hub/store/internal/` or `runner/` module — outside its own
+connections seam — acquires `self._engine` directly instead of taking the injected `HubStoreConnections` /
+`RunnerStoreConnections` collaborator the exemplar below wires.
 
 **Do.** `blizzard/src/blizzard/hub/domain/chunks/` declares per-concept read/write Protocol pairs (for example
 `IReadChunkRecordRepository` and `IWriteChunkRecordRepository`) plus one read-only-only seam (`facts`);
@@ -56,7 +58,8 @@ module globals.
 **Scope.** The injected clock (`bzh:injected-clock`) is a member of this rule, not an exception to it.
 
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
-singleton read directly.
+singleton read directly. `tests/test_layering.py` fails the unit tier when `build_stores` or `ClaudeCodeAdapter` is
+imported anywhere outside the six composition roots named below.
 
 **Do.** Blizzard has no DI container. Six modules are its composition roots, each wiring every seam once and handing
 collaborators down in a frozen dataclass like `HubServices`: `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`,

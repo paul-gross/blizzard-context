@@ -20,11 +20,18 @@ The shape codifies the three seams the blizzard architecture rules require
      uses it. Anything under `internal/` is package-private and must not be
      imported from outside the feature.
 
-  3. **Factory-injected error wrapping.** Library exceptions are turned into the
-     domain `RepoError` by an injected `RepoErrorFactory.from_*` method, not by
-     inline `raise X from Y` at every call site. The factory logs once at the
-     wrap site (structlog, standards/logging.md) with structured fields, so the
-     reporter and dashboard render them without re-parsing.
+  3. **Factory-injected error wrapping, behind an injected connections seam.**
+     Library exceptions are turned into the domain `RepoError` by an injected
+     `RepoErrorFactory.from_*` method, not by inline `raise X from Y` at every
+     call site. The factory logs once at the wrap site (structlog,
+     standards/logging.md) with structured fields, so the reporter and
+     dashboard render them without re-parsing. Adapters never reach the
+     library client directly: they take an injected `RepoConnections`, the one
+     collaborator that holds the client and calls the factory
+     (bzh:dependency-inversion) — mirroring `RunnerStoreConnections` /
+     `HubStoreConnections` in production, the pattern
+     architecture/clean-architecture.md's structural gate holds every
+     `hub/store/internal/` and `runner/` adapter to.
 
 The DI container binds the Write variant where mutations are required and the
 Read variant where they aren't (bzh:dependency-injection) — the Protocol type
@@ -38,7 +45,7 @@ from typing import Protocol
 
 import structlog
 
-import some_io_library  # confined to this file (and any sibling internal/ adapters)
+import some_io_library  # confined to RepoConnections — no adapter method reaches it directly
 
 
 # --- Domain types ----------------------------------------------------------
@@ -98,6 +105,46 @@ class RepoErrorFactory:
         return err
 
 
+# --- Connections (injected, the only place the library client is held) ----
+
+class RepoConnections:
+    """The connection-acquiring collaborator every adapter takes in place of
+    the raw `some_io_library` client (bzh:dependency-inversion). Holds the
+    client and the error factory together, so a library exception is always
+    caught and translated at the point it is raised — no adapter method
+    catches `some_io_library`'s own exception type itself. Mirrors
+    `RunnerStoreConnections` / `HubStoreConnections` in production.
+    """
+
+    def __init__(self, client: "some_io_library.Client", errors: RepoErrorFactory) -> None:
+        self._client = client
+        self._errors = errors
+
+    def fetch(self, thing_id: str) -> bytes:
+        try:
+            return self._client.fetch(thing_id)
+        except some_io_library.IOError as exc:
+            raise self._errors.from_io(exc, f"fetch failed for {thing_id}") from exc
+
+    def list(self, prefix: str) -> list:
+        try:
+            return self._client.list(prefix)
+        except some_io_library.IOError as exc:
+            raise self._errors.from_io(exc, f"list failed for prefix {prefix!r}") from exc
+
+    def write(self, thing_id: str, payload: bytes) -> None:
+        try:
+            self._client.write(thing_id, payload)
+        except some_io_library.IOError as exc:
+            raise self._errors.from_io(exc, f"save failed for {thing_id}") from exc
+
+    def delete(self, thing_id: str) -> None:
+        try:
+            self._client.delete(thing_id)
+        except some_io_library.IOError as exc:
+            raise self._errors.from_io(exc, f"delete failed for {thing_id}") from exc
+
+
 # --- Public Protocols (the seam services depend on) -----------------------
 
 class IReadFooRepository(Protocol):
@@ -118,23 +165,18 @@ class IWriteFooRepository(IReadFooRepository, Protocol):
 # production; shown here in one file for the exemplar) ----------------------
 
 class ReadFooRepository:
-    """Read-only `some_io_library` adapter. All library usage is confined here."""
+    """Read-only `some_io_library` adapter. The client is reached only through
+    the injected `RepoConnections` — never held or opened here."""
 
-    def __init__(self, error_factory: RepoErrorFactory) -> None:
-        self._errors = error_factory
+    def __init__(self, connections: RepoConnections) -> None:
+        self._connections = connections
 
     def get_thing(self, thing_id: str) -> Thing:
-        try:
-            raw = some_io_library.fetch(thing_id)
-        except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"fetch failed for {thing_id}") from exc
+        raw = self._connections.fetch(thing_id)
         return self._parse(thing_id, raw)
 
     def list_things(self, prefix: str) -> list[Thing]:
-        try:
-            entries = some_io_library.list(prefix)
-        except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"list failed for prefix {prefix!r}") from exc
+        entries = self._connections.list(prefix)
         return [self._parse(e.id, e.raw) for e in entries]
 
     @staticmethod
@@ -147,16 +189,10 @@ class WriteFooRepository(ReadFooRepository):
     """Read-write adapter. Mutating operations live here; reads inherited."""
 
     def save_thing(self, thing: Thing) -> None:
-        try:
-            some_io_library.write(thing.id, thing.payload)
-        except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"save failed for {thing.id}") from exc
+        self._connections.write(thing.id, thing.payload)
 
     def delete_thing(self, thing_id: str) -> None:
-        try:
-            some_io_library.delete(thing_id)
-        except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"delete failed for {thing_id}") from exc
+        self._connections.delete(thing_id)
 
 
 # Typecheck-time Protocol/adapter conformance sentinel. Pyright rejects the
@@ -174,8 +210,9 @@ def _conforms_write_foo_repository(x: WriteFooRepository) -> IWriteFooRepository
 #
 # class Container(containers.DeclarativeContainer):
 #     error_factory = providers.Singleton(RepoErrorFactory)
+#     connections = providers.Singleton(RepoConnections, client=client, errors=error_factory)
 #     foo_repo: providers.Provider[IWriteFooRepository] = providers.Singleton(
-#         WriteFooRepository, error_factory=error_factory,
+#         WriteFooRepository, connections=connections,
 #     )
 #
 # Controllers declare their dependency as `IReadFooRepository` — the Singleton
