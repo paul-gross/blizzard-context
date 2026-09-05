@@ -140,7 +140,7 @@ stands up only the served hub, needing just the built bundle and an installed Ch
 - `test_gardening_run_dialog_browser` — mints a routine with a never-swept default scope, opens the dialog, and proves
   the delta-steering rule (D5) renders for real: the never-swept note shows and the delta radio is disabled. Mints a new
   scope through the dialog (D3), typing its slug and required description, and proves submission unlocks only once both
-  are filled. Submits and proves the create-then-run ordering landed against the live hub —
-  `GET /api/scopes` shows the new slug once the confirmation renders — and that the confirmation names a real
-  `ch_`-prefixed chunk id and links to `/board/chunk/<id>`, rendering no board of its own. Closing the confirmation
-  tears the dialog down back to the routines list.
+  are filled. Submits and proves the create-then-run ordering landed against the live hub — `GET /api/scopes` shows the
+  new slug once the confirmation renders — and that the confirmation names a real `ch_`-prefixed chunk id and links to
+  `/board/chunk/<id>`, rendering no board of its own. Closing the confirmation tears the dialog down back to the
+  routines list.

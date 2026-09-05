@@ -9,9 +9,11 @@ does when the axis is undeclared.
 
 Parent: [../index.md](../index.md).
 
-| Axis                                | Evaluates                                                                                                                                |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [`architecture`](./architecture.md) | Structural drift in blizzard's code — layering, dependency direction, seam placement and width, injection, and the Angular suite's split |
+| Axis                                                | Evaluates                                                                                                                                |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [`agent-facing-context`](./agent-facing-context.md) | Guidance drift in this harness's own prose — whether a rule is reachable, weighs what it earns, routes truthfully, and is stated once    |
+| [`architecture`](./architecture.md)                 | Structural drift in blizzard's code — layering, dependency direction, seam placement and width, injection, and the Angular suite's split |
+| [`comments`](./comments.md)                         | Prose drift in blizzard's code — which facts a comment or docstring may state, and whose vocabulary a seam's contract is stated in       |
 
 ## Scope slugs
 
