@@ -12,15 +12,13 @@ run whatever the change touched.
 attributes in `tests/e2e/`, and wire field names off a live API response in `tests/service/` — so renaming either ships
 green and breaks them where you will not see it.
 
-**Do.**
+**Do.** `demo/` is in the sweep because the tiers are not the only readers of those handles: the board's kiosk demo mode
+(`?demo=true`) steers on `chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key` from
+production code, and it fails quietly where a scenario fails loudly.
 
 ```bash
 grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
 ```
-
-`demo/` is in that sweep because the tiers are not the only readers of those handles: the board's kiosk demo mode
-(`?demo=true`) steers on `chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key` from
-production code, and it fails quietly where a scenario fails loudly.
 
 **Don't.** Rename a `data-testid` and push on a green `blizzard:gate` — the e2e scenario reading the old handle fails
 only on the release run, after the rename has landed.

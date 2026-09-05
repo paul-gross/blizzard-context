@@ -148,7 +148,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `garden-runs.shell-sweep.spec.ts` covers the gardening runs-and-findings tab's two presentational components, each
   mounted directly with plain inputs. `FleetRunList`'s escalated row, at 390px, must carry a genuinely different
   computed `background-color` and `border-left-color` from a normal row — a computed-style claim no viewport width
-  changes, since jsdom would accept the `rl-row--escalated` class name without ever evaluating it against
+  changes, since jsdom would accept the `rl-body--escalated` class name without ever evaluating it against
   `run-list.css`; proven able to fail by dropping that rule's `background`/`border-left-color` declarations.
   `FleetRunDelta`, at 390px, must stack its two finding-set blocks with distinct `top`s, and, within the first set,
   stack its added/observed/gone groups in that order with no overlap and no horizontal overflow of the delta itself;
@@ -170,9 +170,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   selection signal), the bulk bar's own buttons must, at 1400px, 390px, and 320px, stay inside the viewport and never
   overlap each other, and the list itself must carry no horizontal overflow — real CSS layout claims jsdom cannot make.
   Separately, a `gone`-flagged row must carry a genuinely different computed `background-color` and `border-left-color`
-  from a plain row — a computed-style claim no viewport width changes, since jsdom would accept the `fl-row--gone` class
-  name without ever evaluating it against `finding-list.css`. Gardening sits in the hub's mobile bottom tab bar, so the
-  narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  from a plain row — a computed-style claim no viewport width changes, since jsdom would accept the `fl-body--gone`
+  class name without ever evaluating it against `finding-list.css`. Gardening sits in the hub's mobile bottom tab bar,
+  so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `gardening-finding-triage-dialog.shell-sweep.spec.ts` covers the findings triage bulk-action dialog's own view,
   mounted directly with plain inputs, once per verb that carries a distinct field shape. At 1400px, 390px, and 320px the
   note field must render without overflowing the dialog panel, the `supersede` verb's extra absorbing-finding field must

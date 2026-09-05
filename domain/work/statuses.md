@@ -49,9 +49,9 @@ human-gated, paused, or terminal — even though a standing edge declared while 
 through all of that. Declaring is itself only ever admitted in that same window, so the gate does not shrink what a
 marking can name; it only stops repeating the answer once the question no longer holds.
 
-A chunk currently named as another's blocked-marking prerequisite cannot itself be deleted while that edge stands —
-deletion refuses 409, naming the dependents. Deleting the *dependent* chunk is unaffected by this and stays exactly as
-deletable as the sentence above already promises.
+A chunk currently named as another's prerequisite cannot itself be deleted while that edge stands — deletion refuses
+409, naming the dependents. Deleting the *dependent* chunk is unaffected by this and stays exactly as deletable as the
+sentence above already promises.
 
 Folding a chunk away carries its standing edges onto the survivor rather than releasing them outright — the blocked
 marking a dependent carries continues to resolve through the survivor after the fold, never left naming a chunk that no

@@ -23,28 +23,28 @@ running. A chunk that lands and is only later abandoned still closes its work it
 A node-step's completion may carry proposed work items (`proposes_work_items`, [../graphs/nodes.md](../graphs/nodes.md))
 — a `create` (a new item's title, body, and stated priority) or an `update` (an open item's pointer plus evidence to
 append) — riding the completion alongside its artifacts. They accumulate inertly through the graph: nothing reads a
-proposal row until the chunk delivers.
+proposal row until the chunk reaches the graph's reserved terminal.
 
-Delivery materializes them: it turns every accumulated, unstruck proposal of a chunk that has actually delivered — moved
-into the graph's reserved terminal — into a real work item, best-effort, eventually convergent, and not atomic with the
-terminal transition it keys on. A `create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk,
-and node — resting on its own fresh `not_ready` chunk, exactly as a human-filed item does. An `update` appends its
-evidence to the pointed-at item's body and stamps its last-edit instant, when that item is open and its source can be
-edited; closed, withdrawn, nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason instead, and
-delivery is never blocked by it. Every proposal is judged exactly once — replaying the same delivery mints no duplicate
-item and appends no duplicate evidence — but carries no epoch filter: two proposals from two epochs of the same node
-both materialize, since both rode a fence-accepted completion. Materialization keys on the graph's reserved terminal
-transition, however the chunk reached it, while Work refs' closure keys on the chunk landing or being marked done by
-hand, so the two gates diverge in both directions. A chunk stopped after it lands but before it reaches the terminal
-closes its refs and materializes nothing, exactly as a chunk an operator marks done by hand does. A chunk routed to the
-terminal with no landing behind it does the reverse: its proposals materialize, and no ref closes.
+The reserved-terminal transition materializes them: it turns every accumulated, unstruck proposal of a chunk that has
+moved into the graph's reserved terminal into a real work item, best-effort, eventually convergent, and not atomic with
+the transition it keys on. A `create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk, and
+node — resting on its own fresh `not_ready` chunk, exactly as a human-filed item does. An `update` appends its evidence
+to the pointed-at item's body and stamps its last-edit instant, when that item is open and its source can be edited;
+closed, withdrawn, nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason instead, and
+materialization is never blocked by it. Every proposal is judged exactly once — replaying the same materialization pass
+mints no duplicate item and appends no duplicate evidence — but carries no epoch filter: two proposals from two epochs
+of the same node both materialize, since both rode a fence-accepted completion. Materialization keys on the graph's
+reserved terminal transition, however the chunk reached it, while Work refs' closure keys on the chunk landing or being
+marked done by hand, so the two gates diverge in both directions. A chunk stopped after it lands but before it reaches
+the terminal closes its refs and materializes nothing, exactly as a chunk an operator marks done by hand does. A chunk
+routed to the terminal with no landing behind it does the reverse: its proposals materialize, and no ref closes.
 
 An operator resolving a gate may strike some of the chunk's pending proposals — its proposals carrying neither a
 materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded with the
 resolving identity and decision inside the resolution's own first-write-wins write, never a mutation of the proposal's
 own row and never a materialization outcome: it is a refusal *before* materialization ever judges the proposal,
 permanent and exclusive of the judgment a `create`/`update`/unresolved outcome represents. A struck proposal never
-materializes, on any later delivery; the loser of a concurrent resolution strikes nothing at all, the same
+materializes, on any later materialization pass; the loser of a concurrent resolution strikes nothing at all, the same
 first-write-wins reading its choice takes. Striking is explicit — a resolution naming none passes every one of the
 chunk's pending proposals, unstruck.
 

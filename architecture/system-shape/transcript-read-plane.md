@@ -39,9 +39,8 @@ seam — extend it for a future cross-runner requirement rather than opening the
 let a runner read node-grouped transcripts — that widens the whole operator transcript router's exposure to serve one UI
 feature.
 
-### Recorded positions
+### Recorded position
 
-Chunk-scoping the runner-scoped fleet route gains no completeness over the runner's own `transcript_segments` table. It
-inherits the same runner confinement `_demand_lease_owner` and the runner-scoped store already apply, so it returns the
-same view at the cost of a hub round-trip. Only relaxing `reject_runner_principal` is complete across runner hands, and
-the `Don't` above owns why that is not taken.
+Chunk-scoping the runner-scoped fleet route buys nothing over the runner's own `transcript_segments` table: both sit
+behind the same runner confinement, so the route returns the same view at the cost of a hub round-trip. Only relaxing
+`reject_runner_principal` is complete across runner hands, and the `Don't` above owns why that is not taken.
