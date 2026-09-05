@@ -12,13 +12,15 @@ fact vocabulary and derivation queries live in the code.
   runner keeping its environments until the outcome is known.
 - **`paused`** — held on an operator's per-chunk pause fact: on a live route the runner kills the worker but keeps the
   lease, route, epoch, environments, and retry budget so resume respawns in place, while an unclaimed chunk is withheld
-  from the queue. Ranks below the human-gated statuses and above `delivering` and `running`
-  ([../execution/pause.md](../execution/pause.md)).
+  from the queue. A pause is admitted at every status but `done`, `stopped`, and `delivering` — a delivery already in
+  the hub's own hands runs to its outcome — and a resume is never refused. Ranks below the human-gated statuses and
+  above `delivering` and `running` ([../execution/pause.md](../execution/pause.md)).
 - **`waiting_on_human`** — parked on invited human input — an open ask or unresolved gate decision
   ([../humans/asks.md](../humans/asks.md), [../humans/gates.md](../humans/gates.md)); the reap clock stops.
 - **`needs_human`** — parked on failure: the system ran out of moves, runner- or hub-authored, and a person must requeue
   or take over ([../humans/escalation.md](../humans/escalation.md)).
-- **`stopped`** — abandoned by an operator: reachable from any point after acquisition, artifacts and history retained.
+- **`stopped`** — abandoned by an operator: reachable from any status but `done` and `stopped`, acquired or not,
+  artifacts and history retained.
 - **`done`** — terminal: the graph's reserved terminal transition, or an operator's directly recorded `chunk.completed`
   fact (chunk done, the board's Complete), reachable from any non-done status including `stopped`.
 
@@ -48,8 +50,8 @@ through all of that. Declaring is itself only ever admitted in that same window,
 marking can name; it only stops repeating the answer once the question no longer holds.
 
 A chunk currently named as another's blocked-marking prerequisite cannot itself be deleted while that edge stands —
-deletion refuses 409, naming the dependents (issue #460). Deleting the *dependent* chunk is unaffected by this and stays
-exactly as deletable as the sentence above already promises.
+deletion refuses 409, naming the dependents. Deleting the *dependent* chunk is unaffected by this and stays exactly as
+deletable as the sentence above already promises.
 
 Folding a chunk away carries its standing edges onto the survivor rather than releasing them outright — the blocked
 marking a dependent carries continues to resolve through the survivor after the fold, never left naming a chunk that no

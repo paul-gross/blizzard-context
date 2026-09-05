@@ -47,14 +47,12 @@ the loss a `bindings[0]` read makes silent.
 `test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable` is the first service-tier exercise
 of a lease-token-authorized worker-lane read route: a `--scope graph` read resolves from the runner's own mint-time
 mirror with the mock hub down while the same lease's node-scope read still 503s (the `_worker_credential` seam). A
-seeded chunk driven to `stopped` over `POST /_seed/stop` (blizzard-mock#18) exercises PULL's two terminal-fact paths
-over a real hub response rather than `FakeHub`:
-`test_pull_abandons_the_active_lease_when_the_hub_reports_the_chunk_stopped` (issue #118) and
-`test_pull_closes_the_local_escalation_when_the_hub_reports_the_chunk_stopped` (blizzard#292, #293). A peek carrying a
-marked head and an unmarked entry behind it (blizzard#459) is driven under both of a runner's selection policies against
-a real mock hub: `test_fill_reaches_past_a_marked_head_by_default_against_a_real_mock_hub` claims the unmarked entry
-while the marked one stays `ready`, and `test_fill_strict_holds_at_a_marked_head_against_a_real_mock_hub`
-(`[queue] strict`) claims neither.
+seeded chunk driven to `stopped` over `POST /_seed/stop` exercises PULL's two terminal-fact paths over a real hub
+response rather than `FakeHub`: `test_pull_abandons_the_active_lease_when_the_hub_reports_the_chunk_stopped` and
+`test_pull_closes_the_local_escalation_when_the_hub_reports_the_chunk_stopped`. A peek carrying a marked head and an
+unmarked entry behind it is driven under both of a runner's selection policies against a real mock hub:
+`test_fill_reaches_past_a_marked_head_by_default_against_a_real_mock_hub` claims the unmarked entry while the marked one
+stays `ready`, and `test_fill_strict_holds_at_a_marked_head_against_a_real_mock_hub` (`[queue] strict`) claims neither.
 
 **Usage over the wire** (`test_usage_service.py`) runs both directions. Runner-to-mock-hub, a real runner's
 `usage.recorded` facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once.

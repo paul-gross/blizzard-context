@@ -32,3 +32,6 @@ content the step chooses.
 **Do.** The `deliver` node in `src/blizzard/hub/graphs/basic-development-workflow/graph.yaml` is `executor: hub` with
 the single `run:` step `land-every-repo` (`command: python3 -m blizzard.hub.graphs.scripts.land_ff`) and a judgement
 authoring only the `landed`/`conflict`/`failure` choices its script can print.
+
+**Don't.** An `executor: hub` node carrying `prompt: Land every repo` beside its `run:` list — the mint-time validator
+refuses it, since no agent will ever read the prompt.

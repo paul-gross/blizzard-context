@@ -45,3 +45,6 @@ its own choices; a script relying on exit code alone to select among more than t
   completed with a terminal conclusion; prints `conflict` immediately once a repo's PR reads `dirty` — a real merge
   conflict — rather than waiting out `poll_timeout`; prints `failure` immediately once a `blocked`/`unstable` repo's
   check run has completed failing; and prints `landed` once every repo has merged.
+
+**Don't.** A land script that prints `landed` and then a trailing summary line to stdout — the summary is now the last
+line, names no choice, and the step falls through as if it had said nothing.

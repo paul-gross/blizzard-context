@@ -12,6 +12,9 @@ and carries no entries itself.
 
 **Detect.** `blizzard-context:registry-drift` is the mechanical companion that catches a missing registry entry.
 
+**Don't.** Land `tests/e2e/test_new_dialog.py` with its registry entry deferred to a follow-up — the drift check goes
+red for every change behind it, and the next author writes the entry for a scenario they never built.
+
 ## A wire change extends the mock (`bzh:wire-change-extends-mock`)
 
 **Rule.** A hub-to-runner wire change extends the mock counterpart — `blizzard-mock`'s mock hub and mock runner — and
@@ -27,3 +30,6 @@ the sibling `blizzard` worktree — its detail is at [`./commands.md`](./command
 other direction has no such check: the mock runner's `/_drive/*` plane is checked only against a hardcoded declared-set
 snapshot flagging a grown or shrunk verb, `IHubGateway` is never independently diffed against a real contract, and that
 direction therefore rests on this rule rather than on anything mechanical.
+
+**Don't.** A new `/api/fleet/...` route landing in `blizzard` alone — the parity guard fails, and a route exempted from
+it leaves the service tier driving a runner against a mock that answers `404`.

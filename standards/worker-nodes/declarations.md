@@ -70,6 +70,9 @@ judgement assessment aliases every missing name to the same text, losing the per
 **Exception.** A `git_commit`-kind name has no fallback: nothing stands in for a commit that was never pushed and
 declared.
 
+**Don't.** A node declaring `produces: [findings, summary]` whose prompt declares neither — both names land as the same
+judgement text, and nothing downstream can tell which was meant to be which.
+
 ## The `produces_mode` backstop (`bzh:worker-node-produces-backstop`)
 
 **Rule.** The hub config key `produces_mode` gates what an undeclared produces name costs at completion time: under
@@ -81,6 +84,9 @@ unaudited graphs.
 
 **Do.** Flip `produces_mode` to `enforce` only after auditing every graph the hub runs against
 `bzh:worker-node-attach-instruction`; the packaged graphs already pass that audit via the standing guard.
+
+**Don't.** Ship a hub config with `produces_mode = "enforce"` set ahead of that audit — every completion from an
+un-instructed node is rejected at the fence, with no fallback left to land on.
 
 ## The worker's identity environment (`bzh:worker-node-attach-env`)
 
@@ -98,3 +104,6 @@ authored prose.
 
 **Detect.** A prompt instructing the worker to pass identity — for example `--lease <lease-id>` — names a flag that does
 not exist: neither declaration CLI's signature has any argument a lease id, runner URL, or token could bind to.
+
+**Don't.** *"`blizzard runner artifact create --name findings --lease $BLIZZARD_LEASE_ID`"* — the flag does not exist,
+and the prompt now carries an identity value the spawn environment already supplies.
