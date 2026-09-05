@@ -95,9 +95,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   320px it walks all four tabs — General, Node history, Artifacts, Transcripts — each checked for no horizontal
   overflow, exercising the General tab's `@media (min-width: 720px)` collapse and a long unbroken artifact key. Only
   General's own sections (`section-`-prefixed testids) are checked for stacking; Node history, Artifacts, and
-  Transcripts (the shared `fleet-chunk-transcripts-container` nav-plus-viewer pane) are each one nav-plus-viewer pane
-  rather than a stack of independent panels, so the overflow check alone stands in for that tab. Its takeover case
-  mounts a `needs_human` chunk with a wrapped takeover command and raw resume fallback. `fleet-kit-panel`'s body clips
+  Transcripts — the last the shared `fleet-chunk-transcripts-container` — are each one nav-plus-viewer pane rather than
+  a stack of independent panels, so the overflow check alone stands in for that tab. Its takeover case mounts a
+  `needs_human` chunk with a wrapped takeover command and raw resume fallback. `fleet-kit-panel`'s body clips
   horizontally (`overflow-x: hidden`), so no takeover CSS can widen the tab; the claim is the opposite — at 320px each
   over-wide command must be reachable by scrolling its own box (`scrollLeft` round-trips past 0), or the clip amputates
   the string the operator must paste whole. Proven able to fail per half by dropping `overflow-x: auto` from

@@ -12,8 +12,8 @@ and carries no entries itself.
 
 **Detect.** `blizzard-context:registry-drift` is the mechanical companion that catches a missing registry entry.
 
-**Don't.** Land `tests/e2e/test_new_dialog.py` with its registry entry deferred to a follow-up — the drift check goes
-red for every change behind it, and the next author writes the entry for a scenario they never built.
+**Don't.** Land a new `tests/e2e/` scenario with its registry entry deferred to a follow-up — the drift check goes red
+for every change behind it, and the next author writes the entry for a scenario they never built.
 
 ## A wire change extends the mock (`bzh:wire-change-extends-mock`)
 
@@ -31,5 +31,6 @@ other direction has no such check: the mock runner's `/_drive/*` plane is checke
 snapshot flagging a grown or shrunk verb, `IHubGateway` is never independently diffed against a real contract, and that
 direction therefore rests on this rule rather than on anything mechanical.
 
-**Don't.** A new `/api/fleet/...` route landing in `blizzard` alone — the parity guard fails, and a route exempted from
-it leaves the service tier driving a runner against a mock that answers `404`.
+**Don't.** A new `/api/fleet/...` route the runner calls outside `IHubClient`, landing in `blizzard` alone — the guard
+diffs only the protocol's methods, so it stays green while the service tier drives a runner against a mock that answers
+the new route `404`.

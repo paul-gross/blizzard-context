@@ -26,8 +26,12 @@ beside vitest in the unit/component tier.
 
 Playwright owns the service and e2e tiers, per [../verification/blizzard.md](../verification/blizzard.md).
 
-**Don't.** Add `prettier` and a `format` script to settle a formatting dispute — two owners of whitespace, churning
-every file on whichever ran last.
+**Don't.**
+
+```json
+"scripts": { "format": "prettier --write ." },
+"devDependencies": { "prettier": "^3.0.0" }
+```
 
 ## Generated API client (`bzh:generated-client`)
 

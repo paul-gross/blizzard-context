@@ -14,9 +14,9 @@ A chunk never stores item contents: it holds work refs, and reads pass through t
 is the durable referent and the chunk is ephemeral — an unacquired chunk may be grouped away or deleted, and
 re-ingesting the same item mints a fresh chunk. An item already wrapped by a live chunk cannot be ingested again.
 
-A landed chunk's work refs are closed at their own source through its binding — best-effort, eventually convergent, not
-atomic with the landing, and independent of whether the chunk keeps running. A chunk that lands and is only later
-abandoned still closes its work items, because it was in fact delivered.
+A chunk's work refs are closed at their own source through its binding once the chunk lands or an operator marks it done
+by hand — best-effort, eventually convergent, not atomic with the landing, and independent of whether the chunk keeps
+running. A chunk that lands and is only later abandoned still closes its work items, because it was in fact delivered.
 
 ## Materialization
 
@@ -34,9 +34,8 @@ nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason 
 by it. Every proposal is judged exactly once — replaying the same delivery mints no duplicate item and appends no
 duplicate evidence — but carries no epoch filter: two proposals from two epochs of the same node both materialize, since
 both rode a fence-accepted completion. A chunk that lands and is only later abandoned still materializes its proposals;
-a chunk an operator marks done by hand, or one that never reaches delivery, never does. That is a narrower predicate
-than Work refs' closure, which a hand-completion also fires: a hand-completed chunk that never delivered closes its refs
-and materializes nothing.
+a chunk an operator marks done by hand, or one that never reaches delivery, never does — a narrower predicate than Work
+refs' closure, so a hand-completed chunk that never delivered closes its refs and materializes nothing.
 
 An operator resolving a gate may strike some of the chunk's pending proposals — its proposals carrying neither a
 materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded with the
@@ -57,9 +56,10 @@ describes for a grouped chunk.
 A hub item and its chunk live and die together, in both directions. Deleting a chunk withdraws every open `hub:`-source
 pointer it holds — any `forge:`-source pointer on the same chunk survives untouched, since a chunk can carry pointers
 from more than one source — and withdrawing a hub item deletes its unacquired holder chunk in the same stroke rather
-than refusing the withdrawal. Two holders refuse it: a genuinely acquired, still-live holder, and an unacquired holder
-that stands as another chunk's prerequisite — the same refusal deleting it directly meets
-([./statuses.md](./statuses.md) §The blocked marking). A terminal holder's withdrawal deletes nothing.
+than refusing the withdrawal. The withdrawal is refused where the deletion would be: a live holder outside the pre-claim
+statuses — claimed, paused, parked on a person, or delivering — and an unacquired holder that stands as another chunk's
+prerequisite ([./statuses.md](./statuses.md) §The blocked marking). A terminal holder is no live holder at all, so its
+item withdraws and nothing is deleted.
 
 ## Operator-editable properties
 
