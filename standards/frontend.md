@@ -16,11 +16,13 @@ prettier — any formatting concern that matters is expressed as an eslint rule.
 **Why.** One linter that also owns formatting keeps the gate one command and avoids a second formatter fighting eslint,
 churning the tree on whichever ran last.
 
+**Scope.** Binds the unit/component tier's tooling only; Playwright owns the service and e2e tiers, per
+[../verification/blizzard.md](../verification/blizzard.md).
+
 **Detect.** A prettier dependency, a `.prettierrc`, or a `format` script in the Angular workspace; a second test runner
 beside vitest in the unit/component tier.
 
-**Do.** The two gates — Playwright owns the service and e2e tiers, per
-[../verification/blizzard.md](../verification/blizzard.md), so neither is one of them:
+**Do.** The two gates:
 
 - **Lint** — `npm run lint`: eslint over the Angular workspace.
 - **Test** — `npm run test`: vitest, the unit/component tier.
@@ -28,8 +30,10 @@ beside vitest in the unit/component tier.
 **Don't.**
 
 ```json
-"scripts": { "format": "prettier --write ." },
-"devDependencies": { "prettier": "^3.0.0" }
+{
+  "scripts": { "format": "prettier --write ." },
+  "devDependencies": { "prettier": "^3.0.0" }
+}
 ```
 
 ## Generated API client (`bzh:generated-client`)

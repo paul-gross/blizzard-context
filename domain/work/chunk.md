@@ -35,9 +35,9 @@ by it. Every proposal is judged exactly once — replaying the same delivery min
 duplicate evidence — but carries no epoch filter: two proposals from two epochs of the same node both materialize, since
 both rode a fence-accepted completion. Materialization keys on the graph's reserved terminal transition, however the
 chunk reached it, while Work refs' closure keys on the chunk landing or being marked done by hand, so the two gates
-diverge: a chunk that lands and is only later abandoned materializes its proposals; a chunk an operator marks done by
-hand closes its refs and materializes nothing; a chunk routed to the terminal with no landing behind it materializes and
-closes nothing.
+diverge in both directions. A chunk stopped after it lands but before it reaches the terminal closes its refs and
+materializes nothing, exactly as a chunk an operator marks done by hand does. A chunk routed to the terminal with no
+landing behind it does the reverse: its proposals materialize, and no ref closes.
 
 An operator resolving a gate may strike some of the chunk's pending proposals — its proposals carrying neither a
 materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded with the
