@@ -91,19 +91,22 @@ rendering visibly different UI on the same underlying state.
 
 ### `blizzard:manual-external-usage-probe`
 
-**Surface.** No CI tier can prove the vendor's real `/api/oauth/usage` response shape: the tier rules forbid service and
-e2e tests from touching the network, and the endpoint is undocumented and unversioned, so it can drift with no changelog
-to catch it. Every CI-tier test exercises Claude Code's external-subscription-usage sampling against a stubbed
-transport, and this probe is what ties that stub back to what the vendor actually returns.
+**Surface.** No CI tier can prove a declared subscription's provider's real usage-endpoint response shape: the tier
+rules forbid service and e2e tests from touching the network, and a provider's endpoint is typically undocumented and
+unversioned, so it can drift with no changelog to catch it. Every CI-tier test exercises subscription-usage sampling
+against a stubbed transport, and this probe is what ties that stub back to what the provider actually returns. Every
+runner has at least the legacy `anthropic` slug (Claude Code); a runner with `[[subscription]]` declarations may name
+any other declared slug instead.
 
-**Setup.** The runner machine's own real Claude Code OAuth credentials (`~/.claude/.credentials.json`) and a working
-`blizzard runner` binary.
+**Setup.** The runner machine's own real OAuth credentials for the slug under test (`~/.claude/.credentials.json` for
+`anthropic`) and a working `blizzard runner` binary.
 
-**Steps.** Run `blizzard runner external-usage probe`, a read-only diagnostic subcommand, then separately run `claude`'s
-own `/usage` command against the same account, and compare the two.
+**Steps.** Run `blizzard runner external-usage probe <slug>` (e.g. `probe anthropic`), a read-only diagnostic
+subcommand, then separately read that provider's own usage view for the same account (Claude Code's own `/usage`
+command, for `anthropic`), and compare the two.
 
-**Passes when.** The probe's parsed 5h/7d utilization percentages and reset times match what `claude /usage` reports for
-the same account, within the natural few-second sampling skew.
+**Passes when.** The probe's parsed utilization percentages and reset times match what the provider's own usage view
+reports for the same account, within the natural few-second sampling skew.
 
 ### `blizzard:manual-opencode-compatibility`
 
