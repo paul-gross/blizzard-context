@@ -93,11 +93,11 @@ when it introduces a derived cross-fact invariant; a constraint the engine enfor
 not one. Record the decision in the file below that owns the writer when a change adds durable state a reviewer would
 otherwise expect a sweep point for.
 
-A register entry is a standing statement about the write as it currently stands — the writer, the shape of its
+A recorded exemption is a standing statement about the write as it currently stands — the writer, the shape of its
 transaction, and the ground claimed, with whatever that ground owes — and carries no provenance for the change that
-added or reshaped it (`canon:no-process-refs`, `canon:no-retro`). An entry whose claimed window no longer exists in code
-leaves with the window, whether the write went with it or only changed shape: deleted rather than kept to say it was
-retired.
+added or reshaped it (`canon:no-process-refs`, `canon:no-retro`). An exemption whose claimed window no longer exists in
+code leaves with the window, whether the write went with it or only changed shape: deleted rather than kept to say it
+was retired.
 
 The transcript lane is split out of both daemon files: a runner-side or hub-side write that belongs to it is recorded in
 `transcripts.md`, not in the daemon's own register.

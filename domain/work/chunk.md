@@ -22,8 +22,8 @@ running. A chunk that lands and is only later abandoned still closes its work it
 
 A node-step's completion may carry proposed work items (`proposes_work_items`, [../graphs/nodes.md](../graphs/nodes.md))
 — a `create` (a new item's title, body, and stated priority) or an `update` (an open item's pointer plus evidence to
-append) — riding the completion alongside its artifacts. They accumulate inertly through the graph: nothing reads a
-proposal row until the chunk reaches the graph's reserved terminal.
+append) — riding the completion alongside its artifacts. They accumulate through the graph: a gate resolution may read
+them to strike, but nothing materializes a proposal before the chunk reaches the graph's reserved terminal.
 
 The reserved-terminal transition materializes them: it turns every accumulated, unstruck proposal of a chunk that has
 moved into the graph's reserved terminal into a real work item, best-effort, eventually convergent, and not atomic with
@@ -57,11 +57,11 @@ describes for a grouped chunk.
 
 A hub item and its chunk live and die together, in both directions. Deleting a chunk withdraws every open `hub:`-source
 pointer it holds — any `forge:`-source pointer on the same chunk survives untouched, since a chunk can carry pointers
-from more than one source — and withdrawing a hub item deletes its unacquired holder chunk in the same stroke rather
-than refusing the withdrawal. For a live holder the withdrawal is refused where the deletion would be: one at `running`,
-`delivering`, `waiting_on_human`, `needs_human`, or `paused`, and an unacquired one that stands as another chunk's
-prerequisite ([./statuses.md](./statuses.md) §The blocked marking). A terminal holder is no live holder at all, so its
-item withdraws and nothing is deleted.
+from more than one source — and withdrawing a hub item deletes its holder chunk in the same stroke wherever the deletion
+above would be admitted, and is refused wherever the deletion would be: a holder past the unacquired predicate, or an
+unacquired one that stands as another chunk's prerequisite ([./statuses.md](./statuses.md) §The blocked marking). A
+terminal holder is the one exception: withdrawal neither deletes it nor refuses, so the item withdraws and the chunk
+stands.
 
 ## Operator-editable properties
 

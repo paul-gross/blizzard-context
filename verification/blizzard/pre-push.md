@@ -8,13 +8,13 @@ tiers `blizzard:gate` cannot run is stated in its own row at [`./commands.md`](.
 **Rule.** Before you push, sweep the release-only tiers for every handle or field the change renamed or removed, then
 run whatever the change touched.
 
-**Why.** Those tiers are the only readers of surfaces nothing else type-checks — board `data-testid` and `data-*`
-attributes in `tests/e2e/`, and wire field names off a live API response in `tests/service/` — so renaming either ships
-green and breaks them where you will not see it.
+**Why.** Those tiers, and the board's kiosk demo mode (`?demo=true`), are the only readers of surfaces nothing else
+type-checks — board `data-testid` and `data-*` attributes in `tests/e2e/`, and wire field names off a live API response
+in `tests/service/` — so renaming either ships green and breaks them where you will not see it. The demo mode steers on
+`chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key` from production code, and fails
+quietly where a scenario fails loudly.
 
-**Do.** `demo/` is in the sweep because the tiers are not the only readers of those handles: the board's kiosk demo mode
-(`?demo=true`) steers on `chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key` from
-production code, and it fails quietly where a scenario fails loudly.
+**Do.**
 
 ```bash
 grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/

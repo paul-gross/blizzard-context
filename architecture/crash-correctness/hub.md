@@ -96,9 +96,9 @@ recompute.
 
 `POST /api/routines/{routine_id}/run` writes the run item's `work_items` row, its resting chunk's rows — `chunks` plus
 one `chunk_work_refs` row per work ref — the promote-then-tail-stamp pair (`chunk_promoted` plus `queue_positions`), and
-the run's own identity row (`work_item_runs`), together: five inserts spanning six tables `WorkItemStore`/the chunk-seam
-adapters/`RunContextStore` otherwise own across three repositories. All five run on the same connection inside one
-`engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
+the run's own identity row (`work_item_runs`), together: inserts spanning six tables `WorkItemStore`/the chunk-seam
+adapters/`RunContextStore` otherwise own across three repositories. Every one of them runs on the same connection inside
+one `engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
 (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing the shared free functions `insert_chunk_rows`
 and `insert_promote_rows` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) and `insert_run_context_row`
 (`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape §The item-creation chunk
@@ -160,9 +160,9 @@ connection, inside the same `engine.begin()`, as the transition, migration, or d
 proposal insert runs through a shared `insert_proposals` helper
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — each write's own `ArtifactRow`s stay their own separate
 inline loop. A crash before that commit loses the whole write, proposals included, exactly as it already loses the fact
-and its artifacts; a crash after it has nothing left to lose. A consumer reads these rows — the delivery-materialization
-sweep below — but only once the chunk delivers, well after this write's own transaction has closed one way or the other,
-so that consumer changes nothing about this write's own correctness.
+and its artifacts; a crash after it has nothing left to lose. The delivery-materialization sweep below consumes these
+rows, but only once the chunk has reached the graph's reserved terminal, well after this write's own transaction has
+closed one way or the other, so that consumer changes nothing about this write's own correctness.
 
 The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
@@ -174,8 +174,9 @@ inserts each struck proposal's `work_item_strikes` row on the same connection, i
 `decision_resolutions` row it accompanies — the same one-transaction shape §Proposed work items above takes for a step's
 own proposals. A crash before that commit loses the whole write, strikes included, exactly as it already loses the
 resolution; a crash after it has nothing left to lose. The delivery-materialization sweep below reads
-`work_item_strikes` to exclude a struck proposal forever, but only once the chunk delivers, well after this write's own
-transaction has closed one way or the other, so that read changes nothing about this write's own correctness.
+`work_item_strikes` to exclude a struck proposal forever, but only once the chunk has reached the graph's reserved
+terminal, well after this write's own transaction has closed one way or the other, so that read changes nothing about
+this write's own correctness.
 
 The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
@@ -183,7 +184,7 @@ recompute.
 ## The delivery-materialization sweep
 
 `WorkItemMaterializationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/work_item_materialization.py`) re-derives
-its candidate set — every not-yet-judged proposal of a chunk that has delivered
+its candidate set — every not-yet-judged proposal of a chunk that has moved into the graph's reserved terminal
 ([`../../domain/work/chunk.md`](../../domain/work/chunk.md) §Materialization) — from the store on every pass and holds
 no state between passes: no durable outbox of its own, unlike the close-intent drain above. A crash mid-pass loses only
 that pass's remaining work; the next pass re-reads the same candidate set minus whatever the crashed pass already

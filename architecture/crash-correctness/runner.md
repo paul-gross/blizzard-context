@@ -156,12 +156,11 @@ The first window is closed by ordering, not by a registry point: `collect` clear
 once `_judged` returns. The second is narrowed rather than closed: the staleness-exceeded branch calls `Attempt.fail`
 directly, which kills and clears the record itself as one link in its own closing sequence — no separate write of
 `collect`'s own precedes it — so the only span left is inside `Attempt.fail`
-(`blizzard/src/blizzard/runner/loop/attempt.py`), from the elicitation record's clear to the end of the call — the
-lease's closure on every branch but the locally-paused escalation deferral, which returns without closing. A crash in
-that span, or that deferral lifting, lands the lease back in the ordinary judge path with no elicitation record, so at
-most one elicitation is spent again, on a fresh baseline, from a point the staleness bound was already past. That is the
-accepted-loss ground: the loss is one re-spent elicitation, tolerable because it is bounded by the same threshold and
-self-healing on the next pass, and its only durable trace is the
-`elicitation past its staleness bound — failing attempt` warning the failing pass logs — the usage ledger cannot show
-it, because a killed elicitation books no `judge` fact and the fresh one records the generation's only `judge` sample.
-It is not a fresh window `bzh:crash-point-registry` owes a point to.
+(`blizzard/src/blizzard/runner/loop/attempt.py`), from the elicitation record's clear to the lease's closure — a span
+the locally-paused escalation deferral, which returns without closing, never ends at all. A crash in that span, or that
+deferral lifting, lands the lease back in the ordinary judge path with no elicitation record, so at most one elicitation
+is spent again, on a fresh baseline, from a point the staleness bound was already past. That is the accepted-loss
+ground: the loss is one re-spent elicitation, tolerable because it is bounded by the same threshold and self-healing on
+the next pass, and its only durable trace is the `elicitation past its staleness bound — failing attempt` warning the
+failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
+one records the generation's only `judge` sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.
