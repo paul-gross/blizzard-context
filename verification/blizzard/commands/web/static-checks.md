@@ -18,6 +18,9 @@ number itself; in practice the files it has caught were also
 [`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
 `bzh:frontend-container-presentational` splits, since an oversized component is often evidence of merged
 container/presentational concerns, but the ceiling now reaches every `.ts` file this config reads, not only components.
+Also carries a `no-restricted-syntax` rule over `ExportAllDeclaration` in `projects/*/src/lib/*/index.ts` —
+[`../../../../architecture/frontend-structure/disjoint-diffs.md`](../../../../architecture/frontend-structure/disjoint-diffs.md)
+`bzh:frontend-disjoint-diffs`'s ban on a sub-barrel `export *`, scoped so fleet's own `public-api.ts` stays legal.
 
 ### web:typecheck
 

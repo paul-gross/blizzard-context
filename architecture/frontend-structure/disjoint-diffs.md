@@ -24,6 +24,9 @@ not contended.
 
 - A new top-level export added directly to `public-api.ts` instead of a feature sub-barrel; a sub-barrel export no
   consumer outside its own feature directory imports.
+- A sub-barrel `export *`, which re-exports the feature directory's whole surface with no diff on the barrel when it
+  grows — `web:lint`'s `no-restricted-syntax` rule over `ExportAllDeclaration` in `projects/*/src/lib/*/index.ts`
+  catches this one mechanically; the root `public-api.ts` itself is exempt, since it legitimately stars its sub-barrels.
 - A live feature's invalidation expressed as anything other than a row in its own daemon's registry — the shared
   `LiveInvalidationSpine.dispatch()` is the one place a `case` could physically be added, and it is private to
   `live-invalidation-spine.ts`; a registry row in one daemon for a query key that belongs to the other.
