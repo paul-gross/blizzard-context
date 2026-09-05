@@ -65,8 +65,8 @@ its threading, which `tests/test_runner_loop_build.py` does case by case for the
 **Do.** Where production takes one route and the gating tests drive a test-convenient other route, extend a gating case
 onto the production route rather than trusting the upper tier.
 
-**Don't.** Count a `tests/e2e/` scenario as the pin on a config key's threading — the key can be dropped before its
-consumer with every merge gate green, and the scenario that would have caught it runs only on release.
+**Don't.** A `[queue] strict` key whose only test is a browser scenario under `tests/e2e/` watching the board hold at a
+marked head — the gate never runs it, so the key can stop reaching FILL with every merge gate green.
 
 ## Plan against the claims a change falsifies (`bzh:falsified-claims-grep`)
 
