@@ -16,8 +16,9 @@ prettier — any formatting concern that matters is expressed as an eslint rule.
 **Why.** One linter that also owns formatting keeps the gate one command and avoids a second formatter fighting eslint,
 churning the tree on whichever ran last.
 
-**Scope.** Binds the unit/component tier's tooling only; Playwright owns the service and e2e tiers, per
-[../verification/blizzard.md](../verification/blizzard.md).
+**Scope.** Binds the unit/component tier's tooling only. The service and e2e tiers' tooling is the matrix's to name —
+[../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md) — and only the e2e tier is
+browser-driven.
 
 **Detect.** A prettier dependency, a `.prettierrc`, or a `format` script in the Angular workspace; a second test runner
 beside vitest in the unit/component tier.
