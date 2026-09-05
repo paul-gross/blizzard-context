@@ -17,7 +17,7 @@ Parent: [../index.md](../index.md).
 | [./repository-access.md](./repository-access.md)   | Touching persistence, or a controller that reaches it — deciding who may read a store, who may write it, and what a domain call takes                                                                 |
 | [./system-shape.md](./system-shape.md)             | Designing a daemon, an external-system seam, a store schema, a workflow graph, or anything crossing the runner–worker seam — the macro-shape invariants, and the route to the rule that governs yours |
 | [./crash-correctness.md](./crash-correctness.md)   | Building or changing a daemon loop or its store — what makes `kill -9` at any step boundary a tested operation rather than a hope                                                                     |
-| [./frontend-structure.md](./frontend-structure.md) | Placing or reviewing Angular code — deciding where a component, its data access, or its chrome belongs                                                                                                |
+| [./frontend-structure.md](./frontend-structure.md) | Placing or reviewing Angular code — deciding where a component, its data access, or its chrome belongs, or adding to a file several agents' diffs touch                                               |
 
 ## See also
 

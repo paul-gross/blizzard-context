@@ -153,9 +153,9 @@ connection, inside the same `engine.begin()`, as the transition, migration, or d
 proposal insert runs through a shared `insert_proposals` helper
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — each write's own `ArtifactRow`s stay their own separate
 inline loop. A crash before that commit loses the whole write, proposals included, exactly as it already loses the fact
-and its artifacts; a crash after it has nothing left to lose. A consumer now reads these rows — the
-delivery-materialization sweep below — but only once the chunk delivers, well after this write's own transaction has
-closed one way or the other, so that consumer changes nothing about this write's own correctness.
+and its artifacts; a crash after it has nothing left to lose. A consumer reads these rows — the delivery-materialization
+sweep below — but only once the chunk delivers, well after this write's own transaction has closed one way or the other,
+so that consumer changes nothing about this write's own correctness.
 
 The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
@@ -266,17 +266,16 @@ or not at all, and `release`'s read-then-write has nothing outside the transacti
 commits.
 
 `DependencyService` (`blizzard/src/blizzard/hub/domain/dependencies.py`) holds both writes under the same
-`threading.Lock` `ClaimService`/`EditService`/`RestartService` already share
-(`blizzard/src/blizzard/hub/composition.py`) — the same concurrency guard §Chunk delete, then hub-item withdrawal
-already takes for its own composite write, not a crash-window mechanism: it serializes two racing declarations, a
-declaration racing a release, or a declaration racing `DeleteService.delete`'s own hold of the same lock (the
-prerequisite deleted between the caller's resolve and `declare`'s hold of the lock). `declare`'s own under-lock read of
-the dependent's re-derived status runs before its one atomic transaction, the same shape §Chunk delete, then hub-item
-withdrawal states for its own guard-check-then-write, rather than protecting against a crash mid-transaction. The
-prerequisite's re-derived ephemerality read is closed the same way: `GroupService`
-(`blizzard/src/blizzard/hub/domain/queue.py`) holds the same shared lock for its whole fold, so `declare`'s ephemerality
-read is serialized against every writer that can make a prerequisite ephemeral, grouping included.
-`NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`) is a
+`threading.Lock` `ClaimService`/`EditService`/`RestartService` share (`blizzard/src/blizzard/hub/composition.py`) — the
+same concurrency guard §Chunk delete, then hub-item withdrawal already takes for its own composite write, not a
+crash-window mechanism: it serializes two racing declarations, a declaration racing a release, or a declaration racing
+`DeleteService.delete`'s own hold of the same lock (the prerequisite deleted between the caller's resolve and
+`declare`'s hold of the lock). `declare`'s own under-lock read of the dependent's re-derived status runs before its one
+atomic transaction, the same shape §Chunk delete, then hub-item withdrawal states for its own guard-check-then-write,
+rather than protecting against a crash mid-transaction. The prerequisite's re-derived ephemerality read is closed the
+same way: `GroupService` (`blizzard/src/blizzard/hub/domain/queue.py`) holds the same shared lock for its whole fold, so
+`declare`'s ephemerality read is serialized against every writer that can make a prerequisite ephemeral, grouping
+included. `NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`) is a
 `bzh:invariant-checker` assertion as a backstop against a regression in that serialization, not a guard against a live
 gap.
 

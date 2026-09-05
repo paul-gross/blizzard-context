@@ -43,12 +43,7 @@ feature.
 
 Stated so a reviewer need not re-derive them:
 
-- A node-grouped runner transcript read is served from the runner's own `transcript_segments` table alone, not by making
-  the operator plane serve runners. The two ways the operator plane could serve them both fall short: chunk-scoping the
-  runner-scoped fleet route inherits the same runner confinement `_demand_lease_owner` and the runner-scoped store
-  already apply, so it returns the same view the local table does at the cost of a hub round-trip — no completeness
-  gained; and relaxing `reject_runner_principal`, the only shape genuinely complete across runner hands, widens the
-  whole operator router past what the feature justifies. The local read is the cheapest way to get exactly what the
-  runner plane already permits, and it stays extensible — `TranscriptService.for_lease` already resolves
-  local-versus-hub per lease, so a hub half can be added behind that seam without reopening the operator boundary if
-  cross-runner completeness ever becomes a real requirement.
+- Chunk-scoping the runner-scoped fleet route gains no completeness over the runner's own `transcript_segments` table:
+  it inherits the same runner confinement `_demand_lease_owner` and the runner-scoped store already apply, so it returns
+  the same view at the cost of a hub round-trip. Only relaxing `reject_runner_principal` is complete across runner
+  hands, and the `Don't` above owns why that is not taken.
