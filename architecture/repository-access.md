@@ -56,10 +56,17 @@ to its object is an edge concern, done before the domain is invoked.
 **Why.** A domain that takes objects cannot fail on a missing or malformed id mid-rule, and its signatures state exactly
 which entities a rule operates on.
 
+**Scope.** A layer that holds no entity type for the identifier at all — the runner's chunk-keyed operations, where no
+`Chunk` type exists locally (`bzh:facts-not-status` keeps each per-concept table independent) — still resolves at the
+edge: it mints a typed scope naming exactly the facts the rule reads, rather than loading an aggregate that does not
+exist. The scope is data, not behavior, and never grows into one.
+
 **Detect.** A domain signature typed `chunk_id: str` rather than `chunk: Chunk`, or a domain method loading an entity
 from an id it was passed.
 
 **Do.** `blizzard/src/blizzard/hub/domain/complete.py` declares `complete(self, chunk: Chunk, *, by: str)`; the
-controller resolves that chunk through a read repository first.
+controller resolves that chunk through a read repository first. Where no aggregate exists,
+`blizzard/src/blizzard/runner/api/chunk_scope.py` mints the typed scope instead — `TakeoverService.open` takes a
+`TakeoverOpenScope` resolved there, never a bare `chunk_id`.
 
 **Don't.** `advance(chunk_id: str)`, loading the chunk inside the domain.
