@@ -12,7 +12,8 @@ than restating them. Each spoke's rules use the slot skeleton `winter-canon:/rul
 | [`../standards/frontend.md`](../standards/frontend.md)                             | You need the Angular toolchain rules — lint, test, the generated client                                      |
 | [`./clean-architecture.md`](./clean-architecture.md)                               | You are placing daemon-side behavior instead — the counterpart to this map                                   |
 
-None of this tree's own rules — `bzh:frontend-container-presentational`, `bzh:frontend-kit-floor`,
-`bzh:frontend-empty-state-gated` — are tooled; all three are review questions. `web:lint`'s `max-lines` ceiling in
+Of this tree's own rules, `bzh:frontend-container-presentational` and `bzh:frontend-empty-state-gated` are review
+questions; `bzh:frontend-kit-floor` is tooled by `web:structural-gate`'s kit-floor sweep
+([`../verification/blizzard.md`](../verification/blizzard.md)). `web:lint`'s `max-lines` ceiling in
 [`../verification/blizzard.md`](../verification/blizzard.md) reaches every file under `projects/`, this tree's included,
 but is a general complexity heuristic no rule here owns outright.

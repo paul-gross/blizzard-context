@@ -86,9 +86,9 @@ signals last produced instead of ticking; `injectNowSignal` closes exactly that 
 
 **Why.** One token vocabulary means an overlay wash is restyled in one place rather than per component.
 
-**Detect.** A raw `rgba(0, 0, 0` in a component `.css`. Neither this ban nor the retired-chrome-class check
-(`bzh:frontend-kit-floor`'s Detect names the classes) is tooled by `web:lint`
-([../verification/blizzard.md](../verification/blizzard.md)); both are review questions.
+**Detect.** A raw `rgba(0, 0, 0` in a component `.css` — a review question, not tooled by `web:lint`
+([../verification/blizzard.md](../verification/blizzard.md)). The retired-chrome-class check (`bzh:frontend-kit-floor`'s
+Detect names the classes) is tooled instead, by `web:structural-gate`'s kit-floor sweep.
 
 **Do.** `background: var(--overlay-25);`
 

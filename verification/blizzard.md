@@ -50,7 +50,7 @@ A command method passes when its command exits 0.
 | `web:lint`                   | `npm run lint` in `web/` — eslint over the Angular workspace, including the `max-lines` ceiling *(more)*    |
 | `web:typecheck`              | `npm run build` in `web/` — a real AOT compile of both Angular apps *(more)*                                |
 | `web:unit-test`              | `npm run test` in `web/` — vitest, the frontend unit/component tier                                         |
-| `web:structural-gate`        | `npm run structural-gate` in `web/` — the real-timer sweep *(more)*                                         |
+| `web:structural-gate`        | `npm run structural-gate` in `web/` — the real-timer and kit-floor sweeps *(more)*                          |
 | `web:shell-sweep`            | `npm run shell-sweep` in `web/` — the real-Chromium proof for what jsdom cannot evaluate *(more)*           |
 | `web:client-drift`           | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`) *(more)*       |
 | `blizzard-mock:build`        | `uv sync` in the `blizzard-mock` repo                                                                       |

@@ -48,3 +48,12 @@ method. A genuinely time-driven spec is named with its reason in `REAL_TIMER_EXE
 is clean of the real-timer shape today, the gate first runs a fixture self-test — `assertRealTimerDetectorWorks`,
 must-catch and must-pass shapes — and refuses to run if the detector stops classifying (rule
 `bzh:case-pins-its-own-name`).
+
+The same script also sweeps the kit floor
+([`../../../../architecture/frontend-structure/kit.md`](../../../../architecture/frontend-structure/kit.md)
+`bzh:frontend-kit-floor`): a component `.css` outside `fleet/lib/kit/` declaring one of the kit's own retired chrome
+classes (`KitPanel`'s `.panel`/`.p-hdr`/`.p-body`/`.lbl`, `KitAsyncState`'s `.status` and its hand-rolled precursors
+`.none`/`.hint`/`.rest`) as a standalone rule, or a component `.html` outside the kit hand-rolling `KitFactList`'s own
+`<dl class="kv">` grid. A site that should not convert is named with its reason in `KIT_FLOOR_EXEMPT_SITES`, the
+`REAL_TIMER_EXEMPT_FILES` idiom. Its own fixture self-test, `assertKitFloorDetectorWorks`, runs alongside
+`assertRealTimerDetectorWorks` before either sweep does.
