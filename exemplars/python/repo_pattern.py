@@ -20,18 +20,20 @@ The shape codifies the three seams the blizzard architecture rules require
      uses it. Anything under `internal/` is package-private and must not be
      imported from outside the feature.
 
-  3. **Factory-injected error wrapping, behind an injected connections seam.**
+  3. **Factory-injected error wrapping, behind a generic connections seam.**
      Library exceptions are turned into the domain `RepoError` by an injected
      `RepoErrorFactory.from_*` method, not by inline `raise X from Y` at every
      call site. The factory logs once at the wrap site (structlog,
      standards/logging.md) with structured fields, so the reporter and
-     dashboard render them without re-parsing. Adapters never reach the
-     library client directly: they take an injected `RepoConnections`, the one
-     collaborator that holds the client and calls the factory
-     (bzh:dependency-inversion) — mirroring `RunnerStoreConnections` /
+     dashboard render them without re-parsing. Adapters never hold the
+     library client directly: they take an injected `RepoConnections`
+     (bzh:dependency-injection) — mirroring `RunnerStoreConnections` /
      `HubStoreConnections` in production, the pattern
      architecture/clean-architecture.md's structural gate holds every
-     `hub/store/internal/` and `runner/` adapter to.
+     `hub/store/internal/` and `runner/` adapter to. `RepoConnections` stays
+     generic — `connect()`/`begin()`/`all(query)`, never a per-entity method —
+     so entity-specific reads and writes live on the one adapter that owns
+     that entity, not on the shared seam every adapter takes.
 
 The DI container binds the Write variant where mutations are required and the
 Read variant where they aren't (bzh:dependency-injection) — the Protocol type
@@ -45,7 +47,7 @@ from typing import Protocol
 
 import structlog
 
-import some_io_library  # confined to RepoConnections — no adapter method reaches it directly
+import some_io_library  # the client itself is confined to RepoConnections
 
 
 # --- Domain types ----------------------------------------------------------
@@ -109,40 +111,41 @@ class RepoErrorFactory:
 
 class RepoConnections:
     """The connection-acquiring collaborator every adapter takes in place of
-    the raw `some_io_library` client (bzh:dependency-inversion). Holds the
-    client and the error factory together, so a library exception is always
-    caught and translated at the point it is raised — no adapter method
-    catches `some_io_library`'s own exception type itself. Mirrors
-    `RunnerStoreConnections` / `HubStoreConnections` in production.
+    the raw `some_io_library` client (bzh:dependency-injection) —
+    `connect()`/`begin()`/`all(query)`, generic across every concept the
+    feature package adapts. Statement construction and entity-specific
+    operations stay on the adapter that owns that entity, never here
+    (bzh:screaming-architecture); this seam only acquires and translates.
+    Mirrors `RunnerStoreConnections` / `HubStoreConnections` in production,
+    including their one real gap: `begin()` wraps only the context manager's
+    own creation, not a caller's `with` block, so a write that can collide on
+    a business rule — a replay, a uniqueness constraint — still needs its own
+    catch inside that block, the same as a `check_and_record`-style method
+    catches `IntegrityError` locally rather than relying on this seam.
     """
 
     def __init__(self, client: "some_io_library.Client", errors: RepoErrorFactory) -> None:
         self._client = client
         self._errors = errors
 
-    def fetch(self, thing_id: str) -> bytes:
+    def connect(self):
         try:
-            return self._client.fetch(thing_id)
+            return self._client.connect()
         except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"fetch failed for {thing_id}") from exc
+            raise self._errors.from_io(exc, "connect failed") from exc
 
-    def list(self, prefix: str) -> list:
+    def begin(self):
         try:
-            return self._client.list(prefix)
+            return self._client.begin()
         except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"list failed for prefix {prefix!r}") from exc
+            raise self._errors.from_io(exc, "begin failed") from exc
 
-    def write(self, thing_id: str, payload: bytes) -> None:
+    def all(self, query) -> list:
         try:
-            self._client.write(thing_id, payload)
+            with self._client.connect() as conn:
+                return list(conn.execute(query))
         except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"save failed for {thing_id}") from exc
-
-    def delete(self, thing_id: str) -> None:
-        try:
-            self._client.delete(thing_id)
-        except some_io_library.IOError as exc:
-            raise self._errors.from_io(exc, f"delete failed for {thing_id}") from exc
+            raise self._errors.from_io(exc, f"query failed for {query!r}") from exc
 
 
 # --- Public Protocols (the seam services depend on) -----------------------
@@ -165,34 +168,38 @@ class IWriteFooRepository(IReadFooRepository, Protocol):
 # production; shown here in one file for the exemplar) ----------------------
 
 class ReadFooRepository:
-    """Read-only `some_io_library` adapter. The client is reached only through
-    the injected `RepoConnections` — never held or opened here."""
+    """Read-only `some_io_library` adapter. Builds its own queries; the client
+    itself is reached only through the injected `RepoConnections`."""
 
     def __init__(self, connections: RepoConnections) -> None:
         self._connections = connections
 
     def get_thing(self, thing_id: str) -> Thing:
-        raw = self._connections.fetch(thing_id)
-        return self._parse(thing_id, raw)
+        rows = self._connections.all(("get", thing_id))
+        if not rows:
+            raise RepoError(f"no such thing {thing_id}", operation="get")
+        return self._parse(rows[0])
 
     def list_things(self, prefix: str) -> list[Thing]:
-        entries = self._connections.list(prefix)
-        return [self._parse(e.id, e.raw) for e in entries]
+        rows = self._connections.all(("list", prefix))
+        return [self._parse(row) for row in rows]
 
     @staticmethod
-    def _parse(thing_id: str, raw: bytes) -> Thing:
+    def _parse(row) -> Thing:
         # Parsing is a private detail of this class — callers see only Thing.
-        return Thing(id=thing_id, payload=raw)
+        return Thing(id=row.id, payload=row.payload)
 
 
 class WriteFooRepository(ReadFooRepository):
     """Read-write adapter. Mutating operations live here; reads inherited."""
 
     def save_thing(self, thing: Thing) -> None:
-        self._connections.write(thing.id, thing.payload)
+        with self._connections.begin() as conn:
+            conn.execute(("save", thing.id, thing.payload))
 
     def delete_thing(self, thing_id: str) -> None:
-        self._connections.delete(thing_id)
+        with self._connections.begin() as conn:
+            conn.execute(("delete", thing_id))
 
 
 # Typecheck-time Protocol/adapter conformance sentinel. Pyright rejects the
