@@ -94,9 +94,9 @@ rendering visibly different UI on the same underlying state.
 **Surface.** No CI tier can prove a declared subscription's provider's real usage-endpoint response shape: the tier
 rules forbid service and e2e tests from touching the network, and a provider's endpoint is typically undocumented and
 unversioned, so it can drift with no changelog to catch it. Every CI-tier test exercises subscription-usage sampling
-against a stubbed transport, and this probe is what ties that stub back to what the provider actually returns. Every
-runner has at least the legacy `anthropic` slug (Claude Code); a runner with `[[subscription]]` declarations may name
-any other declared slug instead.
+against a stubbed transport, and this probe is what ties that stub back to what the provider actually returns. A
+runner with no `[[subscription]]` declared has exactly one slug to name, the legacy `anthropic` slug (Claude Code); one
+with declarations names any of its own slugs instead, and none of them is guaranteed to be `anthropic`.
 
 **Setup.** The runner machine's own real OAuth credentials for the slug under test (`~/.claude/.credentials.json` for
 `anthropic`) and a working `blizzard runner` binary.
