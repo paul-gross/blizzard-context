@@ -13,11 +13,11 @@ Parent: [../index.md](../index.md).
 
 | Doc                                                | When to read                                                                                                                                                                                          |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [./clean-architecture.md](./clean-architecture.md) | Placing new behavior — the CLEAN layering blizzard carries over from winter: screaming layout, a dependency-free domain core, dependency inversion, and injection at the composition root             |
-| [./repository-access.md](./repository-access.md)   | Touching persistence or a controller — the read/write repository split, which layer may write, and the domain-takes-objects rule                                                                      |
+| [./clean-architecture.md](./clean-architecture.md) | Placing new behavior — deciding which layer it belongs in and what that layer may depend on                                                                                                           |
+| [./repository-access.md](./repository-access.md)   | Touching persistence, or a controller that reaches it — deciding who may read a store, who may write it, and what a domain call takes                                                                 |
 | [./system-shape.md](./system-shape.md)             | Designing a daemon, an external-system seam, a store schema, a workflow graph, or anything crossing the runner–worker seam — the macro-shape invariants, and the route to the rule that governs yours |
 | [./crash-correctness.md](./crash-correctness.md)   | Building or changing a daemon loop or its store — what makes `kill -9` at any step boundary a tested operation rather than a hope                                                                     |
-| [./frontend-structure.md](./frontend-structure.md) | Placing or reviewing Angular code — the container/presentational split, the shared kit as the presentational floor, and the sub-barrel/SSE-registry disjoint-diff mechanism                           |
+| [./frontend-structure.md](./frontend-structure.md) | Placing or reviewing Angular code — deciding where a component, its data access, or its chrome belongs                                                                                                |
 
 ## See also
 

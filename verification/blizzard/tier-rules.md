@@ -58,6 +58,9 @@ lands far from the cause — suspect the wedge before the test.
 daemon with a runtime dir logs to `daemon.log` beside its store, and the mock fleet's dirless daemons log to
 `shared_daemon_log_dir()`.
 
+**Don't.** `subprocess.Popen([...], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)` for a daemon the test then waits
+on — the guard fails the unit tier, and past it the daemon wedges once its log fills the pipe.
+
 ## A visual change is proved by a real render (`bzh:visual-change-needs-a-render`)
 
 **Rule.** Verify a change whose observable effect is visual — layout, styling, what a component renders — by at least

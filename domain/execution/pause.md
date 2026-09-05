@@ -22,9 +22,9 @@ exactly-once claim race — enforced hub-side whether or not the runner has mirr
 ## Per-chunk pause
 
 Per-chunk pause is a third independent lever: it kills the target chunk's in-flight worker while keeping its claim —
-detach's counterpart, the lever that retains the route. What survives and how resume recovers it is owned by
-[../work/statuses.md](../work/statuses.md) (`paused`); resume respawns the parked session under its unchanged session
-id.
+detach's counterpart, the lever that retains the route. Which statuses admit a pause, what survives one, and how resume
+recovers it are owned by [../work/statuses.md](../work/statuses.md) (`paused`); resume respawns the parked session under
+its unchanged session id.
 
 Pause does not freeze the chunk: an operator restart recorded while paused still mints its own epoch, and resume then
 re-enters the moved node instead of the parked session ([../work/restart.md](../work/restart.md)).

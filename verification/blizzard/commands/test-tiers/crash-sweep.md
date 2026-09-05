@@ -31,9 +31,9 @@ command above and runs in the tag `release` workflow. Both CI workflows run it a
 
 The registry's boundary families are `resume.`, `abandon.`, `pause.`, `hubnode.` (the generic hub command node's
 per-step and pending-poll windows), `migrate.`, `attach.`, `nudge.`, `checks.`, `preempt.`, and `close.` (the
-close-intent outbox's enqueue-then-drain windows, blizzard#383), plus ungrouped generic build-to-deliver points that
-mostly fire in the runner loop (`bzh:crash-point-registry`). No case count is kept — the predicate is the membership
-test, not a number that drifts.
+close-intent outbox's enqueue-then-drain windows), plus ungrouped generic build-to-deliver points that mostly fire in
+the runner loop (`bzh:crash-point-registry`). No case count is kept — the predicate is the membership test, not a number
+that drifts.
 
 `claim.` — the route-claim boundary between persisting the route with its capability-token fact and the runner reading
 the plaintext token back — is the first ungrouped point armed on the hub, recovered generically by the runner's
@@ -64,7 +64,7 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   a kill before the marker leaves it unset and recovery re-runs the checks with latest-wins overwrite, while after the
   marker recovery reads the recorded results back and judges. The bounded-CI representative is the recovery-critical
   `checks.after-results.before-marker`.
-- `close.`, the close-intent outbox's enqueue-then-drain windows armed on the hub (blizzard#383), is swept by
+- `close.`, the close-intent outbox's enqueue-then-drain windows armed on the hub, is swept by
   `test_kill9_at_close_crash_point` over both of its members — `close.after-enqueue.before-drain` and
   `close.after-close.before-record` — driven entirely through the built-in `hub` work source, no forge involved: the
   pending intent survives either kill and the item closes exactly once after convergence.

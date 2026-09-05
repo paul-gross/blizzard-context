@@ -25,24 +25,25 @@ A node-step's completion may carry proposed work items (`proposes_work_items`, [
 append) — riding the completion alongside its artifacts. They accumulate inertly through the graph: nothing reads a
 proposal row until the chunk delivers.
 
-Delivery is the same predicate as Work refs' own closure: it turns every accumulated, unstruck proposal of a chunk that
-has actually delivered into a real work item, best-effort, eventually convergent, and not atomic with the landing. A
-`create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk, and node — resting on its own
-fresh `not_ready` chunk, exactly as a human-filed item does. An `update` appends its evidence to the pointed-at item's
-body and stamps its last-edit instant, when that item is open and its source can be edited; closed, withdrawn,
+Delivery materializes them: it turns every accumulated, unstruck proposal of a chunk that has actually delivered — moved
+into the graph's reserved terminal — into a real work item, best-effort, eventually convergent, and not atomic with the
+landing. A `create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk, and node — resting on
+its own fresh `not_ready` chunk, exactly as a human-filed item does. An `update` appends its evidence to the pointed-at
+item's body and stamps its last-edit instant, when that item is open and its source can be edited; closed, withdrawn,
 nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason instead, and delivery is never blocked
 by it. Every proposal is judged exactly once — replaying the same delivery mints no duplicate item and appends no
 duplicate evidence — but carries no epoch filter: two proposals from two epochs of the same node both materialize, since
-both rode a fence-accepted completion. A chunk that lands and is only later abandoned still materializes its proposals,
-the same did-it-deliver reading Work refs takes; a chunk an operator marks done by hand, or one that never reaches
-delivery, never does.
+both rode a fence-accepted completion. A chunk that lands and is only later abandoned still materializes its proposals;
+a chunk an operator marks done by hand, or one that never reaches delivery, never does. That is a narrower predicate
+than Work refs' closure, which a hand-completion also fires: a hand-completed chunk that never delivered closes its refs
+and materializes nothing.
 
-An operator resolving a runner-config gate may strike some of the chunk's pending proposals — its proposals carrying
-neither a materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded
-with the resolving identity and decision inside the resolution's own first-write-wins write, never a mutation of the
-proposal's own row and never a materialization outcome: it is a refusal *before* materialization ever judges the
-proposal, permanent and exclusive of the judgment a `create`/`update`/unresolved outcome represents. A struck proposal
-never materializes, on any later delivery; the loser of a concurrent resolution strikes nothing at all, the same
+An operator resolving a gate may strike some of the chunk's pending proposals — its proposals carrying neither a
+materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded with the
+resolving identity and decision inside the resolution's own first-write-wins write, never a mutation of the proposal's
+own row and never a materialization outcome: it is a refusal *before* materialization ever judges the proposal,
+permanent and exclusive of the judgment a `create`/`update`/unresolved outcome represents. A struck proposal never
+materializes, on any later delivery; the loser of a concurrent resolution strikes nothing at all, the same
 first-write-wins reading its choice takes. Striking is explicit — a resolution naming none passes every one of the
 chunk's pending proposals, unstruck.
 
@@ -56,8 +57,9 @@ describes for a grouped chunk.
 A hub item and its chunk live and die together, in both directions. Deleting a chunk withdraws every open `hub:`-source
 pointer it holds — any `forge:`-source pointer on the same chunk survives untouched, since a chunk can carry pointers
 from more than one source — and withdrawing a hub item deletes its unacquired holder chunk in the same stroke rather
-than refusing the withdrawal. A genuinely acquired, still-live holder refuses the withdrawal exactly as before,
-unchanged; a terminal holder's withdrawal is unaffected either way, deleting nothing.
+than refusing the withdrawal. Two holders refuse it: a genuinely acquired, still-live holder, and an unacquired holder
+that stands as another chunk's prerequisite — the same refusal deleting it directly meets
+([./statuses.md](./statuses.md) §The blocked marking). A terminal holder's withdrawal deletes nothing.
 
 ## Operator-editable properties
 

@@ -93,6 +93,13 @@ when it introduces a derived cross-fact invariant; a constraint the engine enfor
 not one. Record the decision in the file below that owns the writer when a change adds durable state a reviewer would
 otherwise expect a sweep point for.
 
+A register entry is a standing statement about the write as it currently stands: the writer, the shape of its
+transaction, the ground claimed, and — on the accepted-loss ground — the loss, why it is tolerable, and the operator's
+recovery path. It carries no provenance for the change that added or reshaped it: no issue, review round, or superseded
+design, and no contrast with an earlier shape of the same write. An entry that reads as a record of a build rather than
+of a write is rewritten; a write whose window no longer exists in code earns no entry at all, so the entry leaves with
+the window rather than staying to say it was retired.
+
 The transcript lane is split out of both daemon files: a runner-side or hub-side write that belongs to it is recorded in
 `transcripts.md`, not in the daemon's own register.
 

@@ -45,6 +45,9 @@ nothing observes, and the behavior that name promises goes unpinned while both c
 **Detect.** `tests/test_no_duplicate_test_bodies.py` fails on any two cases sharing a body; a deliberate cross-tier
 re-run is declared in that file rather than tolerated.
 
+**Don't.** `test_reap_expires_a_stale_lease` written by copying `test_reap_skips_a_fresh_lease` and changing only the
+name — the guard fails on the shared body, and past it the stale-lease behavior the name promises stays unobserved.
+
 ## A gating tier pins the production path (`bzh:gating-tier-pins-production-paths`)
 
 **Rule.** Pin every production path at a gating tier — a path the gate never drives is unpinned, whatever the upper
@@ -62,6 +65,9 @@ its threading, which `tests/test_runner_loop_build.py` does case by case for the
 **Do.** Where production takes one route and the gating tests drive a test-convenient other route, extend a gating case
 onto the production route rather than trusting the upper tier.
 
+**Don't.** Count a `tests/e2e/` scenario as the pin on a config key's threading — the key can be dropped before its
+consumer with every merge gate green, and the scenario that would have caught it runs only on release.
+
 ## Plan against the claims a change falsifies (`bzh:falsified-claims-grep`)
 
 **Rule.** Plan against the claims a change falsifies, not only the files it touches: enumerate the claims the change
@@ -78,3 +84,6 @@ change never opens.
 grep -rn '<falsified phrasing>' src/ docs/ openapi/ web/
 grep -rn '<falsified phrasing>' <blizzard-context worktree>
 ```
+
+**Don't.** Plan from `git diff --stat` alone — a docstring in a module the change never opens still asserts the old
+default, lands with the change, and lies from its first read.

@@ -43,13 +43,12 @@ feature.
 
 Stated so a reviewer need not re-derive them:
 
-- `blizzard#373` weighed node-grouped runner transcript reads under two shapes: (a) make the operator plane serve
-  runners, either by chunk-scoping the existing runner-scoped fleet route or by relaxing `reject_runner_principal`; (b)
-  serve the read from the runner's own `transcript_segments` table alone. Chunk-scoping the safe (a) variant inherits
-  the same runner confinement `_demand_lease_owner` and the runner-scoped store already apply, so it returns the same
-  view (b) does at the cost of a hub round-trip — its completeness advantage over (b) is illusory. Only relaxing
-  `reject_runner_principal` is genuinely complete across runner hands, and that widens the whole operator router past
-  what the feature justifies. (b) is the recommendation: the cheapest way to get exactly what the runner plane already
-  permits, and it stays extensible — `TranscriptService.for_lease` already resolves local-versus-hub per lease, so a hub
-  half can be added behind that seam without reopening the operator boundary if cross-runner completeness ever becomes a
-  real requirement.
+- A node-grouped runner transcript read is served from the runner's own `transcript_segments` table alone, not by making
+  the operator plane serve runners. The two ways the operator plane could serve them both fall short: chunk-scoping the
+  runner-scoped fleet route inherits the same runner confinement `_demand_lease_owner` and the runner-scoped store
+  already apply, so it returns the same view the local table does at the cost of a hub round-trip — no completeness
+  gained; and relaxing `reject_runner_principal`, the only shape genuinely complete across runner hands, widens the
+  whole operator router past what the feature justifies. The local read is the cheapest way to get exactly what the
+  runner plane already permits, and it stays extensible — `TranscriptService.for_lease` already resolves
+  local-versus-hub per lease, so a hub half can be added behind that seam without reopening the operator boundary if
+  cross-runner completeness ever becomes a real requirement.

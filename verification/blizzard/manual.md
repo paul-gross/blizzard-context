@@ -94,9 +94,9 @@ rendering visibly different UI on the same underlying state.
 **Surface.** No CI tier can prove a declared subscription's provider's real usage-endpoint response shape: the tier
 rules forbid service and e2e tests from touching the network, and a provider's endpoint is typically undocumented and
 unversioned, so it can drift with no changelog to catch it. Every CI-tier test exercises subscription-usage sampling
-against a stubbed transport, and this probe is what ties that stub back to what the provider actually returns. A
-runner with no `[[subscription]]` declared has exactly one slug to name, the legacy `anthropic` slug (Claude Code); one
-with declarations names any of its own slugs instead, and none of them is guaranteed to be `anthropic`.
+against a stubbed transport, and this probe is what ties that stub back to what the provider actually returns. A runner
+with no `[[subscription]]` declared has exactly one slug to name, the legacy `anthropic` slug (Claude Code); one with
+declarations names any of its own slugs instead, and none of them is guaranteed to be `anthropic`.
 
 **Setup.** The runner machine's own real OAuth credentials for the slug under test (`~/.claude/.credentials.json` for
 `anthropic`) and a working `blizzard runner` binary.
@@ -206,9 +206,9 @@ earlier one.
 
 ### `blizzard:manual-fleet-read-latency`
 
-**Surface.** `GET /api/chunks` wall-clock latency at fleet scale, before and after a change to its read path
-(blizzard#421). No CI tier measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the
-*shape* of the cost, not its duration — so a read-path change reports this by hand.
+**Surface.** `GET /api/chunks` wall-clock latency at fleet scale, before and after a change to its read path. No CI tier
+measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the *shape* of the cost, not
+its duration — so a read-path change reports this by hand.
 
 **Blind spot.** A local sqlite store does not reproduce the hosted postgres deployment's per-query network round trip,
 so an absolute reading here says nothing about the hosted hub's own latency. What it measures instead is the **ratio**
@@ -219,8 +219,8 @@ proportionally-similar per-query cost still tracks. The hosted reading is separa
 
 **Setup.** A fleet-scale hub store that is not the live fleet — `workspace:/context/project/hub-data-modes.md`'s mode 2
 (a migrated snapshot copy) or mode 3 (seeded synthetic) — or, for a reading taken mid-change before a fresh store
-exists, a scratch `tests.support.build_hub` instance seeded to the same chunk count via a throwaway script, as
-`blizzard:manual-fleet-read-latency`'s own blizzard#421 baseline used.
+exists, a scratch `tests.support.build_hub` instance seeded to the same chunk count via a throwaway script, as the
+recorded reading below used.
 
 **Steps.**
 
@@ -231,8 +231,8 @@ exists, a scratch `tests.support.build_hub` instance seeded to the same chunk co
 
 **Passes when.** Both readings are recorded together, against the same store and the same `N`.
 
-**blizzard#421 reading** (scratch `build_hub` store, N=173, 5 warmed reps, mean wall-clock and total SQL query count for
-one `GET /api/chunks`):
+**Recorded reading** (scratch `build_hub` store, N=173, 5 warmed reps, mean wall-clock and total SQL query count for one
+`GET /api/chunks`):
 
 | Reading                                                                  | Queries | Mean latency |
 | ------------------------------------------------------------------------ | ------- | ------------ |

@@ -122,12 +122,12 @@ because no fallback in authored prose can stand in for a decision the engine mak
 ## The elicitation relaunch record-before-launch gap
 
 `Judgement._relaunch` (`blizzard/src/blizzard/runner/loop/judgement.py`) re-launches a detached verdict elicitation
-whose prior attempt exited without writing anything readable (blizzard#443, D5) — the loss-recovery counterpart to the
-ordinary first launch, whose own record-before-launch gap earns the `advance.after-elicit-record.before-launch` /
+whose prior attempt exited without writing anything readable — the loss-recovery counterpart to the ordinary first
+launch, whose own record-before-launch gap earns the `advance.after-elicit-record.before-launch` /
 `advance.after-elicit-launch` registry points because the generic sweep scenario reaches it on every ordinary judgement.
 A relaunch's own gap does not: it opens only once a prior elicitation has already been launched, exited, and left an
 unreadable output file — a condition the generic scenario never creates, so `bzh:crash-point-registry`'s family-coverage
-concern applies (D2) and this write earns a recorded decision instead of a dedicated family.
+concern applies and this write earns a recorded decision instead of a dedicated family.
 
 A `kill -9` between `record_elicitation_relaunch` (pid cleared, a fresh `output_path`, `relaunch_count` incremented) and
 the new process actually starting leaves the in-flight record with `pid` unset — the same shape `Judgement.collect`
@@ -141,34 +141,21 @@ should the killed process have actually started before the crash — bounded by 
 (`ELICITATION_STALENESS_THRESHOLD`, 15 minutes) every ordinary relaunch already accepts, and never durable in
 consequence since the orphaned attempt's own output file is simply never read once a newer `output_path` supersedes it.
 
-## The elicitation-clear-after-collect ordering (review round 1, F3/F4)
+## The elicitation-clear-after-collect ordering
 
 `Judgement.collect` (`blizzard/src/blizzard/runner/loop/judgement.py`) clears the in-flight elicitation record, and
-sweeps its output files, only AFTER a collected reply is fully processed — never before. An earlier draft cleared the
-record first, opening two windows the build's own first review round caught: a crash between the clear and `_judged`
-completing would have left a lease with no elicitation record and no buffered outcome, re-entering the ordinary judge
-path and launching a **second, redundant** elicitation (double-billing the attempt's usage, not merely wasting one); and
-the staleness-exceeded branch inside the old `_lost` cleared the record before calling `Attempt.fail`, so a crash in
-that gap silently reset D5's never-resettable staleness baseline on the next pass's fresh `_launch`.
+sweeps its output files, only AFTER a collected reply is fully processed — never before. Clearing first would open two
+windows. A crash between the clear and `_judged` completing would leave a lease with no elicitation record and no
+buffered outcome, re-entering the ordinary judge path and launching a **second, redundant** elicitation — double-billing
+the attempt's usage, not merely wasting one. And a staleness-exceeded branch that cleared the record before calling
+`Attempt.fail` would let a crash in that gap silently reset the never-resettable staleness baseline on the next pass's
+fresh `_launch`.
 
-Both are closed by ordering, not by a registry point: `collect` now clears the record and sweeps the files only once
+Both are closed by ordering, not by a registry point: `collect` clears the record and sweeps the files only once
 `_judged` returns, and the staleness-exceeded branch calls `Attempt.fail` directly, which kills and clears the record
-itself (D7) as one link in its own already-audited closing sequence — no separate write of `collect`'s own precedes
-either. The residual gap this still leaves — `Attempt.fail`'s own kill-then-close sequence, unchanged by this build — is
-the same one the worker-pid kill above it has always carried ("best-effort hygiene; the epoch fence is the guarantee"):
-a crash between the kill and the closure lands the lease back in the ordinary judge path with no elicitation record, so
-at most one elicitation is spent again from the point the staleness bound was already past. That is bounded and
-self-healing, not a fresh window `bzh:crash-point-registry` owes a point to, and no worse than the pre-#443 worker case
-the same comment already accepted.
-
-## The retired nudge-resume reassembly window
-
-`nudge.after-resume.before-reassemble` (`blizzard/src/blizzard/runner/loop/judgement.py`) guarded a synchronous in-turn
-nudge: `Judgement.run` resumed the session with the judge verb, then re-read attachments and reassembled the completion
-in the same method call. Resolving the premature-exit defect (issue #422) replaced that shape with
-`DormantSession.resume_on_unmet_produces`, a fire-and-forget dormant-session wake `Judgement.run` returns from
-immediately — no re-read, no reassembly, nothing after the resume in that call at all. The window the retired point
-guarded no longer exists in code, so it earns the **no window at all** ground rather than a replacement point: the next
-exit under the same lease is a fresh `Judgement.run` call, reconciling `produces:` from the durable store from scratch.
-The remaining `nudge.after-fired-fact.before-resume` point still guards the one real span in this path — the guard
-fact's own durability ahead of the resume it caps.
+itself as one link in its own closing sequence — no separate write of `collect`'s own precedes either. The residual gap
+this leaves — `Attempt.fail`'s own kill-then-close sequence — is the same one the worker-pid kill above it carries
+("best-effort hygiene; the epoch fence is the guarantee"): a crash between the kill and the closure lands the lease back
+in the ordinary judge path with no elicitation record, so at most one elicitation is spent again from the point the
+staleness bound was already past. That is bounded and self-healing, not a fresh window `bzh:crash-point-registry` owes a
+point to, and the same loss the worker-pid kill accepts.

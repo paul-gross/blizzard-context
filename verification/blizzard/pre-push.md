@@ -22,6 +22,9 @@ grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ te
 (`?demo=true`) steers on `chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key` from
 production code, and it fails quietly where a scenario fails loudly.
 
+**Don't.** Rename a `data-testid` and push on a green `blizzard:gate` — the e2e scenario reading the old handle fails
+only on the release run, after the rename has landed.
+
 ## Board test handles
 
 Check a new handle is unique before adding it, expecting exactly one component:
@@ -56,3 +59,6 @@ substituting them for a red drift step reports coverage the gate never ran and l
 **Do.** `web:client-drift` and the OpenAPI half of `blizzard:gate` diff the working tree against the index rather than
 against `HEAD`, so `git add` the regenerated `openapi/` and `web/` output before running the gate — an unstaged
 regeneration is what fails, not an uncommitted one.
+
+**Don't.** Answer a red `web:client-drift` with `npm run lint && npm run test` passing — the regenerated client is still
+unstaged, and the drift ships behind two greens that never looked at it.
