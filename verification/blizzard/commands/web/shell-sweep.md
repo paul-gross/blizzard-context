@@ -222,5 +222,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`bzh:narrow-viewport-tier-rule`).
 - `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline
   (`FleetFindingFactTimeline`), mounted directly with plain inputs: at 390px and 320px a long, unbroken triage note and
-  an actor id must render for every fact row with no horizontal overflow — gardening sits in the hub's mobile bottom
-  tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  an actor id must render for every fact row with no horizontal overflow — gardening sits in the hub's mobile bottom tab
+  bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `gardening-findings-filters.shell-sweep.spec.ts` covers the findings tab widened to every routine and every scope: at
+  390px and 320px the four filter chip rows (routine, scope, class, state), each now carrying a leading "All" option,
+  must render with no horizontal overflow of `.gf-filters`, and a row from a bucket mixing two routines and two scopes
+  must render its own routine and scope with no horizontal overflow of the row itself — gardening sits in the hub's
+  mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
