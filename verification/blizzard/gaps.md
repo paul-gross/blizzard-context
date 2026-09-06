@@ -153,3 +153,21 @@ and judged against what the axis entry declares — the dogfood deployment
 before its wording is treated as proven. Do not answer this with a tier that scores prompt prose against a rubric, and
 do not read the scripted e2e path as evidence about the model: it asserts the machinery a model's output flows through,
 which is the half that already has a tier.
+
+## The bas-hwf iterate/pre-push reshape's wording
+
+`bas-hwf`'s `iterate` and `pre-push` prompts, and the `build.md`/`review.md`/`review.judgement.md`/`retrospective.md`
+amendments the reshape makes, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and
+their retiering off the frontier tier `build` alone still runs on. The declared methods reach the mechanical half only —
+`blizzard:unit-test`'s packaged-prompt byte bars and `tests/test_basic_harness_workflow_graph.py`'s mint-validation and
+routing pins, and `blizzard:component-test`'s graph mint and choice-edge resolution. That `iterate` actually answers
+review's findings as a cold read rather than assuming `build`'s own reasoning, that `pre-push`'s severity triage lands
+correctly, or that `retrospective` can reconstruct the journey from the chunk's asset trail alone — with no lineage
+memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-push` — is asserted by nothing: a prompt is an input to a model
+no tier runs.
+
+Standing in for a tier: a live chunk run through the reshaped lane on the dogfood deployment
+(`workspace:/context/project/local-instance.md`), whose transitions, bounces, and retrospective are read back and judged
+against the routing the reshape intended. That evidence is only producible once the landed graph directory is re-minted,
+so this entry records a standing obligation on the lane's wording rather than a phase gate. Do not answer this with a
+tier that scores prompt prose against a rubric.
