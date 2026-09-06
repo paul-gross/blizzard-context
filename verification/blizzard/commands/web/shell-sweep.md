@@ -220,3 +220,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   390px and 320px several neighbors in each direction must wrap onto their own lines within the panel's own right edge,
   with no horizontal overflow — the surface this mounts on is reachable from the mobile board
   (`bzh:narrow-viewport-tier-rule`).
+- `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline
+  (`FleetFindingFactTimeline`), mounted directly with plain inputs: at 390px and 320px a long, unbroken triage note and
+  an actor id must render for every fact row with no horizontal overflow — gardening sits in the hub's mobile bottom
+  tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
