@@ -17,10 +17,13 @@ stays elastic; the cap turns pruning from a judgment call into a trigger.
 
 ## Scope
 
-Binds the same trees as `bzh:comment-locality`; `blizzard-context`'s `exemplars/` files are teaching artifacts and are
-not bound. A change is held to the caps on every block it adds or edits, while the pre-existing surface is worked down
-by pruning passes and the ratchet, never blocking an incidentally-touched file. The distinction is per block: a new
-class in an old module qualifies, a fuller docstring on an untouched one does not.
+Binds `blizzard/src`, `blizzard/tests`, and `blizzard-mock/src` — exactly the roots `blizzard:prose-ratchet` measures —
+and no other tree: a cap is only as real as the ratchet that reports it, so `blizzard/web/projects`, which
+`bzh:comment-locality` binds and the ratchet cannot parse, carries no cap until the ratchet reaches it and a baseline
+for it is recorded. `blizzard-context`'s `exemplars/` files are teaching artifacts and are not bound. A change is held
+to the caps on every block it adds or edits, while the pre-existing surface is worked down by pruning passes and the
+ratchet, never blocking an incidentally-touched file. The distinction is per block: a new class in an old module
+qualifies, a fuller docstring on an untouched one does not.
 
 ## The caps
 

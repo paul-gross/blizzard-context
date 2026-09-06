@@ -1,7 +1,8 @@
 # Comment only what the code beside it owns (`bzh:comment-locality`)
 
-Which facts a `#` comment or docstring may state, in the Rule/Why/Detect/Do/Don't slot skeleton owned by
-`winter-canon:/rule-shape.md` (`canon:rule-shape`).
+Which facts a comment or docstring may state — a `#` comment or docstring in Python, a `//` comment or `/** */` TSDoc
+block in TypeScript — in the Rule/Why/Detect/Do/Don't slot skeleton owned by `winter-canon:/rule-shape.md`
+(`canon:rule-shape`).
 
 ## Rule
 
@@ -13,7 +14,7 @@ is there. What a block may state is a closed, exhaustive set:
 - a safety warning tied to the adjacent line;
 - an issue or decision citation — the issue alone, never a delivery-plan step riding it (a phase, a lettered change);
 - a bare pointer at the fact's owner;
-- a wire model's field semantics, scoped to the field's own meaning.
+- a wire model's or exported interface's field semantics, scoped to the field's own meaning.
 
 Delete prose that narrates another module's, component's, or repo's behavior, restates an invariant owned elsewhere,
 paraphrases the code beside it, or narrates change history. A citation rides a one-line fact and never licenses a
@@ -32,7 +33,25 @@ test notices.
 
 ## Scope
 
-Binds `#` comments and docstrings across `blizzard/src`, `blizzard/tests`, and `blizzard-mock/src`.
+Binds code prose in both of blizzard's languages, each in its own vocabulary:
+
+| Tree                                                  | Prose bound                                                                                                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src` | `#` comments and docstrings                                                                                                                       |
+| `blizzard/web/projects`                               | `//` and `/* */` comments and `/** */` TSDoc blocks in a `.ts` file, and the `<!-- -->` and `/* */` comments in a component's template and styles |
+
+The generated client, `blizzard/web/projects/fleet/src/lib/api/`, is not bound: its JSDoc is `blizzard/openapi/`'s
+description text rendered, held at the wire model that generates it under §Generated docstrings.
+
+The closed set reads the same in either language. Where a Python shape has no literal TypeScript form, its Angular
+counterpart is:
+
+| Python shape                      | Angular counterpart                                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| A module docstring                | A file's leading `/** */` block, ahead of its first import or declaration                                           |
+| A test docstring                  | The doc on a `.spec.ts` case, test host, fake, or fixture — it claims nothing beyond what that spec's `expect`s pin |
+| A pinning test named in a pointer | The `.spec.ts` file and the `it` title of the case that fails on revert                                             |
+| A seam docstring                  | The doc on one of the seams `bzh:comment-encapsulation` §Scope lists for the Angular suite                          |
 
 ## Generated docstrings
 
@@ -51,13 +70,15 @@ export, so nothing there generates.
 
 ## Detect
 
-- A named other module, class, service, or repo followed by what it does, where a pointer would serve.
+- A named other module, class, service, component, or repo — or a `{@link}` target — followed by what it does, where a
+  pointer would serve.
 - A multi-sentence comment arguing a decision no test would fail on if the decision were reverted.
 - Alternative-rebuttal framing, greppable as "rather than", "instead of", "not X because".
 - Change-history framing, greppable as "unlike the old…", "previously…", "as of this change…" (`canon:no-retro`).
 - Per-parameter provenance — each field introduced with the issue that added it, change history organized by parameter.
 - An issue citation carrying a delivery-plan step alongside it — "Phase 3", "change L(iii)" — greppable as an issue
-  number followed by a phase or lettered-change token.
+  number followed by a phase or lettered-change token; a bare review-finding id — `F5`, `D9`, `review:C2` — is the same
+  shape with no issue at all.
 - An unresolvable reference in a generated description. `blizzard/tests/test_openapi_descriptions.py` fails the unit
   tier on those three shapes, scanning the committed specs and the `wire/` models no spec reaches.
 
@@ -68,12 +89,24 @@ export, so nothing there generates.
 seen_at = as_utc(row.seen_at)
 ```
 
+```ts
+/** The relative age a stamp renders as; a stamp ahead of the clock by under the skew bound reads as "now". */
+export function ageLabel(stamp: string, now: number): string {
+```
+
 ## Don't
 
 ```python
 # Guarded because the board renders this value raw and the runner would then report a future
 # timestamp to the CLI export downstream.
 seen_at = as_utc(row.seen_at)
+```
+
+```ts
+/** The relative age a stamp renders as. `<fleet-when>` calls this on every tick and the board
+ * card's footer reads it too, so both surfaces must stay in step; the skew clamp replaced the
+ * old negative-age guard. */
+export function ageLabel(stamp: string, now: number): string {
 ```
 
 ## See also

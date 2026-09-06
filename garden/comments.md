@@ -11,10 +11,10 @@ states it in a vocabulary that is not the code's. Concretely, on this target:
 
 - A block narrating another module's, component's, or repo's behavior, where a pointer at the owner would serve.
 - A multi-sentence defence of a decision that no test would fail on if the decision were reverted.
-- A seam's contract stated in a caller's or an implementation's vocabulary — a Protocol, wire model, or schema docstring
-  naming a party on the other side of the boundary it defines.
+- A seam's contract stated in a caller's or an implementation's vocabulary — a Protocol, wire model, schema,
+  `InjectionToken`, or component input/output doc naming a party on the other side of the boundary it defines.
 - The same contract stated on both sides of a seam, each side's copy free to drift from the other.
-- A docstring that paraphrases the code beneath it, or narrates the change that produced it.
+- A docstring or TSDoc block that paraphrases the code beneath it, or narrates the change that produced it.
 - One prose convention answered three ways across a tree, where the divergence — not any one block — is the finding.
 
 ## Scope
@@ -32,13 +32,14 @@ states it in a vocabulary that is not the code's. Concretely, on this target:
 [`../standards/comments.md`](../standards/comments.md) (`bzh:comment-locality`) and
 [`../standards/comment-encapsulation.md`](../standards/comment-encapsulation.md) (`bzh:comment-encapsulation`) own every
 rule this axis judges by and are the only home for their prose. Neither has a command, which is what leaves them to this
-axis.
+axis. Each binds every scope above in that scope's own language, so a run narrowed to `web-suite` judges by the same two
+ids in their TypeScript vocabulary.
 
 Where a command already judges the same prose, it owns that judgement and this axis does not
 (`winter-canon:/enforcement-channels.md`):
 
-- `bzh:prose-budget` is out of range entirely — `blizzard:prose-ratchet` judges every block against its cap and every
-  change against the committed baseline.
+- `bzh:prose-budget` is out of range entirely — on every tree it binds, `blizzard:prose-ratchet` judges every block
+  against its cap and every change against the committed baseline.
 - `bzh:one-prose-home` is in range only for a fact absent from `blizzard:restatement-sweep`'s census. A registered fact
   belongs to that sweep, which sees every site declaring it; a fact nobody registered is invisible to it and visible
   here.

@@ -96,8 +96,7 @@ Excludes generated output:
 A fact's home may live outside every bound tree — a domain concept's home, `blizzard-context:/domain/`, is none of them;
 the pointer obligation binds only inside them.
 
-This scope extends past `bzh:comment-locality`'s, adding `blizzard/docs`, `blizzard/README.md`, and
-`blizzard/web/projects`.
+This scope extends past `bzh:comment-locality`'s, adding `blizzard/docs` and `blizzard/README.md`.
 
 For restated facts, `[tasks.restatement-check]`'s roots argument in `blizzard/mise.toml` mechanically enforces the Binds
 list above. The cardinality half binds wider: the bound trees' markdown, instantiated for the sibling checkouts by
