@@ -24,13 +24,22 @@ A scope carries the same reversible, append-only retirement brake a graph does: 
 facts recorded over time, never a destructive edit, and either direction leaves the scope's slug and description
 untouched.
 
+## A routine sweeps a declared set of scopes
+
+A routine's default scope is not the only scope it may sweep: a routine also declares a set of scopes it belongs to, a
+many-to-many relationship between routines and scopes, and its default is always a member of that set. The set can only
+grow the default's membership, never lose it — a routine may come to declare several scopes, but never fewer than the
+one its default names.
+
 ## A run is an act of the pair
 
 `blizzard hub routine run <name>` mints, ingests, and promotes a work item in one act, addressed at the routine and an
 effective scope — the routine's own default, or an explicit override minted the same way a bare scope name is. A `full`
 run always proceeds; a `delta` run runs against the routine/scope pair's own recorded revision, and downgrades to `full`
 — on the record, never refused — when the pair has recorded none yet. What the pair carries between runs is
-`blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's behavior over it.
+`blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's behavior over it. A run's own scope
+handling is unchanged by a routine's declared set: an effective scope is still freely named or minted regardless of
+whether it belongs to that set.
 
 ## A run is readable independent of delivery
 
