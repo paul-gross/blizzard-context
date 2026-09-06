@@ -67,7 +67,11 @@ collaborators down in a frozen dataclass like `HubServices`: `build_hosted_app` 
 `blizzard/src/blizzard/runner/app.py`, and `LoopWiring.context` in `blizzard/src/blizzard/runner/loop/build.py`.
 `blizzard/src/blizzard/runner/cli/runtime.py` and `blizzard/src/blizzard/runner/cli/external_usage.py` are roots too: a
 `click` command is a short-lived process with no server loop to hand a dataclass through, so wiring its concrete
-collaborators once, inline, at the top of the command body is that process's composition root.
+collaborators once, inline, at the top of the command body is that process's composition root. The same reasoning
+extends to a helper a command's own root calls into rather than repeating:
+`blizzard/src/blizzard/runner/cli/daemon.py`'s `uds_client` builds the local UDS `httpx.Client` both
+`RunnerDaemon.reach` and `runner/cli/transcript.py`'s `_daemon_holding` need, shared rather than duplicated, with
+neither call site substituting a fake for it in a test.
 
 **Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
 
