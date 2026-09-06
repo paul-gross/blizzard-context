@@ -8,10 +8,10 @@ the correctness reference — read it when planning against intent or verifying 
 Technical detail means implementation vocabulary — store columns and tables, wire models, service classes, HTTP routes.
 It belongs to [`architecture/`](../architecture/index.md) and [`standards/`](../standards/index.md), and a domain file
 points there instead of carrying it. Vocabulary an operator or graph author writes — a status name, an authored node's
-own keys — is domain vocabulary and stays, unless the domain file has delegated that facet's contract to a standard,
-where the key's entry lives with the contract. Per `bzh:one-prose-home`, a domain-concept fact restated in code prose
-relocates here for good, the code sites reducing to pointers at its section; and where domain and code disagree, code is
-current — fix the domain file.
+own keys — is domain vocabulary and stays; a key governed by a contract the domain file has delegated to a standard is
+stated instead in the spoke of that standard that states its siblings, the delegating facet's own entry staying here.
+Per `bzh:one-prose-home`, a domain-concept fact restated in code prose relocates here for good, the code sites reducing
+to pointers at its section; and where domain and code disagree, code is current — fix the domain file.
 
 | File                                                     | When to read                                                                                                                                                                 |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

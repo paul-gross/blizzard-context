@@ -97,23 +97,25 @@ graph author meets names the domain statement that surface now owes and lands th
 is the `blizzard-context:/domain/` file modeling the concept — the home `bzh:one-prose-home` assigns a domain concept —
 with two resolutions the domain tree itself makes:
 
-- Where the domain file has delegated a facet's contract to a standard, the statement lands in the delegate: the spoke
-  that already states the new key's siblings, or, for the first key of its kind, the spoke whose reader question the key
-  answers.
+- Where the domain file has delegated a facet's contract to a standard, a key governed by that contract lands in the
+  delegate's spoke that already states the key's siblings; when no spoke states one, in the spoke whose reader question
+  the key answers; and when no reader question covers it, in the facet's own entry in the domain file, which delegated
+  only what the standard states.
 - Where a mint-time outcome judges the graph as a whole and the graph's domain file is a router, the statement joins the
   part whose file already states the aspect the outcome judges — the entry node and cycles with edges, the artifact map
-  with declared artifacts.
+  with declared artifacts; an aspect no part yet states goes to the part file nearest it, and the graph hub's row for
+  that part names the aspect.
 
-The surfaces that owe one:
+**Why.** The domain hub concedes that code is current where the two disagree, so absent this rule a surface the code
+grows and the model never claims trips no check and is found only by a standing sweep, a year late and without the
+author's intent — the change that grew it is the one moment its author knows what it means.
+
+**Scope.** Binds the surfaces a graph author meets, each owing its own statement:
 
 - A key an author writes — a node facet, a declaration field, a choice attribute the parser reads — owes the entry
   naming it and what it governs.
 - A default an omitted declaration resolves to owes the statement of what omission resolves to.
 - A rejection or warning an author sees at mint owes the statement that the outcome exists and what triggers it.
-
-**Why.** The domain hub concedes that code is current where the two disagree, so absent this rule a surface the code
-grows and the model never claims trips no check and is found only by a standing sweep, a year late and without the
-author's intent — the change that grew it is the one moment its author knows what it means.
 
 **Detect.** A `blizzard` hunk that reads a new literal key an author writes, resolves an omitted value against a
 configured or constant default, or raises a parse rejection or appends a validator error or warning at mint, with no
