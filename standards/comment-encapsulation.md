@@ -20,10 +20,8 @@ reading as a contract, and the next implementer or caller inherits one consumer'
 ## Exception
 
 - A bare pointer at the party that owns the fact: a name or path on one line, carrying none of the owner's content.
-- A client verb's `--help` text states the observable effect of invoking it — what changes, what the operator will then
-  see, what fails and when — and never the mechanism producing it. This is the seam's instance of `bzh:one-prose-home`'s
-  published-rendered-surface case: a `--help` reader has no source tree to point at, so the effect is restated inline as
-  the verb's own fact, while the mechanism stays the far side's alone to state.
+- A client verb's `--help` text: it states the observable effect of invoking it — what changes, what the operator will
+  then see, what fails and when — and never the mechanism producing it.
 
 ## Scope
 
