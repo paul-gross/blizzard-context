@@ -220,3 +220,16 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   390px and 320px several neighbors in each direction must wrap onto their own lines within the panel's own right edge,
   with no horizontal overflow — the surface this mounts on is reachable from the mobile board
   (`bzh:narrow-viewport-tier-rule`).
+- `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline, mounted through the
+  composed `FleetFindingPanel` rather than standalone (review:F11 — the timeline is never reached bare in the real app,
+  and mounting it in isolation left its own `.fp-timeline` heading's missing CSS rule undetected): at 390px and 320px a
+  genuinely unbroken long note (review:F3 — the prior fixture was ordinary prose, which wraps at word boundaries
+  regardless of `overflow-wrap: anywhere` and proved nothing) must wrap inside its row with no horizontal overflow —
+  gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `gardening-findings-filters.shell-sweep.spec.ts` covers the findings tab widened to every routine and every scope: at
+  390px and 320px the four filter chip rows (routine, scope, class, state), each now carrying a leading "All" option,
+  must render with no horizontal overflow of `.gf-filters`, and a row from a bucket mixing two routines and two scopes
+  must render its own routine and scope with no horizontal overflow of the row itself. Also proves a long, unbroken
+  class name still shrinks-and-ellipsizes on `.fl-class`'s own line, alongside `.fl-ref` (same `top`), rather than
+  wrapping the ref onto a second line once `.fl-routine`/`.fl-scope` render too (review:F2) — gardening sits in the
+  hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
