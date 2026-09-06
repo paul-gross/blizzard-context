@@ -87,3 +87,49 @@ grep -rn '<falsified phrasing>' <blizzard-context worktree>
 
 **Don't.** Plan from `git diff --stat` alone — a docstring in a module the change never opens still asserts the old
 default, lands with the change, and lies from its first read.
+
+## Plan against the claims a change owes (`bzh:owed-claims-landed`)
+
+**Rule.** Plan against the claims a change newly owes, not only the claims it falsifies: a change that grows a surface a
+graph author meets names the domain statement that surface now owes and lands the statement in the same change — in the
+domain file owning the concept, or in the standard that file routes to for the facet's detail. The surfaces that owe
+one:
+
+- A key an author writes — a node facet, a declaration field, a choice attribute the parser reads — owes the entry
+  naming it and what it governs.
+- A default an omitted declaration resolves to owes the statement of what omission resolves to, where the sibling facets
+  state theirs.
+- A rejection or warning an author sees at mint owes the statement that the outcome exists and what triggers it, where
+  the domain owner of that part's mint-time validation speaks.
+
+**Why.** The domain hub concedes that code is current where the two disagree, so a surface the code grows and the model
+never claims is a divergence no gate reports and no later reader is placed to notice — the change that grew it is the
+one moment its author knows what it means.
+
+**Detect.** A hunk under `src/blizzard/hub/domain/` or `src/blizzard/runner/loop/` that reads a new literal key,
+resolves an omitted value against a configured or constant default, or appends a mint-time error or warning, with no
+companion hunk under `domain/` naming the same key, resolution, or outcome. The question to ask of the hunk: could a
+graph author, reading only `domain/`, predict what it does?
+
+**Do.** One planning line per surface, naming the statement and its home, so the domain hunk is planned rather than
+remembered:
+
+```text
+owes: node key `on_reap:` → domain/graphs/nodes.md gains an `on_reap` facet naming what it governs
+owes: `on_reap:` omitted → the same facet states what omission resolves to
+```
+
+**Don't.** A change landing the parser read, the resolution, or the mint-time outcome alone, the model left silent:
+
+- A new node key parsed, stored, and served, with no facet in `domain/graphs/nodes.md` naming it — an author cannot
+  learn it exists, and nothing later reports that it should.
+- A node declaring no `retries:` resolving to a runner-configured budget, while the `retries` facet describes the budget
+  and never says what an omission resolves to.
+- A mint rejecting a `sessions:` entry that carries an unknown key, while the declared-sessions taxonomy says only which
+  fields are optional — an author with a typo'd key learns the rule from the error, never from the model.
+
+**See also.**
+
+- `bzh:falsified-claims-grep` above — the mirror sweep, over the claims a change makes false.
+- `bzh:one-prose-home` in [`../../standards/one-prose-home.md`](../../standards/one-prose-home.md) — the statement lives
+  in the domain file, and the code site points at it.

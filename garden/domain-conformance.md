@@ -39,8 +39,9 @@ finding names the statement it contradicts.
 [`../verification/blizzard/evidence.md`](../verification/blizzard/evidence.md) governs the unpinned-invariant finding:
 `bzh:matrix-acceptance-criteria` and `bzh:mutation-review-selection` own what a declared behavior owes a test.
 
-This axis is the standing counterpart to `bzh:falsified-claims-grep`, which sweeps the claims one change falsifies at
-the time it lands. A claim that went false without any change noticing is what remains, and is in range here.
+This axis is the standing counterpart to the per-change pair `bzh:falsified-claims-grep` and `bzh:owed-claims-landed`,
+which sweep, at the time one change lands, the claims it falsifies and the claims it newly owes. A claim that went
+false, or a surface that landed owing one, without any change noticing is what remains, and is in range here.
 
 Where a command already judges the same agreement, it owns that judgement and this axis does not
 (`winter-canon:/enforcement-channels.md`):
