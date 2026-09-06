@@ -94,16 +94,18 @@ default, lands with the change, and lies from its first read.
 
 **Rule.** Plan against the claims a change newly owes, not only the claims it falsifies: a change that grows a surface a
 graph author meets names the domain statement that surface now owes and lands the statement in the same change. The
-statement's home is the harness file `bzh:one-prose-home` assigns the concept — the `blizzard-context:/domain/` file
-modeling it, or, where that file routes a facet's detail to a standard, the routed standard in which the facet's
-siblings already state theirs. The surfaces that owe one:
+statement's home is the `blizzard-context:/domain/` file modeling the concept — the home `bzh:one-prose-home` assigns a
+domain concept. Where that file routes a facet's detail to a standard, the home is instead the routed standard, or the
+spoke of it, in which the facet's siblings already state theirs: technical detail is what the domain hub carves out to
+`standards/`, and the facet's own routing says where. The surfaces that owe one:
 
 - A key an author writes — a node facet, a declaration field, a choice attribute the parser reads — owes the entry
   naming it and what it governs.
 - A default an omitted declaration resolves to owes the statement of what omission resolves to, where the sibling facets
   state theirs.
 - A rejection or warning an author sees at mint owes the statement that the outcome exists and what triggers it, where
-  the domain owner of that part's mint-time validation speaks.
+  the domain owner of that graph part's mint-time validation speaks — or, where no part's owner speaks to the outcome
+  yet, as the first such statement in the domain file of the part it judges.
 
 **Why.** The domain hub concedes that code is current where the two disagree, so a surface the code grows and the model
 never claims is a divergence no gate reports and no later reader is placed to notice — the change that grew it is the
@@ -111,10 +113,11 @@ one moment its author knows what it means.
 
 **Detect.** A `blizzard` hunk that reads a new literal key an author writes, resolves an omitted value against a
 configured or constant default, or appends a mint-time error or warning, with no companion `blizzard-context` hunk in
-the home the Rule names — the `domain/` file modeling the concept, or the standard that file routes the facet to. The
-common tells sit under `blizzard/src/blizzard/hub/domain/` and `blizzard/src/blizzard/runner/loop/`, but the trigger is
-the author-facing surface wherever it is parsed or resolved, not those two trees. The question to ask of the hunk: could
-a graph author, reading only `blizzard-context:/domain/` and the standards it routes to, predict what it does?
+the home the Rule names — the `domain/` file modeling the concept, or the routed standard or its spoke where the facet's
+siblings state theirs. The common tells sit under `blizzard/src/blizzard/hub/domain/` and
+`blizzard/src/blizzard/runner/loop/`, but the trigger is the author-facing surface wherever it is parsed or resolved,
+not those two trees. The question to ask of the hunk: could a graph author, reading only `blizzard-context:/domain/` and
+the standards trees it routes to, predict what it does?
 
 **Do.** One planning line per surface, naming the statement and its home, so the harness hunk is planned rather than
 remembered:
@@ -122,23 +125,27 @@ remembered:
 ```text
 owes: node key `on_reap:` → blizzard-context:/domain/graphs/nodes.md gains an `on_reap` facet naming what it governs
 owes: `on_reap:` omitted → the same facet states what omission resolves to
-owes: hub-node key `poll_jitter:` omitted → blizzard-context:/standards/hub-nodes/outcome-protocol.md, the routed home
-      where the other polling defaults are stated; nodes.md's `executor` facet keeps only its pointer there
+owes: hub-node key `poll_jitter:` omitted → blizzard-context:/standards/hub-nodes/outcome-protocol.md, the spoke of
+      the standard nodes.md's `executor` facet routes to, where the other polling defaults are stated; nodes.md gains
+      no hunk
 ```
 
-**Don't.** A change landing the parser read, the resolution, or the mint-time outcome alone, the model left silent:
+**Don't.** A `blizzard` commit that parses, stores, serves, and tests a new node key, with this message and no companion
+`blizzard-context` change under `domain/graphs/`:
 
-- A new node key parsed, stored, and served, with no facet in `blizzard-context:/domain/graphs/nodes.md` naming it — an
-  author cannot learn it exists, and nothing later reports that it should.
-- An omitted facet resolving in the runner loop to a runner-configured budget, landed while the facet's entry describes
-  only the budget — what omission resolves to is stated nowhere an author reads.
-- A mint rejecting a declaration that carries an unknown key, landed while that declaration's taxonomy says only which
-  fields are optional — an author with a typo'd key learns the rule from the error, never from the model.
+```text
+feat(hub): accept an `on_reap:` node key
+
+The nodes.md facet entry can follow once the runner side settles what omission means.
+```
+
+An author cannot learn the key exists, the omission already resolves to something, and nothing later reports that either
+should be stated.
 
 **See also.**
 
 - `bzh:falsified-claims-grep` above — the mirror sweep, over the claims a change makes false.
 - `bzh:one-prose-home` in [`../../standards/one-prose-home.md`](../../standards/one-prose-home.md) — the home table that
-  assigns the statement its file, and the pointer the code site keeps.
-- `bzh:matrix-companion-changes` in [`./companion-changes.md`](./companion-changes.md) — what "the same change" means
-  across the two repos: the harness statement is a companion landing of the `blizzard` commit.
+  assigns a domain concept its `domain/` file, and the pointer the code site keeps.
+- `bzh:matrix-companion-changes` in [`./companion-changes.md`](./companion-changes.md) — the precedent shape for a
+  companion landing across the two repos: a `blizzard` commit owing a `blizzard-context` hunk.

@@ -1,7 +1,8 @@
 # What a change must land alongside (`bzh:matrix-companion-changes`)
 
 A surface can land on one side of a boundary and go silently unserved on the other. The rules below name what has to be
-in the same commit for that not to happen.
+in the same commit for that not to happen. The domain statement an author-facing surface owes is the same shape across
+the repo boundary, and is `bzh:owed-claims-landed`'s in [./evidence.md](./evidence.md).
 
 ## An e2e change extends the registry (`bzh:e2e-change-extends-registry`)
 
