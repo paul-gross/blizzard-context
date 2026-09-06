@@ -97,11 +97,12 @@ graph author meets names the domain statement that surface now owes and lands th
 is the `blizzard-context:/domain/` file modeling the concept — the home `bzh:one-prose-home` assigns a domain concept —
 with two resolutions the domain tree itself makes:
 
-- Where the domain file has delegated a facet's whole contract to a standard, the statement lands in the delegate: the
-  spoke that already states the facet's siblings, or, for the first key of its kind, the spoke whose reader question the
-  key answers.
+- Where the domain file has delegated a facet's contract to a standard, the statement lands in the delegate: the spoke
+  that already states the new key's siblings, or, for the first key of its kind, the spoke whose reader question the key
+  answers.
 - Where a mint-time outcome judges the graph as a whole and the graph's domain file is a router, the statement joins the
-  part whose file already states the graph's shape at mint — the entry node and cycles live with edges.
+  part whose file already states the aspect the outcome judges — the entry node and cycles with edges, the artifact map
+  with declared artifacts.
 
 The surfaces that owe one:
 
@@ -110,16 +111,16 @@ The surfaces that owe one:
 - A default an omitted declaration resolves to owes the statement of what omission resolves to.
 - A rejection or warning an author sees at mint owes the statement that the outcome exists and what triggers it.
 
-**Why.** The domain hub concedes that code is current where the two disagree, so a surface the code grows and the model
-never claims fails no gate and is found only by a standing sweep, a year late and without the author's intent — the
-change that grew it is the one moment its author knows what it means.
+**Why.** The domain hub concedes that code is current where the two disagree, so absent this rule a surface the code
+grows and the model never claims trips no check and is found only by a standing sweep, a year late and without the
+author's intent — the change that grew it is the one moment its author knows what it means.
 
 **Detect.** A `blizzard` hunk that reads a new literal key an author writes, resolves an omitted value against a
-configured or constant default, or appends a mint-time error or warning, with no companion `blizzard-context` hunk in
-the home the Rule names. The common tells sit under `blizzard/src/blizzard/hub/domain/` and
-`blizzard/src/blizzard/runner/loop/`, but the trigger is the author-facing surface wherever it is parsed or resolved,
-not those two trees. The question to ask of the hunk: could a graph author, reading only `blizzard-context:/domain/` and
-the standards it delegates to, predict what it does?
+configured or constant default, or raises a parse rejection or appends a validator error or warning at mint, with no
+companion `blizzard-context` hunk in the home the Rule names. The common tells sit under
+`blizzard/src/blizzard/hub/domain/` and `blizzard/src/blizzard/runner/loop/`, but the trigger is the author-facing
+surface wherever it is parsed or resolved, not those two trees. The question to ask of the hunk: could a graph author,
+reading only `blizzard-context:/domain/` and the standards it delegates to, predict what it does?
 
 **Do.** One planning line per surface, naming the statement and its home, so the harness hunk is planned rather than
 remembered:
@@ -140,8 +141,8 @@ feat(hub): accept an `on_reap:` node key
 The nodes.md facet entry can follow once the runner side settles what omission means.
 ```
 
-An author cannot learn the key exists, the omission already resolves to something, and nothing at landing time reports
-that either should be stated.
+An author cannot learn the key exists, the omission already resolves to something, and absent this rule nothing at
+landing time would report that either should be stated.
 
 **See also.**
 
