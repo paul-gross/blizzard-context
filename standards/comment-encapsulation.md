@@ -19,7 +19,11 @@ reading as a contract, and the next implementer or caller inherits one consumer'
 
 ## Exception
 
-A bare pointer at the party that owns the fact: a name or path on one line, carrying none of the owner's content.
+- A bare pointer at the party that owns the fact: a name or path on one line, carrying none of the owner's content.
+- A client verb's `--help` text states the observable effect of invoking it — what changes, what the operator will then
+  see, what fails and when — and never the mechanism producing it. This is the seam's instance of `bzh:one-prose-home`'s
+  published-rendered-surface case: a `--help` reader has no source tree to point at, so the effect is restated inline as
+  the verb's own fact, while the mechanism stays the far side's alone to state.
 
 ## Scope
 
@@ -34,6 +38,8 @@ artifacts and are not bound.
   narrating across a boundary.
 - A contract restated on both sides of a seam, which is `bzh:one-prose-home`'s signature: a reviewer cites that id, and
   [./one-prose-home.md](./one-prose-home.md) owns what a pointer may carry.
+- A client verb's `--help` naming the mechanism behind an effect — a loop step, a bumped counter, an internal
+  reconciler, a daemon-side process — where the effect alone tells the operator what they need.
 
 ## Do
 

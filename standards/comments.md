@@ -11,7 +11,7 @@ is there. What a block may state is a closed, exhaustive set:
 - why-this-here rationale for the adjacent code;
 - a local invariant the code cannot express;
 - a safety warning tied to the adjacent line;
-- an issue or decision citation;
+- an issue or decision citation — the issue alone, never a delivery-plan step riding it (a phase, a lettered change);
 - a bare pointer at the fact's owner;
 - a wire model's field semantics, scoped to the field's own meaning.
 
@@ -56,6 +56,8 @@ export, so nothing there generates.
 - Alternative-rebuttal framing, greppable as "rather than", "instead of", "not X because".
 - Change-history framing, greppable as "unlike the old…", "previously…", "as of this change…" (`canon:no-retro`).
 - Per-parameter provenance — each field introduced with the issue that added it, change history organized by parameter.
+- An issue citation carrying a delivery-plan step alongside it — "Phase 3", "change L(iii)" — greppable as an issue
+  number followed by a phase or lettered-change token.
 - An unresolvable reference in a generated description. `blizzard/tests/test_openapi_descriptions.py` fails the unit
   tier on those three shapes, scanning the committed specs and the `wire/` models no spec reaches.
 
