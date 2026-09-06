@@ -153,16 +153,3 @@ and judged against what the axis entry declares — the dogfood deployment
 before its wording is treated as proven. Do not answer this with a tier that scores prompt prose against a rubric, and
 do not read the scripted e2e path as evidence about the model: it asserts the machinery a model's output flows through,
 which is the half that already has a tier.
-
-## A garden proposal's `class` spelling across runs
-
-A garden routine's findings side has a live cross-run read: `reconcile` fetches the routine's own bucket, and every
-finding in it carries its `class`, so a worker can see how a prior run spelled one. Proposals have no equivalent read —
-`propose` runs on a resumed session that sees only this run, and the one cross-run verb any prompt names,
-`blizzard runner garden findings`, returns findings, never proposals. Nothing lets a worker see how a prior run spelled
-a proposal `class`, so the store's own grouping by that field can drift run over run with no pass ever positioned to
-notice.
-
-Standing in for a tier: nothing does, and nothing should invent a proposals read to close it — that is surface this gap
-does not license. A person reading the docket sheet grouped by `class` is the only place a drifted spelling would
-surface, and only by inspection.
