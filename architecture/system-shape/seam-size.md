@@ -25,9 +25,10 @@ than twelve own (non-underscore) methods, unless named in that test's `_ACCEPTED
 
 **Do.** The runner's harness seam splits `IHarnessAdapter`'s fourteen methods into five narrower Protocols along its
 consumers' own lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, usage
-accounting, and transcript access (`src/blizzard/runner/harness/adapter.py`) — and every consumer re-types to the
-narrowest one its job needs; `IHarnessAdapter` itself stays as a composed alias, its own body empty, for the one
-consumer (the runner's `app.py` composition root) that threads the full seam through rather than calling it.
+accounting, and transcript access (`src/blizzard/runner/harness/adapter.py`) — and a consumer taking the seam directly
+re-types to the narrowest one its job needs (`src/blizzard/runner/domain/takeover.py` and `domain/status.py` each take
+`IHarnessWorkerLifecycle`); `IHarnessAdapter` itself stays as a composed alias, its own body empty, for the code holding
+the whole seam to thread it on — the runner's `app.py` composition root, and the `LoopContext` its steps read through.
 
 **Don't.** Leaving a Protocol to grow past the ceiling because splitting it "later" is easier than registering the width
 now, or registering an exception without a reason — either loses the one signal a reviewer has for "this seam grew wider
