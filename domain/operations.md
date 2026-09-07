@@ -12,12 +12,15 @@ failures — the subset an operator must act on, not a mirror of every state del
 event and re-broadcasting it live; a failure the runner detects reaches it as a durable fact the runner reports.
 
 Each event carries a severity (`info` | `warning` | `critical`), a noun-verb kind name, the runner/chunk/lease/node it
-concerns where present, a human-legible message, and an open detail payload. Each event links back to its chunk and,
-where one exists, the worker transcript. The log reads newest-and-most-severe first — critical before warning before
-info, newest within a band — and is filterable by severity, runner, or chunk.
+concerns where present, a human-legible message, and an open detail payload. Each event links back to its chunk. The log
+reads newest-and-most-severe first — critical before warning before info, newest within a band — and is filterable by
+severity, runner, or chunk.
 
 The severity vocabulary is closed: the log ranks by it, so a value outside the three sorts below every row and no filter
 reaches it — a fourth severity buries its own event.
+
+The log is bounded, at most 200 rows per read, the cap applied *after* severity ranking — it keeps the most severe rows,
+not merely the newest, so a `critical` older than the newest 200 rows still surfaces.
 
 ### Event kinds
 
@@ -42,16 +45,17 @@ A deliberately deferred failure — a runner that told its operator it will star
 ## The activity feed
 
 The activity feed is reconstructed fresh from the durable facts the domain already keeps — transitions, questions, gate
-decisions, runner pauses; no separate log is written for it. It is bounded: 24 hours by default, at most the 200 newest
-rows.
+decisions, runner pauses, and event-log rows; no separate log is written for it. It is bounded: 24 hours by default, at
+most the 200 newest rows.
 
-Four things produce no activity-feed row:
+Five things produce no activity-feed row:
 
 - direct chunk edits — in-place mutation, with no durable fact behind it;
 - reorders of the `not_ready` list or the `ready` queue ([./work/ranking.md](./work/ranking.md)) — per-chunk rows
   carrying no news;
 - runner registration and heartbeats — no durable fact, and muted liveness noise;
-- a runner's subscription-usage sample — rate-limit telemetry for its registry row, not fleet activity.
+- a runner's subscription-usage sample — rate-limit telemetry for its registry row, not fleet activity;
+- a deleted chunk's facts — once a chunk is deleted, every fact of that chunk is suppressed except the deletion itself.
 
 ## See also
 
