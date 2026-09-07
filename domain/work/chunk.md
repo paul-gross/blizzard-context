@@ -10,8 +10,10 @@ a restart's target — and status derives from recorded facts (`bzh:facts-not-st
 
 ## Work refs
 
-A chunk never stores item contents: it holds work refs, and reads pass through to the backing work source. The work item
-is the durable referent and the chunk is ephemeral — an unacquired chunk may be grouped away or deleted, and
+A chunk never stores item contents: it holds work refs, and reads pass through to the backing work source. That source
+is the hub itself for an item authored at the hub — the hub owns such an item outright and holds its title and body as
+its own authored record — and is foreign for an item the hub ingested from elsewhere, whose contents it never holds. The
+work item is the durable referent and the chunk is ephemeral — an unacquired chunk may be grouped away or deleted, and
 re-ingesting the same item mints a fresh chunk. An item already wrapped by a live chunk cannot be ingested again.
 
 A chunk's work refs are closed at their own source through its binding once the chunk lands or an operator marks it done

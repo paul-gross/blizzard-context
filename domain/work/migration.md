@@ -103,7 +103,7 @@ resolves to an entry node.
 Every landing resolves a node by name on the target graph (`bzh:ids-exact-names-correlate`,
 [../graphs/ids-and-names.md](../graphs/ids-and-names.md)); the trigger picks the anchoring name. The landed node's own
 executor then governs, exactly as for an ordinary transition ([../graphs/nodes.md](../graphs/nodes.md)), and status
-after landing keys on that executor, never the node's name — the shipped deliver node is one hub-executed instance, not
-a special case. Landed off a transition-borne trigger, a hub-executed node derives `delivering` — the chunk stays in the
-hub's hands — while a runner node re-queues `ready`; how an eager restart's landing re-enters its node is
+after landing keys on that executor, never the node's name — a delivery node is one hub-executed instance, not a special
+case. Landed off a transition-borne trigger, a hub-executed node derives `delivering` — the chunk stays in the hub's
+hands — while a runner node re-queues `ready`; how an eager restart's landing re-enters its node is
 [./restart.md](./restart.md)'s own.

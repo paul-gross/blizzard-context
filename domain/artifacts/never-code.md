@@ -19,9 +19,9 @@ only under the transcript-read permission. No artifact carries code or a transcr
 
 **Scope.** A graph's `artifacts:` declaration is authored definition text, the same class as an inlined `prompt:` —
 baking it in does not engage the rule; declaring a diff or generated patch there is exactly the work-product the rule
-bars. A hub-owned work item's title and body are the hub's own authored record — the hub is that item's source, so
-holding them engages nothing; what the rule bars is a foreign source's item contents copied to the hub instead of read
-through it ([chunk](../work/chunk.md) §Work refs).
+bars. A hub-owned work item's title and body are held at the hub because the hub is that item's source
+([chunk](../work/chunk.md) §Work refs), so holding them engages nothing; what the rule bars is a foreign source's item
+contents copied to the hub instead of read through it.
 
 **Detect.**
 
