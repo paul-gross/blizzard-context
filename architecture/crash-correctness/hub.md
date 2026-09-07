@@ -111,14 +111,13 @@ The tail position itself is computed before the write, by the same rule `Promote
 (`tail_position`, `blizzard/src/blizzard/hub/domain/promote.py`) — the already-accepted check-then-act shape §Promote,
 then tail-stamp names, widened to a second caller rather than copied.
 
-Two narrower windows are named and accepted here. `RunService.run` (`blizzard/src/blizzard/hub/domain/routine_run.py`)
+One narrower window is named and accepted here. `RunService.run` (`blizzard/src/blizzard/hub/domain/routine_run.py`)
 allocates the run's `ref` through `WorkItemStore.allocate_ref` before this transaction opens, identical in shape to §The
 item-creation chunk mint's own: under the allocator's own already-accepted gap-tolerant contract, a crash in between
-burns that one `ref`, never reused. It also resolves the run's effective scope through `ScopeRegistry.ensure`
-(`blizzard/src/blizzard/hub/domain/scopes.py`) before the same transaction opens, its own separate write when the slug
-is unseen; a crash between that mint and this transaction leaves an idempotently-minted scope with no run against it —
-mint-on-name means the next attempt at the same name reuses it rather than re-minting, so nothing is burned, only a
-retry owed.
+burns that one `ref`, never reused. The run's effective scope carries no write of its own to window: the API edge
+resolves it to an already-existing, already-related `Scope` — a read, refusing rather than minting one — before
+`RunService.run` is ever called, so the domain layer opens no second write ahead of the transaction the way it once did
+through `ScopeRegistry.ensure`.
 
 The composite owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.

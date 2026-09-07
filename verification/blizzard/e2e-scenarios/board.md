@@ -136,10 +136,10 @@ The gardening run dialog, opened from the selected routine's own panel. Needs no
 own `run` mints a queued chunk, never executed here — so, like the graphs-diagram module, it stands up only the served
 hub, needing just the built bundle and an installed Chromium.
 
-- `test_gardening_run_dialog_browser` — mints a routine with a never-swept default scope, opens the dialog, and proves
-  the delta-steering rule renders for real: the never-swept note shows and the delta radio is disabled. Mints a new
-  scope through the dialog, typing its slug and required description, and proves submission unlocks only once both are
-  filled. Submits and proves the create-then-run ordering landed against the live hub — `GET /api/scopes` shows the new
-  slug once the confirmation renders — and that the confirmation names a real `ch_`-prefixed chunk id and links to
-  `/board/chunk/<id>`, rendering no board of its own. Closing the confirmation tears the dialog down back to the
-  routines list.
+- `test_gardening_run_dialog_browser` — mints a routine with a never-swept default scope, links a second scope into its
+  related set ahead of time, and mints a third scope left unlinked. Opens the dialog and proves it offers only the
+  routine's related set (D6) — the default and the linked scope, the unlinked one and the mint escape hatch both absent
+  — and that the delta-steering rule renders for real: the never-swept note shows and the delta radio is disabled.
+  Switches to the linked scope and submits, then proves against a live hub read that the run landed against it, and that
+  the confirmation names a real `ch_`-prefixed chunk id and links to `/board/chunk/<id>`, rendering no board of its own.
+  Closing the confirmation tears the dialog down back to the routines list.

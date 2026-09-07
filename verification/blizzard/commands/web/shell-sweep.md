@@ -147,10 +147,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   layout and real focus-management claims jsdom cannot make.
 - `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields, mounted directly with
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
-  stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, the
-  delta baseline block's finding-set-id line must sit above its per-repo landed-since lines, and the new-scope
-  near-match warning must render below both new-scope inputs rather than overlapping them — real CSS layout claims jsdom
-  cannot make.
+  stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and
+  the delta baseline block's finding-set-id line must sit above its per-repo landed-since lines — real CSS layout claims
+  jsdom cannot make.
 - `garden-runs.shell-sweep.spec.ts` covers the gardening runs-and-findings tab's two presentational components, each
   mounted directly with plain inputs. `FleetRunList`'s escalated row, at 390px, must carry a genuinely different
   computed `background-color` from a normal row, while its `border-left-color` must equal the normal row's, since the
