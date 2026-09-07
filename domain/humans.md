@@ -25,5 +25,5 @@ dormant while a chunk parks and the reap clock these entries stop.
 ## Posture
 
 Every human entry is either opt-in (asks, gates) or exceptional (escalation, takeover). The default posture is
-human-on-the-loop: the default graph has no human touchpoints — agents verify and merge to main. Adding and removing
-gates is the dial between reviewing every step and supervising outcomes.
+human-on-the-loop: a graph that declares no gate has no scheduled human step, and agents carry the work to landing
+unattended. Adding and removing gates is the dial between reviewing every step and supervising outcomes.

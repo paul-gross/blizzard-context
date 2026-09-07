@@ -32,5 +32,5 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
 Landing is informational, not itself a terminal condition — only the graph's reserved terminal (`done`,
 [statuses](../work/statuses.md)) is. The choice a delivery script prints on a clean landing may route straight to the
 graph's reserved terminal or into a further node — the routing is authored, not fixed. A runner node routed after
-landing runs in the holding runner's still-held environment, after every repository has merged, and its own choice is
-what then reaches the terminal.
+landing runs in the holding runner's still-held environment, after every repository has merged; the terminal is reached
+by whatever choice the authored routing eventually carries the chunk to.
