@@ -35,8 +35,8 @@ guessing.
 - **Escalated before any worker session existed** — retries exhausted, or death with no session recorded: the escalation
   carries neither command and there is nothing for a takeover to enter.
 - **Environments released while the session survived** — neither command exists, both being composed from a held
-  workdir, yet a real session still stands behind the lease: unlike the no-session case, there is something for a
-  takeover to enter.
+  workdir, and with the hold released there is nothing for a takeover to enter, even though a real session still stands
+  behind the lease.
 - **Bounce cap crossed** — the escalation carries neither command but never releases the runner's hold on the chunk, so
   any existing session carries over unchanged, and that prior state, not the escalation, decides whether takeover is
   possible.

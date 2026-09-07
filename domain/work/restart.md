@@ -53,9 +53,10 @@ other. Naming no other graph, it is the restart fact alone; a refused restart wr
 ## What it defers
 
 A pause suppresses rather than refuses it: the chunk stays parked and the move is honored on the tick after the pause
-lifts. An open takeover also suppresses it indefinitely — the person is inside that session, and killing it under them
-is worse than a pending move. The hub holds no takeover state to refuse with — deferral at the runner is the whole
-mechanism — and the chunk reads as moved while the human works at the stale epoch
+lifts. An open takeover suppresses it only while the runner still holds the displaced session's lease — the person is
+inside that session, and killing it under them is worse than a pending move. The hub holds no takeover state to refuse
+with, so deferral at the runner is the whole mechanism, and the chunk reads as moved while the human works at the stale
+epoch. Against a chunk parked `needs_human`, whose lease the escalation already closed, nothing defers the re-entry
 ([../humans/takeover.md](../humans/takeover.md)).
 
 ## What it refuses

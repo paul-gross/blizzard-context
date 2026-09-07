@@ -23,8 +23,9 @@ in place against its existing retry budget.
 
 ## Detach
 
-Detach is a superadmin's forcible release of a chunk from its runner: route released, the chunk re-derives ready, and
-the next claim's epoch floor fences the old runner out.
+Detach is an operator's forcible release of a chunk from its runner: it releases the route and supersedes nothing, so
+the chunk re-derives on its remaining facts — ready only when nothing else holds it — and the next claim's epoch floor
+fences the old runner out.
 
 ## Reassignment
 

@@ -23,9 +23,10 @@ liveness is not a proxy for being worked: a consumer folding routes into live oc
 ## Giving tenure back
 
 Three writes release a route by giving tenure back: detach, the hub's requeue of an escalated chunk, and a migration
-that re-queues the chunk onto another graph. After each, the chunk re-derives ready and the next claim fences the old
-runner out. What detach and the requeue each are is owned by [./recovery.md](./recovery.md), which also distinguishes
-the hub's requeue from the holding runner's own.
+that re-queues the chunk onto another graph. After each the route is free and the next claim fences the old runner out;
+what the chunk derives then rests on its remaining facts, and detach supersedes none of them. What detach and the
+requeue each are is owned by [./recovery.md](./recovery.md), which also distinguishes the hub's requeue from the holding
+runner's own.
 
 Stop releases the route terminally — no next claim to fence — and a hub node landing the chunk's terminal releases it
 too.

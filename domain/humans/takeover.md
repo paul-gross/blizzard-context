@@ -21,12 +21,24 @@ once the attempt has already submitted its outcome: a fence minted behind a queu
 
 ## While a person holds the session
 
-No attempt runs during a takeover: the chunk keeps its condition plus human-in-session detail until explicitly requeued
-or ended. An operator's restart ([../work/restart.md](../work/restart.md)) can be recorded against a taken-over chunk
-yet deliberately takes no effect — the hub keeps no takeover state to refuse it, so the holding runner defers the
-teardown indefinitely while the person works at the now-stale epoch; ending the takeover lets the move land.
+No attempt runs during a takeover while the runner still holds the session's lease — which is why a forced entry leaves
+the displaced worker's lease open rather than closing it. Where the escalation already closed the lease, on the ordinary
+parked entry, the guarantee lasts exactly as long as the park: supersede that park at the hub and the held workdir goes
+to a fresh attempt. The takeover contributes no condition of its own: the chunk goes on deriving from its own facts, and
+carries human-in-session detail exactly while the takeover is open.
+
+An operator's restart ([../work/restart.md](../work/restart.md)) recorded against a taken-over chunk lands in full — the
+hub keeps no takeover state to refuse it — and supersedes any park with it. Against a still-open lease the runner defers
+the teardown indefinitely while the person works at the now-stale epoch, and ending the takeover lets the re-entry
+follow; against a lease the escalation already closed, nothing defers it.
 
 ## Ending
 
-Hand-back is ordinarily explicit: the person requeues the chunk. A chunk ending — stopped or done — while a takeover is
+A takeover ends when the person leaves the interactive session. A chunk ending — stopped or done — while a takeover is
 open closes the takeover fact through the hub's own terminal fact, though nothing infers a person is done.
+
+Hand-back is a separate step, and explicit: the person requeues the chunk through the runner holding it
+([../execution/recovery.md](../execution/recovery.md)), clearing the `needs_human` hold — a forced entry, which parks
+nothing, has no such hand-back: the verb refuses a chunk that is not `needs_human`. The order is fixed: the holding
+runner's requeue is refused while a takeover is open, so the session ends first and the hand-back follows. The hub's
+requeue carries no such refusal, and supersedes the park; neither requeue is ever what ends a takeover.
