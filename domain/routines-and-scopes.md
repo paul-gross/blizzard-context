@@ -52,9 +52,9 @@ whether it belongs to that set.
 ## What refuses
 
 Each of these is refused wherever the act is offered, and refused outright — never quietly absorbed into something
-already recorded, never quietly re-addressed at something else: a slug is not normalized, a mint does not hand back what
-already holds the name, a management verb does not create what it failed to find, and a run is not sent to another scope
-or another graph.
+already recorded, never quietly re-addressed at something else: a slug is not normalized, a routine mint does not hand
+back the routine already holding the name, a management verb does not create what it failed to find, and a run is not
+sent to another scope or another graph.
 
 - **A slug outside its shape** — empty, or carrying anything but lowercase letters, digits, and hyphens — wherever a
   scope is named: minting or editing one, a routine's default, a run's override, either verb over a routine's declared
@@ -62,8 +62,8 @@ or another graph.
 - **A routine name already taken** — at mint. A routine's name is claimed once, where a scope's slug is not
   ([Mint-on-name](#mint-on-name)): a second routine under a name already held is refused, never merged into the routine
   holding it.
-- **A scope that does not exist** — when a routine's declared set is grown to name it, that verb minting nothing of its
-  own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
+- **A scope that does not exist** — when a routine's declared set names one, grown or shrunk; the growing verb mints
+  nothing of its own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 - **A graph that does not resolve** — no enabled graph carries the name, resolution being
   [graphs/identity.md](./graphs/identity.md)'s — both when a routine is authored, create and edit alike, and when it
   runs: a graph may retire after a routine came to point at it, and the run is refused rather than the routine

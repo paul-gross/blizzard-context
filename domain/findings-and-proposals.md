@@ -79,10 +79,10 @@ Acceptance does not promote the item it mints — it rests behind the ordinary p
 and it does not move the findings behind the proposal: work being under way is not an observation that the ground
 changed. The item landing is. When the item an accepted proposal minted is delivered, the proposal's findings that are
 still live are **resolved** in that same act — an outflow exit, recorded with the accepter's authority and naming the
-proposal it answered — while a finding a person has already exited by then is left exactly as they left it. The
-resolution lands once per proposal: a retry of the delivery never redoes it, and a later `reopened` on one of those
-findings is a person's word that only a person can answer again. Until that delivery, an accepted proposal's findings
-stay live unless a run reports them gone or a person withdraws them.
+proposal it answered — while a finding a run has since reported gone, or a person has already exited, is left exactly as
+it stands. The resolution lands once per proposal: a retry of the delivery never redoes it, and a later `reopened` on
+one of those findings is a person's word that only a person can answer again. Until that delivery, an accepted
+proposal's findings stay live unless a run reports them gone or a person exits them.
 
 ## What the hub does not do
 
