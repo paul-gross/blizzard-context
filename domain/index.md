@@ -7,13 +7,17 @@ the correctness reference — read it when planning against intent or verifying 
 
 Technical detail means implementation vocabulary — store columns and tables, wire models, service classes, HTTP routes.
 It belongs to [`architecture/`](../architecture/index.md) and [`standards/`](../standards/index.md), and a domain file
-points there instead of carrying it. Vocabulary an operator or graph author writes — a status name, an authored node's
-own keys — is domain vocabulary and stays, with one exception: a key inside a contract the domain file has delegated to
-a standard is stated in the spoke of that standard already stating its siblings — a first of its kind, in the spoke
-whose reader question it answers — and the delegating facet's own entry stays here. A key no spoke takes on either count
-is outside the delegation, and stays. Per `bzh:one-prose-home`, a domain-concept fact restated in code prose relocates
-here for good, the code sites reducing to pointers at its section; and where domain and code disagree, code is current —
-fix the domain file.
+points there instead of carrying it. Technical detail also means any claim quantified over what currently ships — what
+every shipped lane does, what the shipped `deliver` nodes are, which authored routing is the ordinary one — whatever
+vocabulary it is worded in: what ships today is a property of the release, not of the model, and the next graph that
+lands falsifies it. A domain file states what the model permits, requires, or refuses; an orientation to the shipped set
+belongs to [`architecture/`](../architecture/index.md), which is expected to track the code. Vocabulary an operator or
+graph author writes — a status name, an authored node's own keys — is domain vocabulary and stays, with one exception: a
+key inside a contract the domain file has delegated to a standard is stated in the spoke of that standard already
+stating its siblings — a first of its kind, in the spoke whose reader question it answers — and the delegating facet's
+own entry stays here. A key no spoke takes on either count is outside the delegation, and stays. Per
+`bzh:one-prose-home`, a domain-concept fact restated in code prose relocates here for good, the code sites reducing to
+pointers at its section; and where domain and code disagree, code is current — fix the domain file.
 
 | File                                                     | When to read                                                                                                                                                                 |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

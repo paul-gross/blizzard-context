@@ -19,12 +19,14 @@ only under the transcript-read permission. No artifact carries code or a transcr
 
 **Scope.** A graph's `artifacts:` declaration is authored definition text, the same class as an inlined `prompt:` —
 baking it in does not engage the rule; declaring a diff or generated patch there is exactly the work-product the rule
-bars.
+bars. A hub-owned work item's title and body are the hub's own authored record — the hub is that item's source, so
+holding them engages nothing; what the rule bars is a foreign source's item contents copied to the hub instead of read
+through it ([chunk](../work/chunk.md) §Work refs).
 
 **Detect.**
 
 - A design or schema persisting file contents, diffs, or patches at the hub; an artifact carrying code or a transcript
-  instead of a pointer to it; a work item's contents stored rather than read through.
+  instead of a pointer to it; a foreign work source's item contents copied to the hub rather than read through.
 - Transcript content reaching the hub outside the lane — uncapped, unpermissioned, or attached to something other than a
   segment; a graph's `artifacts:` entry holding a diff, a patch, or other generated output rather than authored prose.
 

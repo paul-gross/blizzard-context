@@ -12,6 +12,10 @@ A node-scope artifact accumulates as an append-only, versioned series per node a
   history.
 - **Reads resolve to the newest entry** — later nodes fetching a node-scope artifact by name get the latest attempt's
   version, while the shadowed history stays available.
+- **An ambiguous read is refused, never guessed** — newest-entry resolution runs within one node's series, not across
+  nodes: a name that more than one node produced, or that resolves in more than one scope, is refused naming the
+  candidates until the read is narrowed by producing node or by scope
+  ([declarations](../../standards/worker-nodes/declarations.md) owns the narrowing verbs).
 - **The series keys on the node name** — after a migration or a re-published graph, a re-run of `build` keeps appending
   to the same series (`bzh:ids-exact-names-correlate`, [ids and names](../graphs/ids-and-names.md)); the exact producing
   node is on each artifact's provenance.

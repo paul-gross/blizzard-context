@@ -5,10 +5,10 @@ An artifact is work the `artifact` verb group reads and — at node scope only �
 
 ## Kinds
 
-| Kind               | What it carries                                                                                 |
-| ------------------ | ----------------------------------------------------------------------------------------------- |
-| **Commit pointer** | A repository, a branch name, and a commit hash.                                                 |
-| **Asset**          | Text or a blob — a graph's baked-in definition text, or a delivery marker like `merged/<repo>`. |
+| Kind               | What it carries                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| **Commit pointer** | A repository, a branch name, and a commit hash.                                       |
+| **Asset**          | Text — a graph's baked-in definition text, or a delivery marker like `merged/<repo>`. |
 
 A chunk submits one commit pointer per repository it touches, and the branch behind a pointer is pushed to the forge
 before the artifact is submitted, so the pointer never dangles. The hash is authoritative: branches move, so the hash
