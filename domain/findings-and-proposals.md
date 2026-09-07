@@ -9,10 +9,13 @@ whether or not anyone ever acts. Part of the [domain model](./index.md); the mac
 ## Identity is the hub's to assign
 
 A finding is minted only at delivery, with its own hub-assigned id — an agent never invents one, since a run names what
-it means by reference rather than recomputing whether two observations are the same finding. A delivered list becomes
-its own **finding set**, one per artifact, pointing back at the run that delivered it and carrying that list's scope,
-the per-repository revisions the run read, and the routine's own measurement — properties of the list, not of any single
-finding inside it.
+it means by reference rather than recomputing whether two observations are the same finding — and with its own scope,
+one per finding, fixed at that mint. A delivered list becomes its own **finding set**, one per artifact, pointing back
+at the run that delivered it and carrying the per-repository revisions the run read and the routine's own measurement —
+properties of the list, not of any single finding inside it. The set declares one scope as well — the run's own
+effective scope, no other — and the declaration is a constraint, not a grouping laid over the findings from outside:
+every op the list carries must name a finding recorded under that same scope, and one op naming a finding under another
+scope refuses the whole delivery.
 
 ## A run emits a delta, not a state
 
@@ -26,17 +29,22 @@ Whether a finding is live is never a stored state; it is the newest thing a run 
 **gone** does not close it — it flags the finding for a person, because leaving the live set is a human judgment, never
 a pass's word alone. A later run observing the same finding again restores it — but only while it is merely `gone`. Once
 a person has exited it, a run's own ops go no further: a run cannot revive what a person closed, only a person's own
-`reopened` can, the same authority that closed it in the first place.
+`reopened` can, the same authority that closed it in the first place. One exit is recorded by no hand at the moment it
+lands — delivery of the item an accepted garden proposal minted, which
+[Closing a proposal](#closing-a-proposal-pass-or-accept) owns — and it carries a person's authority all the same, the
+accepter's.
 
 A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
 **not-a-finding**, **superseded** — and **reopened** undoes any of them, the same append-only fact the way `gone` and
-`observed` already are: never a stored column, always a newest-fact-wins read. The five split into two kinds of exit.
-**Outflow** — resolved, gone-confirmed — is the ground itself changing: work landed, or a person confirmed by hand that
-the finding no longer reproduces, the same kind of event a `gone` fact already reports, just said with a person's
-authority instead of a run's. **Withdrawn** — wont-fix, not-a-finding, superseded — is a judgment call about the finding
-itself, never the code: the ground hasn't moved, a person has decided the finding doesn't merit standing regardless.
-Both are exits and both leave the live set for good — the split exists because what a fleet later reports about outflow
-and withdrawal answers different questions, not because one exit outranks another.
+`observed` already are: never a stored column, always a newest-fact-wins read. **superseded** is the one verb that names
+another finding: the one absorbing it, which must itself be live and is never the finding being exited, so a
+supersession always points at something standing — never at nothing, never at another exit. The five split into two
+kinds of exit. **Outflow** — resolved, gone-confirmed — is the ground itself changing: work landed, or a person
+confirmed by hand that the finding no longer reproduces, the same kind of event a `gone` fact already reports, just said
+with a person's authority instead of a run's. **Withdrawn** — wont-fix, not-a-finding, superseded — is a judgment call
+about the finding itself, never the code: the ground hasn't moved, a person has decided the finding doesn't merit
+standing regardless. Both are exits and both leave the live set for good — the split exists because what a fleet later
+reports about outflow and withdrawal answers different questions, not because one exit outranks another.
 
 ## `class` and `locus` are opaque
 
@@ -70,7 +78,12 @@ nobody can find again.
 
 Acceptance does not promote the item it mints — it rests behind the ordinary promote gate a person still has to open —
 and it does not move the findings behind the proposal: work being under way is not an observation that the ground
-changed, so an accepted proposal's findings stay live until a run reports them gone or a person withdraws them.
+changed. The item landing is. When the item an accepted proposal minted is delivered, the proposal's findings that are
+still live are **resolved** in that same act — an outflow exit, recorded with the accepter's authority and naming the
+proposal it answered — while a finding a person has already exited by then is left exactly as they left it. The
+resolution lands once per proposal: a retry of the delivery never redoes it, and a later `reopened` on one of those
+findings is a person's word that only a person can answer again. Until that delivery, an accepted proposal's findings
+stay live unless a run reports them gone or a person withdraws them.
 
 ## What the hub does not do
 
