@@ -70,3 +70,6 @@ controller resolves that chunk through a read repository first. Where no aggrega
 `TakeoverOpenScope` resolved there, never a bare `chunk_id`.
 
 **Don't.** `advance(chunk_id: str)`, loading the chunk inside the domain.
+
+`bzh:domain-takes-objects` is tooled by `blizzard:structural-gate`'s ast-grep scan
+([`../verification/blizzard.md`](../verification/blizzard.md)), scoped to the hub and runner domain trees.
