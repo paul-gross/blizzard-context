@@ -18,12 +18,13 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   per-repository reconciliation.
 - **Conflict is a judged, authored outcome**, not an engine special case: a dirty repository is one of the script's own
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or
-  any other — and whichever node receives it, the retained partial lands carry into the next attempt's reconciliation.
+  any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
+  against.
 - **The policy is the script's.** Which policy a chunk gets is a fact about the graph it travels, and the policy is
   whatever its script does: fast-forwarding each repository's base branch onto the chunk's own commit, opening a pull
   request per repository and watching each to a clean merge, or landing no repository at all and recording some other
-  outcome. "PR mode" names one such authored policy, adopted by minting a graph naming its `deliver` node in place of
-  another's, never by an engine switch.
+  outcome. "PR mode" names one such authored policy, adopted by minting a graph whose `deliver` node declares that
+  policy's script in place of another's, never by an engine switch.
 - **Environment retention.** The holding runner keeps the chunk's environments throughout delivery, until the outcome is
   known.
 
@@ -32,5 +33,5 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
 Landing is informational, not itself a terminal condition — only the graph's reserved terminal (`done`,
 [statuses](../work/statuses.md)) is. The choice a delivery script prints on a clean landing may route straight to the
 graph's reserved terminal or into a further node — the routing is authored, not fixed. A runner node routed after
-landing runs in the holding runner's still-held environment, after every repository has merged; the terminal is reached
-by whatever choice the authored routing eventually carries the chunk to.
+landing runs in the holding runner's still-held environment; the terminal is reached by whatever choice the authored
+routing eventually carries the chunk to.
