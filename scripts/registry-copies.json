@@ -152,6 +152,28 @@
         ]
       },
       "sites": []
+    },
+    {
+      "id": "frontend-structure-rules",
+      "what": "the frontend-structure tree's own rules",
+      "noun": "rules?",
+      "line_requires": "frontend",
+      "owner": "architecture/frontend-structure.md",
+      "probe": {
+        "kind": "md-heading-count-glob",
+        "repo": "blizzard-context",
+        "glob": "architecture/frontend-structure/*.md",
+        "level": 2,
+        "exclude": []
+      },
+      "sites": [
+        {
+          "repo": "blizzard-context",
+          "file": "architecture/frontend-structure.md",
+          "role": "owner",
+          "reason": "the roster's own home — checked so its lead sentence and this tree's actual rule headings cannot disagree"
+        }
+      ]
     }
   ]
 }
