@@ -11,6 +11,7 @@ the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 | [system-shape/graphs.md](./system-shape/graphs.md)                               | Authoring or minting a workflow graph — what it may know, and where its declarations are read from                           |
 | [system-shape/artifact-scopes.md](./system-shape/artifact-scopes.md)             | Reading or writing an artifact through `--scope system`, or reasoning about why a graph-scope and a system-scope read differ |
 | [system-shape/transcript-read-plane.md](./system-shape/transcript-read-plane.md) | Adding or widening a read of transcript data for runner consumption — which plane may serve it                               |
+| [system-shape/seam-size.md](./system-shape/seam-size.md)                         | Adding a method to a Protocol, or deciding whether one has grown wide enough to split or register as an exception            |
 
 ## Deterministic shell (`bzh:deterministic-shell`)
 

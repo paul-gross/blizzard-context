@@ -39,7 +39,8 @@ Binds the same trees as `bzh:comment-locality`, and the seams it holds are each 
 - In a Protocol, wire-model, or schema docstring, a cross-boundary party's name followed by what that party does with
   this code.
 - Prose naming a symbol its module does not import — a `{@link}` target included — or naming a module that imports this
-  one: the mechanical filter for narrating across a boundary.
+  one: a weak signal, not a mechanical filter — measured against this rule's own findings, it recalls 3 of 13. Most
+  cross-boundary narration names its far-side party in plain language, with no symbol for an import graph to resolve.
 - On an `InjectionToken`, an exported `interface`, or an `input()`/`output()` member, the name of the container, page,
   or spec that provides, binds, or overrides it, followed by what it does there — a test-override note is the commonest
   form.
@@ -55,6 +56,12 @@ def resolve(self, key: str) -> Value | None:
     """Return the first match in declaration order, skipping disabled entries; None when none match."""
 ```
 
+```python
+# The chunk's blocked marking (issue #457) — non-None only when it both waits on an
+# unmet prerequisite and this read derives it; null otherwise, regardless of block state.
+blocked: BlockedView | None = None
+```
+
 ```ts
 /** Builds the event source for a stream URL; a source that never opens is the caller's timeout to raise. */
 export const STREAM_SOURCE = new InjectionToken<StreamSourceFactory>('fleet.STREAM_SOURCE');
@@ -65,6 +72,12 @@ export const STREAM_SOURCE = new InjectionToken<StreamSourceFactory>('fleet.STRE
 ```python
 def resolve(self, key: str) -> Value | None:
     """Called by the CLI loader; the TOML adapter walks its file list and returns the first hit."""
+```
+
+```python
+# Non-None only on the fleet-list and detail reads, where a pre-claim dependent's standing edge
+# names a prerequisite not yet done; every other route returning this model does not derive it.
+blocked: BlockedView | None = None
 ```
 
 ```ts

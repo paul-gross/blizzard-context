@@ -43,6 +43,7 @@ also the file installed into every blizzard agent context, so an agent working o
 | [`verification/`](./verification/index.md)         | Blizzard's verifiability matrix — how a change to the application is proven.                   |
 | [`workflows/`](./workflows/index.md)               | How work reaches `master`, and the release cut an agent still drives by hand.                  |
 | [`tooling/`](./tooling/index.md)                   | Driving an external tool beyond the winter CLI.                                                |
+| [`garden/`](./garden/index.md)                     | The named axes blizzard is recurringly evaluated along, and what each judges by.               |
 | [`exemplars/`](./exemplars/python/repo_pattern.py) | Reference implementations to pattern new work off.                                             |
 
 Alongside them sit this repo's own: [`CONTRIBUTING.md`](./CONTRIBUTING.md) for commit format, authoring conventions, and
@@ -58,11 +59,13 @@ dprint check                        # markdown format
 rumdl check .                       # structural markdown lint
 python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate
 python3 tests/test_check_registry_drift.py
+python3 tests/test_lint_markdown_style.py
 ```
 
 The drift check is the interesting one: it reads a committed census and fails when a registry's stated shape and its
 actual enumeration disagree — including at sites in the sibling `blizzard` and `blizzard-mock` checkouts, which is why
-it wants them present. The markdown gates also run through `winter lint`, since this extension contributes the check.
+it wants them present. The markdown gates also run through `winter lint`, since this extension contributes the check —
+`blizzard-context:lint-script-tests` is that check's own test against stubbed binaries.
 
 Beyond the mechanical passes, a rule addition or a routing change owes a **cold-spawn eval** — put the change in front
 of a fresh agent context and see whether it actually routes there. `winter-canon:/evaluating-harness-changes.md` owns
