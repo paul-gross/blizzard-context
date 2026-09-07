@@ -26,8 +26,10 @@ The facets:
 - **`checks`** — deterministic commands the runner runs at worker exit and injects into the exit judgement as durable
   facts, so the worker judges against mechanical truth; a `requires_checks` choice may gate on them. `checks_cwd` (where
   checks run, relative to the leased env's workdir) and `checks_timeout` (per-check seconds) configure checks and are
-  legal only on a node declaring `checks:`. Authoring `checks:` makes a graph application-specific by design — checks
-  are necessarily toolchain commands (`bzh:app-agnostic-graphs` in
+  legal only on a node declaring `checks:`. An omitted `checks_timeout` bounds each check at 600 seconds, and a check
+  that overruns its bound is a red check, never an error — so a hung check reads as red to a `requires_checks` choice
+  ([./edges.md](./edges.md) §Failure, not judgement) instead of wedging the exit. Authoring `checks:` makes a graph
+  application-specific by design — checks are necessarily toolchain commands (`bzh:app-agnostic-graphs` in
   [../../architecture/system-shape.md](../../architecture/system-shape.md)).
 - **`produces`** — names the artifacts the node must submit ([../artifacts.md](../artifacts.md)); a worker node's prompt
   must instruct submitting each by name
@@ -37,5 +39,6 @@ The facets:
   delivery ([../work/chunk.md](../work/chunk.md)). Legal only on a worker-judged runner node: a hub-executed node has no
   worker to author one, and a human gate's exit is the resolving transition, which carries no payload of its own.
 - **`retries`** — the bounded failure budget — crashes, verdict-less exits, reaps — and where exhaustion escalates; a
-  judged failure edge never consumes it.
+  judged failure edge never consumes it. Omitting `retries:` does not lift the bound: the runner supplies its own
+  default of two retries, so every node's failures are budgeted whether or not the graph authored one.
 - **`judgement`** — how the exit is judged and the choices it produces — owned by [./edges.md](./edges.md).
