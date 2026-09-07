@@ -122,6 +122,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `table-layout: fixed`/`overflow-wrap: anywhere` from `routine-panel.css`'s table rule, which lets a long hash push the
   table past its section. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
   (`bzh:narrow-viewport-tier-rule`).
+- `scope-panel.shell-sweep.spec.ts` covers the gardening tab's scope panel (`FleetScopePanel`), stood up alone with
+  `canEdit` on so the description editor and the retire action both render, and with a related-routines list whose
+  second entry is a long hyphenated routine name. At 1280px, 390px, and 320px the description input and the retire
+  action must both be present, the panel's own `scrollWidth` must stay within its `clientWidth`, and the
+  related-routines list's must too — the long name breaks inside the list rather than widening the panel — with no page
+  error. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `gardening-routines-page.shell-sweep.spec.ts` covers the container's own `.gr-layout` list-beside-panel grid, which
   `routine-panel.shell-sweep.spec.ts` never mounts since it stands `FleetRoutinePanel` up alone. At 1280px the list and
   panel must sit side by side; at 390px and 320px `.gr-layout`'s `@media (max-width: 480px)` rule must collapse them
@@ -211,15 +217,6 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   version count, its right-anchored short id, the version badge, and the retired filter chip must all stay inside the
   list's own right edge — a real layout claim, since both levels now render their content projected into another
   component's button rather than into a box this stylesheet owns.
-- `chunk-neighborhood.shell-sweep.spec.ts` covers `ChunkNeighborhood`'s satisfied-vs-unmet edge marking, mounted
-  directly with plain inputs, reading `design/tokens.css`'s real text and injecting it as a `<style>` element the way
-  `hover-tint.shell-sweep.spec.ts` does, since a standalone component test never loads the global stylesheet its
-  `var(--green)`/`var(--amber-hi)` badge colors resolve against. A satisfied prerequisite's badge must carry a genuinely
-  different computed `color` from an unmet one's — a computed-style claim no viewport width changes, since jsdom would
-  accept `[tone]="satisfiedTone(n)"` without ever resolving it against `kit-badge.ts`'s color ladder. Separately, at
-  390px and 320px several neighbors in each direction must wrap onto their own lines within the panel's own right edge,
-  with no horizontal overflow — the surface this mounts on is reachable from the mobile board
-  (`bzh:narrow-viewport-tier-rule`).
 - `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline, mounted through the
   composed `FleetFindingPanel` rather than standalone (review:F11 — the timeline is never reached bare in the real app,
   and mounting it in isolation left its own `.fp-timeline` heading's missing CSS rule undetected): at 390px and 320px a
