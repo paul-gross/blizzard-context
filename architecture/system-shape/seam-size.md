@@ -20,15 +20,20 @@ for one caller must still stand in for methods it never touches.
 generalizes here to the whole population) — a coding-harness adapter or a hub client is gated exactly as a repository
 seam is.
 
-**Detect.** `tests/test_repository_seam_size.py`'s AST scan: a class declaring `Protocol` among its own bases with more
-than twelve own (non-underscore) methods, unless named in that test's `_ACCEPTED_VIOLATIONS` with its own reason.
+**Detect.** `tests/test_seam_size.py`'s AST scan: a class declaring `Protocol` among its own bases with more than twelve
+own (non-underscore) methods, unless its name is in that test's `_ACCEPTED_VIOLATIONS` set — a name-only membership
+test; a reason for the entry is a review obligation, not something the gate itself checks.
 
-**Do.** The runner's harness seam splits `IHarnessAdapter`'s fourteen methods into five narrower Protocols along its
-consumers' own lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, usage
-accounting, and transcript access (`src/blizzard/runner/harness/adapter.py`) — and a consumer taking the seam directly
-re-types to the narrowest one its job needs (`src/blizzard/runner/domain/takeover.py` and `domain/status.py` each take
-`IHarnessWorkerLifecycle`); `IHarnessAdapter` itself stays as a composed alias, its own body empty, for the code holding
-the whole seam to thread it on — the runner's `app.py` composition root, and the `LoopContext` its steps read through.
+**Do.** The runner's harness seam splits `IHarnessAdapter`'s fourteen methods into four narrower Protocols along its
+consumers' own lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, and usage
+accounting (`src/blizzard/runner/harness/adapter.py`). A consumer needing one slice re-types to it directly
+(`domain/takeover.py`, `domain/status.py` each take `IHarnessWorkerLifecycle`); two consumers needing the same wider
+pair — the runner loop's own step functions (`LoopContext.harness`) and the selftest canary — share one composed
+`IHarnessLifecycleAndVerdict` rather than each re-declaring it or falling back to the full seam. `transcript_source`
+stays declared directly on `IHarnessAdapter` itself rather than in a fifth named slice: its one caller is the same
+`app.py` composition root that already holds the whole seam, so a narrower Protocol would have no holder to narrow for.
+`IHarnessAdapter` composes the four slices plus that one method, for the one code path that holds the whole seam without
+calling every part of it piecemeal: the runner's `app.py` composition root.
 
 **Don't.** Leaving a Protocol to grow past the ceiling because splitting it "later" is easier than registering the width
 now, or registering an exception without a reason — either loses the one signal a reviewer has for "this seam grew wider

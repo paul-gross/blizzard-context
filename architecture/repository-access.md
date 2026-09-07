@@ -61,6 +61,11 @@ which entities a rule operates on.
 edge: it mints a typed scope naming exactly the facts the rule reads, rather than loading an aggregate that does not
 exist. The scope is data, not behavior, and never grows into one.
 
+A second, narrower exemption: a parameter that resolves not to the entity the operation is about, but to a guard the
+domain must itself evaluate as part of its own business rule. `ClaimService.claim`'s `runner_id: str` resolves a
+paused-runner denial check inline — a claim-denial rule that belongs in the domain, not at the edge — so it stays a raw
+id, reasoned and registered at its own site with `# ast-grep-ignore: bzh:domain-takes-objects`.
+
 **Detect.** A domain signature typed `chunk_id: str` rather than `chunk: Chunk`, or a domain method loading an entity
 from an id it was passed.
 
