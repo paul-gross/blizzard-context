@@ -60,9 +60,10 @@ run is never quietly re-addressed at another scope or sent to another graph.
   repointed.
 - **A retired effective scope** — the routine's default or an explicit override — when a run is addressed at it.
 
-Two more refusals guard an edit rather than an act, and are stated where that edit is: a routine's name never changes
-([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default scope is never unlinked from its
-declared set ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
+Two more refusals guard one field of a routine rather than the naming or running above, and are stated where that field
+is: a routine's name never changes ([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default
+scope is never unlinked from its declared set
+([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 
 ## A run is readable independent of delivery
 
