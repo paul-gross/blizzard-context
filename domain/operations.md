@@ -34,6 +34,7 @@ not merely the newest, so a `critical` older than the newest 200 rows still surf
 | `work-item-close-failed`       | `warning`  | A closure attempt failed; a later sweep retries it                                                                                                        |
 | `transcript-truncated`         | `warning`  | A transcript segment stopped shipping content — recorded on the segment itself as well, never silent                                                      |
 | `transcript-sidechain-dropped` | `warning`  | A transcript segment observed unlinked sidechain turns it cannot attribute, latched so it warns once per (segment, agent)                                 |
+| `worker-context-warned`        | `warning`  | A worker session's context tokens crossed the configured warn line — reported once, on the first crossing                                                 |
 | `attempt-abandoned`            | `info`     | Given up because the chunk moved on (reassigned or detached), not because the work failed                                                                 |
 | `work-item-closed`             | `info`     | A landed chunk's work item was closed at its own source ([./work/chunk.md](./work/chunk.md))                                                              |
 
