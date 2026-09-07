@@ -37,9 +37,8 @@ accepter's.
 A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
 **not-a-finding**, **superseded** — and **reopened** undoes any of them, the same append-only fact the way `gone` and
 `observed` already are: never a stored column, always a newest-fact-wins read. **superseded** is the one verb that names
-another finding: the one absorbing it, which must itself be live and is never the finding being exited, so a
-supersession always points at something standing — never at nothing, never at another exit. The five split into two
-kinds of exit. **Outflow** — resolved, gone-confirmed — is the ground itself changing: work landed, or a person
+another finding: the one absorbing it, which must itself be live and is never the finding being exited. The five split
+into two kinds of exit. **Outflow** — resolved, gone-confirmed — is the ground itself changing: work landed, or a person
 confirmed by hand that the finding no longer reproduces, the same kind of event a `gone` fact already reports, just said
 with a person's authority instead of a run's. **Withdrawn** — wont-fix, not-a-finding, superseded — is a judgment call
 about the finding itself, never the code: the ground hasn't moved, a person has decided the finding doesn't merit

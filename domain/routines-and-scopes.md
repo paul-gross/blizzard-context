@@ -25,16 +25,18 @@ A scope carries the same reversible, append-only retirement brake a graph does: 
 facts recorded over time, never a destructive edit, and either direction leaves the scope's slug and description
 untouched. What retiring does is withdraw the scope from selection — a retired scope is offered to no new run, and a
 routine's record of when it last swept each scope covers a retired one only where that routine has already swept it —
-while nothing recorded under it moves: its findings stay live and queryable, and its membership in a routine's declared
-set stands until an explicit unlink. Naming a retired scope again, by minting it or as a routine's default, is not
-refused; running against it is ([What refuses](#what-refuses)).
+while nothing recorded under it moves: its findings keep whatever state they had, and stay queryable, and its membership
+in a routine's declared set stands until an explicit unlink. Naming a retired scope again, by minting it or as a
+routine's default, is not refused; running against it is ([What refuses](#what-refuses)).
 
 ## A routine sweeps a declared set of scopes
 
 A routine's default scope is not the only scope it may sweep: a routine also declares a set of scopes it belongs to, a
 many-to-many relationship between routines and scopes, and its default is always a member of that set. The set can only
 grow the default's membership, never lose it — a routine may come to declare several scopes, but never fewer than the
-one its default names.
+one its default names. A scope joins the set only once it exists: unlike a routine's default, which mints the scope it
+names, growing the set never mints one, and naming a scope that does not exist is refused
+([What refuses](#what-refuses)).
 
 ## A run is an act of the pair
 
@@ -49,20 +51,28 @@ whether it belongs to that set.
 
 ## What refuses
 
-Each of these is refused wherever the act is offered, and refused outright: a slug is never quietly normalized, and a
-run is never quietly re-addressed at another scope or sent to another graph.
+Each of these is refused wherever the act is offered, and refused outright — never quietly absorbed into something
+already recorded, never quietly re-addressed at something else: a slug is not normalized, a mint does not hand back what
+already holds the name, a management verb does not create what it failed to find, and a run is not sent to another scope
+or another graph.
 
 - **A slug outside its shape** — empty, or carrying anything but lowercase letters, digits, and hyphens — wherever a
-  scope is named: minting or editing one, a routine's default, a run's override.
+  scope is named: minting or editing one, a routine's default, a run's override, either verb over a routine's declared
+  set.
+- **A routine name already taken** — at mint. A routine's name is claimed once, where a scope's slug is not
+  ([Mint-on-name](#mint-on-name)): a second routine under a name already held is refused, never merged into the routine
+  holding it.
+- **A scope that does not exist** — when a routine's declared set is grown to name it, that verb minting nothing of its
+  own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 - **A graph that does not resolve** — no enabled graph carries the name, resolution being
   [graphs/identity.md](./graphs/identity.md)'s — both when a routine is authored, create and edit alike, and when it
   runs: a graph may retire after a routine came to point at it, and the run is refused rather than the routine
   repointed.
 - **A retired effective scope** — the routine's default or an explicit override — when a run is addressed at it.
 
-Two more refusals guard one field of a routine rather than the naming or running above, and are stated where that field
-is: a routine's name never changes ([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default
-scope is never unlinked from its declared set
+Two more refusals guard a field of an existing routine rather than any act above, and are stated where that field is: a
+routine's name never changes ([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default scope
+is never unlinked from its declared set
 ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 
 ## A run is readable independent of delivery
