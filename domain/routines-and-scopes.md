@@ -41,13 +41,12 @@ names, growing the set never mints one, and naming a scope that does not exist i
 ## A run is an act of the pair
 
 `blizzard hub routine run <name>` mints, ingests, and promotes a work item in one act, addressed at the routine and an
-effective scope — the routine's own default, or an explicit override minted the same way a bare scope name is. Mode
-settles the baseline, never admission: a `full` run needs no baseline, while a `delta` run runs against the
-routine/scope pair's own recorded revision, and downgrades to `full` — on the record, never refused — when the pair has
-recorded none yet. What turns a run away is [What refuses](#what-refuses). What the pair carries between runs is
-`blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's behavior over it. A run's own scope
-handling is unchanged by a routine's declared set: an effective scope is still freely named or minted regardless of
-whether it belongs to that set.
+effective scope — the routine's own default, or an explicit override, which must already belong to the routine's own
+declared set ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)); a run never
+mints a scope of its own. Mode settles the baseline, never admission: a `full` run needs no baseline, while a `delta`
+run runs against the routine/scope pair's own recorded revision, and downgrades to `full` — on the record, never refused
+— when the pair has recorded none yet. What turns a run away is [What refuses](#what-refuses). What the pair carries
+between runs is `blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's behavior over it.
 
 ## What refuses
 
@@ -68,7 +67,12 @@ sent to another scope or another graph.
   [graphs/identity.md](./graphs/identity.md)'s — both when a routine is authored, create and edit alike, and when it
   runs: a graph may retire after a routine came to point at it, and the run is refused rather than the routine
   repointed.
-- **A retired effective scope** — the routine's default or an explicit override — when a run is addressed at it.
+- **An effective scope outside the routine's own related set** — an explicit override naming a scope the routine has not
+  linked in, or naming no scope at all
+  ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)) — when a run is addressed at
+  it, and never minted; the routine's own default is always a member and so is always available.
+- **A retired effective scope** — the routine's default or an explicit override, already related — when a run is
+  addressed at it.
 
 Two more refusals guard a field of an existing routine rather than any act above, and are stated where that field is: a
 routine's name never changes ([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default scope
