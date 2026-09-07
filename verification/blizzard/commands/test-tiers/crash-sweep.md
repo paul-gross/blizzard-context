@@ -13,8 +13,8 @@ The crash-sweep spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md
 The tier command is `BLIZZARD_CRASH_SWEEP=1 uv run pytest -m crash_sweep tests/crash/` (`mise run crash-sweep`) — the
 FULL kill-9 sweep; the crash-correctness contract it enforces is owned by
 [`../../../../architecture/crash-correctness.md`](../../../../architecture/crash-correctness.md). The sweep enumerates
-the crash-point registry (`blizzard.foundation.crash.discover_crash_points`) and, per point, runs the hub and runner as
-real subprocesses over the mock fleet, arms the point so its owning daemon `SIGKILL`s itself there, then asserts the
+the crash-point registry (`tests.crash_points.discover_crash_points`) and, per point, runs the hub and runner as real
+subprocesses over the mock fleet, arms the point so its owning daemon `SIGKILL`s itself there, then asserts the
 invariant checker (`blizzard dev check-invariants`) is green over both stores and the chunk still lands exactly once
 after an unarmed restart — startup is REAP. It needs the sibling `blizzard-mock` worktree and a winter source, and is
 skipped without `BLIZZARD_CRASH_SWEEP=1`.
