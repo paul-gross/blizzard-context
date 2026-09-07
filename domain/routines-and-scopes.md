@@ -24,9 +24,10 @@ default scope, or its run preferences, but never what it is named.
 A scope carries the same reversible, append-only retirement brake a graph does: retiring one and re-enabling it are both
 facts recorded over time, never a destructive edit, and either direction leaves the scope's slug and description
 untouched. What retiring does is withdraw the scope from selection — a retired scope is offered to no new run, and a
-routine's roster of swept scopes lists it only where that routine has already swept it — while nothing recorded under it
-moves: its findings stay live and queryable. Naming a retired scope again, by minting it or as a routine's default, is
-not refused; running against it is ([What refuses](#what-refuses)).
+routine's record of when it last swept each scope covers a retired one only where that routine has already swept it —
+while nothing recorded under it moves: its findings stay live and queryable, and its membership in a routine's declared
+set stands until an explicit unlink. Naming a retired scope again, by minting it or as a routine's default, is not
+refused; running against it is ([What refuses](#what-refuses)).
 
 ## A routine sweeps a declared set of scopes
 
@@ -41,10 +42,10 @@ one its default names.
 effective scope — the routine's own default, or an explicit override minted the same way a bare scope name is. Mode
 settles the baseline, never admission: a `full` run needs no baseline, while a `delta` run runs against the
 routine/scope pair's own recorded revision, and downgrades to `full` — on the record, never refused — when the pair has
-recorded none yet. What turns a run away is [What refuses](#what-refuses), and it turns either mode away alike. What the
-pair carries between runs is `blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's
-behavior over it. A run's own scope handling is unchanged by a routine's declared set: an effective scope is still
-freely named or minted regardless of whether it belongs to that set.
+recorded none yet. What turns a run away is [What refuses](#what-refuses). What the pair carries between runs is
+`blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's behavior over it. A run's own scope
+handling is unchanged by a routine's declared set: an effective scope is still freely named or minted regardless of
+whether it belongs to that set.
 
 ## What refuses
 
@@ -59,14 +60,19 @@ run is never quietly re-addressed at another scope or sent to another graph.
   repointed.
 - **A retired effective scope** — the routine's default or an explicit override — when a run is addressed at it.
 
+Two more refusals guard an edit rather than an act, and are stated where that edit is: a routine's name never changes
+([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default scope is never unlinked from its
+declared set ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
+
 ## A run is readable independent of delivery
 
 A run is enumerable the moment it is minted, whether or not it ever delivers — an escalated run that never wrote a
 finding is as much a run as a delivered one, and both are read from the same act's own record, never from what delivery
 produced. A run's outcome is the same derived chunk status every other chunk carries
 (`architecture/system-shape/store-facts.md`'s `bzh:facts-not-status`), not a garden-specific status of its own. A
-fanned-out survey's run can deliver more than one finding set in the same act — several scopes swept together, several
-lists published — and each stays its own set, distinguishable from the others, never merged into one.
+fanned-out survey's run can deliver more than one finding set in the same act — several lists published, every one of
+them under the run's own effective scope — and each stays its own set, distinguishable from the others, never merged
+into one.
 
 ## What the hub does not do
 

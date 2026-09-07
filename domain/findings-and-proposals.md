@@ -14,8 +14,8 @@ one per finding, fixed at that mint. A delivered list becomes its own **finding 
 at the run that delivered it and carrying the per-repository revisions the run read and the routine's own measurement —
 properties of the list, not of any single finding inside it. The set declares one scope as well — the run's own
 effective scope, no other — and the declaration is a constraint, not a grouping laid over the findings from outside:
-every op the list carries must name a finding recorded under that same scope, and one op naming a finding under another
-scope refuses the whole delivery.
+every op naming an existing finding must name one recorded under that same scope, and one op naming a finding under
+another scope refuses the whole delivery.
 
 ## A run emits a delta, not a state
 
