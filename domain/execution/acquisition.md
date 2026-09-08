@@ -5,9 +5,9 @@ How a chunk is granted to a runner, what the route locates, and which writes giv
 
 Acquisition is the hub granting a ready chunk to exactly one runner — the one point of cross-runner contention, where
 fleet exactly-once is upheld. The claim is claim-by-route: the runner peeks the hub-ordered queue, acquires the
-environments, and posts the complete route; the hub accepts exactly one claim per chunk. Every claim also carries the
-chunk's epoch floor; what the claimant's leases owe it is owned by [./fencing.md](./fencing.md). The environment
-identifier is opaque to the hub — it knows which environment, never what an environment is.
+environments, and posts the complete route; the hub accepts exactly one claim per chunk. The environment identifier is
+opaque to the hub — it knows which environment, never what an environment is. What the grant obliges of the claimant's
+leases is owned by [./fencing.md](./fencing.md).
 
 Which entry a runner claims out of a peek carrying a [blocked marking](../work/statuses.md#the-blocked-marking) is that
 runner's own choice, not the hub's: by default it reaches past a marked entry for the first unmarked one, rather than
