@@ -7,14 +7,14 @@ Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-r
 Every fact stated in code prose has exactly one home site; every other mention is a one-line pointer that names the home
 and carries none of its content. The home is assigned by the fact's kind, never chosen per site:
 
-| Fact kind             | Home                                                                                                                                                        |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A boundary contract   | The seam that defines the boundary — the Protocol, wire model, or schema                                                                                    |
-| A local invariant     | The module that owns the state                                                                                                                              |
-| Wire-field semantics  | The wire dataclass, as the field's own meaning (`bzh:comment-locality`'s wire-row qualification) — it generates into `openapi/` and thence a client's JSDoc |
-| A domain concept      | The [`blizzard-context:/domain/`](../domain/index.md) file modeling it, or the delegate spoke that tree's hub sends a delegated key to                      |
-| A defended decision   | The docstring of the pinning test that fails on revert (`bzh:mutation-review-selection`)                                                                    |
-| An operator procedure | The owning section of the operator docs, `blizzard/docs/`                                                                                                   |
+| Fact kind             | Home                                                                                                                                                                                                                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A boundary contract   | The seam that defines the boundary — the Protocol, wire model, or schema                                                                                                                                                                                                            |
+| A local invariant     | The module that owns the state                                                                                                                                                                                                                                                      |
+| Wire-field semantics  | The wire model itself: a class docstring generates into `openapi/` and the client's JSDoc, gated on content (not coverage) by `blizzard/tests/test_openapi_descriptions.py` — a `#` field comment reaches no consumer pydantic serializes, and states only that field's own meaning |
+| A domain concept      | The [`blizzard-context:/domain/`](../domain/index.md) file modeling it, or the delegate spoke that tree's hub sends a delegated key to                                                                                                                                              |
+| A defended decision   | The docstring of the pinning test that fails on revert (`bzh:mutation-review-selection`)                                                                                                                                                                                            |
+| An operator procedure | The owning section of the operator docs, `blizzard/docs/`                                                                                                                                                                                                                           |
 
 ## Pointer forms
 

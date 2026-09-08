@@ -11,6 +11,11 @@ no concrete caller, no loop step, no CLI or UI surface, no consuming container, 
 implementation. The discipline is symmetric — an implementation never re-explains the seam contract it implements, and a
 caller never explains its callee.
 
+On a wire model, the boundary is per field, not per model (`bzh:one-prose-home`'s wire-field row): a field's own `#`
+comment states only that field's meaning, never the model's collective contract or another field's. Two fields — even on
+two different models — may each state the same underlying fact from their own side without colliding: deduplicating one
+into a pointer at the other's model or field is itself the cross-boundary narration this rule forbids.
+
 ## Why
 
 Naming a cross-boundary party couples the boundary's text to that party's implementation — the dependency the code's
