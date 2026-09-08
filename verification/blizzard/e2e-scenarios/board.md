@@ -82,8 +82,8 @@ The operational event log, holding both in-process and browser-driven assertions
 - `test_the_events_grid_does_not_collapse_at_a_narrow_viewport` — proves the Events tab's time-first grid's
   narrow-viewport fallback: at a real ~390px width a long-message row stays bounded in height and the page gains no
   horizontal scroll.
-- `test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — proves the board's rail Event log — a separate,
-  pure-recency activity feed distinct from the Events tab — survives a reload: it seeds a mixed feed across fact
+- `test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — proves the board's rail — the Activity feed, a
+  separate, pure-recency feed distinct from the Events tab — survives a reload: it seeds a mixed feed across fact
   families (a chunk transition, a question, a decision, a runner pause), confirms the rail renders a row for each over
   live SSE, reloads, and confirms the same rows remain — the on-mount `GET /api/activity` backfill re-seeding the ring
   from durable history — with no duplicate or missing row at the seam between backfill and the resumed live tee.
