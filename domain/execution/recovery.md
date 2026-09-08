@@ -29,6 +29,5 @@ fences the old runner out.
 
 ## Reassignment
 
-Reassignment moves a held chunk to another runner — the supported exception to stickiness: the new runner rebuilds the
-environment from the chunk's commit artifacts, mints leases above the hub-supplied epoch floor, and may adopt
-unsubmitted work found ahead of the last submitted artifact commit.
+Reassignment moves a held chunk to another runner — the supported exception to stickiness. A new environment can be
+rebuilt for the new holder. Work not yet pushed as a commit does not survive the move.

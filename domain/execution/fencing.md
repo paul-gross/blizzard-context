@@ -36,9 +36,10 @@ reliable process kills.
 
 **Do.**
 
-- Every fresh claim of a re-queued chunk (a reassignment, or a route-released re-queue such as detach or migration —
-  [../work/migration.md](../work/migration.md)) mints new leases above the hub-supplied epoch floor: the chunk's newest
-  epoch as the hub knows it, carried on the claim, never the claiming runner's local history.
+- Every claim mints its leases above the hub-supplied epoch floor: the chunk's newest epoch as the hub knows it, carried
+  on the claim, never the claiming runner's local history. The floor is a property of the claim itself, not of any
+  re-queue behind it — a fresh claim of a re-queued chunk (a reassignment, or a route-released re-queue such as detach
+  or migration, [../work/migration.md](../work/migration.md)) gets it on the same terms as a first claim.
 - A runner that never drove the chunk still mints strictly above every prior attempt, so the old holder's in-flight
   submission bounces on arrival.
 - Derive a fencing write's own epoch inside the transaction recording it, never from a read the write no longer holds.
