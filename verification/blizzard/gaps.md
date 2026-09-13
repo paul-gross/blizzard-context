@@ -128,9 +128,11 @@ unproven.
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
 (e.g. an empty table) rather than a declaration defect. Do not add a postgres-backed component tier to close this: the
-hosted hub runs SQLite, not postgres (`blizzard-infra`'s `deploy/compose.yaml`), so no deployment — dogfood or otherwise
-— exercises the postgres planner at all. The gap is permanent, not merely temporarily unproven, unless a future
-deployment adds a postgres backend.
+hosted hub runs SQLite, not postgres (`blizzard-infra`'s `deploy/compose.yaml`), so dogfooding never exercises the
+postgres planner. Blizzard's own `packaging/docker/compose.yaml` reference deployment does run postgres, but no test
+tier watches its planner either — an adopter's compose stack is not something any of blizzard's own tiers connects to.
+The gap stays open, not permanent: it closes the day some tier gains a postgres-backed component run, which the
+reference compose image already makes possible.
 
 ## The worker's push to a real forge
 
