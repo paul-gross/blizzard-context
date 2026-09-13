@@ -87,7 +87,7 @@ live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows 
 | `blizzard:manual-autocompact-window`     | A declared `--autocompact` window compacting a real session, rather than the model's own maximum      |
 | `blizzard:manual-worker-deny-list`       | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness     |
 | `blizzard:manual-rollback-drill`         | The compose deployment's rollback promise, walked for real against two published image tags           |
-| `blizzard:manual-fleet-read-latency`     | `GET /api/chunks` wall-clock latency, before/after a read-path change, at fleet scale                 |
+| `blizzard:manual-fleet-read-latency`     | A named hub read path's wall-clock latency, before/after a read-path change, at fleet scale           |
 | `blizzard:manual-sweep-pass-cost`        | One derivation `sweep()` pass's wall time, statement count, and zlib bytes decompressed, steady-state |
 | `blizzard-mock:manual`                   | The winter-wired mock forge fronting a real fixture workspace's bare origins                          |
 | `blizzard-mock:manual-seeded-board`      | A realistic board rendered from a direct store seed: no work source configured, no hub restart        |
