@@ -70,11 +70,18 @@ transaction, and an unfinalized segment is a legal, resumable state rather than 
 ## The hub's event-derivation sweep
 
 `EventDerivationReconciler` (`blizzard/src/blizzard/hub/domain/analytics/derivation.py`) is not a loop step any sweep
-family reaches, and holds no state between passes, re-deriving its candidates from `EventDerivationService.candidacy()`
-— one bulk read of the visible segment set's stored `content_digest`s against each segment's current-version marker,
-with no content byte read (blizzard#513 D2). A segment's digest is written by the same `transcript_segments`
-INSERT/UPDATE that writes its `(turn_range_start, rejected, content)` (D1), so it opens no write window of its own — it
-is exactly as durable as the row it fingerprints.
+family reaches. It holds one piece of process-local state between passes — the last pass's `DerivationSignature`
+(blizzard#524 D5), a cheap aggregate of `transcript_segments` row count, max `id`, max `received_at`, and `chunks` row
+count — purely to decide whether to skip a pass. That state is never persisted and is lost on every process restart,
+which is harmless: a fresh reconciler always runs its first pass in full (this is also what covers an
+`EXTRACTOR_VERSION` bump, since that changes derivation markers, not this signature), and a forced floor runs a full
+pass at least every ten minutes by the injected clock regardless of what the signature reports. The probe is an
+optimization only; correctness rests on that floor, so a same-instant rewrite the signature happens to miss is still
+picked up within one floor period. Whenever a full pass does run, it re-derives its candidates from
+`EventDerivationService.candidacy()` — one bulk read of the visible segment set's stored `content_digest`s against each
+segment's current-version marker, with no content byte read (blizzard#513 D2). A segment's digest is written by the same
+`transcript_segments` INSERT/UPDATE that writes its `(turn_range_start, rejected, content)` (D1), so it opens no write
+window of its own — it is exactly as durable as the row it fingerprints.
 
 Its two durable write paths are each one transaction: `TranscriptEventStore.replace_segment_events`, which deletes that
 `(segment_id, extractor_version)` pair's rows, inserts the fresh set, and writes the marker; and `drop_segments`, one
