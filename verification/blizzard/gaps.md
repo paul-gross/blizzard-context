@@ -110,20 +110,29 @@ requires `ship = true`, so an operator running it against a real `~/.claude/proj
 forward-read lane that no tier records — which dogfooding does not supply by default, since the transcript lane ships
 disabled (`[transcripts] ship = false`).
 
-## The finding table's postgres query plan
+## The query-plan assertions never run under postgres
 
 `tests/test_finding_store.py`'s `test_list_for_query_plans_as_an_index_search` and
 `test_count_by_class_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend every component
 test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
 `ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan.
 `tests/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty-one `chunk_id`-filtered fact tables the
-`20260829_1930_fact_tables_chunk_id_index` revision indexes. No tier runs either assertion against postgres, so whether
-the portable index declarations actually earn an index scan under postgres's own planner stays unproven.
+`20260829_1930_fact_tables_chunk_id_index` revision indexes, extended by the `20260913_1300_hub_store_hot_path_indexes`
+revision's own cases: the three `(chunk_id, epoch)` composites by exact name, the artifacts/graph-choices/transcript-
+segments/chunk-work-refs/close-intents hot-path reads, and each of `activity_facts_since`'s eighteen per-source ordered
+reads (blizzard#519). `tests/test_chunk_usage_statements.py` and its `EXPLAIN QUERY PLAN` case over the spend `_stmt`
+builder assert `ix_usage_facts_recorded_at` the same way (blizzard#517). No tier runs any of these assertions against
+postgres, so whether the portable index declarations actually earn an index scan under postgres's own planner stays
+unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
-(e.g. an empty table) rather than a declaration defect. Do not add a postgres-backed component tier to close this; the
-dogfood deployment's postgres store is the evidence a real-scale table would surface a genuine regression against.
+(e.g. an empty table) rather than a declaration defect. Do not add a postgres-backed component tier to close this: the
+hosted hub runs SQLite, not postgres (`blizzard-infra`'s `deploy/compose.yaml`), so dogfooding never exercises the
+postgres planner. Blizzard's own `packaging/docker/compose.yaml` reference deployment does run postgres, but no test
+tier watches its planner either — an adopter's compose stack is not something any of blizzard's own tiers connects to.
+The gap stays open, not permanent: it closes the day some tier gains a postgres-backed component run, which the
+reference compose image already makes possible.
 
 ## The worker's push to a real forge
 

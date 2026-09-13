@@ -206,14 +206,16 @@ earlier one.
 
 ### `blizzard:manual-fleet-read-latency`
 
-**Surface.** `GET /api/chunks` wall-clock latency at fleet scale, before and after a change to its read path. No CI tier
-measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the *shape* of the cost, not
-its duration — so a read-path change reports this by hand.
+**Surface.** A named hub read path's wall-clock latency at fleet scale, before and after a change to its read path —
+`GET /api/chunks` for the recorded readings below, any other hub read path for a change that touches it instead. No CI
+tier measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the *shape* of the cost,
+not its duration — so a read-path change reports this by hand.
 
-**Blind spot.** A local sqlite store does not reproduce the hosted postgres deployment's per-query network round trip,
-so an absolute reading here says nothing about the hosted hub's own latency. What it measures instead is the **ratio**
-between two readings of the *same* store, before and after the code change — a ratio a sqlite round trip's smaller,
-proportionally-similar per-query cost still tracks. The hosted reading is separate: operator inspection against
+**Blind spot.** The hosted hub runs SQLite, not postgres (`blizzard-infra`'s `deploy/compose.yaml`), so a local sqlite
+store shares its backend with the hosted deployment — but not its EBS-backed volume's I/O characteristics or its EC2
+host's hardware, so an absolute reading here still says nothing about the hosted hub's own latency. What it measures
+instead is the **ratio** between two readings of the *same* store, before and after the code change — a ratio those
+hardware differences still track proportionally. The hosted reading is separate: operator inspection against
 `https://blizzard.grosscode.net` after the change has redeployed there, never a dev surface pointed at it
 (`workspace:/context/project/hub-data-modes.md` owns why).
 
@@ -225,9 +227,12 @@ recorded reading below used.
 **Steps.**
 
 1. Seed or point at a store holding a known chunk count `N`.
-2. Warm the connection (one untimed `GET /api/chunks`), then time several repeated calls and record the mean.
+2. Warm the connection (one untimed call to the read path), then time several repeated calls and record the mean.
 3. Repeat step 2 against the same store, unchanged, on the other side of the code change — the "before" reading taken
    ahead of the change landing (the baseline is unmeasurable once it has), the "after" reading once it has.
+4. Optional, for a change that carries a hub revision: on the same store copy, time `blizzard hub migrate`, then
+   `migrate --down <prior-rev>`, then `migrate` back up, so the migration's own pause at deploy is sized alongside the
+   read-path change it enables.
 
 **Passes when.** Both readings are recorded together, against the same store and the same `N`.
 
@@ -239,8 +244,8 @@ recorded reading below used.
 | Before (`73db0967`)                                                      | 5026    | 339.2ms      |
 | After (`load_all_facts`/`load_all_routes` list read, fact-table indexes) | 40      | 10.4ms       |
 
-A ~125x query-count reduction and ~33x latency reduction on the same local sqlite store. The hosted postgres reading is
-owed separately, by an operator, once this change has redeployed there.
+A ~125x query-count reduction and ~33x latency reduction on the same local sqlite store. The hosted reading is owed
+separately, by an operator, once this change has redeployed there.
 
 **Queue-peek reading** (same method, `GET /api/queue`; scratch `build_hub` store, N=173 promoted chunks, 5 warmed reps):
 
@@ -251,6 +256,59 @@ owed separately, by an operator, once this change has redeployed there.
 
 `GET /api/backlog` and the runner's own `GET /api/fleet/queue/peek` share `list_ready`/`list_not_ready`, so the same
 reading covers all three. The hosted reading is owed separately, as above.
+
+**Hot-path indexes and spend-fold reading (blizzard#517, blizzard#519).** Store: an on-disk copy found at this machine's
+`~/projects/blizzard-blizzard/backups/hub-20260905T175650Z.db`, of unverified provenance — nothing in `blizzard-infra`
+produces a file at that path/name, so treat it as an unofficial, undocumented copy rather than a guaranteed
+application-consistent one. `PRAGMA integrity_check` passed, and its `usage_facts`/`transcript_segments` row counts
+(3,941 and 21,269) match blizzard#517's and blizzard#519's own cited measurements exactly, which is why it was used here
+in place of the operator-provided copy the method's Setup step asks for first — a fresh copy remains owed if this one's
+provenance is ever disputed. N=282 chunks, migrated to the pre-change head
+(`20260907_1000_event_log_runner_id_nullable`) for Before and to `20260913_1300_hub_store_hot_path_indexes` for After;
+one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
+
+| Read                                       | Before queries              | Before latency | After queries | After latency |
+| ------------------------------------------ | --------------------------- | -------------- | ------------- | ------------- |
+| `GET /api/spend` (all-time)                | 1 (3,941 rows materialized) | 21.5ms         | 1             | 0.95ms        |
+| `GET /api/spend` (30-day)                  | 1 (partial materialization) | 4.5ms          | 1             | 0.60ms        |
+| `load_artifacts` (artifacts by chunk)      | 1                           | 0.53ms         | 1             | 0.28ms        |
+| `GraphStore.list_all`                      | 969                         | 132.0ms        | 969           | 98.9ms        |
+| `TranscriptEventStore.visible_segment_ids` | 1                           | 8.4ms          | 1             | 2.6ms         |
+| `activity_facts_since`                     | 18                          | 10.2ms         | 18            | 9.9ms         |
+| `pending_close_intents`                    | 3                           | 0.27ms         | 3             | 0.24ms        |
+| `find_live_holder`                         | 30                          | 2.8ms          | 30            | 2.6ms         |
+
+The spend fold is the standout: ~23x latency reduction on the all-time window, with query count unchanged at 1 (the
+before reading already issued one query — the win is materializing zero `UsageFact` objects instead of 3,941, per
+blizzard#517's own acceptance criterion). `GraphStore.list_all`'s and `find_live_holder`'s query counts are unchanged by
+design — blizzard#519 states its indexes complement, and do not substitute for, the N+1 fixes tracked separately — their
+latency drop reflects a cheaper per-query scan, not fewer queries.
+
+Migration duration on the same store (`blizzard hub migrate` / `--down <prior-rev>` / `migrate` again): up to
+`20260913_1300_hub_store_hot_path_indexes` from the prior head, 177.7ms first pass (includes SQLite's index-build cost
+against real data — this store's affected-table row counts range from single digits up to `transcript_segments`'s
+21,269, with `transcript_events` (9,849), `artifacts` (4,953), `usage_facts` (3,941), `lease_facts` (2,277), and
+`transitions` (2,048) the next largest); a subsequent no-op `migrate` at head, 26.7ms; `--down` back to the prior head,
+89.9ms; and back up again, 127.4ms. All comfortably sub-second even at this snapshot's scale, so the revision's own
+pause at deploy is not a concern at the hosted hub's current size, though a future reader scaling this number should
+scale it off `transcript_segments`'s own growth, since it has no retention policy and is this store's largest affected
+table by a wide margin.
+
+**Write-side cost.** The read-latency readings above say nothing about insert cost on the two tables this migration
+indexes most heavily and that see continuous, append-only writes — `transcript_segments` (4 → 6 indexes) and
+`usage_facts` (1 → 3 indexes). On the same before/after store copies (`transcript_segments` 21,269 rows, `usage_facts`
+3,941 rows before either bench run), 200 warmup inserts then a timed mean of 2,000 more, one row at a time, each in its
+own transaction:
+
+| Insert                    | Before  | After   | Delta |
+| ------------------------- | ------- | ------- | ----- |
+| `usage_facts` row         | 0.094ms | 0.096ms | +2.8% |
+| `transcript_segments` row | 0.141ms | 0.140ms | -1.3% |
+
+Both deltas are within this measurement's own noise band — sqlite's per-row index-maintenance cost for two or three
+small non-unique B-tree indexes on tables already carrying one is not observable at this row count. The store's
+single-writer WAL/`busy_timeout` posture means the risk this reading answers is contention duration, not per-row cost,
+and neither moved measurably.
 
 ### `blizzard:manual-sweep-pass-cost`
 
