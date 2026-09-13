@@ -268,7 +268,7 @@ provenance is ever disputed. N=282 chunks, migrated to the pre-change head
 one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
 
 | Read                                       | Before queries              | Before latency | After queries | After latency |
-| ------------------------------------------- | --------------------------- | -------------- | ------------- | ------------- |
+| ------------------------------------------ | --------------------------- | -------------- | ------------- | ------------- |
 | `GET /api/spend` (all-time)                | 1 (3,941 rows materialized) | 21.5ms         | 1             | 0.95ms        |
 | `GET /api/spend` (30-day)                  | 1 (partial materialization) | 4.5ms          | 1             | 0.60ms        |
 | `load_artifacts` (artifacts by chunk)      | 1                           | 0.53ms         | 1             | 0.28ms        |
