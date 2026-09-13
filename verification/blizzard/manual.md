@@ -251,3 +251,41 @@ owed separately, by an operator, once this change has redeployed there.
 
 `GET /api/backlog` and the runner's own `GET /api/fleet/queue/peek` share `list_ready`/`list_not_ready`, so the same
 reading covers all three. The hosted reading is owed separately, as above.
+
+### `blizzard:manual-sweep-pass-cost`
+
+**Surface.** One `EventDerivationReconciler.sweep()` pass's wall time, statement count, and bytes `zlib.decompress`
+processes, on a steady-state store — a store already converged, so the pass has nothing left to derive or drop. No CI
+tier measures wall-clock time or decompression volume; `blizzard:component-test`'s query-count assertions pin the
+*shape* of the cost, not its duration or byte volume.
+
+**Blind spot.** A local sqlite store does not reproduce the hosted postgres deployment's per-query network round trip or
+its CPU throttle ceiling, so an absolute reading here says nothing about the hosted hub's own latency. What it measures
+instead is the **ratio** between two readings of the *same* store and corpus shape, before and after the code change.
+The hosted reading is separate: the sweep's own elapsed-time log line, read by an operator after the change has
+redeployed there, never a dev surface pointed at the hosted hub (`workspace:/context/project/hub-data-modes.md` owns
+why).
+
+**Setup.** A scratch `tests.support.build_hub` store seeded to the production shape — ≈2,500 visible segments, ≈27,500
+records, content sized to ≈175 MB compressed — through a throwaway script, then swept once (untimed) so the store
+reaches steady state (every segment carries a current marker) before the timed pass.
+
+**Steps.**
+
+1. Seed the scratch store to the shape above.
+2. Sweep once, untimed, so the store converges.
+3. Sweep once more, timed: wall-clock elapsed, total SQL statement count (`tests.support.count_queries`'s technique),
+   and bytes `zlib.decompress` returns across the pass (a wrapped `zlib.decompress` counts them).
+4. Repeat step 3 on the other side of the code change, against the same store shape.
+
+**Passes when.** Both readings are recorded together, against the same corpus shape.
+
+**Recorded reading** (scratch store, 2,500 segments / 27,500 rows / 175.9 MB compressed, one steady-state pass):
+
+| Reading            | Statements | Wall time | Bytes decompressed                        |
+| ------------------ | ---------- | --------- | ----------------------------------------- |
+| Before (`5a9bda9`) | 5003       | 2.81s     | 301.4 MB (27,500 `zlib.decompress` calls) |
+
+A steady-state pass before this change re-decodes every visible segment's content in full to compare fingerprints,
+exactly the defect blizzard#513 names. The hosted postgres reading is owed separately, by an operator, once this change
+has redeployed there.
