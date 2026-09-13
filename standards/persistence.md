@@ -26,15 +26,15 @@ rely on the serialization guarantee those settings preserve rather than fail out
 single-writer lock, which the WAL/`busy_timeout` pair the factory sets preserves rather than removes, is what
 `acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`) and `next_route_seq`
 (`hub/store/internal/chunk_rows.py`) already serialize concurrent callers on — the guarantee is portable across both
-backends, only its sqlite implementation runs through the factory. Second, `transcript_outbound_buffer`, the transcript
-lane's outbound buffer, sets `sqlite_autoincrement=True` on its `seq` primary key — a sqlite-only pragma admitted
-because the hazard it guards is itself sqlite-only, so no portable equivalent exists. The hazard:
-`transcript_outbound_buffer` prunes acked non-final rows (unlike its sibling `outbound_buffer`, which never deletes),
-and a bare sqlite `INTEGER PRIMARY KEY` reuses a pruned row's rowid, so a later insert could be reissued a `seq` a
-consumer already treated as final. Postgres needs no equivalent: that column's `autoincrement=True` compiles there to a
-sequence-backed `SERIAL`, which never reuses a deleted value, so the schema stays one portable surface in effect.
-`tests/test_pin_runner_store.py` pins the sqlite autoincrement behavior; no postgres-side test exists because there is
-no postgres-side hazard to cover.
+backends, only its sqlite implementation runs through the factory. Second, the runner's two outbound buffers —
+`outbound_buffer` and the transcript lane's own `transcript_outbound_buffer` — each set `sqlite_autoincrement=True` on
+their `seq` primary key: a sqlite-only pragma admitted because the hazard it guards is itself sqlite-only, so no
+portable equivalent exists. The hazard: both buffers prune acked rows past their own retention window, and a bare sqlite
+`INTEGER PRIMARY KEY` reuses a pruned row's rowid, so a later insert could be reissued a `seq` a consumer already
+treated as final. Postgres needs no equivalent: that column's `autoincrement=True` compiles there to a sequence-backed
+`SERIAL`, which never reuses a deleted value, so the schema stays one portable surface in effect.
+`tests/test_pin_runner_store.py` pins the sqlite autoincrement behavior for both buffers; no postgres-side test exists
+because there is no postgres-side hazard to cover.
 
 **Detect.** A dialect-specific column type, function, or `text()` SQL; a test asserting behavior only one backend gives;
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit
