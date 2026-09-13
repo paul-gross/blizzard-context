@@ -280,18 +280,19 @@ reaches steady state (every segment carries a current marker) before the timed p
 
 **Passes when.** Both readings are recorded together, against the same corpus shape.
 
-**Recorded reading** (scratch store, 2,500 segments / 27,500 rows, one steady-state pass):
+**Recorded reading** (scratch store, 2,500 segments / 27,500 rows, one steady-state pass). The before and after rows are
+two independent seedings of the same corpus shape — row and segment counts match, but each seeding draws its own random
+row content, so the two compressed-byte totals differ while the shape stays fixed:
 
 | Reading                                                  | Statements | Wall time | Bytes decompressed                        |
 | -------------------------------------------------------- | ---------- | --------- | ----------------------------------------- |
-| Before (`5a9bda9`, 175.9 MB compressed)                  | 5003       | 2.81s     | 301.4 MB (27,500 `zlib.decompress` calls) |
+| Before (`f75916df`, 175.9 MB compressed)                 | 5003       | 2.81s     | 301.4 MB (27,500 `zlib.decompress` calls) |
 | After (`330ae7c4`, 119.6 MB compressed), same reconciler | 1          | 0.002s    | 0                                         |
 | After (`330ae7c4`), fresh reconciler (restart shape)     | 4          | 0.07s     | 0                                         |
 
-A steady-state pass before this change re-decodes every visible segment's content in full to compare fingerprints,
-exactly the defect blizzard#513 names. After the digest-based candidacy read (blizzard#513 D1-D4) and the derivation
-change probe (blizzard#524 D5), a repeated pass over an unchanged store costs one statement — the probe's own aggregate
-read — and decodes nothing. A fresh reconciler's first pass, which never consults the in-memory probe (the shape a
-process restart or crash recovery sees), still runs the real candidacy read: four statements, no content decoded, well
-under the 30s interval either way. The hosted postgres reading is owed separately, by an operator, once this change has
-redeployed there.
+A steady-state pass before this change re-decodes every visible segment's content in full to compare fingerprints. After
+the digest-based candidacy read and the derivation change probe, a repeated pass over an unchanged store costs one
+statement — the probe's own aggregate read — and decodes nothing. A fresh reconciler's first pass, which never consults
+the in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
+statements, no content decoded, well under the 60s interval either way. The hosted postgres reading is owed separately,
+by an operator, once this change has redeployed there.
