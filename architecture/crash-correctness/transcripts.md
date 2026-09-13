@@ -70,15 +70,25 @@ transaction, and an unfinalized segment is a legal, resumable state rather than 
 ## The hub's event-derivation sweep
 
 `EventDerivationReconciler` (`blizzard/src/blizzard/hub/domain/analytics/derivation.py`) is not a loop step any sweep
-family reaches, and holds no state between passes, re-deriving its candidates from
-`EventDerivationService.candidate_segment_ids()`, the visible segment set diffed against each segment's derivation
-marker.
+family reaches. It holds one piece of process-local state between passes — the last pass's `DerivationSignature`, a
+cheap aggregate of `transcript_segments` row count, max `id`, max `received_at`, and `chunks` row count — purely to
+decide whether to skip a pass. That state is never persisted and is lost on every process restart, which is harmless: a
+fresh reconciler always runs its first pass in full (this is also what covers an `EXTRACTOR_VERSION` bump, since that
+changes derivation markers, not this signature), and a forced floor runs a full pass at least every ten minutes by the
+injected clock regardless of what the signature reports. The probe is an optimization only; correctness rests on that
+floor, so a same-instant rewrite the signature happens to miss is still picked up within one floor period. Whenever a
+full pass does run, it re-derives its candidates from `EventDerivationService.candidacy()` — one bulk read of the
+visible segment set's stored `content_digest`s against each segment's current-version marker, with no content byte read.
+A segment's digest is written by the same `transcript_segments` INSERT/UPDATE that writes its
+`(turn_range_start, rejected, content)`, so it opens no write window of its own — it is exactly as durable as the row it
+fingerprints.
 
 Its two durable write paths are each one transaction: `TranscriptEventStore.replace_segment_events`, which deletes that
-`(segment_id, extractor_version)` pair's rows, inserts the fresh set, and writes the marker; and `drop_segment` for a
-segment that left the visible set. A crash in either path leaves a segment underived, fully derived, or fully dropped,
-never half, and the next pass re-reaches it: an underived segment is still a candidate, and a dropped-but-unnoticed one
-is recomputed from `derived_segment_ids()` minus `visible_segment_ids()` every sweep.
+`(segment_id, extractor_version)` pair's rows, inserts the fresh set, and writes the marker; and `drop_segments`, one
+set-scoped transaction for every segment that left the visible set, reusing the same candidacy read's
+`visible_segment_ids` rather than evaluating it a second time. A crash in either path leaves a segment underived, fully
+derived, or fully dropped, never half, and the next pass re-reaches it: an underived segment is still a candidate, and a
+dropped-but-unnoticed one is recomputed from `derived_segment_ids()` minus the next pass's own fresh candidacy read.
 
 Per-segment-per-version uniqueness on `(segment_id, extractor_version, kind, turn_path, occurrence)` is a store-level
 unique constraint the engine enforces, not a derived cross-fact invariant the checker must recompute.
