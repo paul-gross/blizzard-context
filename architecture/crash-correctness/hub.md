@@ -50,6 +50,15 @@ shape would be a guaranteed trip, not a rare race. A crash before the folded tra
 closer's own contract is idempotent, so the next pass's re-attempt is a clean no-op); a crash after it, before the event
 write, loses only the informational, append-only event, never the fact or the retirement.
 
+The sweep's per-intent backoff (`close_intent_attempts`, blizzard#524 D7) opens no window of its own. A `failed`
+outcome's attempt row rides `record_work_item_closure`'s own transaction above — the same one that writes the outcome
+fact — so it is exactly as durable as that fact and never separately lost. A `skipped` attempt (no closer bound for the
+ref's source) has no outcome fact and no retirement to fold alongside, so `record_close_attempt_skipped` is its own
+single-statement transaction; a crash before it commits loses nothing durable (the intent was already pending and stays
+pending), and there is nothing after it to lose. Either way the ledger is append-only (`bzh:facts-not-status`): a crash
+mid-sweep leaves some intents' backoff clocks ticked and others not, and the next pass reads each one's own history
+fresh, exactly as an interrupted sweep already did before backoff existed.
+
 Per-ref close-once is `record_work_item_closure`'s own store-level uniqueness constraint on
 `(chunk_id, source, ref, outcome)`, mirroring `record_hub_artifact`'s own idempotent-bool contract; retirement rides the
 same transaction, so it carries no separate once-only claim of its own. `hub:no-double-terminal-closure` and
