@@ -145,6 +145,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`scrollTop` round-trips on the panel, stays `0` on `document.scrollingElement`), and
   `CdkTrapFocus`/`cdkTrapFocusAutoCapture` keep focus inside the panel on open and across eight real `Tab` presses —
   layout and real focus-management claims jsdom cannot make.
+- `kit-confirm-dialog.shell-sweep.spec.ts` covers `KitConfirmDialog`: Cancel and confirm controls share the dialog
+  footer row, and repeated real `Tab` presses keep focus inside the composed confirmation prompt.
 - `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields, mounted directly with
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
   stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and
