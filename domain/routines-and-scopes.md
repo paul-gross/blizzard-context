@@ -46,7 +46,8 @@ declared set ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-de
 mints a scope of its own. Mode settles the baseline, never admission: a `full` run needs no baseline, while a `delta`
 run runs against the routine/scope pair's own recorded revision, and downgrades to `full` — on the record, never refused
 — when the pair has recorded none yet. What turns a run away is [What refuses](#what-refuses). What the pair carries
-between runs is `blizzard-product:/plans/garden/machinery.md`'s own fact; this states only the run's behavior over it.
+between runs is `blizzard-product:/delivered/garden/machinery.md`'s own fact; this states only the run's behavior over
+it.
 
 ## What refuses
 
