@@ -43,6 +43,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `app-nav.shell-sweep.spec.ts` covers the runner's top tab strip (`AppNav`). Its `KitTabStrip`/`KitTab` chrome carries
   no `@container` rule, so the claim is narrower: from 1400px to 320px both static labels render and the strip never
   overflows its own width.
+- `glance-view.shell-sweep.spec.ts` covers the mobile glance board at 390px and 320px: its attention, motion, queue, and
+  completed-work sections remain ordered vertically, and the board has no horizontal overflow or page error.
 - `chunk-page-layout.shell-sweep.spec.ts` covers the hub chunk detail page, reached from the mobile board — the General
   tab, whose `@media (min-width: 720px)` grid puts work item and issues in a shared left column with node history beside
   them, and the Transcripts tab — routed for real via `RouterTestingHarness` under a height-capped stand-in for the app
@@ -105,6 +107,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `runner-view.shell-sweep.spec.ts` covers the runner registry's rate-limit pace bars (`RunnerPanelView`): a row
   carrying two sampled windows, each a stacked utilization/elapsed bar pair, must at the board right rail's ~390px width
   stack both windows' bars within the fleet panel's width, with no overflow and no page error.
+- `fleet-view.shell-sweep.spec.ts` covers the mobile Fleet screen at 390px and 320px: runner cards stack without
+  overlap, and long claim ids and subscription names remain inside both their card and the surrounding panel.
 - `transcript-panel.shell-sweep.spec.ts` covers the runner's `TranscriptPanel` in closed-lease-from-hub states: at 390px
   and 320px a truncated archived read must render the archived badge and truncation banner (`transcript-archived-badge`,
   `transcript-truncated`), and a hub-unreachable read (`hub_unreachable: true`) its degrade banner
