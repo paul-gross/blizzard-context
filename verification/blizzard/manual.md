@@ -282,7 +282,8 @@ The spend fold is the standout: ~23x latency reduction on the all-time window, w
 before reading already issued one query — the win is materializing zero `UsageFact` objects instead of 3,941, per
 blizzard#517's own acceptance criterion). `GraphStore.list_all`'s and `find_live_holder`'s query counts are unchanged by
 design — blizzard#519 states its indexes complement, and do not substitute for, the N+1 fixes tracked separately — their
-latency drop reflects a cheaper per-query scan, not fewer queries.
+latency drop reflects a cheaper per-query scan, not fewer queries. blizzard#515/#518's own bulk-read adoption is what
+later touches those two read paths — see the table below for how each one's count and latency actually move.
 
 Migration duration on the same store (`blizzard hub migrate` / `--down <prior-rev>` / `migrate` again): up to
 `20260913_1300_hub_store_hot_path_indexes` from the prior head, 177.7ms first pass (includes SQLite's index-build cost
@@ -309,6 +310,32 @@ Both deltas are within this measurement's own noise band — sqlite's per-row in
 small non-unique B-tree indexes on tables already carrying one is not observable at this row count. The store's
 single-writer WAL/`busy_timeout` posture means the risk this reading answers is contention duration, not per-row cost,
 and neither moved measurably.
+
+**Bulk-read adoption reading (blizzard#515/#518).** Store: a scratch `build_hub` sqlite store seeded via a throwaway
+script — N=225 chunks: 200 raw-seeded (`tests.support.seed_chunk`) across 20 minted graphs of 6 real nodes each, every
+one holding a `default`-source work ref (`ChunkWorkRefsStore.add_work_refs`) so pointer-liveness fan-out spans every
+graph; 15 promoted `default`-source ingests and 10 hub-issued work items, both landing on the hub's own auto-minted
+default graph — 21 distinct graphs total. No hub-store migration lands between the two commits (`git diff` over
+`src/blizzard/hub/store` is empty apart from the internal adapters below), so one seeded `hub.db` copy served both
+sides: Before at `096b1c49` (the parent of blizzard#515/#518's four phases), After at `284ece8c` (this branch's tip);
+one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
+
+| Read                  | Before queries | Before latency | After queries | After latency |
+| --------------------- | -------------- | -------------- | ------------- | ------------- |
+| `GET /api/chunks`     | 561            | 161.0ms        | 37            | 21.2ms        |
+| `GET /api/graphs`     | 207            | 45.2ms         | 2             | 5.2ms         |
+| `GraphStore.list_all` | 206            | 30.9ms         | 106           | 28.2ms        |
+| `find_live_holder`    | 30             | 4.8ms          | 30            | 6.6ms         |
+| `live_work_refs`      | 6078           | 1431.8ms       | 24            | 12.0ms        |
+
+`GET /api/chunks`, `GET /api/graphs`, and `live_work_refs` see the query-count win these phases were built for — ~15x,
+~104x, and ~253x fewer statements respectively, tracked by roughly matching latency drops (~7.6x, ~8.7x, ~119x).
+`GraphStore.list_all`'s own count nearly halves (206 → 106) from Phase 3's per-node choices batching inside `_reify`,
+but stays proportional to graph count rather than bounded — `list_all`'s own per-graph reification loop is untouched —
+so its latency drop is correspondingly modest (~1.1x). `find_live_holder`'s query count is unchanged (30 → 30) and its
+latency is flat within this measurement's noise: this call's win lives in `live_holders`' cross-pointer batching, which
+a single pointer with one candidate holder — this reading's own isolated `find_live_holder` call — never exercises; the
+fan-out win shows up instead in `live_work_refs` and in `GET /api/chunks`'s own bulk `live_holders` resolution above.
 
 ### `blizzard:manual-sweep-pass-cost`
 
