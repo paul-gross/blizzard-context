@@ -336,3 +336,31 @@ own `closed_at IS NULL` no-op, and `resolve_for_item` runs again. Its own gate i
 `finding_facts` row already carrying the proposal's id), not any one finding's current state, so that retry completes an
 interrupted resolution exactly once and a finding a person reopens afterward is never silently re-resolved by a later,
 unrelated repeat of the same close.
+
+## Runner fact ingest: the high-water mark, persisted per fact
+
+`FactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/facts.py`) walks a runner's pushed batch in seq order and,
+for each fact that applies, writes that fact's own domain row and then, as a second write, advances `runner_high_water`
+to that fact's seq through `set_runner_high_water` — inside the same loop iteration, before moving to the next fact,
+rather than once after the whole batch.
+
+The span between a fact's domain write landing and its own mark-write committing is a real window, and what a crash
+inside it loses is bounded to that one fact: a replay resubmits every seq the runner's own ack never confirmed, the
+replayed seq reads at or below the now-stale mark as not-yet-advanced, and `_apply` runs again against a domain write
+most kinds do not gate on a natural key — `usage.recorded` sums tokens with no dedupe key of its own, for one — so the
+replay double-applies exactly that one fact. Persisting the mark inside the loop rather than after it is what keeps that
+bound at one fact regardless of how many rode in the same batch: a crash after the third fact's mark commits, mid-way
+through a ten-fact push, leaves the ninth and tenth facts simply unapplied, re-submitted and applied cleanly on the next
+push, not double-applied alongside the third.
+
+The loss is tolerable because it is bounded to the one fact already in flight when the crash lands, silent only in the
+sense that no dedicated alarm names it, and recoverable by nothing more than the runner's own ordinary retry — the exact
+shape a lost-ack replay already produces for every other fact kind, at the same one-fact cost. A rejected fact never
+advances the mark past it and is excluded from this window, since `_apply` returning false skips the mark-write for that
+seq entirely and the loop moves on to the next one.
+
+This is a real window whose whole loss is accepted and named, not the no-window ground: each `set_runner_high_water`
+call is its own transaction, so a crash can land between it and either the domain write just before it or the next
+fact's domain write just after — a span that exists and can lose a bounded, non-durable amount, not a span with nothing
+left to separate. The write owes the checker nothing beyond what it already carries: `runner_high_water` is a per-runner
+scalar the store already treats as idempotently overwritable, not a derived cross-fact invariant this change adds.
