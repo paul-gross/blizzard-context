@@ -317,8 +317,9 @@ one holding a `default`-source work ref (`ChunkWorkRefsStore.add_work_refs`) so 
 graph; 15 promoted `default`-source ingests and 10 hub-issued work items, both landing on the hub's own auto-minted
 default graph — 21 distinct graphs total. No hub-store migration lands between the two commits (`git diff` over
 `src/blizzard/hub/store` is empty apart from the internal adapters below), so one seeded `hub.db` copy served both
-sides: Before at `096b1c49` (the parent of blizzard#515/#518's four phases), After at `284ece8c` (this branch's tip);
-one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
+sides: Before at `096b1c49` (the parent of blizzard#515/#518's four phases), After at `284ece8c` (the four phases' tip;
+the later repair commit `8b2c3449` touches no store read, so the measured counts still hold); one warm rep then 5 timed
+reps, mean wall-clock and total SQL query count per call:
 
 | Read                  | Before queries | Before latency | After queries | After latency |
 | --------------------- | -------------- | -------------- | ------------- | ------------- |
