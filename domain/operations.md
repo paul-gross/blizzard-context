@@ -28,6 +28,7 @@ not merely the newest, so a `critical` older than the newest 200 rows still surf
 | ------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `needs-human`                  | `critical` | A standing open escalation                                                                                                                                |
 | `worker-lost`                  | `critical` | Retries are exhausted; the attempt is lost to a human                                                                                                     |
+| `owner-unresolvable`           | `critical` | An existing session's recorded harness owner is unknown or unavailable to this runner; the chunk escalates rather than resuming under a substitute        |
 | `hub-node-unroutable-outcome`  | `critical` | A hub node produced an outcome its graph authors no edge for, so the chunk re-polls it until someone authors one — announced per node visit, not per poll |
 | `attempt-failed`               | `warning`  | An attempt died and a retry will run                                                                                                                      |
 | `command-failed`               | `warning`  | A captured spawn, git-push, or environment-prep command failed, carrying the command and its stderr tail                                                  |

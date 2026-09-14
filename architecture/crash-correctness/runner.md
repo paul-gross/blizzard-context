@@ -43,6 +43,9 @@ runs once per attempt and closes, requeues, or escalates the lease, leaving the 
 need of a durable guard fact. A crash between the abandon closure and its enqueue loses at most one informational,
 append-only event, which the next attempt's failure re-emits.
 
+`Attempt.escalate_owner_unresolvable`'s own `owner-unresolvable` event rides the identical `close` call `Attempt.fail`'s
+branches already do, so it inherits the same atomic guarantee and needs no entry of its own beyond this one.
+
 ## The preamble fingerprint
 
 The runner store's `session_preamble_facts` table (`blizzard/src/blizzard/runner/store/schema.py`) holds, per harness
@@ -181,3 +184,33 @@ ground: the loss is one re-spent elicitation, tolerable because it is bounded by
 the next pass, and its only durable trace is the `elicitation past its staleness bound — failing attempt` warning the
 failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
 one records the generation's only `judge` sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.
+
+## The unresolvable-pool-owner escalation mint
+
+`Spawner._escalate_unresolvable_resume_owner` (`blizzard/src/blizzard/runner/loop/spawn.py`) mints a zero-budget,
+never-spawned lease purely to give `Attempt.escalate_owner_unresolvable`
+(`blizzard/src/blizzard/runner/loop/attempt.py`) an existing lease to close, when an existing recorded session's owner
+cannot be dispatched to at node entry — a named pool's head, or a plain, un-pooled resume's own latest session alike;
+`SessionResolver.resolve_resume` surfaces both shapes through the same `ResumeTarget.owner_unresolvable`, so
+`enter_node` routes both through this one mint. Between that mint's own `record_lease` and the escalation's own closure
+landing, the lease sits exactly as any other post-mint, pre-spawn lease does, so `_CP_AFTER_MINT`
+(`spawn.after-lease-mint.before-spawn`) is reused rather than duplicated: a `kill -9` here leaves the identical "lease
+minted; worker not spawned" shape a `HarnessSpawnError`'d ordinary mint already leaves, which the sweep's generic
+`spawn.` family coverage already exercises structurally. No distinct crash point is warranted — the window is not new,
+only a new caller of one already armed.
+
+A crash in that window is recovered by REAP's ordinary orphan sweep (`Reap.run`,
+`blizzard/src/blizzard/runner/loop/steps.py`): any lease with no recorded pid or session is `Attempt.fail`'d regardless
+of why it was minted. This lease's session is `None` (never spawned), so `_owner_block` finds nothing to short-circuit
+the retry check on; its `retries_max` is pinned to `0`, so `retried (0) < retries_max (0)` is false and the retry branch
+never fires; the ordinary exhausted-retries path runs, closing `ESCALATED` and calling `escalate()` — composing no
+takeover, the same "escalated before any worker session existed" shape any other never-spawned lease reaches. A later
+re-entry of the same node — this same `enter_node` call replayed, or a genuine post-recovery retry — costs nothing
+beyond `open_escalation_for_chunk`'s own read: an already-open escalation short-circuits
+`_escalate_unresolvable_resume_owner` before it mints again, and supersession (a later lease minted for the chunk) is
+the only way that escalation ever closes.
+
+The synchronous, no-crash path closes this same mint through `escalate_owner_unresolvable` directly rather than through
+`fail`, so it takes that method's own detached/paused precedence (mirroring `fail`'s) instead: a chunk the hub no longer
+routes here abandons the mint in place rather than escalating it, and a runner paused between the mint above and this
+close leaves the lease open for REAP's same orphan sweep to resolve, exactly as the crash case above already does.

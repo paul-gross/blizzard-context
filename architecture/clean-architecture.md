@@ -56,11 +56,16 @@ module globals.
 **Scope.** The injected clock (`bzh:injected-clock`) is a member of this rule, not an exception to it.
 
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
-singleton read directly. `tests/test_layering.py` fails the unit tier when `build_stores` or `ClaudeCodeAdapter` is
-imported anywhere outside the seven composition roots named below, or when a `hub/` or `runner/` module — outside its
-own connections seam — acquires `self._engine` directly instead of taking the injected `HubStoreConnections` /
-`RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar), or when `SessionFile` is named anywhere
-under `hub/` other than its own declaring module and its composition root.
+singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
+
+- `build_stores` imported anywhere outside the seven composition roots named below.
+- `ClaudeCodeAdapter` imported anywhere outside `runner/harness/internal/claude_code_registry.py` — the one factory that
+  constructs it, `build_production_harness_registry`, whose built registry the composition roots take instead.
+- A `hub/` or `runner/` module — outside its own connections seam — acquiring `self._engine` directly instead of taking
+  the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
+- `SessionFile` named anywhere under `hub/` other than its own declaring module and its composition root.
+- `runner/transcripts/service.py` importing any package's `internal/` module — its per-owner repository resolver is
+  injected instead.
 
 **Do.** Blizzard has no DI container. Seven modules are its composition roots, each wiring every seam once and handing
 collaborators down in a frozen dataclass like `HubServices`: `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`,

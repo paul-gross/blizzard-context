@@ -5,9 +5,10 @@ Spoke of the human-entry hub, [../humans.md](../humans.md).
 
 ## What raises an escalation
 
-A runner escalates when a worker's retries are exhausted, when it dies without a verdict past the retry cap, or when its
-spend cap is reached. The hub itself escalates when a migrating choice's target graph fails to resolve, or when a node's
-bounce cap is crossed.
+A runner escalates when a worker's retries are exhausted, when it dies without a verdict past the retry cap, when its
+spend cap is reached, or when an existing session's recorded harness owner is unknown or unavailable to it — no other
+runner can resume that exact session, so nothing substitutes a different harness for it. The hub itself escalates when a
+migrating choice's target graph fails to resolve, or when a node's bounce cap is crossed.
 
 ## The commands an escalation carries
 
@@ -37,6 +38,9 @@ guessing.
 - **Environments released while the session survived** — neither command exists, both being composed from a held
   workdir, and with the hold released there is nothing for a takeover to enter, even though a real session still stands
   behind the lease.
+- **The recorded owner is unknown or unavailable** — the runner cannot dispatch to it at all right now, so there is
+  nothing to compose a takeover from; the accompanying `owner-unresolvable` event names the recorded harness id and
+  whether it is unknown or merely unavailable ([../operations.md](../operations.md)).
 - **Bounce cap crossed** — the escalation carries neither command but never releases the runner's hold on the chunk, so
   any existing session carries over unchanged, and that prior state, not the escalation, decides whether takeover is
   possible.
