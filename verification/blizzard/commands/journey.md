@@ -16,8 +16,8 @@ is skipped without `BLIZZARD_JOURNEY=1`.
 
 One shared `build → review → deliver` graph drives the journeys by reading each chunk's work item through the hub
 pass-through (`blizzard runner work-items`) and branching on a directive in the issue body. Five issues are filed across
-both fixture repos and ingested by id; two are grouped into one chunk and the riskiest reordered to the top via the
-operator's own board controls. The journeys:
+both fixture repos and ingested by id; direct hub API calls group two into one chunk and place the riskiest first. The
+journeys:
 
 - a clean multi-repo land with grouping and serial delivery (criteria 11/13);
 - a review-fail loop carrying its findings asset and `prompt_addendum` back into build (criterion 9);

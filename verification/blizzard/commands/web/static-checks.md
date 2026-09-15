@@ -57,3 +57,9 @@ classes (`KitPanel`'s `.panel`/`.p-hdr`/`.p-body`/`.lbl`, `KitAsyncState`'s `.st
 `<dl class="kv">` grid. A site that should not convert is named with its reason in `KIT_FLOOR_EXEMPT_SITES`, the
 `REAL_TIMER_EXEMPT_FILES` idiom. Its own fixture self-test, `assertKitFloorDetectorWorks`, runs alongside
 `assertRealTimerDetectorWorks` before either sweep does.
+
+The script also censuses every TypeScript, template, and stylesheet below `web/projects` for the retired board Top/group
+contract: its type, inputs, handlers, grouping mutation facade, and test handles. Generated grouping-client symbols are
+deliberately outside that census: API and CLI grouping remain supported. `assertBoardControlDetectorWorks` first
+exercises each retired shape and an allowed grouping-client shape, so a clean result cannot silently be a detector that
+stopped classifying (`bzh:case-pins-its-own-name`).

@@ -197,6 +197,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`bzh:narrow-viewport-tier-rule`), the marking must render directly below the status row without moving the status's
   own position and without its own right edge overflowing the card — a real CSS layout claim jsdom cannot make, since
   `ChunkBlocked` mounts outside the card's own open button (a nested interactive element inside it is invalid HTML).
+- `board-column.shell-sweep.spec.ts` covers `BoardColumn`'s decorative reorder grip: READY and BACKLOG each render a
+  token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
+  non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
+  target; the grip introduces no drag handle.
 - `gardening-page-grids.shell-sweep.spec.ts` covers the three gardening sub-tabs that arrived with the five-way tab
   split and share one claim rather than each carrying its own file — Scopes, Runs, and Findings — each scoping the same
   desktop master/detail split and mobile route-driven drill-down. Table-driven over the three pages: at 1280px the list

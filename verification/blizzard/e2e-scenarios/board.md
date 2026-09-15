@@ -26,14 +26,14 @@ The browser half of the e2e tier: a real Chromium driven by Playwright over the 
 
 - `test_board_browser_live_group_reorder_answer_and_pause` — loads the board once, never reloading, proving the status
   chip flips live over SSE as facts land and the detail drawer renders node history plus the artifact store. The same
-  function proves two ready chunks are grouped from their cards in the READY lane — the ready queue is a board column,
-  so a promoted chunk crosses from BACKLOG into READY rather than leaving the board — and the queue is reordered by
-  dragging the grouped survivor's card to the lane's top with real pointer events (the `@angular/cdk` drop list the lane
-  arms; the drop-to-anchor arithmetic is fenced at `web:unit-test` with a synthesized `CdkDragDrop`), the next FILL
-  claiming the grouped plural-pointer survivor first, both honored. It also proves a parked chunk's question is answered
-  from the board and the chunk resumes to `done`. It proves a running chunk is paused directly from its chunk detail
-  dock — the claim-keeping, one-chunk lever, distinct from the runner-level brake: the chip flips to `paused` live with
-  no reload (the one status a pause-parked chunk's chip shows —
+  function groups two ready chunks through `POST /api/chunks/{id}/group`, then observes the survivor live in the READY
+  lane after the merged card vanishes. It asserts decorative grips in the ranked BACKLOG and READY lanes and no retired
+  board controls, then reorders the grouped survivor's whole card to the READY lane's top with real pointer events (the
+  `@angular/cdk` drop list the lane arms; the drop-to-anchor arithmetic is fenced at `web:unit-test` with a synthesized
+  `CdkDragDrop`), the next FILL claiming the grouped plural-pointer survivor first, both honored. It also proves a
+  parked chunk's question is answered from the board and the chunk resumes to `done`. It proves a running chunk is
+  paused directly from its chunk detail dock — the claim-keeping, one-chunk lever, distinct from the runner-level brake:
+  the chip flips to `paused` live with no reload (the one status a pause-parked chunk's chip shows —
   [domain/work/statuses.md](../../../domain/work/statuses.md) ranks `paused` below the human-gated statuses, so the
   proof needs a chunk caught genuinely running, not already parked on a question), the chunk relocates to the WAIT/HUMAN
   column, the claim survives the runner killing the worker and parking the lease, the dock names who paused it, and
@@ -84,9 +84,9 @@ The operational event log, holding both in-process and browser-driven assertions
   horizontal scroll.
 - `test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — proves the board's rail — the Activity feed, a
   separate, pure-recency feed distinct from the Events tab — survives a reload: it seeds a mixed feed across fact
-  families (a chunk transition, a question, a decision, a runner pause), confirms the rail renders a row for each over
-  live SSE, reloads, and confirms the same rows remain — the on-mount `GET /api/activity` backfill re-seeding the ring
-  from durable history — with no duplicate or missing row at the seam between backfill and the resumed live tee.
+  families before the first load, confirms the initial activity read renders every durable row, restarts the hub with a
+  fresh replay ring over the same store, reloads, and confirms the same rows remain — the on-mount `GET /api/activity`
+  backfill restoring durable history — with no duplicate or missing row.
 
 ## test_transcript_tab_browser_e2e
 
@@ -128,7 +128,8 @@ cleanly without `BLIZZARD_E2E=1` or without Chromium, but an unbuilt bundle fail
   only prove Chromium's measurers agree with each other); it sweeps every graph blizzard ships, discovered from the tree
   so a new one is covered the day it lands, and a shipped graph rendering the diagram-unavailable fallback is admitted
   only when it routes an edge out of the graph — the one shape `layoutGraph` documents refusing, today the triage router
-  — and is a layout regression otherwise.
+  — and is a layout regression otherwise. Graphs that author targeted resume sessions must render that metadata, and at
+  least one shipped graph must keep that branch of the proof live.
 
 ## test_gardening_run_dialog_browser_e2e
 
