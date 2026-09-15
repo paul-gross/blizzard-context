@@ -58,12 +58,17 @@ module globals.
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
 singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 
-- `build_stores` imported anywhere outside the seven composition roots named below.
+- `blizzard.runner.composition` imported, in any form, anywhere outside the seven composition roots named below —
+  fail-closed, with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
 - `ClaudeCodeAdapter` imported anywhere outside `runner/harness/internal/claude_code_registry.py` — the one factory that
   constructs it, `build_production_harness_registry`, whose built registry the composition roots take instead.
 - A `hub/` or `runner/` module — outside its own connections seam — acquiring `self._engine` directly instead of taking
   the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
-- `SessionFile` named anywhere under `hub/` other than its own declaring module and its composition root.
+- `SessionFile` named anywhere under `hub/` other than `hub/cli/sessions/internal/session_file.py` (its declaring
+  module) and its composition root.
+- `IWriteSessionStore` named anywhere under `hub/cli/` other than `hub/cli/sessions/` (the Protocol's own package) and
+  its composition root — `login`/`logout` take the `SessionService` application service instead, never the raw seam
+  (`bzh:controller-read-only`).
 - `runner/transcripts/service.py` importing any package's `internal/` module — its per-owner repository resolver is
   injected instead.
 
@@ -78,7 +83,10 @@ through, so wiring its concrete collaborators once, inline, at the top of the co
 root. The same reasoning extends to a helper a command's own root calls into rather than repeating:
 `blizzard/src/blizzard/runner/cli/daemon.py`'s `uds_client` builds the local UDS `httpx.Client` both
 `RunnerDaemon.reach` and `runner/cli/transcript.py`'s `_daemon_holding` need, shared rather than duplicated, with
-neither call site substituting a fake for it in a test.
+neither call site substituting a fake for it in a test. `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_stores` is
+the same shape: it builds the runner's read-only store bundle and disposes the engine on exit, so
+`runner/cli/prompt.py`'s `_stored_override` calls into it instead of repeating the construction outside a composition
+root.
 
 **Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
 
