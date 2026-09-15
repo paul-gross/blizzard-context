@@ -10,11 +10,12 @@ The service spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md). R
 
 ### blizzard:service-test
 
-The tier command is `BLIZZARD_SERVICE=1 uv run pytest tests/service/` (`mise run service-test`) — a running hub or
-runner daemon's HTTP API exercised from outside the process against a mock counterpart, seams bound to the mock fleet.
-It is distinct from `blizzard:e2e`, which drives the loop in-process one tick at a time and drives the served board
-through a real browser. It needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet console
-scripts, the stub IdP, and `mock-claude-code`) plus a winter source, and skips cleanly without `BLIZZARD_SERVICE=1`.
+The tier command is `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`) — a running hub
+or runner daemon's HTTP API exercised from outside the process against a mock counterpart, seams bound to the mock
+fleet. It is distinct from `blizzard:e2e`, which drives the loop in-process one tick at a time and drives the served
+board through a real browser. It needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet
+console scripts, the stub IdP, and `mock-claude-code`) plus a winter source, and skips cleanly without
+`BLIZZARD_SERVICE=1`.
 
 **Hub against mock runner plus mock forge.** A claim then a completion advances the chunk over the wire
 (`test_claim_and_completion_advance_the_chunk_over_the_wire`), stale epochs are rejected, and route-token authz runs
