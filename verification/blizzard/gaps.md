@@ -121,9 +121,11 @@ test runs against — that `list_for`'s routine+scope read and `count_by_class`'
 revision's own cases: the three `(chunk_id, epoch)` composites by exact name, the artifacts/graph-choices/transcript-
 segments/chunk-work-refs/close-intents hot-path reads, and each of `activity_facts_since`'s eighteen per-source ordered
 reads (blizzard#519). `tests/test_chunk_usage_statements.py` and its `EXPLAIN QUERY PLAN` case over the spend `_stmt`
-builder assert `ix_usage_facts_recorded_at` the same way (blizzard#517). No tier runs any of these assertions against
-postgres, so whether the portable index declarations actually earn an index scan under postgres's own planner stays
-unproven.
+builder assert `ix_usage_facts_recorded_at` the same way (blizzard#517). `tests/test_store_read_index_gate.py`'s scan
+gate and `tests/test_runner_store_indexes.py`'s named-index pins (blizzard#525) assert the same `EXPLAIN QUERY PLAN`
+shape across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend.
+No tier runs any of these assertions against postgres, so whether the portable index declarations actually earn an index
+scan under postgres's own planner stays unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
