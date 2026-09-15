@@ -10,8 +10,8 @@ The crash-sweep spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md
 
 ### blizzard:crash-sweep
 
-The tier command is `BLIZZARD_CRASH_SWEEP=1 uv run pytest -m crash_sweep tests/crash/` (`mise run crash-sweep`) — the
-FULL kill-9 sweep; the crash-correctness contract it enforces is owned by
+The tier command is `BLIZZARD_CRASH_SWEEP=1 uv run pytest -n auto -m crash_sweep tests/crash/` (`mise run crash-sweep`)
+— the FULL kill-9 sweep; the crash-correctness contract it enforces is owned by
 [`../../../../architecture/crash-correctness.md`](../../../../architecture/crash-correctness.md). The sweep enumerates
 the crash-point registry (`tests.crash_points.discover_crash_points`) and, per point, runs the hub and runner as real
 subprocesses over the mock fleet, arms the point so its owning daemon `SIGKILL`s itself there, then asserts the
@@ -20,14 +20,14 @@ after an unarmed restart — startup is REAP. It needs the sibling `blizzard-moc
 skipped without `BLIZZARD_CRASH_SWEEP=1`.
 
 In CI the `pr` and `push` workflows run the bounded CI profile —
-`BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -m crash_sweep tests/crash/` (`mise run crash-sweep-ci`)
-— one representative point per boundary family plus the whole-process cases and the recovery-critical windows, six and a
-half to eight minutes of wall time on a GitHub runner, under the ceiling the sweep step's own `timeout-minutes`
-declares. Bounded, but not a fast check. The bounded subset is intersected with the live registry and asserts each named
-point still exists (`bzh:crash-point-registry`), so a rename fails loudly; the FULL sweep stays the documented local
-command above and runs in the tag `release` workflow. Both CI workflows run it as a real gate over a multi-repo checkout
-— `blizzard`, `blizzard-mock`, and the public `blizzard-workspace` (the winter source) as siblings,
-`BLIZZARD_MOCK_WINTER_SOURCE` pointed at the last.
+`BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -n auto -m crash_sweep tests/crash/`
+(`mise run crash-sweep-ci`) — one representative point per boundary family plus the whole-process cases and the
+recovery-critical windows, six and a half to eight minutes of wall time on a GitHub runner, under the ceiling the sweep
+step's own `timeout-minutes` declares. Bounded, but not a fast check. The bounded subset is intersected with the live
+registry and asserts each named point still exists (`bzh:crash-point-registry`), so a rename fails loudly; the FULL
+sweep stays the documented local command above and runs in the tag `release` workflow. Both CI workflows run it as a
+real gate over a multi-repo checkout — `blizzard`, `blizzard-mock`, and the public `blizzard-workspace` (the winter
+source) as siblings, `BLIZZARD_MOCK_WINTER_SOURCE` pointed at the last.
 
 The registry's boundary families are `resume.`, `abandon.`, `pause.`, `hubnode.` (the generic hub command node's
 per-step and pending-poll windows), `migrate.`, `attach.`, `declare-commit.`, `nudge.`, `checks.`, `preempt.`, and
