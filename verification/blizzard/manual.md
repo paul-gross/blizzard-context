@@ -338,6 +338,21 @@ latency is flat within this measurement's noise: this call's win lives in `live_
 a single pointer with one candidate holder — this reading's own isolated `find_live_holder` call — never exercises; the
 fan-out win shows up instead in `live_work_refs` and in `GET /api/chunks`'s own bulk `live_holders` resolution above.
 
+**Derive-once read-sweep reading (blizzard#516/#527).** Store: a scratch `build_hub` sqlite store seeded via a throwaway
+script — N=173 chunks, each ingested and promoted to ready (`tests.support.ingest`). One warm rep then 5 timed reps,
+mean wall-clock and total SQL query count per call, both sides on the same seeded store:
+
+| Read               | Before queries (`3c96c0d4`) | Before latency | After queries (`8fdb7577`) | After latency |
+| ------------------ | --------------------------- | -------------- | -------------------------- | ------------- |
+| `GET /api/queue`   | 56                          | 10.5ms         | 28                         | 7.8ms         |
+| `GET /api/backlog` | 56                          | 9.2ms          | 28                         | 6.9ms         |
+
+A 2x query-count reduction on both routes, tracked by a roughly proportional latency drop: dropping the per-request
+`load_all_facts` bulk read once `ChunkRecordStore`/`QueueService` take an already-derived `statuses` map instead of
+deriving it from facts internally (Phase 1) removes that read's own statement cost entirely, not just its per-chunk
+shape — the count was already flat in fleet size before this change, per the queue-peek reading above. The hosted
+reading is owed separately, by an operator, once this change has redeployed there.
+
 ### `blizzard:manual-sweep-pass-cost`
 
 **Surface.** One `EventDerivationReconciler.sweep()` pass's wall time, statement count, and bytes `zlib.decompress`
@@ -382,18 +397,3 @@ statement — the probe's own aggregate read — and decodes nothing. A fresh re
 the in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
 statements, no content decoded, well under the 60s interval either way. The hosted postgres reading is owed separately,
 by an operator, once this change has redeployed there.
-
-**Derive-once read-sweep reading (blizzard#516/#527).** Store: a scratch `build_hub` sqlite store seeded via a throwaway
-script — N=173 chunks, each ingested and promoted to ready (`tests.support.ingest`). One warm rep then 5 timed reps,
-mean wall-clock and total SQL query count per call, both sides on the same seeded store:
-
-| Read               | Before queries (`3c96c0d4`) | Before latency | After queries (`8fdb7577`) | After latency |
-| ------------------ | --------------------------- | -------------- | -------------------------- | ------------- |
-| `GET /api/queue`   | 56                          | 10.5ms         | 28                         | 7.8ms         |
-| `GET /api/backlog` | 56                          | 9.2ms          | 28                         | 6.9ms         |
-
-A 2x query-count reduction on both routes, tracked by a roughly proportional latency drop: dropping the per-request
-`load_all_facts` bulk read once `ChunkRecordStore`/`QueueService` take an already-derived `statuses` map instead of
-deriving it from facts internally (Phase 1) removes that read's own statement cost entirely, not just its per-chunk
-shape — the count was already flat in fleet size before this change, per blizzard#515/#518's own queue-peek reading
-above. The hosted reading is owed separately, by an operator, once this change has redeployed there.

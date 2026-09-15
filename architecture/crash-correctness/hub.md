@@ -8,15 +8,17 @@ transcript lane is recorded in [`./transcripts.md`](./transcripts.md) instead.
 
 ## Promote, then tail-stamp
 
-`PromoteService.promote` (`blizzard/src/blizzard/hub/domain/promote.py`) records the `chunk_promoted.promoted_at` fact
-through `record_promote` and then, as a second write, an explicit `queue_positions` tail-position fact through
-`record_queue_position`, stamping the newly-ready chunk past every currently-ready chunk.
+`PromoteService.promote` (`blizzard/src/blizzard/hub/domain/promote.py`) calls
+`ChunkQueueStore.record_promote_with_tail_position` (`blizzard/src/blizzard/hub/store/internal/chunk_queue_store.py`),
+which inserts the `chunk_promoted.promoted_at` fact and an explicit `queue_positions` tail-position fact — stamping the
+newly-ready chunk past every currently-ready chunk — in one write transaction (`insert_promote_rows`,
+`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). No window: a crash ahead of that transaction's commit loses
+both facts together, and a retry re-derives the same tail position from a fresh read.
 
-A crash between those two writes leaves the chunk promoted with no explicit queue position, which is exactly the gap
-`QueueService._effective_position`'s (`blizzard/src/blizzard/hub/domain/queue.py`) fallback covers: an un-positioned
-chunk sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small
-explicit-position float assigned to another chunk, so it still reaches the tail of the ready queue and the window
-degrades rather than breaks.
+`QueueService._effective_position`'s (`blizzard/src/blizzard/hub/domain/queue.py`) fallback — an un-positioned chunk
+sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small explicit-position
+float assigned to another chunk — guards a chunk promoted with no queue position by some other route, not a crash inside
+this one transaction.
 
 ## The close-intent drain sweep
 
