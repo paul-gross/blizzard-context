@@ -16,8 +16,8 @@ concerns where present, a human-legible message, and an open detail payload. Eac
 reads newest-and-most-severe first — critical before warning before info, newest within a band — and is filterable by
 severity, runner, or chunk.
 
-The severity vocabulary is closed: the log ranks by it, so a value outside the three sorts below every row and no filter
-reaches it — a fourth severity buries its own event.
+Both vocabularies are closed: the hub refuses an `event.recorded` fact whose kind is not in §Event kinds, or whose
+severity is not the one that kind declares.
 
 The log is bounded, at most 200 rows per read, the cap applied *after* severity ranking — it keeps the most severe rows,
 not merely the newest, so a `critical` older than the newest 200 rows still surfaces.
