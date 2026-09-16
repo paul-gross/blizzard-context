@@ -240,3 +240,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   class name still shrinks-and-ellipsizes on `.fl-class`'s own line, alongside `.fl-ref` (same `top`), rather than
   wrapping the ref onto a second line once `.fl-routine`/`.fl-scope` render too (review:F2) — gardening sits in the
   hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `kit-master-detail.shell-sweep.spec.ts` covers the `KitMasterDetail` kit member's own collapse rule, lifted out of the
+  hub and runner node-history tabs: at 1024px the detail pane's `left` must sit at or past the list pane's `right`, with
+  the list pane's resolved width matching `--master-list-col`; at 390px and 320px the two panes must genuinely stack — a
+  common `left` with distinct `top`s — with no horizontal overflow. Proven able to fail by forcing the base `:host`
+  `flex-direction` to `row`.
