@@ -67,7 +67,8 @@ stands.
 
 ## Operator-editable properties
 
-The graph pin, the model/effort defaults, and the intended migration are plain mutable properties, not fact logs.
+The graph pin, the model/effort/harness defaults, and the intended migration are plain mutable properties, not fact
+logs.
 
 ### Graph pin
 
@@ -77,11 +78,12 @@ window. Once the chunk has moved, the pin is immutable and changes only when a m
 ([./migration.md](./migration.md)) applies. A chunk detached back to `ready` mid-graph is past that window: it stands on
 a node another graph need not contain, so only a migration can move it.
 
-### Model and effort defaults
+### Model, effort, and harness defaults
 
-The default model preference and default effort are chunk properties beside the graph pin, minted empty — no preference
-expressed, so the runner's own default applies. They share the session declaration's vocabulary: a prioritized
-preference list of capability tiers or harness-native names, plus one effort value; a graph's declared session
+The default model preference, default effort, and default harness set are chunk properties beside the graph pin, minted
+empty — no preference expressed, so the runner's own default applies. They share the session declaration's vocabulary: a
+prioritized preference list of capability tiers or harness-native names, one effort value, and an ordered acceptable
+harness set ([../graphs/declared-sessions.md](../graphs/declared-sessions.md) §Harness set); a graph's declared session
 ([../graphs/declared-sessions.md](../graphs/declared-sessions.md)) outranks the chunk defaults field by field. The
 defaults are editable while the chunk is unclaimed and immutable thereafter — a wider window than the pin's.
 

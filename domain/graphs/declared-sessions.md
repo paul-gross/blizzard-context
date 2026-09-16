@@ -2,10 +2,10 @@
 
 A graph may declare named sessions — a top-level sibling of the node set, not a node facet (graph definition:
 [../graphs.md](../graphs.md)). A declaration names one shared lineage of agent context and its policy; nodes reference
-it via `fresh:<session>` and `resume:<session>`. All four declaration fields are optional: model preference, effort,
-compaction window, rotation bounds — and any other key rejects the mint, the error naming the unrecognized keys, the
-keys this hub recognizes, and its version, so a misspelled field fails loudly rather than being ignored. Definitional —
-a taxonomy of those fields and their resolution (`canon:rule-shape` §File kinds). Part of the
+it via `fresh:<session>` and `resume:<session>`. All five declaration fields are optional: model preference, effort,
+compaction window, rotation bounds, harness set — and any other key rejects the mint, the error naming the unrecognized
+keys, the keys this hub recognizes, and its version, so a misspelled field fails loudly rather than being ignored.
+Definitional — a taxonomy of those fields and their resolution (`canon:rule-shape` §File kinds). Part of the
 [domain model](../index.md).
 
 ## Resolution and pools
@@ -56,3 +56,15 @@ Rotation bounds make a lineage finite: a session continues only while every meas
 threshold; past one, the next member starts a new session in the same pool. Bounds cover context size, transcript size,
 and harness invocations — the last counting spawns, resumes, and judgements, so a node-step spends two or three. An
 unmeasurable bound is not a breach; a missing measurement leaves the session standing.
+
+## Harness set
+
+The harness set is an ordered, unique, nonempty list when authored — unlike model, whose empty list is itself a valid
+no-preference declaration, an authored empty harness list is rejected outright; omit the key to accept every harness.
+Resolution is harness-primary, model-secondary: a fresh mint walks the set in declared order, and only for whichever
+harness can serve does its own model preference resolve, never the reverse — a later harness's earlier-preferred model
+still loses to an earlier harness's later one. A member the fleet doesn't hold is still valid authored policy: which
+harnesses a runner actually binds is a runner-time fact, never a mint-validation concern, so authoring an id no runner
+yet binds mints cleanly. A single-harness set resolves model exactly as the model preference section above describes,
+native names included; a multi-harness set instead requires strict per-harness resolution — a harness resolving none of
+the model preference is skipped rather than falling back within it.
