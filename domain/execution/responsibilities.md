@@ -14,9 +14,9 @@ A runner's registry entry derives everything observable, never stored flags: liv
 brake from the newest fact in its own stream — rule `bzh:facts-not-status`, owned by
 [../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md).
 
-The entry also reports the usage of every provider subscription the runner declares — its rate-limit utilization in each
-of the provider's reset windows — under that subscription's own identity: a runner-unique slug, an operator-facing name,
-and its newest sample with the time it was taken. Every member passes its own staleness gate on its own sample, so a
-subscription never sampled, or whose newest sample is stale, is simply absent from the collection — never a fabricated
-zero, and never a reason to omit any other. The collection is advisory: neither granting a chunk nor anything else the
-hub decides reads it.
+The entry also reports the usage of every provider subscription the runner declares — its rate-limit utilization across
+the provider's reset windows. Each subscription is reported under its own identity — a runner-unique slug and an
+operator-facing name — carrying only its newest sample, with the time that sample was taken. A subscription appears only
+while that sample passes its own staleness gate, so one never sampled, or sampled only too long ago, is simply absent
+from the collection — never as a fabricated zero, and never a reason to omit any other. The collection is advisory:
+neither granting a chunk nor anything else the hub decides reads it.
