@@ -13,3 +13,9 @@ owned by [../artifacts/never-code.md](../artifacts/never-code.md).
 A runner's registry entry derives everything observable, never stored flags: liveness from its most recent contact, each
 brake from the newest fact in its own stream — rule `bzh:facts-not-status`, owned by
 [../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md).
+
+The entry also reports usage for each subscription the runner declares — zero or more, each under its own identity: a
+runner-unique slug, an operator-facing name, and its newest sample with the time it was taken. Every member passes its
+own staleness gate on its own sample, so a subscription never sampled, or whose newest sample is stale, is simply absent
+from the collection — never a fabricated zero, and never a reason to omit any other. The collection is advisory: neither
+granting a chunk nor anything else the hub decides reads it.

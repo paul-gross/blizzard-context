@@ -37,11 +37,14 @@ remaining the durable referent.
 ## The blocked marking
 
 A chunk with a standing dependency edge whose prerequisite has not reached `done` carries a **blocked marking** — a
-nullable field naming that one prerequisite, read beside `status` on the chunk read and on the queue and backlog
+nullable field naming one unmet prerequisite, read beside `status` on the chunk read and on the queue and backlog
 listings. It is not a status and never gates one: a blocked chunk keeps the status it derives, the rank it holds, and
 the list it lives in, and stays exactly as groupable, deletable, and editable as it was a moment earlier. The marking
 names its immediate prerequisite only — where that prerequisite is itself blocked, the chain is not walked, so an
-operator following the root follows the naming one hop at a time.
+operator following the root follows the naming one hop at a time. Beside the name, the marking carries a count of how
+many prerequisites are unmet in total — never below one, since the marking is absent when nothing is unmet — so a
+surface too narrow to list them can say how many rather than naming one and silently dropping the rest. Where several
+are unmet at once, the one named is the earliest-declared of the unmet set.
 
 Only a dependent read at `not_ready` or `ready` — `PRE_CLAIM_STATUSES` — derives a marking. The marking answers why a
 chunk cannot yet be claimed, and that question stops applying the moment a chunk is claimed, running, delivering,
