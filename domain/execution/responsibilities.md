@@ -1,6 +1,7 @@
 # Responsibilities
 
-Which party owns each piece of execution. Spoke of the [execution hub](../execution.md).
+Which party owns each piece of execution, and what a runner's registry entry reports. Spoke of the
+[execution hub](../execution.md).
 
 The hub orchestrates the fleet's work: it owns chunks, graphs, artifacts, and the registry, and it grants work. A runner
 executes work on its own machine, bound to one prepared workspace: it claims chunks, acquires environments, drives
@@ -18,7 +19,7 @@ The entry also reports subscription usage as the runner samples it: one member f
 has sampled, reporting that subscription's rate-limit utilization across the provider's reset windows. Each member is
 reported under its own identity — a runner-unique slug and an operator-facing name — carrying only its newest sample,
 with the time that sample was taken. A member stands only while that sample passes the staleness gate, so one whose
-newest sample has aged out falls away, while a subscription never sampled was never there at all — never a fabricated
+newest sample has aged out falls away. A subscription the entry does not report is simply absent — never a fabricated
 zero, and never a reason to omit any other. Sampling is the whole of what the hub knows here: it holds no list of what
-the runner declares, so it cannot tell a subscription that has gone silent from one that was never declared. The
-collection is advisory: neither granting a chunk nor anything else the hub decides reads it.
+the runner declares, so a subscription declared but never sampled and one never declared at all are the same absence to
+it. The collection is advisory: neither granting a chunk nor anything else the hub decides reads it.
