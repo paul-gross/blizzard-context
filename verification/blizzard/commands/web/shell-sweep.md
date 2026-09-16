@@ -245,3 +245,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   the list pane's resolved width matching `--master-list-col`; at 390px and 320px the two panes must genuinely stack — a
   common `left` with distinct `top`s — with no horizontal overflow. Proven able to fail by forcing the base `:host`
   `flex-direction` to `row`.
+- `graph-session-table.shell-sweep.spec.ts` covers `GraphSessionTable`'s columns, mounted alone at 800px — the widest
+  `graph-detail.shell-sweep.spec.ts`'s own page ever frames it at, and a page the hub's mobile bottom tab bar cannot
+  reach, so the narrow-viewport tier rule does not bind here. Every header and data cell of a session row with a
+  populated harness set must sit side by side with no column overlap and no overflow of the table's own right edge, and
+  the harness list must render inside its own column rather than being swallowed by a neighbor — a real layout claim
+  jsdom cannot make. Proven able to fail by widening the table's cell padding far enough that the row no longer fits
+  inside the table's own full width.

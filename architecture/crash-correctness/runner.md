@@ -214,3 +214,15 @@ The synchronous, no-crash path closes this same mint through `escalate_owner_unr
 `fail`, so it takes that method's own detached/paused precedence (mirroring `fail`'s) instead: a chunk the hub no longer
 routes here abandons the mint in place rather than escalating it, and a runner paused between the mint above and this
 close leaves the lease open for REAP's same orphan sweep to resolve, exactly as the crash case above already does.
+
+D12 (blizzard#432) gives this same pattern a second entry point: `Spawner.escalate_no_acceptable_harness` /
+`Attempt.escalate_no_acceptable_harness`, reached when a fresh mint's `HarnessSelector` exhausts the node's acceptable
+harness set with nothing servable, and from `Attempt.requeue`'s own membership guard — a retry whose lease's owner has
+fallen out of a since-edited acceptable set, never a candidate to resume under. Its `_mint` call passes
+`harness_id=None`, the same escalation-only mode `_escalate_unresolvable_resume_owner`'s call never needs: no owner is
+chosen, so no stamps resolve (model, effort, and compaction window all land `None`) and no mint owner is recorded,
+leaving `leases.harness_id` at its already-nullable unset value. It shares this section's whole crash-correctness
+account otherwise: the same `_CP_AFTER_MINT` window, the same REAP recovery through the ordinary exhausted-retries path
+(a zero-budget lease with no session composes no takeover, same as any other never-spawned lease), and the same
+`open_escalation_for_chunk` guard ahead of the mint, so a chunk already escalated this way cannot loop a second mint on
+top of the first.

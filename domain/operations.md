@@ -24,20 +24,21 @@ not merely the newest, so a `critical` older than the newest 200 rows still surf
 
 ### Event kinds
 
-| Kind                           | Severity   | Meaning                                                                                                                                                   |
-| ------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `needs-human`                  | `critical` | A standing open escalation                                                                                                                                |
-| `worker-lost`                  | `critical` | Retries are exhausted; the attempt is lost to a human                                                                                                     |
-| `owner-unresolvable`           | `critical` | An existing session's recorded harness owner is unknown or unavailable to this runner; the chunk escalates rather than resuming under a substitute        |
-| `hub-node-unroutable-outcome`  | `critical` | A hub node produced an outcome its graph authors no edge for, so the chunk re-polls it until someone authors one — announced per node visit, not per poll |
-| `attempt-failed`               | `warning`  | An attempt died and a retry will run                                                                                                                      |
-| `command-failed`               | `warning`  | A captured spawn, git-push, or environment-prep command failed, carrying the command and its stderr tail                                                  |
-| `work-item-close-failed`       | `warning`  | A closure attempt failed; a later sweep retries it                                                                                                        |
-| `transcript-truncated`         | `warning`  | A transcript segment stopped shipping content — recorded on the segment itself as well, never silent                                                      |
-| `transcript-sidechain-dropped` | `warning`  | A transcript segment observed unlinked sidechain turns it cannot attribute, latched so it warns once per (segment, agent)                                 |
-| `worker-context-warned`        | `warning`  | A worker session's context tokens crossed the configured warn line — reported once, on the first crossing                                                 |
-| `attempt-abandoned`            | `info`     | Given up because the chunk moved on (reassigned or detached), not because the work failed                                                                 |
-| `work-item-closed`             | `info`     | A landed chunk's work item was closed at its own source ([./work/chunk.md](./work/chunk.md))                                                              |
+| Kind                           | Severity   | Meaning                                                                                                                                                         |
+| ------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `needs-human`                  | `critical` | A standing open escalation                                                                                                                                      |
+| `worker-lost`                  | `critical` | Retries are exhausted; the attempt is lost to a human                                                                                                           |
+| `owner-unresolvable`           | `critical` | An existing session's recorded harness owner is unknown or unavailable to this runner; the chunk escalates rather than resuming under a substitute              |
+| `no-acceptable-harness`        | `critical` | A fresh mint's every acceptable harness is unknown, unavailable, or resolves no authored tier; the chunk escalates rather than minting under the runner default |
+| `hub-node-unroutable-outcome`  | `critical` | A hub node produced an outcome its graph authors no edge for, so the chunk re-polls it until someone authors one — announced per node visit, not per poll       |
+| `attempt-failed`               | `warning`  | An attempt died and a retry will run                                                                                                                            |
+| `command-failed`               | `warning`  | A captured spawn, git-push, or environment-prep command failed, carrying the command and its stderr tail                                                        |
+| `work-item-close-failed`       | `warning`  | A closure attempt failed; a later sweep retries it                                                                                                              |
+| `transcript-truncated`         | `warning`  | A transcript segment stopped shipping content — recorded on the segment itself as well, never silent                                                            |
+| `transcript-sidechain-dropped` | `warning`  | A transcript segment observed unlinked sidechain turns it cannot attribute, latched so it warns once per (segment, agent)                                       |
+| `worker-context-warned`        | `warning`  | A worker session's context tokens crossed the configured warn line — reported once, on the first crossing                                                       |
+| `attempt-abandoned`            | `info`     | Given up because the chunk moved on (reassigned or detached), not because the work failed                                                                       |
+| `work-item-closed`             | `info`     | A landed chunk's work item was closed at its own source ([./work/chunk.md](./work/chunk.md))                                                                    |
 
 An escalation ([./humans/escalation.md](./humans/escalation.md)) remains its own fact under its own supersession rule;
 the log does not re-model it — every currently-open escalation projects as a `needs-human` critical event, one row in

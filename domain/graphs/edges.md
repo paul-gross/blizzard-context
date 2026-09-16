@@ -23,7 +23,9 @@ Taking a `graph:<name>` choice re-pins the chunk to the named graph, landing at 
 target's entry ([../work/migration.md](../work/migration.md) §Landing). The target resolves by name only when taken
 (`bzh:ids-exact-names-correlate`, [./ids-and-names.md](./ids-and-names.md)), so targeting a graph not yet minted is a
 mint-time warning, not an error. A migration choice may carry `model:` — a single model name re-pinned as the chunk's
-default model preference, what undeclared surfaces inherit.
+default model preference, what undeclared surfaces inherit. The override is scoped to model alone: a migration choice
+carries no harness override, so a migration never re-pins the chunk's default harness set — only a plain chunk edit
+([../work/chunk.md](../work/chunk.md) §Model, effort, and harness defaults) does.
 
 ## Judgement
 
