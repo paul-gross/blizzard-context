@@ -15,6 +15,7 @@ Parent: [../index.md](../index.md).
 | [`architecture`](./architecture.md)                 | Structural drift in blizzard's code — layering, dependency direction, seam placement and width, injection, and the Angular suite's split |
 | [`comments`](./comments.md)                         | Prose drift in blizzard's code — which facts a comment or docstring may state, and whose vocabulary a seam's contract is stated in       |
 | [`domain-conformance`](./domain-conformance.md)     | Disagreement between the behavior the domain model declares and the behavior the code implements and the suite pins                      |
+| [`performance`](./performance.md)                   | Cost drift in blizzard's hot paths — per-item resolution, ungated sweeps, unbounded reads, and work a result never needed                |
 
 ## Scope slugs
 
