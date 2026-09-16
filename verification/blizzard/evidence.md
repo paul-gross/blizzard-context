@@ -139,9 +139,13 @@ planned rather than remembered:
 ```text
 owes: `retries:` omitted → blizzard-context:/domain/graphs/nodes.md's retries facet states the runner's own default
       applies; pinned by
-      tests/test_runner_loop.py::test_fill_spawns_a_node_with_no_authored_retry_budget_at_the_configured_default
+      tests/test_runner_loop.py::test_fill_spawns_a_node_with_no_authored_retry_budget_at_the_configured_default and,
+      for the default's own value, tests/test_pin_runner_loop.py::test_default_retries_max_is_two
 owes: an entry reaching no terminal → blizzard-context:/domain/graphs/edges.md's reachability warning states the
       second arm; pinned by tests/test_graph_validation.py::test_entry_reaching_no_terminal_is_a_warning_not_an_error
+owes: hub-node key `poll_jitter:` omitted → blizzard-context:/standards/hub-nodes/outcome-protocol.md, the delegate
+      spoke that states the other polling defaults; nodes.md gains no hunk; pinned by a case in
+      tests/test_hub_command_node.py asserting the delegate default applies
 ```
 
 **Don't.** A `blizzard` commit that parses, stores, serves, and tests a new node key, with this message and no companion
