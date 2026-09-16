@@ -215,7 +215,7 @@ The synchronous, no-crash path closes this same mint through `escalate_owner_unr
 routes here abandons the mint in place rather than escalating it, and a runner paused between the mint above and this
 close leaves the lease open for REAP's same orphan sweep to resolve, exactly as the crash case above already does.
 
-D12 (blizzard#432) gives this same pattern a second entry point: `Spawner.escalate_no_acceptable_harness` /
+This same pattern has a second entry point: `Spawner.escalate_no_acceptable_harness` /
 `Attempt.escalate_no_acceptable_harness`, reached when a fresh mint's `HarnessSelector` exhausts the node's acceptable
 harness set with nothing servable, and from `Attempt.requeue`'s own membership guard — a retry whose lease's owner has
 fallen out of a since-edited acceptable set, never a candidate to resume under. Its `_mint` call passes
