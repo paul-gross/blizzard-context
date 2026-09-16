@@ -105,6 +105,11 @@ with two placements the domain tree's own shape decides:
   An aspect no part yet states is the author's to place, in one part, whose row in the graph hub then widens its read
   trigger so a reader with that need descends there.
 
+The same change also owes the pin: a newly declared behavior is a production path, and
+`bzh:gating-tier-pins-production-paths` already obliges every production path onto a gating tier. This rule adds only
+that the planning line below carries that case alongside the statement's home — the standard itself stays owned where it
+is.
+
 **Why.** The domain hub concedes that code is current where the two disagree, so absent this rule a surface the code
 grows and the model never claims trips no check and is found only by a standing sweep, a year late and without the
 author's intent — the change that grew it is the one moment its author knows what it means.
@@ -124,14 +129,19 @@ trigger is the author-facing surface wherever it is parsed or resolved, not thos
 hunk: could a graph author, reading only `blizzard-context:/domain/` and the standards it delegates to, predict what it
 does?
 
-**Do.** One planning line per surface, naming the statement and its home, so the harness hunk is planned rather than
-remembered:
+A second signature, once the statement itself lands: the branch, default, or warning it names carries no gating-tier
+assertion that would fail were the branch deleted or the warning's trigger inverted — `bzh:mutation-review-selection`'s
+own litmus, applied to this rule's obligation rather than assumed satisfied by the statement's presence.
+
+**Do.** One planning line per surface, naming the statement, its home, and the case that pins it, so the harness hunk is
+planned rather than remembered:
 
 ```text
-owes: node key `on_reap:` → blizzard-context:/domain/graphs/nodes.md gains an `on_reap` facet naming what it governs
-owes: `on_reap:` omitted → the same facet states what omission resolves to
-owes: hub-node key `poll_jitter:` omitted → blizzard-context:/standards/hub-nodes/outcome-protocol.md, the delegate
-      spoke that states the other polling defaults; nodes.md gains no hunk
+owes: `retries:` omitted → blizzard-context:/domain/graphs/nodes.md's retries facet states the runner's own default
+      applies; pinned by
+      tests/test_runner_loop.py::test_fill_spawns_a_node_with_no_authored_retry_budget_at_the_configured_default
+owes: an entry reaching no terminal → blizzard-context:/domain/graphs/edges.md's reachability warning states the
+      second arm; pinned by tests/test_graph_validation.py::test_entry_reaching_no_terminal_is_a_warning_not_an_error
 ```
 
 **Don't.** A `blizzard` commit that parses, stores, serves, and tests a new node key, with this message and no companion
@@ -151,5 +161,7 @@ landing time would report that either should be stated.
 - `bzh:falsified-claims-grep` above — the mirror sweep, over the claims a change makes false.
 - `bzh:one-prose-home` in [`../../standards/one-prose-home.md`](../../standards/one-prose-home.md) — the home table that
   assigns a domain concept its `domain/` file, and the pointer the code site keeps.
+- `bzh:gating-tier-pins-production-paths` above — owns the pin standard this rule's `Do` line names a case against;
+  restated nowhere here.
 - `bzh:matrix-companion-changes` in [`./companion-changes.md`](./companion-changes.md) — the precedent shape for a
   companion landing across the two repos: a `blizzard` commit owing a `blizzard-context` hunk.
