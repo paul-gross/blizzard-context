@@ -50,9 +50,12 @@ branches already do, so it inherits the same atomic guarantee and needs no entry
 
 The runner store's `session_preamble_facts` table (`blizzard/src/blizzard/runner/store/schema.py`) holds, per harness
 session, a digest of the standing spawn-preamble prose that session was last sent, so a resumed spawn can skip an
-unchanged layer and announce a changed one. The fingerprint write sits inside the SPAWN step immediately after
-`record_spawn` but lands only after the spawn call returns, so a durable fingerprint always implies the prose actually
-reached the process.
+unchanged layer and announce a changed one. `Spawner.spawn` (`blizzard/src/blizzard/runner/loop/spawn.py`) is the only
+caller: the fingerprint write sits inside the SPAWN step immediately after `record_identified_spawn`, once the launched
+process's identity is durable, but lands only after the spawn call itself returns, so a durable fingerprint always
+implies the prose actually reached the process. A dormant session's own wake
+(`blizzard/src/blizzard/runner/loop/dormant.py`) resumes the same session through `record_spawn` instead, delivering a
+short wake message rather than a re-rendered preamble, so that path never reads or writes this table at all.
 
 A crash that loses the fingerprint leaves the next resume reading `None` and rendering all three preamble layers in
 full, a token cost rather than a safety break.
