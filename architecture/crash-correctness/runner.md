@@ -185,6 +185,28 @@ the next pass, and its only durable trace is the `elicitation past its staleness
 failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
 one records the generation's only `judge` sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.
 
+## The identity-failure-mark-before-close gap
+
+`Reap.run`'s provisional-generation branch and `Spawner.spawn`'s `WorkerIdentityError` handler
+(`blizzard/src/blizzard/runner/loop/steps.py`, `blizzard/src/blizzard/runner/loop/spawn.py`) both call
+`record_identity_failed` to close a durably-provisional generation (D1/D2) as unidentified — the first ahead of
+`Attempt.fail`'s own kill-then-close, the second ahead of re-raising `HarnessSpawnError` with the lease left open for
+REAP's next pass. `record_identity_failed` is its own transaction, so in either caller a `kill -9` right after it
+commits, and before what follows it completes, is a real span.
+
+Both halves are independently harmless. `record_identity_failed` finds the lease's newest still-open `lease_spawns` row
+(`session_id IS NULL`) and stamps `identity_failed_at`; re-running it after a crash re-stamps the same row with a later
+timestamp, never a second row. The lease itself sits open with `pid` set and `session_id` still `NULL` in the interim —
+the exact shape `Reap.run`'s own provisional-generation branch re-scans on every tick, and the module's own contract
+already promises to recover: "every step is idempotent... a crash mid-tick and a restart re-run the tick harmlessly;
+startup recovery is REAP running first." A crash before `Attempt.fail` closes the lease leaves REAP's next pass
+re-entering the identical branch, re-marking (harmlessly) and completing the close; a crash inside the spawn handler
+leaves the same reapable shape, which REAP's ordinary sweep reaches on its own schedule whether or not the handler's own
+marking landed first. `NoUnownedLiveLeaseProcess` inspects only CLOSED leases, so the open-but-marked or
+open-and-unmarked interim never violates it — the invariant is owed only at the moment `Attempt.fail`'s own close lands,
+by which point `record_identity_failed` has always already run at least once. The write earns no window at all: its
+halves are independently harmless, and the existing REAP re-scan is the recovery, not a new registry point.
+
 ## The unresolvable-pool-owner escalation mint
 
 `Spawner._escalate_unresolvable_resume_owner` (`blizzard/src/blizzard/runner/loop/spawn.py`) mints a zero-budget,
