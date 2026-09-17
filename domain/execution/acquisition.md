@@ -3,16 +3,20 @@
 How a chunk is granted to a runner, what the route locates, and which writes give tenure back. Spoke of the
 [execution hub](../execution.md).
 
-Acquisition is the hub granting a ready chunk to exactly one runner — the one point of cross-runner contention, where
-fleet exactly-once is upheld. The claim is claim-by-route: the runner peeks the hub-ordered queue, acquires the
-environments, and posts the complete route; the hub accepts exactly one claim per chunk. The environment identifier is
-opaque to the hub — it knows which environment, never what an environment is. What the grant obliges of the claimant's
-leases is owned by [./fencing.md](./fencing.md).
+Acquisition is the hub granting a ready chunk to exactly one runner able to run it — the one point of cross-runner
+contention, where fleet exactly-once is upheld. The claim is claim-by-route: the runner peeks the hub-ordered queue,
+acquires the environments, and posts the complete route; the hub accepts exactly one claim per chunk. The environment
+identifier is opaque to the hub — it knows which environment, never what an environment is. What the grant obliges of
+the claimant's leases is owned by [./fencing.md](./fencing.md).
 
 Which entry a runner claims out of a peek carrying a [blocked marking](../work/statuses.md#the-blocked-marking) is that
-runner's own choice, not the hub's: by default it reaches past a marked entry for the first unmarked one, rather than
-spending an attempt on one it already knows is not yet claimable. An operator may instead configure a runner to hold at
-a marked entry and claim nothing that tick — strictness the runner chooses, not a fleet-wide rule.
+runner's own choice on the unfiltered peek: by default it reaches past a marked entry for the first unmarked one in the
+list it already holds, rather than spending an attempt on one it already knows is not yet claimable. A runner peeking
+matched to its own capability snapshot instead has that choice made for it: the hub applies the same hold-or-pass-over
+policy before ever handing back an entry, spanning both the blocked marking and the runner's own capability eligibility
+together, so there is nothing left to reach past locally. Either way an operator's own runner config sets the policy —
+hold at the first unusable entry and claim nothing that tick, or pass over it — strictness the runner chooses, not a
+fleet-wide rule.
 
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 
