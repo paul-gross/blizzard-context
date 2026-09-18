@@ -72,3 +72,22 @@ and the hub CLI's `chunk depend`/`chunk release-dependency` commands stay outsid
 retired, not the surface it called. `assertDockControlDetectorWorks` runs the same must-catch/must-not-false-positive
 proof against every retired shape before the sweep trusts it, the same `bzh:case-pins-its-own-name` guard the
 board-control census follows.
+
+The script also sweeps every mutation hook for the two shapes
+[`../../../../architecture/frontend-structure/mutations.md`](../../../../architecture/frontend-structure/mutations.md)
+declares tooled. `bzh:frontend-mutation-settles-on-refresh`'s half: a `queryClient.invalidateQueries(...)` call inside a
+mutation hook that is `void`-discarded rather than returned (or `Promise.all`'d and returned) from `onSuccess`/
+`onSettled`. No exemption list — the shape has no legitimate exception. Its own fixture self-test,
+`assertInvalidateReturnedDetectorWorks`, runs alongside the other detectors' self-tests before the sweep trusts it
+(`bzh:case-pins-its-own-name`).
+
+`bzh:frontend-pending-override`'s half: `setQueryData` anywhere in a non-spec file under `projects/`, and `onMutate`
+anywhere in a file calling `injectMutation(`. `setQueryData` is scanned everywhere, not only inside the file that
+defines a mutation hook, because a *consumer* of a hook (a container calling `.mutate(vars, { onMutate: ... })`, say)
+can write the cache just as easily as the hook itself — scoping the scan to `injectMutation(` alone would leave every
+consumer free to do it instead. `onMutate` cannot be told apart from a cache-write snapshot/rollback by a static scan
+alone, so it stays scoped to a defining file, where the ambiguity actually arises; a site that keeps `onMutate` for a
+non-cache side effect is named in `NO_CACHE_WRITE_EXEMPT_FILES` with a one-line reason, the same reasoned-exemption
+idiom the real-timer and kit-floor sweeps use. Its own fixture self-test, `assertNoCacheWriteDetectorWorks`, proves the
+exemption does real work — an exempted fixture would still be caught without it — alongside the other detectors'
+self-tests before the sweep trusts it (`bzh:case-pins-its-own-name`).

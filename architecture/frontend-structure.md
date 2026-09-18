@@ -9,11 +9,14 @@ than restating them. Each spoke's rules use the slot skeleton `winter-canon:/rul
 | [`./frontend-structure/containers.md`](./frontend-structure/containers.md)         | You are placing a component's logic, or deciding what a data-backed view may render before its read resolves |
 | [`./frontend-structure/kit.md`](./frontend-structure/kit.md)                       | You are building a component's chrome and choosing between the shared kit and a local copy                   |
 | [`./frontend-structure/disjoint-diffs.md`](./frontend-structure/disjoint-diffs.md) | You are adding to a shared file — a barrel, the SSE registry — and two agents' diffs must not collide        |
+| [`./frontend-structure/mutations.md`](./frontend-structure/mutations.md)           | You are writing a mutation hook, or rendering a control's predictable outcome before its mutation settles    |
 | [`../standards/frontend.md`](../standards/frontend.md)                             | You need the Angular toolchain rules — lint, test, the generated client                                      |
 | [`./clean-architecture.md`](./clean-architecture.md)                               | You are placing daemon-side behavior instead — the counterpart to this map                                   |
 
-Of this tree's four own rules, `bzh:frontend-container-presentational`, `bzh:frontend-empty-state-gated`, and
+Of this tree's six own rules, `bzh:frontend-container-presentational`, `bzh:frontend-empty-state-gated`, and
 `bzh:frontend-disjoint-diffs` are review questions; `bzh:frontend-kit-floor` is tooled by `web:structural-gate`'s
-kit-floor sweep ([`../verification/blizzard.md`](../verification/blizzard.md)). `web:lint`'s `max-lines` ceiling in
-[`../verification/blizzard.md`](../verification/blizzard.md) reaches every file under `projects/`, this tree's included,
-but is a general complexity heuristic no rule here owns outright.
+kit-floor sweep ([`../verification/blizzard.md`](../verification/blizzard.md)).
+`bzh:frontend-mutation-settles-on-refresh` and `bzh:frontend-pending-override` are each partly tooled by their own
+`web:structural-gate` sweep ([`../verification/blizzard.md`](../verification/blizzard.md)) and partly review questions.
+`web:lint`'s `max-lines` ceiling in [`../verification/blizzard.md`](../verification/blizzard.md) reaches every file
+under `projects/`, this tree's included, but is a general complexity heuristic no rule here owns outright.
