@@ -50,9 +50,12 @@ branches already do, so it inherits the same atomic guarantee and needs no entry
 
 The runner store's `session_preamble_facts` table (`blizzard/src/blizzard/runner/store/schema.py`) holds, per harness
 session, a digest of the standing spawn-preamble prose that session was last sent, so a resumed spawn can skip an
-unchanged layer and announce a changed one. The fingerprint write sits inside the SPAWN step immediately after
-`record_spawn` but lands only after the spawn call returns, so a durable fingerprint always implies the prose actually
-reached the process.
+unchanged layer and announce a changed one. `Spawner.spawn` (`blizzard/src/blizzard/runner/loop/spawn.py`) is the only
+caller: the fingerprint write sits inside the SPAWN step immediately after `record_identified_spawn`, once the launched
+process's identity is durable, but lands only after the spawn call itself returns, so a durable fingerprint always
+implies the prose actually reached the process. A dormant session's own wake
+(`blizzard/src/blizzard/runner/loop/dormant.py`) resumes the same session through `record_spawn` instead, delivering a
+short wake message rather than a re-rendered preamble, so that path never reads or writes this table at all.
 
 A crash that loses the fingerprint leaves the next resume reading `None` and rendering all three preamble layers in
 full, a token cost rather than a safety break.
@@ -184,6 +187,28 @@ ground: the loss is one re-spent elicitation, tolerable because it is bounded by
 the next pass, and its only durable trace is the `elicitation past its staleness bound — failing attempt` warning the
 failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
 one records the generation's only `judge` sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.
+
+## The identity-failure-mark-before-close gap
+
+`Reap.run`'s provisional-generation branch and `Spawner.spawn`'s `WorkerIdentityError` handler
+(`blizzard/src/blizzard/runner/loop/steps.py`, `blizzard/src/blizzard/runner/loop/spawn.py`) both call
+`record_identity_failed` to close a durably-provisional generation (D1/D2) as unidentified — the first ahead of
+`Attempt.fail`'s own kill-then-close, the second ahead of re-raising `HarnessSpawnError` with the lease left open for
+REAP's next pass. `record_identity_failed` is its own transaction, so in either caller a `kill -9` right after it
+commits, and before what follows it completes, is a real span.
+
+Both halves are independently harmless. `record_identity_failed` finds the lease's newest still-open `lease_spawns` row
+(`session_id IS NULL`) and stamps `identity_failed_at`; re-running it after a crash re-stamps the same row with a later
+timestamp, never a second row. The lease itself sits open with `pid` set and `session_id` still `NULL` in the interim —
+the exact shape `Reap.run`'s own provisional-generation branch re-scans on every tick, and the module's own contract
+already promises to recover: "every step is idempotent... a crash mid-tick and a restart re-run the tick harmlessly;
+startup recovery is REAP running first." A crash before `Attempt.fail` closes the lease leaves REAP's next pass
+re-entering the identical branch, re-marking (harmlessly) and completing the close; a crash inside the spawn handler
+leaves the same reapable shape, which REAP's ordinary sweep reaches on its own schedule whether or not the handler's own
+marking landed first. `NoUnownedLiveLeaseProcess` inspects only CLOSED leases, so the open-but-marked or
+open-and-unmarked interim never violates it — the invariant is owed only at the moment `Attempt.fail`'s own close lands,
+by which point `record_identity_failed` has always already run at least once. The write earns no window at all: its
+halves are independently harmless, and the existing REAP re-scan is the recovery, not a new registry point.
 
 ## The unresolvable-pool-owner escalation mint
 
