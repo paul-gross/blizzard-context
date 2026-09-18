@@ -15,6 +15,7 @@ invariant, it does so in the slot skeleton owned by `winter-canon:/rule-shape.md
 | [`envelope.md`](./execution/envelope.md)                 | …you need what a worker session is primed with, or how a change reaches it.                               |
 | [`pause.md`](./execution/pause.md)                       | …an operator paused a runner or a chunk — what stops, what keeps running, and what happens to the claim.  |
 | [`recovery.md`](./execution/recovery.md)                 | …a lease expired, an attempt was exhausted, or a chunk must change runner.                                |
+| [`claim-vocabulary.md`](./execution/claim-vocabulary.md) | …you need the operator-facing terms for a claim and what a runner's process does to it.                   |
 
 ## See also
 
