@@ -27,6 +27,11 @@ Detach is an operator's forcible release of a chunk from its runner: it releases
 the chunk re-derives on its remaining facts — ready only when nothing else holds it — and the next claim's epoch floor
 fences the old runner out.
 
+Detach **ends** the chunk rather than parking it: the worker is killed and the session is discarded, not resumable — the
+inverse of a per-chunk pause's park, which keeps the same session for a later resume ([./pause.md](./pause.md)). A
+pinning test for the worker-killed half of this is
+`blizzard/tests/test_runner_detach.py::test_pull_abandons_a_live_detached_chunk`.
+
 ## Reassignment
 
 Reassignment moves a held chunk to another runner — the supported exception to stickiness. A new environment can be

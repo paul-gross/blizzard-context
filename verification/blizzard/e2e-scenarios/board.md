@@ -37,10 +37,11 @@ The browser half of the e2e tier: a real Chromium driven by Playwright over the 
   [domain/work/statuses.md](../../../domain/work/statuses.md) ranks `paused` below the human-gated statuses, so the
   proof needs a chunk caught genuinely running, not already parked on a question), the chunk relocates to the WAIT/HUMAN
   column, the claim survives the runner killing the worker and parking the lease, the dock names who paused it, and
-  resuming from the dock returns it to a live, progressing status. And it proves the runner registry's pause/resume
-  brake stops and then restarts new claims (MVP criterion 11), engaged before the survivor lands because the landing
-  frees the runner's only agent slot in the same tick — FILL's reconcile releases the survivor's binding — so from that
-  instant the brake alone holds the remaining ready chunk in the lane.
+  resuming from the dock returns it to a live, progressing status. While the dock is open on that chunk it also asserts
+  none of the three retired dependency-UI testids (the prerequisite field, Declare, Release) render. And it proves the
+  runner registry's pause/resume brake stops and then restarts new claims (MVP criterion 11), engaged before the
+  survivor lands because the landing frees the runner's only agent slot in the same tick — FILL's reconcile releases the
+  survivor's binding — so from that instant the brake alone holds the remaining ready chunk in the lane.
 
 ## test_board_cost_live_e2e
 

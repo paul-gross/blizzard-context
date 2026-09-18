@@ -63,3 +63,12 @@ contract: its type, inputs, handlers, grouping mutation facade, and test handles
 deliberately outside that census: API and CLI grouping remain supported. `assertBoardControlDetectorWorks` first
 exercises each retired shape and an allowed grouping-client shape, so a clean result cannot silently be a detector that
 stopped classifying (`bzh:case-pins-its-own-name`).
+
+A separate census over the same three extensions covers the chunk detail dock's retired dependency-management UI: the
+free-text prerequisite input, the Declare/Release testids, the `DependencyEvent` type, the `declareDependency`/
+`releaseDependency` outputs, and the `dependency.mutations.ts` mutation wrapper's own exports
+(`injectDeclareDependencyMutation`, `injectReleaseDependencyMutation`, `DependencyVars`). The generated hub API client
+and the hub CLI's `chunk depend`/`chunk release-dependency` commands stay outside it — only the frontend affordance
+retired, not the surface it called. `assertDockControlDetectorWorks` runs the same must-catch/must-not-false-positive
+proof against every retired shape before the sweep trusts it, the same `bzh:case-pins-its-own-name` guard the
+board-control census follows.
