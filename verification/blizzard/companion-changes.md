@@ -44,3 +44,19 @@ direction therefore rests on this rule rather than on anything mechanical.
 **Don't.** A new `/api/fleet/...` route the runner calls outside `IHubClient`, landing in `blizzard` alone — the guard
 diffs only the protocol's methods, so it stays green while the service tier drives a runner against a mock that answers
 the new route `404`.
+
+## An OpenCode lever roster change extends both sides (`bzh:opencode-lever-roster-extends-both-sides`)
+
+**Rule.** A change to `blizzard-mock`'s `opencode_surface.levers.Lever`/`CATALOG` — adding, renaming, or removing a
+member — lands `blizzard`'s `tests/service/support.py::_fake_binary` kwarg and name-mapping in the same change, kept 1:1
+with the enum, and updates `_fake_binary`'s `len(lever_flags)` pin to match.
+
+**Why.** `blizzard` deliberately holds no dependency on `blizzard-mock` (`tests/support.py::github_double`'s established
+stance), so nothing mechanical diffs the two rosters — a member landed on one side alone drifts silently, covered only
+by [`./gaps.md`](./gaps.md#the-cross-repo-opencode-lever-roster).
+
+**Detect.** None — this rule is the standing check; `_fake_binary`'s count pin only catches a size mismatch, never a
+same-count rename.
+
+**Don't.** A `blizzard-mock` commit adding `Lever.NEW_MISBEHAVIOUR` to the roster with no companion `blizzard` change —
+the new lever emits correctly but no service-tier case ever arms it.

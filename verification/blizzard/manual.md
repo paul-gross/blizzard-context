@@ -126,6 +126,21 @@ evidence directory.
 `compatibility: supported` or `compatibility: degraded`, and `report.json` records `complete: true` and
 `admissible: true`. This diagnostic result is not production adapter availability or a harness-selection decision.
 
+### `blizzard:manual-opencode-compatibility-rehearsal`
+
+**Surface.** That `blizzard/docs/deployment/opencode-compatibility.md`'s stated offline rehearsal path — emit a
+CLI-surface artifact and point `--binary` at it to exercise the whole diagnostic flow without provider quota — is itself
+followable exactly as written, by an operator with no prior knowledge of the mock fleet's internals. This is distinct
+from `blizzard:manual-opencode-compatibility`, which proves the pinned live contract against a real provider; this
+method proves a page.
+
+**Procedure.** Against a provisioned feature env, follow the page's stated rehearsal steps in order and no others: emit
+the artifact with the documented `mock-opencode` verb, then invoke the diagnostic with `--binary` pointed at the emitted
+path.
+
+**Passes when.** The page's steps are sufficient on their own — no undocumented flag, path, or prerequisite is needed —
+and the run ends the way the page says it will.
+
 ### `blizzard:manual-autocompact-window`
 
 **Surface.** The `--autocompact` flag's effect rather than its presence: a session spawned with a declared

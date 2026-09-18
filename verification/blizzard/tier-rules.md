@@ -10,12 +10,12 @@ The tier roster, and the standard every tier's tests are written to. The command
 Four tiers, all used — each answers a different question, and none substitutes for another. The mocks the upper tiers
 bind are owned by `blizzard-mock`.
 
-| Tier          | Method                    | Scope                                                                                                     | Tooling                                                                                                                             |
-| ------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Unit**      | `blizzard:unit-test`      | One class or function in isolation.                                                                       | pytest                                                                                                                              |
-| **Component** | `blizzard:component-test` | A domain slice wired with real internal collaborators, doubles only at the seams.                         | pytest                                                                                                                              |
-| **Service**   | `blizzard:service-test`   | A running hub or runner's HTTP API exercised from outside, seams bound to the mock fleet.                 | pytest + HTTP                                                                                                                       |
-| **E2E**       | `blizzard:e2e`            | The full system — hub, runner, web app — through the browser and CLI, every seam bound to the mock fleet. | pytest plus a real Chromium via Playwright; each browser-driven scenario states its own guard in the [registry](./e2e-scenarios.md) |
+| Tier          | Method                    | Scope                                                                                                                                                                                | Tooling                                                                                                                             |
+| ------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Unit**      | `blizzard:unit-test`      | One class or function in isolation.                                                                                                                                                  | pytest                                                                                                                              |
+| **Component** | `blizzard:component-test` | A domain slice wired with real internal collaborators, doubles only at the seams.                                                                                                    | pytest                                                                                                                              |
+| **Service**   | `blizzard:service-test`   | A running hub or runner's HTTP API exercised from outside, or an out-of-process external-tool binding driven against a mock-fleet binary — seams bound to the mock fleet either way. | pytest + HTTP                                                                                                                       |
+| **E2E**       | `blizzard:e2e`            | The full system — hub, runner, web app — through the browser and CLI, every seam bound to the mock fleet.                                                                            | pytest plus a real Chromium via Playwright; each browser-driven scenario states its own guard in the [registry](./e2e-scenarios.md) |
 
 ## Hermetic by construction
 
@@ -31,8 +31,34 @@ Stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`)
 ## One-sided service tests
 
 A one-sided service test drives the mock counterpart: runner service tests run against the mock hub, hub service tests
-against the mock runner. Its edge cases come from driving the mock's levers, never from contriving the real daemon into
-a rare state.
+against the mock runner, and a diagnostic driving a real external tool runs against the mock fleet's own CLI-surface
+artifact instead. Its edge cases come from driving the mock's levers, never from contriving the real daemon or the real
+external tool into a rare state.
+
+## A whole-CLI harness fake is a service-tier binding (`bzh:external-cli-fake-is-service-tier`)
+
+**Rule.** A test case that drives a fake external-tool CLI as an out-of-process binary — spawned and exercised the way a
+real harness integration would spawn the genuine tool, not called as a hermetic in-process double — belongs at
+`blizzard:service-test`. It runs behind the same fleet-binding skip every other service-tier case already uses: it needs
+the sibling provisioned `blizzard-mock` worktree and skips cleanly when that worktree is not provisioned, never a fail.
+
+**Why.** A whole-CLI fake only earns its weight by being spawned as a real process — argv, exit codes, stdio framing,
+and process lifetime all real. That is the mock fleet's own claim, the same one the rest of the service tier rests on,
+so a case that needs it inherits the mock fleet's gate rather than running unconditionally wherever it happens to be
+collected.
+
+**Detect.** A test resolving a binary path from the sibling `blizzard-mock` worktree to spawn it *as the external tool
+under test* — asserting the exit code, argv-shape, or process behavior of the fake CLI itself. A case driving only a
+generic subprocess, pty, or sandbox boundary that never presents an external-tool-shaped CLI is not this — it stays at
+`blizzard:component-test` with an inline script, since moving it would weaken the gate for no gain. Nor is a case that
+resolves the same worktree's mock hub/runner daemon binaries to stand up the fleet a browser-driven scenario then
+exercises — that is `blizzard:e2e`'s own established binding, not a whole-CLI-fake case.
+
+**Do.** Guard the case behind the established fleet-binding skip and resolve the binary through the established
+sibling-worktree helper, never a new resolution mechanism.
+
+**Don't.** Leave a whole-CLI-fake case at `blizzard:component-test` reasoning that it "doesn't touch the network" — the
+tier a case belongs to turns on whether it spawns the mock fleet's own binary, not on whether the case runs offline.
 
 ## Crash correctness is a dimension, not a tier
 

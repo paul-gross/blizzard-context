@@ -25,41 +25,41 @@ Full detail lives under `./blizzard/`, one file per reader question.
 
 A command method passes when its command exits 0.
 
-| Method                       | Command                                                                                                                                        |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard:build`             | `uv sync` from the repo root — installs the `blizzard` project and its `dev` group                                                             |
-| `blizzard:lint`              | `uv run ruff check .`                                                                                                                          |
-| `blizzard:format`            | `uv run ruff format --check .`                                                                                                                 |
-| `blizzard:typecheck`         | `uv run pyright`                                                                                                                               |
-| `blizzard:structural-gate`   | `uv run ast-grep scan --error=unused-suppression .` then `uv run ast-grep test` — the ast-grep structural channel gate (`contracts/ast-grep/`) |
-| `blizzard:unit-test`         | `uv run pytest -m unit` — one class or function in isolation *(more)*                                                                          |
-| `blizzard:component-test`    | `uv run pytest -m component` — a domain slice, doubles only at the seams *(more)*                                                              |
-| `blizzard:service-test`      | `mise run service-test` — a running daemon's HTTP API driven from outside *(more)*                                                             |
-| `blizzard:e2e`               | `mise run e2e` — the standing full-stack smoke suite                                                                                           |
-| `blizzard:journey`           | `mise run journey` — the capstone acceptance-journey rehearsal over real host daemons *(more)*                                                 |
-| `blizzard:crash-sweep`       | `mise run crash-sweep` — the full kill-9 sweep over the crash-point registry *(more)*                                                          |
-| `blizzard:sse-contract`      | `mise run sse-contract` — the SSE frame shape against the golden corpus `contracts/sse/` *(more)*                                              |
-| `blizzard:cli-contract`      | `uv run pytest tests/test_cli_surface_contract.py` — the CLI command tree against `contracts/cli/` *(more)*                                    |
-| `blizzard:restatement-sweep` | `mise run restatement-check` — the one-home census *(more)*                                                                                    |
-| `blizzard:prose-ratchet`     | `mise run prose-check` — the per-root prose ratchet                                                                                            |
-| `blizzard:gate`              | `mise run gate` — the local reproduction of CI's shared `gate` job *(more)*                                                                    |
-| `blizzard:ci`                | `gh run watch --repo paul-gross/blizzard <run-id> --exit-status` — the authoritative remote gate *(more)*                                      |
-| `blizzard:wheel`             | `mise run build` — both Angular apps, then the one wheel, node-free *(more)*                                                                   |
-| `blizzard:wheel-smoke`       | The serve smoke on the built wheel in a node-free venv — the **P5 exit criterion** *(more)*                                                    |
-| `blizzard:image-smoke`       | `mise run image-smoke` — the hub image booted on an empty data volume *(more)*                                                                 |
-| `blizzard:compose-smoke`     | `mise run compose-smoke` — the reference compose deployment on a local image *(more)*                                                          |
-| `web:lint`                   | `npm run lint` in `web/` — eslint over the Angular workspace, including the `max-lines` ceiling *(more)*                                       |
-| `web:typecheck`              | `npm run build` in `web/` — a real AOT compile of both Angular apps *(more)*                                                                   |
-| `web:unit-test`              | `npm run test` in `web/` — vitest, the frontend unit/component tier                                                                            |
-| `web:structural-gate`        | `npm run structural-gate` in `web/` — the real-timer, kit-floor, and retired-board-control sweeps *(more)*                                     |
-| `web:shell-sweep`            | `npm run shell-sweep` in `web/` — the real-Chromium proof for what jsdom cannot evaluate *(more)*                                              |
-| `web:client-drift`           | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`) *(more)*                                          |
-| `blizzard-mock:build`        | `uv sync` in the `blizzard-mock` repo                                                                                                          |
-| `blizzard-mock:lint`         | `uv run ruff check .`                                                                                                                          |
-| `blizzard-mock:format`       | `uv run ruff format --check .`                                                                                                                 |
-| `blizzard-mock:typecheck`    | `uv run pyright`                                                                                                                               |
-| `blizzard-mock:unit-test`    | `uv run pytest` — the mock fleet's own unit + component suite, plus the wire-parity guard *(more)*                                             |
-| `blizzard-mock:e2e`          | `uv run pytest -m e2e` — the fleet acceptance proof, and the **P4 exit criterion** *(more)*                                                    |
+| Method                       | Command                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard:build`             | `uv sync` from the repo root — installs the `blizzard` project and its `dev` group                                                                                |
+| `blizzard:lint`              | `uv run ruff check .`                                                                                                                                             |
+| `blizzard:format`            | `uv run ruff format --check .`                                                                                                                                    |
+| `blizzard:typecheck`         | `uv run pyright`                                                                                                                                                  |
+| `blizzard:structural-gate`   | `uv run ast-grep scan --error=unused-suppression .` then `uv run ast-grep test` — the ast-grep structural channel gate (`contracts/ast-grep/`)                    |
+| `blizzard:unit-test`         | `uv run pytest -m unit` — one class or function in isolation *(more)*                                                                                             |
+| `blizzard:component-test`    | `uv run pytest -m component` — a domain slice, doubles only at the seams *(more)*                                                                                 |
+| `blizzard:service-test`      | `mise run service-test` — a running daemon's HTTP API driven from outside, or an out-of-process external-tool binding driven against a mock-fleet binary *(more)* |
+| `blizzard:e2e`               | `mise run e2e` — the standing full-stack smoke suite                                                                                                              |
+| `blizzard:journey`           | `mise run journey` — the capstone acceptance-journey rehearsal over real host daemons *(more)*                                                                    |
+| `blizzard:crash-sweep`       | `mise run crash-sweep` — the full kill-9 sweep over the crash-point registry *(more)*                                                                             |
+| `blizzard:sse-contract`      | `mise run sse-contract` — the SSE frame shape against the golden corpus `contracts/sse/` *(more)*                                                                 |
+| `blizzard:cli-contract`      | `uv run pytest tests/test_cli_surface_contract.py` — the CLI command tree against `contracts/cli/` *(more)*                                                       |
+| `blizzard:restatement-sweep` | `mise run restatement-check` — the one-home census *(more)*                                                                                                       |
+| `blizzard:prose-ratchet`     | `mise run prose-check` — the per-root prose ratchet                                                                                                               |
+| `blizzard:gate`              | `mise run gate` — the local reproduction of CI's shared `gate` job *(more)*                                                                                       |
+| `blizzard:ci`                | `gh run watch --repo paul-gross/blizzard <run-id> --exit-status` — the authoritative remote gate *(more)*                                                         |
+| `blizzard:wheel`             | `mise run build` — both Angular apps, then the one wheel, node-free *(more)*                                                                                      |
+| `blizzard:wheel-smoke`       | The serve smoke on the built wheel in a node-free venv — the **P5 exit criterion** *(more)*                                                                       |
+| `blizzard:image-smoke`       | `mise run image-smoke` — the hub image booted on an empty data volume *(more)*                                                                                    |
+| `blizzard:compose-smoke`     | `mise run compose-smoke` — the reference compose deployment on a local image *(more)*                                                                             |
+| `web:lint`                   | `npm run lint` in `web/` — eslint over the Angular workspace, including the `max-lines` ceiling *(more)*                                                          |
+| `web:typecheck`              | `npm run build` in `web/` — a real AOT compile of both Angular apps *(more)*                                                                                      |
+| `web:unit-test`              | `npm run test` in `web/` — vitest, the frontend unit/component tier                                                                                               |
+| `web:structural-gate`        | `npm run structural-gate` in `web/` — the real-timer, kit-floor, and retired-board-control sweeps *(more)*                                                        |
+| `web:shell-sweep`            | `npm run shell-sweep` in `web/` — the real-Chromium proof for what jsdom cannot evaluate *(more)*                                                                 |
+| `web:client-drift`           | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`) *(more)*                                                             |
+| `blizzard-mock:build`        | `uv sync` in the `blizzard-mock` repo                                                                                                                             |
+| `blizzard-mock:lint`         | `uv run ruff check .`                                                                                                                                             |
+| `blizzard-mock:format`       | `uv run ruff format --check .`                                                                                                                                    |
+| `blizzard-mock:typecheck`    | `uv run pyright`                                                                                                                                                  |
+| `blizzard-mock:unit-test`    | `uv run pytest` — the mock fleet's own unit + component suite, plus the wire-parity guard *(more)*                                                                |
+| `blizzard-mock:e2e`          | `uv run pytest -m e2e` — the fleet acceptance proof, and the **P4 exit criterion** *(more)*                                                                       |
 
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by
@@ -77,21 +77,22 @@ live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows 
 [`./blizzard/manual-mock.md`](./blizzard/manual-mock.md) — the live forge, the seeded board and fleet — for the
 `blizzard-mock:` rows.
 
-| Method                                   | Surface                                                                                               |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `blizzard:manual`                        | The acceptance loop end-to-end; **automated as of P6** — run it as `blizzard:e2e`, not by hand        |
-| `blizzard:manual-sse-probe`              | The live SSE wire probe: framing and timing on a real socket, hub or runner, one daemon at a time     |
-| `blizzard:manual-standing-idp`           | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture        |
-| `blizzard:manual-external-usage-probe`   | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`             |
-| `blizzard:manual-opencode-compatibility` | OpenCode `1.18.25` with ChatGPT `5.6 Luna` at `max`, live CLI/provider compatibility diagnostic       |
-| `blizzard:manual-autocompact-window`     | A declared `--autocompact` window compacting a real session, rather than the model's own maximum      |
-| `blizzard:manual-worker-deny-list`       | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness     |
-| `blizzard:manual-rollback-drill`         | The compose deployment's rollback promise, walked for real against two published image tags           |
-| `blizzard:manual-fleet-read-latency`     | A named hub read path's wall-clock latency, before/after a read-path change, at fleet scale           |
-| `blizzard:manual-sweep-pass-cost`        | One derivation `sweep()` pass's wall time, statement count, and zlib bytes decompressed, steady-state |
-| `blizzard-mock:manual`                   | The winter-wired mock forge fronting a real fixture workspace's bare origins                          |
-| `blizzard-mock:manual-seeded-board`      | A realistic board rendered from a direct store seed: no work source configured, no hub restart        |
-| `blizzard-mock:manual-seeded-fleet`      | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick       |
+| Method                                             | Surface                                                                                                                                            |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard:manual`                                  | The acceptance loop end-to-end; **automated as of P6** — run it as `blizzard:e2e`, not by hand                                                     |
+| `blizzard:manual-sse-probe`                        | The live SSE wire probe: framing and timing on a real socket, hub or runner, one daemon at a time                                                  |
+| `blizzard:manual-standing-idp`                     | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture                                                     |
+| `blizzard:manual-external-usage-probe`             | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`                                                          |
+| `blizzard:manual-opencode-compatibility`           | OpenCode `1.18.25` with ChatGPT `5.6 Luna` at `max`, live CLI/provider compatibility diagnostic                                                    |
+| `blizzard:manual-opencode-compatibility-rehearsal` | The public rehearsal procedure for the compatibility diagnostic, walked offline against an emitted CLI-surface artifact instead of a live provider |
+| `blizzard:manual-autocompact-window`               | A declared `--autocompact` window compacting a real session, rather than the model's own maximum                                                   |
+| `blizzard:manual-worker-deny-list`                 | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness                                                  |
+| `blizzard:manual-rollback-drill`                   | The compose deployment's rollback promise, walked for real against two published image tags                                                        |
+| `blizzard:manual-fleet-read-latency`               | A named hub read path's wall-clock latency, before/after a read-path change, at fleet scale                                                        |
+| `blizzard:manual-sweep-pass-cost`                  | One derivation `sweep()` pass's wall time, statement count, and zlib bytes decompressed, steady-state                                              |
+| `blizzard-mock:manual`                             | The winter-wired mock forge fronting a real fixture workspace's bare origins                                                                       |
+| `blizzard-mock:manual-seeded-board`                | A realistic board rendered from a direct store seed: no work source configured, no hub restart                                                     |
+| `blizzard-mock:manual-seeded-fleet`                | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick                                                    |
 
 ## Tools
 
