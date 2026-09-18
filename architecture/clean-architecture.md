@@ -60,8 +60,10 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 
 - `blizzard.runner.composition` imported, in any form, anywhere outside the seven composition roots named below —
   fail-closed, with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
-- `ClaudeCodeAdapter` imported anywhere outside `runner/harness/internal/claude_code_registry.py` — the one factory that
-  constructs it, `build_production_harness_registry`, whose built registry the composition roots take instead.
+- `ClaudeCodeAdapter` imported anywhere outside `runner/harness/internal/harness_registry.py` — the one factory that
+  constructs it, `build_production_harness_registry`, whose built registry the composition roots take instead;
+  `OpenCodeAdapter` is gated the same way, constructed only by `runner/harness/internal/opencode_registry.py`'s
+  `build_opencode_binding`.
 - A `hub/` or `runner/` module — outside its own connections seam — acquiring `self._engine` directly instead of taking
   the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
 - `SessionFile` named anywhere under `hub/` other than `hub/cli/sessions/internal/session_file.py` (its declaring
