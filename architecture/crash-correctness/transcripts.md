@@ -92,3 +92,31 @@ dropped-but-unnoticed one is recomputed from `derived_segment_ids()` minus the n
 
 Per-segment-per-version uniqueness on `(segment_id, extractor_version, kind, turn_path, occurrence)` is a store-level
 unique constraint the engine enforces, not a derived cross-fact invariant the checker must recompute.
+
+## Invocation boundaries (blizzard#437 D6/D11)
+
+`invocation_boundaries` (`blizzard/src/blizzard/runner/store/schema.py`) records one durable start marker per fleet-driven
+invocation — a worker spawn generation, a resume generation, a judgement, or a nudge — written by
+`InvocationBoundaryStore.record_boundary_open` before that invocation's process launches, so interrupted-usage recovery
+(blizzard#437 Phase 4) has a durable range to read even if the launch itself is the thing that crashes.
+
+Spawn's and a plain resume's own boundary writes (`Spawner.spawn`, `DormantSession._wake`) are genuinely new pre-launch
+writes, each guarded by its own registered point (`spawn.after-boundary-record.before-spawn`,
+`resume.wake.after-boundary-record.before-launch`) in the family its scenario already belongs to — no new family, since
+neither opens a window a fresh generic or RESUME sweep scenario does not already reach.
+
+Judgement's and the nudge's own boundary writes are the narrower ground instead: each rides an *existing* pre-launch
+write — `record_elicitation_launch` (`Judgement._launch`) and `record_nudge_fired` (`Judgement.run`) respectively — as a
+second, immediately-adjacent transaction, reached before that write's own existing crash point
+(`advance.after-elicit-record.before-launch`, `nudge.after-fired-fact.before-resume`). The narrow gap between the two
+transactions carries no crash point of its own: a crash inside it leaves the existing fact durable but no boundary, which
+recovery reads exactly like a session with no boundary at all — a source that answers "unmeasured" rather than a wrong
+answer — so the loss is accepted and named here rather than separately instrumented.
+
+Closing rides `Attempt.close`, the one funnel every closure path (`abandon`, `preempt`, `fail`, and the rest) shares:
+`close_boundaries_for_lease` runs BEFORE `record_closure`, so a crash between the two just re-enters this same
+idempotent closure path on the next pass rather than opening a window of its own — the same ground `_pump_lease_before_close`,
+sitting right beside it, already stands on. This is what answers `bzh:open-facts-declare-closure` for a boundary a
+hub-terminal chunk leaves open: `Pull._reconcile_leases` calling `Attempt.abandon` on a `STOPPED` chunk reaches the same
+funnel as any other closure, so no separate hub-terminal mirror is needed. `InvocationBoundaryClosedWhenLeaseClosed`
+(`blizzard/src/blizzard/tools/invariants.py`) is the checker assertion this closure obligation earns.
