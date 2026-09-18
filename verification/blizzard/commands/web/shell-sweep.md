@@ -211,12 +211,19 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   route shows only the detail and its Back control, with no horizontal overflow. A separate long-list case proves detail
   opens at its own top and Back restores the list's scroll position. Gardening sits in the hub's mobile bottom tab bar,
   so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
-- `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every control live at once
-  — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real dock share) and at
-  390px/320px (`bzh:narrow-viewport-tier-rule`): none of Pause, Complete, Delete, the route/Detach group, or the close
-  button may overflow the header's own right edge — a real CSS flex-wrap layout claim jsdom cannot make. The spec
-  asserts its swept selector list against an exact count, so a control added to the row without being added to the list
-  fails the fixture rather than passing unmeasured.
+- `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every in-flow control live
+  at once — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real dock share)
+  and at 390px/320px (`bzh:narrow-viewport-tier-rule`): neither Pause nor the `⋯` overflow trigger nor the close button
+  may overflow the header's own right edge — a real CSS flex-wrap layout claim jsdom cannot make. A second case per
+  width opens the trigger's own menu panel — a real CDK overlay attached to `document.body`, not the `.d-actions` flex
+  row — and sweeps that Detach, Complete, and Delete each stay on-viewport. Both cases assert their swept selector list
+  against an exact count, so a control added to the row or the panel without being added to the list fails the fixture
+  rather than passing unmeasured.
+- `machine-detail-header.shell-sweep.spec.ts` covers the machine detail dock's own header: a real pointer hover on
+  Pause/Resume must open the wired `KitTooltip` naming the claiming runner — a real CDK overlay claim jsdom cannot make
+  — and the header's two clusters (identity, actions) must never overflow with a long chunk id and runner name live at
+  once, at 390px/320px (the mobile shell `local-panel-mobile.html` mounts `local-machine-detail` inside,
+  `bzh:narrow-viewport-tier-rule`) and at a `LocalPanelLayout` desktop width.
 - `chunk-artifact-structured.shell-sweep.spec.ts` covers the two structured readings of a garden asset artifact —
   `ChunkArtifactDelta` and `ChunkArtifactSurvey` — mounted through `ChunkArtifactBody` inside a height-capped flex
   column. Each must bound itself at the cap and scroll its own overflow (`.rd-body`'s `scrollHeight` exceeding its
