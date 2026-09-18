@@ -141,6 +141,43 @@ path.
 **Passes when.** The page's steps are sufficient on their own — no undocumented flag, path, or prerequisite is needed —
 and the run ends the way the page says it will.
 
+### `blizzard:manual-opencode-export-budget`
+
+**Surface.** `OpenCodeTranscriptSource`'s wall-clock cost — one `opencode export <session-id>` shell-out plus its
+strict parse — under fleet-realistic concurrency, against the cursor token-size budget blizzard#437 D1 sets. No CI
+tier measures wall-clock time at all, and every component-tier test of the source binds a scripted export rather than
+a real `opencode` binary, so neither the shell-out's latency nor the parser's cost at a large retained conversation is
+pinned anywhere else. This is the contingency `blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s
+Performance boundary names: if the budget this reading records fails, the source moves behind OpenCode's documented
+server API instead, without changing the seam.
+
+**Blind spot.** A dev machine's `opencode export` cost is not the hosted runner host's — different disk, different CPU
+class, a different concurrent-worker count. What it measures instead is the **ratio** between the export's cost at a
+small retained conversation and at a large one, and between one concurrent caller and several, on the same machine —
+the shape a budget decision turns on, not an absolute SLA.
+
+**Setup.** A real `opencode` binary (or the emitted mock CLI-surface artifact once Phase 5 lands one with a general
+`export`, standing in when a live provider is unavailable), driving one session compacted enough to carry a
+fleet-realistic retained-turn count, per `blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s Forward
+reads section.
+
+**Steps.**
+
+1. Grow one OpenCode session to a retained conversation of realistic size (tool calls, reasoning parts, at least one
+   compaction).
+2. Time a single `opencode export`, cold, then time the source's `turns_since` cursor-admit pass over the parsed
+   result.
+3. Repeat concurrently at the fleet's realistic per-host worker count, timing wall-clock elapsed for the slowest
+   caller.
+4. Record the cursor token's serialized byte size at that retained-turn count (D1's own budget quantity).
+
+**Passes when.** Both readings — the single-call cost and the concurrent-fleet cost — are recorded together against
+the same session shape, alongside the cursor token's byte size at that shape, so D10's contingency is decided from a
+measurement rather than a guess.
+
+**Recorded reading.** None yet — no `OpenCodeTranscriptSource` exists to measure until Phase 3 lands it. Phase 5 runs
+this method for real and records the reading here, which is what selects or rejects the Phase 1 contingency.
+
 ### `blizzard:manual-autocompact-window`
 
 **Surface.** The `--autocompact` flag's effect rather than its presence: a session spawned with a declared
