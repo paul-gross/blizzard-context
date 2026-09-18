@@ -213,10 +213,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every control live at once
   — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real dock share) and at
-  390px/320px (`bzh:narrow-viewport-tier-rule`): none of Pause, Complete, Delete, the prerequisite field, Declare,
-  Release, the route/Detach group, or the close button may overflow the header's own right edge — a real CSS flex-wrap
-  layout claim jsdom cannot make. The spec asserts its swept selector list against an exact count, so a control added to
-  the row without being added to the list fails the fixture rather than passing unmeasured.
+  390px/320px (`bzh:narrow-viewport-tier-rule`): none of Pause, Complete, Delete, the route/Detach group, or the close
+  button may overflow the header's own right edge — a real CSS flex-wrap layout claim jsdom cannot make. The spec
+  asserts its swept selector list against an exact count, so a control added to the row without being added to the list
+  fails the fixture rather than passing unmeasured.
 - `chunk-artifact-structured.shell-sweep.spec.ts` covers the two structured readings of a garden asset artifact —
   `ChunkArtifactDelta` and `ChunkArtifactSurvey` — mounted through `ChunkArtifactBody` inside a height-capped flex
   column. Each must bound itself at the cap and scroll its own overflow (`.rd-body`'s `scrollHeight` exceeding its
