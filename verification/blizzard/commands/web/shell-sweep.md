@@ -151,6 +151,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   layout and real focus-management claims jsdom cannot make.
 - `kit-confirm-dialog.shell-sweep.spec.ts` covers `KitConfirmDialog`: Cancel and confirm controls share the dialog
   footer row, and repeated real `Tab` presses keep focus inside the composed confirmation prompt.
+- `kit-tooltip.shell-sweep.spec.ts` covers `KitTooltip`: a real pointer hover and a real keyboard `Tab` focus each open
+  the trigger's overlay panel, and `aria-describedby` resolves to that panel's own id in the rendered DOM — real
+  pointer, focus, and DOM-relationship claims jsdom cannot make.
 - `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields, mounted directly with
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
   stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and

@@ -11,9 +11,9 @@ action buttons, choice chips, tab strips — from `fleet/lib/kit/`, never a re-t
 **Why.** A shared floor makes "no duplicated chrome" structural rather than a review habit, and a chrome fix (a token, a
 state message) lands once.
 
-**Scope.** The kit depends only on `@angular/core` (plus common directives) and the token CSS (`design/tokens.css`) — no
-query, mutation, or client injection — keeping it presentational, testable by plain inputs, and at the bottom of the
-dependency graph; nothing in it may depend upward on a feature.
+**Scope.** The kit depends only on `@angular/core`, `@angular/cdk`, and the token CSS (`design/tokens.css`) — no query,
+mutation, or client injection — keeping it presentational, testable by plain inputs, and at the bottom of the dependency
+graph; nothing in it may depend upward on a feature.
 
 **Detect.** A new component's sibling `.css` declaring the retired chrome classes
 `.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl` (plus `KitAsyncState`'s own hand-rolled precursors `.none`/`.hint`/`.rest`)
