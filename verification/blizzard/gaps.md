@@ -194,7 +194,7 @@ goes untested by `blizzard`'s diagnostic cases, or a stale `blizzard` kwarg targ
 loudly only when `mock-opencode emit` rejects it at runtime.
 
 Standing in for a tier: `_fake_binary`'s own `assert len(lever_flags) == 26` pins the count as a trip-wire, and
-`bzh:opencode-lever-roster-extends-both-sides` in [`./companion-changes.md`](./companion-changes.md) obligates a
-roster change to land both sides in the same commit family. Neither closes the gap mechanically — the count can stay 26
-while a name silently swaps — so a roster change's correctness rests on the author following the companion-changes rule,
-not on a tier that would need the cross-repo import D7 forbids.
+`bzh:opencode-lever-roster-extends-both-sides` in [`./companion-changes.md`](./companion-changes.md) obligates a roster
+change to land both sides in the same commit family. Neither closes the gap mechanically — the count can stay 26 while a
+name silently swaps — so a roster change's correctness rests on the author following the companion-changes rule, not on
+a tier that would need the cross-repo import D7 forbids.
