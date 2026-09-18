@@ -182,3 +182,19 @@ Standing in for a tier: a live chunk run through the reshaped lane on the dogfoo
 against the routing the reshape intended. That evidence is only producible once the landed graph directory is re-minted,
 so this entry records a standing obligation on the lane's wording rather than a phase gate. Do not answer this with a
 tier that scores prompt prose against a rubric.
+
+## The cross-repo OpenCode lever roster
+
+`blizzard-mock`'s `opencode_surface.levers.Lever`/`CATALOG` and `blizzard`'s `tests/service/support.py::_fake_binary`
+kwarg roster are two independently maintained 1:1 mirrors of the same 26-member misbehaviour vocabulary — `_fake_binary`
+claims its mapping is exhaustive against the `Lever` enum, but `blizzard` deliberately holds no dependency on
+`blizzard-mock` (`tests/support.py::github_double`'s established stance), so nothing mechanical can diff the two
+rosters. A member added on one side with no matching update on the other drifts silently: a new `blizzard-mock` lever
+goes untested by `blizzard`'s diagnostic cases, or a stale `blizzard` kwarg targets a retired lever name and fails
+loudly only when `mock-opencode emit` rejects it at runtime.
+
+Standing in for a tier: `_fake_binary`'s own `assert len(lever_flags) == 26` pins the count as a trip-wire, and
+`bzh:opencode-lever-roster-extends-both-sides` in [`./companion-changes.md`](./companion-changes.md) obligates a
+roster change to land both sides in the same commit family. Neither closes the gap mechanically — the count can stay 26
+while a name silently swaps — so a roster change's correctness rests on the author following the companion-changes rule,
+not on a tier that would need the cross-repo import D7 forbids.

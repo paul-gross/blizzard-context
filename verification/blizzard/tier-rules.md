@@ -47,10 +47,12 @@ and process lifetime all real. That is the mock fleet's own claim, the same one 
 so a case that needs it inherits the mock fleet's gate rather than running unconditionally wherever it happens to be
 collected.
 
-**Detect.** A test resolving a binary path from the sibling `blizzard-mock` worktree, or asserting the exit code,
-argv-shape, or process behavior of one. A case driving only a generic subprocess, pty, or sandbox boundary that never
-presents an external-tool-shaped CLI is not this — it stays at `blizzard:component-test` with an inline script, since
-moving it would weaken the gate for no gain.
+**Detect.** A test resolving a binary path from the sibling `blizzard-mock` worktree to spawn it *as the external tool
+under test* — asserting the exit code, argv-shape, or process behavior of the fake CLI itself. A case driving only a
+generic subprocess, pty, or sandbox boundary that never presents an external-tool-shaped CLI is not this — it stays at
+`blizzard:component-test` with an inline script, since moving it would weaken the gate for no gain. Nor is a case that
+resolves the same worktree's mock hub/runner daemon binaries to stand up the fleet a browser-driven scenario then
+exercises — that is `blizzard:e2e`'s own established binding, not a whole-CLI-fake case.
 
 **Do.** Guard the case behind the established fleet-binding skip and resolve the binary through the established
 sibling-worktree helper, never a new resolution mechanism.
