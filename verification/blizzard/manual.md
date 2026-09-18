@@ -175,8 +175,36 @@ reads section.
 the same session shape, alongside the cursor token's byte size at that shape, so D10's contingency is decided from a
 measurement rather than a guess.
 
-**Recorded reading.** None yet — no `OpenCodeTranscriptSource` exists to measure until Phase 3 lands it. Phase 5 runs
-this method for real and records the reading here, which is what selects or rejects the Phase 1 contingency.
+**Recorded reading** (real `opencode 1.18.31`, one session grown to 122 messages / ~28k tokens over 24 real tool-using
+turns in a scratch git repo — a moderate-but-real retained size; time pressure cut the run short of an explicit
+compaction, so this is a smaller shape than the fleet's largest long-lived sessions, not the ceiling):
+
+| Reading                                        | Value                        |
+| ----------------------------------------------- | ----------------------------- |
+| Export size at this retained shape               | 408,050 bytes                |
+| Cold `opencode export`, single caller            | 866.4ms                      |
+| `turns_since` cursor-admit pass over the parse   | 3.14ms (441 records admitted) |
+| Cursor token byte size at this shape             | 75,846 bytes                 |
+| 8 concurrent callers, wall-clock for the batch   | 1618.3ms                     |
+| 8 concurrent callers, slowest caller             | 1485.6ms                     |
+| 8 concurrent callers, mean                       | 1269.7ms                     |
+
+**A blocking finding, independent of the budget itself.** `opencode export`'s own stdout write truncates at exactly
+65536 bytes (one Linux pipe buffer) when its stdout is a pipe rather than a regular file — reproduced identically
+through a raw shell pipe (`opencode export <id> | wc -c`), a bare `subprocess.Popen`/`communicate()`, and
+`SubprocessOpenCodeExporter`'s own `capture_output=True` call, all three truncating this same 408,050-byte export at
+65,536 bytes and leaving the parser a corrupt document (`json.JSONDecodeError`). Redirecting to a regular file instead
+(as this reading's own script does) reads the export whole. Every export above 64KiB — routine at this retained
+size, let alone a larger one — is silently unreadable through `SubprocessOpenCodeExporter` as written today,
+regardless of what this budget reading concludes; that adapter needs to redirect to a temp file rather than pipe-capture,
+a fix this reading did not make (out of Phase 5's declared scope) but flags as urgent, ahead of Phase 6.
+
+**What the budget itself says.** Once read correctly (file-redirected), both the single-call and the 8-way concurrent
+cost stay well under a second at this shape, and the cursor token — while non-trivial at 75,846 bytes — is a bounded
+fraction of the 408KB export it was cut from. Nothing here forces D10's server-API contingency on cost grounds alone;
+the pipe-truncation bug above is the actual blocker, and it blocks correctness before it ever reaches a performance
+budget. A follow-up reading at a genuinely large (compacted, 100k+ token) session, after the truncation fix lands,
+would sharpen this — this one is real but modest, not the ceiling case D1 ultimately needs.
 
 ### `blizzard:manual-autocompact-window`
 
