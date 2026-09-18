@@ -71,6 +71,18 @@ for `transcript_cursor`; the tail-marker fallback is unverified until a live run
 Re-run `blizzard:manual-opencode-compatibility` long enough to force a compaction before treating the fallback as
 proven, and do not add a tier that would assert a hand-authored spelling against itself.
 
+## OpenCode transcript reads never distinguish `not_found`
+
+`IHarnessTranscriptSource.turns_since`'s `TranscriptReadReason` names `not_found` and `unreadable` as distinct outcomes,
+but `opencode export <session-id>` gives no confirmed signal separating "no such session" from any other export failure
+— the compatibility probe's own `_export_session` (`opencode_probe.py`) does not distinguish them either, always folding
+a non-zero exit into one generic error string. `OpenCodeTranscriptSource` therefore reports every export failure as
+`unreadable`, never `not_found`, until a live run's exit code or stderr shape is captured and confirmed.
+
+Standing in for a tier: `blizzard:unit-test` covers the chosen `unreadable` default against every failure shape this
+parser can name; a live `opencode export` against a genuinely absent session id would be the evidence for a narrower
+`not_found` path, and does not exist yet. Do not add a stderr-string match invented rather than captured from a run.
+
 ## The worker deny list
 
 `WorkerSettings.document`'s `permissions.deny` list travels to the harness as a JSON settings file on every worker
