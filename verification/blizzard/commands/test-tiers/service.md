@@ -17,6 +17,11 @@ board through a real browser. It needs the sibling provisioned `blizzard-mock` w
 console scripts, the stub IdP, and `mock-claude-code`) plus a winter source, and skips cleanly without
 `BLIZZARD_SERVICE=1`.
 
+The same tier also binds a whole-CLI external-tool fake the mock fleet emits — an out-of-process binary driven the way a
+real harness integration would drive the genuine tool, rather than a hermetic in-process double
+(`bzh:external-cli-fake-is-service-tier`). A case driving only a generic subprocess, pty, or sandbox boundary, with no
+external-tool-shaped CLI in the loop, stays at `blizzard:component-test` instead.
+
 **Hub against mock runner plus mock forge.** A claim then a completion advances the chunk over the wire
 (`test_claim_and_completion_advance_the_chunk_over_the_wire`), stale epochs are rejected, and route-token authz runs
 under `route_token_mode=enforce`. Under `produces_mode=enforce` a completion for a node declaring `produces:` is fenced
