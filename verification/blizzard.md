@@ -85,6 +85,7 @@ live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows 
 | `blizzard:manual-external-usage-probe`             | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`                                                          |
 | `blizzard:manual-opencode-compatibility`           | OpenCode `1.18.25` with ChatGPT `5.6 Luna` at `max`, live CLI/provider compatibility diagnostic                                                    |
 | `blizzard:manual-opencode-compatibility-rehearsal` | The public rehearsal procedure for the compatibility diagnostic, walked offline against an emitted CLI-surface artifact instead of a live provider |
+| `blizzard:manual-opencode-export-budget`           | `opencode export`'s wall-clock cost at concurrency, against the token bound the cursor's pruning evidence sets                                     |
 | `blizzard:manual-autocompact-window`               | A declared `--autocompact` window compacting a real session, rather than the model's own maximum                                                   |
 | `blizzard:manual-worker-deny-list`                 | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness                                                  |
 | `blizzard:manual-rollback-drill`                   | The compose deployment's rollback promise, walked for real against two published image tags                                                        |

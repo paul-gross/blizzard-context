@@ -141,6 +141,68 @@ path.
 **Passes when.** The page's steps are sufficient on their own — no undocumented flag, path, or prerequisite is needed —
 and the run ends the way the page says it will.
 
+### `blizzard:manual-opencode-export-budget`
+
+**Surface.** `OpenCodeTranscriptSource`'s wall-clock cost — one `opencode export <session-id>` shell-out plus its strict
+parse — under fleet-realistic concurrency, against the cursor token-size budget blizzard#437 D1 sets. No CI tier
+measures wall-clock time at all, and every component-tier test of the source binds a scripted export rather than a real
+`opencode` binary, so neither the shell-out's latency nor the parser's cost at a large retained conversation is pinned
+anywhere else. This is the contingency `blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s Performance
+boundary names: if the budget this reading records fails, the source moves behind OpenCode's documented server API
+instead, without changing the seam.
+
+**Blind spot.** A dev machine's `opencode export` cost is not the hosted runner host's — different disk, different CPU
+class, a different concurrent-worker count. What it measures instead is the **ratio** between the export's cost at a
+small retained conversation and at a large one, and between one concurrent caller and several, on the same machine — the
+shape a budget decision turns on, not an absolute SLA.
+
+**Setup.** A real `opencode` binary (or the emitted mock CLI-surface artifact once Phase 5 lands one with a general
+`export`, standing in when a live provider is unavailable), driving one session compacted enough to carry a
+fleet-realistic retained-turn count, per `blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s Forward reads
+section.
+
+**Steps.**
+
+1. Grow one OpenCode session to a retained conversation of realistic size (tool calls, reasoning parts, at least one
+   compaction).
+2. Time a single `opencode export`, cold, then time the source's `turns_since` cursor-admit pass over the parsed result.
+3. Repeat concurrently at the fleet's realistic per-host worker count, timing wall-clock elapsed for the slowest caller.
+4. Record the cursor token's serialized byte size at that retained-turn count (D1's own budget quantity).
+
+**Passes when.** Both readings — the single-call cost and the concurrent-fleet cost — are recorded together against the
+same session shape, alongside the cursor token's byte size at that shape, so D10's contingency is decided from a
+measurement rather than a guess.
+
+**Recorded reading** (real `opencode 1.18.31`, one session grown to 122 messages / ~28k tokens over 24 real tool-using
+turns in a scratch git repo — a moderate-but-real retained size; time pressure cut the run short of an explicit
+compaction, so this is a smaller shape than the fleet's largest long-lived sessions, not the ceiling):
+
+| Reading                                        | Value                         |
+| ---------------------------------------------- | ----------------------------- |
+| Export size at this retained shape             | 408,050 bytes                 |
+| Cold `opencode export`, single caller          | 866.4ms                       |
+| `turns_since` cursor-admit pass over the parse | 3.14ms (441 records admitted) |
+| Cursor token byte size at this shape           | 75,846 bytes                  |
+| 8 concurrent callers, wall-clock for the batch | 1618.3ms                      |
+| 8 concurrent callers, slowest caller           | 1485.6ms                      |
+| 8 concurrent callers, mean                     | 1269.7ms                      |
+
+**A blocking finding, independent of the budget itself — since fixed.** `opencode export`'s own stdout write truncates
+at exactly 65536 bytes (one Linux pipe buffer) when its stdout is a pipe rather than a regular file — reproduced
+identically through a raw shell pipe (`opencode export <id> | wc -c`), a bare `subprocess.Popen`/`communicate()`, and
+`SubprocessOpenCodeExporter`'s own `capture_output=True` call, all three truncating this same 408,050-byte export at
+65,536 bytes and leaving the parser a corrupt document (`json.JSONDecodeError`). Redirecting to a regular file instead
+(as this reading's own script does) reads the export whole. Every export above 64KiB — routine at this retained size,
+let alone a larger one — was silently unreadable through `SubprocessOpenCodeExporter` as written at the time of this
+reading; `SubprocessOpenCodeExporter.export` now redirects `opencode export`'s stdout to a scratch file and reads it
+back, closing the gap this reading found.
+
+**What the budget itself says.** Once read correctly (file-redirected), both the single-call and the 8-way concurrent
+cost stay well under a second at this shape, and the cursor token — while non-trivial at 75,846 bytes — is a bounded
+fraction of the 408KB export it was cut from. Nothing here forces D10's server-API contingency on cost grounds alone. A
+follow-up reading at a genuinely large (compacted, 100k+ token) session would sharpen this — this one is real but
+modest, not the ceiling case D1 ultimately needs.
+
 ### `blizzard:manual-autocompact-window`
 
 **Surface.** The `--autocompact` flag's effect rather than its presence: a session spawned with a declared
