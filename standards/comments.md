@@ -68,6 +68,10 @@ Every model under `blizzard/src/blizzard/wire` is held to this clause published 
 `responses=` from being public; `blizzard-mock/src` falls outside it, because its wire models mirror a schema they never
 export, so nothing there generates.
 
+Editing one of these docstrings stales `openapi/` and the generated TypeScript client; landing the regenerated pair in
+the same change is `bzh:generated-client` in [`./frontend.md`](./frontend.md) — the same class of owed landing as a wire
+or e2e change, not a fresh obligation of its own.
+
 ## Detect
 
 - A named other module, class, service, component, or repo — or a `{@link}` target — followed by what it does, where a
