@@ -100,13 +100,13 @@ diagnostic curve the next interval re-samples.
 
 ## Retention pruning
 
-`Retention` (`blizzard/src/blizzard/runner/loop/steps.py`) runs three prunes every tick, one per append-only lane:
-`prune_outbound` deletes an acked `outbound_buffer` row past its window but only below the lowest still-pending seq, and
-`prune_heartbeats` / `prune_external_usage_samples` each compact their table to every lease's or slug's newest row past
-a shorter window. Each prune is one `DELETE` statement in its own transaction, so a `kill -9` anywhere around it leaves
-the table exactly as it was before the statement or exactly as it would be after — never a partially-applied delete.
-That is a **no-window** write: there is no second half a crash could separate it from, and so no
-`bzh:crash-point-registry` entry is owed.
+`Retention` (`blizzard/src/blizzard/runner/loop/steps.py`) runs three prunes every tick, one for each of the append-only
+lanes named below: `prune_outbound` deletes an acked `outbound_buffer` row past its window but only below the lowest
+still-pending seq, and `prune_heartbeats` / `prune_external_usage_samples` each compact their table to every lease's or
+slug's newest row past a shorter window. Each prune is one `DELETE` statement in its own transaction, so a `kill -9`
+anywhere around it leaves the table exactly as it was before the statement or exactly as it would be after — never a
+partially-applied delete. That is a **no-window** write: there is no second half a crash could separate it from, and so
+no `bzh:crash-point-registry` entry is owed.
 
 None of the three can delete a row a live reader still depends on. The outbound prune's pending-floor check keeps every
 row a still-open fact might need; the heartbeat and usage-sample prunes keep each lease's or slug's newest row

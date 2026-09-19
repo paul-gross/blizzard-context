@@ -29,11 +29,15 @@ states it in a vocabulary that is not the code's. Concretely, on this target:
 
 ## Criteria
 
-[`../standards/comments.md`](../standards/comments.md) (`bzh:comment-locality`) and
-[`../standards/comment-encapsulation.md`](../standards/comment-encapsulation.md) (`bzh:comment-encapsulation`) own every
-rule this axis judges by and are the only home for their prose. Neither has a command, which is what leaves them to this
-axis. Each binds every scope above in that scope's own language, so a run narrowed to `web-suite` judges by the same two
-ids in their TypeScript vocabulary.
+The ids below, none of them carrying a command, which is what leaves them to this axis:
+
+- `bzh:comment-locality` in [`../standards/comments.md`](../standards/comments.md) and `bzh:comment-encapsulation` in
+  [`../standards/comment-encapsulation.md`](../standards/comment-encapsulation.md) each bind every scope above in that
+  scope's own language, so a run narrowed to `web-suite` judges by the same two ids in their TypeScript vocabulary.
+- `bzh:help-states-effect` in [`../standards/help-text.md`](../standards/help-text.md) binds `cli-surface` alone — the
+  `--help` text `bzh:comment-encapsulation`'s Exception hands it.
+
+Those files own every rule this axis judges by and are the only home for their prose.
 
 Where a command already judges the same prose, it owns that judgement and this axis does not
 (`winter-canon:/enforcement-channels.md`):

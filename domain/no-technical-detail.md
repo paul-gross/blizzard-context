@@ -36,6 +36,12 @@ own entry stays. The key is stated in the first of these that exists:
 
 A key no spoke takes on either count is outside the delegation, and stays.
 
+## Scope
+
+Binds this tree's model files — the spokes stating concept behavior, and the hub where it frames them. A file whose
+subject is how to author or review the tree, this one included, states a convention rather than the model and is not
+bound by it.
+
 ## Detect
 
 - A store, wire, service, or route name in a domain file carrying what that thing does, not a pointer at its owner.
