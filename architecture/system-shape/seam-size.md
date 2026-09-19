@@ -27,13 +27,15 @@ test; a reason for the entry is a review obligation, not something the gate itse
 **Do.** The runner's harness seam splits `IHarnessAdapter`'s fourteen methods into four narrower Protocols along its
 consumers' own lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, and usage
 accounting (`src/blizzard/runner/harness/adapter.py`). A consumer needing one slice re-types to it directly
-(`domain/takeover.py`, `domain/status.py` each take `IHarnessWorkerLifecycle`); two consumers needing the same wider
-pair — the runner loop's own step functions (`LoopContext.harness`) and the selftest canary — share one composed
-`IHarnessLifecycleAndVerdict` rather than each re-declaring it or falling back to the full seam. `transcript_source`
-stays declared directly on `IHarnessAdapter` itself rather than in a fifth named slice: its one caller is the same
-`app.py` composition root that already holds the whole seam, so a narrower Protocol would have no holder to narrow for.
-`IHarnessAdapter` composes the four slices plus that one method, for the one code path that holds the whole seam without
-calling every part of it piecemeal: the runner's `app.py` composition root.
+(`domain/takeover.py`, `domain/status.py` each take `IHarnessWorkerLifecycle`); the runner loop's own step functions
+(`LoopContext.harness`) take the composed `IHarnessLifecycleAndVerdict` (worker lifecycle plus verdict parsing), while
+the selftest canary's own widened roster needs a wider composed pair still — worker lifecycle, verdict parsing, and
+usage accounting, plus `transcript_source` — so it takes its own `IHarnessSelfTestSeam` rather than either re-declaring
+the whole set or falling back to the full adapter. `transcript_source` sits outside all four slices, declared directly
+on both `IHarnessSelfTestSeam` and `IHarnessAdapter` itself, its two callers each already holding a wide-enough composed
+seam that a fifth named slice would have nothing left to narrow for. `IHarnessAdapter` composes the four slices plus
+that one method, for the one code path that holds the whole seam without calling every part of it piecemeal: the
+runner's `app.py` composition root.
 
 **Don't.** Leaving a Protocol to grow past the ceiling because splitting it "later" is easier than registering the width
 now, or registering an exception without a reason — either loses the one signal a reviewer has for "this seam grew wider

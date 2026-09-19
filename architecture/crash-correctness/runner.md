@@ -255,19 +255,17 @@ top of the first.
 ## The selftest result
 
 `SelfTestService._finish` (`blizzard/src/blizzard/runner/selftest/service.py`) writes a completed selftest run's
-terminal outcome — status, error, and its per-check results — as a `selftest_results` row plus its
-`selftest_result_checks` children (`blizzard/src/blizzard/runner/store/schema.py`), read back by `harness_id`, newest
-row wins. Run *state* stays the process-local, restart-erased resource it always was (`SelfTestRun`, held only in
-`SelfTestService`'s own in-memory dict); only the *terminal outcome* of a completed run is durable, so the
-harness-health evaluator's daemon-start recalculation can see the last completed result across a restart rather than
-treating every boot as a never-run selftest.
+terminal outcome — status and error only — as one `selftest_results` row
+(`blizzard/src/blizzard/runner/store/schema.py`), read back by `harness_id`, newest row wins. Run *state*, per-check
+results included, stays the process-local, restart-erased resource it always was (`SelfTestRun`, held only in
+`SelfTestService`'s own in-memory dict); nothing durable reads a run's own checks back, so they ride no further than
+that. Only the *terminal outcome* of a completed run is durable, so the harness-health evaluator's daemon-start
+recalculation can see the last completed result across a restart rather than treating every boot as a never-run
+selftest.
 
-The parent row and its children are one insert apiece inside one committed transaction
-(`SelfTestResultStore.record_selftest_result`), so a `kill -9` either leaves the previous recorded result standing or
-the new one complete with every one of its children — never a parent row with no children, or fewer than it should have.
-This is a **no-window** write: there is no second half a crash could separate it from, the same ground `Retention.run`'s
-prunes above rest on. Nothing durable reads through a half-written row anyway, since a reader always joins the parent to
-its children through the parent's own primary key after both inserts have already committed as one unit.
+The write is one insert (`SelfTestResultStore.record_selftest_result`), so a `kill -9` either leaves the previous
+recorded result standing or the new one complete — never a half-written row. This is a **no-window** write: there is no
+second half a crash could separate it from, the same ground `Retention.run`'s prunes above rest on.
 
 The write owes the invariant checker nothing: `latest_selftest_result` reads the newest row by primary key per
 `harness_id`, an ordering comparison over append-only rows, never a derived cross-fact invariant. A run still
