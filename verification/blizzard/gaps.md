@@ -94,13 +94,15 @@ Standing in for a tier: `blizzard:manual-worker-deny-list` closes this as a live
 [`blizzard:manual-autocompact-window`](./manual.md#blizzardmanual-autocompact-window) — an external harness's live
 permission enforcement sits outside a hermetic, network-free CI tier's reach.
 
-## Transcript normalization
+## Claude Code transcript normalization
 
 `blizzard-mock`'s `ClaudeTranscriptWriter` (`blizzard-mock/src/blizzard_mock/harness/facades/_transcript.py`)
 deliberately mints none of the shapes involved, so no mock-driven `blizzard:service-test` or `blizzard:e2e` exercises
 the normalizer, which could drift from a future Claude Code CLI with every tier green. `test_transcript_tab_browser_e2e`
 does not close it either: it seeds hand-authored `TurnSegmentView` JSON straight to `POST /api/fleet/transcripts`, so no
-normalizer output ever reaches it.
+normalizer output ever reaches it. OpenCode's own `opencode_normalizer` is a separate code path this gap does not reach
+either way — it is exercised by `blizzard-mock`'s `OpenCodeTranscriptWriter` through a real mock-driven
+`blizzard:service-test` (blizzard#437 Phase 5), which this one is not.
 
 Standing in for a tier: sidechain and thinking-turn normalization is proven only against hand-authored fixtures, pinned
 at `blizzard:unit-test` and by the component-tier projection golden tests, both fed by the same record fixtures — which
@@ -108,12 +110,15 @@ transcript shapes are involved, and why, is owned by `blizzard-mock`'s `src/bliz
 §"Conversation transcripts". Do not add a real-corpus CI tier reading a developer's `~/.claude/projects`, which is
 neither hermetic nor reproducible.
 
-## The transcript source's position codec, batch budget, and EOF clamps
+## Claude Code's transcript source position codec, batch budget, and EOF clamps
 
 The position codec, the shared batch budget, and the past-EOF clamps inside `ClaudeCodeTranscriptSource.turns_since` are
 pinned at no tier at all. Every component-tier test of the transcript lane binds a scriptable `FakeTranscriptSource`
 (`blizzard/tests/runner_fakes.py`), so `tests/test_transcript_pump.py` and `tests/test_transcript_backfill.py` reach the
-pump's and the backfill's own decisions and never those three pieces.
+pump's and the backfill's own decisions and never those three pieces. `OpenCodeTranscriptSource` is a distinct
+implementer this gap does not name: its own export-identity cursor, bound token, and `not_found`/`unreadable` split are
+pinned at `blizzard:unit-test` (blizzard#437 Phase 3) — "OpenCode transcript reads never distinguish `not_found`" above
+covers what that tier does not.
 
 Standing in for a tier: `blizzard runner transcript reship` and `blizzard runner transcript backfill` drive
 `TranscriptPump.drain_segment` with `deadline=None` over a complete historical file from offset 0 until the source
