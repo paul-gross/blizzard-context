@@ -28,7 +28,7 @@ a daemon-side process — where the effect alone tells the operator what they ne
 
 ```python
 def pause(...) -> None:
-    """Pause this runner: it starts no new workers, and `runner status` reports it paused until `resume`."""
+    """Pause this runner: it starts no new workers, and `runner status` reports it paused until the brake is cleared."""
 ```
 
 ## Don't
