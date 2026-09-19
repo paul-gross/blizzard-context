@@ -82,7 +82,7 @@ frozen dataclass like `HubServices`:
 - `build_hosted_app` in `blizzard/src/blizzard/runner/app.py`
 - `LoopWiring.context` in `blizzard/src/blizzard/runner/loop/build.py`
 
-The CLI entry modules are roots too — a `click` command is a short-lived process with no server loop to hand a dataclass
+The CLI modules below are roots too — a `click` command is a short-lived process with no server loop to hand a dataclass
 through, so wiring its concrete collaborators once, inline, at the top of the command body is that process's composition
 root:
 
