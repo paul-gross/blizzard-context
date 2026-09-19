@@ -93,25 +93,26 @@ dropped-but-unnoticed one is recomputed from `derived_segment_ids()` minus the n
 Per-segment-per-version uniqueness on `(segment_id, extractor_version, kind, turn_path, occurrence)` is a store-level
 unique constraint the engine enforces, not a derived cross-fact invariant the checker must recompute.
 
-## Invocation boundaries (blizzard#437 D6/D11)
+## Invocation boundaries
 
 `invocation_boundaries` (`blizzard/src/blizzard/runner/store/schema.py`) records one durable start marker per
 fleet-driven invocation — a worker spawn generation, a resume generation, a judgement, or a nudge — written by
 `InvocationBoundaryStore.record_boundary_open` before that invocation's process launches, so interrupted-usage recovery
-(blizzard#437 Phase 4) has a durable range to read even if the launch itself is the thing that crashes.
+has a durable range to read even if the launch itself is the thing that crashes.
 
 Spawn's and a plain resume's own boundary writes (`Spawner.spawn`, `DormantSession._wake`) are genuinely new pre-launch
 writes, each guarded by its own registered point (`spawn.after-boundary-record.before-spawn`,
 `resume.wake.after-boundary-record.before-launch`) in the family its scenario already belongs to — no new family, since
 neither opens a window a fresh generic or RESUME sweep scenario does not already reach.
 
-Judgement's and the nudge's own boundary writes are the narrower ground instead: each rides an *existing* pre-launch
-write — `record_elicitation_launch` (`Judgement._launch`) and `record_nudge_fired` (`Judgement.run`) respectively — as a
-second, immediately-adjacent transaction, reached before that write's own existing crash point
-(`advance.after-elicit-record.before-launch`, `nudge.after-fired-fact.before-resume`). The narrow gap between the two
-transactions carries no crash point of its own: a crash inside it leaves the existing fact durable but no boundary,
-which recovery reads exactly like a session with no boundary at all — a source that answers "unmeasured" rather than a
-wrong answer — so the loss is accepted and named here rather than separately instrumented.
+Judgement's and the nudge's own boundary writes take the narrower ground instead: each is its own transaction,
+immediately after an *existing* pre-launch write — `record_elicitation_launch` (`Judgement._launch`) and
+`record_nudge_fired` (`Judgement.run`) respectively — reached before that write's own existing crash point
+(`advance.after-elicit-record.before-launch`, `nudge.after-fired-fact.before-resume`). The gap between the two
+transactions is a real window, not a joined write: a crash inside it leaves the existing fact durable but no boundary.
+What that loses is bounded and recoverable — recovery reads it exactly like a session with no boundary at all, a source
+that answers "unmeasured" rather than a wrong answer — so it is accepted and named here (the second ground above) rather
+than separately instrumented.
 
 Closing rides `Attempt.close`, the one funnel every closure path (`abandon`, `preempt`, `fail`, and the rest) shares:
 `close_boundaries_for_lease` runs BEFORE `record_closure`, so a crash between the two just re-enters this same
