@@ -58,8 +58,8 @@ module globals.
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
 singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 
-- `blizzard.runner.composition` imported, in any form, anywhere outside the seven composition roots named below —
-  fail-closed, with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
+- `blizzard.runner.composition` imported, in any form, anywhere outside the composition roots named below — fail-closed,
+  with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
 - `ClaudeCodeAdapter` imported anywhere outside `runner/harness/internal/harness_registry.py` — the one factory that
   constructs it, `build_production_harness_registry`, whose built registry the composition roots take instead;
   `OpenCodeAdapter` is gated the same way, constructed only by `runner/harness/internal/opencode_registry.py`'s
@@ -74,21 +74,31 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 - `runner/transcripts/service.py` importing any package's `internal/` module — its per-owner repository resolver is
   injected instead.
 
-**Do.** Blizzard has no DI container. Seven modules are its composition roots, each wiring every seam once and handing
-collaborators down in a frozen dataclass like `HubServices`: `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`,
-`build_services` in `blizzard/src/blizzard/hub/composition.py`, `build_hosted_app` in
-`blizzard/src/blizzard/runner/app.py`, and `LoopWiring.context` in `blizzard/src/blizzard/runner/loop/build.py`.
-`blizzard/src/blizzard/runner/cli/runtime.py`, `blizzard/src/blizzard/runner/cli/external_usage.py`, and
-`blizzard/src/blizzard/hub/cli/__init__.py` are roots too: a `click` command (or, for the hub CLI, the `hub` group
-callback every verb's context inherits `ctx.obj` from) is a short-lived process with no server loop to hand a dataclass
+**Do.** Blizzard has no DI container. Its composition roots each wire every seam once and hand collaborators down in a
+frozen dataclass like `HubServices`:
+
+- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`
+- `build_services` in `blizzard/src/blizzard/hub/composition.py`
+- `build_hosted_app` in `blizzard/src/blizzard/runner/app.py`
+- `LoopWiring.context` in `blizzard/src/blizzard/runner/loop/build.py`
+
+The CLI entry modules are roots too — a `click` command is a short-lived process with no server loop to hand a dataclass
 through, so wiring its concrete collaborators once, inline, at the top of the command body is that process's composition
-root. The same reasoning extends to a helper a command's own root calls into rather than repeating:
-`blizzard/src/blizzard/runner/cli/daemon.py`'s `uds_client` builds the local UDS `httpx.Client` both
-`RunnerDaemon.reach` and `runner/cli/transcript.py`'s `_daemon_holding` need, shared rather than duplicated, with
-neither call site substituting a fake for it in a test. `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_stores` is
-the same shape: it builds the runner's read-only store bundle and disposes the engine on exit, so
-`runner/cli/prompt.py`'s `_stored_override` calls into it instead of repeating the construction outside a composition
-root.
+root:
+
+- `blizzard/src/blizzard/runner/cli/runtime.py`
+- `blizzard/src/blizzard/runner/cli/external_usage.py`
+- `blizzard/src/blizzard/hub/cli/__init__.py` — the `hub` group callback, which every verb's context inherits `ctx.obj`
+  from
+
+The same reasoning extends to a helper a command's own root calls into rather than repeating:
+
+- `blizzard/src/blizzard/runner/cli/daemon.py`'s `uds_client` builds the local UDS `httpx.Client` both
+  `RunnerDaemon.reach` and `runner/cli/transcript.py`'s `_daemon_holding` need, shared rather than duplicated, with
+  neither call site substituting a fake for it in a test.
+- `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_stores` builds the runner's read-only store bundle and disposes
+  the engine on exit, so `runner/cli/prompt.py`'s `_stored_override` calls into it instead of repeating the construction
+  outside a composition root.
 
 **Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
 

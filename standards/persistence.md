@@ -19,22 +19,24 @@ CI loops stay cheap. On ordering, sqlite's incidental rowid order coincides with
 real `order_by` still comes back in write order, indistinguishable from deliberate ordering to any sqlite-backed test,
 and only postgres's unordered contract exposes the gap.
 
-**Exception.** Two recorded exemptions. First, the engine factory (`src/blizzard/foundation/store/engine.py`) is the one
-place allowed to branch on the configured backend for driver and connection-level settings — never for query semantics;
-it owns those settings' values, and no store, domain, or migration code may name or hardcode one. A write path may still
-rely on the serialization guarantee those settings preserve rather than fail outright on contention: sqlite's
-single-writer lock, which the WAL/`busy_timeout` pair the factory sets preserves rather than removes, is what
-`acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`) and `next_route_seq`
-(`hub/store/internal/chunk_rows.py`) already serialize concurrent callers on — the guarantee is portable across both
-backends, only its sqlite implementation runs through the factory. Second, the runner's two outbound buffers —
-`outbound_buffer` and the transcript lane's own `transcript_outbound_buffer` — each set `sqlite_autoincrement=True` on
-their `seq` primary key: a sqlite-only pragma admitted because the hazard it guards is itself sqlite-only, so no
-portable equivalent exists. The hazard: both buffers prune acked rows past their own retention window, and a bare sqlite
-`INTEGER PRIMARY KEY` reuses a pruned row's rowid, so a later insert could be reissued a `seq` a consumer already
-treated as final. Postgres needs no equivalent: that column's `autoincrement=True` compiles there to a sequence-backed
-`SERIAL`, which never reuses a deleted value, so the schema stays one portable surface in effect.
-`tests/test_pin_runner_store.py` pins the sqlite autoincrement behavior for both buffers; no postgres-side test exists
-because there is no postgres-side hazard to cover.
+**Exception.**
+
+- **The engine factory.** `src/blizzard/foundation/store/engine.py` is the one place allowed to branch on the configured
+  backend for driver and connection-level settings — never for query semantics; it owns those settings' values, and no
+  store, domain, or migration code may name or hardcode one. A write path may still rely on the serialization guarantee
+  those settings preserve rather than fail outright on contention: sqlite's single-writer lock, which the
+  WAL/`busy_timeout` pair the factory sets preserves rather than removes, is what `acquire_hub_exec_slot`
+  (`hub/store/internal/chunk_hub_exec_store.py`) and `next_route_seq` (`hub/store/internal/chunk_rows.py`) already
+  serialize concurrent callers on — the guarantee is portable across both backends, only its sqlite implementation runs
+  through the factory.
+- **The runner's outbound buffers.** `outbound_buffer` and the transcript lane's own `transcript_outbound_buffer` each
+  set `sqlite_autoincrement=True` on their `seq` primary key: a sqlite-only pragma admitted because the hazard it guards
+  is itself sqlite-only, so no portable equivalent exists. The hazard: both buffers prune acked rows past their own
+  retention window, and a bare sqlite `INTEGER PRIMARY KEY` reuses a pruned row's rowid, so a later insert could be
+  reissued a `seq` a consumer already treated as final. Postgres needs no equivalent: that column's `autoincrement=True`
+  compiles there to a sequence-backed `SERIAL`, which never reuses a deleted value, so the schema stays one portable
+  surface in effect. `tests/test_pin_runner_store.py` pins the sqlite autoincrement behavior for both buffers; no
+  postgres-side test exists because there is no postgres-side hazard to cover.
 
 **Detect.** A dialect-specific column type, function, or `text()` SQL; a test asserting behavior only one backend gives;
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit

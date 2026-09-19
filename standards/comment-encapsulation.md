@@ -25,8 +25,8 @@ reading as a contract, and the next implementer or caller inherits one consumer'
 ## Exception
 
 - A bare pointer at the party that owns the fact: a name or path on one line, carrying none of the owner's content.
-- A client verb's `--help` text: it states the observable effect of invoking it — what changes, what the operator will
-  then see, what fails and when — and never the mechanism producing it.
+- A client verb's `--help` text, which states an effect wherever it lands: `bzh:help-states-effect` in
+  [./help-text.md](./help-text.md) governs it instead.
 
 ## Scope
 
@@ -51,8 +51,6 @@ Binds the same trees as `bzh:comment-locality`, and the seams it holds are each 
   form.
 - A contract restated on both sides of a seam, which is `bzh:one-prose-home`'s signature: a reviewer cites that id, and
   [./one-prose-home.md](./one-prose-home.md) owns what a pointer may carry.
-- A client verb's `--help` naming the mechanism behind an effect — a loop step, a bumped counter, an internal
-  reconciler, a daemon-side process — where the effect alone tells the operator what they need.
 
 ## Do
 

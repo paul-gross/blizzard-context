@@ -53,7 +53,7 @@ The activity feed is reconstructed fresh from the durable facts the domain alrea
 decisions, runner pauses, and event-log rows; no separate log is written for it. It is bounded: 24 hours by default, at
 most the 200 newest rows.
 
-Five things produce no activity-feed row:
+These produce no activity-feed row:
 
 - direct chunk edits — in-place mutation, with no durable fact behind it;
 - reorders of the `not_ready` list or the `ready` queue ([./work/ranking.md](./work/ranking.md)) — per-chunk rows

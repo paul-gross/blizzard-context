@@ -166,14 +166,7 @@
         "level": 2,
         "exclude": []
       },
-      "sites": [
-        {
-          "repo": "blizzard-context",
-          "file": "architecture/frontend-structure.md",
-          "role": "owner",
-          "reason": "the roster's own home — checked so its lead sentence and this tree's actual rule headings cannot disagree"
-        }
-      ]
+      "sites": []
     }
   ]
 }

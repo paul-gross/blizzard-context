@@ -97,9 +97,9 @@ graph author meets names the domain statement that surface now owes and lands th
 is the `blizzard-context:/domain/` file modeling the concept — the home `bzh:one-prose-home` assigns a domain concept —
 with two placements the domain tree's own shape decides:
 
-- A key inside a contract the domain file has delegated to a standard is placed by the domain hub's delegated-key
-  sentence in [`../../domain/index.md`](../../domain/index.md), which owns the spoke that takes the key and what the
-  domain file keeps.
+- A key inside a contract the domain file has delegated to a standard is placed by `bzh:domain-no-technical-detail`'s
+  Exception in [`../../domain/no-technical-detail.md`](../../domain/no-technical-detail.md), which owns the spoke that
+  takes the key and what the domain file keeps.
 - A mint-time outcome that judges the graph as a whole, whose domain file is a router, joins the part whose file already
   states the aspect the outcome judges — the entry node and cycles with edges, the artifact map with declared artifacts.
   An aspect no part yet states is the author's to place, in one part, whose row in the graph hub then widens its read

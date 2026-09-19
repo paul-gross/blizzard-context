@@ -56,15 +56,15 @@ to its object is an edge concern, done before the domain is invoked.
 **Why.** A domain that takes objects cannot fail on a missing or malformed id mid-rule, and its signatures state exactly
 which entities a rule operates on.
 
+**Exception.** A parameter that resolves not to the entity the operation is about, but to a guard the domain must itself
+evaluate as part of its own business rule. `ClaimService.claim`'s `runner_id: str` resolves a paused-runner denial check
+inline — a claim-denial rule that belongs in the domain, not at the edge — so it stays a raw id, reasoned and registered
+at its own site with `# ast-grep-ignore: bzh:domain-takes-objects`.
+
 **Scope.** A layer that holds no entity type for the identifier at all — the runner's chunk-keyed operations, where no
 `Chunk` type exists locally (`bzh:facts-not-status` keeps each per-concept table independent) — still resolves at the
 edge: it mints a typed scope naming exactly the facts the rule reads, rather than loading an aggregate that does not
 exist. The scope is data, not behavior, and never grows into one.
-
-A second, narrower exemption: a parameter that resolves not to the entity the operation is about, but to a guard the
-domain must itself evaluate as part of its own business rule. `ClaimService.claim`'s `runner_id: str` resolves a
-paused-runner denial check inline — a claim-denial rule that belongs in the domain, not at the edge — so it stays a raw
-id, reasoned and registered at its own site with `# ast-grep-ignore: bzh:domain-takes-objects`.
 
 **Detect.** A domain signature typed `chunk_id: str` rather than `chunk: Chunk`, or a domain method loading an entity
 from an id it was passed.
