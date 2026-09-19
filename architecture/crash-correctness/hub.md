@@ -58,8 +58,7 @@ as durable as that fact and never separately lost. A `skipped` attempt (no close
 outcome fact and no retirement to fold alongside, so `record_close_attempt_skipped` is its own single-statement
 transaction; a crash before it commits loses nothing durable (the intent was already pending and stays pending), and
 there is nothing after it to lose. Either way the ledger is append-only (`bzh:facts-not-status`): a crash mid-sweep
-leaves some intents' backoff clocks ticked and others not, and the next pass reads each one's own history fresh, exactly
-as an interrupted sweep already did before backoff existed.
+leaves some intents' backoff clocks ticked and others not, and the next pass reads each one's own history fresh.
 
 Per-ref close-once is `record_work_item_closure`'s own store-level uniqueness constraint on
 `(chunk_id, source, ref, outcome)`, mirroring `record_hub_artifact`'s own idempotent-bool contract; retirement rides the
@@ -127,8 +126,7 @@ allocates the run's `ref` through `WorkItemStore.allocate_ref` before this trans
 item-creation chunk mint's own: under the allocator's own already-accepted gap-tolerant contract, a crash in between
 burns that one `ref`, never reused. The run's effective scope carries no write of its own to window: the API edge
 resolves it to an already-existing, already-related `Scope` — a read, refusing rather than minting one — before
-`RunService.run` is ever called, so the domain layer opens no second write ahead of the transaction the way it once did
-through `ScopeRegistry.ensure`.
+`RunService.run` is ever called, so the domain layer opens no second write ahead of the transaction.
 
 The composite owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
@@ -365,4 +363,4 @@ This is a real window whose whole loss is accepted and named, not the no-window 
 call is its own transaction, so a crash can land between it and either the domain write just before it or the next
 fact's domain write just after — a span that exists and can lose a bounded, non-durable amount, not a span with nothing
 left to separate. The write owes the checker nothing beyond what it already carries: `runner_high_water` is a per-runner
-scalar the store already treats as idempotently overwritable, not a derived cross-fact invariant this change adds.
+scalar the store already treats as idempotently overwritable, not a derived cross-fact invariant to recompute.
