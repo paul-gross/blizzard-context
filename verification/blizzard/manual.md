@@ -108,6 +108,60 @@ command, for `anthropic`), and compare the two.
 **Passes when.** The probe's parsed utilization percentages and reset times match what the provider's own usage view
 reports for the same account, within the natural few-second sampling skew.
 
+### `blizzard:manual-retired-wire-response-vocabulary-census`
+
+**Surface.** Retired subscription wire-response vocabulary in the `blizzard` app repo — the response types, fields,
+projections, and rendering paths a subscription-shape retirement was supposed to remove, plus the prose that still
+describes them as live.
+
+**Setup.** Run in the `blizzard` worktree of the feature env the retirement was built in, or in `projects/blizzard/`
+when working from the source checkout; `workspace:/context/workspace-layout.md` owns both shapes. The mock's mirror of
+these response models is not in surface here — `blizzard-mock:unit-test`'s wire-parity guard holds it mechanically.
+
+**Phrase declarations.** Search these exact identifiers and semantic legacy-shape phrases:
+
+- `ExternalSubscriptionUsageView`
+- `LegacySubscriptionUsageView`
+- `external_subscription_usage`
+- `legacy usage`
+- `legacy snapshot`
+- `legacy field`
+- `legacy fallback`
+- `one usage sample`
+- `single usage sample`
+- `newest usage sample`
+
+**Classifications.** Apply these tests in order and stop at the first that matches, so every occurrence has exactly one
+verdict:
+
+1. **Out of surface** — the `[external_subscription_usage]` key in `blizzard-runner.toml` or the code and prose reading
+   it, and the `external_subscription_usage.sampled` fact-kind string. These name a config table and a fact, not a wire
+   response; a retirement of the response shape never touches them.
+2. **Retained** — a frozen migration's restated literal (`bzh:frozen-revisions`), current per-slug storage, or a test or
+   scenario name naming the fact rather than the response.
+3. **Deleted** — everything else: a wire response type or field, a legacy projection, a fallback rendering path, or
+   prose or a test asserting the retired and current shapes coexist.
+
+**Steps.** Record `git rev-parse HEAD`, then search tracked content with:
+
+```bash
+pattern='(External|Legacy)SubscriptionUsageView|external_subscription_usage'
+pattern="${pattern}|[Ll]egacy (usage|snapshot|field|fallback)"
+pattern="${pattern}|([Oo]ne|[Ss]ingle|[Nn]ewest) usage sample"
+git grep -n -E "$pattern"
+```
+
+Read every hit in its surrounding context — the phrase alone never decides a verdict — and classify each under the
+ordered tests above. This is a census, not a sweep: it reads the tree and does not change it. A `deleted` occurrence is
+a failure to report, not something the pass removes on its way through.
+
+**Evidence.** Record the revision, the search expression, the total hit count, and one line per occurrence giving its
+path, line, phrase, class, and the reason that class was reached. Keep it with the change under review — the pull
+request or commit that claims this method — rather than in this file, which holds no per-run readings
+(`../standards/prose-budget.md`).
+
+**Passes when.** Every occurrence classifies as out-of-surface or retained, and none classifies as deleted.
+
 ### `blizzard:manual-opencode-compatibility`
 
 **Surface.** The live CLI/provider compatibility surface for OpenCode `1.18.25` with ChatGPT `5.6 Luna`
