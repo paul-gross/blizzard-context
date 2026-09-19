@@ -74,7 +74,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-facts-alignment.shell-sweep.spec.ts` covers the chunk detail facts/usage table pair — `ChunkFacts` with
   `ChunkTokenBreakdown` projected as its sibling `<dl class="kv">` — a geometry check that the shared
   `--kv-label-col`/`--chunk-facts-pad` custom properties keep the tables' columns aligned when a long wrapped Runner
-  value gives them different content widths.
+  value gives them different content widths. A second case proves a standing-edge row (Depends on/Blocks) shares that
+  same grid: with one prerequisite present, its value column's `left` must match the facts table's own Runner row.
 - `hover-tint.shell-sweep.spec.ts` covers the `--tint-hover`/`--tint-selected` tokens where they compose —
   `BoardCardComponent`, `ChunkTimeline`'s history rows, and `ChunkArtifacts`'s artifact rows — a computed-style proof: a
   real Playwright pointer (`userEvent.hover`) must distinguish hovered from resting `background-color` and, on the board
