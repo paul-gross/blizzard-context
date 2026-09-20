@@ -43,9 +43,10 @@ context accounting a harness ran under, because the mock façade sees argv and n
 the flag — mint carries a model, resumes carry none — and stops there.
 
 Standing in for a tier: what backs the surrounding export behavior is a one-time empirical observation of Claude Code
-CLI 2.1.220 and the retained live OpenCode `1.18.25` compatibility evidence. Neither observation proves OpenCode session
-stickiness when model flags are omitted; each harness also has a configuration that can defeat stickiness, which
-`docs/deployment/worker-spawn.md` states as deployment requirements. Do not add a real-token tier to close this gap.
+CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted set (currently `{1.18.25}`). Neither
+observation proves OpenCode session stickiness when model flags are omitted; each harness also has a configuration that
+can defeat stickiness, which `docs/deployment/worker-spawn.md` states as deployment requirements. Do not add a
+real-token tier to close this gap.
 
 ## The declared compaction window
 
@@ -63,8 +64,8 @@ compaction behavior sits outside a hermetic, network-free CI tier's reach.
 The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
 retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
 otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under any of the
-runner's admitted-version corpus directories (today just
-`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`) carries it — the admitted version's live runs never
+runner's admitted-version corpus directories — the runner's admitted set (currently `{1.18.25}`) has only the one,
+`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — carries it: the admitted version's live runs never
 compacted. A wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
 
 Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
@@ -91,14 +92,40 @@ admitted-version corpus; its own comment says plainly that a read or a skill inv
 unlike `_CLAUDE_CODE_JSONL_2`, which maps all three kinds. Nothing stands in for the missing two: inventing a
 `tool_name`/`argument_key` pair for either would be guessing at OpenCode's real tool vocabulary rather than reading it
 off a captured run, exactly the shape "OpenCode transcript reads never distinguish `not_found`" above already refuses.
-`blizzard:service-test`'s mixed-harness dispatch gate (`test_mixed_harness_dispatch_service.py`) deliberately exercises
-only the one proven `agent-spawn` kind for this reason and does not close this gap.
+`blizzard:service-test`'s mixed-harness dispatch gate (`test_mixed_harness_dispatch_service.py`) exercises both an
+`agent-spawn` and a `skill-invocation` kind overall, but only through the Claude Code lineage's own (proven) dialect;
+the OpenCode lineage in that same test deliberately exercises only the one proven `agent-spawn` kind, for this reason,
+and does not close this gap.
 
 Standing in for a tier: a live OpenCode run whose transcript actually reads a file or invokes a skill, captured into the
-admitted-version corpus (`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`) the same way the spawn
-mapping itself was proven, is the only evidence that would extend `_OPENCODE_EXPORT_1` correctly. Do not add a mock- or
-unit-invented tool name to close this — a mock's own vocabulary is authored, not observed, and would prove nothing about
-what OpenCode actually calls its tools.
+admitted-version corpus — the runner's admitted set (currently `{1.18.25}`), so
+`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — the same way the spawn mapping itself was proven,
+is the only evidence that would extend `_OPENCODE_EXPORT_1` correctly. Do not add a mock- or unit-invented tool name to
+close this — a mock's own vocabulary is authored, not observed, and would prove nothing about what OpenCode actually
+calls its tools.
+
+## Capability-matched peek's hold-vs-pass-over distinction, and a bare node's chunk-declared default at spawn
+
+`test_mixed_harness_dispatch_service.py`'s own module docstring and section comments record two proofs the mock hub's
+fidelity leaves unreachable. First, `[queue] strict`'s hold-vs-pass-over distinction for capability-matched peek:
+`POST /api/fleet/queue/peek`'s matched form resolves the calling runner from a bare `runner_id` query param, never sent
+by the real production `HttpHubClient` (which carries none — the real hub instead resolves the caller from its own
+authenticated principal, a scheme this mock's fleet routes never implement). A real runner's peek against this mock
+therefore always 401s the matched form and falls back to the legacy, capability-unfiltered read, so both
+`[queue] strict` configurations send the peek the same now-ignored `policy` value and the distinction itself is
+genuinely unreachable here — the CLAIM endpoint's own capability revalidation is still real and proven end to end
+regardless, keyed off the claiming `runner_id` from the claim body rather than peek identity. Second, a bare node
+honoring the chunk's own declared default all the way through spawn: `blizzard-mock-hub`'s own `envelope()` route,
+unlike the real hub's `EffectiveSession.of`, never bakes the chunk's `default_harnesses` back onto the node before
+handing the envelope to the runner, so while a bare node's real CLAIM does honor the chunk's own declared default
+(proven), the SPAWN that follows still falls through to `Spawner.spawn`'s own no-`session_harnesses` fallback — this
+runner's own configured default, never the chunk's declared one.
+
+Standing in for a tier: a `blizzard-mock` fidelity fix to the matched-peek route — resolving the calling runner the way
+the real hub does, off its authenticated principal rather than a bare query param — would close the first limitation;
+baking `default_harnesses` onto the envelope's node the way `EffectiveSession.of` does would close the second. Do not
+invent either behavior at the unit or component tier: both are hub-side routing decisions this suite means to prove
+against the real production `HttpHubClient`/`Spawner.spawn` path, never a hand-built substitute.
 
 ## The worker deny list
 

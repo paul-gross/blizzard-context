@@ -57,16 +57,17 @@ digest fails only the announcement one — so neither passes vacuously.
 
 One traversal, one graph: a `build` node (default Claude Code, no `session_harnesses` declared) hands off to an
 `opencode-review` node declaring OpenCode through a graph-level named session (`session: resume:<name>`), then to
-`deliver` — the same shape `tests/service/test_mixed_harness_dispatch_service.py` proves at the component tier, driven
-here through a real daemon pair instead. The runner daemon is cleanly restarted (SIGTERM, unarmed — no crash-point)
-twice: once right at the lineage boundary, before `opencode-review`'s fresh mint is ever attempted, and once more
-mid-way through that same OpenCode session, while it is hung open — proving a graceful operator restart survives both a
-harness handoff and a resume inside an already-open session on the harness it lands in.
+`deliver` — the same shape `test_mixed_harness_dispatch_service.py` proves at `blizzard:service-test`, driven here
+through a real daemon pair instead. The runner daemon is cleanly restarted (SIGTERM, unarmed — no crash-point) twice:
+once right at the lineage boundary, before `opencode-review`'s fresh mint is ever attempted, and once more mid-way
+through that same OpenCode session, while it is hung open — proving a graceful operator restart survives both a harness
+handoff and a resume inside an already-open session on the harness it lands in.
 
 - `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` — asserts every dispatch lands on
   the correct adapter with no cross-harness leakage (the runner store's own `harness_id` per lease); the second restart
   resumes the SAME lease/epoch/session opencode-review already held rather than minting a retry; the resume-intent it
   marks is cleared once recovery completes; each node's resolved effort and model carry the provenance its own session
   declared or inherited (build the chunk default, opencode-review its own session's); the board's per-node-step usage
-  and the hub's derived analytics events both attribute the right harness/model/version to the right node, cross-checked
-  against the runner's own ground truth; and both nodes' commits land on bare main exactly once.
+  attributes the right harness/model/version to the right node, cross-checked against the runner's own ground truth, and
+  the hub's derived analytics events attribute the right harness/model to the right node (this test does not assert
+  their `harness_version`); and both nodes' commits land on bare main exactly once.
