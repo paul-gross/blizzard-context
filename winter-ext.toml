@@ -14,5 +14,6 @@ prefix = "bzh"
 requires = ["winter-canon", "winter-github"]
 
 # `winter lint` contribution: runs the repo-local markdown style gates
-# (dprint format, rumdl lint) over every scoped repo carrying their configs.
+# (dprint format, rumdl lint, vale prose) over every scoped repo carrying
+# their configs.
 lint = "scripts/lint-markdown-style.py"

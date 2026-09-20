@@ -2,8 +2,8 @@
 """Tests for scripts/lint-markdown-style.py — stdlib-only, hermetic.
 
 The winter-lint contribution is exercised as a subprocess with the lint env
-contract, against throwaway repos and stub `dprint`/`rumdl` executables placed
-on PATH, so no real tool install is needed. Mirrors the fixture style of
+contract, against throwaway repos and stub `dprint`/`rumdl`/`vale` executables
+placed on PATH, so no real tool install is needed. Mirrors the fixture style of
 test_check_registry_drift.py.
 """
 
@@ -50,17 +50,20 @@ class LintMarkdownStyleTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
-    def configure(self, dprint: bool = True, rumdl: bool = True) -> None:
+    def configure(self, dprint: bool = True, rumdl: bool = True, vale: bool = True) -> None:
         if dprint:
             (self.repo / "dprint.json").write_text("{}\n")
         if rumdl:
             (self.repo / ".rumdl.toml").write_text("[global]\n")
+        if vale:
+            (self.repo / ".vale.ini").write_text("StylesPath = styles\n")
 
     def test_violations_become_fail_findings(self) -> None:
         self.configure()
         (self.repo / "doc.md").write_text("x\n")
         write_stub(self.bin, "dprint", f"from {self.repo}/doc.md:\n1 1| x\n", 20)
         write_stub(self.bin, "rumdl", "doc.md:12:1: [MD013] Line length 130 exceeds 120 characters [*]\n", 1)
+        write_stub(self.bin, "vale", "doc.md:4:9:Blizzard.ProcessReference:'stub#000001' is a process reference.\n", 1)
         findings, code = run_check([self.repo], self.workspace, self.bin)
         self.assertEqual(code, 0)
         by_check = {f["check"]: f for f in findings}
@@ -70,14 +73,28 @@ class LintMarkdownStyleTest(unittest.TestCase):
         self.assertEqual(by_check["markdown-lint"]["file"], "repo/doc.md")
         self.assertEqual(by_check["markdown-lint"]["line"], 12)
         self.assertIn("MD013", by_check["markdown-lint"]["message"])
+        self.assertEqual(by_check["markdown-prose-lint"]["status"], "fail")
+        self.assertEqual(by_check["markdown-prose-lint"]["file"], "repo/doc.md")
+        self.assertEqual(by_check["markdown-prose-lint"]["line"], 4)
+        self.assertIn("process reference", by_check["markdown-prose-lint"]["message"])
+        self.assertIn("Blizzard.ProcessReference", by_check["markdown-prose-lint"]["message"])
 
     def test_clean_run_emits_nothing(self) -> None:
         self.configure()
         write_stub(self.bin, "dprint", "", 0)
         write_stub(self.bin, "rumdl", "Success: No issues found in 1 file\n", 0)
+        write_stub(self.bin, "vale", "", 0)
         findings, code = run_check([self.repo], self.workspace, self.bin)
         self.assertEqual(code, 0)
         self.assertEqual(findings, [])
+
+    def test_vale_marker_alone_scopes_the_prose_gate_only(self) -> None:
+        self.configure(dprint=False, rumdl=False, vale=True)
+        (self.repo / "doc.md").write_text("x\n")
+        write_stub(self.bin, "vale", "doc.md:1:1:Blizzard.ProcessReference:'stub#1' is a process reference.\n", 1)
+        findings, code = run_check([self.repo], self.workspace, self.bin)
+        self.assertEqual(code, 0)
+        self.assertEqual({f["check"] for f in findings}, {"markdown-prose-lint"})
 
     def test_unconfigured_repo_is_silently_out_of_scope(self) -> None:
         (self.repo / "doc.md").write_text("x\n")
@@ -90,7 +107,7 @@ class LintMarkdownStyleTest(unittest.TestCase):
         findings, code = run_check([self.repo], self.workspace, None)
         self.assertEqual(code, 0)
         self.assertEqual({f["status"] for f in findings}, {"warn"})
-        self.assertEqual({f["check"] for f in findings}, {"markdown-format", "markdown-lint"})
+        self.assertEqual({f["check"] for f in findings}, {"markdown-format", "markdown-lint", "markdown-prose-lint"})
 
     def test_changed_scope_files_route_to_owning_repo(self) -> None:
         self.configure()
@@ -100,6 +117,7 @@ class LintMarkdownStyleTest(unittest.TestCase):
         changed.write_text("x\n")
         write_stub(self.bin, "dprint", "", 0)
         write_stub(self.bin, "rumdl", "docs/note.md:3:1: [MD047] File should end with a single newline character [*]\n", 1)
+        write_stub(self.bin, "vale", "", 0)
         findings, code = run_check([changed], self.workspace, self.bin)
         self.assertEqual(code, 0)
         self.assertEqual(len(findings), 1)

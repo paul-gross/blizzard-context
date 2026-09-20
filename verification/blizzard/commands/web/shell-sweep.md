@@ -233,24 +233,24 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   disclosure shell actually resolves. Both shapes are swept, never one: they render in the same slot, and a sizing rule
   naming only one of them is exactly the defect this catches. Proven able to fail by dropping either host tag from
   `chunk-artifact-body.css`'s shared sizing rule.
-- `graph-explorer-list.shell-sweep.spec.ts` covers the explorer's two row levels once rebuilt on `KitSelectRow`, with
-  the first lineage genuinely expanded so the nested level lays out. At 520px, 390px, and 320px a long graph name, its
+- `graph-explorer-list.shell-sweep.spec.ts` covers the explorer's two row levels, built on `KitSelectRow`, with the
+  first lineage genuinely expanded so the nested level lays out. At 520px, 390px, and 320px a long graph name, its
   version count, its right-anchored short id, the version badge, and the retired filter chip must all stay inside the
-  list's own right edge — a real layout claim, since both levels now render their content projected into another
-  component's button rather than into a box this stylesheet owns.
+  list's own right edge — a real layout claim, since both levels render their content projected into another component's
+  button rather than into a box this stylesheet owns.
 - `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline, mounted through the
-  composed `FleetFindingPanel` rather than standalone (review:F11 — the timeline is never reached bare in the real app,
-  and mounting it in isolation left its own `.fp-timeline` heading's missing CSS rule undetected): at 390px and 320px a
-  genuinely unbroken long note (review:F3 — the prior fixture was ordinary prose, which wraps at word boundaries
-  regardless of `overflow-wrap: anywhere` and proved nothing) must wrap inside its row with no horizontal overflow —
-  gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
-- `gardening-findings-filters.shell-sweep.spec.ts` covers the findings tab widened to every routine and every scope: at
-  390px and 320px the four filter chip rows (routine, scope, class, state), each now carrying a leading "All" option,
+  composed `FleetFindingPanel` rather than standalone (the timeline is never reached bare in the real app, and mounting
+  it in isolation left its own `.fp-timeline` heading's missing CSS rule undetected): at 390px and 320px a genuinely
+  unbroken long note (an ordinary-prose fixture wraps at word boundaries regardless of `overflow-wrap: anywhere` and
+  proves nothing) must wrap inside its row with no horizontal overflow — gardening sits in the hub's mobile bottom tab
+  bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `gardening-findings-filters.shell-sweep.spec.ts` covers the findings tab, which spans every routine and every scope:
+  at 390px and 320px the four filter chip rows (routine, scope, class, state), each carrying a leading "All" option,
   must render with no horizontal overflow of `.gf-filters`, and a row from a bucket mixing two routines and two scopes
   must render its own routine and scope with no horizontal overflow of the row itself. Also proves a long, unbroken
   class name still shrinks-and-ellipsizes on `.fl-class`'s own line, alongside `.fl-ref` (same `top`), rather than
-  wrapping the ref onto a second line once `.fl-routine`/`.fl-scope` render too (review:F2) — gardening sits in the
-  hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  wrapping the ref onto a second line once `.fl-routine`/`.fl-scope` render too — gardening sits in the hub's mobile
+  bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `kit-master-detail.shell-sweep.spec.ts` covers the `KitMasterDetail` kit member's own collapse rule, lifted out of the
   hub and runner node-history tabs: at 1024px the detail pane's `left` must sit at or past the list pane's `right`, with
   the list pane's resolved width matching `--master-list-col`; at 390px and 320px the two panes must genuinely stack — a

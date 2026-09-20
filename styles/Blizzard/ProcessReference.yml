@@ -1,0 +1,6 @@
+extends: existence
+message: "'%s' is a process reference — state what is proven now, not how it was delivered."
+level: error
+scope: raw
+raw:
+  - '(blizzard#\d+|review:F\d+)'
