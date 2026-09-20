@@ -233,20 +233,22 @@ request or commit that claims this method — rather than in this file, which ho
 
 ### `blizzard:manual-opencode-compatibility`
 
-**Surface.** The live CLI/provider compatibility surface for OpenCode `1.18.25` with ChatGPT `5.6 Luna`
-(`openai/gpt-5.6-luna`) at `max`, covering the diagnostic's:
+**Surface.** The live CLI/provider compatibility surface for an OpenCode version in the runner's admitted set (currently
+just `1.18.25`) with ChatGPT `5.6 Luna` (`openai/gpt-5.6-luna`) at `max`, covering the diagnostic's:
 
 - `fresh_turn`, `resume`, `process_control`, `judgement`, `root_hook`, `permission`, and `model_variant`
 - `usage_cost`, `takeover`, `transcript_read`, `transcript_cursor`, `child_sessions`, and `configuration_isolation`
 
 **Procedure.** Follow the public operator procedure at `blizzard/docs/deployment/opencode-compatibility.md` for
-prerequisites, invocation, live opt-in, credential and evidence handling, failure conditions, and interpretation.
+prerequisites, invocation, live opt-in, credential and evidence handling, failure conditions, and interpretation. That
+page's own "Admitting a candidate version" section owns the separate procedure for growing the admitted set itself — the
+gates a candidate owes before this diagnostic applies to it, and the two-part version-and-corpus admission claim.
 
 **Retained evidence.** Retain the diagnostic output and the sanitized `report.json` and `runtime.json` files from the
 evidence directory.
 
-**Passes when.** The command exits zero, the output reports OpenCode version `1.18.25` and ends with
-`compatibility: supported` or `compatibility: degraded`, and `report.json` records `complete: true` and
+**Passes when.** The command exits zero, the output reports an admitted OpenCode version (currently `1.18.25`) and ends
+with `compatibility: supported` or `compatibility: degraded`, and `report.json` records `complete: true` and
 `admissible: true`. This diagnostic result is not production adapter availability or a harness-selection decision.
 
 ### `blizzard:manual-opencode-compatibility-rehearsal`
@@ -254,8 +256,8 @@ evidence directory.
 **Surface.** That `blizzard/docs/deployment/opencode-compatibility.md`'s stated offline rehearsal path — emit a
 CLI-surface artifact and point `--binary` at it to exercise the whole diagnostic flow without provider quota — is itself
 followable exactly as written, by an operator with no prior knowledge of the mock fleet's internals. This is distinct
-from `blizzard:manual-opencode-compatibility`, which proves the pinned live contract against a real provider; this
-method proves a page.
+from `blizzard:manual-opencode-compatibility`, which proves the admitted-version live contract against a real provider;
+this method proves a page.
 
 **Procedure.** Against a provisioned feature env, follow the page's stated rehearsal steps in order and no others: emit
 the artifact with the documented `mock-opencode` verb, then invoke the diagnostic with `--binary` pointed at the emitted

@@ -62,9 +62,10 @@ compaction behavior sits outside a hermetic, network-free CI tier's reach.
 
 The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
 retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
-otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under
-`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` carries it — the pinned live runs never compacted. A
-wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
+otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under any of the
+runner's admitted-version corpus directories (today just
+`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`) carries it — the admitted version's live runs never
+compacted. A wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
 
 Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
 for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
@@ -82,6 +83,22 @@ a non-zero exit into one generic error string. `OpenCodeTranscriptSource` theref
 Standing in for a tier: `blizzard:unit-test` covers the chosen `unreadable` default against every failure shape this
 parser can name; a live `opencode export` against a genuinely absent session id would be the evidence for a narrower
 `not_found` path, and does not exist yet. Do not add a stderr-string match invented rather than captured from a run.
+
+## OpenCode's analytics dialect has no proven read/skill tool-name mapping
+
+`dialects.py`'s `_OPENCODE_EXPORT_1` registers only `KIND_AGENT_SPAWN` (`tool_name="task"`), fixture-proven off the
+admitted-version corpus; its own comment says plainly that a read or a skill invocation "have no proven tool name yet" —
+unlike `_CLAUDE_CODE_JSONL_2`, which maps all three kinds. Nothing stands in for the missing two: inventing a
+`tool_name`/`argument_key` pair for either would be guessing at OpenCode's real tool vocabulary rather than reading it
+off a captured run, exactly the shape "OpenCode transcript reads never distinguish `not_found`" above already refuses.
+`blizzard:service-test`'s mixed-harness dispatch gate (`test_mixed_harness_dispatch_service.py`) deliberately exercises
+only the one proven `agent-spawn` kind for this reason and does not close this gap.
+
+Standing in for a tier: a live OpenCode run whose transcript actually reads a file or invokes a skill, captured into the
+admitted-version corpus (`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`) the same way the spawn
+mapping itself was proven, is the only evidence that would extend `_OPENCODE_EXPORT_1` correctly. Do not add a mock- or
+unit-invented tool name to close this — a mock's own vocabulary is authored, not observed, and would prove nothing about
+what OpenCode actually calls its tools.
 
 ## The worker deny list
 

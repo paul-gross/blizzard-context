@@ -94,7 +94,7 @@ narrow probe of one named claim, and wins over the general row only where the ch
 | `blizzard:manual-standing-idp`                            | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture                                                     |
 | `blizzard:manual-external-usage-probe`                    | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`                                                          |
 | `blizzard:manual-retired-wire-response-vocabulary-census` | Retired subscription wire-response vocabulary left behind in the app repo after a shape retirement                                                 |
-| `blizzard:manual-opencode-compatibility`                  | OpenCode `1.18.25` with ChatGPT `5.6 Luna` at `max`, live CLI/provider compatibility diagnostic                                                    |
+| `blizzard:manual-opencode-compatibility`                  | An admitted OpenCode version (currently `1.18.25`) with ChatGPT `5.6 Luna` at `max`, live CLI/provider compatibility diagnostic                    |
 | `blizzard:manual-opencode-compatibility-rehearsal`        | The public rehearsal procedure for the compatibility diagnostic, walked offline against an emitted CLI-surface artifact instead of a live provider |
 | `blizzard:manual-opencode-export-budget`                  | `opencode export`'s wall-clock cost at concurrency, against the token bound the cursor's pruning evidence sets                                     |
 | `blizzard:manual-autocompact-window`                      | A declared `--autocompact` window compacting a real session, rather than the model's own maximum                                                   |
