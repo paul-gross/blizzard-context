@@ -263,12 +263,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   the harness list must render inside its own column rather than being swallowed by a neighbor — a real layout claim
   jsdom cannot make. Proven able to fail by widening the table's cell padding far enough that the row no longer fits
   inside the table's own full width.
-- `chunk-transcripts-provenance.shell-sweep.spec.ts` covers the transcripts tab's per-segment harness-provenance badges
-  (blizzard#441): two segments recording distinct harnesses render two genuinely distinct badges, at the board's own
-  narrow, mobile-reachable width, with no page error and no horizontal overflow.
-- `chunk-timeline-provenance.shell-sweep.spec.ts` covers the node-history timeline's harness-provenance badges
-  (blizzard#441): two steps recording distinct harnesses render two genuinely distinct badges beside their own usage
-  figures, at the same narrow width, with no page error and no horizontal overflow.
+- `chunk-transcripts-provenance.shell-sweep.spec.ts` covers the transcripts tab's per-segment harness-provenance badges:
+  two segments recording distinct harnesses render two genuinely distinct badges, at the board's own narrow,
+  mobile-reachable width, with no page error and no horizontal overflow.
+- `chunk-timeline-provenance.shell-sweep.spec.ts` covers the node-history timeline's harness-provenance badges: two
+  steps recording distinct harnesses render two genuinely distinct badges beside their own usage figures, at the same
+  narrow width, with no page error and no horizontal overflow.
 - `chunk-detail-view-provenance.shell-sweep.spec.ts` covers the runner's local-panel escalation resume box's
-  harness-provenance badge (blizzard#441): it renders beside the resume command at the runner's own narrow width, with
-  no page error and no horizontal overflow.
+  harness-provenance badge: it renders beside the resume command at the runner's own narrow width, with no page error
+  and no horizontal overflow.
