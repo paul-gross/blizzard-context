@@ -42,9 +42,11 @@ its own choices; a script relying on exit code alone to select among more than t
 
 - `land_default.py` prints `conflict` before its push stage ever starts, so nothing lands when one repo is dirty.
 - `land_pr_ci.py` prints `pending` while any repo's PR is not yet `mergeable_state: clean` and no repo's check runs have
-  completed with a terminal conclusion; prints `conflict` immediately once a repo's PR reads `dirty` — a real merge
-  conflict — rather than waiting out `poll_timeout`; prints `failure` immediately once a `blocked`/`unstable` repo's
-  check run has completed failing; and prints `landed` once every repo has merged.
+  completed with a terminal conclusion (`cancelled` is not terminal — a concurrency-group cancellation is not a failed
+  job); prints `conflict` immediately once a repo's PR reads `dirty` — a real merge conflict — rather than waiting out
+  `poll_timeout`; prints `failure` immediately once a `blocked`/`unstable` repo's check run has completed failing on a
+  check the base branch does not also fail; prints `inherited-failure` once a failing check the base branch ALSO fails
+  survives a one-time re-request unchanged; and prints `landed` once every repo has merged.
 
 **Don't.** A land script that prints `landed` and then a trailing summary line to stdout — the summary is now the last
 line, names no choice, and the step falls through as if it had said nothing.
