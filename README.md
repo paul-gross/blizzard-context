@@ -57,6 +57,7 @@ own, declared as methods in [`verifiability.md`](./verifiability.md) and run bef
 ```shell
 dprint check                        # markdown format
 rumdl check .                       # structural markdown lint
+vale --output=line .                # process-reference prose lint
 python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate
 python3 tests/test_check_registry_drift.py
 python3 tests/test_lint_markdown_style.py
