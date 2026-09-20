@@ -342,9 +342,9 @@ earlier one.
 tier measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the *shape* of the cost,
 not its duration — so a read-path change reports this by hand.
 
-**Blind spot.** The hosted hub runs SQLite, not postgres (`blizzard-infra`'s `deploy/compose.yaml`), so a local sqlite
-store shares its backend with the hosted deployment — but not its EBS-backed volume's I/O characteristics or its EC2
-host's hardware, so an absolute reading here still says nothing about the hosted hub's own latency. What it measures
+**Blind spot.** A local sqlite store shares the hosted hub's own backend ([`gaps.md`](./gaps.md) §The query-plan
+assertions never run under postgres owns which one, and why) but not its EBS-backed volume's I/O characteristics or its
+EC2 host's hardware, so an absolute reading here still says nothing about the hosted hub's own latency. What it measures
 instead is the **ratio** between two readings of the *same* store, before and after the code change — a ratio those
 hardware differences still track proportionally. The hosted reading is separate: operator inspection against
 `https://blizzard.grosscode.net` after the change has redeployed there, never a dev surface pointed at it
@@ -491,12 +491,12 @@ processes, on a steady-state store — a store already converged, so the pass ha
 tier measures wall-clock time or decompression volume; `blizzard:component-test`'s query-count assertions pin the
 *shape* of the cost, not its duration or byte volume.
 
-**Blind spot.** A local sqlite store does not reproduce the hosted postgres deployment's per-query network round trip or
-its CPU throttle ceiling, so an absolute reading here says nothing about the hosted hub's own latency. What it measures
-instead is the **ratio** between two readings of the *same* store and corpus shape, before and after the code change.
-The hosted reading is separate: the sweep's own elapsed-time log line, read by an operator after the change has
-redeployed there, never a dev surface pointed at the hosted hub (`workspace:/context/project/hub-data-modes.md` owns
-why).
+**Blind spot.** A local sqlite store shares the hosted hub's own backend ([`gaps.md`](./gaps.md) §The query-plan
+assertions never run under postgres owns which one, and why) but not its per-query network round trip or its CPU
+throttle ceiling, so an absolute reading here says nothing about the hosted hub's own latency. What it measures instead
+is the **ratio** between two readings of the *same* store and corpus shape, before and after the code change. The hosted
+reading is separate: the sweep's own elapsed-time log line, read by an operator after the change has redeployed there,
+never a dev surface pointed at the hosted hub (`workspace:/context/project/hub-data-modes.md` owns why).
 
 **Setup.** A scratch `tests.support.build_hub` store seeded to the production shape — ≈2,500 visible segments, ≈27,500
 records, content sized to ≈175 MB compressed — through a throwaway script, then swept once (untimed) so the store
@@ -526,5 +526,5 @@ A steady-state pass before this change re-decodes every visible segment's conten
 the digest-based candidacy read and the derivation change probe, a repeated pass over an unchanged store costs one
 statement — the probe's own aggregate read — and decodes nothing. A fresh reconciler's first pass, which never consults
 the in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
-statements, no content decoded, well under the 60s interval either way. The hosted postgres reading is owed separately,
-by an operator, once this change has redeployed there.
+statements, no content decoded, well under the 60s interval either way. The hosted reading is owed separately, by an
+operator, once this change has redeployed there.
