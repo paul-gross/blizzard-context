@@ -1,0 +1,7 @@
+extends: existence
+message: "'%s' is a process reference — state what is proven now, not how it was delivered."
+level: error
+nonword: true
+tokens:
+  - 'blizzard#\d+'
+  - 'review:F\d+'

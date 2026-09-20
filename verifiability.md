@@ -11,6 +11,7 @@ Every command method below runs from the repo root.
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `blizzard-context:markdown-format`      | `dprint check`                                                                                           |
 | `blizzard-context:markdown-lint`        | `rumdl check .`                                                                                          |
+| `blizzard-context:markdown-prose-lint`  | `vale --output=line .`                                                                                   |
 | `blizzard-context:registry-drift`       | `python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate` |
 | `blizzard-context:registry-drift-tests` | `python3 tests/test_check_registry_drift.py`                                                             |
 | `blizzard-context:lint-script-tests`    | `python3 tests/test_lint_markdown_style.py`                                                              |
@@ -18,6 +19,8 @@ Every command method below runs from the repo root.
 `blizzard-context:markdown-format` is the format gate `dprint.json` declares; `dprint fmt` writes the fix, and both
 forms need the `dprint` binary on `PATH`. `blizzard-context:markdown-lint` is the structural markdown lint `.rumdl.toml`
 declares; `rumdl check . --fix` applies the autofixable subset, and both need the `rumdl` binary on `PATH`.
+`blizzard-context:markdown-prose-lint` is the process-reference prose gate `.vale.ini` and `styles/Blizzard/` declare;
+it needs the `vale` binary on `PATH` (`mise use -g vale`).
 
 Passing `--gate` to the registry-drift check refuses a green on any skipped check, not only on a `fail`.
 `blizzard-context:registry-drift` is local-only: it needs the sibling `blizzard` checkout with its `.venv` and the
@@ -26,8 +29,8 @@ sibling `blizzard-mock` checkout, which a feature env supplies and a standalone 
 checkout.
 
 `blizzard-context:lint-script-tests` exercises the `winter lint` check this extension contributes
-(`scripts/lint-markdown-style.py`, wired through `winter-ext.toml`'s `lint` field) against stubbed binaries, so neither
-tool need be installed.
+(`scripts/lint-markdown-style.py`, wired through `winter-ext.toml`'s `lint` field) against stubbed binaries, so none of
+the three tools need be installed.
 
 ## Manual testing
 
