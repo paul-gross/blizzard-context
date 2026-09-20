@@ -182,7 +182,7 @@ before its wording is treated as proven. Do not answer this with a tier that sco
 do not read the scripted e2e path as evidence about the model: it asserts the machinery a model's output flows through,
 which is the half that already has a tier.
 
-## The review-fail and deliver-conflict loops' prompt behavior
+## The review-fail, deliver-conflict, and inherited-CI-failure loops' prompt behavior
 
 `bas-hwf`'s `iterate` and `pre-push` prompts, together with `build.md`/`review.md`/`review.judgement.md`/
 `retrospective.md`, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and their
@@ -194,10 +194,17 @@ correctly, or that `retrospective` can reconstruct the journey from the chunk's 
 memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-push` — is asserted by nothing: a prompt is an input to a model
 no tier runs.
 
-Standing in for a tier: a live chunk run through this lane on the dogfood deployment
+The same residue now also covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and
+`bas-hwf`'s `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through
+on every lane — and each lane's `pre-push.md` rebase-to-empty qualifier. `land_pr_ci`'s own classification is proven by
+`blizzard:unit-test`'s scripted-forge cases and `tests/test_graph_authoring.py`'s per-lane edge/addendum pins; that a
+worker reads the addendum's repair charge correctly, or applies the loop bound's chunk-history check rather than
+repeating the repair a second time, is not.
+
+Standing in for a tier: a live chunk run through each lane on the dogfood deployment
 (`workspace:/context/project/local-instance.md`), whose transitions, bounces, and retrospective are read back and judged
 against the routing these prompts intend. That evidence is only producible once the landed graph directory is re-minted,
-so this entry records a standing obligation on the lane's wording rather than a phase gate. Do not answer this with a
+so this entry records a standing obligation on the lanes' wording rather than a phase gate. Do not answer this with a
 tier that scores prompt prose against a rubric.
 
 ## The cross-repo OpenCode lever roster
