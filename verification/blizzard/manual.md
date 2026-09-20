@@ -198,12 +198,12 @@ and the run ends the way the page says it will.
 ### `blizzard:manual-opencode-export-budget`
 
 **Surface.** `OpenCodeTranscriptSource`'s wall-clock cost — one `opencode export <session-id>` shell-out plus its strict
-parse — under fleet-realistic concurrency, against the cursor token-size budget the server-API contingency below sets.
-No CI tier measures wall-clock time at all, and every component-tier test of the source binds a scripted export rather
-than a real `opencode` binary, so neither the shell-out's latency nor the parser's cost at a large retained conversation
-is pinned anywhere else. This is the contingency `blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s
-Performance boundary names: if the budget this reading records fails, the source moves behind OpenCode's documented
-server API instead, without changing the seam.
+parse — under fleet-realistic concurrency, against the cursor token-size budget
+`blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s Performance boundary sets. No CI tier measures
+wall-clock time at all, and every component-tier test of the source binds a scripted export rather than a real
+`opencode` binary, so neither the shell-out's latency nor the parser's cost at a large retained conversation is pinned
+anywhere else. If the budget this reading records fails, that boundary's own contingency applies: the source moves
+behind OpenCode's documented server API instead, without changing the seam.
 
 **Blind spot.** A dev machine's `opencode export` cost is not the hosted runner host's — different disk, different CPU
 class, a different concurrent-worker count. What it measures instead is the **ratio** between the export's cost at a
@@ -220,11 +220,11 @@ retained-turn count, per `blizzard-product:plans/adapters/opencode/spec/transcri
    compaction).
 2. Time a single `opencode export`, cold, then time the source's `turns_since` cursor-admit pass over the parsed result.
 3. Repeat concurrently at the fleet's realistic per-host worker count, timing wall-clock elapsed for the slowest caller.
-4. Record the cursor token's serialized byte size at that retained-turn count (the quantity the budget above turns on).
+4. Record the cursor token's serialized byte size at that retained-turn count (the quantity this budget turns on).
 
 **Passes when.** Both readings — the single-call cost and the concurrent-fleet cost — are recorded together against the
-same session shape, alongside the cursor token's byte size at that shape, so the server-API contingency above is decided
-from a measurement rather than a guess.
+same session shape, alongside the cursor token's byte size at that shape, so the server-API contingency is decided from
+a measurement rather than a guess.
 
 **Recorded reading** (real `opencode 1.18.31`, one session grown to 122 messages / ~28k tokens over 24 real tool-using
 turns in a scratch git repo — a moderate-but-real retained size; time pressure cut the run short of an explicit
@@ -252,9 +252,9 @@ back, closing the gap this reading found.
 
 **What the budget itself says.** Once read correctly (file-redirected), both the single-call and the 8-way concurrent
 cost stay well under a second at this shape, and the cursor token — while non-trivial at 75,846 bytes — is a bounded
-fraction of the 408KB export it was cut from. Nothing here forces the server-API contingency above on cost grounds
-alone. A follow-up reading at a genuinely large (compacted, 100k+ token) session would sharpen this — this one is real
-but modest, not the ceiling case this budget ultimately needs.
+fraction of the 408KB export it was cut from. Nothing here forces the server-API contingency on cost grounds alone. A
+follow-up reading at a genuinely large (compacted, 100k+ token) session would sharpen this — this one is real but
+modest, not the ceiling case this budget ultimately needs.
 
 ### `blizzard:manual-autocompact-window`
 
@@ -341,13 +341,13 @@ earlier one.
 tier measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the *shape* of the cost,
 not its duration — so a read-path change reports this by hand.
 
-**Blind spot.** A local sqlite store shares the hosted hub's own backend ([`gaps.md`](./gaps.md) §The query-plan
-assertions never run under postgres owns which one, and why) but not its EBS-backed volume's I/O characteristics or its
-EC2 host's hardware, so an absolute reading here still says nothing about the hosted hub's own latency. What it measures
-instead is the **ratio** between two readings of the *same* store, before and after the code change — a ratio those
-hardware differences still track proportionally. The hosted reading is separate: operator inspection against
-`https://blizzard.grosscode.net` after the change has redeployed there, never a dev surface pointed at it
-(`workspace:/context/project/hub-data-modes.md` owns why).
+**Blind spot.** A local sqlite store shares the hosted hub's own backend
+([`./gaps.md`](./gaps.md#the-query-plan-assertions-never-run-under-postgres) owns which one, and why) but not its
+EBS-backed volume's I/O characteristics or its EC2 host's hardware, so an absolute reading here still says nothing about
+the hosted hub's own latency. What it measures instead is the **ratio** between two readings of the *same* store, before
+and after the code change — a ratio those hardware differences still track proportionally. The hosted reading is
+separate: operator inspection against `https://blizzard.grosscode.net` after the change has redeployed there, never a
+dev surface pointed at it (`workspace:/context/project/hub-data-modes.md` owns why).
 
 **Setup.** A fleet-scale hub store that is not the live fleet — `workspace:/context/project/hub-data-modes.md`'s mode 2
 (a migrated snapshot copy) or mode 3 (seeded synthetic) — or, for a reading taken mid-change before a fresh store
@@ -391,8 +391,8 @@ reading covers all three. The hosted reading is owed separately, as above.
 `~/projects/blizzard-blizzard/backups/hub-20260905T175650Z.db`, of unverified provenance — nothing in `blizzard-infra`
 produces a file at that path/name, so treat it as an unofficial, undocumented copy rather than a guaranteed
 application-consistent one. `PRAGMA integrity_check` passed, and its `usage_facts`/`transcript_segments` row counts
-(3,941 and 21,269) match this migration's own previously cited measurements exactly, which is why it was used here in
-place of the operator-provided copy the method's Setup step asks for first — a fresh copy remains owed if this one's
+(3,941 and 21,269) are large enough to exercise the hot-path indexes at realistic scale, which is why it was used here
+in place of the operator-provided copy the method's Setup step asks for first — a fresh copy remains owed if this one's
 provenance is ever disputed. N=282 chunks, migrated to the pre-change head
 (`20260907_1000_event_log_runner_id_nullable`) for Before and to `20260913_1300_hub_store_hot_path_indexes` for After;
 one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
@@ -412,8 +412,8 @@ The spend fold is the standout: ~23x latency reduction on the all-time window, w
 before reading already issued one query — the win is materializing zero `UsageFact` objects instead of 3,941).
 `GraphStore.list_all`'s and `find_live_holder`'s query counts are unchanged by design — these indexes complement, and do
 not substitute for, the N+1 fixes tracked separately — their latency drop reflects a cheaper per-query scan, not fewer
-queries. A later bulk-read adoption is what touches those two read paths next — see the table below for how each one's
-count and latency actually move.
+queries. The Bulk-read adoption reading below is what touches those two read paths next — see its own table for how each
+one's count and latency actually move.
 
 Migration duration on the same store (`blizzard hub migrate` / `--down <prior-rev>` / `migrate` again): up to
 `20260913_1300_hub_store_hot_path_indexes` from the prior head, 177.7ms first pass (includes SQLite's index-build cost
@@ -490,12 +490,13 @@ processes, on a steady-state store — a store already converged, so the pass ha
 tier measures wall-clock time or decompression volume; `blizzard:component-test`'s query-count assertions pin the
 *shape* of the cost, not its duration or byte volume.
 
-**Blind spot.** A local sqlite store shares the hosted hub's own backend ([`gaps.md`](./gaps.md) §The query-plan
-assertions never run under postgres owns which one, and why) but not its per-query network round trip or its CPU
-throttle ceiling, so an absolute reading here says nothing about the hosted hub's own latency. What it measures instead
-is the **ratio** between two readings of the *same* store and corpus shape, before and after the code change. The hosted
-reading is separate: the sweep's own elapsed-time log line, read by an operator after the change has redeployed there,
-never a dev surface pointed at the hosted hub (`workspace:/context/project/hub-data-modes.md` owns why).
+**Blind spot.** A local sqlite store shares the hosted hub's own backend
+([`./gaps.md`](./gaps.md#the-query-plan-assertions-never-run-under-postgres) owns which one, and why) but not its
+EBS-backed volume's I/O characteristics or its EC2 host's CPU throttle ceiling, so an absolute reading here says nothing
+about the hosted hub's own latency. What it measures instead is the **ratio** between two readings of the *same* store
+and corpus shape, before and after the code change. The hosted reading is separate: the sweep's own elapsed-time log
+line, read by an operator after the change has redeployed there, never a dev surface pointed at the hosted hub
+(`workspace:/context/project/hub-data-modes.md` owns why).
 
 **Setup.** A scratch `tests.support.build_hub` store seeded to the production shape — ≈2,500 visible segments, ≈27,500
 records, content sized to ≈175 MB compressed — through a throwaway script, then swept once (untimed) so the store

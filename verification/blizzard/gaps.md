@@ -184,8 +184,8 @@ which is the half that already has a tier.
 
 ## The review-fail and deliver-conflict loops' prompt behavior
 
-`bas-hwf`'s `iterate` and `pre-push` prompts, and the `build.md`/`review.md`/`review.judgement.md`/`retrospective.md`
-prompts they call, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and their
+`bas-hwf`'s `iterate` and `pre-push` prompts, together with `build.md`/`review.md`/`review.judgement.md`/
+`retrospective.md`, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and their
 retiering off the frontier tier `build` alone still runs on. The declared methods reach the mechanical half only —
 `blizzard:unit-test`'s packaged-prompt byte bars and `tests/test_basic_harness_workflow_graph.py`'s mint-validation and
 routing pins, and `blizzard:component-test`'s graph mint and choice-edge resolution. That `iterate` actually answers
@@ -214,4 +214,4 @@ Standing in for a tier: `_fake_binary`'s own `assert len(lever_flags) == 26` pin
 `bzh:opencode-lever-roster-extends-both-sides` in [`./companion-changes.md`](./companion-changes.md) obligates a roster
 change to land both sides in the same commit family. Neither closes the gap mechanically — the count can stay 26 while a
 name silently swaps — so a roster change's correctness rests on the author following the companion-changes rule, not on
-a tier that would need the cross-repo import `blizzard`'s no-dependency stance forbids.
+a tier that would need the cross-repo import `tests/support.py::github_double`'s established stance forbids.

@@ -36,6 +36,7 @@ from pathlib import Path
 DPRINT_CONFIG = "dprint.json"
 RUMDL_CONFIG = ".rumdl.toml"
 VALE_CONFIG = ".vale.ini"
+CONFIG_MARKERS = (DPRINT_CONFIG, RUMDL_CONFIG, VALE_CONFIG)
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 # rumdl text format: <path>:<line>:<col>: [MD013] message [*]
@@ -65,9 +66,14 @@ def scope_paths() -> list[Path]:
 
 
 def owning_root(md_file: Path) -> Path | None:
-    """Nearest ancestor carrying any tool config — the repo the file belongs to."""
+    """Nearest ancestor carrying any tool config — the repo the file belongs to.
+
+    Assumes a repo's markers all sit at its one true root, as the opt-in
+    convention intends; a marker committed nested under an ancestor that also
+    carries markers would shadow the ancestor's coverage for files below it.
+    """
     for parent in md_file.parents:
-        if (parent / DPRINT_CONFIG).is_file() or (parent / RUMDL_CONFIG).is_file() or (parent / VALE_CONFIG).is_file():
+        if any((parent / marker).is_file() for marker in CONFIG_MARKERS):
             return parent
     return None
 
@@ -81,7 +87,7 @@ def group_scope(paths: list[Path]) -> dict[Path, list[Path] | None]:
     groups: dict[Path, list[Path] | None] = {}
     for path in paths:
         if path.is_dir():
-            if (path / DPRINT_CONFIG).is_file() or (path / RUMDL_CONFIG).is_file() or (path / VALE_CONFIG).is_file():
+            if any((path / marker).is_file() for marker in CONFIG_MARKERS):
                 groups[path.resolve()] = None
         elif path.suffix == ".md" and path.is_file():
             root = owning_root(path.resolve())
@@ -97,7 +103,7 @@ def run_tool(argv: list[str], cwd: Path) -> subprocess.CompletedProcess[str] | N
     env = dict(os.environ, NO_COLOR="1")
     try:
         return subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, timeout=300)
-    except FileNotFoundError:
+    except (OSError, subprocess.TimeoutExpired):
         return None
 
 
@@ -156,7 +162,7 @@ def check_vale(root: Path, files: list[Path] | None, workspace: Path) -> None:
     argv += ["."] if files is None else [str(f.relative_to(root)) for f in files]
     proc = run_tool(argv, root)
     if proc is None:
-        emit("markdown-prose", "warn", f"vale not on PATH — prose-reference check skipped for {rel(root, workspace)}", remediation="mise use -g vale")
+        emit("markdown-prose-lint", "warn", f"vale not on PATH — process-reference check skipped for {rel(root, workspace)}", remediation="mise use -g vale")
         return
     if proc.returncode == 0:
         return
@@ -166,10 +172,10 @@ def check_vale(root: Path, files: list[Path] | None, workspace: Path) -> None:
         m = VALE_LINE_RE.match(raw.strip())
         if m:
             named = True
-            emit("markdown-prose", "fail", m.group("msg").strip(), file=rel(root / m.group("path"), workspace), line=int(m.group("line")), remediation="State the fact once at its owning site and point to it, or restate it without the process reference.")
+            emit("markdown-prose-lint", "fail", f"{m.group('rule').strip()}: {m.group('msg').strip()}", file=rel(root / m.group("path"), workspace), line=int(m.group("line")), remediation="Delete the citation; if the sentence states nothing once it's gone, delete the sentence too (canon:no-process-refs's fix is deletion, not rephrasing).")
     if not named:
         detail = output.strip().splitlines()
-        emit("markdown-prose", "fail", f"vale check failed in {rel(root, workspace)}: {detail[-1] if detail else 'no output'}")
+        emit("markdown-prose-lint", "fail", f"vale check failed in {rel(root, workspace)}: {detail[-1] if detail else 'no output'}")
 
 
 def main() -> int:

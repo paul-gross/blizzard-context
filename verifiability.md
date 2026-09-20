@@ -20,7 +20,10 @@ Every command method below runs from the repo root.
 forms need the `dprint` binary on `PATH`. `blizzard-context:markdown-lint` is the structural markdown lint `.rumdl.toml`
 declares; `rumdl check . --fix` applies the autofixable subset, and both need the `rumdl` binary on `PATH`.
 `blizzard-context:markdown-prose-lint` is the process-reference prose gate `.vale.ini` and `styles/Blizzard/` declare;
-it needs the `vale` binary on `PATH` (`mise use -g vale`).
+it needs the `vale` binary on `PATH` (`mise use -g vale`). A document whose subject is the reference notation itself
+(`canon:no-process-refs`'s Exception) exempts a site with Vale's own inline marker,
+`<!-- vale Blizzard.ProcessReference = NO -->` before the exhibited example and `= YES` after it, rather than a
+repo-wide `TokenIgnores` entry.
 
 Passing `--gate` to the registry-drift check refuses a green on any skipped check, not only on a `fail`.
 `blizzard-context:registry-drift` is local-only: it needs the sibling `blizzard` checkout with its `.venv` and the
