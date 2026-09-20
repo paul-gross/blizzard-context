@@ -102,7 +102,7 @@ the normalizer, which could drift from a future Claude Code CLI with every tier 
 does not close it either: it seeds hand-authored `TurnSegmentView` JSON straight to `POST /api/fleet/transcripts`, so no
 normalizer output ever reaches it. OpenCode's own `opencode_normalizer` is a separate code path this gap does not reach
 either way — it is exercised by `blizzard-mock`'s `OpenCodeTranscriptWriter` through a real mock-driven
-`blizzard:service-test` (blizzard#437 Phase 5), which this one is not.
+`blizzard:service-test`, which this one is not.
 
 Standing in for a tier: sidechain and thinking-turn normalization is proven only against hand-authored fixtures, pinned
 at `blizzard:unit-test` and by the component-tier projection golden tests, both fed by the same record fixtures — which
@@ -117,8 +117,8 @@ pinned at no tier at all. Every component-tier test of the transcript lane binds
 (`blizzard/tests/runner_fakes.py`), so `tests/test_transcript_pump.py` and `tests/test_transcript_backfill.py` reach the
 pump's and the backfill's own decisions and never those three pieces. `OpenCodeTranscriptSource` is a distinct
 implementer this gap does not name: its own export-identity cursor, bound token, and `not_found`/`unreadable` split are
-pinned at `blizzard:unit-test` (blizzard#437 Phase 3) — "OpenCode transcript reads never distinguish `not_found`" above
-covers what that tier does not.
+pinned at `blizzard:unit-test` — "OpenCode transcript reads never distinguish `not_found`" above covers what that tier
+does not.
 
 Standing in for a tier: `blizzard runner transcript reship` and `blizzard runner transcript backfill` drive
 `TranscriptPump.drain_segment` with `deadline=None` over a complete historical file from offset 0 until the source
@@ -137,12 +137,12 @@ test runs against — that `list_for`'s routine+scope read and `count_by_class`'
 `20260829_1930_fact_tables_chunk_id_index` revision indexes, extended by the `20260913_1300_hub_store_hot_path_indexes`
 revision's own cases: the three `(chunk_id, epoch)` composites by exact name, the artifacts/graph-choices/transcript-
 segments/chunk-work-refs/close-intents hot-path reads, and each of `activity_facts_since`'s eighteen per-source ordered
-reads (blizzard#519). `tests/test_chunk_usage_statements.py` and its `EXPLAIN QUERY PLAN` case over the spend `_stmt`
-builder assert `ix_usage_facts_recorded_at` the same way (blizzard#517). `tests/test_store_read_index_gate.py`'s scan
-gate and `tests/test_runner_store_indexes.py`'s named-index pins (blizzard#525) assert the same `EXPLAIN QUERY PLAN`
-shape across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend.
-No tier runs any of these assertions against postgres, so whether the portable index declarations actually earn an index
-scan under postgres's own planner stays unproven.
+reads. `tests/test_chunk_usage_statements.py` and its `EXPLAIN QUERY PLAN` case over the spend `_stmt` builder assert
+`ix_usage_facts_recorded_at` the same way. `tests/test_store_read_index_gate.py`'s scan gate and
+`tests/test_runner_store_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN` shape across every hub and
+runner read method's own table vocabulary, plan-classified through the same sqlite backend. No tier runs any of these
+assertions against postgres, so whether the portable index declarations actually earn an index scan under postgres's own
+planner stays unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
@@ -182,11 +182,11 @@ before its wording is treated as proven. Do not answer this with a tier that sco
 do not read the scripted e2e path as evidence about the model: it asserts the machinery a model's output flows through,
 which is the half that already has a tier.
 
-## The bas-hwf iterate/pre-push reshape's wording
+## The review-fail and deliver-conflict loops' prompt behavior
 
 `bas-hwf`'s `iterate` and `pre-push` prompts, and the `build.md`/`review.md`/`review.judgement.md`/`retrospective.md`
-amendments the reshape makes, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and
-their retiering off the frontier tier `build` alone still runs on. The declared methods reach the mechanical half only —
+prompts they call, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and their
+retiering off the frontier tier `build` alone still runs on. The declared methods reach the mechanical half only —
 `blizzard:unit-test`'s packaged-prompt byte bars and `tests/test_basic_harness_workflow_graph.py`'s mint-validation and
 routing pins, and `blizzard:component-test`'s graph mint and choice-edge resolution. That `iterate` actually answers
 review's findings as a cold read rather than assuming `build`'s own reasoning, that `pre-push`'s severity triage lands
@@ -194,9 +194,9 @@ correctly, or that `retrospective` can reconstruct the journey from the chunk's 
 memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-push` — is asserted by nothing: a prompt is an input to a model
 no tier runs.
 
-Standing in for a tier: a live chunk run through the reshaped lane on the dogfood deployment
+Standing in for a tier: a live chunk run through this lane on the dogfood deployment
 (`workspace:/context/project/local-instance.md`), whose transitions, bounces, and retrospective are read back and judged
-against the routing the reshape intended. That evidence is only producible once the landed graph directory is re-minted,
+against the routing these prompts intend. That evidence is only producible once the landed graph directory is re-minted,
 so this entry records a standing obligation on the lane's wording rather than a phase gate. Do not answer this with a
 tier that scores prompt prose against a rubric.
 
@@ -214,4 +214,4 @@ Standing in for a tier: `_fake_binary`'s own `assert len(lever_flags) == 26` pin
 `bzh:opencode-lever-roster-extends-both-sides` in [`./companion-changes.md`](./companion-changes.md) obligates a roster
 change to land both sides in the same commit family. Neither closes the gap mechanically — the count can stay 26 while a
 name silently swaps — so a roster change's correctness rests on the author following the companion-changes rule, not on
-a tier that would need the cross-repo import D7 forbids.
+a tier that would need the cross-repo import `blizzard`'s no-dependency stance forbids.
