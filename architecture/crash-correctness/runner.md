@@ -251,3 +251,24 @@ account otherwise: the same `_CP_AFTER_MINT` window, the same REAP recovery thro
 (a zero-budget lease with no session composes no takeover, same as any other never-spawned lease), and the same
 `open_escalation_for_chunk` guard ahead of the mint, so a chunk already escalated this way cannot loop a second mint on
 top of the first.
+
+## The selftest result
+
+`SelfTestService._finish` (`blizzard/src/blizzard/runner/selftest/service.py`) writes a completed selftest run's
+terminal outcome — status and error only — as one `selftest_results` row
+(`blizzard/src/blizzard/runner/store/schema.py`), read back by `harness_id`, newest row wins. Run *state*, per-check
+results included, stays the process-local, restart-erased resource it always was (`SelfTestRun`, held only in
+`SelfTestService`'s own in-memory dict); nothing durable reads a run's own checks back, so they ride no further than
+that. Only the *terminal outcome* of a completed run is durable, so the harness-health evaluator's daemon-start
+recalculation can see the last completed result across a restart rather than treating every boot as a never-run
+selftest.
+
+The write is one insert (`SelfTestResultStore.record_selftest_result`), so a `kill -9` either leaves the previous
+recorded result standing or the new one complete — never a half-written row. This is a **no-window** write: there is no
+second half a crash could separate it from, the same ground `Retention.run`'s prunes above rest on.
+
+The write owes the invariant checker nothing: `latest_selftest_result` reads the newest row by primary key per
+`harness_id`, an ordering comparison over append-only rows, never a derived cross-fact invariant. A run still
+`"running"` when the daemon crashes is never recorded at all — `_finish` is the only write site, reached only once a run
+resolves to `"passed"` or `"failed"` — so the table only ever holds terminal outcomes, and a lost in-flight run simply
+leaves the prior harness's last completed result standing until the next one supersedes it.

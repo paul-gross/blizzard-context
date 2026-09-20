@@ -63,8 +63,8 @@ compaction behavior sits outside a hermetic, network-free CI tier's reach.
 The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
 retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
 otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under
-`blizzard/contracts/opencode/1.18.25/` carries it — the pinned live runs never compacted. A wrong spelling parses as
-absent, so the fallback silently stops firing rather than failing.
+`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` carries it — the pinned live runs never compacted. A
+wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
 
 Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
 for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
