@@ -17,8 +17,8 @@ Concretely, on this target:
 - A fact given a second full statement in a second file, where a pointer at its owner would serve
   (`canon:point-dont-duplicate`, `canon:one-owner`).
 - A rule authored outside the slot skeleton, or carrying no stable id for a citation to resolve (`canon:rule-shape`).
-- Process references or change-history narration left in prose that is read as current guidance
-  (`canon:no-process-refs`, `canon:no-retro`).
+- Delivery-plan shorthand (a step label, a phase number) or change-history narration left in prose that is read as
+  current guidance (`canon:no-process-refs`, `canon:no-retro`).
 
 ## Scope
 
@@ -37,6 +37,10 @@ Where a command already judges the same prose, it owns that judgement and this a
 
 - `canon:format` and `canon:markdown-lint` are out of range entirely — `blizzard-context:markdown-format` and
   `blizzard-context:markdown-lint` judge every file against them.
+- `canon:no-process-refs`'s two crisp-signature citation shapes — a tracker number (`blizzard#\d+`) and a review-finding
+  id (`review:F\d+`) — are out of range: `blizzard-context:markdown-prose-lint` judges every file against them.
+  Delivery-plan shorthand and change-history narration carry no crisp signature a mechanical rule can safely match, and
+  stay in range above.
 - A count, roster, or enumeration is out of range where `blizzard-context:registry-drift` reaches it. Its own declared
   limitations name what it does not, and that residue is in range.
 
