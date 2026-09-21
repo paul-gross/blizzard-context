@@ -92,10 +92,10 @@ admitted-version corpus; its own comment says plainly that a read or a skill inv
 unlike `_CLAUDE_CODE_JSONL_2`, which maps all three kinds. Nothing stands in for the missing two: inventing a
 `tool_name`/`argument_key` pair for either would be guessing at OpenCode's real tool vocabulary rather than reading it
 off a captured run, exactly the shape "OpenCode transcript reads never distinguish `not_found`" above already refuses.
-`blizzard:service-test`'s mixed-harness dispatch gate (`test_mixed_harness_dispatch_service.py`) exercises both an
-`agent-spawn` and a `skill-invocation` kind overall, but only through the Claude Code lineage's own (proven) dialect;
-the OpenCode lineage in that same test deliberately exercises only the one proven `agent-spawn` kind, for this reason,
-and does not close this gap.
+`blizzard:service-test`'s mixed-harness dispatch gate (`test_mixed_harness_dispatch_service.py`) exercises an
+`agent-spawn` kind through the OpenCode lineage's own (proven) dialect and a `skill-invocation` kind through the
+Claude Code lineage's own (proven) dialect — never the reverse. OpenCode's own dialect deliberately stops at that one
+proven kind, for this reason, so the missing OpenCode read/skill mapping above is still not closed by this test.
 
 Standing in for a tier: a live OpenCode run whose transcript actually reads a file or invokes a skill, captured into the
 admitted-version corpus — the runner's admitted set (currently `{1.18.25}`), so
