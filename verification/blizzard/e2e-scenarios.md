@@ -21,6 +21,7 @@ Taken together the scenarios cover:
 - the multi-daemon runner SSO federation
 - the operational event log
 - resume-time spawn-preamble elision
+- a mixed Claude Code/OpenCode lineage crossing a harness handoff and surviving two operator restarts
 - the forge-status label projection
 - checks-gate enforcement
 - the YAML-authored delivery policies and their conflict path
@@ -34,13 +35,13 @@ section homed in exactly one spoke — check C of `blizzard-context:/scripts/che
 every spoke and fails a module documented in more than one file, so single-homing is machine-enforced. This hub carries
 no module sections; the routing table below is the routing map and the discovery entry point for the spokes.
 
-| Spoke                                                    | When to read                                                                                                             |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [delivery-loop.md](./e2e-scenarios/delivery-loop.md)     | The canonical delivery shape, the chunk shapes riding it, and the edges carrying a chunk past its graph or past the land |
-| [human-loop.md](./e2e-scenarios/human-loop.md)           | The stops-for-a-person scenarios — retries exhausted, a question asked, a gated decision                                 |
-| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | `deliver` against a red check, conflict, or pending CI, plus the forge label projection                                  |
-| [node-sessions.md](./e2e-scenarios/node-sessions.md)     | Which session a node resumes and what a resumed spawn re-sends                                                           |
-| [auth.md](./e2e-scenarios/auth.md)                       | The hub login dance and the multi-daemon runner SSO bounce                                                               |
-| [board.md](./e2e-scenarios/board.md)                     | The browser proofs over the hub-served web app — board views, live SSE updates, the graph explorer                       |
-| [runner-panel.md](./e2e-scenarios/runner-panel.md)       | The panel a runner serves itself                                                                                         |
-| [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden-routine graph's run paths — findings, proposals, and the rejected-delivery bounce                    |
+| Spoke                                                    | When to read                                                                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| [delivery-loop.md](./e2e-scenarios/delivery-loop.md)     | The canonical delivery shape, the chunk shapes riding it, and the edges carrying a chunk past its graph or past the land       |
+| [human-loop.md](./e2e-scenarios/human-loop.md)           | The stops-for-a-person scenarios — retries exhausted, a question asked, a gated decision                                       |
+| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | `deliver` against a red check, conflict, or pending CI, plus the forge label projection                                        |
+| [node-sessions.md](./e2e-scenarios/node-sessions.md)     | Which session a node resumes, what a resumed spawn re-sends, and a mixed-harness lineage's survival across an operator restart |
+| [auth.md](./e2e-scenarios/auth.md)                       | The hub login dance and the multi-daemon runner SSO bounce                                                                     |
+| [board.md](./e2e-scenarios/board.md)                     | The browser proofs over the hub-served web app — board views, live SSE updates, the graph explorer                             |
+| [runner-panel.md](./e2e-scenarios/runner-panel.md)       | The panel a runner serves itself                                                                                               |
+| [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden-routine graph's run paths — findings, proposals, and the rejected-delivery bounce                          |

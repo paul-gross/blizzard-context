@@ -7,9 +7,11 @@
 
 What a node's session carries across an entry: which session a node resumes, and what a resumed spawn re-sends.
 
-Both modules run in-process, one tick at a time, with no browser; each needs the sibling provisioned `blizzard-mock`
-worktree plus a local winter source, skips without `BLIZZARD_E2E=1`, and runs in the tag `release` workflow's full e2e
-tier.
+`test_session_modes_e2e` and `test_resume_preamble_e2e` run in-process, one tick at a time, with no browser;
+`test_mixed_harness_e2e` drives a real `blizzard-hub`/`blizzard-runner` subprocess pair instead, the daemon itself
+restarted mid-scenario (`tests/crash/`'s own subprocess harness, reused rather than re-derived). Every module needs the
+sibling provisioned `blizzard-mock` worktree plus a local winter source, skips without `BLIZZARD_E2E=1`, and runs in the
+tag `release` workflow's full e2e tier.
 
 The mock records each turn's user text into a Claude-Code-shaped transcript at `<root>/mock-claude-code/<sid>.jsonl` —
 an untagged prompt's text being the runner's preamble verbatim — so a session's transcript is the ordered record of what
@@ -50,3 +52,22 @@ digest fails only the announcement one — so neither passes vacuously.
 - `test_resumed_node_entry_elides_unchanged_standing_layers` — the efficiency half: with both standing layers unchanged
   between the two entries, the resumed spawn collapses them to a single line, re-sends neither, announces nothing, and
   still carries its own freshly minted lease id with the previous attempt's absent.
+
+## test_mixed_harness_e2e
+
+One traversal, one graph: a `build` node (default Claude Code, no `session_harnesses` declared) hands off to an
+`opencode-review` node declaring OpenCode through a graph-level named session (`session: resume:<name>`), then to
+`deliver` — the same shape `test_mixed_harness_dispatch_service.py` proves at `blizzard:service-test`, driven here
+through a real daemon pair instead. The runner daemon is cleanly restarted (SIGTERM, unarmed — no crash-point) twice:
+once right at the lineage boundary, before `opencode-review`'s fresh mint is ever attempted, and once more mid-way
+through that same OpenCode session, while it is hung open — proving a graceful operator restart survives both a harness
+handoff and a resume inside an already-open session on the harness it lands in.
+
+- `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` — asserts every dispatch lands on
+  the correct adapter with no cross-harness leakage (the runner store's own `harness_id` per lease); the second restart
+  resumes the SAME lease/epoch/session opencode-review already held rather than minting a retry; the resume-intent it
+  marks is cleared once recovery completes; each node's resolved effort and model carry the provenance its own session
+  declared or inherited (build the chunk default, opencode-review its own session's); the board's per-node-step usage
+  attributes the right harness/model/version to the right node, cross-checked against the runner's own ground truth, and
+  the hub's derived analytics events attribute the right harness/model to the right node (this test does not assert
+  their `harness_version`); and both nodes' commits land on bare main exactly once.
