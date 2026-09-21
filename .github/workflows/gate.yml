@@ -38,10 +38,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: false
-          python-version: "3.12"
       - name: registry-drift script tests
         run: python3 tests/test_check_registry_drift.py
       - name: lint-markdown-style script tests

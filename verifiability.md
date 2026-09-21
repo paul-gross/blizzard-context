@@ -44,10 +44,11 @@ the three tools need be installed.
 
 `blizzard-context:ci-workflows` is this repo's own workflow-lint method (no declared method proved a GitHub Actions
 workflow file before it): `actionlint`, run from the repo root, scans `.github/workflows/` by default. It is local-only
-— run it by hand whenever a workflow file changes; it is not wired into `gate.yml` itself. This repo carries no
-`mise.toml`: it installs into a workspace as `.winter/ext/context/`, where a mise config would trip the workspace's
-per-worktree trust prompts, so `dprint`, `rumdl`, `vale`, and `actionlint` are each installed and pinned inline in the
-workflow (`mise x <tool>@<version> --`) rather than declared as `[tools]`.
+— run it by hand whenever a workflow file changes; it is not wired into `gate.yml` itself, so its pin lives only in the
+Commands table row above, not in any workflow file. This repo carries no `mise.toml`: it installs into a workspace as
+`.winter/ext/context/`, where a mise config would trip the workspace's per-worktree trust prompts, so `dprint`, `rumdl`,
+and `vale` — the tools `gate.yml` actually runs — are each installed and pinned inline in the workflow
+(`mise x <tool>@<version> --`) rather than declared as `[tools]`.
 
 ## Manual testing
 

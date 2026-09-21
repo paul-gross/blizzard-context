@@ -55,6 +55,10 @@ pass criteria; what belongs here is only *which* a change owes:
 ## Delivery
 
 - Default branch: `master`.
-- Push directly to `master` — no PR, no review. Rebase onto the latest `origin/master` first so history stays linear and
-  each landed unit of work is a single commit.
+- This repo lands work the same three ways `workspace:/context/project/contributing.md` describes — which one applies is
+  a fact about who is driving, not about the change. `.github/workflows/pr.yml` and `push.yml`
+  ([verifiability.md](./verifiability.md) owns what they run) are what make the fleet's `open-pr` mode usable here:
+  before they existed, a fleet-opened PR carried no checks and merged on sight.
+- By hand: push directly to `master` — no PR, no review. Rebase onto the latest `origin/master` first so history stays
+  linear and each landed unit of work is a single commit.
 - See `workspace:/context/worktree-ops.md` for the exact git commands per worktree.
