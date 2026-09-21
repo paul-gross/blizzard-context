@@ -272,3 +272,26 @@ The write owes the invariant checker nothing: `latest_selftest_result` reads the
 `"running"` when the daemon crashes is never recorded at all — `_finish` is the only write site, reached only once a run
 resolves to `"passed"` or `"failed"` — so the table only ever holds terminal outcomes, and a lost in-flight run simply
 leaves the prior harness's last completed result standing until the next one supersedes it.
+
+## The provider-overload backoff facts
+
+`OverloadStore.record_overload` and `.record_reset` (`blizzard/src/blizzard/runner/store/internal/overload_store.py`)
+append to `overload_facts` / `overload_resets` (`blizzard/src/blizzard/runner/store/schema.py`), mirroring
+`nudge_facts`'s own shape: `record_overload` is a check-then-insert keyed on
+`(lease_id, epoch, invocation_kind,
+invocation_identity)` inside one transaction, and `record_reset` is a lone insert in
+its own transaction. Both are **no-window** writes: a `kill -9` on either commits the whole row or none of it, and
+re-classifying the same exit on a later pass re-checks and writes nothing past the first success.
+
+The fact these rows feed — whether a lease is currently backing off — is derived at read time (`backing_off_facts`,
+`blizzard/src/blizzard/runner/domain/overload.py`), never stored: an open fact closes by the lease's own current
+generation (worker) or elicitation launch instant (judge) no longer matching the identity the fact recorded, not by a
+separate closing write. A crash between `record_overload` committing and the caller's own
+`publish_lease_changed(cause="dormant")` — the same detached record-then-announce shape `park_on_ask`'s and `_wake`'s
+own publishes already use, covered by this file's "Event emission" section — costs at most one missed live SSE
+announcement; the next read of `backing_off_facts` (or `LeaseActivity.state`) derives `"backing-off"` from the durable
+row regardless, so no operator-visible state is ever lost, only delayed to the next poll.
+
+The write owes the invariant checker nothing: `backing_off_facts`'s own closure is an identity comparison over
+append-only rows and existing repository reads (`lease_generation`, `in_flight_elicitation`), never a derived cross-fact
+invariant a second writer could disagree with.
