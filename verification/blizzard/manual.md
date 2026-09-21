@@ -4,28 +4,97 @@
 <!-- rumdl-disable MD001 -->
 
 Full detail for the `blizzard:` manual methods named in [`../blizzard.md`](../blizzard.md)'s Manual testing table, one
-section per row, in that table's order. The `blizzard-mock:` methods live in [`./manual-mock.md`](./manual-mock.md).
+section per row, in that table's order. The `web:` methods live in [`./manual-web.md`](./manual-web.md) and the
+`blizzard-mock:` methods in [`./manual-mock.md`](./manual-mock.md).
 
-### `blizzard:manual`
+### `blizzard:manual-hub`
 
-**Surface.** The walking skeleton — one chunk traveling ingest, acquire, mock-scripted commit, deliver, and landed in a
-bare origin, with `done` derived from facts.
+**Surface.** A running hub driven by hand from outside the process — its HTTP API under `/api/`, and the operator CLI
+(`blizzard hub …`), itself a client of that API — for behavior a change makes observable on a live daemon: a route's
+response, a verb's effect on the fleet view, a transition's derived status. A narrower `blizzard:manual-*` row whose
+claim is the changed behavior wins over this one, and auth-gated behavior is `blizzard:manual-standing-idp`'s, because
+the hub this method stands up serves everything unauthenticated.
 
-**Setup.** A fixture-workspace env (`tool:fixture-workspace`) with the hub, the runner, and the mock fleet bound, and
-sqlite up via each daemon's embedded store.
+**Setup.** `tool:service-up` stands the stack up, run from the workspace root; the sourced band is what sets
+`$BZ_HUB_URL` and points the shell at the env's own hub:
 
-**Steps.** This method is automated, and [`../blizzard.md`](../blizzard.md#manual-testing)'s Manual testing row names
-the tier that runs the loop and stands the stack up for you. Two routes drive it by hand instead: read the
-`mise run e2e` source for the exact in-process sequence, or walk it against live services —
+```bash
+winter provision <env>
+winter service up <env> --wait
+source <(winter env <env>)
+curl -fs "$BZ_HUB_URL/api/health"
+```
 
-1. `winter service up <env> --wait`, bringing up forge, hub, and runner.
-2. `blizzard-mock-fixture reset --env <env>`.
-3. Drop the harness fence marker in its `workspace/`.
-4. File a forge issue.
-5. `POST /api/chunks`, so the hosted runner ticks it to `done`.
+Run the CLI as `uv run blizzard hub <verb>` from `<env>/blizzard`, so the client under exercise is the worktree's own
+rather than an installed one; it reads `$BZ_HUB_URL`, so no `--hub-url` is needed. Drive only the env's own hub — never
+the hosted one, whose standing rule `workspace:/context/project/hub-data-modes.md` owns. Put the store in the state the
+change needs with `tool:mock-data`, or through the real ingest path when ingest itself is under exercise;
+[`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns that choice and both routes' preconditions.
 
-**Passes when.** The chunk lands in the bare origin and the hub's facts derive `done`, run fully locally with no tokens
-and no network.
+**Steps.**
+
+1. State the changed behavior as an observable before driving anything: this request or verb, against this state, yields
+   this response or output.
+2. Seed or drive the hub into that state.
+3. Drive the behavior with `curl` against `$BZ_HUB_URL/api/…` or with the CLI verb. The app repo's
+   `openapi/hub.openapi.json` carries every route and its shapes, and `blizzard hub --help` the verb tree.
+4. Confirm it through a second surface, so the observation is the hub's state rather than one surface's own echo: an API
+   write read back through `blizzard hub status` or `blizzard hub chunk show`, a CLI write through the route that serves
+   it, a read compared against the seed or the drive that put the state there.
+5. Keep the commands run and their output with the change under verification.
+
+When the behavior under exercise rides the acceptance loop — ingest, acquire, commit, deliver, landed — walk the loop
+against the live stack rather than seeding past it:
+
+1. `uv run blizzard-mock-fixture reset --env <env>`, from `<env>/blizzard-mock`.
+2. Drop the harness fence marker in the fixture's `workspace/`.
+3. File a forge issue.
+4. `POST /api/chunks`, so the env's runner ticks the chunk to `done`.
+
+`blizzard:e2e` runs this same loop as a tier, and the `mise run e2e` source is the exact in-process sequence to read
+when a by-hand step is unclear. Walking it by hand exercises a change on the loop while watching it; it never stands in
+for the tier.
+
+**Passes when.** The stated observable holds on the running hub, confirmed through a second surface — and, for a loop
+walk, the chunk lands in the bare origin and the hub's facts derive `done`, with no tokens and no network.
+
+### `blizzard:manual-runner`
+
+**Surface.** A running runner driven by hand over its local HTTP API — the machine-local view and controls a change
+makes observable on a live daemon: a route's response, a lease's or environment's reported state, the pause brake's
+effect on the next tick. The rendered panel over that API is `web:manual-panel`'s
+([`./manual-web.md`](./manual-web.md#webmanual-panel)).
+
+**Setup.** `tool:service-up`, as for `blizzard:manual-hub` above; the same sourced band sets `$BZ_RUNNER_PORT`, the port
+the runner answers on:
+
+```bash
+curl -fs "http://127.0.0.1:$BZ_RUNNER_PORT/api/health"
+```
+
+The env's runner spawns the fenced mock harness (`tool:mock-fleet`), never a real one. Seed its store with
+`tool:mock-data` only after the daemon's first start, and leave a seeded runner's local pause engaged;
+[`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns why on both counts.
+
+**Steps.**
+
+1. State the changed behavior as an observable: this request, against this runner state, yields this response.
+2. Seed or drive the runner into that state — a seed for a read, a chunk walked through the env's hub
+   (`blizzard:manual-hub`'s loop walk) for behavior only a live lease shows.
+3. Drive the behavior with `curl` against `http://127.0.0.1:$BZ_RUNNER_PORT/api/…`. The app repo's
+   `openapi/runner.openapi.json` carries every route and its shapes.
+4. Account for the tick: the daemon reconciles its store on every tick — 30 seconds by default, `tick end` in the
+   runner's log — so re-read after one, and treat a row that changes across it as the daemon's doing rather than the
+   request's.
+5. Confirm it through a second surface — `uv run blizzard runner status --runner-url "http://127.0.0.1:$BZ_RUNNER_PORT"`
+   from `<env>/blizzard`, `GET /api/dashboard`, or, for a read, the seed or the drive that put the state there — and
+   keep the commands run and their output with the change under verification.
+
+The CLI verbs whose help is labeled **Worker:** resolve their lease from a spawned worker's environment, so they are
+exercised by a worker the runner spawns, not typed by hand.
+
+**Passes when.** The stated observable holds on the running runner and still holds after the next tick, confirmed
+through a second surface.
 
 ### `blizzard:manual-sse-probe`
 

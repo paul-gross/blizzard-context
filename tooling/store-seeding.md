@@ -6,8 +6,8 @@ Develop and demo the board against a local store seeded directly by `blizzard-mo
 
 Reach for the real wire path — a configured `[[work_source]]`, a minted forge fixture, and a real `POST /api/chunks`
 ingest — only when the ingest path itself, rather than the data it produces, is what is under test. The sequence that
-path rides is owned by `blizzard:manual` in [`../verification/blizzard.md`](../verification/blizzard.md). An edit to a
-`[[work_source]]` entry takes effect only after a restart — `winter service restart <env>/hub` — because the hub reads
+path rides is owned by `blizzard:manual-hub` in [`../verification/blizzard.md`](../verification/blizzard.md). An edit to
+a `[[work_source]]` entry takes effect only after a restart — `winter service restart <env>/hub` — because the hub reads
 `blizzard-hub.toml` once at `blizzard hub host` startup and has no reload or SIGHUP handler.
 
 ## Running it

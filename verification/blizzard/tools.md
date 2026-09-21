@@ -12,10 +12,13 @@ tool id, in table order.
 `winter service up <env> --wait` brings the env's verification stack up in order (forge → hub → runner via
 `depends_on`), each service health-gated on a real readiness check, port-band isolated so parallel envs never collide.
 The stack: per-env postgres on its own band port, the mock GitHub forge at band +1 from the env's blizzard-mock worktree
-fronting `$BZ_FORGE_REPOS_DIR` (the fixture workspace's per-env bare origins), and the blizzard hub (band +2) and runner
-(band +3) in tmux slots. Hub and runner run on their embedded sqlite stores; the per-env postgres runs but the daemons
-do not use it. The runner drives the per-env blizzard-mock fixture workspace and spawns the fenced mock-claude-code
-façade.
+fronting `$BZ_FORGE_REPOS_DIR` (the fixture workspace's per-env bare origins), and the blizzard hub (band +2,
+`$BZ_HUB_PORT`, with `$BZ_HUB_URL` derived from it) and runner (band +3, `$BZ_RUNNER_PORT`) in tmux slots. Hub and
+runner run on their embedded sqlite stores; the per-env postgres runs but the daemons do not use it. The runner drives
+the per-env blizzard-mock fixture workspace and spawns the fenced mock-claude-code façade. Behind the daemons come the
+two `ng serve` dev servers — the hub board at band +4 (`$BZ_HUB_WEB_PORT`) and the runner panel at band +5
+(`$BZ_RUNNER_WEB_PORT`) — each compiling the worktree's current web source and proxying `/api` to its own daemon, where
+the daemon's own port serves only the last built bundle.
 
 ### tool:mock-fleet
 

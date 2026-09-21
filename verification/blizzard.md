@@ -3,7 +3,8 @@
 Each entry below is one way a skill or agent may assert a blizzard change is correct; the document conforms to the canon
 concept at `winter-canon:/verifiability-matrix.md`, and method ids follow its scheme
 (`winter-canon:/verifiability-matrix.md#method-identifiers`). The scopes here: `blizzard` for the app repo's Python QA
-and the daemon-level tiers, `web` for the Angular workspace checks, and `blizzard-mock` for the mock-fleet repo.
+and the daemon-level tiers, `web` for the Angular workspace — its checks, and its two apps driven in a browser — and
+`blizzard-mock` for the mock-fleet repo.
 
 A `*(more)*` marker on a row flags that a spoke carries the row's fuller detail:
 [`./blizzard/commands.md`](./blizzard/commands.md) for Commands rows — what each runs, asserts, and cannot see — and
@@ -73,13 +74,22 @@ The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scope
 ## Manual testing
 
 Manual methods are verification no single command performs. Each row's full surface, setup, steps, and pass condition
-live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows and in
-[`./blizzard/manual-mock.md`](./blizzard/manual-mock.md) — the live forge, the seeded board and fleet — for the
-`blizzard-mock:` rows.
+live in the spoke for its scope:
+
+- [`./blizzard/manual.md`](./blizzard/manual.md) — the `blizzard:` rows.
+- [`./blizzard/manual-web.md`](./blizzard/manual-web.md) — the `web:` rows.
+- [`./blizzard/manual-mock.md`](./blizzard/manual-mock.md) — the `blizzard-mock:` rows: the live forge, the seeded board
+  and fleet.
+
+`blizzard:manual-hub`, `blizzard:manual-runner`, `web:manual-board`, and `web:manual-panel` are the general exercises —
+one per surface a person can drive, for a change whose behavior shows on that running surface. Every other row is a
+narrow probe of one named claim, and wins over the general row only where the change under verification is to that claim
+— a probe whose steps merely pass through the changed surface does not.
 
 | Method                                                    | Surface                                                                                                                                            |
 | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard:manual`                                         | The acceptance loop end-to-end; **automated as of P6** — run it as `blizzard:e2e`, not by hand                                                     |
+| `blizzard:manual-hub`                                     | A running hub driven by hand: its HTTP API and the operator CLI against it                                                                         |
+| `blizzard:manual-runner`                                  | A running runner driven by hand over its HTTP API                                                                                                  |
 | `blizzard:manual-sse-probe`                               | The live SSE wire probe: framing and timing on a real socket, hub or runner, one daemon at a time                                                  |
 | `blizzard:manual-standing-idp`                            | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture                                                     |
 | `blizzard:manual-external-usage-probe`                    | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`                                                          |
@@ -92,6 +102,8 @@ live in [`./blizzard/manual.md`](./blizzard/manual.md) for the `blizzard:` rows 
 | `blizzard:manual-rollback-drill`                          | The compose deployment's rollback promise, walked for real against two published image tags                                                        |
 | `blizzard:manual-fleet-read-latency`                      | A named hub read path's wall-clock latency, before/after a read-path change, at fleet scale                                                        |
 | `blizzard:manual-sweep-pass-cost`                         | One derivation `sweep()` pass's wall time, statement count, and zlib bytes decompressed, steady-state                                              |
+| `web:manual-board`                                        | The hub board driven in a real browser against a running hub                                                                                       |
+| `web:manual-panel`                                        | The runner panel driven in a real browser against a running runner                                                                                 |
 | `blizzard-mock:manual`                                    | The winter-wired mock forge fronting a real fixture workspace's bare origins                                                                       |
 | `blizzard-mock:manual-seeded-board`                       | A realistic board rendered from a direct store seed: no work source configured, no hub restart                                                     |
 | `blizzard-mock:manual-seeded-fleet`                       | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick                                                    |
