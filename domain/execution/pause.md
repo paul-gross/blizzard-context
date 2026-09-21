@@ -21,10 +21,10 @@ exactly-once claim race — enforced hub-side whether or not the runner has mirr
 
 The runner's own brake is not only operator-set: it also engages itself the moment a harness reports it has hit a
 subscription usage limit, on a worker generation's exit or a judge elicitation's exit alike. The reason names the
-harness and, where the harness reported one, its reset time. The limited lease is not failed and consumes no retry —
-it is parked in place, the same claim-keeping shape a per-chunk pause leaves a chunk in, and resumes automatically
-once the brake lifts. Only an operator clears the brake; the runner never lifts it on its own, even once the reset
-time it reported has passed.
+harness and, where the harness reported one, its reset time. The limited lease is not failed and consumes no retry — it
+is parked in place, the same claim-keeping shape a per-chunk pause leaves a chunk in, and resumes automatically once the
+brake lifts. Only an operator clears the brake; the runner never lifts it on its own, even once the reset time it
+reported has passed.
 
 ## Per-chunk pause
 

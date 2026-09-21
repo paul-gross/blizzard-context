@@ -39,6 +39,8 @@ The facets:
   delivery ([../work/chunk.md](../work/chunk.md)). Legal only on a worker-judged runner node: a hub-executed node has no
   worker to author one, and a human gate's exit is the resolving transition, which carries no payload of its own.
 - **`retries`** — the bounded failure budget — crashes, verdict-less exits, reaps — and where exhaustion escalates; a
-  judged failure edge never consumes it. Omitting `retries:` does not lift the bound: the runner supplies its own
-  default of two retries, so every node's failures are budgeted whether or not the graph authored one.
+  judged failure edge never consumes it, and neither does a verdict-less exit the runner classifies as its harness
+  hitting a usage limit — that one pauses the runner instead ([../execution/pause.md](../execution/pause.md) §Runner-
+  level pause). Omitting `retries:` does not lift the bound: the runner supplies its own default of two retries, so
+  every other failure is budgeted whether or not the graph authored one.
 - **`judgement`** — how the exit is judged and the choices it produces — owned by [./edges.md](./edges.md).
