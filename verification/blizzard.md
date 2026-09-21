@@ -61,7 +61,7 @@ A command method passes when its command exits 0.
 | `blizzard-mock:typecheck`    | `uv run pyright`                                                                                                                                                  |
 | `blizzard-mock:unit-test`    | `uv run pytest` — the mock fleet's own unit + component suite, plus the wire-parity guard *(more)*                                                                |
 | `blizzard-mock:e2e`          | `uv run pytest -m e2e` — the fleet acceptance proof, and the **P4 exit criterion** *(more)*                                                                       |
-| `blizzard-mock:ci-workflows` | `mise x actionlint@1.7.12 -- actionlint` — scans `.github/workflows/` by default; local-only, not wired into `gate.yml`                                           |
+| `blizzard-mock:ci-workflows` | `mise x actionlint@1.7.12 -- actionlint`                                                                                                                          |
 
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by
@@ -71,6 +71,9 @@ The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scope
 [`../architecture/crash-correctness.md`](../architecture/crash-correctness.md) owns the daemon requirements
 `blizzard:crash-sweep` exercises, and `blizzard:e2e`'s scenario registry is
 [`./blizzard/e2e-scenarios.md`](./blizzard/e2e-scenarios.md).
+
+`blizzard-mock:ci-workflows` scans `.github/workflows/` by default (run from the `blizzard-mock` repo root) and is
+local-only — it is not wired into that repo's own `gate.yml`.
 
 ## Manual testing
 
