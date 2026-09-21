@@ -87,26 +87,26 @@ narrow probe of one named claim, and wins over the general row only where the ch
 — a probe whose steps merely pass through the changed surface does not.
 
 | Method                                                    | Surface                                                                                                                                                 |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard:manual-hub`                                     | A running hub driven by hand: its HTTP API and the operator CLI against it                                                                             |
-| `blizzard:manual-runner`                                  | A running runner driven by hand over its HTTP API                                                                                                      |
-| `blizzard:manual-sse-probe`                               | The live SSE wire probe: framing and timing on a real socket, hub or runner, one daemon at a time                                                      |
-| `blizzard:manual-standing-idp`                            | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture                                                         |
-| `blizzard:manual-external-usage-probe`                    | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`                                                              |
-| `blizzard:manual-retired-wire-response-vocabulary-census` | Retired subscription wire-response vocabulary left behind in the app repo after a shape retirement                                                     |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard:manual-hub`                                     | A running hub driven by hand: its HTTP API and the operator CLI against it                                                                              |
+| `blizzard:manual-runner`                                  | A running runner driven by hand over its HTTP API                                                                                                       |
+| `blizzard:manual-sse-probe`                               | The live SSE wire probe: framing and timing on a real socket, hub or runner, one daemon at a time                                                       |
+| `blizzard:manual-standing-idp`                            | Auth-gated behavior in a browser against a standing hub and stub IdP, outside any test fixture                                                          |
+| `blizzard:manual-external-usage-probe`                    | The vendor's real OAuth-usage response shape, proven live against `claude`'s own `/usage`                                                               |
+| `blizzard:manual-retired-wire-response-vocabulary-census` | Retired subscription wire-response vocabulary left behind in the app repo after a shape retirement                                                      |
 | `blizzard:manual-opencode-compatibility`                  | An OpenCode version from the runner's admitted set (currently `{1.18.25}`) with ChatGPT `5.6 Luna` at `max`, live CLI/provider compatibility diagnostic |
-| `blizzard:manual-opencode-compatibility-rehearsal`        | The public rehearsal procedure for the compatibility diagnostic, walked offline against an emitted CLI-surface artifact instead of a live provider     |
-| `blizzard:manual-opencode-export-budget`                  | `opencode export`'s wall-clock cost at concurrency, against the token bound the cursor's pruning evidence sets                                         |
-| `blizzard:manual-autocompact-window`                      | A declared `--autocompact` window compacting a real session, rather than the model's own maximum                                                       |
-| `blizzard:manual-worker-deny-list`                        | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness                                                      |
-| `blizzard:manual-rollback-drill`                          | The compose deployment's rollback promise, walked for real against two published image tags                                                            |
-| `blizzard:manual-fleet-read-latency`                      | A named hub read path's wall-clock latency, before/after a read-path change, at fleet scale                                                            |
-| `blizzard:manual-sweep-pass-cost`                         | One derivation `sweep()` pass's wall time, statement count, and zlib bytes decompressed, steady-state                                                  |
-| `web:manual-board`                                        | The hub board driven in a real browser against a running hub                                                                                           |
-| `web:manual-panel`                                        | The runner panel driven in a real browser against a running runner                                                                                     |
-| `blizzard-mock:manual`                                    | The winter-wired mock forge fronting a real fixture workspace's bare origins                                                                           |
-| `blizzard-mock:manual-seeded-board`                       | A realistic board rendered from a direct store seed: no work source configured, no hub restart                                                         |
-| `blizzard-mock:manual-seeded-fleet`                       | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick                                                        |
+| `blizzard:manual-opencode-compatibility-rehearsal`        | The public rehearsal procedure for the compatibility diagnostic, walked offline against an emitted CLI-surface artifact instead of a live provider      |
+| `blizzard:manual-opencode-export-budget`                  | `opencode export`'s wall-clock cost at concurrency, against the token bound the cursor's pruning evidence sets                                          |
+| `blizzard:manual-autocompact-window`                      | A declared `--autocompact` window compacting a real session, rather than the model's own maximum                                                        |
+| `blizzard:manual-worker-deny-list`                        | A worker settings `permissions.deny` list actually closing off the denied tools on a live harness                                                       |
+| `blizzard:manual-rollback-drill`                          | The compose deployment's rollback promise, walked for real against two published image tags                                                             |
+| `blizzard:manual-fleet-read-latency`                      | A named hub read path's wall-clock latency, before/after a read-path change, at fleet scale                                                             |
+| `blizzard:manual-sweep-pass-cost`                         | One derivation `sweep()` pass's wall time, statement count, and zlib bytes decompressed, steady-state                                                   |
+| `web:manual-board`                                        | The hub board driven in a real browser against a running hub                                                                                            |
+| `web:manual-panel`                                        | The runner panel driven in a real browser against a running runner                                                                                      |
+| `blizzard-mock:manual`                                    | The winter-wired mock forge fronting a real fixture workspace's bare origins                                                                            |
+| `blizzard-mock:manual-seeded-board`                       | A realistic board rendered from a direct store seed: no work source configured, no hub restart                                                          |
+| `blizzard-mock:manual-seeded-fleet`                       | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick                                                         |
 
 ## Tools
 
