@@ -61,6 +61,7 @@ A command method passes when its command exits 0.
 | `blizzard-mock:typecheck`    | `uv run pyright`                                                                                                                                                  |
 | `blizzard-mock:unit-test`    | `uv run pytest` — the mock fleet's own unit + component suite, plus the wire-parity guard *(more)*                                                                |
 | `blizzard-mock:e2e`          | `uv run pytest -m e2e` — the fleet acceptance proof, and the **P4 exit criterion** *(more)*                                                                       |
+| `blizzard-mock:ci-workflows` | `mise x actionlint@1.7.12 -- actionlint` over `.github/workflows/`                                                                                                |
 
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by

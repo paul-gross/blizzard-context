@@ -12,8 +12,10 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 Bare `uv run pytest` — the default suite: unit plus component coverage of the mock forge (issues, PRs, real-git merges,
 every lever), the fixture-workspace scaffold, the mock coding-harness engine and façades, the CLI-surface harness mode
 and its own lever roster, the mock-data CLI, and the stub OAuth IdP (`test_idp.py` — the `blizzard-mock-idp` oidc and
-github surfaces plus its `/_levers` control plane). `blizzard-mock` runs no CI, so this method gates the local command
-only.
+github surfaces plus its `/_levers` control plane). `.github/workflows/{pr,push}.yml` run this same method, minus the
+`needs_blizzard`-marked wire-parity and real-runner tests (`mise run test -- -m "not needs_blizzard"`, check names
+`gate / pytest (sans needs_blizzard)`) — a single-repo CI checkout carries no sibling `blizzard` for them to read. The
+bare local command stays unmarked and fail-closed.
 
 The wire-parity guard (`tests/test_wire_parity.py`), the mock side of `bzh:wire-change-extends-mock`, maps every
 mock-hub response model to the hub schema it mirrors and diffs field sets against the committed
