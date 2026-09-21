@@ -42,8 +42,8 @@ daemon. It pins what an in-process client cannot: the note requirement refusing 
 the wire and a non-zero exit in the CLI), one call exiting many ids, a later delta op naming an exited finding rejected
 while a `gone`-flagged one is still a live target, the `GET /api/routines/trend` per-period created/exit counts with
 their outflow-vs-withdrawn roll-ups and introduced-age cut rendered identically by `blizzard hub routine trend`, and
-delivery-triggered resolution end to end — an accepted garden proposal's minted item, landed by a `merged/` marker,
-resolving that proposal's findings through the daemon's own close-intent drain.
+delivery-triggered closure end to end — an accepted garden proposal's minted item, landed by a `merged/` marker, closing
+that proposal's findings to `delivered` through the daemon's own close-intent drain.
 
 **Runner against mock hub.** `unreachable` buffers, `drop_ack` proves idempotency, and a `stale_envelope` is tolerated —
 the chunk lands because the runner fences on its own lease epoch, not the envelope

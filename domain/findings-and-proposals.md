@@ -26,13 +26,19 @@ honest without asking anything of an agent's discipline.
 ## Liveness is derived, and reversible
 
 Whether a finding is live is never a stored state; it is the newest thing a run said about it. A run reporting a finding
-**gone** does not close it — it flags the finding for a person, because leaving the live set is a human judgment, never
-a pass's word alone. A later run observing the same finding again restores it — but only while it is merely `gone`. Once
-a person has exited it, a run's own ops go no further: a run cannot revive what a person closed, only a person's own
-`reopened` can, the same authority that closed it in the first place. One exit is recorded by no hand at the moment it
-lands — delivery of the item an accepted garden proposal minted, which
-[Closing a proposal](#closing-a-proposal-pass-or-accept) owns — and it carries a person's authority all the same, the
-accepter's.
+**gone** does not ordinarily close it — it flags the finding for a person, because leaving the live set is a human
+judgment, never a pass's word alone. A later run observing the same finding again restores it — but only while it is
+merely `gone`. Once a person has exited it, a run's own ops go no further: a run cannot revive what a person closed,
+only a person's own `reopened` can, the same authority that closed it in the first place.
+
+One state is recorded by no hand at the moment it lands, and it is not an exit: delivery of the item an accepted garden
+proposal minted closes that proposal's still-live findings to **delivered**, carrying the accepter's own authority —
+[Closing a proposal](#closing-a-proposal-pass-or-accept) owns the mechanics. `delivered` is neither `live` nor one of
+the five exits below; nobody has confirmed the delivery's claim yet. It stays visible to the routine that owns the
+finding, and only that routine's own next run clears it — a `gone` op against a `delivered` finding is the one case
+where a run's own word does settle it for good, completing the exit to **resolved** that the delivery only claimed; an
+`observed` op against one instead reads as the delivery having been wrong or premature, and restores it to `live`,
+exactly like reviving a merely-`gone` finding.
 
 A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
 **not-a-finding**, **superseded** — and **reopened** undoes any of them, the same append-only fact the way `gone` and
@@ -78,11 +84,13 @@ nobody can find again.
 Acceptance does not promote the item it mints — it rests behind the ordinary promote gate a person still has to open —
 and it does not move the findings behind the proposal: work being under way is not an observation that the ground
 changed. The item landing is. When the item an accepted proposal minted is delivered, the proposal's findings that are
-still live are **resolved** in that same act — an outflow exit, recorded with the accepter's authority and naming the
-proposal it answered — while a finding a run has since reported gone, or a person has already exited, is left exactly as
-it stands. The resolution lands once per proposal: a retry of the delivery never redoes it, and a later `reopened` on
-one of those findings is a person's word that only a person can answer again. Until that delivery, an accepted
-proposal's findings stay live unless a run reports them gone or a person exits them.
+still live are closed to **delivered** in that same act — carrying the accepter's authority and naming the proposal it
+answered, but not yet an exit — while a finding a run has since reported gone, or a person has already exited, is left
+exactly as it stands. The closure lands once per proposal: a retry of the delivery never redoes it. What settles a
+`delivered` finding for good is the owning routine's own next run, not the delivery itself (§Liveness is derived, and
+reversible) — a later `reopened` on one that has already settled to `resolved` is a person's word that only a person can
+answer again. Until that delivery, an accepted proposal's findings stay live unless a run reports them gone or a person
+exits them.
 
 ## What the hub does not do
 
