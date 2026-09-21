@@ -49,6 +49,7 @@ A command method passes when its command exits 0.
 | `blizzard:wheel-smoke`       | The serve smoke on the built wheel in a node-free venv — the **P5 exit criterion** *(more)*                                                                       |
 | `blizzard:image-smoke`       | `mise run image-smoke` — the hub image booted on an empty data volume *(more)*                                                                                    |
 | `blizzard:compose-smoke`     | `mise run compose-smoke` — the reference compose deployment on a local image *(more)*                                                                             |
+| `blizzard:ci-workflows`      | `mise x actionlint@1.7.12 -- actionlint`                                                                                                                          |
 | `web:lint`                   | `npm run lint` in `web/` — eslint over the Angular workspace, including the `max-lines` ceiling *(more)*                                                          |
 | `web:typecheck`              | `npm run build` in `web/` — a real AOT compile of both Angular apps *(more)*                                                                                      |
 | `web:unit-test`              | `npm run test` in `web/` — vitest, the frontend unit/component tier                                                                                               |
@@ -61,6 +62,7 @@ A command method passes when its command exits 0.
 | `blizzard-mock:typecheck`    | `uv run pyright`                                                                                                                                                  |
 | `blizzard-mock:unit-test`    | `uv run pytest` — the mock fleet's own unit + component suite, plus the wire-parity guard *(more)*                                                                |
 | `blizzard-mock:e2e`          | `uv run pytest -m e2e` — the fleet acceptance proof, and the **P4 exit criterion** *(more)*                                                                       |
+| `blizzard-mock:ci-workflows` | `mise x actionlint@1.7.12 -- actionlint`                                                                                                                          |
 
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by
@@ -70,6 +72,9 @@ The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scope
 [`../architecture/crash-correctness.md`](../architecture/crash-correctness.md) owns the daemon requirements
 `blizzard:crash-sweep` exercises, and `blizzard:e2e`'s scenario registry is
 [`./blizzard/e2e-scenarios.md`](./blizzard/e2e-scenarios.md).
+
+`blizzard:ci-workflows` and `blizzard-mock:ci-workflows` scan `.github/workflows/` by default (run from each repo's own
+root) and are local-only — neither is wired into that repo's own `gate.yml`.
 
 ## Manual testing
 

@@ -47,10 +47,10 @@ Declared limitations (stated here rather than discovered later):
   mechanizable; that half stays a `blizzard-context:manual-reference-check`
   item.
 - B1 and B2 run against the **blizzard checkout only**. `blizzard-mock`
-  registers a single pytest marker (`e2e`) and its `blizzard-mock:unit-test`
-  method is bare `uv run pytest` by design, so "which tier does this file
-  live in" has no answer there. Blizzard-mock-scoped citations get check A
-  and nothing more.
+  registers pytest markers (`e2e`, `needs_blizzard`) for orthogonal reasons —
+  neither names a tier — and its `blizzard-mock:unit-test` method is bare
+  `uv run pytest` by design, so "which tier does this file live in" has no
+  answer there. Blizzard-mock-scoped citations get check A and nothing more.
 - Check A answers existence, not attribution: scope sets search order, and a
   citation resolving in the sibling checkout passes.
 - Angle-bracket placeholder literals and rootless wildcards are excluded
