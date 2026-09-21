@@ -1,0 +1,47 @@
+# The merge gate — the reusable check suite.
+#
+# `pr.yml` runs it on every pull request; `push.yml` calls it too, so the gate is defined
+# once and never drifts between triggers.
+#
+# `registry-drift` (verifiability.md) stays local-only and does not run here: it needs
+# the sibling `blizzard` and `blizzard-mock` checkouts a single-repo CI runner does not
+# carry, and running it against their `master` would redden a PR whenever a chunk changes
+# a citation here together with the sibling repo it cites (the sibling half is not on
+# `master` yet).
+name: gate
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  markdown:
+    name: dprint + rumdl + vale
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+        with:
+          version: 2026.9.2
+          install: false
+      - name: dprint check
+        run: mise x dprint@0.55.2 -- dprint check
+      - name: rumdl check
+        run: mise x rumdl@0.2.54 -- rumdl check .
+      - name: vale
+        run: mise x vale@3.22.0 -- vale --output=line .
+
+  script-tests:
+    name: registry-drift + lint-markdown-style script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: registry-drift script tests
+        run: python3 tests/test_check_registry_drift.py
+      - name: lint-markdown-style script tests
+        run: python3 tests/test_lint_markdown_style.py
