@@ -17,8 +17,8 @@ The component spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md).
   the same, and the expected, accept/reject verdict over one scenario matrix, so re-deriving "is a gated choice red?"
   inline instead of calling the shared `wire.completion.ChecksGate.violated` predicate fails.
 - `test_fleet_spend_api.py` — proves `GET /api/spend?since=` sums usage facts by `recorded_at` across every chunk,
-  excluding facts recorded before `since` — distinct from a chunk's own derived total — with cost-absent rows giving a
-  lower bound flagged `cost_partial`, and a malformed `since` rejected 422.
+  excluding facts recorded before `since` — distinct from a chunk's own derived total — with a row carrying neither a
+  billed nor an estimated amount giving a lower bound flagged `cost_partial`, and a malformed `since` rejected 422.
 - `test_store_read_index_gate.py` — drives every read method of every hub and runner `IRead*` Protocol against a real,
   migrated-to-head sqlite store and fails if any plans an unindexed scan, or an sqlite automatic covering index, over a
   table not declared in `tests/store_scan_allowlist.py`; extend or fix its coverage or allowances there and in
