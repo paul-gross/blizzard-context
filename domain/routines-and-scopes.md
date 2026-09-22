@@ -8,10 +8,12 @@ letters, digits, and hyphens, at least one character and nothing else; whatever 
 
 ## Mint-on-name
 
-A scope comes into existence the moment its slug is first named — either an operator naming it directly, or a routine
-naming a default scope no scope yet holds. Naming an already-existing slug again is not an error and does not overwrite
-what is already recorded against it: minting is idempotent, and a scope's description is changed only by explicitly
-editing it.
+A scope comes into existence the moment its slug is first named — an operator naming it directly, a routine naming a
+default scope no scope yet holds, or a delivery lane's review round naming one in a deferred finding at landing
+(`domain/findings-and-proposals.md`'s own review-sourced finding). Naming an already-existing slug again is not an error
+and does not overwrite what is already recorded against it: minting is idempotent, and a scope's description is changed
+only by explicitly editing it. A scope a review round mints carries a hub-written description naming the chunk that
+minted it, an operator's to edit later — the one path here whose minted description is not blank.
 
 ## The name is a routine's lineage
 
