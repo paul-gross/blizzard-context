@@ -63,8 +63,9 @@ stays `ready`, and `test_fill_strict_holds_at_a_marked_head_against_a_real_mock_
 **Usage over the wire** (`test_usage_service.py`) runs both directions. Runner-to-mock-hub, a real runner's
 `usage.recorded` facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once.
 Mock-runner-to-live-hub, usage pushed through the real `POST /api/fleet/events` becomes per-node-step usage plus the
-derived chunk total (`cost_partial` on absent cost) read off the live `GET /api/chunks/{id}` and `GET /api/chunks`,
-idempotent on a replayed seq.
+derived chunk total read off the live `GET /api/chunks/{id}` and `GET /api/chunks`, idempotent on a replayed seq — a
+pushed `estimated_cost_usd` reads back on both the per-step row and the total, kept apart from `cost_usd`, and
+`cost_partial` flags a row only when it carries neither amount.
 
 **Hub SSE live fan-out** is proven only at this tier: the component tier can only assert an event was recorded, off the
 broker's replay tail, while the publish-to-subscriber-queue-to-wire leg a live board depends on is real only here, via

@@ -32,9 +32,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `BoardHeader` plus `AppNavMenu`, and `runner`'s `AppHeader`. At widths 1400px down to 320px, straddling every declared
   header breakpoint, and — runner only, the one content-dependent header width — usernames from authless to 64
   characters, the profile menu trigger must sit fully inside the viewport, `elementFromPoint` at its center must hit
-  inside it, with no horizontal overflow and no page error. The sweep's shape follows `BoardHeader`'s geometry: a stat
-  strip and trailing cluster sharing equal flex-shrink priority squeeze the menu near the strip's 1150px breakpoint —
-  which is why the already-clipping stat strip carries an outsized `flex-shrink` (`board-header.css`'s `.stats` rule),
+  inside it, with no horizontal overflow and no page error. The hub fixture's spend cells each carry their own estimate
+  line too, so the sweep's widest natural content includes it. The sweep's shape follows `BoardHeader`'s geometry: a
+  stat strip and trailing cluster sharing equal flex-shrink priority squeeze the menu near the strip's 1150px breakpoint
+  — which is why the already-clipping stat strip carries an outsized `flex-shrink` (`board-header.css`'s `.stats` rule),
   and why the swept widths straddle that breakpoint. The specs are proven able to fail by reverting `BoardHeader`'s
   `.trailing` shrink fix (`flex: 0 1 auto; min-width: 0`, `board-header.css`), which reproduces the off-screen-menu
   symptom. `app-header.shell-sweep.spec.ts` additionally sweeps the connection cell's `degraded` state — the longest
@@ -54,6 +55,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
     work-item column's `right`, while work item and issues keep distinct `top`s in their shared column. Proven able to
     fail by moving node history's explicit grid placement (`grid-column: 1; grid-row: 3`) into the work-item/issues
     column.
+  - General tab, cost estimate: at 390px, over a total and its own history step both carrying only a runner-reported
+    estimate, the token breakdown's own estimate row and the timeline's own estimate figure must both render with no
+    horizontal overflow of the tab.
   - Transcripts-tab stacking: the nav-beside-viewer split collapses below `@media (min-width: 720px)` — with one stubbed
     segment open at 390px, the step nav's `top` must sit above the segment body's, with no horizontal overflow; proven
     able to fail by forcing `.tx-tab`'s base `flex-direction` to `row`.
@@ -202,6 +206,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`bzh:narrow-viewport-tier-rule`), the marking must render directly below the status row without moving the status's
   own position and without its own right edge overflowing the card — a real CSS layout claim jsdom cannot make, since
   `ChunkBlocked` mounts outside the card's own open button (a nested interactive element inside it is invalid HTML).
+- `board-card-cost.shell-sweep.spec.ts` covers `BoardCardComponent`'s right-hand meta group at its fullest: a done-lane
+  card carrying its completion stamp, a billed cost, and a cost estimate at once. At 800px and at 390px/320px
+  (`bzh:narrow-viewport-tier-rule`) the three figures must sit side by side on one line, none overlapping the one before
+  it and none overflowing the card — a real CSS layout claim jsdom cannot make.
 - `board-column.shell-sweep.spec.ts` covers `BoardColumn`'s decorative reorder grip: READY and BACKLOG each render a
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
@@ -269,7 +277,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   mobile-reachable width, with no page error and no horizontal overflow.
 - `chunk-timeline-provenance.shell-sweep.spec.ts` covers the node-history timeline's harness-provenance badges: two
   steps recording distinct harnesses render two genuinely distinct badges beside their own usage figures, at the same
-  narrow width, with no page error and no horizontal overflow.
+  narrow width, with no page error and no horizontal overflow. A second case, mounting both the timeline and the Node
+  history tab's Selection list over a step carrying only a runner-reported estimate, proves the estimate figure renders
+  on each, labeled, with no PARTIAL marker and no horizontal overflow at the same width.
 - `chunk-detail-view-provenance.shell-sweep.spec.ts` covers the runner's local-panel escalation resume box's
   harness-provenance badge: it renders beside the resume command at the runner's own narrow width, with no page error
   and no horizontal overflow.

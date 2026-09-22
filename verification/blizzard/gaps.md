@@ -271,3 +271,23 @@ Standing in for a tier: `_fake_binary`'s own `assert len(lever_flags) == 26` pin
 change to land both sides in the same commit family. Neither closes the gap mechanically — the count can stay 26 while a
 name silently swaps — so a roster change's correctness rests on the author following the companion-changes rule, not on
 a tier that would need the cross-repo import `tests/support.py::github_double`'s established stance forbids.
+
+## The OpenCode subscription cost estimate against a live step
+
+`OpenCodeAdapter`'s zero-cost estimate — the price-cache seam, the tier rule, and the per-step split between `cost_usd`
+and `estimated_cost_usd` — is pinned at `blizzard:unit-test` against a fake `IOpenCodePriceCatalog` and hand-authored
+`models.json` fixtures, and in the same tier by a real `OpenCodeAdapter` over that fake catalog driven through
+`UsageRecorder.record_worker` into a real runner store's outbound payload. No tier proves either half of this against a
+real OpenCode subscription step: that `resolve_price_cache_path`'s resolved location is actually the cache file the
+worker's own OpenCode process wrote to (never a stale or differently-scoped cache a test fixture only assumes matches),
+and that the computed estimate agrees with what OpenCode itself would have billed a non-subscription call for the same
+step. A fake catalog proves the tier rule is applied correctly to whatever entry it is handed; it proves nothing about
+whether that entry, or its resolved path, is real.
+
+Standing in for a tier: a change to the estimation path — the price cache, its path resolution, or the adapter's
+per-step pricing — owes `blizzard:manual-runner` together with `web:manual-board`, run against a local runner with a
+real OpenCode subscription binding and a local hub (`workspace:/context/project/hub-data-modes.md`; never the hosted
+hub): one real node-step observed showing `$X.XX est.` on the board and in `hub chunk show`, with the billed figure
+unchanged. Nothing repeats that observation automatically, so the change's author owes it by hand. Do not add a
+real-token/live-OpenCode CI tier to close this — an external harness's live pricing behavior sits outside a hermetic,
+network-free CI tier's reach.
