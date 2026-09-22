@@ -177,6 +177,30 @@ command, for `anthropic`), and compare the two.
 **Passes when.** The probe's parsed utilization percentages and reset times match what the provider's own usage view
 reports for the same account, within the natural few-second sampling skew.
 
+### `blizzard:manual-credential-renewal`
+
+**Surface.** No CI tier can prove `codex app-server`'s `account/read` call actually renews a real OpenAI login: the tier
+rules forbid service and e2e tests from touching the network or a real credential file, and `blizzard:service-test`'s
+own concurrent-writer proof runs against `mock-codex app-server`, never the real binary. This method is what ties that
+proof back to the real vendor CLI. Phase 2 of blizzard#504 is not accepted until this method has been run and passed at
+least once, on a login whose rotation the operator accepts — forking a copy of a real login into a scratch `CODEX_HOME`
+invalidates that login's own refresh token, so this method is run against a login the operator is prepared to have
+rotated, never a throwaway copy.
+
+**Setup.** A runner with an `openai`-provider `[[subscription]]` declared, whose credential file (`~/.codex/auth.json`
+by default, or the declaration's own `credentials_path`) is inside the renewer's lead window — at or near its own
+access-token `exp` — and a working `codex` binary the runner's environment can reach. Record the credential file's own
+`tokens.refresh_token` and access-token `exp` before starting.
+
+**Steps.** Let one of the runner's own sampling cadences fire naturally (`ExternalUsageSample` calls `renew_if_due()`
+before every due sample), or drive it directly via a normal tick with the subscription's cadence already elapsed.
+Optionally, run `codex` by hand at the same time (e.g. `codex login status`), so the live proof also covers the
+concurrent-writer path the mock only simulates.
+
+**Passes when.** The credential file's `tokens.refresh_token` and access-token `exp` have both changed from what was
+recorded in Setup, `codex login status` (or an equivalent vendor-CLI check) still reports the login as active afterward,
+and the runner's very next sample for that slug succeeds rather than reporting `credential_lapsed`.
+
 ### `blizzard:manual-retired-wire-response-vocabulary-census`
 
 **Surface.** Retired subscription wire-response vocabulary in the `blizzard` app repo — the response types, fields,
