@@ -43,10 +43,10 @@ context accounting a harness ran under, because the mock façade sees argv and n
 the flag — mint carries a model, resumes carry none — and stops there.
 
 Standing in for a tier: what backs the surrounding export behavior is a one-time empirical observation of Claude Code
-CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted set (currently `{1.18.25}`). Neither
-observation proves OpenCode session stickiness when model flags are omitted; each harness also has a configuration that
-can defeat stickiness, which `docs/deployment/worker-spawn.md` states as deployment requirements. Do not add a
-real-token tier to close this gap.
+CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted range (currently `>=1.18.25,<2.0`).
+Neither observation proves OpenCode session stickiness when model flags are omitted; each harness also has a
+configuration that can defeat stickiness, which `docs/deployment/worker-spawn.md` states as deployment requirements. Do
+not add a real-token tier to close this gap.
 
 ## The declared compaction window
 
@@ -64,9 +64,9 @@ compaction behavior sits outside a hermetic, network-free CI tier's reach.
 The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
 retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
 otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under any of the
-runner's admitted-version corpus directories — the runner's admitted set (currently `{1.18.25}`) has only the one,
-`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — carries it: the admitted version's live runs never
-compacted. A wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
+runner's committed corpus directories — the runner's admitted range (currently `>=1.18.25,<2.0`) is backed by only the
+one, `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — carries it: that corpus version's live runs
+never compacted. A wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
 
 Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
 for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
@@ -97,8 +97,8 @@ off a captured run, exactly the shape "OpenCode transcript reads never distingui
 Code lineage's own (proven) dialect — never the reverse. OpenCode's own dialect deliberately stops at that one proven
 kind, for this reason, so the missing OpenCode read/skill mapping above is still not closed by this test.
 
-Standing in for a tier: a live OpenCode run whose transcript actually reads a file or invokes a skill, captured into the
-admitted-version corpus — the runner's admitted set (currently `{1.18.25}`), so
+Standing in for a tier: a live OpenCode run whose transcript actually reads a file or invokes a skill, captured into a
+committed corpus inside the runner's admitted range (currently `>=1.18.25,<2.0`), today only
 `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — the same way the spawn mapping itself was proven,
 is the only evidence that would extend `_OPENCODE_EXPORT_1` correctly. Do not add a mock- or unit-invented tool name to
 close this — a mock's own vocabulary is authored, not observed, and would prove nothing about what OpenCode actually
