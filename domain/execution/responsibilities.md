@@ -29,8 +29,9 @@ with the time that sample was taken. A member stands only while that sample pass
 newest sample has aged out falls away. A sampler that produces nothing reports a miss instead, carrying only its reason;
 one reason, a lapsed credential, is itself a member: a subscription whose newest lapsed miss is newer than its newest
 sample — or that was never sampled at all — stands with that condition and no windows, for as long as the miss itself
-passes the same staleness gate, and a fresh sample clears it. A miss for any other reason changes nothing the hub shows.
-A subscription the entry does not report is simply absent — never a fabricated zero, and never a reason to omit any
-other. Samples and misses are the whole of what the hub knows here: it holds no list of what the runner declares, so a
+passes the same staleness gate, and a fresh sample clears it. Only the newest miss per slug is kept, so a later miss for
+any other reason clears a lapsed condition the same way a fresh sample does — the reason itself renders nothing. A
+subscription the entry does not report is simply absent — never a fabricated zero, and never a reason to omit any other.
+Samples and misses are the whole of what the hub knows here: it holds no list of what the runner declares, so a
 subscription declared but never attempted and one never declared at all are the same absence to it. The collection is
 advisory: neither granting a chunk nor anything else the hub decides reads it.
