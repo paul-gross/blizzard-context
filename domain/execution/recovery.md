@@ -14,6 +14,10 @@ advances the chunk. Even an error-during-execution exit is never reaped: the run
 nothing exists to branch on — the backstop is the node's declared `produces:` plus the empty-delivery refusal at
 delivery time, catching what the errored exit failed to produce regardless of exit status.
 
+An exit the harness's own provider itself reports as overloaded is neither reaped nor judged: it resumes the same
+session in place after a bounded, growing wait, spending no retry — until a bounded streak of consecutive overloads on
+the one lease is reached, at which point it falls through to an ordinary judged exit.
+
 ## Requeue
 
 Requeue names two operations. The hub's supersedes the escalation and releases the route, returning the chunk to the
