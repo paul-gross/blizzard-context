@@ -286,7 +286,10 @@ re-classifying the same exit on a later pass re-checks and writes nothing past t
 The fact these rows feed — whether a lease is currently backing off — is derived at read time (`backing_off_facts`,
 `blizzard/src/blizzard/runner/domain/overload.py`), never stored: an open fact closes by the lease's own current
 generation (worker) or elicitation launch instant (judge) no longer matching the identity the fact recorded, not by a
-separate closing write. A crash between `record_overload` committing and the caller's own
+separate closing write. A lease that closes without ever recording a later generation or elicitation launch closes the
+fact a second way (`bzh:open-facts-declare-closure`): `OverloadStore.open_overload_facts` anti-joins `lease_closures`
+directly, the same shape `ask_store.py` already uses, rather than leaning on every caller scoping its own read to
+`list_active_leases()`. A crash between `record_overload` committing and the caller's own
 `publish_lease_changed(cause="dormant")` — the same detached record-then-announce shape `park_on_ask`'s and `_wake`'s
 own publishes already use, covered by this file's "Event emission" section — costs at most one missed live SSE
 announcement; the next read of `backing_off_facts` (or `LeaseActivity.state`) derives `"backing-off"` from the durable
