@@ -24,9 +24,9 @@ review-sourced finding carries no routine lineage — it answers to no routine's
 it was filed under — and carries its own `severity`, blizzard's own closed vocabulary (`blocking`/`should-fix`), unlike
 the deployment-opaque `class`/`locus` every finding also carries. It also names the chunk whose review raised it. It is
 visible to every routine run sweeping that same scope, exactly as if that routine had raised it itself, and a run may
-answer it with `observed`/`gone` like any other. It arrives in no finding set — the one exception to "one set per
-delivered artifact" above — because a review delta spans whatever scopes its entries name and has no run behind it to
-measure.
+answer it with `observed`/`gone` like any other. It arrives in no finding set — the one exception to the finding set's
+own "one per artifact" rule above — because a review delta spans whatever scopes its entries name and has no run
+behind it to measure.
 
 ## A run emits a delta, not a state
 
