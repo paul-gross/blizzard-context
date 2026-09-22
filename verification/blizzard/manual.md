@@ -605,8 +605,9 @@ operator, once this change has redeployed there.
 
 **Surface.** Each protected repo's live GitHub `master` branch protection, against the required-check set its own
 verification doc names (`blizzard`: [`./commands/packaging.md`](./commands/packaging.md); `blizzard-mock`:
-`blizzard-mock`'s own `verification/blizzard/commands/mock.md`; `blizzard-context`: `../verifiability.md`). An operator
-runs this once, after landing, to apply protection, then again on any later change to a repo's required-check set.
+[`./commands/mock.md`](./commands/mock.md); `blizzard-context`: [`../../verifiability.md`](../../verifiability.md)). An
+operator applies the protection each of those docs carries, then reads it back through this method once after landing,
+and again on any later change to a repo's required-check set.
 
 **Setup.** `gh auth status`, authenticated as an account with admin on each protected repo.
 
