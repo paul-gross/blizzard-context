@@ -14,17 +14,17 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   landing shape of its own, but reads the `merged/<repo>` marker convention to tell a fully-landed continuation apart
   from a genuinely incomplete delivery ([outcome protocol](../../standards/hub-nodes/outcome-protocol.md)). Even
   chunk-atomicity — checking every repository merges before pushing any — is one script's construction, not a property
-  of delivery: a fast-forward policy advances repositories one at a time and accepts a partial land, recovered by
-  per-repository reconciliation.
+  of delivery: a policy could advance repositories one at a time and accept a partial land, recovered the same way, per
+  repository.
 - **Conflict is a judged, authored outcome**, not an engine special case: a dirty repository is one of the script's own
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
   against.
 - **The policy is the script's.** Which policy a chunk gets is a fact about the graph it travels, and the policy is
-  whatever its script does: fast-forwarding each repository's base branch onto the chunk's own commit, opening a pull
-  request per repository and watching each to a clean merge, or landing no repository at all and recording some other
-  outcome. "PR mode" names one such authored policy, adopted by minting a graph whose `deliver` node declares that
-  policy's script in place of another's, never by an engine switch.
+  whatever its script does: opening a pull request per repository and watching each to a terminal-green, rebase-merged
+  landing, or landing no repository at all and recording some other outcome. "PR mode" names the currently shipped
+  policy, adopted by minting a graph whose `deliver` node declares that policy's script in place of another's, never by
+  an engine switch.
 - **Environment retention.** The holding runner keeps the chunk's environments throughout delivery, until the outcome is
   known.
 

@@ -33,3 +33,23 @@ default path) and fails rather than skips when it cannot resolve one — parity 
 
 `uv run pytest -m e2e` — the fleet acceptance proof and the **P4 exit criterion**: a scripted prompt lands a commit the
 mock forge merges to bare `main`.
+
+**Required checks on `master`.** The `pr.yml` checks below, applied by an operator via
+`blizzard:manual-branch-protection` once the hosted hub runs a PR-landing change — not yet applied:
+
+```bash
+gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": false,
+    "checks": [
+      {"context": "gate / ruff + pyright"},
+      {"context": "gate / pytest (sans needs_blizzard)"}
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null
+}
+EOF
+```

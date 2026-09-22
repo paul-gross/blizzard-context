@@ -63,3 +63,27 @@ of its own) is pinned at `blizzard:unit-test` in `tests/test_compose_deployment.
 `gh run watch --repo paul-gross/blizzard <run-id> --exit-status` — watch a GitHub Actions run, the `push` merge-gate on
 master or the `pr` gate, to completion, exiting non-zero on failure. This is the authoritative remote gate; the
 workflows and the watch loop are documented in the `blizzard` app repo's `docs/ci.md`.
+
+**Required checks on `master`.** The `pr.yml` checks below, applied by an operator via
+`blizzard:manual-branch-protection` once the hosted hub runs a PR-landing change — not yet applied:
+
+```bash
+gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": false,
+    "checks": [
+      {"context": "gate / ruff + pyright + structural gate"},
+      {"context": "gate / pytest (unit + component)"},
+      {"context": "gate / OpenAPI spec drift"},
+      {"context": "gate / eslint + vitest + client drift"},
+      {"context": "upper-tiers / service tier (blizzard:service-test)"},
+      {"context": "upper-tiers / kill-9 crash sweep — CI profile (blizzard:crash-sweep)"}
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null
+}
+EOF
+```

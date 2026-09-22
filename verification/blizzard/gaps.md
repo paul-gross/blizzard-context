@@ -243,7 +243,12 @@ The same residue now also covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'
 on every lane — and each lane's `pre-push.md` rebase-to-empty qualifier. `land_pr_ci`'s own classification is proven by
 `blizzard:unit-test`'s scripted-forge cases and `tests/test_graph_authoring.py`'s per-lane edge/addendum pins; that a
 worker reads the addendum's repair charge correctly, or applies the loop bound's chunk-history check rather than
-repeating the repair a second time, is not.
+repeating the repair a second time, is not. Nor is whether a `failure` bounce's own-defect case is actually triaged
+`significant` rather than treated as a plain rebase, or whether a repair worker reads `delivery-findings` at all.
+
+Every lane's `retrospective.md` now verifies landing by the PR's own merge state and its merged sha's reachability from
+base, never the sha pre-push declared — no tier reads this leg back; a worker misreading it (checking the wrong sha, or
+skipping the merge-state read) is silent until a live chunk exposes it.
 
 Standing in for a tier: a live chunk run through each lane on the dogfood deployment
 (`workspace:/context/project/local-instance.md`), whose transitions, bounces, and retrospective are read back and judged

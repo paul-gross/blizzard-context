@@ -600,3 +600,24 @@ statement — the probe's own aggregate read — and decodes nothing. A fresh re
 the in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
 statements, no content decoded, well under the 60s interval either way. The hosted reading is owed separately, by an
 operator, once this change has redeployed there.
+
+### `blizzard:manual-branch-protection`
+
+**Surface.** Each protected repo's live GitHub `master` branch protection, against the required-check set its own
+verification doc names (`blizzard`: [`./commands/packaging.md`](./commands/packaging.md); `blizzard-mock`:
+`blizzard-mock`'s own `verification/blizzard/commands/mock.md`; `blizzard-context`: `../verifiability.md`). An operator
+runs this once, after landing, to apply protection, then again on any later change to a repo's required-check set.
+
+**Setup.** `gh auth status`, authenticated as an account with admin on each protected repo.
+
+**Steps.**
+
+1. Per protected repo, read back live protection: `gh api repos/<owner>/<repo>/branches/master/protection`.
+2. Compare its `required_status_checks.checks[].context` list against the repo's documented required set, and its
+   `enforce_admins.enabled` / `required_pull_request_reviews` against the documented `false` / unset.
+3. Confirm the latest landing on `master` is single-parent: `git log -1 --format=%P origin/master | wc -w` reads `1`,
+   proving the rebase-merge policy rather than a merge commit landed it.
+
+**Passes when.** Every protected repo's live protection matches its documented required set exactly, and the latest
+`master` landing is single-parent. `blizzard-infra` is out of scope for this method — its own docs record why it cannot
+be protected on the current GitHub plan.

@@ -50,6 +50,26 @@ Commands table row above, not in any workflow file. This repo carries no `mise.t
 and `vale` — the tools `gate.yml` actually runs — are each installed and pinned inline in the workflow
 (`mise x <tool>@<version> --`) rather than declared as `[tools]`.
 
+**Required checks on `master`.** The `pr.yml`/`push.yml` checks below, applied by an operator via
+`blizzard:manual-branch-protection` once the hosted hub runs a PR-landing change — not yet applied:
+
+```bash
+gh api -X PUT repos/paul-gross/blizzard-context/branches/master/protection --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": false,
+    "checks": [
+      {"context": "gate / dprint + rumdl + vale"},
+      {"context": "gate / registry-drift + lint-markdown-style script tests"}
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null
+}
+EOF
+```
+
 ## Manual testing
 
 ### `blizzard-context:manual-reference-check`
