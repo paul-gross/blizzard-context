@@ -298,3 +298,24 @@ row regardless, so no operator-visible state is ever lost, only delayed to the n
 The write owes the invariant checker nothing: `backing_off_facts`'s own closure is an identity comparison over
 append-only rows and existing repository reads (`lease_generation`, `in_flight_elicitation`), never a derived cross-fact
 invariant a second writer could disagree with.
+
+## The credential-renewal window
+
+`ExternalUsageSample._sample_one` (`blizzard/src/blizzard/runner/loop/steps.py`) asks a subscription's renewer binding
+to `renew_if_due()` before the sample it is about to take, and only then records the attempt — outcome, miss reason, and
+renewal outcome — through `UsageStore.record_external_usage_attempt`
+(`blizzard/src/blizzard/runner/store/internal/usage_store.py`), which lands the attempt row and its outbound report in
+one transaction. The renewal itself is the vendor CLI's own rewrite of its credential file, driven as a bounded one-shot
+subprocess (`blizzard/src/blizzard/runner/subscriptions/internal/openai_credential_renewer.py`): blizzard never opens
+that file for writing (`bzh:subscriptions-no-write`).
+
+This is a **real window**, and its loss is **accepted**: a `kill -9` between the vendor's rewrite landing and blizzard's
+attempt row committing loses only that attempt row and the `renewal` outcome it would have carried. The credential file
+is the vendor's own atomic, lock-guarded write either way, so the renewed token is on disk regardless; the next cadence
+re-reads its expiry, finds it not due, samples, and records an attempt row as if the lost one had never been owed.
+Nothing derives from the missing row: the slug's cadence anchor is the newest attempt, so the only cost is one cadence
+sampling early, and the runner-local diagnostics showing the previous attempt's renewal outcome until the next one
+lands.
+
+The write owes the invariant checker nothing: the attempt row is an append-only fact, and the renewal outcome it carries
+is never cross-checked against the credential file it describes.

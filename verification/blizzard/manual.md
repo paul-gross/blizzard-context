@@ -182,8 +182,8 @@ reports for the same account, within the natural few-second sampling skew.
 **Surface.** No CI tier can prove `codex app-server`'s `account/read` call actually renews a real OpenAI login: the tier
 rules forbid service and e2e tests from touching the network or a real credential file, and `blizzard:service-test`'s
 own concurrent-writer proof runs against `mock-codex app-server`, never the real binary. This method is what ties that
-proof back to the real vendor CLI. Phase 2 of blizzard#504 is not accepted until this method has been run and passed at
-least once, on a login whose rotation the operator accepts — forking a copy of a real login into a scratch `CODEX_HOME`
+proof back to the real vendor CLI. The renewal seam is not accepted until this method has been run and passed at least
+once, on a login whose rotation the operator accepts — forking a copy of a real login into a scratch `CODEX_HOME`
 invalidates that login's own refresh token, so this method is run against a login the operator is prepared to have
 rotated, never a throwaway copy.
 

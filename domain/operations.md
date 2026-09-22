@@ -59,7 +59,7 @@ These produce no activity-feed row:
 - reorders of the `not_ready` list or the `ready` queue ([./work/ranking.md](./work/ranking.md)) — per-chunk rows
   carrying no news;
 - runner registration and heartbeats — no durable fact, and muted liveness noise;
-- a runner's subscription-usage samples — rate-limit telemetry for its registry row, not fleet activity;
+- a runner's subscription-usage samples and misses — rate-limit telemetry for its registry row, not fleet activity;
 - a deleted chunk's facts — once a chunk is deleted, every fact of that chunk is suppressed except the deletion itself.
 
 ## See also
