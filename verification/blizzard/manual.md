@@ -233,23 +233,23 @@ request or commit that claims this method — rather than in this file, which ho
 
 ### `blizzard:manual-opencode-compatibility`
 
-**Surface.** The live CLI/provider compatibility surface for an OpenCode version in the runner's admitted set (currently
-`{1.18.25}`) with ChatGPT `5.6 Luna` (`openai/gpt-5.6-luna`) at `max`, covering the diagnostic's:
+**Surface.** The live CLI/provider compatibility surface for an OpenCode version inside the runner's admitted range
+(currently `>=1.18.25,<2.0`) with ChatGPT `5.6 Luna` (`openai/gpt-5.6-luna`) at `max`, covering the diagnostic's:
 
 - `fresh_turn`, `resume`, `process_control`, `judgement`, `root_hook`, `permission`, and `model_variant`
 - `usage_cost`, `takeover`, `transcript_read`, `transcript_cursor`, `child_sessions`, and `configuration_isolation`
 
 **Procedure.** Follow the public operator procedure at `blizzard/docs/deployment/opencode-compatibility.md` for
 prerequisites, invocation, live opt-in, credential and evidence handling, failure conditions, and interpretation. That
-page's own "Admitting a candidate version" section owns the separate procedure for growing the admitted set itself — the
-gates a candidate owes before this diagnostic applies to it, and the two-part version-and-corpus admission claim.
+page's own "Admitting a candidate version" section owns the separate procedure for admitting a candidate version — the
+gates a candidate owes before this diagnostic applies to it, and when a new corpus or a widened range is owed.
 
 **Retained evidence.** Retain the diagnostic output and the sanitized `report.json` and `runtime.json` files from the
 evidence directory.
 
-**Passes when.** The command exits zero, the output reports an OpenCode version from the runner's admitted set
-(currently `{1.18.25}`) and ends with `compatibility: supported` or `compatibility: degraded`, and `report.json` records
-`complete: true` and `admissible: true`. This diagnostic result is not production adapter availability or a
+**Passes when.** The command exits zero, the output reports an OpenCode version inside the runner's admitted range
+(currently `>=1.18.25,<2.0`) and ends with `compatibility: supported` or `compatibility: degraded`, and `report.json`
+records `complete: true` and `admissible: true`. This diagnostic result is not production adapter availability or a
 harness-selection decision.
 
 ### `blizzard:manual-opencode-compatibility-rehearsal`
