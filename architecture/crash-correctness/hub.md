@@ -246,6 +246,25 @@ invariant to recompute — and, unlike most of this register's writes, whose ide
 after-the-fact bookkeeping, this one's marker is folded into its own transaction, which is what gives its replay
 idempotence in the first place.
 
+## Review findings delivery, marker folded into its own transaction
+
+`ReviewFindingsStore.deliver` (`blizzard/src/blizzard/hub/store/internal/review_findings_store.py`) mirrors the garden
+delivery entry above: it writes a review round's whole plan — the new `findings` and `finding_facts` rows the round's
+`deferred` entries mint — plus its own `review-findings-delivered` marker artifact row, all on the same
+`store.write("deliver")` connection. The idempotence check (`already_delivered`, keyed on `chunk_id` alone, not
+`(chunk_id, node_id, epoch)`, since a chunk owes at most one review-findings delivery) reads for the marker before
+writing, exactly as garden delivery's does, giving the same before/after-commit replay safety: nothing durable on a
+pre-commit crash, and the next `review_deliver.py` POST finding its own marker and minting nothing further on one after.
+
+This entry deviates from the garden precedent on one point: a scope a `deferred` entry names that does not yet exist is
+minted inside this same transaction (`domain/routines-and-scopes.md`'s own mint-on-name path for review delivery), where
+garden delivery's own write instead reads the scope and refuses the whole delivery if it is missing. A crash before this
+transaction commits therefore leaves neither the findings, the marker, nor any scope it would have minted — the same
+all-or-nothing shape, just with one more table folded in.
+
+The write owes the checker nothing for the same reason garden delivery's does: a single-transaction, multi-table insert
+with its own in-transaction marker, not a derived cross-fact invariant to recompute.
+
 ## Garden proposal closure: pass, and accept-with-mint
 
 `GardenProposalClosureStore.record_pass`/`record_accept_decline`

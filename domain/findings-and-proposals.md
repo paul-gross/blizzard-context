@@ -17,6 +17,17 @@ effective scope, no other — and the declaration is a constraint, not a groupin
 every op naming an existing finding must name one recorded under that same scope, and one op naming a finding under
 another scope refuses the whole delivery.
 
+## A finding can also be raised by a delivery lane's review
+
+Minting is not a run's alone: a delivery lane's own review round can raise a finding too, at the chunk's landing. A
+review-sourced finding carries no routine lineage — it answers to no routine's delta-diffing history, only to the scope
+it was filed under — and carries its own `severity`, blizzard's own closed vocabulary (`blocking`/`should-fix`), unlike
+the deployment-opaque `class`/`locus` every finding also carries. It also names the chunk whose review raised it. It is
+visible to every routine run sweeping that same scope, exactly as if that routine had raised it itself, and a run may
+answer it with `observed`/`gone` like any other. It arrives in no finding set — the one exception to "one set per
+delivered artifact" above — because a review delta spans whatever scopes its entries name and has no run behind it to
+measure.
+
 ## A run emits a delta, not a state
 
 What a run delivers is not the routine's new standing state; it is the change to apply to it. Emitting nothing about a
