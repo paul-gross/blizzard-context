@@ -18,7 +18,8 @@ The choreography end to end — sequencing between nodes, the review carry-back,
 landing. A worker that cannot finish just exits with its facts, and the platform derives what happens next.
 
 - The merge-queue landing is a hub-executed node — delivery is the hub's own act, no agent's role
-  ([../domain/artifacts/delivery.md](../domain/artifacts/delivery.md)).
+  ([../domain/artifacts/delivery.md](../domain/artifacts/delivery.md)). Every lane lands through a pull request the hub
+  merges only once its head reads a terminal-green check verdict, using a rebase-merge for a linear history.
 - A human enters only where invited or where failure parks the chunk — asks, gate decisions, takeover
   ([../domain/humans.md](../domain/humans.md)).
 

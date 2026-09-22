@@ -600,3 +600,28 @@ statement — the probe's own aggregate read — and decodes nothing. A fresh re
 the in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
 statements, no content decoded, well under the 60s interval either way. The hosted reading is owed separately, by an
 operator, once this change has redeployed there.
+
+### `blizzard:manual-branch-protection`
+
+**Surface.** Each protected repo's live GitHub `master` branch protection, against the required-check set its own
+verification doc names (`blizzard`: [`./commands/packaging.md`](./commands/packaging.md); `blizzard-mock`:
+[`./commands/mock.md`](./commands/mock.md); `blizzard-context`: [`../../verifiability.md`](../../verifiability.md)). An
+operator applies the protection each of those docs carries, then reads it back through this method once after landing,
+and again on any later change to a repo's required-check set.
+
+**Setup.** `gh auth status`, authenticated as an account with admin on each protected repo.
+
+**Steps.**
+
+1. Per protected repo, read back live protection: `gh api repos/<owner>/<repo>/branches/master/protection`.
+2. Compare its `required_status_checks.checks[].context` list against the repo's documented required set, and its
+   `enforce_admins.enabled` / `required_pull_request_reviews` against the documented `false` / unset.
+3. Confirm the most recently merged fleet PR actually landed by rebase-merge — not merely that `master`'s current tip is
+   single-parent, which an ordinary direct push would read too:
+   `gh pr list --state merged --base master --limit 1
+   --json mergeCommit` names the merge commit, then
+   `git log -1 --format=%P <that sha>` reads a single parent.
+
+**Passes when.** Every protected repo's live protection matches its documented required set exactly, and the most
+recently merged fleet PR's own merge commit is single-parent. `blizzard-infra` is out of scope for this method — its own
+docs record why it cannot be protected on the current GitHub plan.
