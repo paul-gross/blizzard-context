@@ -24,12 +24,12 @@ target:
 
 One slug per kind of use.
 
-| Slug            | Ground                                                                                                        |
-| --------------- | ------------------------------------------------------------------------------------------------------------- |
-| `skills`        | The skills the workspace installs, against the invocations sessions make of them                              |
-| `agent-types`   | The agent types the workspace declares, against the activity sessions of each type generate                   |
-| `context-files` | The agent-facing files the workspace and its harness carry, against the on-demand reads sessions make of them |
-| `nodes`         | The worker-executed nodes blizzard's graphs declare, against the activity sessions record at each             |
+| Slug            | Ground                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `skills`        | The skills the workspace installs, against the invocations sessions make of them                                    |
+| `agent-types`   | The agent types the workspace declares, against the read, skill, and spawn calls sessions of each type make         |
+| `context-files` | The agent-facing files the workspace and its harness carry, against the on-demand reads sessions make of them       |
+| `nodes`         | The worker-executed nodes blizzard's graphs declare, against the read, skill, and spawn calls sessions make at each |
 
 ## Criteria
 
@@ -47,13 +47,13 @@ scope. The summaries are the evidence; the transcripts behind them are not:
 | `context-files` | `blizzard runner analytics counts files`       |
 | `nodes`         | `blizzard runner analytics counts nodes`       |
 
-The `agent-types` and `nodes` reads count every event a session records under an agent type or at a node, not spawns or
-steps: their magnitudes measure how much activity each entry carries, so one long-running agent or one chatty node reads
-heavy on its own. The `files` read counts only the reads a session makes with its read tool: a file the harness loads
-into context on its own — the workspace and extension hubs, and everything they import — or one a session reads through
-the shell never registers. A zero means unused for a skill, an agent type, or a node a worker session runs; for a
-hub-executed node, which runs with no session, and for a file that reaches a session without a read call, it is no
-evidence at all.
+Every count covers three kinds of tool call and nothing else: a read-tool call, a skill invocation, and an agent spawn.
+A skill is used only through a skill invocation, so a zero for a skill is evidence of disuse. For an agent type or a
+node, a zero says only that none of those three calls was made there — a session working through the shell or an editor
+leaves no trace, and a spawn lands in the spawning session's lane, not the spawned type's — and a magnitude ranks those
+calls, not work done. For a file, the count sees only read-tool calls: a file the harness loads into context on its own
+— the workspace and extension hubs, and everything they import — or one a session reads through the shell never
+registers, so its zero is no evidence at all.
 
 Two bodies bound what counts as a gap:
 
