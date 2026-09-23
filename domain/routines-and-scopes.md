@@ -23,13 +23,18 @@ default scope, or its run preferences, but never what it is named.
 
 ## The retired brake
 
-A scope carries the same reversible, append-only retirement brake a graph does: retiring one and re-enabling it are both
-facts recorded over time, never a destructive edit, and either direction leaves the scope's slug and description
-untouched. What retiring does is withdraw the scope from selection — a retired scope is offered to no new run, and a
-routine's record of when it last swept each scope covers a retired one only where that routine has already swept it —
-while nothing recorded under it moves: its findings keep whatever state they had, and stay queryable, and its membership
-in a routine's declared set stands until an explicit unlink. Naming a retired scope again, by minting it or as a
-routine's default, is not refused; running against it is ([What refuses](#what-refuses)).
+A scope and a routine each carry the same reversible, append-only retirement brake a graph does: retiring one and
+re-enabling it are both facts recorded over time, never a destructive edit, and either direction leaves the retired
+thing's own stored fields untouched. What retiring a scope does is withdraw it from selection — a retired scope is
+offered to no new run, and a routine's record of when it last swept each scope covers a retired one only where that
+routine has already swept it — while nothing recorded under it moves: its findings keep whatever state they had, and
+stay queryable, and its membership in a routine's declared set stands until an explicit unlink. Naming a retired scope
+again, by minting it or as a routine's default, is not refused; running against it is ([What refuses](#what-refuses)).
+
+Retiring a routine withdraws it from running only: it keeps every run, finding, proposal, and closure recorded under it,
+each staying exactly as queryable as before, and it stays editable and fully readable — naming it, viewing it, changing
+its graph or defaults, or growing or shrinking its declared scope set, none of that is a running act and none of it is
+refused. Only starting a new run against it is ([What refuses](#what-refuses)).
 
 ## A routine sweeps a declared set of scopes
 
@@ -76,6 +81,7 @@ sent to another scope or another graph.
   it, and never minted; the routine's own default is always a member and so is always available.
 - **A retired effective scope** — the routine's default or an explicit override, already related — when a run is
   addressed at it.
+- **A retired routine** — when a run is addressed at it, checked before the effective scope is even resolved.
 
 Two more refusals guard a field of an existing routine rather than any act above, and are stated where that field is: a
 routine's name never changes ([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default scope
