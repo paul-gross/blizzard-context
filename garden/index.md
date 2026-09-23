@@ -1,8 +1,10 @@
 # Garden
 
-Blizzard's **gardening-axes registry** — the named axes along which blizzard is recurringly evaluated for weight, truth,
-and drift. Conforms to the canon concept at `winter-canon:/gardening-axes.md` (`canon:gardening-axes`), which owns the
-registry's required shape; this file is its blizzard instance.
+Blizzard's **gardening-axes registry** — the named axes along which blizzard is recurringly evaluated. Most judge the
+product for weight, truth, and drift against a written standard; one judges it against its charter, for what it does not
+yet do. A garden is grown as much as it is pruned, and both kinds of axis are declared here. Conforms to the canon
+concept at `winter-canon:/gardening-axes.md` (`canon:gardening-axes`), which owns the registry's required shape; this
+file is its blizzard instance.
 
 An evaluation pass names an axis and resolves it here; `canon:gardening-axes` owns what resolution means and what a pass
 does when the axis is undeclared.
@@ -15,6 +17,7 @@ Parent: [../index.md](../index.md).
 | [`architecture`](./architecture.md)                 | Structural drift in blizzard's code — layering, dependency direction, seam placement and width, injection, and the Angular suite's split |
 | [`comments`](./comments.md)                         | Prose drift in blizzard's code — which facts a comment or docstring may state, and whose vocabulary a seam's contract is stated in       |
 | [`domain-conformance`](./domain-conformance.md)     | Disagreement between the behavior the domain model declares and the behavior the code implements and the suite pins                      |
+| [`ideation:features`](./ideation-features.md)       | What the charter's personas still cannot do on one surface — the distance between a surface as built and the intent it serves            |
 | [`performance`](./performance.md)                   | Cost drift in blizzard's hot paths — per-item resolution, ungated sweeps, unbounded reads, and work a result never needed                |
 
 ## Scope slugs
