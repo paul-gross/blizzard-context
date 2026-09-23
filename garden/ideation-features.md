@@ -28,17 +28,16 @@ One slug per surface.
 ## Criteria
 
 `blizzard-product:/charter/` — its mission, vision, and personas — owns every statement of intent this axis judges
-against and is the only home for that prose; the personas file owns the `persona:<slug>` ids a proposal names the person
-it serves by.
+against and is the only home for that prose; each persona's card under `charter/personas/` is the single home of its
+`persona:<slug>` id.
 
 This axis judges against intent and enforces no standard. The charter says what the product is for, never what the code
 must look like, so nothing it states is a rule a surface can violate, and a proposal here is an opinion about what the
-product could become rather than a finding of drift. That is also why no command is out of range: no gate judges this
-ground, and no test can.
+product could become rather than a finding of drift.
 
 Two bodies bound what counts as a gap:
 
-- `blizzard-product:/epics.md` is the record of what is already planned. A capability the registry carries is not a gap
+- `blizzard-product:/epics.md` is the record of what is already planned. A capability `epics.md` carries is not a gap
   this axis reports; it is intent already on its way.
 - [`../architecture/`](../architecture/index.md) is out of range. The [`architecture`](./architecture.md) axis judges
   drift from the constraints it declares, and proposing to change those constraints is the same code read in the

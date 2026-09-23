@@ -1,10 +1,9 @@
 # Garden
 
-Blizzard's **gardening-axes registry** — the named axes along which blizzard is recurringly evaluated. Most judge the
-product for weight, truth, and drift against a written standard; one judges it against its charter, for what it does not
-yet do. A garden is grown as much as it is pruned, and both kinds of axis are declared here. Conforms to the canon
-concept at `winter-canon:/gardening-axes.md` (`canon:gardening-axes`), which owns the registry's required shape; this
-file is its blizzard instance.
+Blizzard's **gardening-axes registry** — the named axes along which blizzard is recurringly evaluated. Most judge
+blizzard for weight, truth, and drift against a written standard; an `ideation:` axis judges the product against its
+charter, for what it does not yet do. Conforms to the canon concept at `winter-canon:/gardening-axes.md`
+(`canon:gardening-axes`), which owns the registry's required shape; this file is its blizzard instance.
 
 An evaluation pass names an axis and resolves it here; `canon:gardening-axes` owns what resolution means and what a pass
 does when the axis is undeclared.
