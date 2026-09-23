@@ -24,12 +24,12 @@ target:
 
 One slug per kind of use.
 
-| Slug            | Ground                                                                                              |
-| --------------- | --------------------------------------------------------------------------------------------------- |
-| `skills`        | The skills the workspace installs, against the invocations sessions make of them                    |
-| `agent-types`   | The agent types the workspace declares, against the activity sessions of each type generate         |
-| `context-files` | The agent-facing files the workspace and its harness carry, against the reads sessions make of them |
-| `nodes`         | The nodes blizzard's graphs declare, against the activity sessions record at each                   |
+| Slug            | Ground                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------- |
+| `skills`        | The skills the workspace installs, against the invocations sessions make of them                              |
+| `agent-types`   | The agent types the workspace declares, against the activity sessions of each type generate                   |
+| `context-files` | The agent-facing files the workspace and its harness carry, against the on-demand reads sessions make of them |
+| `nodes`         | The worker-executed nodes blizzard's graphs declare, against the activity sessions record at each             |
 
 ## Criteria
 
@@ -49,7 +49,11 @@ scope. The summaries are the evidence; the transcripts behind them are not:
 
 The `agent-types` and `nodes` reads count every event a session records under an agent type or at a node, not spawns or
 steps: their magnitudes measure how much activity each entry carries, so one long-running agent or one chatty node reads
-heavy on its own. A zero still means the entry went unused.
+heavy on its own. The `files` read counts only the reads a session makes with its read tool: a file the harness loads
+into context on its own — the workspace and extension hubs, and everything they import — or one a session reads through
+the shell never registers. A zero means unused for a skill, an agent type, or a node a worker session runs; for a
+hub-executed node, which runs with no session, and for a file that reaches a session without a read call, it is no
+evidence at all.
 
 Two bodies bound what counts as a gap:
 
