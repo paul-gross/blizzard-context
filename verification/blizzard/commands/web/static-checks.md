@@ -4,8 +4,8 @@
 <!-- rumdl-disable MD001 -->
 <!-- The `###` headings, test/spec-filename code spans, and `npm run` script names are machine-checked — keep each verbatim, inside its own section. -->
 
-The detail spoke for the Angular checks that need no browser — the AOT compile, generated-client drift, and the
-structural gate — under the Angular workspace hub, [`../web.md`](../web.md). Read
+The detail spoke for the Angular checks that need no browser — the AOT compile, generated-client drift, the structural
+gate, and the bundle-composition check — under the Angular workspace hub, [`../web.md`](../web.md). Read
 [`../../../blizzard.md`](../../../blizzard.md) first for the short command and the method-id inventory;
 [`../../commands.md`](../../commands.md) routes to the other methods' detail.
 
@@ -91,3 +91,20 @@ non-cache side effect is named in `NO_CACHE_WRITE_EXEMPT_FILES` with a one-line 
 idiom the real-timer and kit-floor sweeps use. Its own fixture self-test, `assertNoCacheWriteDetectorWorks`, proves the
 exemption does real work — an exempted fixture would still be caught without it — alongside the other detectors'
 self-tests before the sweep trusts it (`bzh:case-pins-its-own-name`).
+
+### web:bundle-composition
+
+`npm run bundle-check` in `web/` (`web/scripts/bundle-check.js`) — the tooled half of
+[`../../../../architecture/frontend-structure/eager-shell.md`](../../../../architecture/frontend-structure/eager-shell.md)
+`bzh:frontend-eager-shell-entry`. Builds the hub app with esbuild's own metafile (`ng build hub --stats-json`, into a
+temp directory) and resolves the initial chunk from it twice. At output granularity — the output whose entry point is
+`main.ts`, plus every output it reaches over a static `import-statement` edge, a `dynamic-import` edge starting a lazy
+chunk instead — it prints the per-area byte breakdown (framework, CDK, each fleet area) that a bundle-size change
+records. At source-file granularity, over the same metafile's module graph, it enforces the gate: a source file
+reachable that eagerly that matches a forbidden pattern — the fleet `chunk-detail/`, `garden/`, `graphs/`, or
+`transcripts/` sub-barrels, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay` bundles — fails the run, named together
+with the file that imports it. Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one eager import
+matching a forbidden pattern, one eager import that does not, and a forbidden pattern reached only through a dynamic
+import — runs before the walk is trusted (`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json` is the
+size backstop the same build enforces. Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside
+`web:structural-gate`.

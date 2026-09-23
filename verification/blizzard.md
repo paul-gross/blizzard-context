@@ -55,6 +55,7 @@ A command method passes when its command exits 0.
 | `web:unit-test`              | `npm run test` in `web/` — vitest, the frontend unit/component tier                                                                                               |
 | `web:structural-gate`        | `npm run structural-gate` in `web/` — the real-timer, kit-floor, retired-board-control, mutation-invalidation, and mutation-cache-write sweeps *(more)*           |
 | `web:shell-sweep`            | `npm run shell-sweep` in `web/` — the real-Chromium proof for what jsdom cannot evaluate *(more)*                                                                 |
+| `web:bundle-composition`     | `npm run bundle-check` in `web/` — the hub's initial chunk resolved from esbuild's metafile, failing on a forbidden feature module *(more)*                       |
 | `web:client-drift`           | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`) *(more)*                                                             |
 | `blizzard-mock:build`        | `uv sync` in the `blizzard-mock` repo                                                                                                                             |
 | `blizzard-mock:lint`         | `uv run ruff check .`                                                                                                                                             |
