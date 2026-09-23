@@ -21,10 +21,8 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
   against.
 - **The policy is the script's.** Which policy a chunk gets is a fact about the graph it travels, and the policy is
-  whatever its script does: opening a pull request per repository and watching each to a terminal-green, rebase-merged
-  landing, or landing no repository at all and recording some other outcome. "PR mode" names the currently shipped
-  policy, adopted by minting a graph whose `deliver` node declares that policy's script in place of another's, never by
-  an engine switch.
+  whatever its script does. A graph adopts a policy by declaring its script in `deliver`, never by an engine switch;
+  [feature delivery](../../workflows/feature-delivery.md) describes the shipped policy.
 - **Environment retention.** The holding runner keeps the chunk's environments throughout delivery, until the outcome is
   known.
 

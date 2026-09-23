@@ -633,19 +633,21 @@ verification doc names (`blizzard`: [`./commands/packaging.md`](./commands/packa
 operator applies the protection each of those docs carries, then reads it back through this method once after landing,
 and again on any later change to a repo's required-check set.
 
-**Setup.** `gh auth status`, authenticated as an account with admin on each protected repo.
+**Setup.** `gh auth status`, authenticated as an account with admin on each protected repo. Have the URL of a known
+fleet-delivered PR for each repo being checked.
 
 **Steps.**
 
 1. Per protected repo, read back live protection: `gh api repos/<owner>/<repo>/branches/master/protection`.
 2. Compare its `required_status_checks.checks[].context` list against the repo's documented required set, and its
    `enforce_admins.enabled` / `required_pull_request_reviews` against the documented `false` / unset.
-3. Confirm the most recently merged fleet PR actually landed by rebase-merge — not merely that `master`'s current tip is
-   single-parent, which an ordinary direct push would read too:
-   `gh pr list --state merged --base master --limit 1
-   --json mergeCommit` names the merge commit, then
-   `git log -1 --format=%P <that sha>` reads a single parent.
+3. From the known PR URL, confirm its branch matches the delivered chunk and its state is merged with
+   `gh pr view <fleet-pr-number> --repo <owner>/<repo> --json state,headRefName,mergedAt,mergeCommit`.
+4. Fetch in that repo's worktree with `git -C <repo-worktree> fetch origin`, then
+   `git -C <repo-worktree> log -1 --format=%P <mergeCommit.oid>` reads two parents.
 
-**Passes when.** Every protected repo's live protection matches its documented required set exactly, and the most
-recently merged fleet PR's own merge commit is single-parent. `blizzard-infra` is out of scope for this method — its own
-docs record why it cannot be protected on the current GitHub plan.
+**Passes when.** Every protected repo's live protection matches its documented required set exactly, and the selected
+fleet PR's own merge commit has two parents.
+
+`blizzard-infra` is out of scope for this method — its own docs record why it cannot be protected on the current GitHub
+plan.
