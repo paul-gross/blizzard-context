@@ -7,12 +7,11 @@ The gardening axis that holds what the fleet was built to use to what it actuall
 ## Evaluates
 
 The distance between the skills, agent types, context files, and graph nodes the fleet was built to use and the ones its
-sessions actually invoke, spawn, open, and pass through — what nobody touches, and what is missing. Concretely, on this
-target:
+sessions leave a trace of using — what nobody touches, and what is missing. Concretely, on this target:
 
-- Something built for the fleet that the counts say nothing uses — a skill never invoked, an agent type never spawned, a
-  context file never opened, a node no chunk passes through — over a window long enough for the absence to mean
-  something.
+- Something built for the fleet that the counts show no sign of — a skill never invoked, or an agent type, node, or
+  on-demand context file with no read, skill, or spawn call against it — over a window long enough for the absence to
+  mean something.
 - A kind of use that concentrates on a few of its entries while the rest sit idle — the fleet reaching for the same
   three things where a dozen were built.
 - A use the fleet makes that nothing was built for — a file sessions keep opening that no hub routes to, or work an
@@ -69,5 +68,5 @@ Two bodies bound what counts as a gap:
 Every run records, proposals or none:
 
 - Proposals delivered, per scope swept.
-- The share of each swept scope's ground that the window's counts show untouched — the number an accepted proposal to
+- The share of each swept scope's ground that reads zero in the window's counts — the number an accepted proposal to
   stop carrying something is meant to move, which a count of proposals alone cannot show moving.
