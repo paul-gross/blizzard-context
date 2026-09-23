@@ -16,7 +16,9 @@ Parent: [../index.md](../index.md).
 | [`architecture`](./architecture.md)                 | Structural drift in blizzard's code — layering, dependency direction, seam placement and width, injection, and the Angular suite's split |
 | [`comments`](./comments.md)                         | Prose drift in blizzard's code — which facts a comment or docstring may state, and whose vocabulary a seam's contract is stated in       |
 | [`domain-conformance`](./domain-conformance.md)     | Disagreement between the behavior the domain model declares and the behavior the code implements and the suite pins                      |
+| [`ideation:cost`](./ideation-cost.md)               | Where the fleet's model spend, per node or per graph, exceeds what the work it bought produced                                           |
 | [`ideation:features`](./ideation-features.md)       | What the charter's personas still cannot do on one surface — the distance between a surface as built and the intent it serves            |
+| [`ideation:usage`](./ideation-usage.md)             | What the fleet was built to use — skills, agent types, context files, graph nodes — against what its sessions actually use               |
 | [`performance`](./performance.md)                   | Cost drift in blizzard's hot paths — per-item resolution, ungated sweeps, unbounded reads, and work a result never needed                |
 
 ## Scope slugs
