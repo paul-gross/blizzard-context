@@ -29,7 +29,7 @@ One slug per domain hub, each covering that hub, its spokes, and the code implem
 | `domain-artifacts`  | What work produces and how it lands — the model, the series, delivery, and the never-code rule                    |
 | `domain-humans`     | Where a person enters the loop — asks, gates, escalation, and takeover                                            |
 | `domain-operations` | Operational visibility — the durable, typed, severity-ranked event log                                            |
-| `domain-routines`   | A routine's graph, default scope, and run preference, and a scope's slug and retired brake                        |
+| `domain-routines`   | A routine's graph, default scope, run preference, and retired brake, and a scope's slug and retired brake         |
 | `domain-findings`   | A finding's identity, liveness, and vocabulary, and a proposal's findings list                                    |
 
 ## Criteria
