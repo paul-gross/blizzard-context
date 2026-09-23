@@ -42,21 +42,23 @@ The real packaged `ideation` YAML with only its prompts swapped for scripts — 
 delivery command all reach the mint verbatim — run as a real routine (`POST /routines/{id}/run`) against a live hub
 minted with a gardening-axes registry declaring an `ideation:` axis, one chunk per authored path.
 
-- `test_ideation_runs_end_to_end_on_all_authored_paths` — eight runs of one routine: the declared-axis path carries
-  survey → reconcile → propose → deliver to a docket of proposals spanning all three graph-owned classes (`direction`,
-  `tweak`, `retire`), every proposal's `findings` empty, and the delivered finding set records the measurement with no
-  revisions and no finding rows (asserted in the hub's `finding_sets`); the operator then closes two of the delivered
-  proposals — one accepted without minting a work item, one passed with a reason — before a second run's reconcile reads
-  that passed proposal and its reason back through `garden proposals --state all` and drops the matching candidate,
-  routing straight to deliver without ever reaching propose; the empty-survey path delivers the skeleton delta with no
-  candidates at all; the undeclared-axis path has survey itself park the chunk on `waiting_on_human` with a
-  `blizzard runner ask` question naming the missing axis, and once a human answers it the chunk reaches `done` with no
-  finding set and no proposals — the reserved terminal, never a delivery; propose's own decline path delivers the
-  skeleton with no proposals attached; the invalid path has delivery reject the docket and bounce to propose rather than
-  reconcile — the opposite of `garden-routine`'s `invalid`, which returns to reconcile — where the corrected docket
-  delivers only if the `invalid` edge's `prompt_addendum` actually threaded into re-entry; the failure path has delivery
-  crash, bounce to propose, which republishes the same docket unchanged, and the retry delivers it; and a second
-  consecutive `invalid` or `failure` at deliver escalates via `blizzard runner
-  ask` rather than retrying a third time.
-  Session policy is asserted off the runner's own store: reconcile never shares survey's session, and propose resumes
-  reconcile's.
+- `test_ideation_runs_end_to_end_on_all_authored_paths` — ten runs of one routine: the declared-axis path carries survey
+  → reconcile → propose → deliver to a docket spanning all three graph-owned classes (`direction`, `tweak`, `retire`),
+  every proposal's `findings` empty, and the delivered finding set records the measurement with no revisions and no
+  finding rows; the operator then closes two of the delivered proposals — one accepted without minting a work item, one
+  passed with a reason — before a second run's reconcile reads every proposal and its closure back through
+  `garden proposals --state all`, asserts the passed one carries its reason, drops every candidate, and routes straight
+  to deliver with survey's own skeleton measurement recorded; a third run returns the passed candidate saying what
+  changed since that reason, so reconcile keeps it and propose's proposal names the earlier proposal's id; the
+  empty-survey path delivers the skeleton delta with no candidates at all; propose's own decline path delivers the
+  skeleton with no proposals attached; the invalid path has delivery reject a wrongly-scoped delta and bounce to propose
+  rather than reconcile — the opposite of `garden-routine`'s `invalid`, which returns to reconcile — where the corrected
+  delta delivers only if the `invalid` edge's `prompt_addendum` actually threaded into re-entry; the failure path has
+  the deliver command exit non-zero once behind a crash-once shim the scripted mint wraps it in, routing the `failure`
+  edge to propose, whose addendum republishes the docket unchanged and whose retry records it exactly once; a second
+  consecutive `invalid` at deliver escalates via `blizzard runner ask` rather than retrying a third time, and the
+  human's answer resolves the delivery; and the undeclared-axis path has survey itself park the chunk on
+  `waiting_on_human` with a `blizzard runner ask` question naming the missing axis — answered that the axis stays
+  undeclared, the chunk reaches `done` with no finding set and no proposals, the reserved terminal and never a delivery;
+  answered that the registry was updated, survey re-resolves and sweeps instead. Session policy is asserted off the
+  runner's own store: reconcile never shares survey's session, and propose resumes reconcile's.
