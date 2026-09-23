@@ -1,10 +1,11 @@
 # Findings and proposals
 
 A **finding** is one instance a routine's run observed — not a theme, not a tally: seventeen occurrences of the same
-weed are seventeen findings, each with its own locus and its own id. A **garden proposal** is a proposed response to one
-or more findings. Both are durable hub entities, first class the way an artifact is, and both persist as evidence
-whether or not anyone ever acts. Part of the [domain model](./index.md); the machinery both ride is
-`blizzard-product:/delivered/garden/machinery.md`, which this does not restate.
+weed are seventeen findings, each with its own locus and its own id. A **garden proposal** is a proposed response to the
+findings behind it — it may name none at all (§A proposal's findings are optional). Both are durable hub entities, first
+class the way an artifact is, and both persist as evidence whether or not anyone ever acts. Part of the
+[domain model](./index.md); the machinery both ride is `blizzard-product:/delivered/garden/machinery.md`, which this
+does not restate.
 
 ## Identity is the hub's to assign
 
@@ -69,11 +70,12 @@ response. The hub indexes and counts them, and never interprets either: it can t
 knowing what the name means, which is what any case for mechanizing a judgment rests on. A finding's `locus` is where it
 lives, read and stored the same way.
 
-## A proposal needs at least one finding
+## A proposal's findings are optional
 
-A garden proposal names every finding it answers, required and non-empty — a proposal with nothing behind it is an
-opinion no run was asked for. Grouping findings under one response is the proposal's whole job; a finding itself never
-groups.
+A garden proposal may name no findings at all: the hub enforces no minimum, empty or not. Whether a graph's own routine
+requires one is that graph's own decision to make, never the hub's — the hub only stores, groups, and counts whatever a
+proposal names. Grouping findings under one response is still the proposal's whole job when it names any; a finding
+itself never groups.
 
 ## Never confused with a work-item proposal
 
@@ -87,10 +89,10 @@ A garden proposal carries two closing verbs, and both leave a durable record —
 item's own (`domain/work.md`). **Passing** is not a dismissal: it is the note that stops a later run raising the same
 response as though it were new, and it wants a reason more than accepting does. **Accepting** records agreement, and
 most acceptances mint work — a self-sourced hub work item, linked to the proposal in the same act, its body the
-proposal's own (or the accept's override) wrapped in a template naming the findings behind it, so the worker the item
-reaches can tell which findings it answers. Minting stays the default; declining to mint is the deliberate act, because
-a spurious backlog item is visible and deletable while a real commission that silently mints nothing is a decision
-nobody can find again.
+proposal's own (or the accept's override) wrapped in a template naming the findings behind it, when it names any, so the
+worker the item reaches can tell which findings it answers; a proposal naming none mints an item whose body carries no
+such template at all. Minting stays the default; declining to mint is the deliberate act, because a spurious backlog
+item is visible and deletable while a real commission that silently mints nothing is a decision nobody can find again.
 
 Acceptance does not promote the item it mints — it rests behind the ordinary promote gate a person still has to open —
 and it does not move the findings behind the proposal: work being under way is not an observation that the ground
