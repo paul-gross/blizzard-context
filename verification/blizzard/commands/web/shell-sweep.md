@@ -174,7 +174,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   list-beside-panel grid: the list and panel sit side by side at 1280px; at 740px, 700px, 390px, and 320px the bare
   route shows only the docket, while a selected route shows only the detail and its Back control, with no horizontal
   overflow. The real detail panel's evidence-row locus (`.pp-finding-locus`) also wraps a long, unbroken path at 390px
-  rather than widening the panel past its column.
+  rather than widening the panel past its column, and a proposal citing no findings at all withholds the whole Evidence
+  section at 390px, with `.gp-layout` still not overflowing horizontally.
 - `gardening-proposal-pass-dialog.shell-sweep.spec.ts` covers the Pass dialog's own view, mounted directly with plain
   inputs: at 390px and 1024px the footer's Cancel/Pass buttons must genuinely sit side by side, neither overflowing the
   dialog panel.
