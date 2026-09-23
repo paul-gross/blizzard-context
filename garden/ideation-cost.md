@@ -21,10 +21,10 @@ out of proportion to what passing through it changed. Concretely, on this target
 
 One slug per spend profile.
 
-| Slug     | Ground                                                                                          |
-| -------- | ----------------------------------------------------------------------------------------------- |
-| `nodes`  | The per-node profile — usage and cost summed by node, across every graph that declares the node |
-| `graphs` | The per-graph profile — usage and cost summed by graph, across every chunk that ran the graph   |
+| Slug     | Ground                                                                                               |
+| -------- | ---------------------------------------------------------------------------------------------------- |
+| `nodes`  | The per-node profile — usage and cost summed by node, across every graph that declares the node      |
+| `graphs` | The per-graph profile — usage and cost summed by graph, attributed to each chunk's current graph pin |
 
 ## Criteria
 
