@@ -212,12 +212,16 @@ worker pushing to real GitHub. Do not add a real-forge CI tier.
 The packaged `garden-routine` prompts carry the routine's whole method: `survey.md` resolves the routine's name as an
 axis against the target project's gardening-axes registry, follows that entry's Criteria pointer, and records its
 declared Measurement, and `propose.md` rules what a proposal's `findings` may cite and how its `class` is spelled. The
-declared methods reach the mechanical half only — `blizzard:unit-test`'s packaged-prompt byte bars
-(`blizzard/tests/test_prompt_byte_bars.py`) and its `blizzard hub` verb guard, `blizzard:component-test`'s graph mint
-and choice-edge resolution, and `blizzard:e2e`'s `test_garden_routine_runs_end_to_end_on_all_six_paths`, whose scripted
-node bodies deliberately exercise no model at all. That `survey` actually resolves its axis from the target's registry
-rather than improvising a yardstick, or that `propose` actually cites the refs its own run just minted, is asserted by
-nothing: a prompt is an input to a model no tier runs.
+same gap holds for the packaged `ideation` graph's prompts: its `survey`/`reconcile`/`propose` carry the charter
+resolution and proposal-classing behavior that replaces `garden-routine`'s standard-judged method — resolving the
+target's own charter rather than a standard, and classing a proposal as `direction`/`tweak`/`retire` rather than citing
+findings a fix answers. The declared methods reach the mechanical half only — `blizzard:unit-test`'s packaged-prompt
+byte bars (`blizzard/tests/test_prompt_byte_bars.py`) and its `blizzard hub` verb guard, `blizzard:component-test`'s
+graph mint and choice-edge resolution, and `blizzard:e2e`'s `test_garden_routine_runs_end_to_end_on_all_six_paths` and
+`test_ideation_e2e`'s own run, whose scripted node bodies deliberately exercise no model at all. That `survey` actually
+resolves its axis from the target's registry rather than improvising a yardstick, that `propose` actually cites the refs
+its own run just minted, or that `ideation`'s `survey`/`reconcile`/`propose` actually resolve the target's charter and
+class a proposal correctly, is asserted by nothing: a prompt is an input to a model no tier runs.
 
 Standing in for a tier: a live routine run against a real fleet, whose delivered finding set and docket are read back
 and judged against what the axis entry declares — the dogfood deployment
