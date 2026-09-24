@@ -45,9 +45,10 @@ runs seams-mocked, spending no tokens and touching no network.
 store rather than through an injected seam Protocol; or a test that cannot run without a real external system because no
 seam exists to bind a mock to.
 
-**Do.** The runner depends on `IWorkspaceProvider`, `IHarness`, and the forge seam; production binds winter, Claude
-Code, and GitHub, while tests bind the blizzard-mock fleet. The reference seam stack: the work source (at the hub), the
-workspace provider, the coding harness, delivery (the forge), and the human channel are the seam Protocols.
+**Do.** The runner depends on `IWorkspaceProvider`, `IHarness`, and the forge seam; production selects winter or the
+built-in basic workspace provider by configuration, alongside Claude Code and GitHub, while tests bind the blizzard-mock
+fleet. The reference seam stack: the work source (at the hub), the workspace provider, the coding harness, delivery (the
+forge), and the human channel are the seam Protocols.
 
 **Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
 mock harness.

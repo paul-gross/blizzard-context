@@ -22,6 +22,14 @@ The happy path: build, then a scripted-PASS review, then deliver, to landed.
   through the runner-to-hub work-item pass-through and commits the fetched text, asserted reachable from bare `main` —
   MVP criterion 1 at the e2e tier.
 
+## test_basic_workspace
+
+A chunk runs through the built-in folder-backed provider against a local bare git origin, with a trap that fails if any
+child invokes winter. The mock harness owns creation of the feature branch; the provider allocates detached worktrees.
+
+- `test_basic_workspace_chunk_lands_without_winter` — builds, reviews, and delivers a real chunk to bare `main` from a
+  plain workspace directory, with the hub deriving `done` and no winter workspace or CLI invocation.
+
 ## test_review_cycle_e2e
 
 The cycle where review fails once, then passes, and the chunk lands.
