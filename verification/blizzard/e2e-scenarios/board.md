@@ -53,14 +53,14 @@ The cost/usage render half: the same served board, loaded once and never reloade
   classes inline — and update live with no reload, the claim only a real browser over the real SSE spine can make: a
   fresh `usage.recorded` fact pushed to `POST /api/fleet/events` re-broadcasts `chunk-changed`, the `FleetLiveUpdates`
   spine invalidates the chunk read and `hubFleetSpendKey`, and card, header, and dock move in place. It also proves a
-  row with neither a billed nor an estimated amount flips every figure to its `~`-marked lower bound, never a silently
+  row with neither a billed nor an estimated amount flips every figure to its `+`-marked lower bound, never a silently
   understated exact. The partial marking and the per-history-step `(node, epoch)` inline match are additionally fenced
   at the component tier: `chunk-detail-panel.spec.ts`, `board-header.spec.ts`, `board-shell.spec.ts`,
   `fleet-live.spec.ts`, `test_usage_facts_ingest.py`, `test_fleet_spend_api.py`, `test_hub_cli_status.py`. On its own
-  second chunk, a subscription-only `usage.recorded` fact (an estimate, no billed cost) proves the card and the header's
-  spend-today estimate cell both render the labeled estimate live (the card shows no billed figure at all), the dock
-  renders its own estimate label beside its own billed-cost line, and that this chunk shows no PARTIAL marker: an
-  estimate alone does not make a row partial.
+  second chunk, a subscription-only `usage.recorded` fact (an estimate, no billed cost) proves the card renders its one
+  `~`-marked figure live (entirely estimated, never a bare `$0.00`), the header's spend-today figure folds that estimate
+  into the fleet total under both markers, the dock's cost line reads the same `~`-marked figure, and that this chunk
+  shows no PARTIAL marker: an estimate alone does not make a row partial.
 
 ## test_glance_board_e2e
 
@@ -73,8 +73,8 @@ The mobile glance board at a real ~390px width under `bzh:narrow-viewport-tier-r
   a populated fleet.
 - `test_the_glance_board_shows_a_cost_estimate_never_a_plain_billed_zero` — claims a chunk with no billed cost at all,
   pushes it a subscription-only `usage.recorded` fact (an estimate, no billed cost), and proves the "Fleet spend ·
-  today" panel and the in-motion row both render the labeled estimate — never a plain billed figure standing in for a
-  window whose only spend is an estimate.
+  today" panel and the in-motion row both render the one `~`-marked figure — never a plain billed `$0.00` standing in
+  for a window whose only spend is an estimate.
 
 ## test_event_log_e2e
 

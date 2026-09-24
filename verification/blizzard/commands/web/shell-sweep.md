@@ -55,9 +55,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
     work-item column's `right`, while work item and issues keep distinct `top`s in their shared column. Proven able to
     fail by moving node history's explicit grid placement (`grid-column: 1; grid-row: 3`) into the work-item/issues
     column.
-  - General tab, cost estimate: at 390px, over a total and its own history step both carrying only a runner-reported
-    estimate, the token breakdown's own estimate row and the timeline's own estimate figure must both render with no
-    horizontal overflow of the tab.
+  - General tab, cost figure: at 390px, over a total and its own history step both carrying only a runner-reported
+    estimate, the token breakdown's and the timeline's one combined `~$X.XX` figure must each render with no horizontal
+    overflow of the tab.
   - Transcripts-tab stacking: the nav-beside-viewer split collapses below `@media (min-width: 720px)` — with one stubbed
     segment open at 390px, the step nav's `top` must sit above the segment body's, with no horizontal overflow; proven
     able to fail by forcing `.tx-tab`'s base `flex-direction` to `row`.
@@ -207,9 +207,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   own position and without its own right edge overflowing the card — a real CSS layout claim jsdom cannot make, since
   `ChunkBlocked` mounts outside the card's own open button (a nested interactive element inside it is invalid HTML).
 - `board-card-cost.shell-sweep.spec.ts` covers `BoardCardComponent`'s right-hand meta group at its fullest: a done-lane
-  card carrying its completion stamp, a billed cost, and a cost estimate at once. At 800px and at 390px/320px
-  (`bzh:narrow-viewport-tier-rule`) the three figures must sit side by side on one line, none overlapping the one before
-  it and none overflowing the card — a real CSS layout claim jsdom cannot make.
+  card carrying its completion stamp and its one combined cost figure, billed, estimated, and partial at once. At 800px
+  and at 390px/320px (`bzh:narrow-viewport-tier-rule`) the two must sit side by side on one line, neither overlapping
+  the other and neither overflowing the card — a real CSS layout claim jsdom cannot make.
 - `board-column.shell-sweep.spec.ts` covers `BoardColumn`'s decorative reorder grip: READY and BACKLOG each render a
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
