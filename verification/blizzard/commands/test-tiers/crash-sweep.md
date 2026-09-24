@@ -16,8 +16,8 @@ The tier command is `BLIZZARD_CRASH_SWEEP=1 uv run pytest -n auto -m crash_sweep
 the crash-point registry (`tests.crash_points.discover_crash_points`) and, per point, runs the hub and runner as real
 subprocesses over the mock fleet, arms the point so its owning daemon `SIGKILL`s itself there, then asserts the
 invariant checker (`blizzard dev check-invariants`) is green over both stores and the chunk still lands exactly once
-after an unarmed restart — startup is REAP. It needs the sibling `blizzard-mock` worktree and a winter source, and is
-skipped without `BLIZZARD_CRASH_SWEEP=1`.
+after an unarmed restart — startup is REAP. It needs the sibling `blizzard-mock` worktree; the winter-bound scenarios
+also need a winter source. It is skipped without `BLIZZARD_CRASH_SWEEP=1`.
 
 In CI the `pr` and `push` workflows run the bounded CI profile —
 `BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -n auto -m crash_sweep tests/crash/`
@@ -87,3 +87,8 @@ scenarios are:
 - an external runner kill mid-flight, both before and after the worker's commit is durably declared;
 - daemon restarts re-attaching an in-flight session in place;
 - a `killpg` of the hub process group mid-delivery between repo pushes, both land graphs swept.
+
+`tests/crash/test_basic_workspace_crash.py` drives the built-in folder provider without a winter fixture or CLI. It arms
+`fill.after-env-acquire.before-bind`, `fill.after-bind.before-claim`, and `abandon.after-release.before-closure` on a
+real runner subprocess; each restart lands the chunk exactly once with both-store invariants green. The release case
+also checks the released worktree's repo manifest is empty before restart.
