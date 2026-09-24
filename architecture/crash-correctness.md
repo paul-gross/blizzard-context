@@ -72,13 +72,13 @@ opens under a dedicated scenario — the family-coverage check passes on the sib
 window goes unswept.
 
 **Do.** Add the window's stable name to the registry, prefixed for the scenario that reaches it —
-`pause.after-kill.before-park`, not `pull.after-pause-kill.before-park`, even though the call site sits inside the PULL
-step's code; the sweep enumerates the registry and arms each in turn; the daemon self-kills only when the test fence is
-set.
+`pause.after-interrupt.before-park`, not `pull.after-pause-interrupt.before-park`, even though the call site sits inside
+the PULL step's code; the sweep enumerates the registry and arms each in turn; the daemon self-kills only when the test
+fence is set.
 
 **Don't.** Assert a window is crash-safe in prose without a registry entry the sweep can arm — the claim is untested.
-Prefix a new point `pull.after-pause-kill.before-park` because that's where its `.reached()` call sits, instead of
-`pause.after-kill.before-park` for the scenario whose window it actually guards.
+Prefix a new point `pull.after-pause-interrupt.before-park` because that's where its `.reached()` call sits, instead of
+`pause.after-interrupt.before-park` for the scenario whose window it actually guards.
 
 ### Recorded exemptions — durable state the sweep does not arm
 
