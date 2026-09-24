@@ -291,7 +291,7 @@ whether that entry, or its resolved path, is real.
 Standing in for a tier: a change to the estimation path — the price cache, its path resolution, or the adapter's
 per-step pricing — owes `blizzard:manual-runner` together with `web:manual-board`, run against a local runner with a
 real OpenCode subscription binding and a local hub (`workspace:/context/project/hub-data-modes.md`; never the hosted
-hub): one real node-step observed showing `$X.XX est.` on the board and in `hub chunk show`, with the billed figure
-unchanged. Nothing repeats that observation automatically, so the change's author owes it by hand. Do not add a
-real-token/live-OpenCode CI tier to close this — an external harness's live pricing behavior sits outside a hermetic,
-network-free CI tier's reach.
+hub): one real node-step observed showing its `~`-marked figure on the board and in `hub chunk show`, the estimate
+folded into the billed amount. Nothing repeats that observation automatically, so the change's author owes it by hand.
+Do not add a real-token/live-OpenCode CI tier to close this — an external harness's live pricing behavior sits outside a
+hermetic, network-free CI tier's reach.
