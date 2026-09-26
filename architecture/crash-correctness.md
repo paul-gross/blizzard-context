@@ -26,8 +26,9 @@ from a module global rather than its parameters.
 **Don't.** A single `tick()` that inlines all four phases with no separately callable boundary — no test can stop
 between FILL and ADVANCE.
 
-**See also.** [`./repository-access.md`](./repository-access.md) `bzh:probe-gated-pass` — what a periodic step checks
-before it rescans, once it is a step function.
+**See also.** [`./repository-access.md`](./repository-access.md) `bzh:probe-gated-pass` — what a converging pass or a
+windowed tick step checks before it rescans; a phase that reacts within a tick, as each of REAP, PULL, FILL, and ADVANCE
+does, is outside it.
 
 ## An injected clock (`bzh:injected-clock`)
 
