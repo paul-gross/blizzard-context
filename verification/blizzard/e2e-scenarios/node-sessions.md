@@ -31,10 +31,10 @@ packaged default's own setting — and whose `review` node is `session: fresh`.
   review visits carry two distinct session ids disjoint from build's, first arrival at build spawned fresh, and
   `latest_session_id(chunk, None)` — what bare `resume` would inherit — is a review session, not build's: the concrete
   reason the targeted `resume:<node>` form exists.
-- `test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model` — proves a named pool — `build`
-  carries `fresh:code`, minting a session per entry; `review` carries `resume:code`, continuing the head `build` just
-  minted, a pairing no `resume:<node>` form expresses — and proves off the mock's recorded argv that the mint and
-  every resume carry the same resolved model.
+- `test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model` — proves a named pool — `build` carries
+  `fresh:code`, minting a session per entry; `review` carries `resume:code`, continuing the head `build` just minted, a
+  pairing no `resume:<node>` form expresses — and proves off the mock's recorded argv that the mint and every resume
+  carry the same resolved model.
 
 ## test_resume_preamble_e2e
 
