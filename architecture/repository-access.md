@@ -124,30 +124,32 @@ below — whether a periodic pass runs at all, which this rule takes as given.
 
 ## Bound a read by its page (`bzh:page-bounded-read`)
 
-**Rule.** A read endpoint's cost is set by the page asked for, not by fleet size: its statement count is flat as the
-fleet grows, and its row volume is bounded by the page. A fleet-sized read behind a paged endpoint is allowed only where
-the call site states, beside the call, why the page's own ids cannot bound it.
+**Rule.** A set-shaped read's cost is set by the page its caller asks for — an endpoint's `limit`, a drain's batch — not
+by fleet size: its statement count is flat as the fleet grows, and its row volume is bounded by the page. A fleet-sized
+read behind a paged caller is allowed only where the call site states, beside the call or in the handler's docstring,
+why the page's own ids cannot bound it.
 
-**Why.** The board polls read endpoints continuously, so a read whose cost tracks the fleet turns every chunk ever
-minted into a per-poll tax on every viewer, and a small page hides that tax behind a small response. A stated reason is
-what lets a reviewer tell a fleet read the render needs from one nobody has questioned.
+**Why.** A set-shaped read sits on a path that repeats forever — the board polls its endpoints, the runner drains every
+tick — so a read whose cost tracks the fleet turns every chunk ever minted into a per-call tax, and a small page hides
+that tax behind a small response. A stated reason is what lets a reviewer tell a fleet read the render needs from one
+nobody has questioned.
 
-**Scope.** This binds set-shaped reads — a list or page over a filter, and the endpoint answering from one — which is
-exactly what `bzh:bulk-reconstitution` leaves alone. A singular read is in range on proportion alone: one record
-answered in dozens of statements is flat, and still owes its site a stated reason or a smaller count.
+**Scope.** This binds set-shaped reads — a list or page over a filter, and whatever answers from one: an HTTP read
+endpoint, or a runner tick step draining an outbound buffer — which is exactly what `bzh:bulk-reconstitution` leaves
+alone. A singular read is outside it: its statement count is judged against its own need by reading, not by this rule.
 
 **Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
 as `blizzard/tests/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do, and a count that
 grows between the sizes is the finding. Row volume is judged by reading: a `list_all()` or `load_all_*` call in a
 handler, a page sliced in Python from an every-id read, or a per-request fan-out whose row count no `limit` bounds, with
-no comment beside it stating why the page's ids would not do. A singular endpoint answering one record in dozens of
-statements with nothing at the site saying why — `GET /api/chunks/{chunk_id}` in
-`blizzard/src/blizzard/hub/api/chunks.py` is the standing case. The fix is the page's own ids through
-`bzh:bulk-reconstitution`'s plural form, or the reason written beside the read.
+no reason beside it or in the handler's docstring stating why the page's ids would not do; a drain that calls a
+`limit`-accepting store read with no `limit`. The fix is the page's own ids through `bzh:bulk-reconstitution`'s plural
+form, a `limit` on the drain, or the reason written at the site.
 
 **Do.** `blizzard/src/blizzard/hub/api/chunks.py`'s `list_chunks` is keyset-paged and its statement count is flat across
-fixture sizes; its `load_all_facts()`, `load_all_routes()`, and `record.list_all()` fleet reads each carry the reason
-beside them — a pointer this page renders can be held live by a chunk outside it.
+fixture sizes; its `load_all_facts()` and `record.list_all()` fleet reads carry their reason — in the handler's
+docstring and in the comment beside `list_all()` — that a pointer this page renders can be held live by a chunk outside
+it.
 
 **Don't.** A handler that takes `limit` and `cursor`, calls `record.list_all()`, slices the page out of the result, and
 loads each page row's facts through the singular getter — bounded in rows returned, fleet-sized in rows read, and
@@ -162,24 +164,26 @@ count lives in.
 
 **Rule.** A periodic pass checks a cheap change probe — a watermark, a cursor, a signature — before it rescans its
 corpus, skips the rescan when the probe matches the previous pass's value, and forces a full pass once a bounded floor
-has elapsed since the last one, so a missed signal can never become a permanent skip.
+has elapsed since the last one, so a missed signal can never become a permanent skip. A pass whose work is bounded by a
+window far longer than the floor may instead run on the floor alone, with no probe.
 
 **Why.** A reconciler runs forever at a fixed interval while the corpus it converges changes rarely, so an unprobed pass
 pays the full rescan on every tick for a result the previous tick already produced. The floor is what makes the skip
-safe: a probe that misses a change costs one floor's latency rather than correctness.
+safe: a probe that misses a change costs one floor's latency rather than correctness, and a windowed pass run on the
+floor alone overshoots its window by at most one floor.
 
 **Scope.** This binds the pass itself — the reconciler's `sweep()` body, or a runner tick step's `run()` — not the
 `Sweep` driver in `blizzard/src/blizzard/hub/app.py`, which owns cadence and jitter and steps the pass as a black box. A
-tick step whose work is bounded by a window far longer than the tick — the runner's `Retention` step in
-`blizzard/src/blizzard/runner/loop/steps.py`, which prunes day-scale lanes every tick — is in range with the floor as
-its whole gate: between floors nothing can have aged across the window, so the pass has nothing to probe. A per-item
-resolution inside the pass is `bzh:bulk-reconstitution`'s, not this rule's.
+fixed cadence where a change signal would do is judged here, at the pass: the probe is what makes a fixed interval
+cheap, so the answer to it is a gated pass, not a re-timed driver. The runner's `Retention` step in
+`blizzard/src/blizzard/runner/loop/steps.py`, which prunes day-scale lanes every tick, is the floor-only form's case: it
+owes a floor, not a probe. A per-item resolution inside the pass is `bzh:bulk-reconstitution`'s, not this rule's.
 
 **Detect.** A `sweep()` or step `run()` whose first statement is the corpus read, with no value compared against the
 previous pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that
 enforces a day-scale window unconditionally every tick. The fix is a probe seam on the store — a max-watermark or a
 signature query answering in one statement — compared against the value the pass last converged on, plus a recorded
-last-full-pass instant checked against the floor.
+last-full-pass instant checked against the floor; for a windowed pass, the recorded instant and the floor alone.
 
 **Do.** `blizzard/src/blizzard/hub/domain/analytics/derivation.py`'s `EventDerivationReconciler.sweep` reads
 `derivation_signature()` first, returns when it matches the last converged signature and the ten-minute floor is not
