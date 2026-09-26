@@ -28,9 +28,9 @@ reason field, latched per segment and reason, then `OutboundFacts.transcript_tru
 A chunk-budget breach (`chunk_budget_exceeded`) is a different write shape, not the same one under another reason
 string: neither of `TranscriptPump._pump_one`'s two call sites writes a delta at all, and each fires
 `stop_transcript_segment_shipping` and then the same fact-lane warning. A budget breach's reason field is re-derived
-from `chunk_transcript_shipped_bytes` fresh every tick, so a crash before `stop_transcript_segment_shipping` lands
-leaves the segment un-stopped one tick longer and the next evaluation of the same over-budget total retries the same
-write: delayed, never lost.
+from `chunk_transcript_shipped_bytes_for_chunks`, read once per run into a local per-run mirror, fresh every tick, so a
+crash before `stop_transcript_segment_shipping` lands leaves the segment un-stopped one tick longer and the next
+evaluation of the same over-budget total retries the same write: delayed, never lost.
 
 The delta-then-reason-field window, which only the record-cap and unshippable paths have, costs at most one occurrence's
 own note, since `truncated_reason` is a worst-of display field rather than a per-event log and the delta write already
