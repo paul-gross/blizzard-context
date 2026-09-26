@@ -107,8 +107,8 @@ substituted for the wide one at a call site whose consumer reaches outside the s
 *wide* plural `load_facts_for`, which returns exactly what calling `load_facts` per id would; `status_facts_for` is the
 *narrowed* sibling, reading only the fact families a `ChunkStatusView` reaches and naming that set in its own docstring
 rather than every family `load_facts_for` loads. `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s
-`FindingStore.get_many` resolves its rows in one query and batches their facts through `_facts_for_many` at
-`_FACTS_BATCH_SIZE` ids per statement.
+`FindingStore.get_many` batches both its row read and its `_facts_for_many` facts read through
+`blizzard/src/blizzard/hub/store/internal/batching.py`'s shared `id_batches`.
 
 **Don't.** `{chunk_id: self._facts.load_facts(chunk_id) for chunk_id in chunk_ids}` — and its seam-level cause, a
 Protocol declaring no `load_facts_for` for that comprehension to collapse into.
