@@ -136,7 +136,9 @@ nobody has questioned.
 
 **Scope.** This binds set-shaped reads — a list or page over a filter, and whatever answers from one: an HTTP read
 endpoint, or a runner tick step draining an outbound buffer — which is exactly what `bzh:bulk-reconstitution` leaves
-alone. A singular read is outside it: its statement count is judged against its own need by reading, not by this rule.
+alone. A singular read is outside it: its statement count is judged against its own need by reading, not by this rule. A
+periodic pass's corpus read is outside it too: the pass has no page to bound it by, and whether that read runs at all is
+`bzh:probe-gated-pass`'s concern.
 
 **Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
 as `blizzard/tests/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do, and a count that
@@ -162,24 +164,28 @@ count lives in.
 
 ## A probe-gated pass (`bzh:probe-gated-pass`)
 
-**Rule.** A periodic pass checks a cheap change probe — a watermark, a cursor, a signature — before it rescans its
-corpus, skips the rescan when the probe matches the previous pass's value, and forces a full pass once a bounded floor
-has elapsed since the last one, so a missed signal can never become a permanent skip. A pass whose work is bounded by a
-window far longer than the floor may instead run on the floor alone, with no probe.
+**Rule.** A periodic pass converging a corpus toward a derived state checks a cheap change probe — a watermark, a
+cursor, a signature — before it rescans its corpus, skips the rescan when the probe matches the previous pass's value,
+and forces a full pass once a bounded floor has elapsed since the last one, so a missed signal can never become a
+permanent skip. A periodic pass enforcing a window far longer than the floor, such as a retention prune, instead runs on
+the floor alone, with no probe.
 
 **Why.** A reconciler runs forever at a fixed interval while the corpus it converges changes rarely, so an unprobed pass
 pays the full rescan on every tick for a result the previous tick already produced. The floor is what makes the skip
 safe: a probe that misses a change costs one floor's latency rather than correctness, and a windowed pass run on the
 floor alone overshoots its window by at most one floor.
 
-**Scope.** This binds the pass itself — the reconciler's `sweep()` body, or a runner tick step's `run()` — not the
-`Sweep` driver in `blizzard/src/blizzard/hub/app.py`, which owns cadence and jitter and steps the pass as a black box. A
-fixed cadence where a change signal would do is judged here, at the pass: the probe is what makes a fixed interval
-cheap, so the answer to it is a gated pass, not a re-timed driver. The runner's `Retention` step in
-`blizzard/src/blizzard/runner/loop/steps.py`, which prunes day-scale lanes every tick, is the floor-only form's case: it
-owes a floor, not a probe. A per-item resolution inside the pass is `bzh:bulk-reconstitution`'s, not this rule's.
+**Scope.** This binds the pass itself — a hub reconciler's `sweep()` body, and a runner tick step's `run()` where that
+step enforces a window far longer than its floor — not the `Sweep` driver in `blizzard/src/blizzard/hub/app.py`, which
+owns cadence and jitter and steps the pass as a black box. A fixed cadence where a change signal would do is judged
+here, at the pass: the probe is what makes a fixed interval cheap, so the answer to it is a gated pass, not a re-timed
+driver. The runner's `Retention` step in `blizzard/src/blizzard/runner/loop/steps.py`, which prunes day-scale lanes
+every tick, is the floor-only form's case: it owes a floor, not a probe. A tick step whose job is to react within a tick
+— reaping, advancing, filling, draining, sampling live leases — is outside it: its corpus is the live work the tick
+exists to answer, and a skip or a floor would delay the reaction it owes. A per-item resolution inside the pass is
+`bzh:bulk-reconstitution`'s, not this rule's.
 
-**Detect.** A `sweep()` or step `run()` whose first statement is the corpus read, with no value compared against the
+**Detect.** A reconciler's `sweep()` whose first statement is the corpus read, with no value compared against the
 previous pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that
 enforces a day-scale window unconditionally every tick. The fix is a probe seam on the store — a max-watermark or a
 signature query answering in one statement — compared against the value the pass last converged on, plus a recorded
