@@ -167,36 +167,39 @@ count lives in.
 **Rule.** A periodic pass converging a corpus toward a derived state checks a cheap change probe — a watermark, a
 cursor, a signature — before it rescans its corpus, skips the rescan when the probe matches the previous pass's value,
 and forces a full pass once a bounded floor has elapsed since the last one, so a missed signal can never become a
-permanent skip. A periodic pass enforcing a window far longer than the floor, such as a retention prune, instead runs on
-the floor alone, with no probe.
+permanent skip. A periodic pass that prunes or expires what has aged past a window far longer than the floor instead
+runs on the floor alone, with no probe.
 
 **Why.** A reconciler runs forever at a fixed interval while the corpus it converges changes rarely, so an unprobed pass
 pays the full rescan on every tick for a result the previous tick already produced. The floor is what makes the skip
-safe: a probe that misses a change costs one floor's latency rather than correctness, and a windowed pass run on the
-floor alone overshoots its window by at most one floor.
+safe: a probe that misses a change costs one floor's latency rather than correctness, and a pruning pass run on the
+floor alone keeps aged rows at most one floor past its window.
 
 **Scope.** This binds the pass itself — a periodic `sweep()` or tick step `run()` body, hub or runner alike — not the
 `Sweep` driver in `blizzard/src/blizzard/hub/app.py`, which owns cadence and jitter and steps the pass as a black box. A
 fixed cadence where a change signal would do is judged here, at the pass: the probe is what makes a fixed interval
 cheap, so the answer to it is a gated pass, not a re-timed driver. A pass is in range when it rescans a corpus to
-converge a derived state from it, as the hub's annotation and event-derivation reconcilers do, or when it enforces a
-window far longer than its floor — the runner's `Retention` step in `blizzard/src/blizzard/runner/loop/steps.py`, which
-prunes day-scale lanes every tick, is that floor-only form's case: it owes a floor, not a probe. A pass whose job is to
-act on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer, retrying an intent
-whose backoff has elapsed, sampling live leases — is outside it, on either side: `CloseIntentDrainer.sweep` in
-`blizzard/src/blizzard/hub/domain/work_closure.py` and the runner's `Reap` and `Advance` steps are that shape. Its
-due-set is the live work the pass exists to answer, often made due by time passing alone, so no change probe sees it and
-a floor would delay the reaction it owes. A pass that opens on a read returning only its not-yet-acted-on rows and
-returns when that read is empty — `WorkItemMaterializationReconciler.sweep`'s `unmaterialized_proposals()` in
-`blizzard/src/blizzard/hub/domain/work_item_materialization.py` — is already gated: that read is its probe, and it owes
-no floor, since it reads the pending rows themselves rather than a signal about them. A per-item resolution inside the
-pass is `bzh:bulk-reconstitution`'s, not this rule's.
+converge a derived state from it, as the hub's annotation and event-derivation reconcilers do, or when it prunes or
+expires what has aged past a window far longer than its floor — the runner's `Retention` step in
+`blizzard/src/blizzard/runner/loop/steps.py`, which prunes day-scale lanes every tick, is that floor-only form's case:
+it owes a floor, not a probe. A pass that enforces a window without pruning it — the runner's `SpendCeiling` step, which
+engages the pause brake once rolling-window spend reaches its cap — is outside this rule altogether: it owes its
+reaction on the tick the cap is crossed, and a floor there would let spend overshoot the cap for up to one floor. A pass
+whose job is to act on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer,
+retrying an intent whose backoff has elapsed, sampling live leases — is outside it, on either side:
+`CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_closure.py` and the runner's `Reap` and `Advance`
+steps are that shape. Such a pass's due-set is the live work the pass exists to answer, often made due by time passing
+alone, so no change probe sees it and a floor would delay the reaction it owes. A pass that opens on a read returning
+only its not-yet-acted-on rows and returns when that read is empty — `WorkItemMaterializationReconciler.sweep`'s
+`unmaterialized_proposals()` in `blizzard/src/blizzard/hub/domain/work_item_materialization.py` — is already gated: that
+read is its probe, and it owes no floor, since it reads the pending rows themselves rather than a signal about them. A
+per-item resolution inside the pass is `bzh:bulk-reconstitution`'s, not this rule's.
 
 **Detect.** A converging pass whose first statement is its full-corpus read, with no value compared against the previous
-pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that enforces a
+pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that prunes a
 day-scale window unconditionally every tick. The fix is a probe seam on the store — a max-watermark or a signature query
 answering in one statement — compared against the value the pass last converged on, plus a recorded last-full-pass
-instant checked against the floor; for a windowed pass, the recorded instant and the floor alone.
+instant checked against the floor; for a pruning pass, the recorded instant and the floor alone.
 
 **Do.** `blizzard/src/blizzard/hub/domain/analytics/derivation.py`'s `EventDerivationReconciler.sweep` reads
 `derivation_signature()` first, returns when it matches the last converged signature and the ten-minute floor is not

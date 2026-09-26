@@ -27,7 +27,7 @@ from a module global rather than its parameters.
 between FILL and ADVANCE.
 
 **See also.** [`./repository-access.md`](./repository-access.md) `bzh:probe-gated-pass` — what a converging pass or a
-windowed tick step checks before it rescans; a phase that reacts within a tick, as each of REAP, PULL, FILL, and ADVANCE
+pruning tick step checks before it rescans; a phase that reacts within a tick, as each of REAP, PULL, FILL, and ADVANCE
 does, is outside it.
 
 ## An injected clock (`bzh:injected-clock`)
