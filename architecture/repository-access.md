@@ -1,9 +1,9 @@
 # Repository access
 
 These rules refine the dependency-inversion seam [`./clean-architecture.md`](./clean-architecture.md) owns
-(`bzh:dependency-inversion`): they govern who may hold which repository, and what crosses the domain boundary. Each rule
-below uses the slot skeleton `winter-canon:/rule-shape.md` owns (`canon:rule-shape`), with its `bzh:` id carried in its
-heading.
+(`bzh:dependency-inversion`): they govern who may hold which repository, what crosses the domain boundary, and what a
+read may cost. Each rule below uses the slot skeleton `winter-canon:/rule-shape.md` owns (`canon:rule-shape`), with its
+`bzh:` id carried in its heading.
 
 ## Split every repository seam (`bzh:repository-split`)
 
@@ -119,3 +119,97 @@ Protocol declaring no `load_facts_for` for that comprehension to collapse into.
 `IN` stays inside. [`./system-shape/seam-size.md`](./system-shape/seam-size.md) `bzh:seam-size-ceiling` — a narrowed
 plural is preferred partly because it lets a seam split along consumer lines rather than widening one seam toward the
 cap. `blizzard/tests/support.py`'s `count_queries` is how a call site's statement count is held flat as the fleet grows.
+`bzh:page-bounded-read` below — the reads this rule leaves alone, and the bound they owe instead. `bzh:probe-gated-pass`
+below — whether a periodic pass runs at all, which this rule takes as given.
+
+## Bound a read by its page (`bzh:page-bounded-read`)
+
+**Rule.** A set-shaped read's cost is set by the page its caller asks for — an endpoint's `limit`, a drain's batch — not
+by fleet size: its statement count is flat as the fleet grows, and its row volume is bounded by the page. A fleet-sized
+read behind a paged caller is allowed only where the call site states, beside the call or in the handler's docstring,
+why the page's own ids cannot bound it.
+
+**Why.** A set-shaped read sits on a path that repeats forever — the board polls its endpoints, the runner drains every
+tick — so a read whose cost tracks the fleet turns every chunk ever minted into a per-call tax, and a small page hides
+that tax behind a small response. A stated reason is what lets a reviewer tell a fleet read the render needs from one
+nobody has questioned.
+
+**Scope.** This binds set-shaped reads — a list or page over a filter, and whatever answers from one: an HTTP read
+endpoint, or a runner tick step draining an outbound buffer — which is exactly what `bzh:bulk-reconstitution` leaves
+alone. A singular read is outside it: its statement count is judged against its own need by reading, not by this rule. A
+periodic pass's corpus read is outside it too: the pass has no page to bound it by, and whether that read runs at all is
+`bzh:probe-gated-pass`'s concern.
+
+**Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
+as `blizzard/tests/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do, and a count that
+grows between the sizes is the finding. Row volume is judged by reading: a `list_all()` or `load_all_*` call in a
+handler, a page sliced in Python from an every-id read, or a per-request fan-out whose row count no `limit` bounds, with
+no reason beside it or in the handler's docstring stating why the page's ids would not do; a drain that calls a
+`limit`-accepting store read with no `limit`. The fix is the page's own ids through `bzh:bulk-reconstitution`'s plural
+form, a `limit` on the drain, or the reason written at the site.
+
+**Do.** `blizzard/src/blizzard/hub/api/chunks.py`'s `list_chunks` is keyset-paged and its statement count is flat across
+fixture sizes; its `load_all_facts()` and `record.list_all()` fleet reads carry their reason — in the handler's
+docstring and in the comment beside `list_all()` — that a pointer this page renders can be held live by a chunk outside
+it.
+
+**Don't.** A handler that takes `limit` and `cursor`, calls `record.list_all()`, slices the page out of the result, and
+loads each page row's facts through the singular getter — bounded in rows returned, fleet-sized in rows read, and
+growing in statements per page row.
+
+**See also.** `bzh:bulk-reconstitution` above — the plural form that lets a read stop at the page's ids, and the seam
+rule for the per-item reads this rule's measurement exposes.
+[`../verification/blizzard.md`](../verification/blizzard.md) `blizzard:component-test` — the tier the two-fixture-size
+count lives in.
+
+## A probe-gated pass (`bzh:probe-gated-pass`)
+
+**Rule.** A periodic pass converging a corpus toward a derived state checks a cheap change probe — a watermark, a
+cursor, a signature — before it rescans its corpus, skips the rescan when the probe matches the previous pass's value,
+and forces a full pass once a bounded floor has elapsed since the last one, so a missed signal can never become a
+permanent skip. A periodic pass that prunes or expires what has aged past a window far longer than the floor instead
+runs on the floor alone, with no probe.
+
+**Why.** A reconciler runs forever at a fixed interval while the corpus it converges changes rarely, so an unprobed pass
+pays the full rescan on every tick for a result the previous tick already produced. The floor is what makes the skip
+safe: a probe that misses a change costs one floor's latency rather than correctness, and a pruning pass run on the
+floor alone keeps aged rows at most one floor past its window.
+
+**Scope.** This binds the pass itself — a periodic `sweep()` or tick step `run()` body, hub or runner alike — not the
+`Sweep` driver in `blizzard/src/blizzard/hub/app.py`, which owns cadence and jitter and steps the pass as a black box. A
+fixed cadence where a change signal would do is judged here, at the pass: the probe is what makes a fixed interval
+cheap, so the answer to it is a gated pass, not a re-timed driver. A pass is in range when it rescans a corpus to
+converge a derived state from it, as the hub's annotation and event-derivation reconcilers do, or when it prunes or
+expires what has aged past a window far longer than its floor — the runner's `Retention` step in
+`blizzard/src/blizzard/runner/loop/steps.py`, which prunes day-scale lanes every tick, is that floor-only form's case:
+it owes a floor, not a probe. A pass that enforces a window without pruning it — the runner's `SpendCeiling` step, which
+engages the pause brake once rolling-window spend reaches its cap — is outside this rule altogether: it owes its
+reaction on the tick the cap is crossed, and a floor there would let spend overshoot the cap for up to one floor. A pass
+whose job is to act on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer,
+retrying an intent whose backoff has elapsed, sampling live leases — is outside it, on either side:
+`CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_closure.py` and the runner's `Reap` and `Advance`
+steps are that shape. Such a pass's due-set is the live work the pass exists to answer, often made due by time passing
+alone, so no change probe sees it and a floor would delay the reaction it owes. A pass that opens on a read returning
+only its not-yet-acted-on rows and returns when that read is empty — `WorkItemMaterializationReconciler.sweep`'s
+`unmaterialized_proposals()` in `blizzard/src/blizzard/hub/domain/work_item_materialization.py` — is already gated: that
+read is its probe, and it owes no floor, since it reads the pending rows themselves rather than a signal about them. A
+per-item resolution inside the pass is `bzh:bulk-reconstitution`'s, not this rule's.
+
+**Detect.** A converging pass whose first statement is its full-corpus read, with no value compared against the previous
+pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that prunes a
+day-scale window unconditionally every tick. The fix is a probe seam on the store — a max-watermark or a signature query
+answering in one statement — compared against the value the pass last converged on, plus a recorded last-full-pass
+instant checked against the floor; for a pruning pass, the recorded instant and the floor alone.
+
+**Do.** `blizzard/src/blizzard/hub/domain/analytics/derivation.py`'s `EventDerivationReconciler.sweep` reads
+`derivation_signature()` first, returns when it matches the last converged signature and the ten-minute floor is not
+due, and otherwise runs the full pass and records both the signature and the instant. An unchanged pass costs the
+probe's one statement.
+
+**Don't.** `blizzard/src/blizzard/hub/domain/forge_status.py`'s `AnnotationReconciler.sweep`, which reads
+`live_work_refs()` and every source's `marked_refs()` unconditionally on each pass, so an idle fleet pays the whole diff
+every interval, changed or not.
+
+**See also.** [`./crash-correctness.md`](./crash-correctness.md) `bzh:steppable-loop` — the pass this rule gates is one
+of its step functions — and `bzh:injected-clock` there, whose clock the floor reads. `bzh:bulk-reconstitution` above —
+what the pass owes per item once it does run.
