@@ -188,6 +188,27 @@ the next pass, and its only durable trace is the `elicitation past its staleness
 failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
 one records the generation's only `judge` sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.
 
+## The pause-park teardown
+
+`Attempt.park_paused` (`blizzard/src/blizzard/runner/loop/attempt.py`) only signals: a SIGINT to the worker's group and
+to any in-flight elicitation's, then the durable park, which names that elicitation by record id. The registry point
+`pause.after-interrupt.before-park` covers the one window there; recovery re-runs `park_paused`, whose guarded interrupt
+re-signals only a still-live owned group. Completing the teardown is `DormantSession.on_unpause`'s first act
+(`blizzard/src/blizzard/runner/loop/dormant.py`), on every tick the park is open: a group still alive within
+`SHUTDOWN_DRAIN_DEADLINE` of `parked_at` is left alone, one alive past it is SIGKILLed, and a named elicitation that has
+exited books its `judge` usage against the paused generation through the recorder and is then cleared, its files swept —
+the same usage-then-clear order as `Judgement.collect`. Those two writes are the teardown's only durable ones, and
+neither opens a window: the usage write replays as an exact-replay no-op under its `(lease, generation, kind)` key, and
+a crash between it and the clear leaves the record standing for the next tick to book (no-op) and clear again. The
+deadline is read off the durable `parked_at`, so a runner restart resumes the countdown rather than restarting it. This
+is the no-window ground; no registry point is owed.
+
+The park's named-elicitation column is what the teardown reads to tell two standing records apart. An in-flight
+elicitation record still standing under an open pause park is one of exactly two things: the park's own interrupted
+record, which the park names, and which the teardown books and clears; or a usage-limit judge park's deliberately
+standing record, which no park names, and which `on_unpause` answers with a fresh elicitation once the brake lifts. A
+named record that has since vanished, or a park naming none, leaves the teardown nothing to do.
+
 ## The identity-failure-mark-before-close gap
 
 `Reap.run`'s provisional-generation branch and `Spawner.spawn`'s `WorkerIdentityError` handler
