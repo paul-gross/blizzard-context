@@ -296,8 +296,8 @@ announcement; the next read of `backing_off_facts` (or `LeaseActivity.state`) de
 row regardless, so no operator-visible state is ever lost, only delayed to the next poll.
 
 The write owes the invariant checker nothing: `backing_off_facts`'s own closure is an identity comparison over
-append-only rows and existing repository reads (`lease_generation`, `in_flight_elicitation`), never a derived cross-fact
-invariant a second writer could disagree with.
+append-only rows and existing repository reads (`lease_generations`, `in_flight_elicitations`), never a derived
+cross-fact invariant a second writer could disagree with.
 
 ## The credential-renewal window
 
