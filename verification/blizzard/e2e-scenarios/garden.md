@@ -40,7 +40,7 @@ a live hub, one chunk per authored path.
 
 The real packaged `ideation` YAML with only its prompts swapped for scripts — name, nodes, edges, session pools, and the
 delivery command all reach the mint verbatim — run as a real routine (`POST /routines/{id}/run`) against a live hub
-minted with a gardening-axes registry declaring an `ideation:` axis, one chunk per authored path.
+minted with a gardening-axes registry declaring the routine's ideation axis, one chunk per authored path.
 
 - `test_ideation_runs_end_to_end_on_all_authored_paths` — ten runs of one routine: the declared-axis path carries survey
   → reconcile → propose → deliver to a docket spanning all three graph-owned classes (`direction`, `tweak`, `retire`),
