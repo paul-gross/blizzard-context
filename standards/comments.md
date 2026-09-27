@@ -83,9 +83,10 @@ or e2e change, not a fresh obligation of its own.
   finding id, a phase, or a lettered-change token — for example,
   <!-- vale Blizzard.ProcessReference = NO --> "blizzard#123", "issue #123", "PR #123", "review:F5", "D9", "Phase 3",
   "change L(iii)"
-  <!-- vale Blizzard.ProcessReference = YES --> — is `blizzard-context:markdown-prose-lint`'s Vale rule
-  (`styles/Blizzard/ProcessReference.yml`) to catch mechanically in a `.py`, `.ts`, `.css`, or `.md` file. A template's
-  `.html` comment carries the same shapes but Vale cannot see it there, so it stays grep-detected.
+  <!-- vale Blizzard.ProcessReference = YES --> — is the shared Vale rule (`styles/Blizzard/ProcessReference.yml`) to
+  catch mechanically in a `.py`, `.ts`, `.css`, or `.md` file: `blizzard-context:markdown-prose-lint` in this repo's own
+  `*.md`, `blizzard:process-ref-lint` and `blizzard-mock:process-ref-lint` for those repos' full language surface. A
+  template's `.html` comment carries the same shapes but Vale cannot see it there, so it stays grep-detected.
 - An unresolvable reference in a generated description. `blizzard/tests/test_openapi_descriptions.py` fails the unit
   tier on those three shapes, scanning the committed specs and the `wire/` models no spec reaches.
 

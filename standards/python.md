@@ -39,8 +39,9 @@ triple-quoted string changes why they matter.
 same 120 even though `per-file-ignores` disables `E501` there — one ceiling everywhere.
 
 **Detect.** A fact duplicated across docstrings; a docstring explaining today's code by contrast with code the same
-change deletes (*"unlike the old X"*, *"as of this change"*); a citation of a chunk-internal review-finding id that
-resolves nowhere once the chunk closes.
+change deletes (*"unlike the old X"*, *"as of this change"*); a process-reference citation — a review-finding id, a
+decision or finding id, an issue/PR number, or a phase — per `bzh:comment-locality`, gated regardless of whether it
+would still resolve.
 
 **Do.** `src/blizzard/hub/runtime.py`'s module docstring: *"The `init` / `migrate` verbs run while the daemon is
 **down** — the only carve-out to 'only a daemon opens its own store'."*

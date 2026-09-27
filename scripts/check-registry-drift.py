@@ -1639,10 +1639,10 @@ def _load_mise_tool_pin(root: Path, tool: str) -> str | None:
     return value if isinstance(value, str) else None
 
 
-def _inline_vale_pin(gate_yml_path: Path) -> str | None:
-    if not gate_yml_path.is_file():
+def _inline_vale_pin(path: Path) -> str | None:
+    if not path.is_file():
         return None
-    m = _VALE_PIN_RE.search(gate_yml_path.read_text(errors="replace"))
+    m = _VALE_PIN_RE.search(path.read_text(errors="replace"))
     return m.group(1) if m else None
 
 
@@ -1701,9 +1701,31 @@ def check_G(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
         else:
             findings.append(Finding("G", "pass", f"{sibling_relfile} is byte-identical to blizzard-context's copy"))
 
-    pins: dict[str, str | None] = {
-        "blizzard-context": _inline_vale_pin(repo_root / ".github" / "workflows" / "gate.yml")
+    own_pin_sources = {
+        "blizzard-context/.github/workflows/gate.yml": _inline_vale_pin(
+            repo_root / ".github" / "workflows" / "gate.yml"
+        ),
+        "blizzard-context/README.md": _inline_vale_pin(repo_root / "README.md"),
+        "blizzard-context/verifiability.md": _inline_vale_pin(repo_root / "verifiability.md"),
     }
+    for source, pin in own_pin_sources.items():
+        if pin is None:
+            findings.append(
+                Finding("G", "fail", f"{source}'s vale pin could not be resolved", remediation="Pin `vale@<version>` there.")
+            )
+    resolved_own = {pin for pin in own_pin_sources.values() if pin is not None}
+    if len(resolved_own) > 1:
+        findings.append(
+            Finding(
+                "G",
+                "fail",
+                f"blizzard-context's own vale pins disagree across gate.yml/README.md/verifiability.md: "
+                f"{sorted(resolved_own)}",
+                remediation="Bring every in-repo mention of the vale pin to the same version.",
+            )
+        )
+
+    pins: dict[str, str | None] = {"blizzard-context": sorted(resolved_own)[0] if resolved_own else None}
     for repo in ("blizzard", "blizzard-mock"):
         root = checkouts.get(repo)
         if root is not None:
@@ -1711,7 +1733,7 @@ def check_G(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
 
     for repo, pin in pins.items():
         if pin is None:
-            findings.append(Finding("G", "warn", f"{repo}'s vale pin could not be resolved"))
+            findings.append(Finding("G", "fail", f"{repo}'s vale pin could not be resolved"))
     resolved = {repo: pin for repo, pin in pins.items() if pin is not None}
     if len(set(resolved.values())) > 1:
         findings.append(

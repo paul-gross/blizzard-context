@@ -51,9 +51,10 @@ Where a command already judges the same prose, it owns that judgement and this a
   `blizzard/tests/test_openapi_descriptions.py` scans the committed specs for.
 - `bzh:comment-locality`'s closed set no longer permits a process reference (a repo or hub tracker number, an issue or
   PR number, a review-finding id, a bare decision or finding id, a phase, or a lettered-change token) at all, and in a
-  `.py`, `.ts`, `.css`, or `.md` file that is out of range: `blizzard-context:markdown-prose-lint`'s Vale rule judges
-  every such file against the same shapes. A template's `.html` comment carries the same shapes but Vale cannot see it
-  there, so it stays in range above.
+  `.py`, `.ts`, `.css`, or `.md` file that is out of range: the shared Vale rule judges every such file against the same
+  shapes — `blizzard-context:markdown-prose-lint` in this repo's own `*.md`, `blizzard:process-ref-lint` and
+  `blizzard-mock:process-ref-lint` for those repos' full language surface. A template's `.html` comment carries the same
+  shapes but Vale cannot see it there, so it stays in range above.
 
 ## Measurement
 
