@@ -22,16 +22,17 @@ authentication, or a failed conformance selftest all withhold it, never reported
 flag itself. Availability is the same kind of fact the brakes above are: a runner's own assertion, superseded whole on
 its next registration, never a condition the hub derives from other rows or from a capability's absence over time.
 
-The entry also reports subscription usage as the runner samples it: one member for each provider subscription the runner
-has sampled, reporting that subscription's rate-limit utilization across the provider's reset windows. Each member is
-reported under its own identity — a runner-unique slug and an operator-facing name — carrying only its newest sample,
-with the time that sample was taken. A member stands only while that sample passes the staleness gate, so one whose
-newest sample has aged out falls away. A sampler that produces nothing reports a miss instead, carrying only its reason;
-one reason, a lapsed credential, is itself a member: a subscription whose newest lapsed miss is newer than its newest
-sample — or that was never sampled at all — stands with that condition and no windows, for as long as the miss itself
-passes the same staleness gate, and a fresh sample clears it. Only the newest miss per slug is kept, so a later miss for
-any other reason clears a lapsed condition the same way a fresh sample does — the reason itself renders nothing. A
-subscription the entry does not report is simply absent — never a fabricated zero, and never a reason to omit any other.
-Samples and misses are the whole of what the hub knows here: it holds no list of what the runner declares, so a
-subscription declared but never attempted and one never declared at all are the same absence to it. The collection is
-advisory: neither granting a chunk nor anything else the hub decides reads it.
+The entry also reports subscription usage, keyed off the runner's own declared roster: at registration a runner declares
+its subscription roster — slug, name, and provider — and the next registration replaces the whole roster, the same way
+capabilities does. While a roster is declared, the entry carries exactly one member per declared slug, whatever the age
+of its sample: a never-sampled or long-stale slug is still a member. Each member is reported under its own identity — a
+runner-unique slug and an operator-facing name — carrying its newest reported sample, with the time that sample was
+taken, and its newest reported miss, with the miss's own reason. A slug no longer declared is no longer a member, even
+though its sampled and missed reports persist and resume the moment it is redeclared. A lapsed credential still takes
+precedence over a stale sample: a subscription whose newest lapsed miss is newer than its newest sample — or that was
+never sampled at all — stands with that condition and no windows, and a fresh sample clears it. Only the newest miss per
+slug is kept, so a later miss for any other reason clears a lapsed condition the same way a fresh sample does — the
+reason itself renders nothing. A runner that has declared no roster at all keeps today's fallback instead: one member
+per sampled slug, standing only while that sample passes the staleness gate. Either way there is never a fabricated
+zero, and the collection stays advisory: neither granting a chunk nor anything else the hub decides reads it. How old
+counts as too old to still show is a board presentation matter, not stated here.
