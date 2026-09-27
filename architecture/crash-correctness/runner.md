@@ -340,3 +340,22 @@ lands.
 
 The write owes the invariant checker nothing: the attempt row is an append-only fact, and the renewal outcome it carries
 is never cross-checked against the credential file it describes.
+
+## The per-lease scratch directory
+
+`WorkerScratchDirs` (`blizzard/src/blizzard/runner/loop/worker_scratch.py`) is filesystem state, not a store write:
+`Spawner.preamble` and `Spawner._worker_preamble` (`blizzard/src/blizzard/runner/loop/spawn.py`) call `ensure` ahead of
+every resume and fresh spawn respectively, and `Attempt.close` (`blizzard/src/blizzard/runner/loop/attempt.py`) calls
+`remove` after `record_closure` commits, never before.
+
+Both halves are independently harmless. `ensure` is idempotent — recreating an already-present directory is a no-op —
+so a crash between it and the spawn it precedes leaves nothing to reconcile; the next `ensure` on the same lease id
+recomputes the identical path. `remove` runs only once the closure is already durable, so a crash between the two
+leaves an orphan directory behind a lease that is already closed, never a still-active lease with its directory gone.
+`LoopWiring.context`'s own one-shot sweep (`blizzard/src/blizzard/runner/loop/build.py`), run only from
+`PeriodicDriver`'s daemon-start build, ahead of its first tick, removes exactly that kind of orphan — anything under
+`worker-tmp/` whose name is not a currently active lease id — and is not a candidate for `bzh:probe-gated-pass` or
+`Retention`, since it runs once at daemon start rather than on a recurring cadence.
+
+The write earns **no window at all**: neither half has a partner write to be separated from, and the worst either
+ordering leaves a crash to interrupt is one orphan directory, collected at the next restart.
