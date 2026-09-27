@@ -34,6 +34,23 @@ default path) and fails rather than skips when it cannot resolve one — parity 
 `uv run pytest -m e2e` — the fleet acceptance proof and the **P4 exit criterion**: a scripted prompt lands a commit the
 mock forge merges to bare `main`.
 
+### blizzard-mock:gate
+
+`mise run gate` (a `[tasks.gate]` entry point this repo did not carry before) mirrors `gate.yml`'s own checks locally:
+ruff format --check, ruff check, pyright, `uv run pytest -m "not needs_blizzard"`, and the process-reference Vale rule.
+`gate.yml` runs the Vale rule as its own dedicated job, installing it through `jdx/mise-action` the same way the
+`quality` job already installs mise to run `mise run lint`/`typecheck`.
+
+### blizzard-mock:process-ref-lint
+
+`mise exec -- vale --output=line .` from the repo root — `styles/Blizzard/ProcessReference.yml` against `.vale.ini`'s
+`[*.md]` and `[{src,tests}/**/*.py]` sections. Same token set and no-exemption-list rule as `blizzard:process-ref-lint`.
+
+### blizzard-mock:ci
+
+`gh run watch --repo paul-gross/blizzard-mock <run-id> --exit-status` — watch a GitHub Actions run, the `push`
+merge-gate on master or the `pr` gate, to completion, exiting non-zero on failure.
+
 **Required checks on `master`.** The `pr.yml` checks below, applied by an operator via
 `blizzard:manual-branch-protection` once the hosted hub runs a PR-landing change — not yet applied:
 
@@ -44,7 +61,8 @@ gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input 
     "strict": false,
     "checks": [
       {"context": "gate / ruff + pyright"},
-      {"context": "gate / pytest (sans needs_blizzard)"}
+      {"context": "gate / pytest (sans needs_blizzard)"},
+      {"context": "gate / process-reference lint"}
     ]
   },
   "enforce_admins": false,

@@ -60,7 +60,7 @@ def resolve(self, key: str) -> Value | None:
 ```
 
 ```python
-# The chunk's blocked marking (issue #457) — non-None only when it both waits on an
+# The chunk's blocked marking — non-None only when it both waits on an
 # unmet prerequisite and this read derives it; null otherwise, regardless of block state.
 blocked: BlockedView | None = None
 ```

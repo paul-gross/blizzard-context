@@ -556,8 +556,19 @@ class RunEffectivenessGateTests(unittest.TestCase):
         self.blizzard_mock.mkdir()
         self.blizzard = Path(self.tmp.name) / "blizzard"
         (self.blizzard / "tests").mkdir(parents=True)
-        _write(self.blizzard / "mise.toml", '[tasks.gate]\nrun = "./scripts/ci-gate.sh"\n')
+        _write(self.blizzard / "mise.toml", '[tasks.gate]\nrun = "./scripts/ci-gate.sh"\n\n[tools]\nvale = "3.22.0"\n')
         _write(self.blizzard / "web" / "package.json", '{"scripts": {}}')
+        # Check G's inputs: the shared rule, byte-identical, plus an agreeing vale pin —
+        # present on all three sides so a fully effective run reaches `executed` for G too.
+        rule_text = "extends: existence\nscope: text\ntokens:\n  - 'x'\n"
+        _write(self.repo_root / "styles" / "Blizzard" / "ProcessReference.yml", rule_text)
+        _write(self.blizzard / "styles" / "Blizzard" / "ProcessReference.yml", rule_text)
+        _write(self.blizzard_mock / "styles" / "Blizzard" / "ProcessReference.yml", rule_text)
+        _write(self.blizzard_mock / "mise.toml", '[tools]\nvale = "3.22.0"\n')
+        _write(
+            self.repo_root / ".github" / "workflows" / "gate.yml",
+            "      - run: mise x vale@3.22.0 -- vale --output=line .\n",
+        )
         # A repo under check carries its own registry-copy census (check F reads it
         # from `repo_root`, never from beside the script) — one entry with no copies
         # anywhere in the fixture, so F runs to completion and finds nothing.
@@ -1212,6 +1223,73 @@ class CheckFTests(unittest.TestCase):
         # limitations): `one` reads on ordinary prose far more often than on a real
         # cardinality, so a registry of one member is a declared miss, not a bug.
         self.assertEqual(drift._stated_counts("the one check that remains", "checks?"), [])
+
+
+class CheckGTests(unittest.TestCase):
+    RULE_REL = "styles/Blizzard/ProcessReference.yml"
+    RULE_TEXT = "extends: existence\nscope: text\ntokens:\n  - 'x'\n"
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.context = self.root / "blizzard-context"
+        self.blizzard = self.root / "blizzard"
+        self.mock = self.root / "blizzard-mock"
+        _write(self.context / self.RULE_REL, self.RULE_TEXT)
+        _write(
+            self.context / ".github" / "workflows" / "gate.yml",
+            "      - run: mise x vale@3.22.0 -- vale --output=line .\n",
+        )
+        self.checkouts = {"blizzard": self.blizzard, "blizzard-mock": self.mock}
+
+    def _write_sibling(self, repo: Path, rule_text: str, vale_pin: str = "3.22.0") -> None:
+        _write(repo / self.RULE_REL, rule_text)
+        _write(repo / "mise.toml", f'[tools]\nvale = "{vale_pin}"\n')
+
+    def test_byte_identical_copies_and_matching_pins_pass(self):
+        self._write_sibling(self.blizzard, self.RULE_TEXT)
+        self._write_sibling(self.mock, self.RULE_TEXT)
+        findings = drift.check_G(self.context, self.checkouts)
+        self.assertEqual([f for f in findings if f.status == "fail"], [])
+        self.assertEqual(len([f for f in findings if f.status == "pass"]), 3)  # 2 rule copies + the pin agreement
+
+    def test_a_diverged_copy_fails(self):
+        self._write_sibling(self.blizzard, self.RULE_TEXT + "  - 'y'\n")
+        self._write_sibling(self.mock, self.RULE_TEXT)
+        findings = drift.check_G(self.context, self.checkouts)
+        fails = [f for f in findings if f.status == "fail"]
+        self.assertEqual(len(fails), 1)
+        self.assertIn("blizzard/" + self.RULE_REL, fails[0].file)
+
+    def test_a_missing_sibling_rule_fails(self):
+        _write(self.blizzard / "mise.toml", '[tools]\nvale = "3.22.0"\n')
+        self._write_sibling(self.mock, self.RULE_TEXT)
+        findings = drift.check_G(self.context, self.checkouts)
+        fails = [f for f in findings if f.status == "fail"]
+        self.assertEqual(len(fails), 1)
+        self.assertIn("not found", fails[0].message)
+
+    def test_an_absent_sibling_checkout_warns_rather_than_fails(self):
+        self._write_sibling(self.mock, self.RULE_TEXT)
+        findings = drift.check_G(self.context, {"blizzard-mock": self.mock})
+        self.assertEqual([f for f in findings if f.status == "fail"], [])
+        warns = [f for f in findings if f.status == "warn" and "blizzard checkout not found" in f.message]
+        self.assertEqual(len(warns), 1)
+
+    def test_a_vale_pin_disagreement_fails(self):
+        self._write_sibling(self.blizzard, self.RULE_TEXT, vale_pin="3.22.0")
+        self._write_sibling(self.mock, self.RULE_TEXT, vale_pin="3.21.0")
+        findings = drift.check_G(self.context, self.checkouts)
+        fails = [f for f in findings if f.status == "fail"]
+        self.assertEqual(len(fails), 1)
+        self.assertIn("pin disagreement", fails[0].message)
+
+    def test_own_rule_missing_fails_immediately(self):
+        (self.context / self.RULE_REL).unlink()
+        findings = drift.check_G(self.context, self.checkouts)
+        self.assertEqual(_shape(findings), [("G", "fail")])
+        self.assertIn("not found in blizzard-context", findings[0].message)
 
 
 class CopyRegistryLoadTests(unittest.TestCase):

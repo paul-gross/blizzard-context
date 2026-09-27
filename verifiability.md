@@ -11,7 +11,7 @@ Every command method below runs from the repo root.
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `blizzard-context:markdown-format`      | `dprint check`                                                                                           |
 | `blizzard-context:markdown-lint`        | `rumdl check .`                                                                                          |
-| `blizzard-context:markdown-prose-lint`  | `vale --output=line .`                                                                                   |
+| `blizzard-context:markdown-prose-lint`  | `mise x vale@3.22.0 -- vale --output=line .`                                                             |
 | `blizzard-context:registry-drift`       | `python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate` |
 | `blizzard-context:registry-drift-tests` | `python3 tests/test_check_registry_drift.py`                                                             |
 | `blizzard-context:lint-script-tests`    | `python3 tests/test_lint_markdown_style.py`                                                              |

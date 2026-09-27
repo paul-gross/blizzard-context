@@ -25,6 +25,14 @@ govern the siblings only. `bzh:one-prose-home` §Scope owns the swept surface as
 and is the place to read it. Three failure classes: a declared site disagreeing with its probe,
 an undeclared site stating the count, and a declared site whose prose is gone.
 
+Check G asserts the process-reference Vale rule stays byte-identical across blizzard,
+blizzard-mock, and blizzard-context (`styles/Blizzard/ProcessReference.yml`, written once
+here and copied into the siblings), and that all three repos pin the same Vale version —
+blizzard's and blizzard-mock's `mise.toml` `[tools]` entries against blizzard-context's own
+inline `vale@` pin in `.github/workflows/gate.yml`, since this repo carries no `mise.toml`
+(`blizzard-context:ci-workflows`). A sibling checkout that is absent is a skip for G, the
+same shape check A's missing-checkout case uses.
+
 Emits NDJSON findings on stdout, one object per line, following the
 `winter lint` finding contract (`check`, `status` in {pass, warn, fail},
 optional `message`/`file`/`line`/`remediation`). Exits 0 by default; with
@@ -1608,6 +1616,116 @@ def check_F(
     return findings
 
 
+# --------------------------------------------------------------------------
+# Check G — the shared Vale rule and its pin stay identical across blizzard,
+# blizzard-mock, and blizzard-context
+# --------------------------------------------------------------------------
+
+PROCESS_REFERENCE_RULE_REL = "styles/Blizzard/ProcessReference.yml"
+
+_VALE_PIN_RE = re.compile(r"vale@([0-9]+(?:\.[0-9]+){1,2})")
+
+
+def _load_mise_tool_pin(root: Path, tool: str) -> str | None:
+    path = root / "mise.toml"
+    if not path.is_file():
+        return None
+    try:
+        with path.open("rb") as fh:
+            data = tomllib.load(fh)
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    value = data.get("tools", {}).get(tool)
+    return value if isinstance(value, str) else None
+
+
+def _inline_vale_pin(gate_yml_path: Path) -> str | None:
+    if not gate_yml_path.is_file():
+        return None
+    m = _VALE_PIN_RE.search(gate_yml_path.read_text(errors="replace"))
+    return m.group(1) if m else None
+
+
+def check_G(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
+    """The rule is written once, in blizzard-context, and copied byte-for-byte into
+    blizzard and blizzard-mock; a sibling checkout that is simply absent is a skip, the
+    same shape check A's missing-checkout case uses, never a fail invented from a
+    comparison that never had both sides."""
+    findings: list[Finding] = []
+    own_rule = repo_root / PROCESS_REFERENCE_RULE_REL
+    if not own_rule.is_file():
+        findings.append(
+            Finding(
+                "G",
+                "fail",
+                f"{PROCESS_REFERENCE_RULE_REL} not found in blizzard-context",
+                PROCESS_REFERENCE_RULE_REL,
+                None,
+                "Add the shared rule.",
+            )
+        )
+        return findings
+    own_bytes = own_rule.read_bytes()
+
+    for repo in ("blizzard", "blizzard-mock"):
+        root = checkouts.get(repo)
+        if root is None:
+            findings.append(
+                Finding("G", "warn", f"{repo} checkout not found — byte-identity and pin checks skipped for it")
+            )
+            continue
+        sibling_rule = root / PROCESS_REFERENCE_RULE_REL
+        sibling_relfile = f"{repo}/{PROCESS_REFERENCE_RULE_REL}"
+        if not sibling_rule.is_file():
+            findings.append(
+                Finding(
+                    "G",
+                    "fail",
+                    f"{sibling_relfile} not found",
+                    sibling_relfile,
+                    None,
+                    "Copy the rule from blizzard-context byte-for-byte.",
+                )
+            )
+        elif sibling_rule.read_bytes() != own_bytes:
+            findings.append(
+                Finding(
+                    "G",
+                    "fail",
+                    f"{sibling_relfile} is not byte-identical to blizzard-context's copy",
+                    sibling_relfile,
+                    None,
+                    "Copy blizzard-context's styles/Blizzard/ProcessReference.yml byte-for-byte.",
+                )
+            )
+        else:
+            findings.append(Finding("G", "pass", f"{sibling_relfile} is byte-identical to blizzard-context's copy"))
+
+    pins: dict[str, str | None] = {
+        "blizzard-context": _inline_vale_pin(repo_root / ".github" / "workflows" / "gate.yml")
+    }
+    for repo in ("blizzard", "blizzard-mock"):
+        root = checkouts.get(repo)
+        if root is not None:
+            pins[repo] = _load_mise_tool_pin(root, "vale")
+
+    for repo, pin in pins.items():
+        if pin is None:
+            findings.append(Finding("G", "warn", f"{repo}'s vale pin could not be resolved"))
+    resolved = {repo: pin for repo, pin in pins.items() if pin is not None}
+    if len(set(resolved.values())) > 1:
+        findings.append(
+            Finding(
+                "G",
+                "fail",
+                f"vale pin disagreement: {', '.join(f'{r}={p}' for r, p in sorted(resolved.items()))}",
+                remediation="Bring every repo's vale pin to the same version.",
+            )
+        )
+    elif len(resolved) == 3:
+        findings.append(Finding("G", "pass", f"vale pinned at {next(iter(resolved.values()))} in all three repos"))
+    return findings
+
 
 # --------------------------------------------------------------------------
 # Interpreter / collection
@@ -1643,7 +1761,7 @@ def _collect(cmd_prefix: list[str], blizzard_root: Path, marker: str) -> list[st
 # checks against, so a check dropped by a missing checkout, interpreter, or
 # registry input (rather than run and passing) is caught explicitly instead
 # of inferred from warn text.
-ALL_CHECKS = ("A", "B1", "B2", "C", "C2", "D", "D2", "E", "F")
+ALL_CHECKS = ("A", "B1", "B2", "C", "C2", "D", "D2", "E", "F", "G")
 
 # Check F's swept markdown inside each sibling checkout. This dict instantiates
 # `bzh:one-prose-home` §Scope's Binds list, one glob per bound tree that can hold
@@ -1878,6 +1996,10 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
             )
         )
         registry_input_missing = True
+
+    findings += check_G(repo_root, checkouts)
+    if {"blizzard", "blizzard-mock"} <= set(checkouts):
+        executed.add("G")
 
     fail_count = sum(1 for f in findings if f.status == "fail")
     skipped = set(ALL_CHECKS) - executed
