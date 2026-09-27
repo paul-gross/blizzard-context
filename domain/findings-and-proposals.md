@@ -77,6 +77,22 @@ requires one is that graph's own decision to make, never the hub's — the hub o
 proposal names. Grouping findings under one response is still the proposal's whole job when it names any; a finding
 itself never groups.
 
+## A proposal's origin: a routine's run, or an operator
+
+A garden proposal is minted from one of two origins, a fact fixed at mint and never inferred from an absent routine: a
+**routine's run**, raised by its own delivery, or an **operator**, authored directly by a person through the hub API or
+CLI. An operator-authored proposal may name a routine or none — the routine is optional there, the way it never is for a
+routine-run proposal — and when it names findings, they may come from any routines and scopes at once: a proposal
+carries no scope of its own, so nothing about its origin narrows which findings it may group. A finding may belong to
+more than one proposal, of either origin, open or closed — grouping is not exclusive.
+
+## A proposal may be edited while it is open
+
+Title, class, body, and the findings a proposal names may all change while the proposal is still open, regardless of its
+origin — a routine-run proposal is exactly as editable as an operator-authored one. Closure makes it immutable: once
+passed or accepted, no further edit, attach, or detach reaches it. This is a plain in-place replacement, not an
+append-only history — the newest edit is the only one that survives, never a superseded trail of prior versions.
+
 ## Never confused with a work-item proposal
 
 A garden proposal and a work-item proposal (`domain/work.md`) are unrelated entities that happen to share a word. Both
