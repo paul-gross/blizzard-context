@@ -109,7 +109,7 @@ those constants; it reads markdown only.
 - A contract narrated at both the seam and an implementation, or at both a schema column and its domain reader.
 - A `.ts` leading `/** */` block or a `.md` section repeating a `.py` docstring's phrasing almost verbatim — the
   non-Python signature of the same drift.
-- The same issue number explained — not merely cited — in more than one file.
+- The same fact explained in more than one file, rather than stated once and pointed at from the rest.
 - A pointer that also summarizes its target: a pointer names the owner, never précises the content.
 - A hand-maintained count — `canon:parallel-structure` (`winter-canon:/principles.md`) names it a Detect signal, and
   `canon:row-is-router` forbids one in a hub row outright.

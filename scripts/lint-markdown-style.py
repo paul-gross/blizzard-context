@@ -9,6 +9,14 @@ lint findings. A repo without any of the three configs is silently out of
 scope: the configs are the opt-in, so a wider rollout needs only to commit
 them.
 
+Whole-repo scope (`all`/`repo`/`env`) hands a bare directory root, and `check_vale`
+then runs `vale .` unrestricted — linting every file kind that repo's own `.vale.ini`
+covers, `.py`/`.ts`/`.css` included wherever a repo (blizzard, blizzard-mock) opts them
+in, not only `.md`. `changed` scope hands files instead, and `group_scope` only ever
+collects `.md` files into that list (`group_scope`'s `elif path.suffix == ".md"` guard
+below) — so a changed-scope run always lints Markdown only, even in a repo whose
+`.vale.ini` covers code too.
+
 This is a `winter lint` check (see winter-cli `configuration/lint.md`). It is
 wired in via the `lint` field of this module's `winter-ext.toml`, confines
 itself to `WINTER_LINT_PATHS`, and always exits 0 — a violation is a finding,
@@ -172,7 +180,7 @@ def check_vale(root: Path, files: list[Path] | None, workspace: Path) -> None:
         m = VALE_LINE_RE.match(raw.strip())
         if m:
             named = True
-            emit("markdown-prose-lint", "fail", f"{m.group('rule').strip()}: {m.group('msg').strip()}", file=rel(root / m.group("path"), workspace), line=int(m.group("line")), remediation="Delete the citation; if the sentence states nothing once it's gone, delete the sentence too (canon:no-process-refs's fix is deletion, not rephrasing).")
+            emit("markdown-prose-lint", "fail", f"{m.group('rule').strip()}: {m.group('msg').strip()}", file=rel(root / m.group("path"), workspace), line=int(m.group("line")), remediation="State the fact the token stood for, or delete it (bzh:comment-locality); canon:no-process-refs forbids rephrasing the token itself.")
     if not named:
         detail = output.strip().splitlines()
         emit("markdown-prose-lint", "fail", f"vale check failed in {rel(root, workspace)}: {detail[-1] if detail else 'no output'}")

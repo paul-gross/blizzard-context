@@ -20,7 +20,16 @@ passes and an unstaged one fails (`web:client-drift`).
 `mise run gate` is not the full master merge gate — it omits `blizzard:service-test` and the bounded crash-sweep CI
 profile (`mise run crash-sweep-ci`); the `pr` and `push` workflows run both as separate real gate jobs, so a PR breaking
 either tier still fails. `bzh:sweep-release-only-tiers` ([`../pre-push.md`](../pre-push.md)) names the surfaces this
-blind spot bites.
+blind spot bites. `mise run gate` runs `blizzard:process-ref-lint` as one of its own steps (`scripts/ci-gate.sh`), so a
+green `blizzard:gate` already covers it; the row below exists for running the rule on its own.
+
+### blizzard:process-ref-lint
+
+`mise exec -- vale --output=line .` from the repo root — `styles/Blizzard/ProcessReference.yml` against `.vale.ini`'s
+`[*.md]`, `[{src,tests,scripts}/**/*.py]`, and `[web/projects/**/*.{ts,css}]` sections. A process reference anywhere in
+scope (a repo or hub tracker number, an issue or PR number, a review-finding id, a bare decision or finding id, a phase,
+or a lettered-change token) is a hard failure; there is no `TokenIgnores` exemption list. `gate.yml` runs it as its own
+dedicated job, installing Vale through `jdx/mise-action`.
 
 ### blizzard:wheel
 
@@ -78,6 +87,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / pytest (unit + component)"},
       {"context": "gate / OpenAPI spec drift"},
       {"context": "gate / eslint + vitest + client drift"},
+      {"context": "gate / process-reference lint"},
       {"context": "upper-tiers / service tier (blizzard:service-test)"},
       {"context": "upper-tiers / kill-9 crash sweep — CI profile (blizzard:crash-sweep)"}
     ]

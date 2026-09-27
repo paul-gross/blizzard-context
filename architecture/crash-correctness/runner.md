@@ -213,10 +213,10 @@ named record that has since vanished, or a park naming none, leaves the teardown
 
 `Reap.run`'s provisional-generation branch and `Spawner.spawn`'s `WorkerIdentityError` handler
 (`blizzard/src/blizzard/runner/loop/steps.py`, `blizzard/src/blizzard/runner/loop/spawn.py`) both call
-`record_identity_failed` to close a durably-provisional generation (D1/D2) as unidentified — the first ahead of
-`Attempt.fail`'s own kill-then-close, the second ahead of re-raising `HarnessSpawnError` with the lease left open for
-REAP's next pass. `record_identity_failed` is its own transaction, so in either caller a `kill -9` right after it
-commits, and before what follows it completes, is a real span.
+`record_identity_failed` to close a durably-provisional generation as unidentified — the first ahead of `Attempt.fail`'s
+own kill-then-close, the second ahead of re-raising `HarnessSpawnError` with the lease left open for REAP's next pass.
+`record_identity_failed` is its own transaction, so in either caller a `kill -9` right after it commits, and before what
+follows it completes, is a real span.
 
 Both halves are independently harmless. `record_identity_failed` finds the lease's newest still-open `lease_spawns` row
 (`session_id IS NULL`) and stamps `identity_failed_at`; re-running it after a crash re-stamps the same row with a later

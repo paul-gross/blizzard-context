@@ -12,13 +12,13 @@ is there. What a block may state is a closed, exhaustive set:
 - why-this-here rationale for the adjacent code;
 - a local invariant the code cannot express;
 - a safety warning tied to the adjacent line;
-- an issue or decision citation — the issue alone, never a delivery-plan step riding it (a phase, a lettered change);
 - a bare pointer at the fact's owner;
 - a wire model's or exported interface's field semantics, scoped to the field's own meaning.
 
 Delete prose that narrates another module's, component's, or repo's behavior, restates an invariant owned elsewhere,
-paraphrases the code beside it, or narrates change history. A citation rides a one-line fact and never licenses a
-paragraph, and a test docstring claims no production behavior beyond what that test's own assertions pin.
+paraphrases the code beside it, or narrates change history. A process reference — an issue, decision, or review-finding
+citation, alone or riding a delivery-plan step — states the fact it stood for instead, or is deleted; a test docstring
+claims no production behavior beyond what that test's own assertions pin.
 
 A comment defending a decision is converted, not kept: the decision earns a pinning test if it lacks one, and the
 comment shrinks to a pointer at that test or at the owning doc — the pointer replacing the argument rather than riding
@@ -63,10 +63,9 @@ it and it additionally drops whatever an external consumer cannot resolve. Three
 - winter workspace path notation.
 
 Against that narrowing, generated description text gains two allowances — an absolute public URL where a reference is
-warranted, and a sibling route or schema published in the same spec — and keeps the citation, which resolves publicly.
-Every model under `blizzard/src/blizzard/wire` is held to this clause published or not, since any of them is one
-`responses=` from being public; `blizzard-mock/src` falls outside it, because its wire models mirror a schema they never
-export, so nothing there generates.
+warranted, and a sibling route or schema published in the same spec. Every model under `blizzard/src/blizzard/wire` is
+held to this clause published or not, since any of them is one `responses=` from being public; `blizzard-mock/src` falls
+outside it, because its wire models mirror a schema they never export, so nothing there generates.
 
 Editing one of these docstrings stales `openapi/` and the generated TypeScript client; landing the regenerated pair in
 the same change is `bzh:generated-client` in [`./frontend.md`](./frontend.md) — the same class of owed landing as a wire
@@ -80,9 +79,14 @@ or e2e change, not a fresh obligation of its own.
 - Alternative-rebuttal framing, greppable as "rather than", "instead of", "not X because".
 - Change-history framing, greppable as "unlike the old…", "previously…", "as of this change…" (`canon:no-retro`).
 - Per-parameter provenance — each field introduced with the issue that added it, change history organized by parameter.
-- An issue citation carrying a delivery-plan step alongside it — "Phase 3", "change L(iii)" — greppable as an issue
-  number followed by a phase or lettered-change token; a bare review-finding id — `F5`, `D9`, `review:C2` — is the same
-  shape with no issue at all.
+- A process reference — a repo or hub tracker number, an issue or PR number, a review-finding id, a bare decision or
+  finding id, a phase, or a lettered-change token — for example,
+  <!-- vale Blizzard.ProcessReference = NO --> "blizzard#123", "issue #123", "PR #123", "review:F5", "D9", "Phase 3",
+  "change L(iii)"
+  <!-- vale Blizzard.ProcessReference = YES --> — is the shared Vale rule (`styles/Blizzard/ProcessReference.yml`) to
+  catch mechanically in a `.py`, `.ts`, `.css`, or `.md` file: `blizzard-context:markdown-prose-lint` in this repo's own
+  `*.md`, `blizzard:process-ref-lint` and `blizzard-mock:process-ref-lint` for those repos' full language surface. A
+  template's `.html` comment carries the same shapes but Vale cannot see it there, so it stays grep-detected.
 - An unresolvable reference in a generated description. `blizzard/tests/test_openapi_descriptions.py` fails the unit
   tier on those three shapes, scanning the committed specs and the `wire/` models no spec reaches.
 
