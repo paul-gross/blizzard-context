@@ -254,6 +254,14 @@ Every lane's `retrospective.md` now verifies landing by the PR's own merge state
 base, never the sha pre-push declared — no tier reads this leg back; a worker misreading it (checking the wrong sha, or
 skipping the merge-state read) is silent until a live chunk exposes it.
 
+`adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-push.md` addenda, now scope a second or later visit to
+the delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method
+covers pass without a re-run. The byte bars and `tests/test_adw_docket.py`'s pointer census still hold the prompts'
+mechanics; that a re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix,
+scopes by the change's own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the
+prior report records as failed, and records the scoping decision in the new report is asserted by nothing — a scoping
+that quietly skips a method the delta touches passes the same as an honest one until a live chunk exposes it.
+
 Standing in for a tier: a live chunk run through each lane on the dogfood deployment
 (`workspace:/context/project/local-instance.md`), whose transitions, bounces, and retrospective are read back and judged
 against the routing these prompts intend. That evidence is only producible once the landed graph directory is re-minted,
