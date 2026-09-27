@@ -37,6 +37,9 @@ Stated so a reviewer need not re-derive them:
   together once on close — conforming because `work_items` is a mutable entity (title, body, and `edited_at` change in
   place), not a fact log, so closure is recorded state no query over other rows can produce, the same terminal-instant
   shape `hub_exec_slot.released_at` uses.
+- `garden_proposals` is a mutable entity row while open — title, class, body, and its `garden_proposal_findings` links
+  all change in place, of either origin — with closure kept as its own terminal fact in `garden_proposal_closures`
+  rather than a column pair on the proposal row itself, the same position `work_items` holds.
 
 ## Open facts declare their closure (`bzh:open-facts-declare-closure`)
 
