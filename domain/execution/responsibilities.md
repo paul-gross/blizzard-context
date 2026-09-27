@@ -28,11 +28,12 @@ capabilities does. While a roster is declared, the entry carries exactly one mem
 of its sample: a never-sampled or long-stale slug is still a member. Each member is reported under its own identity — a
 runner-unique slug and an operator-facing name — carrying its newest reported sample, with the time that sample was
 taken, and its newest reported miss, with the miss's own reason. A slug no longer declared is no longer a member, even
-though its sampled and missed reports persist and resume the moment it is redeclared. A lapsed credential still takes
-precedence over a stale sample: a subscription whose newest lapsed miss is newer than its newest sample — or that was
-never sampled at all — stands with that condition and no windows, and a fresh sample clears it. Only the newest miss per
-slug is kept, so a later miss for any other reason clears a lapsed condition the same way a fresh sample does — the
-reason itself renders nothing. A runner that has declared no roster at all keeps today's fallback instead: one member
-per sampled slug, standing only while that sample passes the staleness gate. Either way there is never a fabricated
-zero, and the collection stays advisory: neither granting a chunk nor anything else the hub decides reads it. How old
-counts as too old to still show is a board presentation matter, not stated here.
+though its sampled and missed reports persist and resume the moment it is redeclared. A lapsed credential takes
+precedence for display: when a subscription's newest miss is a lapsed credential newer than its newest (or absent)
+sample, that condition is set, but a surviving sample's own fields are never blanked by it — only a slug that has never
+sampled at all shows no windows alongside the condition. A fresh sample, or a later miss for any other reason, clears a
+lapsed condition — the other reason itself renders nothing. A runner that has declared no roster at all keeps today's
+fallback instead: a member stands while its sample passes the staleness gate, or independently while a lapsed-credential
+miss newer than it does, with the same never-blanked sample rule once admitted either way. Either way there is never a
+fabricated zero, and the collection stays advisory: neither granting a chunk nor anything else the hub decides reads it.
+How old counts as too old to still show is a board presentation matter, not stated here.
