@@ -569,6 +569,8 @@ class RunEffectivenessGateTests(unittest.TestCase):
             self.repo_root / ".github" / "workflows" / "gate.yml",
             "      - run: mise x vale@3.22.0 -- vale --output=line .\n",
         )
+        _write(self.repo_root / "README.md", "`mise x vale@3.22.0 -- vale --output=line .`\n")
+        _write(self.repo_root / "verifiability.md", "`mise x vale@3.22.0 -- vale --output=line .`\n")
         # A repo under check carries its own registry-copy census (check F reads it
         # from `repo_root`, never from beside the script) — one entry with no copies
         # anywhere in the fixture, so F runs to completion and finds nothing.
