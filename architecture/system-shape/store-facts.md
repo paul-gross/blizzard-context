@@ -38,8 +38,10 @@ Stated so a reviewer need not re-derive them:
   place), not a fact log, so closure is recorded state no query over other rows can produce, the same terminal-instant
   shape `hub_exec_slot.released_at` uses.
 - `garden_proposals` is a mutable entity row while open — title, class, body, and its `garden_proposal_findings` links
-  all change in place, of either origin — with closure kept as its own terminal fact in `garden_proposal_closures`
-  rather than a column pair on the proposal row itself, the same position `work_items` holds.
+  all change in place, of either origin — but unlike `work_items`, its closure is never a column pair on the proposal
+  row itself: `garden_proposal_closures` holds it as its own immutable, at-most-one-per-proposal fact row (enforced by
+  `UniqueConstraint("proposal_id")`), conforming for the same reason `work_items.closed_at`/`closure` do — it is
+  recorded state no query over other rows can produce — just kept in its own table rather than in-row.
 
 ## Open facts declare their closure (`bzh:open-facts-declare-closure`)
 
