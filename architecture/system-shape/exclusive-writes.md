@@ -22,8 +22,8 @@ before any later read; on Postgres it takes the row lock a concurrent locker of 
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
 stop, complete, detach, and requeue. A macro-shape constraint on deployment topology, on what holds once more than one
 hub process may share a store — not a `kill -9` crash-correctness requirement; one hub process already serializes every
-one of these correctly today. Dependency **release** is exempt, not a migration gap: it can only shrink the standing
-set and can never close a cycle, so no row lock is needed over anything it writes —
+one of these correctly today. Dependency **release** is exempt, not a migration gap: it can only shrink the standing set
+and can never close a cycle, so no row lock is needed over anything it writes —
 [../crash-correctness/hub.md](../crash-correctness/hub.md) §Dependency edge declare and release owns the reasoning.
 
 **Detect.**
@@ -37,8 +37,8 @@ set and can never close a cycle, so no row lock is needed over anything it write
 
 **Do.** `lock_chunk_row` (`hub/store/internal/chunk_rows.py`) — a no-op `UPDATE` on the chunk's own row, already minted
 before any claim, edit, or dependency write can reach it — called as the transaction's first statement, with every guard
-read that follows it on the same connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunks/exclusive.py`) is the one
-place this crosses the domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock on
+read that follows it on the same connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunks/exclusive.py`) is the
+one place this crosses the domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock on
 Postgres, where two writers naming the same set in different orders could otherwise wait on each other) before yielding
 `ILockedChunkRead` — a domain-facing handle carrying no connection. A sibling write repository's own `*_locked` method
 takes that same handle and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a
@@ -55,9 +55,9 @@ Stated so a reviewer need not re-derive them:
 - **The residual fleet-wide cycle lock.** `DependencyService`, `GroupService`, and `DeleteService` still take an
   in-process lock, built in `hub/app.py`, for two things a row lock cannot close: `DependencyService`/`GroupService`
   hold it for the fleet-wide standing-dependency cycle check (`hub:no-standing-dependency-cycle`), which reasons over
-  the whole graph — two disjoint declares racing on different rows can still together close a cycle neither alone
-  would. `DeleteService` holds it for a narrower reason: releasing a chunk's own outgoing edges can race a concurrent
-  fold reminting one of those same edges onto a chunk neither transaction's row lock names. Moving either use onto a
+  the whole graph — two disjoint declares racing on different rows can still together close a cycle neither alone would.
+  `DeleteService` holds it for a narrower reason: releasing a chunk's own outgoing edges can race a concurrent fold
+  reminting one of those same edges onto a chunk neither transaction's row lock names. Moving either use onto a
   store-level singleton row needs a schema migration.
 - **The hub-exec slot's empty-table gap.** `acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`) locks
   via a table-wide no-op `UPDATE` against `hub_exec_slot`, which carries no unique constraint (`hub/store/schema.py`).

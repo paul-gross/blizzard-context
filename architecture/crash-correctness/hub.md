@@ -299,12 +299,13 @@ item and chunk inserts), not a derived cross-fact invariant to recompute.
 
 ## Dependency edge declare and release
 
-`ChunkDependenciesStore.declare_locked`/`.release` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`)
-each write `chunk_dependencies` in one transaction — `declare_locked` a single insert of the fresh edge row, on the
-connection `IChunkExclusiveWrites.locked` already opened and row-locked; `release` a read of the standing row followed
-by its `released_at`/`released_by` update on the same connection, inside its own `store.write` transaction. Neither has
-a partial-write span for a crash to land inside: `declare_locked`'s insert either lands whole or not at all, and
-`release`'s read-then-write has nothing outside the transaction observing the read before the write commits.
+`ChunkDependenciesStore.declare_locked`/`.release`
+(`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) each write `chunk_dependencies` in one
+transaction — `declare_locked` a single insert of the fresh edge row, on the connection `IChunkExclusiveWrites.locked`
+already opened and row-locked; `release` a read of the standing row followed by its `released_at`/`released_by` update
+on the same connection, inside its own `store.write` transaction. Neither has a partial-write span for a crash to land
+inside: `declare_locked`'s insert either lands whole or not at all, and `release`'s read-then-write has nothing outside
+the transaction observing the read before the write commits.
 
 `DependencyService` (`blizzard/src/blizzard/hub/domain/dependencies.py`) holds `declare_locked` under two guards: the
 row lock over the `(dependent, prerequisite)` pair it shares with `ClaimService`/`EditService`/`RestartService`/
@@ -318,10 +319,9 @@ mid-transaction. `release` takes only the residual fleet-wide lock: it can only 
 close a cycle, so it needs no row lock over anything it writes. The prerequisite's re-derived ephemerality read is
 closed the same way: `GroupService` holds the same fleet-wide lock — plus its own row lock over the fold's own chunks —
 for its whole fold, so `declare_locked`'s ephemerality read is serialized against every writer that can make a
-prerequisite ephemeral, grouping included.
-`NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`) is a
-`bzh:invariant-checker` assertion as a backstop against a regression in that serialization, not a guard against a live
-gap.
+prerequisite ephemeral, grouping included. `NoStandingDependencyOntoEphemeralChunk`
+(`hub:no-standing-dependency-onto-ephemeral-chunk`) is a `bzh:invariant-checker` assertion as a backstop against a
+regression in that serialization, not a guard against a live gap.
 
 Neither `declare` nor `release` earns a `bzh:crash-point-registry` entry — the "no window at all" ground: `declare`'s
 insert and `release`'s read-then-write are each whole inside their own single transaction. `declare` alone introduces
