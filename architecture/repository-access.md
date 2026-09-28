@@ -165,6 +165,34 @@ rule for the per-item reads this rule's measurement exposes.
 [`../verification/blizzard.md`](../verification/blizzard.md) `blizzard:component-test` — the tier the two-fixture-size
 count lives in.
 
+## Read the live set on a hot path (`bzh:live-set-read`)
+
+**Rule.** A read on a path that repeats forever — a runner tick, a board or runner poll — whose consumer needs only
+non-terminal chunks excludes terminal chunks in the store query, by a prefilter over terminal facts, before loading or
+deriving anything per chunk. The prefilter is sound, not exact: it may keep a terminal chunk for the derivation to drop,
+and never drops a chunk the derivation would call non-terminal. Its cost floor is one indexed probe per `chunks` row;
+removing that floor needs a persisted terminal marker, which `bzh:facts-not-status` forbids.
+
+**Why.** Terminal is absorbing and retention keeps a finished chunk's facts forever, so a read that derives every chunk
+and then discards the terminal ones charges each finished chunk to every future call. The cost of a hot read should
+track the live fleet, not the deployment's age.
+
+**Scope.** A read that renders terminal chunks stays `bzh:page-bounded-read`'s. A terminal status a live chunk needs,
+such as a done prerequisite, is resolved by id through `bzh:bulk-reconstitution`'s plural form, not by widening the live
+read. A periodic pass's corpus read stays `bzh:probe-gated-pass`'s.
+
+**Detect.** Measured: `blizzard/tests/test_live_set_read.py` builds two fixtures that differ only in terminal-chunk
+count and asserts `count_queries` and `count_rows_read` from `blizzard/tests/support.py` are flat and the response
+identical. By reading: a `TERMINAL_STATUSES` filter applied in Python to an every-chunk status read on such a path.
+
+**Do.** `ChunkFactsStore.load_live_statuses` excludes stopped, completed, PR-closed, and newest-movement-is-done chunks
+in its query; the queue reads bound their position and record lookups by the live candidates it names.
+
+**Don't.** Read every chunk's statuses and drop the terminal ones in Python.
+
+**See also.** `domain/work/statuses.md` — terminal chunks never un-stop or un-complete, and restart refuses a terminal
+chunk, which is what makes the exclusion sound.
+
 ## A probe-gated pass (`bzh:probe-gated-pass`)
 
 **Rule.** A periodic pass converging a corpus toward a derived state checks a cheap change probe — a watermark, a
