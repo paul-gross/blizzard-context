@@ -46,10 +46,10 @@ runs seams-mocked, spending no tokens and touching no network.
 store rather than through an injected seam Protocol; or a test that cannot run without a real external system because no
 seam exists to bind a mock to.
 
-**Do.** The runner depends on `IWorkspaceProvider`, `IHarness`, and the forge seam; production selects winter or the
-built-in basic workspace provider by configuration, alongside Claude Code and GitHub, while tests bind the blizzard-mock
-fleet. The reference seam stack: the work source (at the hub), the workspace provider, the coding harness, delivery (the
-forge), and the human channel are the seam Protocols.
+**Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
+basic workspace provider by configuration, alongside Claude Code, while tests bind the blizzard-mock fleet. The hub
+reaches its external systems through `IWorkSource` and its capability family, `IOAuthProvider`, and
+`IHubCommandRunner`/`IHubWorkdir`.
 
 **Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
 mock harness.
@@ -71,6 +71,19 @@ Stated so a reviewer need not re-derive them:
   because `IWorkSource` declares no enumeration method, so no non-hub binding could serve them anyway; the read half is
   what splits out of `IWorkEditor` the day a binding gains a real enumeration capability, and not before. Consequently
   `editor(name) is None` means structurally never edited for every source but the hub, not merely not opted in.
+- **Forge access.** No forge seam Protocol exists. The forge is reached today through four paths, none of them a seam in
+  this rule's sense: graph land scripts reach it directly through the `run:` env contract's `BZ_FORGE_*` variables —
+  deliberate, because the script is the landing policy, not a loop step, domain, or store, which are the sites
+  **Detect** covers, and tests bind the mock forge by pointing `BZ_FORGE_URL` at it; work-source bindings reach it for
+  items and branch links; the OAuth provider reaches it for login; and `GitHubCommitResolver` reaches it behind the
+  `garden_delivery.CommitResolver` callable, a type alias rather than a Protocol. Land-script access falls outside the
+  Rule's sites and is bound by the env contract instead of a seam; `CommitResolver` is an injected,
+  composition-root-selected seam whose interface is a one-call type alias, so it satisfies the Rule's swappability
+  intent without being a Protocol. Consequently: delivery qualifies a repo from the `git_commit` artifact's recorded
+  origin, falling back to `BZ_FORGE_OWNER`; the garden commit resolver sees only bare repo names, so it always qualifies
+  by `BZ_FORGE_OWNER`, defaulting to `hub/app.py::DEFAULT_FORGE_OWNER` when unset; a chunk whose first pointer is a
+  `hub:` item gets no branch links, because `HubWorkSource.branch_url` is always `None`; and each consumer's endpoint is
+  declared separately, per consumer.
 
 ## See also
 
