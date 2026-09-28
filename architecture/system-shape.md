@@ -71,19 +71,22 @@ Stated so a reviewer need not re-derive them:
   because `IWorkSource` declares no enumeration method, so no non-hub binding could serve them anyway; the read half is
   what splits out of `IWorkEditor` the day a binding gains a real enumeration capability, and not before. Consequently
   `editor(name) is None` means structurally never edited for every source but the hub, not merely not opted in.
-- **Forge access.** No forge seam Protocol exists. The forge is reached today through four paths, none of them a seam in
-  this rule's sense: graph land scripts reach it directly through the `run:` env contract's `BZ_FORGE_*` variables —
-  deliberate, because the script is the landing policy, not a loop step, domain, or store, which are the sites
-  **Detect** covers, and tests bind the mock forge by pointing `BZ_FORGE_URL` at it; work-source bindings reach it for
-  items and branch links; the OAuth provider reaches it for login; and `GitHubCommitResolver` reaches it behind the
-  `garden_delivery.CommitResolver` callable, a type alias rather than a Protocol. Land-script access falls outside the
-  Rule's sites and is bound by the env contract instead of a seam; `CommitResolver` is an injected,
-  composition-root-selected seam whose interface is a one-call type alias, so it satisfies the Rule's swappability
-  intent without being a Protocol. Consequently: delivery qualifies a repo from the `git_commit` artifact's recorded
-  origin, falling back to `BZ_FORGE_OWNER`; the garden commit resolver sees only bare repo names, so it always qualifies
-  by `BZ_FORGE_OWNER`, defaulting to `hub/app.py::DEFAULT_FORGE_OWNER` when unset; a chunk whose first pointer is a
-  `hub:` item gets no branch links, because `HubWorkSource.branch_url` is always `None`; and each consumer's endpoint is
-  declared separately, per consumer.
+- No single forge seam Protocol exists; the forge is reached through several of the seams already named above, plus one
+  path outside the Rule entirely. The work-source capability family (`IWorkSource`, `IWorkEditor`, `IWorkCloser`,
+  `IWorkAnnotator`) and `IOAuthProvider` are real Protocol seams that happen to reach the forge — for work items, branch
+  links, closing work items, and the periodic forge-status annotation sweep, and for login, respectively.
+  `GitHubCommitResolver` reaches it behind the `garden_delivery.CommitResolver` callable: an injected,
+  composition-root-selected seam whose interface is a one-call type alias rather than a Protocol, satisfying the Rule's
+  swappability intent without being one. Graph land scripts reach it directly through the `run:` env contract's
+  `BZ_FORGE_*` variables, outside the Rule's sites (a loop step, domain, or store) because the script is the landing
+  policy ([../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md) owns how tests bind the mock
+  forge for this path). Land scripts and `GitHubCommitResolver` share the hub's one configured forge endpoint
+  (`BZ_FORGE_URL`/`BZ_FORGE_TOKEN`/`BZ_FORGE_OWNER`); the work-source family and the OAuth provider each declare their
+  own endpoint through their own config entry instead. The garden commit resolver sees only bare repo names, so it
+  always qualifies by `BZ_FORGE_OWNER`, defaulting to `hub/app.py::DEFAULT_FORGE_OWNER` when unset; delivery instead
+  qualifies a repo from the `git_commit` artifact's recorded origin before a land script ever runs, and the script falls
+  back to `BZ_FORGE_OWNER` only when that origin was still a bare name; and a chunk whose first pointer is a `hub:` item
+  gets no branch links, because `HubWorkSource.branch_url` is always `None`.
 
 ## See also
 
