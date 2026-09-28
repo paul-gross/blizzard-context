@@ -46,9 +46,9 @@ against the last commit `edge` was published from, and `dev-image` needs it.
 ### blizzard:wheel
 
 `mise run build` (`./scripts/build-wheel.sh`) — the one build entrypoint: it builds both Angular apps into
-`src/blizzard/static/{hub,runner}`, builds the single wheel (`uv build --wheel`) embedding those assets plus both
-migration trees, then installs it into a clean node-free venv and runs `blizzard --version` in it. `BLIZZARD_VERSION`
-overrides the wheel version for dev builds and tag releases.
+`src/blizzard/static/`, builds the single wheel (`uv build --wheel`) embedding those assets plus both migration trees,
+then installs it into a clean node-free venv and runs `blizzard --version` in it. `BLIZZARD_VERSION` overrides the wheel
+version for dev builds and tag releases.
 
 ### blizzard:wheel-smoke
 

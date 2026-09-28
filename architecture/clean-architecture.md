@@ -47,11 +47,12 @@ repository.
 
 ## Dependency injection (`bzh:dependency-injection`)
 
-**Rule.** Nothing constructs its own collaborators — every dependency is injected, and concrete wiring happens once, at
-the composition root.
+**Rule.** Nothing constructs its own collaborators — every dependency is injected. A long-lived process has one
+composition graph: process-scoped collaborators are built once and injected into both its served app and its driver.
+Short-lived CLI commands have their own roots.
 
-**Why.** A single wiring root lets a test substitute a fake store, a virtual clock, and a mock forge without patching
-module globals.
+**Why.** One process graph prevents independently wired app and driver collaborators from diverging, and lets tests
+substitute a fake store, a virtual clock, and a mock forge without patching module globals.
 
 **Scope.** The injected clock (`bzh:injected-clock`) is a member of this rule, not an exception to it.
 
@@ -74,17 +75,17 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 - `runner/transcripts/service.py` importing any package's `internal/` module — its per-owner repository resolver is
   injected instead.
 
-**Do.** Blizzard has no DI container. Its composition roots each wire every seam once and hand collaborators down in a
-frozen dataclass like `HubServices`:
+**Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
+down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
+the same process graph with explicit lifetimes:
 
 - `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`
 - `build_services` in `blizzard/src/blizzard/hub/composition.py`
-- `build_hosted_app` in `blizzard/src/blizzard/runner/app.py`
-- `LoopWiring.context` in `blizzard/src/blizzard/runner/loop/build.py`
+- The runner host graph in `blizzard/src/blizzard/runner/composition.py`, injected into the served app in
+  `blizzard/src/blizzard/runner/app.py` and the periodic loop in `blizzard/src/blizzard/runner/loop/build.py`
 
-The CLI modules below are roots too — a `click` command is a short-lived process with no server loop to hand a dataclass
-through, so wiring its concrete collaborators once, inline, at the top of the command body is that process's composition
-root:
+The CLI modules below are roots for short-lived commands — they wire collaborators once, inline, at the top of the
+command body, without joining the hosted process graph:
 
 - `blizzard/src/blizzard/runner/cli/runtime.py`
 - `blizzard/src/blizzard/runner/cli/external_usage.py`

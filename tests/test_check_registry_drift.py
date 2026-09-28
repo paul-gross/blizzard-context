@@ -587,7 +587,7 @@ class RunEffectivenessGateTests(unittest.TestCase):
         venv_bin.mkdir(parents=True)
         stub = venv_bin / "python"
         stub.write_text(
-            "#!/usr/bin/env python3\n"
+            f"#!{sys.executable}\n"
             "import sys\n"
             "m_indices = [i for i, a in enumerate(sys.argv) if a == '-m']\n"
             "marker = sys.argv[m_indices[-1] + 1]\n"
