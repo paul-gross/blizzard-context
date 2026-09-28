@@ -14,6 +14,7 @@ the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 | [system-shape/seam-size.md](./system-shape/seam-size.md)                               | Adding a method to a Protocol, or deciding whether one has grown wide enough to split or register as an exception            |
 | [system-shape/subscription-credentials.md](./system-shape/subscription-credentials.md) | Reading, sampling, or renewing a subscription credential file                                                                |
 | [system-shape/fleet-wire.md](./system-shape/fleet-wire.md)                             | Changing a route, schema, or enum a runner reaches on the hub — what a hub change may do to it across the skew window        |
+| [system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)                 | Adding or reviewing a write enforcing an exactly-one-wins decision, or a write another such decision's guard reads consult   |
 
 ## Deterministic shell (`bzh:deterministic-shell`)
 
