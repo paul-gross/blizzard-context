@@ -29,7 +29,10 @@ only where mutation is required.
 them.
 
 **See also.** [`../exemplars/python/repo_pattern.py`](../exemplars/python/repo_pattern.py) — the read/write Protocol
-pair and its binding in runnable form.
+pair and its binding in runnable form. [`./system-shape/exclusive-writes.md`](./system-shape/exclusive-writes.md)
+`bzh:store-exclusive-write` — the one seam where a write Protocol splits further, into a plain form and a `*_locked`
+form taking a domain-facing handle, so an exactly-one-wins decision's writers can share one locked connection without
+the connection itself crossing into the domain layer.
 
 ## Controllers hold read repositories only (`bzh:controller-read-only`)
 
