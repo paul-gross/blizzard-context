@@ -18,8 +18,8 @@ the fleet wedges.
 **Detect.** `blizzard:wire-compat` ([../../verification/blizzard.md](../../verification/blizzard.md)) is the mechanical
 check — it fails a pull request against its merge-base and fails a push to `master` against the last commit `edge` was
 published from. Its declared surface already covers the 17 `HubProxy` forwards under `src/blizzard/runner/api/`, since
-every one targets an `/api/fleet/...` path; a runner call reaching the hub outside that surface constant is invisible
-to it.
+every one targets an `/api/fleet/...` path; a runner call reaching the hub outside that surface constant is invisible to
+it.
 
 **Do.** A new optional response field; a new route kept beside its replacement; and, when a new runner→hub call reaches
 outside the declared surface, extending `blizzard:wire-compat`'s surface constant in the same change.
