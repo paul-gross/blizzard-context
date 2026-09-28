@@ -234,6 +234,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   row — and sweeps that Detach, Complete, and Delete each stay on-viewport. Both cases assert their swept selector list
   against an exact count, so a control added to the row or the panel without being added to the list fails the fixture
   rather than passing unmeasured.
+- `chunk-delivery.shell-sweep.spec.ts` mounts the board card, detail dock, and routed General tab with both a PR and a
+  landed repository at 1280px and 390px. All outbound anchors stay within the viewport and outside the card's select
+  button, while the dock and routed tab both show the explicit human-merge wait.
 - `machine-detail-header.shell-sweep.spec.ts` covers the machine detail dock's own header: a real pointer hover on
   Pause/Resume must open the wired `KitTooltip` naming the claiming runner — a real CDK overlay claim jsdom cannot make
   — and the header's two clusters (identity, actions) must never overflow with a long chunk id and runner name live at
