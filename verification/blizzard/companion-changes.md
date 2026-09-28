@@ -39,7 +39,10 @@ served routes, and `blizzard-mock`'s `tests/test_wire_parity.py` covers the shap
 the sibling `blizzard` worktree — its detail is at [`./commands.md`](./commands/mock.md#blizzard-mockunit-test). The
 other direction has no such check: the mock runner's `/_drive/*` plane is checked only against a hardcoded declared-set
 snapshot flagging a grown or shrunk verb, `IHubGateway` is never independently diffed against a real contract, and that
-direction therefore rests on this rule rather than on anything mechanical.
+direction therefore rests on this rule rather than on anything mechanical. `blizzard:wire-compat`
+(`bzh:fleet-wire-additive`) is a different axis on the same surface — additive-vs-breaking across the hub↔runner skew
+window — and does not stand in for extending the mock: a new route can be perfectly additive and still leave the mock
+counterpart unserved.
 
 **Don't.** A new `/api/fleet/...` route the runner calls outside `IHubClient`, landing in `blizzard` alone — the guard
 diffs only the protocol's methods, so it stays green while the service tier drives a runner against a mock that answers

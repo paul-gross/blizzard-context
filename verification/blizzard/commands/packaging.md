@@ -11,11 +11,12 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 `mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
-(`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, then eslint, vitest, the web structural gate's
-real-timer, kit-floor, and retired-board-control sweeps (`web:structural-gate`), the bundle-composition check
-(`web:bundle-composition`), and generated-client drift over `web/`. Stage regenerated `openapi/` or `web/` client output
-before running it: the drift checks are a working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration
-passes and an unstaged one fails (`web:client-drift`).
+(`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, hub↔runner wire compatibility
+(`blizzard:wire-compat`), then eslint, vitest, the web structural gate's real-timer, kit-floor, and
+retired-board-control sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`), and
+generated-client drift over `web/`. Stage regenerated `openapi/` or `web/` client output before running it: the drift
+checks are a working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails
+(`web:client-drift`).
 
 `mise run gate` is not the full master merge gate — it omits `blizzard:service-test` and the bounded crash-sweep CI
 profile (`mise run crash-sweep-ci`); the `pr` and `push` workflows run both as separate real gate jobs, so a PR breaking
@@ -30,6 +31,17 @@ green `blizzard:gate` already covers it; the row below exists for running the ru
 scope (a repo or hub tracker number, an issue or PR number, a review-finding id, a bare decision or finding id, a phase,
 or a lettered-change token) is a hard failure; there is no `TokenIgnores` exemption list. `gate.yml` runs it as its own
 dedicated job, installing Vale through `jdx/mise-action`.
+
+### blizzard:wire-compat
+
+`mise run wire-compat` (`uv run blizzard-wire-compat --baseline merge-base --against origin/master`) fails on a breaking
+change to the declared hub↔runner wire surface (`bzh:fleet-wire-additive`,
+[`../../../architecture/system-shape/fleet-wire.md`](../../../architecture/system-shape/fleet-wire.md)):
+`openapi/hub.openapi.json`'s `/api/fleet/*` paths, the `/api/auth/jwks.json`/`/api/auth/authorize` federation routes,
+and every component schema they reach. Walks `HEAD`'s merge-base with `origin/master` one first-parent commit at a time,
+failing unless the landing commit's subject carries a `!`. `gate.yml`'s `wire-compat` job runs this only when the
+triggering event is `pull_request`; `push.yml`'s `wire-compat-deployed` job runs `--baseline deployed` instead, diffing
+against the last commit `edge` was published from, and `dev-image` needs it.
 
 ### blizzard:wheel
 
@@ -86,6 +98,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / ruff + pyright + structural gate"},
       {"context": "gate / pytest (unit + component)"},
       {"context": "gate / OpenAPI spec drift"},
+      {"context": "gate / hub↔runner wire compatibility"},
       {"context": "gate / eslint + vitest + client drift"},
       {"context": "gate / process-reference lint"},
       {"context": "upper-tiers / service tier (blizzard:service-test)"},
