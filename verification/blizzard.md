@@ -45,6 +45,7 @@ A command method passes when its command exits 0.
 | `blizzard:prose-ratchet`         | `mise run prose-check` — the per-root prose ratchet                                                                                                               |
 | `blizzard:gate`                  | `mise run gate` — the local reproduction of CI's shared `gate` job *(more)*                                                                                       |
 | `blizzard:process-ref-lint`      | `mise exec -- vale --output=line .` — the process-reference prose gate over `.py`, `.ts`, `.css`, and `.md` *(more)*                                              |
+| `blizzard:wire-compat`           | `mise run wire-compat` — fails on a breaking change to the hub↔runner wire surface (`bzh:fleet-wire-additive`) *(more)*                                           |
 | `blizzard:ci`                    | `gh run watch --repo paul-gross/blizzard <run-id> --exit-status` — the authoritative remote gate *(more)*                                                         |
 | `blizzard:wheel`                 | `mise run build` — both Angular apps, then the one wheel, node-free *(more)*                                                                                      |
 | `blizzard:wheel-smoke`           | The serve smoke on the built wheel in a node-free venv — the **P5 exit criterion** *(more)*                                                                       |
