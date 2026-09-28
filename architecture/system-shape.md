@@ -72,10 +72,12 @@ Stated so a reviewer need not re-derive them:
   what splits out of `IWorkEditor` the day a binding gains a real enumeration capability, and not before. Consequently
   `editor(name) is None` means structurally never edited for every source but the hub, not merely not opted in.
 - No single forge seam Protocol exists; the forge is reached through several of the seams already named above, plus one
-  path outside the Rule entirely. The work-source capability family (`IWorkSource`, `IWorkEditor`, `IWorkCloser`,
-  `IWorkAnnotator`) and `IOAuthProvider` are real Protocol seams that happen to reach the forge — for work items, branch
-  links, closing work items, and the periodic forge-status annotation sweep, and for login, respectively.
-  `GitHubCommitResolver` reaches it behind the `garden_delivery.CommitResolver` callable: an injected,
+  path outside the Rule entirely. `IWorkSource`, `IWorkCloser`, and `IWorkAnnotator` — three of the work-source
+  capability family's Protocols — and `IOAuthProvider` are real Protocol seams that happen to reach the forge:
+  `IWorkSource` for work items and branch links, `IWorkCloser` for closing work items, `IWorkAnnotator` for the periodic
+  forge-status annotation sweep, and `IOAuthProvider` for login. The family's fourth member, `IWorkEditor`, never
+  reaches it — only the built-in hub source seats one, per the recorded position above, and that source has no external
+  forge behind it. `GitHubCommitResolver` reaches it behind the `garden_delivery.CommitResolver` callable: an injected,
   composition-root-selected seam whose interface is a one-call type alias rather than a Protocol, satisfying the Rule's
   swappability intent without being one. Graph land scripts reach it directly through the `run:` env contract's
   `BZ_FORGE_*` variables, outside the Rule's sites (a loop step, domain, or store) because the script is the landing
