@@ -29,14 +29,23 @@ at the very end of the phase and an interrupted mapping run is lost. Once the ma
 run through mutmut's own SIGINT/`KeyboardInterrupt` path and exits the caller-facing budget exit code; any mutant left
 "not checked" or "check was interrupted" is re-run, never reported as a verdict, on the next invocation.
 
-Measured wall time, mutant count, and test-file count, one full run per scope:
+Measured wall time, mutant count, and test-file count. Only `cli-surface` finished as one clean run; the others are
+partial or fragmented and are not comparable to it:
 
-| Scope           | Mapping | Mutant execution | Total | Mutants | Test files |
-| --------------- | ------- | ---------------- | ----- | ------- | ---------- |
-| `cli-surface`   | 75s     | 660s             | 735s  | 2336    | 52         |
-| `hub-daemon`    | —       | —                | —     | —       | —          |
-| `runner-daemon` | —       | —                | —     | —       | —          |
-| `shared-spine`  | —       | —                | —     | —       | —          |
+| Scope           | Mapping | Mutant execution                     | Total   | Mutants | Test files |
+| --------------- | ------- | ------------------------------------ | ------- | ------- | ---------- |
+| `cli-surface`   | 75s     | 660s                                 | 735s    | 2336    | 52         |
+| `hub-daemon`    | ~1341s  | ~62593s (estimated, not a wall time) | ~63934s | 28405   | 386        |
+| `runner-daemon` | —       | stopped early                        | ~3690s  | 32532   | —          |
+| `shared-spine`  | —       | not run                              | —       | —       | —          |
+
+`hub-daemon` ran to completion (23271 killed, 4892 survived, 224 no tests, 17 timeout, 1 segfault) but across many
+resumed sessions, so no clean wall time exists: mapping is a timed re-run over cached mutants, and mutant execution is
+summed per-mutant durations divided by 18 workers. `runner-daemon` was interrupted at about 23,600 of 32,532 mutants
+after roughly an hour (13933 killed, 5883 survived, 3349 no tests, 479 timeout, remainder unchecked); no report was
+written. Wall time is dominated by the expensive tail and by timeouts, not by the mutant count: the early mutants finish
+fast and the remainder slow sharply, and each timeout costs its full multiplied budget (`timeout_multiplier = 3`).
+Completing `runner-daemon` and `shared-spine` waits on structural fixes tracked separately.
 
 The method cannot see: any tier above `unit`/`component` (`blizzard:service-test`, `blizzard:e2e`, `blizzard:journey`,
 `blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, and the migrations
