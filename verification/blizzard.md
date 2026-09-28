@@ -42,6 +42,7 @@ A command method passes when its command exits 0.
 | `blizzard:sse-contract`          | `mise run sse-contract` — the SSE frame shape against the golden corpus `contracts/sse/` *(more)*                                                                 |
 | `blizzard:cli-contract`          | `uv run pytest tests/test_cli_surface_contract.py` — the CLI command tree against `contracts/cli/` *(more)*                                                       |
 | `blizzard:restatement-sweep`     | `mise run restatement-check` — the one-home census *(more)*                                                                                                       |
+| `blizzard:mutation`              | `mise run mutation <scope>` — scoped, resumable mutation testing over `src/blizzard` *(more)*                                                                     |
 | `blizzard:prose-ratchet`         | `mise run prose-check` — the per-root prose ratchet                                                                                                               |
 | `blizzard:gate`                  | `mise run gate` — the local reproduction of CI's shared `gate` job *(more)*                                                                                       |
 | `blizzard:process-ref-lint`      | `mise exec -- vale --output=line .` — the process-reference prose gate over `.py`, `.ts`, `.css`, and `.md` *(more)*                                              |
