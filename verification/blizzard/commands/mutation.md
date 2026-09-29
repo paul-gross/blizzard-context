@@ -63,7 +63,7 @@ execution of a daemon scope is hours and is not measured:
 
 | Scope           | Generation | Mapping  | Clean + forced-fail | Preparation | Execution       | Mutants | Test files |
 | --------------- | ---------- | -------- | ------------------- | ----------- | --------------- | ------- | ---------- |
-| `cli-surface`   | —          | 34s      | —                   | —           | 111s            | 2386    | 43         |
+| `cli-surface`   | 4s         | 37s      | 36s                 | 77s         | 79s             | 2386    | 43         |
 | `hub-daemon`    | 29s        | ~4 min   | ~3.7 min            | 8.3 min     | not run in full | 28,698  | 138        |
 | `runner-daemon` | 64s        | ~4.5 min | ~4.5 min            | 10.2 min    | not run in full | —       | 115        |
 | `shared-spine`  | 3s         | ~3.4 min | ~3.5 min            | ~7 min      | ~11.5 min       | 668     | 157        |
