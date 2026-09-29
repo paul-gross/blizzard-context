@@ -656,3 +656,34 @@ fleet PR's own merge commit has two parents.
 
 `blizzard-infra` is out of scope for this method — its own docs record why it cannot be protected on the current GitHub
 plan.
+
+### `blizzard:manual-live-routine`
+
+**Surface.** A garden routine run end to end by a real-harness runner against an env-local hub — the path no mock
+harness walks: the survey's own tool calls, a command outlasting one of them, and the lease staying live across it.
+`blizzard:manual-runner` spawns only the fenced mock; this row is for a change whose claim is what a real worker does
+with a routine's charge.
+
+**Setup.** `tool:service-up` as for `blizzard:manual-hub`, then stop the env's own mock runner so it cannot claim the
+run. Stand up a verification runner beside it: its own runtime directory, a dedicated feature env (`winter ws init` then
+`winter provision`), `BZ_HARNESS_BINARY` set to the real harness, and `BZ_BASE_BRANCH` set to the branch under test.
+Create the routine and its scopes through `blizzard hub routine create` and `routine scope add`.
+
+**Steps.**
+
+1. Start a run with `blizzard hub routine run --mode full`, and, once it ends, `--mode delta` for a routine whose
+   baseline the first run delivered.
+2. While a run is live, read the verification runner's lease activity on its API on a cadence shorter than the staleness
+   threshold; note the largest gap between heartbeats.
+3. Read the terminal state, findings, proposals, and measurement back through the operator CLI (`routine sweeps`, the
+   findings and proposals verbs), never the store.
+4. Capture the run's transcript: the longest single tool call, and the exact arguments the survey passed to any command
+   the axis routes to.
+5. Record which revision of the agent context the worker read.
+
+**Passes when.** The routine run reaches its terminal state with its findings, proposals, and measurement delivered,
+read back through the operator CLI; the verification runner's lease never read `stale`; and the transcript is kept with
+the verification report.
+
+**Hazards.** Never the systemd runners' stores, and never the hosted hub —
+`workspace:/context/project/hub-data-modes.md` owns which hub is safe.

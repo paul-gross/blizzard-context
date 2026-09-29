@@ -33,6 +33,9 @@ for each slug's mutate globs and test selection, so a slug here means exactly th
 | `shared-spine`  | The daemon-neutral layer both daemons depend on, the wire models, and the shared auth core            |
 | `cli-surface`   | The hub and runner command surfaces and the shared CLI entry package                                  |
 
+A delta run's ground is the slug's functions changed since the baseline revision, per `--since` in
+[`../verification/blizzard/commands/mutation.md`](../verification/blizzard/commands/mutation.md).
+
 No `web-suite` slug: `blizzard:mutation` mutates `src/blizzard` only, and the Angular suite has no mutation method.
 
 ## Criteria
