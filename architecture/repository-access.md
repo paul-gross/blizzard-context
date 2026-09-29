@@ -44,7 +44,9 @@ repositories belong to the domain layer alone.
 **Scope.** A controller answering a query straight from a read model is fine: reads bypass no invariant.
 
 **Detect.** A router or CLI handler injecting a write repository, or a mutation performed in an edge handler instead of
-delegated.
+delegated. `tests/test_layering.py` fails the unit tier on `IWriteSessionStore` named anywhere under `hub/cli/` other
+than `hub/cli/sessions/` (the Protocol's own package) and its composition root — `login`/`logout` take the
+`SessionService` application service instead, never the raw seam.
 
 **Do.** `blizzard/src/blizzard/hub/api/queue.py` stays read-only over the store and delegates its writes to the queue
 domain services, which hold the write chunk repository.
@@ -111,7 +113,7 @@ substituted for the wide one at a call site whose consumer reaches outside the s
 *narrowed* sibling, reading only the fact families a `ChunkStatusView` reaches and naming that set in its own docstring
 rather than every family `load_facts_for` loads. `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s
 `FindingStore.get_many` batches both its row read and its `_facts_for_many` facts read through
-`blizzard/src/blizzard/hub/store/internal/batching.py`'s shared `id_batches`.
+`blizzard/src/blizzard/foundation/store/batching.py`'s shared `id_batches`.
 
 **Don't.** `{chunk_id: self._facts.load_facts(chunk_id) for chunk_id in chunk_ids}` — and its seam-level cause, a
 Protocol declaring no `load_facts_for` for that comprehension to collapse into.

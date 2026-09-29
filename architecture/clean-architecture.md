@@ -16,7 +16,8 @@ filesystem, or network — with frameworks, stores, and transports outside it, d
 swap untouched.
 
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
-app.
+app. `tests/test_layering.py` fails the unit tier on a `hub/domain/` or `runner/domain/` module importing fastapi,
+starlette, sqlalchemy, click, or httpx.
 
 **Do.** `blizzard/src/blizzard/hub/domain/` and `blizzard/src/blizzard/runner/domain/` import no web, ORM, or CLI
 package; `blizzard/src/blizzard/hub/api/` and `blizzard/src/blizzard/hub/store/` depend on them, never the reverse.
@@ -61,19 +62,8 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 
 - `blizzard.runner.composition` imported, in any form, anywhere outside the composition roots named below — fail-closed,
   with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
-- `ClaudeCodeAdapter` imported anywhere outside `runner/harness/internal/harness_registry.py` — the one factory that
-  constructs it, `build_production_harness_registry`, whose built registry the composition roots take instead;
-  `OpenCodeAdapter` is gated the same way, constructed only by `runner/harness/internal/opencode_registry.py`'s
-  `build_opencode_binding`.
 - A `hub/` or `runner/` module — outside its own connections seam — acquiring `self._engine` directly instead of taking
   the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
-- `SessionFile` named anywhere under `hub/` other than `hub/cli/sessions/internal/session_file.py` (its declaring
-  module) and its composition root.
-- `IWriteSessionStore` named anywhere under `hub/cli/` other than `hub/cli/sessions/` (the Protocol's own package) and
-  its composition root — `login`/`logout` take the `SessionService` application service instead, never the raw seam
-  (`bzh:controller-read-only`).
-- `runner/transcripts/service.py` importing any package's `internal/` module — its per-owner repository resolver is
-  injected instead.
 
 **Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
@@ -89,6 +79,8 @@ command body, without joining the hosted process graph:
 
 - `blizzard/src/blizzard/runner/cli/runtime.py`
 - `blizzard/src/blizzard/runner/cli/external_usage.py`
+- `blizzard/src/blizzard/runner/cli/opencode.py`
+- `blizzard/src/blizzard/tools/invariants.py`
 - `blizzard/src/blizzard/hub/cli/__init__.py` — the `hub` group callback, which every verb's context inherits `ctx.obj`
   from
 
@@ -102,6 +94,28 @@ The same reasoning extends to a helper a command's own root calls into rather th
   outside a composition root.
 
 **Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
+
+## Internal visibility (`bzh:internal-visibility`)
+
+**Rule.** A package's `internal/` is private to that package: only the package that directly contains it, and every
+module below that package, may import from it. Composition roots may import any `internal/`.
+
+**Why.** `internal/` holds a package's adapters and helpers; a sibling package importing one couples to a concrete class
+instead of the package's public surface, so the adapter can no longer change without breaking its neighbor.
+
+**Scope.** Tests are out of scope: they are white-box and act as their own roots. The composition roots are the modules
+`bzh:dependency-injection` names; there is no per-import exemption — a crossing is fixed, or its importer is a root.
+
+**Detect.** A module outside `<pkg>/` importing a module under `<pkg>/internal/`, by absolute, relative, or
+`from <pkg> import internal` form. `tests/test_layering.py`'s generic check fails the unit tier on it, over every
+`internal/` under `blizzard/src/blizzard/`, naming the owner.
+
+**Do.** `blizzard/src/blizzard/runner/harness/admission.py` gives `runner/loop/capability_snapshot.py` version admission
+and offline classification from the harness package's public surface, delegating to `runner/harness/internal/`.
+`blizzard/src/blizzard/foundation/store/batching.py` is the public home of the id-batching both daemons' stores share.
+
+**Don't.** A store adapter in one package importing an adapter or helper from another package's `internal/`, rather than
+taking the seam or a public module.
 
 ## Screaming architecture (`bzh:screaming-architecture`)
 
