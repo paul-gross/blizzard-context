@@ -76,6 +76,11 @@ The env's runner spawns the fenced mock harness (`tool:mock-fleet`), never a rea
 `tool:mock-data` only after the daemon's first start, and leave a seeded runner's local pause engaged;
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns why on both counts.
 
+Restart the env's runner — to pick up an edited `blizzard-runner.toml`, say — with
+`winter service restart <env>/runner`, and stop a runner you launched by hand by its own pid. Never kill by a pattern
+such as `pkill -f "blizzard runner host"`: it matches every runner on the machine, including a live fleet runner that
+may be hosting your own session, and a runner exits cleanly on that signal, so its supervisor does not bring it back.
+
 **Steps.**
 
 1. State the changed behavior as an observable: this request, against this runner state, yields this response.
