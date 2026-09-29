@@ -16,11 +16,13 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   chunk-atomicity — checking every repository merges before pushing any — is one script's construction, not a property
   of delivery: a policy could advance repositories one at a time and accept a partial land, recovered the same way, per
   repository.
-- **Delivery references.** The shipped PR-opening policies record `delivery-pr/<repo>` as a durable, idempotent mid-run
-  marker immediately after discovering a PR, before a wait or merge. Its JSON content is
+- **Delivery references.** The shipped PR-opening policies record `delivery-pr/<repo>/<number>` as a durable, idempotent
+  mid-run marker immediately after discovering a PR, before a wait or merge. Its JSON content is
   `{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }`; it is a review reference, not a signal that
-  a person must merge. The repo's `merged/<repo>` marker content is the landed revision, not the submitted branch tip. A
-  policy that deliberately parks for a person's merge may author an `awaiting-external-merge` marker; only that marker
+  a person must merge. A replacement PR gets its own marker, so the latest reference for a repo is open and superseded
+  references remain closed history; the earlier `delivery-pr/<repo>` form remains readable. The repo's `merged/<repo>`
+  marker content is the landed revision, not the submitted branch tip. A policy that deliberately parks for a person's
+  merge may author an `awaiting-external-merge` marker in the same delivery epoch as its PR reference; only that marker
   (or historical `pr.opened` facts) signals a human merge wait. The hub read projects these markers alongside historical
   PR closures and per-repo landing facts: closed PRs stay in history, while landed rows name only repos with a landed
   SHA. Writers are `blizzard/src/blizzard/hub/graphs/scripts/land_common.py` and the land scripts using it; readers are
