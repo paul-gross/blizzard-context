@@ -6,7 +6,7 @@ follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sh
 ## Chrome comes from the kit (`bzh:frontend-kit-floor`)
 
 **Rule.** Every presentational component builds its chrome — panel shell, async loading/error/empty state, tone badges,
-action buttons, choice chips, tab strips — from `fleet/lib/kit/`, never a re-typed copy.
+action buttons, choice chips, single-select dropdowns, tab strips — from `fleet/lib/kit/`, never a re-typed copy.
 
 **Why.** A shared floor makes "no duplicated chrome" structural rather than a review habit, and a chrome fix (a token, a
 state message) lands once.
