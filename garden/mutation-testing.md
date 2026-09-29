@@ -7,13 +7,12 @@ The gardening axis that holds blizzard's fast tiers to what they pin rather than
 
 Behavior the fast tiers execute but never check — surfaced as mutants that survive them: a line `blizzard:mutation`
 alters while every `unit`-tier test it selects stays green. The command reports a survivor as a candidate, not a
-finding; a run sorts each candidate into the class that names its remedy, and files the ones that name a gap.
-Concretely, on this target:
+finding. Concretely, on this target:
 
 - A test that executes the mutated line and asserts nothing the mutation changes.
 - A production branch no selected test takes, so the mutant on it is never observed.
 - Code whose mutation is invisible because nothing observable depends on the code.
-- An equivalent mutant left unsuppressed, returning as noise on every run.
+- An equivalent mutant left unsuppressed on a line the marker could take, returning as noise on every run.
 
 This axis and the `tests` axis blizzard's garden plan names are opposite readings of the same suite: this one finds what
 is unpinned — the behavior a green suite would let regress — where `tests` prunes what is excess — the duplicate, the
@@ -57,7 +56,6 @@ Where a command already judges the same question, it owns that judgement and thi
   is out of range here; [`../verification/blizzard/commands/mutation.md`](../verification/blizzard/commands/mutation.md)
   states that reach, and a production path pinned only above `unit` is `bzh:gating-tier-pins-production-paths`'s, judged
   per change.
-- Whether a test that now asserts something is worth keeping is the `tests` axis's, once declared.
 
 ## Measurement
 
