@@ -18,6 +18,7 @@ Parent: [../index.md](../index.md).
 | [`domain-conformance`](./domain-conformance.md)     | Disagreement between the behavior the domain model declares and the behavior the code implements and the suite pins                          |
 | [`fitness`](./fitness.md)                           | Headroom and warnings no gate enforces — build budgets, web and test warnings, dependency health, and ungated checks red on `master`         |
 | [`ideation`](./ideation.md)                         | What the product could become, against its charter — on its surfaces, in its structure, in what the fleet uses, and in what the fleet spends |
+| [`mutation-testing`](./mutation-testing.md)         | Behavior the fast tiers run but do not check — surfaced as mutants that survive them, each sorted into the class that names its remedy       |
 | [`performance`](./performance.md)                   | Cost drift in blizzard's hot paths — per-item resolution, ungated sweeps, unbounded reads, and work a result never needed                    |
 
 ## Scope slugs

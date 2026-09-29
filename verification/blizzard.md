@@ -17,6 +17,7 @@ Full detail lives under `./blizzard/`, one file per reader question.
 | [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md)             | Adding, renaming, or reading a `blizzard:e2e` scenario — what each one proves                                                                  |
 | [`markers.md`](./blizzard/markers.md)                         | A row carries a `P3`–`P7` or **Gap** marker, or its method does not exist yet                                                                  |
 | [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims, or planning the claims a change falsifies or newly owes                |
+| [`mutation-survivors.md`](./blizzard/mutation-survivors.md)   | A `blizzard:mutation` run reported survivors — sorting each into the class that names its remedy, and when one may be suppressed               |
 | [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing                                                       |
 | [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                                                                   |
 | [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                                                             |
