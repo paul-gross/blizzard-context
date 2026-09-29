@@ -51,8 +51,8 @@ CLI"* — a docstring explaining the module by contrast with the code the change
 
 ## A property body only delegates (`bzh:property-delegates`)
 
-**Rule.** A property body only delegates: any branch, boolean operator, or comparison lives in a plain method or function
-the property returns.
+**Rule.** A property body only delegates: any branch, boolean operator, or comparison lives in a plain method or
+function the property returns.
 
 **Why.** mutmut skips every decorated function except a lone `@staticmethod` or `@classmethod` — its
 `_skip_node_and_children` declines a decorator's side effects in the trampoline copy and a `@property`'s signature
