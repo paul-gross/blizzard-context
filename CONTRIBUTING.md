@@ -57,8 +57,9 @@ pass criteria; what belongs here is only *which* a change owes:
 - Default branch: `master`.
 - This repo lands work the same three ways `workspace:/context/project/contributing.md` describes — which one applies is
   a fact about who is driving, not about the change. `.github/workflows/pr.yml` and `push.yml`
-  ([verifiability.md](./verifiability.md) owns what they run) are what make the fleet's `open-pr` mode usable here:
-  before they existed, a fleet-opened PR carried no checks and merged on sight.
-- By hand: push directly to `master` — no PR, no review. Rebase onto the latest `origin/master` first so history stays
-  linear and each landed unit of work is a single commit.
+  ([verifiability.md](./verifiability.md) owns what they run) are what give a PR here a gate to wait on, whether the
+  fleet or an agent working by hand opened it: before they existed, a PR carried no checks and merged on sight.
+- By hand: land through a PR the agent opens, watches, and rebase-merges on green; push directly to `master` only when
+  the user explicitly asks. The sequence — curate, open, watch, rebase-merge — is owned by
+  `workspace:/context/project/contributing.md` §The by-hand path.
 - See `workspace:/context/worktree-ops.md` for the exact git commands per worktree.
