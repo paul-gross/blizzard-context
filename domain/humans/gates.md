@@ -11,6 +11,9 @@ A decision's choices are exactly the node's judgement choices, owned by [../grap
 Gates arrive structurally, as a human-judged node, or by runner configuration selecting node names — human sign-off
 added without editing any graph. At a human-judged node a runner-submitted transition is rejected.
 
+A decision records whether the graph declared its gate or a named runner's configuration imposed it. A runner declares
+its gate set to the hub, which reports it and never enforces it.
+
 ## Resolution
 
 Pending derives: a decision is open while no resolving fact references it, and the chunk derives `waiting_on_human` from
