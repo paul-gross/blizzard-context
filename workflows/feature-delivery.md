@@ -18,9 +18,10 @@ The choreography end to end — sequencing between nodes, the review carry-back,
 landing. A worker that cannot finish just exits with its facts, and the platform derives what happens next.
 
 - Delivery is a hub-executed node, not an agent's role
-  ([../domain/artifacts/delivery.md](../domain/artifacts/delivery.md)). In `merge-to-main`, every lane opens a pull
-  request for each repo with work to land; the hub merges it with a merge commit only after a terminal-green check
-  verdict. `open-pr` is a distinct authored mode, not shipped by the current fleet lanes.
+  ([../domain/artifacts/delivery.md](../domain/artifacts/delivery.md)). Every code-delivering lane lands through
+  `land-pr-ci` — its `deliver` node runs `land_pr_ci`, which opens a pull request for each repo with work to land; the
+  hub merges it with a merge commit only after a terminal-green check verdict. No lane parks a chunk on an open PR for a
+  human to merge.
 - A human enters only where invited or where failure parks the chunk — asks, gate decisions, takeover
   ([../domain/humans.md](../domain/humans.md)).
 

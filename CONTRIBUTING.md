@@ -55,8 +55,8 @@ pass criteria; what belongs here is only *which* a change owes:
 ## Delivery
 
 - Default branch: `master`.
-- This repo lands work the same three ways `workspace:/context/project/contributing.md` describes — which one applies is
-  a fact about who is driving, not about the change. `.github/workflows/pr.yml` and `push.yml`
+- This repo lands work the same two ways `workspace:/context/project/contributing.md` describes — which one applies is a
+  fact about who is driving, not about the change. `.github/workflows/pr.yml` and `push.yml`
   ([verifiability.md](./verifiability.md) owns what they run) are what give a PR here a gate to wait on, whether the
   fleet or an agent working by hand opened it: before they existed, a PR carried no checks and merged on sight.
 - By hand: land through a PR the agent opens, watches, and rebase-merges on green; push directly to `master` only when
