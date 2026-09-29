@@ -20,7 +20,8 @@ Both vocabularies are closed: the hub refuses an `event.recorded` fact whose kin
 severity is not the one that kind declares.
 
 The log is bounded, at most 200 rows per read, the cap applied *after* severity ranking — it keeps the most severe rows,
-not merely the newest, so a `critical` older than the newest 200 rows still surfaces. The route caps below the hub's general list maximum.
+not merely the newest, so a `critical` older than the newest 200 rows still surfaces. The route caps below the hub's
+general list maximum.
 
 ### Event kinds
 
