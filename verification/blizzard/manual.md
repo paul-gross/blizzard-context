@@ -681,7 +681,12 @@ with a routine's charge.
   under test. It starts from a clean environment, never the env band, so no mock fence or permission-mode override
   reaches the real harness. The runner resets the dedicated env to `base_branch` on every acquire; a branch already
   checked out in another env's worktree cannot be that base, so name a remote-tracking ref that only the verification
-  needs (`git update-ref refs/remotes/origin/<name> <sha>`).
+  needs (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its own main, so
+  the ref is set only in the repo under test.
+- The delta run needs a baseline that both carries the command under test and leaves changed functions with mutants. An
+  older commit alone cannot: it may predate the command, or the range may change only functions the method cannot see.
+  Build the base as an older commit with the command's own commit cherry-picked onto it, and confirm with a direct run
+  of the command that the range yields a small, sortable survivor set before starting the routine.
 
 **Steps.**
 
