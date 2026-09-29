@@ -57,19 +57,19 @@ re-invocation pays the clean and forced-fail runs again. The coverage map is not
 only test ids it has not seen, never a changed test's reach, so a kept map reports false survivors on exactly the
 functions a delta run targets.
 
-Measured wall time, on a shared 20-core host at load 5 to 12, under the current configuration (`unit`-tier selection,
+Measured wall time, on a shared 20-core host at load 5 to 20, under the current configuration (`unit`-tier selection,
 timeout multiplier of 3). Preparation is generation plus the coverage map plus the clean and forced-fail runs; a full
 execution of a daemon scope is hours and is not measured:
 
-| Scope           | Generation | Mapping  | Clean + forced-fail | Preparation | Execution         | Mutants | Test files |
-| --------------- | ---------- | -------- | ------------------- | ----------- | ----------------- | ------- | ---------- |
-| `cli-surface`   | —          | 34s      | —                   | —           | 111s              | 2386    | 43         |
-| `hub-daemon`    | 29s        | ~4 min   | ~3.7 min            | 8.3 min     | not run in full   | 28,698  | 138        |
-| `runner-daemon` | 64s        | ~4.5 min | ~4.5 min            | 10.2 min    | not run in full   | —       | 115        |
-| `shared-spine`  | —          | —        | —                   | —           | over 10 min total | 668     | 157        |
+| Scope           | Generation | Mapping  | Clean + forced-fail | Preparation | Execution       | Mutants | Test files |
+| --------------- | ---------- | -------- | ------------------- | ----------- | --------------- | ------- | ---------- |
+| `cli-surface`   | —          | 34s      | —                   | —           | 111s            | 2386    | 43         |
+| `hub-daemon`    | 29s        | ~4 min   | ~3.7 min            | 8.3 min     | not run in full | 28,698  | 138        |
+| `runner-daemon` | 64s        | ~4.5 min | ~4.5 min            | 10.2 min    | not run in full | —       | 115        |
+| `shared-spine`  | 3s         | ~3.4 min | ~3.5 min            | ~7 min      | ~11.5 min       | 668     | 157        |
 
-The full `cli-surface` sweep took 169s (1454 killed, 693 survived, 226 no tests, 13 timeout) — too many survivors to
-sort in one context, which is the designed `excessive` outcome. A prior full `hub-daemon` run across many resumed
+A full `cli-surface` sweep takes 156 to 169s (1454 killed, 693 survived, 226 no tests, 13 timeout) — too many survivors
+to sort in one context, which is the designed `excessive` outcome. A prior full `hub-daemon` run across many resumed
 sessions left 4892 survivors. Wall time in execution is dominated by the expensive tail and by timeouts, not the mutant
 count: each timeout costs its full multiplied budget (mutmut's `timeout_multiplier`).
 
