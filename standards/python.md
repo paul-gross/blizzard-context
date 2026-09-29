@@ -48,3 +48,26 @@ would still resolve.
 
 **Don't.** The same fact framed as change narrative — *"migrations no longer run at startup; the verbs moved to the
 CLI"* — a docstring explaining the module by contrast with the code the change deleted.
+
+## A property body only delegates (`bzh:property-delegates`)
+
+**Rule.** A property body only delegates: any branch, boolean operator, or comparison lives in a plain method or
+function the property returns.
+
+**Why.** mutmut skips every decorated function except a lone `@staticmethod` or `@classmethod` — its
+`_skip_node_and_children` declines a decorator's side effects in the trampoline copy and a `@property`'s signature
+assignment. Decision logic in a property body is therefore never mutated, and mutation testing reports nothing about it.
+
+**Scope.** `src/blizzard/**`; the property family is `@property`, `@cached_property`, `@functools.cached_property`, and
+`@<name>.setter` / `@<name>.deleter`, alone or stacked with other decorators.
+
+**Detect.** `bzh:property-delegates`, an `ast-grep` rule in the structural gate, flags an `if`, conditional expression,
+`match`, comprehension `if`, `and`/`or`/`not`, or comparison anywhere in a property-family body. Every site that
+predates the rule carries a `# ast-grep-ignore: bzh:property-delegates` directive on its `def` line; the gate's
+unused-suppression check makes that list shrink-only.
+
+**Do.** `LeaseActivity.state` in `src/blizzard/runner/domain/leases/__init__.py` returns `self._derive_state()`, a plain
+method that holds the precedence chain.
+
+**Don't.** A `# pragma: no mutate` workaround, a second decorator on the delegate (any decorator but a lone
+`@staticmethod`/`@classmethod` puts it back out of mutmut's reach), or a new directive on a new site.

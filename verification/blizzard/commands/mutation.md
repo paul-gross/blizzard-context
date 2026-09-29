@@ -54,6 +54,8 @@ written. Wall time is dominated by the expensive tail and by timeouts, not by th
 fast and the remainder slow sharply, and each timeout costs its full multiplied budget (mutmut's `timeout_multiplier`).
 
 The method cannot see: any tier above `unit` (`blizzard:component-test`, `blizzard:service-test`, `blizzard:e2e`,
-`blizzard:journey`, `blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, and
-the paths `[tool.mutmut].do_not_mutate` excludes from every scope. A survivor is a candidate, not a confirmed gap; no
-standard yet classifies one.
+`blizzard:journey`, `blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, the
+paths `[tool.mutmut].do_not_mutate` excludes from every scope, and the body of any decorated function other than a lone
+`@staticmethod` or `@classmethod` — mutmut's `_skip_node_and_children` skips it because the trampoline copy would repeat
+the decorator's side effects. A property is the case that matters; `bzh:property-delegates` keeps decision logic out of
+it. A survivor is a candidate, not a confirmed gap; no standard yet classifies one.
