@@ -5,9 +5,9 @@ The gardening axis that holds blizzard's fast tiers to what they pin rather than
 
 ## Evaluates
 
-Behavior the fast tiers execute but never check — surfaced as mutants that survive them: a line `blizzard:mutation`
-alters while every `unit`-tier test it selects stays green. The command reports a survivor as a candidate, not a
-finding. Concretely, on this target:
+Behavior the fast tiers execute but never check — surfaced as mutants that survive them: a single alteration
+`blizzard:mutation` makes to a line while every `unit`-tier test it selects stays green. The command reports a survivor
+as a candidate, not a finding. Concretely, on this target:
 
 - A test that executes the mutated line and asserts nothing the mutation changes.
 - A production branch no selected test takes, so the mutant on it is never observed.

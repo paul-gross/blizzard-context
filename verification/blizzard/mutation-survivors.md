@@ -7,29 +7,33 @@ class obliges. Written at file-per-rule granularity in the slot skeleton `winter
 ## Rule
 
 Sort every survivor `blizzard:mutation` reports into exactly one class below, then carry out that class's remedy; a
-survivor is closed by its remedy, never by being read and set aside. Ask first whether the mutant changes anything a
-caller could observe. If it does, ask whether a selected test executes the mutated line: yes is Weak assertion, no is
-Unreached. If it does not, ask whether deleting the code would change anything a caller could observe: yes is
-Equivalent, no is Superfluous code.
+survivor is closed by its remedy, never by being read and set aside — an Equivalent left unmarked is closed by recording
+its class and reason, which is its remedy. Ask first whether the mutant changes anything a caller could observe. If it
+does, ask whether a selected test executes the mutated line: yes is Weak assertion, no is Unreached. If it does not, ask
+whether the code is still needed — whether deleting it would change anything a caller could observe: yes is Equivalent,
+no is Superfluous code.
 
-| Class                | Signature                                                                                                                                                                                                                                                                   | Remedy                                                                                                                                  |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Weak assertion**   | The mutant changes observable behavior, and a selected test executes the mutated line yet stays green — the test observes the path but not the value the mutation moves                                                                                                     | Name the test and the assertion that would kill the mutant, and add that assertion to that test                                         |
-| **Unreached**        | The mutant changes observable behavior, and no selected test executes the mutated line — the tests enter the function but never take that branch. A mutant in a function no test enters is counted under `no tests` rather than listed, and is this class at function grain | Add a case that takes the branch, at a gating tier                                                                                      |
-| **Superfluous code** | The mutant changes nothing observable because nothing observable depends on the code — a re-copy no caller mutates, a guard on a state no input produces, a default no reader consults                                                                                      | Delete the code; the mutation showed it does nothing                                                                                    |
-| **Equivalent**       | The mutant changes nothing observable, and the code is still needed — the mutated form computes the same thing along every path that reaches it                                                                                                                             | Mark the line once, with the reason stated — `# pragma: no mutate (equivalent: <reason>)` — when the marker costs no other mutant on it |
+| Class                | Signature                                                                                                                                                                                                                                                                   | Remedy                                                                                                                                                                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Weak assertion**   | The mutant changes observable behavior, and a selected test executes the mutated line yet stays green — the test observes the path but not the value the mutation moves                                                                                                     | Name the test and the assertion that would kill the mutant, and add that assertion to that test                                                                                                                                       |
+| **Unreached**        | The mutant changes observable behavior, and no selected test executes the mutated line — the tests enter the function but never take that branch. A mutant in a function no test enters is counted under `no tests` rather than listed, and is this class at function grain | Add a case that takes the branch, at a gating tier                                                                                                                                                                                    |
+| **Superfluous code** | The mutant changes nothing observable because nothing observable depends on the code — a re-copy no caller mutates, a guard on a state no input produces, a default no reader consults                                                                                      | Delete the code; the mutation showed it does nothing                                                                                                                                                                                  |
+| **Equivalent**       | The mutant changes nothing observable, and the code is still needed — the mutated form computes the same thing along every path that reaches it                                                                                                                             | Mark the line once, with the reason stated — `# pragma: no mutate (equivalent: <reason>)` — when the marker costs no other mutant on it; otherwise leave it unmarked and record the survivor Equivalent, with its reason, on each run |
 
 The suppression marker is mutmut's own, and it works at line grain: mutmut stops generating every mutant on a marked
 line, not only the equivalent one. A survivor of another class on that line leaves the report unsorted, and a mutant a
 test kills today stops checking that the test still kills it. So mark a line only when every mutant on it is equivalent
 — read the line for what else mutmut alters there, since every operator, number, string, and keyword on it is a mutation
 site and `mutants/report.json` lists none of the killed ones. When the line carries a mutant that matters, sort and
-close its other survivors first, then move the equivalent expression onto a line of its own and mark that; an expression
-that cannot be separated from its neighbors stays unmarked and is sorted Equivalent again on each run, the price of
-keeping them checked. The parenthesized reason is what keeps the marker honest, and a marker with no reason is a
-survivor hidden rather than sorted. One line per marker: the region forms mutmut also reads (`block`, `start`, `end`)
-and the `do_not_mutate` globs in `blizzard/pyproject.toml` exclude ground no run should mutate, which is a different
-decision from one mutant's equivalence and is not made here.
+close its other survivors first, then move the equivalent expression into a statement of its own — bind it to a local —
+and mark that. mutmut reads the marker only as a statement's trailing comment or a comment line standing alone above it,
+and applies it to the line the statement starts on; a comment on a continuation line inside a parenthesized expression
+is never read, so splitting one expression across lines marks nothing. An expression that cannot be separated from its
+neighbors stays unmarked and is recorded Equivalent again on each run, the price of keeping them checked. The
+parenthesized reason is what keeps the marker honest, and a marker with no reason is a survivor hidden rather than
+sorted. One line per marker: the region forms mutmut also reads (`block`, `start`, `end`) and the `do_not_mutate` globs
+in `blizzard/pyproject.toml` exclude ground no run should mutate, which is a different decision from one mutant's
+equivalence and is not made here.
 
 ## Why
 
@@ -43,10 +47,16 @@ deletes a test that was pinning something. Sorting first is what turns a survivo
 `mutants/report.json`, and each entry there is a candidate this rule sorts. The signatures a reviewer reads a candidate
 for:
 
-- **Equivalent, the patterns already observed on this target.** A value assigned on a line a higher-precedence branch
-  overrides before it is read; `None` substituted for `False` where the consumer reads only truthiness; a fallback no
-  input reaches past the guard above it; a second read of a value nothing wrote between the reads. Each is equivalent
-  only under the stated condition — the same substitution of `None` for `True` flips truthiness and is a real gap.
+- **Equivalent, the patterns already observed on this target.** A value a higher-precedence branch overrides before it
+  is read; `None` substituted for `False` where the consumer reads only truthiness; a fallback the guard above it
+  narrows; a second read of a value nothing wrote between the reads. Each names why the mutation is invisible, not why
+  the code is needed, so each is Equivalent only while the code still is: the overridden value is still read on inputs
+  the override does not catch, the mutant differing only on those it does; the `False` is still a default callers omit;
+  the fallback is still reached by some input, the guard leaving it only inputs on which the mutant computes the same
+  result; the re-read is still the only binding in scope where it is used. Where deleting the code is as invisible as
+  the mutation, the survivor is Superfluous code whichever pattern it matches — a fallback no input reaches at all is
+  Superfluous even where the type checker makes deleting it take a restructure. And each holds only under its condition
+  — the same substitution of `None` for `True` flips truthiness and is a real gap.
 - **A type-invalid mutant is not therefore noise.** `stale=None` on a parameter typed `bool` fails the type checker and
   still lands green in the suite when nothing asserts on the stale side — a real gap wearing a type error. Reading
   survivors through a type check drops that class unread, which is why `type_check_command` stays unset in
@@ -71,7 +81,7 @@ superfluous:     `seen = set(seen)` re-copies a set no caller mutates
 equivalent:      `count > 0` → `count >= 0` where zero was rejected by the guard above; `count > 1` is a
                  mutant of the same line, and the one-item case kills it
                  → leave the line unmarked, since the marker would stop generating `count > 1` too,
-                   and sort this survivor Equivalent on each run
+                   and record this survivor Equivalent, with its reason, on each run
 ```
 
 ## Don't
