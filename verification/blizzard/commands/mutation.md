@@ -90,6 +90,21 @@ to sort in one context, which is the designed `excessive` outcome. A prior full 
 sessions left 4892 survivors. Wall time in execution is dominated by the expensive tail and by timeouts, not the mutant
 count: each timeout costs its full multiplied budget (mutmut's `timeout_multiplier`).
 
+Delta mode's measured wall time — `mutation --since <base>` over five fleet chunks that touched `src/blizzard`, each the
+pull request's base against its head, the delta mode overlaid on each historical head, one at a time on the same shared
+host. This is the command alone; the node's session overhead is not in it:
+
+| Chunk diff | Scopes run (survivors)                                                                  | Wall time |
+| ---------- | --------------------------------------------------------------------------------------- | --------- |
+| 1 file     | `runner-daemon` (21)                                                                    | 539s      |
+| 1 file     | `runner-daemon` (14)                                                                    | 544s      |
+| 2 files    | `runner-daemon` (0)                                                                     | 600s      |
+| 22 files   | `hub-daemon` (155), `runner-daemon` (123), `cli-surface` (0); `shared-spine` no-changes | 1289s     |
+| 10 files   | `hub-daemon` (318), `cli-surface` (0); `shared-spine` no-changes                        | 1331s     |
+
+The median is 600s, command only; every run finished under the 1800s default with all scopes `complete`. A change that
+touches only one daemon scope costs one preparation (7 to 10 minutes), and each further daemon scope adds another.
+
 The method cannot see: any tier above `unit` (`blizzard:component-test`, `blizzard:service-test`, `blizzard:e2e`,
 `blizzard:journey`, `blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, the
 paths `[tool.mutmut].do_not_mutate` excludes from every scope, and the body of any decorated function other than a lone
