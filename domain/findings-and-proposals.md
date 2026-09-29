@@ -86,6 +86,10 @@ routine-run proposal — and when it names findings, they may come from any rout
 carries no scope of its own, so nothing about its origin narrows which findings it may group. A finding may belong to
 more than one proposal, of either origin, open or closed — grouping is not exclusive.
 
+A routine's run is shown every finding it may cite: its routine's non-exited findings in every scope, plus
+review-sourced ones on its own scope. Its proposals may cite any of them, while its finding set's `observed` and `gone`
+ops stay within its own scope.
+
 ## A proposal may be edited while it is open
 
 Title, class, body, and the findings a proposal names may all change while the proposal is still open, regardless of its

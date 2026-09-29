@@ -28,13 +28,14 @@ a live hub, one chunk per authored path.
   actually threaded into re-entry; `virgin` runs against a scope this routine has never touched, where reconcile's own
   `add` ops carry the survey candidates' submission-local refs and propose's docket cites those refs rather than any
   live id — the delivered proposal's `findings` resolve to exactly the `fin_` ids this same delivery minted, proving a
-  run can answer the findings it just opened; and `no-strategy` mirrors `excessive`'s bail-out shape for an axis the
-  target's gardening-axes registry declares no entry for — survey's whole output is one `undeclared-axis` candidate, and
-  the run still delivers with that gap landing as the finding. After `found` delivers, `GET /api/runs` reports its row
-  (routine, scope, mode, `done` outcome, and the delivered finding-set it published) and `GET /api/runs/{chunk_id}`
-  reads its delta back as the two `stale-docstring` findings, an `added` group with empty `observed`/`gone`. Session
-  policy is asserted off the runner's own store: reconcile never shares survey's session, propose resumes the match head
-  its reconcile minted, and the bounced re-entry mints a fresh one.
+  run can answer the findings it just opened, and whose bucket shows `found`'s findings under their own scope; and
+  `no-strategy` mirrors `excessive`'s bail-out shape for an axis the target's gardening-axes registry declares no entry
+  for — survey's whole output is one `undeclared-axis` candidate, and the run still delivers with that gap landing as
+  the finding. After `found` delivers, `GET /api/runs` reports its row (routine, scope, mode, `done` outcome, and the
+  delivered finding-set it published) and `GET /api/runs/{chunk_id}` reads its delta back as the two `stale-docstring`
+  findings, an `added` group with empty `observed`/`gone`. Session policy is asserted off the runner's own store:
+  reconcile never shares survey's session, propose resumes the match head its reconcile minted, and the bounced re-entry
+  mints a fresh one.
 
 ## test_ideation_e2e
 
