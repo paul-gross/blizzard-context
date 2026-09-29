@@ -28,8 +28,11 @@ mutated, whichever you picked.
 whether it would still pass had the change never happened, and if it would, it is a surviving mutant rather than
 evidence.
 
-**Detect.** A mutation whose stated justification names a different symbol than the line mutated — a defect in the plan,
-not a stylistic quibble.
+**Detect.** `blizzard:mutation` is the mechanical detector — `mise run mutation <scope>` runs this litmus over every
+mutable line of a garden scope at once and writes each mutant the selected tests stay green on, with its diff, to
+`mutants/report.json`; `bzh:mutation-survivor-classification` in [`./mutation-survivors.md`](./mutation-survivors.md)
+sorts what it reports. By hand, the signature is a mutation whose stated justification names a different symbol than the
+line mutated — a defect in the plan, not a stylistic quibble.
 
 **Do.** Make the claim per-assertion, naming the assertion that fired.
 
