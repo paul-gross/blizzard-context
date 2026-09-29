@@ -144,8 +144,8 @@ cleanly without `BLIZZARD_E2E=1` or without Chromium, but an unbuilt bundle fail
 ## test_gardening_run_dialog_browser_e2e
 
 The gardening run dialog, opened from the selected routine's own panel. Needs no runner or forge traffic — a routine's
-own `run` mints a queued chunk, never executed here — so, like the graphs-diagram module, it stands up only the served
-hub, needing just the built bundle and an installed Chromium.
+own `run` mints a `not_ready` chunk, never executed here — so, like the graphs-diagram module, it stands up only the
+served hub, needing just the built bundle and an installed Chromium.
 
 - `test_gardening_run_dialog_browser` — mints a routine with a never-swept default scope, links a second scope into its
   related set ahead of time, and mints a third scope left unlinked. Opens the dialog and proves it offers only the

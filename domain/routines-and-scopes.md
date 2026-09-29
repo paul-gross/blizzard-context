@@ -47,14 +47,14 @@ names, growing the set never mints one, and naming a scope that does not exist i
 
 ## A run is an act of the pair
 
-`blizzard hub routine run <name>` mints, ingests, and promotes a work item in one act, addressed at the routine and an
-effective scope — the routine's own default, or an explicit override, which must already belong to the routine's own
-declared set ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)); a run never
-mints a scope of its own. Mode settles the baseline, never admission: a `full` run needs no baseline, while a `delta`
-run runs against the routine/scope pair's own recorded revision, and downgrades to `full` — on the record, never refused
-— when the pair has recorded none yet. What turns a run away is [What refuses](#what-refuses). What the pair carries
-between runs is `blizzard-product:/delivered/garden/machinery.md`'s own fact; this states only the run's behavior over
-it.
+`blizzard hub routine run <name>` mints and ingests a work item in one act, addressed at the routine and an effective
+scope — the routine's own default, or an explicit override, which must already belong to the routine's own declared set
+([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)); a run never mints a scope of
+its own, and its chunk rests behind the ordinary promote gate rather than entering the ready queue. Mode settles the
+baseline, never admission: a `full` run needs no baseline, while a `delta` run runs against the routine/scope pair's own
+recorded revision, and downgrades to `full` — on the record, never refused — when the pair has recorded none yet. What
+turns a run away is [What refuses](#what-refuses). What the pair carries between runs is
+`blizzard-product:/delivered/garden/machinery.md`'s own fact; this states only the run's behavior over it.
 
 ## What refuses
 
