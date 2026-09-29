@@ -105,21 +105,18 @@ recompute.
 ## The routine-run mint
 
 `POST /api/routines/{routine_id}/run` writes the run item's `work_items` row, its resting chunk's rows — `chunks` plus
-one `chunk_work_refs` row per work ref — the promote-then-tail-stamp pair (`chunk_promoted` plus `queue_positions`), and
-the run's own identity row (`work_item_runs`), together: inserts spanning six tables `WorkItemStore`/the chunk-seam
-adapters/`RunContextStore` otherwise own across three repositories. Every one of them runs on the same connection inside
-one `engine.begin()` in `WorkItemStore.create_with_chunk_and_promote`
+one `chunk_work_refs` row per work ref — and the run's own identity row (`work_item_runs`), together: inserts spanning
+four tables `WorkItemStore`/the chunk-seam adapters/`RunContextStore` otherwise own across three repositories. Every one
+of them runs on the same connection inside one `engine.begin()` in `WorkItemStore.create_run_with_chunk`
 (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing the shared free functions `insert_chunk_rows`
-and `insert_promote_rows` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) and `insert_run_context_row`
+(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) and `insert_run_context_row`
 (`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape §The item-creation chunk
-mint already takes, widened from one table to three: what lets a single caller open one transaction over all six at
+mint already takes, widened from one table to three: what lets a single caller open one transaction over all four at
 once. `work_item_runs` is what garden delivery's own read (`blizzard/src/blizzard/hub/domain/run_context.py`) resolves a
 chunk's run identity through; landing it outside this transaction would reopen exactly the window this section exists to
 close.
 
-The tail position itself is computed before the write, by the same rule `PromoteService.promote` stamps by
-(`tail_position`, `blizzard/src/blizzard/hub/domain/promote.py`) — the already-accepted check-then-act shape §Promote,
-then tail-stamp names, widened to a second caller rather than copied.
+The chunk is written with no promote fact and no queue position: it rests `not_ready` until the standalone promote.
 
 One narrower window is named and accepted here. `RunService.run` (`blizzard/src/blizzard/hub/domain/routine_run.py`)
 allocates the run's `ref` through `WorkItemStore.allocate_ref` before this transaction opens, identical in shape to §The
