@@ -8,8 +8,8 @@ fact vocabulary and derivation queries live in the code.
 - **`not_ready`** — minted and resting: visible on the board, never claimed; an explicit promote moves it to `ready`.
 - **`ready`** — ingested and unclaimed: in the hub's queue with no live route.
 - **`running`** — claimed by a runner and being worked.
-- **`delivering`** — in the hub's own hands: queued for or undergoing delivery, or awaiting an external merge — the
-  runner keeping its environments until the outcome is known.
+- **`delivering`** — in the hub's own hands: queued for or undergoing delivery — the runner keeping its environments
+  until the outcome is known.
 - **`paused`** — held on an operator's per-chunk pause fact: on a live route the runner interrupts the worker, then
   kills a survivor, but keeps the lease, route, epoch, environments, and retry budget so resume respawns in place, while
   an unclaimed chunk is withheld from the queue. A pause is admitted at every status but `done`, `stopped`, and

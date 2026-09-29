@@ -23,9 +23,9 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   references remain closed history; the earlier `delivery-pr/<repo>` form remains readable. The repo's `merged/<repo>`
   marker content is the landed revision, not the submitted branch tip. A policy that deliberately parks for a person's
   merge may author an `awaiting-external-merge` marker in the same delivery epoch as its PR reference; only that marker
-  (or historical `pr.opened` facts) signals a human merge wait. The hub read projects these markers alongside historical
-  PR closures and per-repo landing facts: closed PRs stay in history, while landed rows name only repos with a landed
-  SHA. Writers are `blizzard/src/blizzard/hub/graphs/scripts/land_common.py` and the land scripts using it; readers are
+  signals a human merge wait. The hub read projects these markers alongside per-repo landing facts: closed PRs stay in
+  history, while landed rows name only repos with a landed SHA. Writers are
+  `blizzard/src/blizzard/hub/graphs/scripts/land_common.py` and the land scripts using it; readers are
   `blizzard/src/blizzard/hub/domain/delivery_read.py` through
   `blizzard/src/blizzard/hub/store/internal/chunk_artifacts_store.py`.
 - **Conflict is a judged, authored outcome**, not an engine special case: a dirty repository is one of the script's own
