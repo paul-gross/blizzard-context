@@ -9,7 +9,7 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 ### blizzard:mutation
 
-`mise run mutation <scope> [--budget SECONDS]` runs mutation testing (mutmut) over one
+`mise run mutation <scope> [--budget SECONDS] [--since REV] [--fresh]` runs mutation testing (mutmut) over one
 [garden scope](../../../garden/architecture.md) of `src/blizzard`: `hub-daemon`, `runner-daemon`, `shared-spine`, or
 `cli-surface`. `scripts/mutation.py`'s scope table is the one home for each slug's mutate globs and test selection —
 paths are not restated here. An unknown slug exits non-zero and lists the valid ones before any mutant tree is touched.
@@ -35,23 +35,43 @@ path and exits the caller-facing budget exit code; any mutant left "not checked"
 never reported as a verdict, on the next invocation. A `.meta` left unreadable by an interrupted write is discarded, so
 that file's mutants re-run.
 
-Measured wall time, mutant count, and test-file count. `cli-surface` is one clean run under the current configuration.
-`hub-daemon` and `runner-daemon` were taken with `unit or component` selected and a timeout multiplier of 3, and are
-partial or fragmented, so neither is comparable to it:
+`--since REV` narrows a run to the delta: only the functions in the scope's ground whose source differs between `REV`
+and `HEAD` are executed and reported, and the report records the `since` revision. Generation and the coverage map still
+cover the whole scope. A `REV` that names no commit exits 2 and runs nothing — it never widens to a full run. No changed
+function in the scope is a complete, empty report and exit 0 without a mutant tree. A changed function that carries no
+mutant (a decorated body mutmut skips) is left out, not an error.
 
-| Scope           | Mapping | Mutant execution                     | Total   | Mutants | Test files |
-| --------------- | ------- | ------------------------------------ | ------- | ------- | ---------- |
-| `cli-surface`   | 34s     | 111s                                 | 146s    | 2386    | 43         |
-| `hub-daemon`    | ~1341s  | ~62593s (estimated, not a wall time) | ~63934s | 28405   | 386        |
-| `runner-daemon` | —       | stopped early                        | ~3690s  | 32532   | —          |
-| `shared-spine`  | —       | not run                              | —       | —       | —          |
+`--fresh` discards any existing mutant tree before the run, so no verdict or test selection from an earlier run
+survives. A leased worker passes it: a pooled environment keeps its ignored `mutants/` between leases, and its frozen
+selection would otherwise date from an older revision. A local resume omits it.
 
-`hub-daemon` ran to completion (23271 killed, 4892 survived, 224 no tests, 17 timeout, 1 segfault) but across many
-resumed sessions, so no clean wall time exists: mapping is a timed re-run over cached mutants, and mutant execution is
-summed per-mutant durations divided by 18 workers. `runner-daemon` was interrupted at about 23,600 of 32,532 mutants
-after roughly an hour (13933 killed, 5883 survived, 3349 no tests, 479 timeout, remainder unchecked); no report was
-written. Wall time is dominated by the expensive tail and by timeouts, not by the mutant count: the early mutants finish
-fast and the remainder slow sharply, and each timeout costs its full multiplied budget (mutmut's `timeout_multiplier`).
+`mutants/report.json` is written whenever the run ends, including on an expired `--budget`: it then carries
+`"complete": false`, its counts include the unchecked mutants under `not checked`, and its survivors are only those
+found so far. A full-scope run stopped this way is real evidence for how large the survivor backlog is; the run still
+exits the budget exit code.
+
+Preparation — generation, the coverage map, and the clean and forced-fail runs — costs more than one tool call's
+ten-minute limit on a daemon scope, and no worker setting raises that limit. A worker therefore runs the command in the
+background, polls it to completion in short calls, and does not re-invoke it under a small `--budget`, since each
+re-invocation pays the clean and forced-fail runs again. The coverage map is not persisted across leases: mutmut re-maps
+only test ids it has not seen, never a changed test's reach, so a kept map reports false survivors on exactly the
+functions a delta run targets.
+
+Measured wall time, on a shared 20-core host at load 5 to 20, under the current configuration (`unit`-tier selection,
+timeout multiplier of 3). Preparation is generation plus the coverage map plus the clean and forced-fail runs; a full
+execution of a daemon scope is hours and is not measured:
+
+| Scope           | Generation | Mapping  | Clean + forced-fail | Preparation | Execution       | Mutants | Test files |
+| --------------- | ---------- | -------- | ------------------- | ----------- | --------------- | ------- | ---------- |
+| `cli-surface`   | 4s         | 37s      | 36s                 | 77s         | 79s             | 2386    | 43         |
+| `hub-daemon`    | 29s        | ~4 min   | ~3.7 min            | 8.3 min     | not run in full | 28,698  | 138        |
+| `runner-daemon` | 64s        | ~4.5 min | ~4.5 min            | 10.2 min    | not run in full | —       | 115        |
+| `shared-spine`  | 3s         | ~3.4 min | ~3.5 min            | ~7 min      | ~11.5 min       | 668     | 157        |
+
+A full `cli-surface` sweep takes 156 to 169s (1454 killed, 693 survived, 226 no tests, 13 timeout) — too many survivors
+to sort in one context, which is the designed `excessive` outcome. A prior full `hub-daemon` run across many resumed
+sessions left 4892 survivors. Wall time in execution is dominated by the expensive tail and by timeouts, not the mutant
+count: each timeout costs its full multiplied budget (mutmut's `timeout_multiplier`).
 
 The method cannot see: any tier above `unit` (`blizzard:component-test`, `blizzard:service-test`, `blizzard:e2e`,
 `blizzard:journey`, `blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, the

@@ -656,3 +656,53 @@ fleet PR's own merge commit has two parents.
 
 `blizzard-infra` is out of scope for this method — its own docs record why it cannot be protected on the current GitHub
 plan.
+
+### `blizzard:manual-live-routine`
+
+**Surface.** A garden routine run end to end by a real-harness runner against an env-local hub — the path no mock
+harness walks: the survey's own tool calls, a command outlasting one of them, and the lease staying live across it.
+`blizzard:manual-runner` spawns only the fenced mock; this row is for a change whose claim is what a real worker does
+with a routine's charge.
+
+**Setup.** `tool:service-up` as for `blizzard:manual-hub`, then stop the env's own mock runner
+(`winter service down <env>/runner`) so it cannot claim the run. Four preconditions the stack does not give you:
+
+- The hub store is at head: run `blizzard hub migrate --dir "$BZ_HUB_RUNTIME"` and restart the hub, or re-`init` a fresh
+  runtime. A store left by an earlier tenant can carry a stamped revision without its columns, and delivery then fails
+  with a 500 that no artifact can fix.
+- The routine's graph is minted: `blizzard hub graph sync`, then `hub routine create` for the routine, plus one
+  throwaway routine per extra scope slug (a scope is minted by the routine that names it) so `routine scope add` can
+  link it.
+- The hub has no forge configured — start it without `BZ_FORGE_URL`. With the env's mock forge, delivery resolves each
+  cited commit against fixture origins that hold no real commit, and rejects every delta.
+- The verification runner has its own runtime directory (`blizzard runner init`, then set `runner_id`, `workspace_envs`
+  to the dedicated env, `max_agents = 1`, `[worker] path_prepend` to the mise shims, and `[opencode] enabled = false`),
+  a `hub_url` at the env-local hub, `BZ_HARNESS_BINARY` set to the real harness, and `base_branch` set to the branch
+  under test. It starts from a clean environment, never the env band, so no mock fence or permission-mode override
+  reaches the real harness. The runner resets the dedicated env to `base_branch` on every acquire; a branch already
+  checked out in another env's worktree cannot be that base, so name a remote-tracking ref that only the verification
+  needs (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its own main, so
+  the ref is set only in the repo under test.
+- The delta run needs a baseline that both carries the command under test and leaves changed functions with mutants. An
+  older commit alone cannot: it may predate the command, or the range may change only functions the method cannot see.
+  Build the base as an older commit with the command's own commit cherry-picked onto it, and confirm with a direct run
+  of the command that the range yields a small, sortable survivor set before starting the routine.
+
+**Steps.**
+
+1. Start a run with `blizzard hub routine run --mode full` with the runner's `base_branch` at an older commit, and, once
+   it ends, `--mode delta` with `base_branch` moved to the branch under test, so the delta has a real diff to narrow to.
+2. While a run is live, read the verification runner's lease activity on its API on a cadence shorter than the staleness
+   threshold; note the largest gap between heartbeats.
+3. Read the terminal state, findings, proposals, and measurement back through the operator CLI (`routine sweeps`, the
+   findings and proposals verbs), never the store.
+4. Capture the run's transcript: the longest single tool call, and the exact arguments the survey passed to any command
+   the axis routes to.
+5. Record which revision of the agent context the worker read.
+
+**Passes when.** The routine run reaches its terminal state with its findings, proposals, and measurement delivered,
+read back through the operator CLI; the verification runner's lease never read `stale`; and the transcript is kept with
+the verification report.
+
+**Hazards.** Never the systemd runners' stores, and never the hosted hub —
+`workspace:/context/project/hub-data-modes.md` owns which hub is safe.
