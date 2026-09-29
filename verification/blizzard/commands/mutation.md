@@ -50,6 +50,23 @@ selection would otherwise date from an older revision. A local resume omits it.
 found so far. A full-scope run stopped this way is real evidence for how large the survivor backlog is; the run still
 exits the budget exit code.
 
+**Delta mode.** `mise run mutation --since REV [--delta-budget SECONDS]` — no scope — is the delivery-time form. It maps
+every file under `src/blizzard` that differs between `REV` and `HEAD` to the scopes that own it, and runs each touched
+scope fresh, one after another, as its own `<scope> --since REV --fresh` process. A scope whose changed files carry no
+changed function is `no-changes` and is not run. Changed files no scope owns — `src/blizzard/tools/` and the global
+exclusions — are listed, not run. A `REV` that names no commit exits 2 and runs nothing.
+
+`--delta-budget` is one wall-clock budget for the whole delta, preparation included; its default, 1800 seconds, lives in
+`scripts/mutation.py`. It is not `--budget`, which bounds one scope's execution only, and passing both is refused. A
+scope still running at the deadline is killed and reported `over-budget`, and a scope not yet started is reported
+`over-budget` too; scopes already finished keep their results.
+
+The delta run always writes `mutants/delta-report.json` beside `mutants/report.json` and exits 0 whenever it does. The
+report records `since`, the budget, total `elapsed_seconds`, `unscoped_files`, and one entry per touched scope with its
+`status` (`complete`, `over-budget`, `failed`, `no-changes`), `reason`, `elapsed_seconds` and `survivors`. A `failed`
+scope carries the tail of its run's output, since a mutmut baseline failure writes no `report.json`. Test selection
+stays each scope's own: narrowing it to the changed modules would under-select and report false Unreached survivors.
+
 Preparation — generation, the coverage map, and the clean and forced-fail runs — costs more than one tool call's
 ten-minute limit on a daemon scope, and no worker setting raises that limit. A worker therefore runs the command in the
 background, polls it to completion in short calls, and does not re-invoke it under a small `--budget`, since each
@@ -72,6 +89,21 @@ A full `cli-surface` sweep takes 156 to 169s (1454 killed, 693 survived, 226 no 
 to sort in one context, which is the designed `excessive` outcome. A prior full `hub-daemon` run across many resumed
 sessions left 4892 survivors. Wall time in execution is dominated by the expensive tail and by timeouts, not the mutant
 count: each timeout costs its full multiplied budget (mutmut's `timeout_multiplier`).
+
+Delta mode's measured wall time — `mutation --since <base>` over five fleet chunks that touched `src/blizzard`, each the
+pull request's base against its head, the delta mode overlaid on each historical head, one at a time on the same shared
+host. This is the command alone; the node's session overhead is not in it:
+
+| Chunk diff | Scopes run: survivors                                                                | Wall time |
+| ---------- | ------------------------------------------------------------------------------------ | --------- |
+| 1 file     | `runner-daemon`: 21                                                                  | 539s      |
+| 1 file     | `runner-daemon`: 14                                                                  | 544s      |
+| 2 files    | `runner-daemon`: 0                                                                   | 600s      |
+| 22 files   | `hub-daemon`: 155, `runner-daemon`: 123, `cli-surface`: 0; `shared-spine` no-changes | 1289s     |
+| 10 files   | `hub-daemon`: 318, `cli-surface`: 0; `shared-spine` no-changes                       | 1331s     |
+
+The median is 600s, command only; every run finished under the 1800s default with all scopes `complete`. A change that
+touches only one daemon scope costs one preparation (7 to 10 minutes), and each further daemon scope adds another.
 
 The method cannot see: any tier above `unit` (`blizzard:component-test`, `blizzard:service-test`, `blizzard:e2e`,
 `blizzard:journey`, `blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, the

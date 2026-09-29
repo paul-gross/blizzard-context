@@ -706,3 +706,37 @@ the verification report.
 
 **Hazards.** Never the systemd runners' stores, and never the hosted hub —
 `workspace:/context/project/hub-data-modes.md` owns which hub is safe.
+
+### `blizzard:manual-live-node`
+
+**Surface.** One node of a packaged graph run by a real-harness runner against an env-local hub — what a real worker
+does with the node's prompt, the asset it publishes, and the edge the chunk then takes. `blizzard:manual-runner` spawns
+only the fenced mock and `blizzard:manual-live-routine` walks a garden routine; this row is for a change whose claim is
+a graph node's live behavior, entered by `hub chunk restart --to-graph <graph> --node <node>` so the steps before it
+need not be re-walked.
+
+**Setup.** As `blizzard:manual-live-routine`'s Setup — the store at head, the graph minted with
+`blizzard hub graph sync`, no forge configured, and the verification runner's own runtime directory with the real
+harness and a `base_branch` — without its delta-baseline precondition. Add:
+
+- A hub work item for a small change, whose changed functions sit in one scope of the surface the node acts on, and a
+  disposable branch pushed for it.
+- A real `build` turn to declare the commit, so the node reads a declared tip; a chunk restarted onto the node with no
+  declared commit tests only that path.
+
+**Steps.**
+
+1. Ingest the work item and let the chunk reach the node's predecessor with a real declared commit.
+2. Restart it onto the node: `blizzard hub chunk restart --to-graph <graph> --node <node>`.
+3. While the node runs, read the runner's lease activity on its API on a cadence shorter than the staleness threshold;
+   note the largest gap between heartbeats.
+4. Read the node's published asset back through the operator CLI, never the store, and check it against what the node's
+   prompt owes.
+5. Let the chunk take its edge, read the next node's own output for what it did with the asset, then stop the chunk.
+6. Record the node's session overhead — its wall time less the wrapped command's own — and the revision of the agent
+   context the worker read.
+
+**Passes when.** The asset is present and well-formed, the chunk took the edge the node's verdict names, the downstream
+node consumed the asset as its addendum directs, and the runner's lease never read `stale`.
+
+**Hazards.** As `blizzard:manual-live-routine`'s: never the systemd runners' stores, and never the hosted hub.

@@ -1,8 +1,10 @@
 # Sorting a surviving mutant (`bzh:mutation-survivor-classification`)
 
 `blizzard:mutation` reports a survivor as a candidate; this file owns what a candidate is sorted into and what each
-class obliges. Written at file-per-rule granularity in the slot skeleton `winter-canon:/rule-shape.md` owns
-(`canon:rule-shape`): the classes table is the contract the Rule slot requires, not skeleton drift.
+class obliges. A change's own survivors reach a delivery as the advisory `mutation-report` from `blizzard:mutation`'s
+delta mode; review sorts them here and raises each real gap as `should-fix`, never `blocking`. Written at file-per-rule
+granularity in the slot skeleton `winter-canon:/rule-shape.md` owns (`canon:rule-shape`): the classes table is the
+contract the Rule slot requires, not skeleton drift.
 
 ## Rule
 

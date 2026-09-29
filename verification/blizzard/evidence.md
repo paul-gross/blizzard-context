@@ -31,8 +31,10 @@ evidence.
 **Detect.** `blizzard:mutation` is the mechanical detector — `mise run mutation <scope>` runs this litmus over every
 mutable line of a garden scope at once and writes each mutant the selected tests stay green on, with its diff, to
 `mutants/report.json`; `bzh:mutation-survivor-classification` in [`./mutation-survivors.md`](./mutation-survivors.md)
-sorts what it reports. By hand, the signature is a mutation whose stated justification names a different symbol than the
-line mutated — a defect in the plan, not a stylistic quibble.
+sorts what it reports. At delivery, a change's own survivors arrive as the `mutation-report` the graph's advisory
+`mutation` node publishes from the diff-scoped delta run, and review reads it. By hand, the signature is a mutation
+whose stated justification names a different symbol than the line mutated — a defect in the plan, not a stylistic
+quibble.
 
 **Do.** Make the claim per-assertion, naming the assertion that fired.
 
