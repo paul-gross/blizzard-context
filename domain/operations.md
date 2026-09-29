@@ -20,7 +20,8 @@ Both vocabularies are closed: the hub refuses an `event.recorded` fact whose kin
 severity is not the one that kind declares.
 
 The log is bounded, at most 200 rows per read, the cap applied *after* severity ranking — it keeps the most severe rows,
-not merely the newest, so a `critical` older than the newest 200 rows still surfaces.
+not merely the newest, so a `critical` older than the newest 200 rows still surfaces. The route caps below the hub's
+general list maximum.
 
 ### Event kinds
 
@@ -51,7 +52,7 @@ A deliberately deferred failure — a runner that told its operator it will star
 
 The activity feed is reconstructed fresh from the durable facts the domain already keeps — transitions, questions, gate
 decisions, runner pauses, and event-log rows; no separate log is written for it. It is bounded: 24 hours by default, at
-most the 200 newest rows.
+most the 200 newest rows. The route caps below the hub's general list maximum.
 
 These produce no activity-feed row:
 
