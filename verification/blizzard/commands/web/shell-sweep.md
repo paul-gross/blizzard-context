@@ -290,3 +290,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-detail-view-provenance.shell-sweep.spec.ts` covers the runner's local-panel escalation resume box's
   harness-provenance badge: it renders beside the resume command at the runner's own narrow width, with no page error
   and no horizontal overflow.
+- `chunk-awaiting-human.shell-sweep.spec.ts` covers the Gate panel's origin line: a long runner id in "gated by runner …
+  (runner config)" wraps inside the panel at about 390px rather than forcing horizontal scroll.
+- `local-info-view.shell-sweep.spec.ts` covers the runner panel's info section with a runner imposing several gates: the
+  Gates fact row stays inside the panel at about 390px rather than forcing horizontal scroll.
