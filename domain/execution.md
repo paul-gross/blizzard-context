@@ -14,6 +14,7 @@ invariant, it does so in the slot skeleton owned by `winter-canon:/rule-shape.md
 | [`fencing.md`](./execution/fencing.md)                   | …you need what bounds one node-step attempt, or how a stale attempt is kept from advancing the chunk.     |
 | [`envelope.md`](./execution/envelope.md)                 | …you need what a worker session is primed with, or how a change reaches it.                               |
 | [`pause.md`](./execution/pause.md)                       | …an operator paused a runner or a chunk — what stops, what keeps running, and what happens to the claim.  |
+| [`retirement.md`](./execution/retirement.md)             | …an operator retired a runner or revoked its token — what stops, what survives, and how it is reversed.   |
 | [`recovery.md`](./execution/recovery.md)                 | …a lease expired, an attempt was exhausted, or a chunk must change runner.                                |
 | [`claim-vocabulary.md`](./execution/claim-vocabulary.md) | …you need the operator-facing terms for a claim and what a runner's process does to it.                   |
 

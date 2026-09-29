@@ -13,7 +13,8 @@ owned by [../artifacts/never-code.md](../artifacts/never-code.md).
 
 A runner's registry entry derives everything observable, never stored flags: liveness from its most recent contact, each
 brake from the newest fact in its own stream — rule `bzh:facts-not-status`, owned by
-[../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md).
+[../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md). Whether the runner is
+retired derives the same way, from its newest lifecycle fact ([retirement.md](./retirement.md)).
 
 The entry also reports its own capabilities: every coding-harness binding the runner can execute right now, one member
 per harness id, each carrying that harness's observed version, the tier ids it can resolve, and an availability state
