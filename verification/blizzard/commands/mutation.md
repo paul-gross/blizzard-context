@@ -94,13 +94,13 @@ Delta mode's measured wall time — `mutation --since <base>` over five fleet ch
 pull request's base against its head, the delta mode overlaid on each historical head, one at a time on the same shared
 host. This is the command alone; the node's session overhead is not in it:
 
-| Chunk diff | Scopes run (survivors)                                                                  | Wall time |
-| ---------- | --------------------------------------------------------------------------------------- | --------- |
-| 1 file     | `runner-daemon` (21)                                                                    | 539s      |
-| 1 file     | `runner-daemon` (14)                                                                    | 544s      |
-| 2 files    | `runner-daemon` (0)                                                                     | 600s      |
-| 22 files   | `hub-daemon` (155), `runner-daemon` (123), `cli-surface` (0); `shared-spine` no-changes | 1289s     |
-| 10 files   | `hub-daemon` (318), `cli-surface` (0); `shared-spine` no-changes                        | 1331s     |
+| Chunk diff | Scopes run: survivors                                                                | Wall time |
+| ---------- | ------------------------------------------------------------------------------------ | --------- |
+| 1 file     | `runner-daemon`: 21                                                                  | 539s      |
+| 1 file     | `runner-daemon`: 14                                                                  | 544s      |
+| 2 files    | `runner-daemon`: 0                                                                   | 600s      |
+| 22 files   | `hub-daemon`: 155, `runner-daemon`: 123, `cli-surface`: 0; `shared-spine` no-changes | 1289s     |
+| 10 files   | `hub-daemon`: 318, `cli-surface`: 0; `shared-spine` no-changes                       | 1331s     |
 
 The median is 600s, command only; every run finished under the 1800s default with all scopes `complete`. A change that
 touches only one daemon scope costs one preparation (7 to 10 minutes), and each further daemon scope adds another.
