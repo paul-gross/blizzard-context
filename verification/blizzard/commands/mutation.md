@@ -50,6 +50,23 @@ selection would otherwise date from an older revision. A local resume omits it.
 found so far. A full-scope run stopped this way is real evidence for how large the survivor backlog is; the run still
 exits the budget exit code.
 
+**Delta mode.** `mise run mutation --since REV [--delta-budget SECONDS]` — no scope — is the delivery-time form. It maps
+every file under `src/blizzard` that differs between `REV` and `HEAD` to the scopes that own it, and runs each touched
+scope fresh, one after another, as its own `<scope> --since REV --fresh` process. A scope whose changed files carry no
+changed function is `no-changes` and is not run. Changed files no scope owns — `src/blizzard/tools/` and the global
+exclusions — are listed, not run. A `REV` that names no commit exits 2 and runs nothing.
+
+`--delta-budget` is one wall-clock budget for the whole delta, preparation included; its default, 1800 seconds, lives in
+`scripts/mutation.py`. It is not `--budget`, which bounds one scope's execution only, and passing both is refused. A
+scope still running at the deadline is killed and reported `over-budget`, and a scope not yet started is reported
+`over-budget` too; scopes already finished keep their results.
+
+The delta run always writes `mutants/delta-report.json` beside `mutants/report.json` and exits 0 whenever it does. The
+report records `since`, the budget, total `elapsed_seconds`, `unscoped_files`, and one entry per touched scope with its
+`status` (`complete`, `over-budget`, `failed`, `no-changes`), `reason`, `elapsed_seconds` and `survivors`. A `failed`
+scope carries the tail of its run's output, since a mutmut baseline failure writes no `report.json`. Test selection
+stays each scope's own: narrowing it to the changed modules would under-select and report false Unreached survivors.
+
 Preparation — generation, the coverage map, and the clean and forced-fail runs — costs more than one tool call's
 ten-minute limit on a daemon scope, and no worker setting raises that limit. A worker therefore runs the command in the
 background, polls it to completion in short calls, and does not re-invoke it under a small `--budget`, since each

@@ -262,6 +262,16 @@ scopes by the change's own commits once a rebase or base merge intervenes, re-ru
 prior report records as failed, and records the scoping decision in the new report is asserted by nothing — a scoping
 that quietly skips a method the delta touches passes the same as an honest one until a live chunk exposes it.
 
+`adv-dwf`'s `mutation.md`, `mutation.judgement.md`, and `review.from-mutation.md`, and the survivor bullet in
+`build.from-review.md`, carry the delivery-time mutation report's whole method: run the project's declared diff-scoped
+method from each repo's newest declared tip, publish a report that always exists, sort survivors under the project's
+classification, and answer a real survivor with the killing assertion or a recorded equivalence. The byte bars, the edge
+and addendum pins in `tests/test_packaged_graph_sessions.py`, and the delta mode's own unit cases reach the mechanical
+half. That a worker uses the declared tip rather than its worktree's reset HEAD, states the reason where no method is
+declared, carries a prior report forward only when the change's functions did not move, and raises each survivor as
+`should-fix` rather than `blocking` is proven for one path by `blizzard:manual-live-node`; the `build.from-review.md`
+bullet is reachable only on a review-`fail` round, which that run does not force, and is asserted by nothing.
+
 Standing in for a tier: a live chunk run through each lane on the dogfood deployment
 (`workspace:/context/project/local-instance.md`), whose transitions, bounces, and retrospective are read back and judged
 against the routing these prompts intend. That evidence is only producible once the landed graph directory is re-minted,
