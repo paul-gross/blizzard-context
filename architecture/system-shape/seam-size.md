@@ -26,16 +26,15 @@ test; a reason for the entry is a review obligation, not something the gate itse
 
 **Do.** The runner's harness seam splits `IHarnessAdapter`'s methods into narrower Protocols along its consumers' own
 lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, usage accounting, usage-limit
-classification, and provider-overload classification (`src/blizzard/runner/harness/adapter.py`). A consumer needing one
-slice re-types to it directly (`domain/takeover.py`, `domain/status.py` each take `IHarnessWorkerLifecycle`); the runner
-loop's own step functions (`LoopContext.harness`) take the composed `IHarnessLifecycleAndVerdict` (worker lifecycle plus
-verdict parsing), while the selftest canary's own widened roster needs a wider composed pair still — worker lifecycle,
-verdict parsing, and usage accounting, plus `transcript_source` — so it takes its own `IHarnessSelfTestSeam` rather than
-either re-declaring the whole set or falling back to the full adapter. `transcript_source` sits outside every slice,
-declared directly on both `IHarnessSelfTestSeam` and `IHarnessAdapter` itself, its two callers each already holding a
-wide-enough composed seam that a further named slice would have nothing left to narrow for. `IHarnessAdapter` composes
-those slices plus that one method, for the one code path that holds the whole seam without calling every part of it
-piecemeal: the runner's `app.py` composition root.
+classification, and provider-overload classification (`src/blizzard/runner/harness/adapter.py`). A consumer never
+resolves the full adapter: the registry exposes one accessor per consumer role, each declared to return exactly the
+slice that role calls — `lifecycle`, `lifecycle_and_verdict`, `self_test`, `model_resolution`, `usage_accounting`,
+`usage_limits`, `provider_overload` (`IHarnessRegistry` in `src/blizzard/runner/harness/registry.py`). The domain
+services (`domain/takeover.py`, `domain/status.py`) take `IHarnessLifecycleRegistry`, which declares only `lifecycle`.
+`LoopContext.harnesses` stays the composed `IHarnessRegistry`, a pass-through every loop step reads its role accessor
+from. The selftest canary's widened roster — lifecycle, verdict parsing, usage accounting, plus `transcript_source` —
+takes its own `IHarnessSelfTestSeam`. The full `IHarnessAdapter` lives only in `HarnessBinding` and the composition-side
+registry builders that fill it (`harness/internal/harness_registry.py`, `harness/internal/opencode_registry.py`).
 
 **Don't.** Leaving a Protocol to grow past the ceiling because splitting it "later" is easier than registering the width
 now, or registering an exception without a reason — either loses the one signal a reviewer has for "this seam grew wider
