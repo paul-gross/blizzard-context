@@ -214,12 +214,12 @@ fixed cadence where a change signal would do is judged here, at the pass: the pr
 cheap, so the answer to it is a gated pass, not a re-timed driver. A pass is in range when it rescans a corpus to
 converge a derived state from it, as the hub's annotation and event-derivation reconcilers do, or when it prunes or
 expires what has aged past a window far longer than its floor — the runner's `Retention` step in
-`blizzard/src/blizzard/runner/loop/steps.py`, which prunes day-scale lanes every tick, is that floor-only form's case:
-it owes a floor, not a probe. A pass that enforces a window without pruning it — the runner's `SpendCeiling` step, which
-engages the pause brake once rolling-window spend reaches its cap — is outside this rule altogether: it owes its
-reaction on the tick the cap is crossed, and a floor there would let spend overshoot the cap for up to one floor. A pass
-whose job is to act on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer,
-retrying an intent whose backoff has elapsed, sampling live leases — is outside it, on either side:
+`blizzard/src/blizzard/runner/loop/steps.py`, which prunes its day-scale lanes on a one-hour floor, is that floor-only
+form's case: it owes a floor, not a probe. A pass that enforces a window without pruning it — the runner's
+`SpendCeiling` step, which engages the pause brake once rolling-window spend reaches its cap — is outside this rule
+altogether: it owes its reaction on the tick the cap is crossed, and a floor there would let spend overshoot the cap for
+up to one floor. A pass whose job is to act on work as it comes due — reaping a lease, advancing or filling, draining a
+queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases — is outside it, on either side:
 `CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_closure.py` and the runner's `Reap` and `Advance`
 steps are that shape. Such a pass's due-set is the live work the pass exists to answer, often made due by time passing
 alone, so no change probe sees it and a floor would delay the reaction it owes. A pass that opens on a read returning

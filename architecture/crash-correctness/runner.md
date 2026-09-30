@@ -100,20 +100,23 @@ diagnostic curve the next interval re-samples.
 
 ## Retention pruning
 
-`Retention` (`blizzard/src/blizzard/runner/loop/steps.py`) runs three prunes every tick, one for each of the append-only
-lanes named below: `prune_outbound` deletes an acked `outbound_buffer` row past its window but only below the lowest
-still-pending seq, and `prune_heartbeats` / `prune_external_usage_samples` each compact their table to every lease's or
-slug's newest row past a shorter window. Each prune is one `DELETE` statement in its own transaction, so a `kill -9`
-anywhere around it leaves the table exactly as it was before the statement or exactly as it would be after — never a
-partially-applied delete. That is a **no-window** write: there is no second half a crash could separate it from, and so
-no `bzh:crash-point-registry` entry is owed.
+`Retention` (`blizzard/src/blizzard/runner/loop/steps.py`) runs four prunes, one for each of the append-only lanes named
+below plus the worker-stdout file sweep, on a one-hour floor rather than every tick: `prune_outbound` deletes an acked
+`outbound_buffer` row past its window but only below the lowest still-pending seq, and `prune_heartbeats` /
+`prune_external_usage_samples` each compact their table to every lease's or slug's newest row past a shorter window. The
+last-pass instant lives in memory, on a long-lived holder the loop's composition root builds once, and is recorded once
+every lane has been attempted whatever each one's outcome. A restart forgets it, so the first tick after one runs a full
+pass. Each prune is one `DELETE` statement in its own transaction, so a `kill -9` anywhere around it leaves the table
+exactly as it was before the statement or exactly as it would be after — never a partially-applied delete. That is a
+**no-window** write: there is no second half a crash could separate it from, and so no `bzh:crash-point-registry` entry
+is owed.
 
-None of the three can delete a row a live reader still depends on. The outbound prune's pending-floor check keeps every
-row a still-open fact might need; the heartbeat and usage-sample prunes keep each lease's or slug's newest row
+None of the store prunes can delete a row a live reader still depends on. The outbound prune's pending-floor check keeps
+every row a still-open fact might need; the heartbeat and usage-sample prunes keep each lease's or slug's newest row
 unconditionally, which is the only row `latest_heartbeat` and `last_external_usage_attempt_at` ever read — so a crash
-losing the retried prune's effect costs nothing beyond a few more rows lingering until the next tick's pass, never a
-wrong answer from either read. `Retention.run` also isolates each lane's own prune in its own `try`/`except`, so one
-lane raising costs that lane's pass, not the tick's other two.
+losing the retried prune's effect costs nothing beyond a few more rows lingering until the next pass, never a wrong
+answer from either read. `Retention.run` also isolates each lane's own prune in its own `try`/`except`, so one lane
+raising costs that lane's pass, not the other three, and it retries at the next floor.
 
 ## The graph-artifact mirror
 
