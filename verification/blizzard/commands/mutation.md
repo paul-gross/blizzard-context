@@ -37,9 +37,9 @@ that file's mutants re-run.
 
 `--since REV` narrows a run to the delta: only the functions in the scope's ground whose source differs between `REV`
 and `HEAD` are executed and reported, and the report records the `since` revision. Generation and the coverage map still
-cover the whole scope. A `REV` that names no commit exits 2 and runs nothing — it never widens to a full run. No changed
-function in the scope is a complete, empty report and exit 0 without a mutant tree. A changed function that carries no
-mutant (a decorated body mutmut skips) is left out, not an error.
+cover the whole scope. A `REV` that names no commit exits 2 and runs nothing — it never widens to a full run. A scope
+with no changed function writes a complete, empty `mutants/report.json` and exits 0, with no mutant generated or run. A
+changed function that carries no mutant (a decorated body mutmut skips) is left out, not an error.
 
 `--fresh` discards any existing mutant tree before the run, so no verdict or test selection from an earlier run
 survives. A leased worker passes it: a pooled environment keeps its ignored `mutants/` between leases, and its frozen

@@ -14,7 +14,8 @@ swept whether or not it found anything:
    budgets of the hub and runner apps — that the built output puts at or past its `maximumWarning`, or within 10% of its
    `maximumError`.
 2. **Web build warnings.** Warnings printed by the web build (`mise run web-build`, the hub and runner apps) and by the
-   `fleet` library build (`npx ng build fleet` in `blizzard/web`, which no declared command runs).
+   `fleet` and `local-panel` library builds (`npx ng build fleet` and `npx ng build local-panel` in `blizzard/web`,
+   which no declared command runs).
 3. **Python test warnings.** The warnings summary of the full Python suite, counted by category and by source —
    `uv run pytest -n auto` in `blizzard`, and `uv run pytest` in `blizzard-mock`, which carries no `pytest-xdist`. A
    deprecation is a finding whatever it names: the removal it announces will otherwise arrive as a failure.

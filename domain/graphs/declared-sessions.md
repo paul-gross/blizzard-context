@@ -2,7 +2,7 @@
 
 A graph may declare named sessions — a top-level sibling of the node set, not a node facet (graph definition:
 [../graphs.md](../graphs.md)). A declaration names one shared lineage of agent context and its policy; nodes reference
-it via `fresh:<session>` and `resume:<session>`. All five declaration fields are optional: model preference, effort,
+it via `fresh:<session>` and `resume:<session>`. Every declaration field is optional: model preference, effort,
 compaction window, rotation bounds, harness set — and any other key rejects the mint, the error naming the unrecognized
 keys, the keys this hub recognizes, and its version, so a misspelled field fails loudly rather than being ignored.
 Definitional — a taxonomy of those fields and their resolution (`canon:rule-shape` §File kinds). Part of the
