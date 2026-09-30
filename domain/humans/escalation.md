@@ -7,8 +7,10 @@ Spoke of the human-entry hub, [../humans.md](../humans.md).
 
 A runner escalates when a worker's retries are exhausted, when it dies without a verdict past the retry cap, when its
 spend cap is reached, or when an existing session's recorded harness owner is unknown or unavailable to it — no other
-runner can resume that exact session, so nothing substitutes a different harness for it. The hub itself escalates when a
-migrating choice's target graph fails to resolve, or when a node's bounce cap is crossed.
+runner can resume that exact session, so nothing substitutes a different harness for it. It also escalates when no
+acceptable harness can serve a mint: a fresh mint exhausts harness selection, or a retry's failed owner is outside the
+current acceptable set, so requeue refuses to switch owners. The hub itself escalates when a migrating choice's target
+graph fails to resolve, or when a node's bounce cap is crossed.
 
 ## The commands an escalation carries
 
@@ -41,6 +43,9 @@ guessing.
 - **The recorded owner is unknown or unavailable** — the runner cannot dispatch to it at all right now, so there is
   nothing to compose a takeover from; the accompanying `owner-unresolvable` event names the recorded harness id and
   whether it is unknown or merely unavailable ([../operations.md](../operations.md)).
+- **No acceptable harness can serve the mint** — the lease was never spawned and has no owner, so the escalation carries
+  neither command; the accompanying `no-acceptable-harness` event records the selection or retry refusal
+  ([../operations.md](../operations.md)).
 - **Bounce cap crossed** — the escalation carries neither command but never releases the runner's hold on the chunk, so
   any existing session carries over unchanged, and that prior state, not the escalation, decides whether takeover is
   possible.
@@ -53,8 +58,9 @@ guessing.
 
 A present wrapped verb is the supported takeover entry point ([./takeover.md](./takeover.md)). But whether takeover is
 possible is independent of what commands the escalation carries: entering a session checks directly whether a runner
-still holds the chunk with a session behind its most recent lease, never the escalation's contents — an escalation
-carrying nothing can still be takeable.
+still holds the chunk with a session behind its active lease, or otherwise its most recent lease with a session, never
+the escalation's contents — an escalation carrying nothing can still be takeable. The reference session must also meet
+the harness-owner entry condition in [takeover's Entering section](./takeover.md#entering), whatever parked the chunk.
 
 ## Supersession
 
