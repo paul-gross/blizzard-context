@@ -36,8 +36,8 @@ though its sampled and missed reports persist and resume the moment it is redecl
 precedence for display: when a subscription's newest miss is a lapsed credential newer than its newest (or absent)
 sample, that condition is set, but a surviving sample's own fields are never blanked by it — only a slug that has never
 sampled at all shows no windows alongside the condition. A fresh sample, or a later miss for any other reason, clears a
-lapsed condition — the other reason itself renders nothing. A runner that has declared no roster at all keeps today's
-fallback instead: a member stands while its sample passes the staleness gate, or independently while a lapsed-credential
-miss newer than it does, with the same never-blanked sample rule once admitted either way. Either way there is never a
-fabricated zero, and the collection stays advisory: neither granting a chunk nor anything else the hub decides reads it.
-How old counts as too old to still show is a board presentation matter, not stated here.
+lapsed condition — the other reason itself renders nothing. A runner that has declared no roster at all uses the
+roster-less fallback instead: a member stands while its sample passes the staleness gate, or independently while a
+lapsed-credential miss newer than it does, with the same never-blanked sample rule once admitted either way. Either way
+there is never a fabricated zero, and the collection stays advisory: neither granting a chunk nor anything else the hub
+decides reads it. How old counts as too old to still show is a board presentation matter, not stated here.

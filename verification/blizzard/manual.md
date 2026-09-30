@@ -341,21 +341,16 @@ compaction, so this is a smaller shape than the fleet's largest long-lived sessi
 | 8 concurrent callers, slowest caller           | 1485.6ms                      |
 | 8 concurrent callers, mean                     | 1269.7ms                      |
 
-**A blocking finding, independent of the budget itself — since fixed.** `opencode export`'s own stdout write truncates
-at exactly 65536 bytes (one Linux pipe buffer) when its stdout is a pipe rather than a regular file — reproduced
-identically through a raw shell pipe (`opencode export <id> | wc -c`), a bare `subprocess.Popen`/`communicate()`, and
-`SubprocessOpenCodeExporter`'s own `capture_output=True` call, all three truncating this same 408,050-byte export at
-65,536 bytes and leaving the parser a corrupt document (`json.JSONDecodeError`). Redirecting to a regular file instead
-(as this reading's own script does) reads the export whole. Every export above 64KiB — routine at this retained size,
-let alone a larger one — was silently unreadable through `SubprocessOpenCodeExporter` as written at the time of this
-reading; `SubprocessOpenCodeExporter.export` now redirects `opencode export`'s stdout to a scratch file and reads it
-back, closing the gap this reading found.
+**Export capture boundary.** `opencode export` can truncate stdout at 65536 bytes (one Linux pipe buffer) when stdout is
+a pipe; the 408,050-byte reading above requires a regular file for capture. `SubprocessOpenCodeExporter.export`
+redirects stdout to a scratch file and reads it back so exports at this retained size remain parseable. The reading's
+script uses the same file-redirection boundary.
 
-**What the budget itself says.** Once read correctly (file-redirected), both the single-call and the 8-way concurrent
-cost stay well under a second at this shape, and the cursor token — while non-trivial at 75,846 bytes — is a bounded
-fraction of the 408KB export it was cut from. Nothing here forces the server-API contingency on cost grounds alone. A
-follow-up reading at a genuinely large (compacted, 100k+ token) session would sharpen this — this one is real but
-modest, not the ceiling case this budget ultimately needs.
+**What the budget itself says.** With file-redirection capture, the single-call cost is under a second and the 8-way
+concurrent batch takes about 1.6 seconds at this shape. The cursor token — while non-trivial at 75,846 bytes — is a
+bounded fraction of the 408KB export it was cut from. Nothing here forces the server-API contingency on cost grounds
+alone. A follow-up reading at a genuinely large (compacted, 100k+ token) session would sharpen this — this one is real
+but modest, not the ceiling case this budget ultimately needs.
 
 ### `blizzard:manual-autocompact-window`
 
