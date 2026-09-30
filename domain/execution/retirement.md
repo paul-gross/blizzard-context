@@ -20,6 +20,9 @@ forced retirement records the fact first, so new claims are refused from that in
 runner still holds through the same release detach uses; each chunk re-derives `ready`. Repeating the retirement
 finishes any release that was interrupted, and releases a claim that slipped in after the holdings check.
 
+A chunk at a terminal status is no holding, whatever route it still carries: it neither refuses a plain retirement nor
+is released by a forced one, which leaves it untouched.
+
 A retired runner process that is still running is refused by the hub, so it never observes the release; its local
 worktrees stay held until the process is stopped.
 
