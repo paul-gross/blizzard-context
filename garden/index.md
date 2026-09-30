@@ -10,16 +10,16 @@ does when the axis is undeclared.
 
 Parent: [../index.md](../index.md).
 
-| Axis                                                | Evaluates                                                                                                                                    |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`agent-facing-context`](./agent-facing-context.md) | Guidance drift in this harness's own prose — whether a rule is reachable, weighs what it earns, routes truthfully, and is stated once        |
-| [`architecture`](./architecture.md)                 | Structural drift in blizzard's code — layering, dependency direction, seam placement and width, injection, and the Angular suite's split     |
-| [`comments`](./comments.md)                         | Prose drift in blizzard's code — which facts a comment or docstring may state, and whose vocabulary a seam's contract is stated in           |
-| [`domain-conformance`](./domain-conformance.md)     | Disagreement between the behavior the domain model declares and the behavior the code implements and the suite pins                          |
-| [`fitness`](./fitness.md)                           | Headroom and warnings no gate enforces — build budgets, web and test warnings, dependency health, and ungated checks red on `master`         |
-| [`ideation`](./ideation.md)                         | What the product could become, against its charter — on its surfaces, in its structure, in what the fleet uses, and in what the fleet spends |
-| [`mutation-testing`](./mutation-testing.md)         | Behavior the fast tiers run but do not check — surfaced as mutants that survive them                                                         |
-| [`performance`](./performance.md)                   | Cost drift in blizzard's hot paths — per-item resolution, ungated sweeps, unbounded reads, and work a result never needed                    |
+| Axis                                                | Evaluates                                                                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [`agent-facing-context`](./agent-facing-context.md) | Guidance drift in this harness's own prose                                                                          |
+| [`architecture`](./architecture.md)                 | Structural drift in blizzard's code                                                                                 |
+| [`comments`](./comments.md)                         | Prose drift in blizzard's code comments and docstrings                                                              |
+| [`domain-conformance`](./domain-conformance.md)     | Disagreement between the behavior the domain model declares and the behavior the code implements and the suite pins |
+| [`fitness`](./fitness.md)                           | Headroom and warnings no gate enforces                                                                              |
+| [`ideation`](./ideation.md)                         | What the product could become, against its charter                                                                  |
+| [`mutation-testing`](./mutation-testing.md)         | Behavior the fast tiers run but do not check — surfaced as mutants that survive them                                |
+| [`performance`](./performance.md)                   | Cost drift in blizzard's hot paths                                                                                  |
 
 ## Scope slugs
 
