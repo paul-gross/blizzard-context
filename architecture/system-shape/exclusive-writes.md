@@ -22,9 +22,8 @@ before any later read; on Postgres it takes the row lock a concurrent locker of 
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
 stop, complete, detach, and requeue. A macro-shape constraint on deployment topology, on what holds once more than one
 hub process may share a store — not a `kill -9` crash-correctness requirement; one hub process already serializes every
-one of these correctly today. Dependency **release** is exempt, not a migration gap: it can only shrink the standing set
-and can never close a cycle, so no row lock is needed over anything it writes —
-[../crash-correctness/hub.md](../crash-correctness/hub.md) §Dependency edge declare and release owns the reasoning.
+one of these correctly today. Dependency **release** is exempt rather than uncovered: it can only shrink the standing
+set and can never close a cycle, so nothing it writes needs a row lock.
 
 **Detect.**
 
@@ -52,26 +51,34 @@ serializing each other and the race reopens with nothing left to catch it.
 
 Stated so a reviewer need not re-derive them:
 
-- **The residual fleet-wide cycle lock.** `DependencyService`, `GroupService`, and `DeleteService` still take an
-  in-process lock, built in `hub/app.py`, for two things a row lock cannot close: `DependencyService`/`GroupService`
-  hold it for the fleet-wide standing-dependency cycle check (`hub:no-standing-dependency-cycle`), which reasons over
-  the whole graph — two disjoint declares racing on different rows can still together close a cycle neither alone would.
-  `DeleteService` holds it for a narrower reason: releasing a chunk's own outgoing edges can race a concurrent fold
-  reminting one of those same edges onto a chunk neither transaction's row lock names. Moving either use onto a
-  store-level singleton row needs a schema migration.
+- **The residual fleet-wide lock.** One in-process `threading.Lock` — `cycle_lock`, built in `hub/composition.py` —
+  stands where a row lock does not reach; each `import threading` it needs carries this rule's `ast-grep-ignore`. Moving
+  any of its holders onto a store-level singleton row needs a schema migration. Its holders:
+  - `DependencyService.declare` and `GroupService.group` — for the fleet-wide standing-dependency cycle check
+    (`hub:no-standing-dependency-cycle`), which reasons over the whole graph: two disjoint writers racing on different
+    rows can still together close a cycle neither alone would.
+  - `DeleteService.delete`, for its whole transaction — the deleted chunk's row lock does not reach the other end of an
+    outgoing edge the delete releases, so a concurrent fold of that other chunk, locking only its own survivor and merge
+    ids, could otherwise remint the edge with the deleted chunk as its dependent.
+  - `DependencyService.release` — as its only lock, being exempt from the row lock (Scope above).
 - **The hub-exec slot's empty-table gap.** `acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`) locks
   via a table-wide no-op `UPDATE` against `hub_exec_slot`, which carries no unique constraint (`hub/store/schema.py`).
   On an empty table that `UPDATE` matches and locks no row, so two concurrent acquires on a freshly-migrated store are
-  unserialized on postgres — the asymmetry [../../standards/persistence.md](../../standards/persistence.md)'s
-  engine-factory exception also records.
-- **Running more than one hub process.** Every writer this spoke covers is migrated onto its rule, but no deployment
-  topology stands up a second hub process against one store today.
-- **The event broker, marker tokens, background sweeps, and migrate-on-boot.** Each is single-process by construction —
-  an in-memory subscriber fan-out, a token minted once per process start, a sweep loop with no cross-process
-  coordination, and a migration run assumed uncontended at boot — and none is touched here.
+  unserialized on postgres; sqlite still serializes them, the statement taking its single writer lock whether or not a
+  row matches.
+- **Running more than one hub process.** No deployment topology stands up a second hub process against one store.
+- **Single-process components outside this rule.** Each is single-process by construction, and this rule governs none of
+  them:
+  - **The event broker** — an in-memory subscriber fan-out.
+  - **Marker-write tokens** — held by an in-memory authority, so a token verifies only in the process that minted it
+    ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The marker-write capability token).
+  - **Background sweeps** — loops with no cross-process coordination.
+  - **Migrate-on-boot** — a migration run assumed uncontended at boot.
 
 ## See also
 
+- [../crash-correctness/hub.md](../crash-correctness/hub.md) — whether a write this rule's locks wrap has a crash
+  window, which no lock here decides.
 - [../../standards/persistence.md](../../standards/persistence.md) — `bzh:sql-portable`, which this rule's locked
   statement is itself held to.
 - [../crash-correctness.md](../crash-correctness.md) — `bzh:invariant-checker`'s `hub:one-live-route-per-chunk`, the

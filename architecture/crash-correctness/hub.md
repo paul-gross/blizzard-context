@@ -152,11 +152,10 @@ before the insert it feeds, there is no narrower window here to name and accept.
 The same transaction also releases the deleted chunk's own standing outgoing dependency edges, via
 `release_outgoing_edges_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) called on the
 same `conn` right after `record_deleted_row` — still inside the one `engine.begin()`, so a deleted dependent's own edges
-never survive it. `DeleteService.delete` also holds the residual fleet-wide lock `DependencyService`/`GroupService`
-share for their own fold and cycle check: the chunk's row lock alone doesn't reach the *other* end of an edge this
-delete releases, so a concurrent fold of that other chunk — which locks only the survivor and its merge ids, never this
-chunk — could otherwise remint the same edge, naming this chunk as its dependent, after it is gone. Holding the residual
-lock for the whole of `delete` serializes it against that fold's own whole transaction, closing the gap.
+never survive it. `DeleteService.delete` also holds the residual fleet-wide lock across that transaction — like the row
+lock above, a guard against a concurrent writer rather than a crash;
+[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt owns who shares it and the race
+it closes.
 
 The pairing owes the checker nothing because it is a single-transaction insert-plus-update(s), not a derived cross-fact
 invariant to recompute.
@@ -304,19 +303,13 @@ on the same connection, inside its own `store.write` transaction. Neither has a 
 inside: `declare_locked`'s insert either lands whole or not at all, and `release`'s read-then-write has nothing outside
 the transaction observing the read before the write commits.
 
-`DependencyService` (`blizzard/src/blizzard/hub/domain/dependencies.py`) holds `declare_locked` under two guards: the
-row lock over the `(dependent, prerequisite)` pair it shares with `ClaimService`/`EditService`/`RestartService`/
-`DeleteService` (`bzh:store-exclusive-write`), and a residual fleet-wide `threading.Lock` it shares with
-`GroupService`/`DeleteService` (`blizzard/src/blizzard/hub/composition.py`) for the one check a row lock cannot close:
-whether declaring this edge would close a cycle somewhere else in the standing graph, through chunks neither one names.
-Both guards wrap the same not-a-crash-window shape §Chunk delete, then hub-item withdrawal already takes for its own
-composite write: `declare_locked`'s own re-derived reads — the dependent's status, the prerequisite's ephemerality, the
-standing set the cycle check walks — all run before its one atomic transaction, never protecting against a crash
-mid-transaction. `release` takes only the residual fleet-wide lock: it can only shrink the standing set and can never
-close a cycle, so it needs no row lock over anything it writes. The prerequisite's re-derived ephemerality read is
-closed the same way: `GroupService` holds the same fleet-wide lock — plus its own row lock over the fold's own chunks —
-for its whole fold, so `declare_locked`'s ephemerality read is serialized against every writer that can make a
-prerequisite ephemeral, grouping included. `NoStandingDependencyOntoEphemeralChunk`
+`DependencyService` (`blizzard/src/blizzard/hub/domain/dependencies.py`) runs `declare_locked` and `release` under locks
+[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns — which
+each holds, and why. None is a crash guard. `declare_locked`'s guards wrap the same not-a-crash-window shape §Chunk
+delete, then hub-item withdrawal already takes for its own composite write: its own re-derived reads — the dependent's
+status, the prerequisite's ephemerality, the standing set the cycle check walks — all run before its one atomic
+transaction, never protecting against a crash mid-transaction. Those same guards serialize the ephemerality read against
+every writer that can make a prerequisite ephemeral, grouping included, so `NoStandingDependencyOntoEphemeralChunk`
 (`hub:no-standing-dependency-onto-ephemeral-chunk`) is a `bzh:invariant-checker` assertion as a backstop against a
 regression in that serialization, not a guard against a live gap.
 
@@ -324,10 +317,10 @@ Neither `declare` nor `release` earns a `bzh:crash-point-registry` entry — the
 insert and `release`'s read-then-write are each whole inside their own single transaction. `declare` alone introduces
 two derived cross-fact invariants the engine enforces no constraint behind: a standing edge could close a cycle in the
 dependency graph, or duplicate an already-standing ordered pair, with no schema-level constraint stopping either — so it
-earns two new `bzh:invariant-checker` assertions: `NoStandingDependencyCycle` (`hub:no-standing-dependency-cycle`) and
+earns two `bzh:invariant-checker` assertions: `NoStandingDependencyCycle` (`hub:no-standing-dependency-cycle`) and
 `NoDuplicateStandingDependency` (`hub:no-duplicate-standing-dependency`), `blizzard/src/blizzard/tools/invariants.py`.
-`release` only sets `released_at`/`released_by` on an already-standing row, inside that same single transaction: it can
-only shrink the standing set and can never close a cycle, so it introduces no derived invariant of its own.
+`release` only sets `released_at`/`released_by` on an already-standing row, inside that same single transaction: it adds
+no standing edge, so it introduces no derived invariant of its own.
 
 ### A fold's edge rewrite, riding its own `chunk_grouped` write
 
@@ -340,10 +333,9 @@ already-locked connection (`bzh:store-exclusive-write`). `GroupService.group`
 can ever commit ahead of a sibling target's own edge release/mint — the condition
 `hub:no-standing-dependency-onto-ephemeral-chunk` forbids: a standing edge naming an already-grouped-away chunk.
 `add_work_refs_locked` runs on the same connection too, ahead of `record_fold_locked` in the same loop-then-once shape,
-so the fold's work-ref merges and its edge rewrite now share one transaction rather than two: the narrower crash window
-this section once named here — some targets' work refs merged, none of them grouped yet — is closed outright, not merely
-covered by a converging retry. The whole fold earns no `bzh:crash-point-registry` entry on the "no window at all"
-ground: there is nothing left for a crash to land partway through, across the whole fold, work refs included.
+so the fold's work-ref merges and its edge rewrite share one transaction: no crash can leave some targets' work refs
+merged with none of them grouped. The whole fold earns no `bzh:crash-point-registry` entry on the "no window at all"
+ground: there is nothing for a crash to land partway through, across the whole fold, work refs included.
 
 ## Delivery-triggered finding closure, riding the close-intent drain
 
