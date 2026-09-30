@@ -13,6 +13,10 @@ A retired runner's credential is dead, it is hidden from the default fleet views
 its contact, and its claims outright, keyed on its id — so a caller with no token is refused as well. The refusal holds
 under every runner-auth mode. A claim refusal reuses the paused-claim denial shape, so an older runner reads it as one.
 
+Human federation through the retired runner's IdP client stops too. Once the redirect URI matches one the runner
+registered, the hub refuses the retired runner distinctly; an unknown client or an unregistered redirect URI keeps the
+one undifferentiated refusal, so the retired case is told apart only by a caller who already knows a registered URI.
+
 ## Holdings
 
 A runner holding chunks cannot be retired plainly: the hub refuses, naming each held chunk and its environments. A
