@@ -40,6 +40,6 @@ a lapsed condition; a miss for any other reason sets no condition. What the boar
 in place of the bars, a named miss reason on a row with no sample — is its own presentation. A runner that has declared
 no roster at all uses the roster-less fallback instead: a member stands while its sample passes the staleness gate, or
 independently while a lapsed-credential miss newer than it does, with the same surviving-sample rule once admitted
-either way. Either way
-there is never a fabricated zero, and the collection stays advisory: neither granting a chunk nor anything else the hub
-decides reads it. How old counts as too old to still show is a board presentation matter, not stated here.
+either way. Either way there is never a fabricated zero, and the collection stays advisory: neither granting a chunk nor
+anything else the hub decides reads it. How old counts as too old to still show is a board presentation matter, not
+stated here.
