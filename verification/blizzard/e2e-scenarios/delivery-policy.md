@@ -34,8 +34,12 @@ through the same generic `executor: hub` primitive.
 - `test_pr_ci_routes_failure_on_a_terminally_failed_check` — proves a terminally failed check routes `failure` back to
   `build` well inside the timeout budget, ruling out a `poll_timeout` trigger, the findings content distinguishing a
   plain CI failure from a red base check ("not this change").
-- `test_pr_ci_self_heals_a_behind_branch_and_lands` — proves a behind-base PR fires `update-branch` and pends before
-  healing, reaching `done` only once the `stale_branch` lever clears through that call.
+- `test_pr_ci_self_heals_a_behind_branch_and_lands` — proves a behind-base PR, with the base really moved, fires
+  `update-branch` and pends before healing, the head advancing past the submitted commit by a merge of the base and
+  reaching `done` only once the `stale_branch` lever clears through that call.
+- `test_pr_ci_refuses_a_foreign_commit_on_the_head` — proves a commit pushed onto the PR's branch after submission
+  routes `failure` back to `build`, the `delivery-findings` artifact naming that commit, with nothing merged at the
+  forge and bare `main` never moving.
 
 ## test_checks_gate_e2e
 

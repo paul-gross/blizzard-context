@@ -46,8 +46,9 @@ its own choices; a script relying on exit code alone to select among more than t
   repo's check runs have completed with a terminal conclusion (`cancelled` is not terminal — a concurrency-group
   cancellation is not a failed job); prints `conflict` immediately once a repo's PR reads `dirty` — a real merge
   conflict — rather than waiting out `poll_timeout`; prints `failure` immediately once a repo's check run has completed
-  failing on a check the base branch does not also fail; prints `inherited-failure` once a failing check the base branch
-  ALSO fails survives a one-time re-request unchanged; and prints `landed` once every repo has merged.
+  failing on a check the base branch does not also fail, or once a repo's PR head has advanced past the submitted commit
+  by anything but its own base merges; prints `inherited-failure` once a failing check the base branch ALSO fails
+  survives a one-time re-request unchanged; and prints `landed` once every repo has merged.
 
 **Don't.** A land script that prints `landed` and then a trailing summary line to stdout — the summary is now the last
 line, names no choice, and the step falls through as if it had said nothing.

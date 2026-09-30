@@ -15,9 +15,10 @@ names, or by name alone where the origin names no owner, so the same name under 
 environments holding one repository yield one pointer; pointers that disagree are reported and refused at delivery,
 never chosen between. The branch behind a pointer is pushed to the forge before the artifact is submitted, so the
 pointer never dangles. The hash is authoritative: branches move, so the hash pins the state actually verified, and the
-branch name serves only to detect work committed ahead of it. There is deliberately no fencing at the branch ref — a
-zombie clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing`,
-[fencing](../execution/fencing.md)).
+branch name serves only to detect work committed ahead of it. The hash stays authoritative through delivery: the lander
+may advance a delivery's head past it only by merging the base branch into it, and any other advance refuses the landing
+and bounces the chunk. There is deliberately no fencing at the branch ref — a zombie clobbering a branch can lose work,
+never land wrong work (`bzh:epoch-fencing`, [fencing](../execution/fencing.md)).
 
 A worker node's asset is normally submitted by explicit worker declaration per the node's `produces:` list
 ([declarations](../../standards/worker-nodes/declarations.md)).
