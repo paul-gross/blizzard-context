@@ -78,6 +78,9 @@ or e2e change, not a fresh obligation of its own.
 - A multi-sentence comment arguing a decision no test would fail on if the decision were reverted.
 - Alternative-rebuttal framing, greppable as "rather than", "instead of", "not X because".
 - Change-history framing, greppable as "unlike the old…", "previously…", "as of this change…" (`canon:no-retro`).
+- The crisp change-history shapes (`split out of`, `moved here from`, `formerly`, `once did`, `before this phase`) are
+  caught by `blizzard:process-ref-lint`'s `styles/Blizzard/ChangeHistory.yml` in `.md`, configured `.py` and `src/`
+  YAML, and web `.ts`/`.css`. The remaining history shapes need judgement; `.html` templates are outside Vale's scope.
 - Per-parameter provenance — each field introduced with the issue that added it, change history organized by parameter.
 - A process reference — a repo or hub tracker number, an issue or PR number, a review-finding id, a bare decision or
   finding id, a phase, or a lettered-change token — for example,
@@ -85,8 +88,8 @@ or e2e change, not a fresh obligation of its own.
   "change L(iii)"
   <!-- vale Blizzard.ProcessReference = YES --> — is the shared Vale rule (`styles/Blizzard/ProcessReference.yml`) to
   catch mechanically in a `.py`, `.ts`, `.css`, or `.md` file: `blizzard-context:markdown-prose-lint` in this repo's own
-  `*.md`, `blizzard:process-ref-lint` and `blizzard-mock:process-ref-lint` for those repos' full language surface. A
-  template's `.html` comment carries the same shapes but Vale cannot see it there, so it stays grep-detected.
+  `*.md`, `blizzard:process-ref-lint` and `blizzard-mock:process-ref-lint` for those repos' configured language surface.
+  A template's `.html` comment carries the same shapes but Vale cannot see it there, so it stays grep-detected.
 - An unresolvable reference in a generated description. `blizzard/tests/test_openapi_descriptions.py` fails the unit
   tier on those three shapes, scanning the committed specs and the `wire/` models no spec reaches.
 
