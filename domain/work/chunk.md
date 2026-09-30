@@ -80,12 +80,15 @@ a node another graph need not contain, so only a migration can move it.
 
 ### Model, effort, and harness defaults
 
-The default model preference, default effort, and default harness set are chunk properties beside the graph pin, minted
-empty — no preference expressed, so the runner's own default applies. They share the session declaration's vocabulary: a
-prioritized preference list of capability tiers or harness-native names, one effort value, and an ordered acceptable
-harness set ([../graphs/declared-sessions.md](../graphs/declared-sessions.md) §Harness set); a graph's declared session
+The default model preference, default effort, and default harness set are chunk properties beside the graph pin. A
+routine-run chunk inherits the routine's defaults at mint; other chunks mint them empty — no preference expressed, so
+the runner's own default applies. They share the session declaration's vocabulary: a prioritized preference list of
+capability tiers or harness-native names, one effort value, and an ordered acceptable harness set
+([../graphs/declared-sessions.md](../graphs/declared-sessions.md) §Harness set); a graph's declared session
 ([../graphs/declared-sessions.md](../graphs/declared-sessions.md)) outranks the chunk defaults field by field. The
-defaults are editable while the chunk is unclaimed and immutable thereafter — a wider window than the pin's.
+defaults are editable while the chunk is `not_ready` or `ready` — a wider window than the pin's, but excluding a paused,
+never-claimed chunk. Outside that window they are immutable except when a migration's authored choice names a model,
+replacing the default model preference ([./migration.md](./migration.md#authored-choice)).
 
 ### Intended migration
 

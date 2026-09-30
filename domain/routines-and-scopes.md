@@ -12,8 +12,11 @@ A scope comes into existence the moment its slug is first named — an operator 
 default scope no scope yet holds, or a delivery lane's review round naming one in a deferred finding at landing
 (`domain/findings-and-proposals.md`'s own review-sourced finding). Naming an already-existing slug again is not an error
 and does not overwrite what is already recorded against it: minting is idempotent, and a scope's description is changed
-only by explicitly editing it. A scope a review round mints carries a hub-written description naming the chunk that
-minted it, an operator's to edit later — the one path here whose minted description is not blank.
+only by explicitly editing it. The description at mint depends on what names the scope:
+
+- A routine naming its default scope mints a blank description.
+- An operator minting a scope directly supplies its description.
+- A review round's mint carries a hub-written description naming its chunk, an operator's to edit later.
 
 ## The name is a routine's lineage
 
