@@ -43,11 +43,11 @@ The real packaged `ideation` YAML with only its prompts swapped for scripts — 
 delivery command all reach the mint verbatim — run as a real routine (`POST /routines/{id}/run`) against a live hub
 minted with a gardening-axes registry declaring the routine's ideation axis, one chunk per authored path.
 
-- `test_ideation_runs_end_to_end_on_all_authored_paths` — ten runs of one routine: the declared-axis path carries survey
-  → reconcile → propose → deliver to a docket spanning all three graph-owned classes (`direction`, `tweak`, `retire`),
-  every proposal's `findings` empty, and the delivered finding set records the measurement with no revisions and no
-  finding rows; the operator then closes two of the delivered proposals — one accepted without minting a work item, one
-  passed with a reason — before a second run's reconcile reads every proposal and its closure back through
+- `test_ideation_runs_end_to_end_on_all_authored_paths` — repeated runs of one routine: the declared-axis path carries
+  survey → reconcile → propose → deliver to a docket spanning all three graph-owned classes (`direction`, `tweak`,
+  `retire`), every proposal's `findings` empty, and the delivered finding set records the measurement with no revisions
+  and no finding rows; the operator then closes two of the delivered proposals — one accepted without minting a work
+  item, one passed with a reason — before a second run's reconcile reads every proposal and its closure back through
   `garden proposals --state all`, asserts the passed one carries its reason, drops every candidate, and routes straight
   to deliver with survey's own skeleton measurement recorded; a third run returns the passed candidate saying what
   changed since that reason, so reconcile keeps it and propose's proposal names the earlier proposal's id; the

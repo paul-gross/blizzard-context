@@ -665,7 +665,7 @@ harness walks: the survey's own tool calls, a command outlasting one of them, an
 with a routine's charge.
 
 **Setup.** `tool:service-up` as for `blizzard:manual-hub`, then stop the env's own mock runner
-(`winter service down <env>/runner`) so it cannot claim the run. Four preconditions the stack does not give you:
+(`winter service down <env>/runner`) so it cannot claim the run. The preconditions the stack does not give you:
 
 - The hub store is at head: run `blizzard hub migrate --dir "$BZ_HUB_RUNTIME"` and restart the hub, or re-`init` a fresh
   runtime. A store left by an earlier tenant can carry a stamped revision without its columns, and delivery then fails

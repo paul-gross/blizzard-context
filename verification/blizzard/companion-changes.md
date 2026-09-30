@@ -51,8 +51,8 @@ the new route `404`.
 ## An OpenCode lever roster change extends both sides (`bzh:opencode-lever-roster-extends-both-sides`)
 
 **Rule.** A change to `blizzard-mock`'s `opencode_surface.levers.Lever`/`CATALOG` — adding, renaming, or removing a
-member — lands `blizzard`'s `tests/service/support.py::_fake_binary` kwarg and name-mapping in the same change, kept 1:1
-with the enum, and updates `_fake_binary`'s `len(lever_flags)` pin to match.
+member — lands `blizzard`'s `_fake_binary` (`tests/service/test_opencode_compatibility_service.py`) kwarg and
+name-mapping in the same change, kept 1:1 with the enum, and updates `_fake_binary`'s `len(lever_flags)` pin to match.
 
 **Why.** `blizzard` deliberately holds no dependency on `blizzard-mock` (`tests/support.py::github_double`'s established
 stance), so nothing mechanical diffs the two rosters — a member landed on one side alone drifts silently, covered only
