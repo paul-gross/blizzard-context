@@ -36,10 +36,10 @@ mock forge merges to bare `main`.
 
 ### blizzard-mock:gate
 
-`mise run gate` (a `[tasks.gate]` entry point this repo did not carry before) mirrors `gate.yml`'s own checks locally:
-ruff format --check, ruff check, pyright, `uv run pytest -m "not needs_blizzard"`, and the process-reference Vale rule.
-`gate.yml` runs the Vale rule as its own dedicated job, installing it through `jdx/mise-action` the same way the
-`quality` job already installs mise to run `mise run lint`/`typecheck`.
+`mise run gate` (`[tasks.gate]`) mirrors `gate.yml`'s own checks locally: ruff format --check, ruff check, pyright,
+`uv run pytest -m "not needs_blizzard"`, and the process-reference Vale rule. `gate.yml` runs the Vale rule as its own
+dedicated job, installing it through `jdx/mise-action` the same way the `quality` job already installs mise to run
+`mise run lint`/`typecheck`.
 
 ### blizzard-mock:process-ref-lint
 
@@ -51,8 +51,8 @@ ruff format --check, ruff check, pyright, `uv run pytest -m "not needs_blizzard"
 `gh run watch --repo paul-gross/blizzard-mock <run-id> --exit-status` — watch a GitHub Actions run, the `push`
 merge-gate on master or the `pr` gate, to completion, exiting non-zero on failure.
 
-**Required checks on `master`.** The `pr.yml` checks below, applied by an operator via
-`blizzard:manual-branch-protection` once the hosted hub runs a PR-landing change — not yet applied:
+**Required checks on `master`.** The `pr.yml` checks below are the set an operator applies and verifies via
+`blizzard:manual-branch-protection`:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input - <<'EOF'

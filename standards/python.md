@@ -38,7 +38,7 @@ triple-quoted string changes why they matter.
 **Scope.** Docstring prose wraps at the toolchain's 120-column ceiling in `src/`, and `tests/*` docstrings hold to the
 same 120 even though `per-file-ignores` disables `E501` there — one ceiling everywhere.
 
-**Detect.** A fact duplicated across docstrings; a docstring explaining today's code by contrast with code the same
+**Detect.** A fact duplicated across docstrings; a docstring explaining current code by contrast with code the same
 change deletes (*"unlike the old X"*, *"as of this change"*); a process reference in any shape `bzh:comment-locality`'s
 Detect names ([`./comments.md`](./comments.md)), gated regardless of whether it would still resolve.
 

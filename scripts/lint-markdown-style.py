@@ -3,7 +3,7 @@
 
 Runs the three repo-local markdown style gates — `dprint check` (format, per
 `dprint.json`), `rumdl check` (structural lint, per `.rumdl.toml`), and
-`vale --output=line` (prose, per `.vale.ini`) — over every scoped repo that
+`vale --output=JSON` (prose, per `.vale.ini`) — over every scoped repo that
 carries the corresponding config file, and re-emits their results as NDJSON
 lint findings. A repo without any of the three configs is silently out of
 scope: the configs are the opt-in, so a wider rollout needs only to commit
@@ -51,8 +51,6 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 RUMDL_LINE_RE = re.compile(r"^(?P<path>.+?):(?P<line>\d+):\d+: (?P<msg>\[MD\d+\] .*?)(?: \[\*\])?$")
 # dprint check names each unformatted file as: from /abs/path:
 DPRINT_FROM_RE = re.compile(r"^from (?P<path>.+):$")
-# vale --output=line format: <path>:<line>:<col>:<Style.Rule>:<message>
-VALE_LINE_RE = re.compile(r"^(?P<path>.+?):(?P<line>\d+):\d+:(?P<rule>[^:]+):(?P<msg>.*)$")
 
 
 def emit(check: str, status: str, message: str, *, file: str | None = None, line: int | None = None, remediation: str | None = None) -> None:
@@ -166,24 +164,33 @@ def check_rumdl(root: Path, files: list[Path] | None, workspace: Path) -> None:
 
 
 def check_vale(root: Path, files: list[Path] | None, workspace: Path) -> None:
-    argv = ["vale", "--output=line"]
+    argv = ["vale", "--output=JSON"]
     argv += ["."] if files is None else [str(f.relative_to(root)) for f in files]
     proc = run_tool(argv, root)
     if proc is None:
-        emit("markdown-prose-lint", "warn", f"vale not on PATH — process-reference check skipped for {rel(root, workspace)}", remediation="mise use -g vale")
+        emit("markdown-prose-lint", "warn", f"vale not on PATH — prose check skipped for {rel(root, workspace)}", remediation="mise use -g vale")
         return
-    if proc.returncode == 0:
+    if proc.returncode == 0 and not proc.stdout.strip():
         return
-    output = ANSI_RE.sub("", proc.stdout + proc.stderr)
-    named = False
-    for raw in output.splitlines():
-        m = VALE_LINE_RE.match(raw.strip())
-        if m:
-            named = True
-            emit("markdown-prose-lint", "fail", f"{m.group('rule').strip()}: {m.group('msg').strip()}", file=rel(root / m.group("path"), workspace), line=int(m.group("line")), remediation="State the fact the token stood for, or delete it (bzh:comment-locality); canon:no-process-refs forbids rephrasing the token itself.")
-    if not named:
-        detail = output.strip().splitlines()
-        emit("markdown-prose-lint", "fail", f"vale check failed in {rel(root, workspace)}: {detail[-1] if detail else 'no output'}")
+    try:
+        alerts = json.loads(proc.stdout)
+        if not isinstance(alerts, dict):
+            raise ValueError("expected Vale's file-to-alerts mapping")
+        if proc.returncode != 0 and not alerts:
+            raise ValueError("Vale exited without diagnostics")
+        for path, entries in alerts.items():
+            for alert in entries:
+                rule = alert["Check"]
+                if rule == "Blizzard.ChangeHistory":
+                    remediation = "State the current contract without the historical clause (canon:no-retro)."
+                elif rule == "Blizzard.ProcessReference":
+                    remediation = "State the fact the token stood for, or delete it (bzh:comment-locality); canon:no-process-refs forbids rephrasing the token itself."
+                else:
+                    remediation = "Consult the named Vale rule and revise the prose."
+                emit("markdown-prose-lint", "warn" if alert["Severity"] == "warning" else "fail",
+                     f"{rule}: {alert['Message']}", file=rel(root / path, workspace), line=alert["Line"], remediation=remediation)
+    except (ValueError, KeyError, TypeError) as exc:
+        emit("markdown-prose-lint", "fail", f"vale check failed in {rel(root, workspace)}: {proc.stderr.strip() or str(exc)}")
 
 
 def main() -> int:

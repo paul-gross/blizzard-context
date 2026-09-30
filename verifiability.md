@@ -20,10 +20,10 @@ Every command method below runs from the repo root.
 `blizzard-context:markdown-format` is the format gate `dprint.json` declares; `dprint fmt` writes the fix, and both
 forms need the `dprint` binary on `PATH`. `blizzard-context:markdown-lint` is the structural markdown lint `.rumdl.toml`
 declares; `rumdl check . --fix` applies the autofixable subset, and both need the `rumdl` binary on `PATH`.
-`blizzard-context:markdown-prose-lint` is the process-reference prose gate `.vale.ini` and `styles/Blizzard/` declare;
-it needs the `vale` binary on `PATH` (`mise use -g vale`). A document whose subject is the reference notation itself
-(`canon:no-process-refs`'s Exception) exempts a site with Vale's own inline marker,
-`<!-- vale Blizzard.ProcessReference = NO -->` before the exhibited example and `= YES` after it, rather than a
+`blizzard-context:markdown-prose-lint` checks process references (errors) and narrow change-history phrases (warnings)
+through `.vale.ini` and `styles/Blizzard/`; it needs the `vale` binary on `PATH` (`mise use -g vale`). A document whose
+subject is the reference notation itself (`canon:no-process-refs`'s Exception) exempts a site with Vale's own inline
+marker, `<!-- vale Blizzard.ProcessReference = NO -->` before the exhibited example and `= YES` after it, rather than a
 repo-wide `TokenIgnores` entry.
 
 `.github/workflows/{pr,push}.yml` run `blizzard-context:markdown-format`, `:markdown-lint`, `:markdown-prose-lint`,
@@ -50,8 +50,8 @@ Commands table row above, not in any workflow file. This repo carries no `mise.t
 and `vale` — the tools `gate.yml` actually runs — are each installed and pinned inline in the workflow
 (`mise x <tool>@<version> --`) rather than declared as `[tools]`.
 
-**Required checks on `master`.** The `pr.yml`/`push.yml` checks below, applied by an operator via
-`blizzard:manual-branch-protection` once the hosted hub runs a PR-landing change — not yet applied:
+**Required checks on `master`.** The `pr.yml`/`push.yml` checks below are the set an operator applies and verifies via
+`blizzard:manual-branch-protection`:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard-context/branches/master/protection --input - <<'EOF'

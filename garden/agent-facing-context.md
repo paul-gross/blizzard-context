@@ -41,8 +41,9 @@ Where a command already judges the same prose, it owns that judgement and this a
 - `canon:no-process-refs`'s crisp-signature shapes — the ones `styles/Blizzard/ProcessReference.yml` matches, listed in
   `bzh:comment-locality`'s Detect ([`../standards/comments.md`](../standards/comments.md)) — are out of range:
   `blizzard-context:markdown-prose-lint` judges every file against them. Every other shape `canon:no-process-refs`'s own
-  Detect list names, and `canon:no-retro`'s change-history narration, carries no crisp signature a mechanical rule can
-  safely match, and stays in range above.
+  Detect list names stay in range above.
+- `canon:no-retro`'s narrow phrase signatures matched by `styles/Blizzard/ChangeHistory.yml` are warned by
+  `blizzard-context:markdown-prose-lint`. Other change-history narration needs manual judgment and stays in range above.
 - A count, roster, or enumeration is out of range where `blizzard-context:registry-drift` reaches it. Its own declared
   limitations name what it does not, and that residue is in range.
 

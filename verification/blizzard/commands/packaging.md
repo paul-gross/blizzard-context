@@ -89,8 +89,8 @@ of its own) is pinned at `blizzard:unit-test` in `tests/test_compose_deployment.
 master or the `pr` gate, to completion, exiting non-zero on failure. This is the authoritative remote gate; the
 workflows and the watch loop are documented in the `blizzard` app repo's `docs/ci.md`.
 
-**Required checks on `master`.** The `pr.yml` checks below, applied by an operator via
-`blizzard:manual-branch-protection` once the hosted hub runs a PR-landing change — not yet applied:
+**Required checks on `master`.** The `pr.yml` checks below are the set an operator applies and verifies via
+`blizzard:manual-branch-protection`:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'EOF'
