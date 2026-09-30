@@ -55,8 +55,7 @@ Where a command already judges the same question, it owns that judgement and thi
 
 - Whether a mutant is killed is `blizzard:mutation`'s verdict, not this axis's — a run reads `mutants/report.json` and
   judges only the survivors it lists.
-- What the method cannot see — the tiers above `unit`, the trees no scope names, the paths its configuration excludes,
-  the decorated function bodies mutmut skips — is out of range here;
+- What the method cannot see is out of range here;
   [`../verification/blizzard/commands/mutation.md`](../verification/blizzard/commands/mutation.md) states that reach,
   and a production path pinned only above `unit` is `bzh:gating-tier-pins-production-paths`'s, judged per change.
 

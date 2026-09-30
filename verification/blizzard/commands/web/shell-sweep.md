@@ -288,8 +288,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-timeline-provenance.shell-sweep.spec.ts` covers the node-history timeline's harness-provenance badges: two
   steps recording distinct harnesses render two genuinely distinct badges beside their own usage figures, at the same
   narrow width, with no page error and no horizontal overflow. A second case, mounting both the timeline and the Node
-  history tab's Selection list over a step carrying only a runner-reported estimate, proves the estimate figure renders
-  on each, labeled, with no PARTIAL marker and no horizontal overflow at the same width.
+  history tab's Selection list over a step carrying only a runner-reported estimate, proves the estimate renders on each
+  folded into the step's one cost figure, with no PARTIAL marker and no horizontal overflow at the same width.
 - `chunk-detail-view-provenance.shell-sweep.spec.ts` covers the runner's local-panel escalation resume box's
   harness-provenance badge: it renders beside the resume command at the runner's own narrow width, with no page error
   and no horizontal overflow.

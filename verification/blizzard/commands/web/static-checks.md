@@ -101,10 +101,10 @@ temp directory) and resolves the initial chunk from it twice. At output granular
 `main.ts`, plus every output it reaches over a static `import-statement` edge, a `dynamic-import` edge starting a lazy
 chunk instead — it prints the per-area byte breakdown (framework, CDK, each fleet area) that a bundle-size change
 records. At source-file granularity, over the same metafile's module graph, it enforces the gate: a source file
-reachable that eagerly that matches a forbidden pattern — the fleet `chunk-detail/`, `garden/`, `graphs/`, or
-`transcripts/` sub-barrels, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay`/`listbox` bundles — fails the run, named
-together with the file that imports it. Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one eager
-import matching a forbidden pattern, one eager import that does not, and a forbidden pattern reached only through a
-dynamic import — runs before the walk is trusted (`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json`
-is the size backstop the same build enforces. Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside
+reachable eagerly that matches a forbidden pattern — the fleet `chunk-detail/`, `garden/`, `graphs/`, or `transcripts/`
+sub-barrels, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay`/`listbox` bundles — fails the run, named together with
+the file that imports it. Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one eager import matching
+a forbidden pattern, one eager import that does not, and a forbidden pattern reached only through a dynamic import —
+runs before the walk is trusted (`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json` is the size
+backstop the same build enforces. Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside
 `web:structural-gate`.
