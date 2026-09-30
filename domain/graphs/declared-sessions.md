@@ -28,11 +28,13 @@ preference, never a model the fleet must have: tier-to-model mapping is runner c
 harness-agnostic (`bzh:app-agnostic-graphs` in
 [../../architecture/system-shape.md](../../architecture/system-shape.md)).
 
-Model resolution is left-to-right; an unresolvable entry is skipped. A wholly unresolvable native-name-only list can
-fall back to the runner's default with one acceptable harness. A list containing a `blizzard:`-namespaced tier instead
-requires resolution of at least one preference: a harness resolving none is skipped, even if it is the only one, in
-which case selection fails. Model changes take effect only where a pool starts a session, never on a resume: a mid-chunk
-edit rotates the pool at its next member rather than switching a running session's model.
+Model resolution is left-to-right; an unresolvable entry is skipped. With an authored harness set, a wholly unresolvable
+native-name-only list can fall back to the runner's default for a sole acceptable harness. A list containing a
+`blizzard:`-namespaced tier instead requires resolution of at least one preference: a harness resolving none is skipped,
+even if it is the only one, in which case selection fails. With no authored harness set, selection is bypassed: the
+runner chooses its default harness, whose model resolution falls back to its default even for an entirely unresolvable
+tier list. Model changes take effect only where a pool starts a session, never on a resume: a mid-chunk edit rotates the
+pool at its next member rather than switching a running session's model.
 
 ## Effort
 
