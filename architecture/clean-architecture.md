@@ -66,6 +66,8 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
   the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
 - A `blizzard.*` class constructed more than once across the hub's composition-root files (`hub/app.py`,
   `hub/composition.py`, `hub/store/internal/chunk_store_factory.py`) — a second copy of a process-scoped collaborator.
+- `build_stores`, `build_production_harness_registry`, or `HarnessHealthCache` called anywhere under
+  `blizzard/src/blizzard/` other than `runner/composition.py` — a second copy of the runner's process graph.
 
 **Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
@@ -114,9 +116,8 @@ instead of the package's public surface, so the adapter can no longer change wit
 `from <pkg> import internal` form. `tests/test_layering.py`'s generic check fails the unit tier on it, over every
 `internal/` under `blizzard/src/blizzard/`, naming the owner.
 
-**Do.** `blizzard/src/blizzard/runner/harness/admission.py` gives `runner/loop/capability_snapshot.py` version admission
-and offline classification from the harness package's public surface, delegating to `runner/harness/internal/`.
-`blizzard/src/blizzard/foundation/store/batching.py` is the public home of the id-batching both daemons' stores share.
+**Do.** `blizzard/src/blizzard/foundation/store/batching.py` is the public home of the id-batching both daemons' stores
+share.
 
 **Don't.** A store adapter in one package importing an adapter or helper from another package's `internal/`, rather than
 taking the seam or a public module.
