@@ -42,6 +42,8 @@ What does not release:
   epoch, and session: the holding runner re-enters the node in the same environments rather than the chunk re-queuing.
 - A cross-graph restart records a migration that re-pins the chunk without re-queuing it — not one of the releasing
   writes.
+- A migration landing on a hub-executed node re-pins the chunk without re-queuing it either: the chunk stays in the
+  hub's hands ([../work/migration.md#landing](../work/migration.md#landing)), its route unreleased.
 - A terminal chunk can still hold a live route: a terminal transition authored by a runner node (the done shape
   [../work/statuses.md](../work/statuses.md) allows) releases nothing, so a done chunk may keep its finisher's route —
   harmless, because the claim path refuses a terminal chunk outright, so the route confers no tenure.
