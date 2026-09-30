@@ -58,7 +58,11 @@ sentence above already promises.
 
 Folding a chunk away carries its standing edges onto the survivor rather than releasing them outright — the blocked
 marking a dependent carries continues to resolve through the survivor after the fold, never left naming a chunk that no
-longer exists.
+longer exists. Each carried edge keeps the instant it was first declared, so the earliest-declared naming holds across a
+fold; where carried edges collapse onto one pair, the earliest instant wins.
+
+The standing dependency graph stays acyclic: a declare that would close a cycle is refused, and so is a group whose
+remapped edges would close one, even when only standing edges cause it.
 
 ## The neighborhood
 
