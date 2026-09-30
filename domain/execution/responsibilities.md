@@ -33,11 +33,13 @@ of its sample: a never-sampled or long-stale slug is still a member. Each member
 runner-unique slug and an operator-facing name — carrying its newest reported sample, with the time that sample was
 taken, and its newest reported miss, with the miss's own reason. A slug no longer declared is no longer a member, even
 though its sampled and missed reports persist and resume the moment it is redeclared. A lapsed credential takes
-precedence for display: when a subscription's newest miss is a lapsed credential newer than its newest (or absent)
-sample, that condition is set, but a surviving sample's own fields are never blanked by it — only a slug that has never
-sampled at all shows no windows alongside the condition. A fresh sample, or a later miss for any other reason, clears a
-lapsed condition — the other reason itself renders nothing. A runner that has declared no roster at all uses the
-roster-less fallback instead: a member stands while its sample passes the staleness gate, or independently while a
-lapsed-credential miss newer than it does, with the same never-blanked sample rule once admitted either way. Either way
-there is never a fabricated zero, and the collection stays advisory: neither granting a chunk nor anything else the hub
-decides reads it. How old counts as too old to still show is a board presentation matter, not stated here.
+precedence: when a subscription's newest miss is a lapsed credential newer than its newest (or absent) sample, that
+condition is set on the entry, and a surviving sample's own fields stay on the entry alongside it — only a slug that has
+never sampled at all carries no windows with the condition. A fresh sample, or a later miss for any other reason, clears
+a lapsed condition; a miss for any other reason sets no condition. What the board shows of the entry — the lapsed notice
+in place of the bars, a named miss reason on a row with no sample — is its own presentation. A runner that has declared
+no roster at all uses the roster-less fallback instead: a member stands while its sample passes the staleness gate, or
+independently while a lapsed-credential miss newer than it does, with the same surviving-sample rule once admitted
+either way. Either way there is never a fabricated zero, and the collection stays advisory: neither granting a chunk nor
+anything else the hub decides reads it. How old counts as too old to still show is a board presentation matter, not
+stated here.
