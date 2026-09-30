@@ -38,8 +38,8 @@ through the same generic `executor: hub` primitive.
   `update-branch` and pends before healing, the head advancing past the submitted commit by a merge of the base and
   reaching `done` only once the `stale_branch` lever clears through that call.
 - `test_pr_ci_refuses_a_foreign_commit_on_the_head` — proves a commit pushed onto the PR's branch after submission
-  routes `failure` back to `build`, the `delivery-findings` artifact naming that commit, with nothing merged at the
-  forge and bare `main` never moving.
+  routes `failure` back to `build`, the `delivery-findings/foreign-head` artifact naming that commit, with nothing
+  merged at the forge and bare `main` never moving.
 
 ## test_checks_gate_e2e
 
