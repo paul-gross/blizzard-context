@@ -20,10 +20,11 @@ Locking first is what makes the guard reads atomic with the write: on SQLite the
 before any later read; on Postgres it takes the row lock a concurrent locker of the same row queues behind.
 
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
-stop, complete, detach, and requeue. A macro-shape constraint on deployment topology, on what holds once more than one
-hub process may share a store — not a `kill -9` crash-correctness requirement; one hub process already serializes every
-one of these correctly today. Dependency **release** is exempt rather than uncovered: it can only shrink the standing
-set and can never close a cycle, so nothing it writes needs a row lock.
+stop, complete, detach, and requeue — and the epoch-fenced writes (`bzh:epoch-fencing`), which the row lock serialises
+against stop and restart. A macro-shape constraint on deployment topology, on what holds once more than one hub process
+may share a store — not a `kill -9` crash-correctness requirement; one hub process already serializes every one of these
+correctly today. Dependency **release** is exempt rather than uncovered: it can only shrink the standing set and can
+never close a cycle, so nothing it writes needs a row lock.
 
 **Detect.**
 
@@ -42,6 +43,10 @@ Postgres, where two writers naming the same set in different orders could otherw
 `ILockedChunkRead` — a domain-facing handle carrying no connection. A sibling write repository's own `*_locked` method
 takes that same handle and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a
 package-private cast only the store layer ever calls — the domain layer never sees a `Connection`.
+
+An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
+write calls on its own connection after the lock and its replay probe and before its first insert. It reads the terminal
+facts and the newest epoch there, so a stop or restart cannot land between the guard and the write.
 
 **Don't.** A `threading.Lock` shared by `ClaimService` and `EditService`, serializing their read-then-write CAS in one
 process — correct until a second hub process starts against the same store, at which point the two locks stop
