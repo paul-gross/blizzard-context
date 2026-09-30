@@ -73,7 +73,7 @@ lives, read and stored the same way.
 
 ## A proposal's findings are optional
 
-A garden proposal may name no findings at all: the hub enforces no minimum, empty or not. Whether a graph's own routine
+A garden proposal may name no findings at all: the hub enforces no minimum. Whether a graph's own routine
 requires one is that graph's own decision to make, never the hub's — the hub only stores, groups, and counts whatever a
 proposal names. Grouping findings under one response is still the proposal's whole job when it names any; a finding
 itself never groups.

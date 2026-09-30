@@ -47,7 +47,7 @@ key-set check alone cannot tell one from another and the case name would pin not
 `uv run pytest tests/test_cli_surface_contract.py` gates the `blizzard hub` and `blizzard runner` command trees against
 the golden corpus `contracts/cli/`: one `<root>.json` per root group, each holding every command node recursively
 reached from it — its full path, help text, short help, and its parameters' spellings, kinds, types, and required/hidden
-flags, in declaration order.
+flags, and each option's `help=` text, in declaration order.
 
 Both the corpus and the live tree the test diffs it against are built by the same walker, `blizzard.tools.cli_surface`,
 over plain `click` introspection (`click.Group.commands`, `click.Command.params`) — no invocation, no I/O. `build()`
