@@ -23,8 +23,10 @@ another scope refuses the whole delivery.
 Minting is not a run's alone: a delivery lane's own review round can raise a finding too, at the chunk's landing. A
 review-sourced finding carries no routine lineage — it answers to no routine's delta-diffing history, only to the scope
 it was filed under — and carries its own `severity`, blizzard's own closed vocabulary (`blocking`/`should-fix`), unlike
-the deployment-opaque `class`/`locus` every finding also carries. It also names the chunk whose review raised it. It is
-visible to every routine run sweeping that same scope, exactly as if that routine had raised it itself, and a run may
+the deployment-opaque `class`/`locus` every finding also carries. A review can only mint `should-fix`: only the
+findings it defers are minted, and a passing review cannot hold a blocking one, so no review-sourced finding is ever
+`blocking`. It also names the chunk whose review raised it. It
+is visible to every routine run sweeping that same scope, exactly as if that routine had raised it itself, and a run may
 answer it with `observed`/`gone` like any other. It arrives in no finding set — the one exception to the finding set's
 own "one per artifact" rule above — because a review delta spans whatever scopes its entries name and has no run behind
 it to measure.
@@ -87,8 +89,11 @@ carries no scope of its own, so nothing about its origin narrows which findings 
 more than one proposal, of either origin, open or closed — grouping is not exclusive.
 
 A routine's run is shown every finding it may cite: its routine's non-exited findings in every scope, plus
-review-sourced ones on its own scope. Its proposals may cite any of them, while its finding set's `observed` and `gone`
-ops stay within its own scope.
+review-sourced ones on its own scope. Its proposals may cite any of them — a run can only speak for what it swept, so
+another routine's finding is out of reach — while its finding set's `observed` and `gone` ops stay within its own
+scope. An operator's `create` and `attach` follow the same rule where findings are concerned: any non-exited finding,
+`delivered` and `gone` included, from any routine or scope; only an exited finding is refused. Both origins apply the
+same test of standing — not exited — and differ only in reach: a run's is bounded by its routine, an operator's is not.
 
 ## A proposal may be edited while it is open
 
