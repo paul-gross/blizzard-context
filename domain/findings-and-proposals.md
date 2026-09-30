@@ -95,7 +95,9 @@ ops stay within its own scope.
 Title, class, body, and the findings a proposal names may all change while the proposal is still open, regardless of its
 origin — a routine-run proposal is exactly as editable as an operator-authored one. Closure makes it immutable: once
 passed or accepted, no further edit, attach, or detach reaches it. This is a plain in-place replacement, not an
-append-only history — the newest edit is the only one that survives, never a superseded trail of prior versions.
+append-only history — the newest edit is the only one that survives, never a superseded trail of prior versions. An edit
+replaces only the fields it names: a field it leaves out keeps its value, so two edits naming different fields both
+survive.
 
 ## Never confused with a work-item proposal
 
