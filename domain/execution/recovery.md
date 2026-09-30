@@ -32,9 +32,9 @@ the chunk re-derives on its remaining facts — ready only when nothing else hol
 fences the old runner out.
 
 Detach **ends** the chunk rather than parking it: the worker is killed and the session is discarded, not resumable — the
-inverse of a per-chunk pause's park, which keeps the same session for a later resume ([./pause.md](./pause.md)).
-Pinning tests are `blizzard/tests/test_runner_detach.py::test_pull_abandons_a_live_detached_chunk` for the
-worker-killed half and
+inverse of a per-chunk pause's park, which keeps the same session for a later resume ([./pause.md](./pause.md)). Pinning
+tests are `blizzard/tests/test_runner_detach.py::test_pull_abandons_a_live_detached_chunk` for the worker-killed half
+and
 `blizzard/tests/test_runner_detach.py::test_a_chunk_detached_mid_node_and_reclaimed_starts_a_fresh_session_not_a_resume`
 for the session-discarded half.
 
