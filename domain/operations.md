@@ -1,27 +1,26 @@
 # Operational visibility (`bzh:operational-event-log`)
 
-Operational visibility is two operator-visible feeds over the same facts, read side by side: the severity-ranked **event
-log**, carrying only the failures a human must act on, and the pure-recency **activity feed** of everything recent —
-situational awareness rather than triage. This file is definitional — a taxonomy of event kinds and how they surface
+Operational visibility is two operator-visible feeds over the same facts, read side by side: the **event log**, carrying
+only the failures a human must act on, and the **activity feed** of everything recent — situational awareness rather
+than triage. Both read newest first. This file is definitional — a taxonomy of event kinds and how they surface
 (`canon:rule-shape` §File kinds) — and part of the domain model at [./index.md](./index.md).
 
 ## The event log
 
-The log is the hub's durable, append-only, typed, severity-ranked record of operationally-significant runner and worker
-failures — the subset an operator must act on, not a mirror of every state delta. The hub owns the log, recording each
-event and re-broadcasting it live; a failure the runner detects reaches it as a durable fact the runner reports.
+The log is the hub's durable, append-only, typed record of operationally-significant runner and worker failures — the
+subset an operator must act on, not a mirror of every state delta. The hub owns the log, recording each event and
+re-broadcasting it live; a failure the runner detects reaches it as a durable fact the runner reports.
 
 Each event carries a severity (`info` | `warning` | `critical`), a noun-verb kind name, the runner/chunk/lease/node it
 concerns where present, a human-legible message, and an open detail payload. Each event links back to its chunk. The log
-reads newest-and-most-severe first — critical before warning before info, newest within a band — and is filterable by
-severity, runner, or chunk.
+reads newest first across every severity, each row keeping its severity, and is filterable by severity, runner, or
+chunk.
 
 Both vocabularies are closed: the hub refuses an `event.recorded` fact whose kind is not in §Event kinds, or whose
 severity is not the one that kind declares.
 
-The log is bounded, at most 200 rows per read, the cap applied *after* severity ranking — it keeps the most severe rows,
-not merely the newest, so a `critical` older than the newest 200 rows still surfaces. The route caps below the hub's
-general list maximum.
+The log is bounded, at most 200 rows per read, the filters applied first and the cap after recency ordering — it keeps
+the newest rows, whatever their severity. The route caps below the hub's general list maximum.
 
 ### Event kinds
 
