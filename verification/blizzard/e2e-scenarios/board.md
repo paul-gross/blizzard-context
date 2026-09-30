@@ -97,6 +97,10 @@ The operational event log, holding both in-process and browser-driven assertions
   families before the first load, confirms the initial activity read renders every durable row, restarts the hub with a
   fresh replay ring over the same store, reloads, and confirms the same rows remain — the on-mount `GET /api/activity`
   backfill restoring durable history — with no duplicate or missing row.
+- `test_activity_rail_tracks_claim_transition_and_fact_burst_across_reload` — opens the real board before a mock runner
+  claims and completes a node, then pushes lease and usage facts through ingest. Checks the distinct claim and
+  transition, spend refresh without extra activity rows, one row for a shared-key question notification, and matching
+  durable activity identities and row count after reload.
 
 ## test_transcript_tab_browser_e2e
 
