@@ -64,13 +64,17 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
   with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
 - A `hub/` or `runner/` module — outside its own connections seam — acquiring `self._engine` directly instead of taking
   the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
+- A `blizzard.*` class constructed more than once across the hub's composition-root files (`hub/app.py`,
+  `hub/composition.py`, `hub/store/internal/chunk_store_factory.py`) — a second copy of a process-scoped collaborator.
 
 **Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
 the same process graph with explicit lifetimes:
 
-- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`
-- `build_services` in `blizzard/src/blizzard/hub/composition.py`
+- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`, which runs `build_hub_core`, then the work-source registry,
+  then `build_services`
+- `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core builds the shared stores
+  and leaf services once; `build_services` takes it and builds none of them
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py`, injected into the served app in
   `blizzard/src/blizzard/runner/app.py` and the periodic loop in `blizzard/src/blizzard/runner/loop/build.py`
 
