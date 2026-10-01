@@ -53,6 +53,12 @@ The activity feed is reconstructed fresh from the durable facts the domain alrea
 decisions, runner pauses, and event-log rows; no separate log is written for it. It is bounded: 24 hours by default, at
 most the 200 newest rows. The route caps below the hub's general list maximum.
 
+A route claim is its own occurrence, distinct from a node transition. Lease-mint and usage facts can refresh chunk,
+spend, and other views without adding another activity row: only the claim's route fact belongs in the feed, once. Live
+frames naming the same fact share one row even when they arrive on different event types or replay; keyless loggable
+occurrences remain separate. The live feed uses the same mapped chunk causes as the durable activity read, not the
+latest status displayed in a chunk-change frame.
+
 These produce no activity-feed row:
 
 - direct chunk edits — in-place mutation, with no durable fact behind it;
