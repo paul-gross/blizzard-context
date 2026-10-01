@@ -670,6 +670,20 @@ not measured.
 duration, and no `blizzard` file changed between the two reads. Record each backend's slowest step with the query or
 view used.
 
+**Recorded reading** (one env-local hub driving the delivery-conflict scenario's chunk `ch_01M3WNWM92HSYBSWENAXD5WG85`
+through a bounce, one collector on the unmodified documented config with both exporters live and no export errors in its
+log; the receiver and metrics ports moved by `--set`, as Setup says):
+
+| Backend              | Query or view                                                                      | Slowest step                                              |
+| -------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Jaeger (self-hosted) | `/api/v3/traces`, service `blizzard-hub`, root spans of the chunk                  | `step build` (epoch 1), 6.408 s                           |
+| Honeycomb (hosted)   | dataset `blizzard-hub`, root spans, `blizzard.chunk.id` = the chunk, `duration_ms` | longest 6.408 s, read by the operator in the Honeycomb UI |
+
+Jaeger's other roots were `step deliver` (epoch 2) 142.7 ms, `step build` (epoch 3) 4827.5 ms and `step deliver`
+(epoch 4) 125.9 ms. The Honeycomb reading is the operator's: the key at hand is an ingest key, which Honeycomb's Query
+API refuses, so the readback was by eye and the step's name was not recorded there. No `blizzard` file changed between
+the two reads.
+
 ### `blizzard:manual-sweep-pass-cost`
 
 **Surface.** One `EventDerivationReconciler.sweep()` pass's wall time, statement count, and bytes `zlib.decompress`
