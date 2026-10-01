@@ -281,6 +281,43 @@ evidence directory.
 records `complete: true` and `admissible: true`. This diagnostic result is not production adapter availability or a
 harness-selection decision.
 
+### `blizzard:manual-opencode-operator-bundle`
+
+**Surface.** The production OpenCode binding's effective operator bundle on a real admitted CLI, including native loader
+precedence, plugin discovery and events that a mock CLI cannot establish. The compatibility diagnostic uses its own
+isolated scratch configuration and does not exercise this binding.
+
+**Setup.** Use a disposable home (`HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`) and scratch git project, all under the
+lease scratch directory. Give both user and project scopes distinct benign config settings and plugins in their native
+OpenCode locations (`opencode.json` and `plugins/`); place an operator `opencode/opencode.json`, a plugin in
+`opencode/plugins/`, and a relative `{file:…}` companion in a test bundle. Use a real `opencode` in the runner's
+admitted range and a working provider login confined to this test home. Build the effective snapshot through the
+production bundle publisher and launch through `OpenCodeAdapter`, not the compatibility probe. Record the CLI version,
+source paths and effective directory; redact credentials and substitution contents from retained output.
+
+**Steps.**
+
+1. Inspect `opencode debug config` from the worker cwd with the adapter's exact `OPENCODE_CONFIG`,
+   `OPENCODE_CONFIG_CONTENT`, and `OPENCODE_CONFIG_DIR` environment. Compare its resolved settings and plugin list to
+   the source scopes; inspect the published JSON and companion paths. Each independent setting survives and the runner's
+   `permission.question` remains `deny`.
+2. Launch a fresh real worker turn that uses a permitted tool and attempts both an operator-denied tool and `question`.
+   Read the tool/permission events and plugin instrumentation, including the runner heartbeat endpoint: denied calls are
+   refused without waiting, each plugin loads once, and exactly one heartbeat arrives for each completed tool call.
+3. Resume the same session, send a nudge, run a judgement and invoke a child `task` session. For each invocation compare
+   the adapter's effective environment, resolved config, plugin execution count and heartbeat count to the tool events.
+4. Introduce a collision with `question` and separately with the runner plugin in the operator bundle; attempt startup
+   and confirm the error names the native source file and the previously published snapshot remains readable. Repeat
+   duplicate plugin identity tests across bundle, project and user JSON entries and native plugin directories. A
+   duplicate must either resolve to one explicitly selected source or fail before the worker launches with both paths.
+
+**Retained evidence.** Keep sanitized resolved-config output, the effective file's path and hash, CLI/tool events,
+plugin instrumentation and per-invocation heartbeat counts alongside the change under verification.
+
+**Passes when.** All settings and companion files load with the documented precedence, denied calls are refused, runner
+and operator plugins execute once each, exactly one heartbeat is emitted per tool call through fresh, resume, nudge,
+judgement and child sessions, and collisions fail with actionable paths without replacing a valid snapshot.
+
 ### `blizzard:manual-opencode-compatibility-rehearsal`
 
 **Surface.** That `blizzard/docs/deployment/opencode-compatibility.md`'s stated offline rehearsal path — emit a
