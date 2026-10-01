@@ -11,7 +11,7 @@ invariant, it does so in the slot skeleton owned by `winter-canon:/rule-shape.md
 | File                                         | Read when…                                                                                                   |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | [`model.md`](./artifacts/model.md)           | …you need what an artifact is — its kinds and scopes, and what a graph declares beside its nodes to be read. |
-| [`never-code.md`](./artifacts/never-code.md) | …you need what an artifact may and may not carry.                                                            |
+| [`never-code.md`](./artifacts/never-code.md) | …you need which artifact kinds the hub validates and what agents are guided never to attach.                 |
 | [`series.md`](./artifacts/series.md)         | …you need what a chunk accumulates across its nodes, or how a later node addresses an earlier one's output.  |
 | [`delivery.md`](./artifacts/delivery.md)     | …you need how a chunk's work lands, and why landing is not itself terminal.                                  |
 

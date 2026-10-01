@@ -29,8 +29,8 @@ A worker node's asset is normally submitted by explicit worker declaration per t
 
 **Graph scope** — definition text a graph's top-level `artifacts:` map bakes into the mint once
 ([declared artifacts](../graphs/declared-artifacts.md)); every chunk pinned to that mint reads back the identical,
-immutable content, and no worker ever produces it. A graph-scope entry is always the asset kind (`bzh:never-code`, owned
-by [never-code.md](./never-code.md)). A node reads graph-scope content on demand through the same lease-scoped verbs,
+immutable content, and no worker ever produces it. A graph-scope entry is always the asset kind
+([never-code.md](./never-code.md)). A node reads graph-scope content on demand through the same lease-scoped verbs,
 scope-qualified ([declarations](../../standards/worker-nodes/declarations.md)) — never injected as prompt content
 ([envelope](../execution/envelope.md)). What a graph-scope read costs is owned by `bzh:graph-scope-reads-local` in
 [artifact-scopes](../../architecture/system-shape/artifact-scopes.md).
