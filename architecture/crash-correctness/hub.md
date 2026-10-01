@@ -67,6 +67,29 @@ same transaction, so it carries no separate once-only claim of its own. `hub:no-
 catches a broken idempotency guard letting a ref carry both `closed` and `gone`, the second a stuck retirement past the
 point the folded transaction ever leaves one standing alone.
 
+## The trace export sweep
+
+`TraceExportSweep.sweep` (`blizzard/src/blizzard/hub/domain/tracing/sweep.py`) tells closed node steps to the configured
+exporter, then appends a `trace_cursor` row recording how far it told. Its one dangerous window is registered:
+`trace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not yet
+appended), swept by one dedicated scenario against an in-test OTLP sink
+(`tests/crash/test_kill9_sweep.py::test_kill9_at_trace_crash_point`). A crash there leaves the cursor unmoved, so the
+next pass re-reads and re-sends the same steps under the same span ids — delivery is at-least-once, and a backend
+deduplicates on span id. A crash before the exporter accepts loses nothing durable.
+
+Its other writes are exempt:
+
+- **Event-log rows.** The `trace-export-failed`, `trace-export-recovered`, and `trace-window-skipped` rows are
+  informational, append-only, and each a single-statement write. A crash before one commits loses only that row: a lost
+  failure or recovery row is recorded again on the next state change, and a lost skip row loses only the note, never the
+  cursor move it describes, because the jump row follows it.
+- **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append with no partner
+  write. A crash before it commits leaves the cursor where it was, and the next pass re-derives the same jump from a
+  fresh read.
+
+The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps past its own cursor
+— the rows it has not yet told — never a corpus it would rescan to find nothing changed.
+
 ## The marker-write capability token
 
 `MarkerAuthority` (`blizzard/src/blizzard/hub/delivery/marker_auth.py`) mints an in-memory, process-scoped token per

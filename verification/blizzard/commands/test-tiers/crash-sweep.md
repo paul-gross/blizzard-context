@@ -31,10 +31,10 @@ multi-repo checkout — `blizzard`, `blizzard-mock`, and the public `blizzard-wo
 
 The registry's boundary families are `resume.`, `abandon.`, `pause.`, `hubnode.` (the generic hub command node's
 per-step and pending-poll windows), `migrate.`, `attach.`, `declare-commit.`, `nudge.`, `checks.`, `preempt.`, `close.`
-(the close-intent outbox's enqueue-then-drain windows), and `usagelimit.` (the runner's own usage-limit brake-then-park
-window, on a worker generation's exit and a judge elicitation's exit alike), plus ungrouped generic build-to-deliver
-points that mostly fire in the runner loop (`bzh:crash-point-registry`). No case count is kept — the predicate is the
-membership test, not a number that drifts.
+(the close-intent outbox's enqueue-then-drain windows), `trace.` (the trace export sweep's after-export, before-cursor
+window), and `usagelimit.` (the runner's own usage-limit brake-then-park window, on a worker generation's exit and a
+judge elicitation's exit alike), plus ungrouped generic build-to-deliver points that mostly fire in the runner loop
+(`bzh:crash-point-registry`). No case count is kept — the predicate is the membership test, not a number that drifts.
 
 `claim.` — the route-claim boundary between persisting the route with its capability-token fact and the runner reading
 the plaintext token back — is the first ungrouped point armed on the hub, recovered generically by the runner's
@@ -75,6 +75,12 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   `close.after-close.before-record` — driven entirely through the built-in `hub` work source, no forge involved: the
   pending intent survives either kill and the item closes exactly once after convergence.
   `blizzard-context/architecture/crash-correctness/hub.md` owns both windows' own ground.
+- `trace.`, the trace export sweep's after-export, before-cursor window armed on the hub, is swept by
+  `test_kill9_at_trace_crash_point` over its lone member, `trace.after-export.before-cursor`: tracing is enabled against
+  an in-test OTLP sink before any step closes, since the cursor opens at enable time, with a zero settle window. After
+  the kill and an unarmed restart the sink holds the killed batch's span ids twice, one cursor row covers the re-sent
+  batch, and the invariants come back green. `blizzard-context/architecture/crash-correctness/hub.md` owns the window's
+  ground.
 - `preempt.`, the operator-restart teardown window armed on the runner, is swept by `test_kill9_at_preempt_crash_point`:
   an operator restarts a running chunk and the runner dies between killing the displaced worker and recording the
   `preempted` closure; recovery re-derives the same preempt off the hub's still-standing fence — the lease closes
