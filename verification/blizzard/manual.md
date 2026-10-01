@@ -627,6 +627,63 @@ deriving it from facts internally removes that read's own statement cost entirel
 count was already flat in fleet size before this change, per the queue-peek reading above. The hosted reading is owed
 separately, by an operator, once this change has redeployed there.
 
+### `blizzard:manual-trace-backends`
+
+**Surface.** One hub's fleet traces leaving through one operator collector, running the documented config
+(`packaging/otel-collector/collector.yaml` in `blizzard`) unmodified, to **two real backends at once** — a self-hosted
+store and a hosted service — and a reader finding a chunk's slowest step in each. `blizzard:e2e`'s `fleet traces`
+subtests prove the exported shape through a file exporter and `blizzard:collector-config` proves the config parses;
+neither delivers a span to a backend or reads one back.
+
+**Blind spot.** The self-hosted store is Jaeger all-in-one, not Tempo, which the config's comments name; both speak OTLP
+gRPC, so the exporter block is the same. A backend's own query and retention behavior beyond the one chunk read here is
+not measured.
+
+**Setup.**
+
+- Jaeger all-in-one in docker: `docker run -d -p 4317:4317 -p 16686:16686 jaegertracing/jaeger:latest` (OTLP gRPC on
+  4317, UI and query API on 16686).
+- Honeycomb as the hosted service. The key is the operator's own: ask for it through `blizzard runner ask`, naming only
+  where it lives, never its value, and pass it to the collector as `HOSTED_TRACES_API_KEY` from that location.
+- The documented collector config, the file itself unchanged, with `TRACE_STORE_ENDPOINT=127.0.0.1:4317`,
+  `TRACE_STORE_INSECURE=true`, `HOSTED_TRACES_ENDPOINT=https://api.honeycomb.io` and the key. Where the machine already
+  holds the config's default ports (`4318` for the receiver, `8888` for the collector's own metrics), move them with
+  command-line `--set` overrides — `--set receivers.otlp.protocols.http.endpoint=127.0.0.1:<port>` and
+  `--set service.telemetry.metrics.level=none` — rather than editing the file.
+- A hub traced through it: an env-local hub from a feature env, never the hosted hub, started with
+  `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:<port>` and `[tracing] sweep_seconds = 1` / `settle_seconds = 0` so
+  steps export as they close. `blizzard`'s e2e harness (`tests/e2e/test_acceptance_loop.py`'s `_hub`) is such a hub.
+
+**Steps.**
+
+1. Start Jaeger, then the collector, and confirm the collector is listening before the hub starts — the export cursor
+   opens at enable time, and a failed first export backs off for minutes.
+2. Drive one chunk through a bounce on the env-local hub — the delivery-conflict scenario's chunk (`merge_conflict`
+   lever armed) goes build → deliver → bounce → build.
+3. In Jaeger, find the chunk's traces by `blizzard.chunk.id` and read each step root's duration; the longest is the
+   slowest step.
+4. In Honeycomb, query the same chunk by `blizzard.chunk.id` over root spans (`parent_span_id` does not exist) and read
+   `duration_ms` per step; again the longest.
+5. Change nothing in `blizzard` between the two reads.
+
+**Passes when.** Both backends show the same step roots for the chunk, each backend yields the slowest step by name and
+duration, and no `blizzard` file changed between the two reads. Record each backend's slowest step with the query or
+view used.
+
+**Recorded reading** (one env-local hub driving the delivery-conflict scenario's chunk `ch_01M3WNWM92HSYBSWENAXD5WG85`
+through a bounce, one collector on the unmodified documented config with both exporters live and no export errors in its
+log; the receiver and metrics ports moved by `--set`, as Setup says):
+
+| Backend              | Query or view                                                                      | Slowest step                                              |
+| -------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Jaeger (self-hosted) | `/api/v3/traces`, service `blizzard-hub`, root spans of the chunk                  | `step build` (epoch 1), 6.408 s                           |
+| Honeycomb (hosted)   | dataset `blizzard-hub`, root spans, `blizzard.chunk.id` = the chunk, `duration_ms` | longest 6.408 s, read by the operator in the Honeycomb UI |
+
+Jaeger's other roots were `step deliver` (epoch 2) 142.7 ms, `step build` (epoch 3) 4827.5 ms and `step deliver`
+(epoch 4) 125.9 ms. The Honeycomb reading is the operator's: the key at hand is an ingest key, which Honeycomb's Query
+API refuses, so the readback was by eye and the step's name was not recorded there. No `blizzard` file changed between
+the two reads.
+
 ### `blizzard:manual-sweep-pass-cost`
 
 **Surface.** One `EventDerivationReconciler.sweep()` pass's wall time, statement count, and bytes `zlib.decompress`

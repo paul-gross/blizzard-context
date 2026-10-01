@@ -15,7 +15,8 @@ without `BLIZZARD_E2E=1`, and uses no browser.
 
 A delivery conflict at the default graph's `deliver` node lands zero repos: with the mock forge's `merge_conflict` lever
 armed, the PR the build node opened is not cleanly mergeable, nothing lands, the bounce routes back to `build`, and the
-route is kept.
+route is kept. It also proves its fleet traces — the `fleet traces` subtest reads the hub's exported spans back from a
+real `otelcol-contrib` — when a collector is present, and that subtest alone skips without one.
 
 - `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — proves the chunk's route holds at
   `build` with a `bounce-envelope` artifact recorded, cause `conflict`; the conflicted PR stays open and unmerged at the
@@ -25,10 +26,16 @@ route is kept.
 
 Delivery policy lives in YAML, not code: the module's graph differs from the default only in `deliver`'s `run:` script
 and poll cadence, names the same `land_pr_ci` script and choice names the shipped graph authors, and drives every route
-through the same generic `executor: hub` primitive.
+through the same generic `executor: hub` primitive. It also proves its fleet traces — the `fleet traces` subtest reads
+the hub's exported spans back from a real `otelcol-contrib` — when a collector is present, and that subtest alone skips
+without one.
 
 - `test_pr_ci_bounces_a_dirty_conflict_back_to_build` — proves a real merge conflict routes the first recorded bounce,
   cause `conflict`, back to `build`, with nothing merged at the forge.
+- `test_pr_ci_bounces_a_poll_timeout_back_to_build` — proves a PR blocked past the node's few-second `poll_timeout` is a
+  kick-back: the bounce carries cause `poll-timeout` and the chunk re-enters `build`, with nothing merged at the forge
+  and bare `main` never moving; its traces subtest shows the deliver step's `hub poll pending` events, its `bounce`
+  event, and the next `build` step linked `bounce`.
 - `test_pr_ci_pends_on_blocked_then_lands_when_green` — proves a blocked PR pends over several polls with exactly one
   unchanging `delivery-findings` artifact, then lands once the required check goes green.
 - `test_pr_ci_routes_failure_on_a_terminally_failed_check` — proves a terminally failed check routes `failure` back to
