@@ -299,8 +299,9 @@ source paths and effective directory; redact credentials and substitution conten
 
 1. Inspect `opencode debug config` from the worker cwd with the adapter's exact `OPENCODE_CONFIG`,
    `OPENCODE_CONFIG_CONTENT`, and `OPENCODE_CONFIG_DIR` environment. Compare its resolved settings and plugin list to
-   the source scopes; inspect the published JSON and companion paths. Each independent setting survives and the runner's
-   `permission.question` remains `deny`.
+   the source scopes; inspect the published JSON and companion paths. Relative `{file:…}` substitutions in
+   `OPENCODE_CONFIG_CONTENT` use absolute snapshot paths, since OpenCode resolves them against the worker cwd. Each
+   independent setting survives and the runner's `permission.question` remains `deny`.
 2. Launch a fresh real worker turn that uses a permitted tool and attempts both an operator-denied tool and `question`.
    Read the tool/permission events and plugin instrumentation, including the runner heartbeat endpoint: denied calls are
    refused without waiting, each plugin loads once, and exactly one heartbeat arrives for each completed tool call.
