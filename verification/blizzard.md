@@ -42,6 +42,7 @@ A command method passes when its command exits 0.
 | `blizzard:crash-sweep`           | `mise run crash-sweep` — the full kill-9 sweep over the crash-point registry *(more)*                                                                             |
 | `blizzard:sse-contract`          | `mise run sse-contract` — the SSE frame shape against the golden corpus `contracts/sse/` *(more)*                                                                 |
 | `blizzard:cli-contract`          | `uv run pytest tests/test_cli_surface_contract.py` — the CLI command tree against `contracts/cli/` *(more)*                                                       |
+| `blizzard:trace-contract`        | `uv run pytest tests/test_trace_contract.py` — the assembled span shape against `contracts/traces/` *(more)*                                                      |
 | `blizzard:restatement-sweep`     | `mise run restatement-check` — the one-home census *(more)*                                                                                                       |
 | `blizzard:mutation`              | `mise run mutation <scope>` — scoped, resumable mutation testing over `src/blizzard` *(more)*                                                                     |
 | `blizzard:prose-ratchet`         | `mise run prose-check` — the per-root prose ratchet                                                                                                               |
@@ -54,6 +55,7 @@ A command method passes when its command exits 0.
 | `blizzard:image-smoke`           | `mise run image-smoke` — the hub image booted on an empty data volume *(more)*                                                                                    |
 | `blizzard:compose-smoke`         | `mise run compose-smoke` — the reference compose deployment on a local image *(more)*                                                                             |
 | `blizzard:ci-workflows`          | `mise x actionlint@1.7.12 -- actionlint`                                                                                                                          |
+| `blizzard:collector-config`      | `mise run collector-config-check` — the example collector config validated by the pinned `otelcol-contrib` *(more)*                                               |
 | `web:lint`                       | `npm run lint` in `web/` — eslint over the Angular workspace, including the `max-lines` ceiling *(more)*                                                          |
 | `web:typecheck`                  | `npm run build` in `web/` — a real AOT compile of both Angular apps *(more)*                                                                                      |
 | `web:unit-test`                  | `npm run test` in `web/` — vitest, the frontend unit/component tier                                                                                               |
@@ -82,7 +84,8 @@ The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scope
 [`./blizzard/e2e-scenarios.md`](./blizzard/e2e-scenarios.md).
 
 `blizzard:ci-workflows` and `blizzard-mock:ci-workflows` scan `.github/workflows/` by default (run from each repo's own
-root) and are local-only — neither is wired into that repo's own `gate.yml`.
+root) and are local-only — neither is wired into that repo's own `gate.yml`. `blizzard:collector-config` is local-only
+the same way.
 
 ## Manual testing
 

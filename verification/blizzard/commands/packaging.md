@@ -83,6 +83,16 @@ postgres health dependency, `trusted_proxies` matching the declared network subn
 `BZ_HUB_DB_URL`, and — `test_hub_has_no_published_ports_only_reachable_through_the_proxy` — the hub publishing no port
 of its own) is pinned at `blizzard:unit-test` in `tests/test_compose_deployment.py`.
 
+### blizzard:collector-config
+
+`mise run collector-config-check` runs `otelcol-contrib validate` over `packaging/otel-collector/collector.yaml`, the
+example operator collector config that fans one trace stream to two backends. The task pins `otelcol-contrib` through
+mise's github backend, scoped to the task rather than the global `[tools]`, so the pin is the collector release the
+config is promised valid for. Local-only: the binary is about 390 MB and `gate.yml` is network-free, so no CI job runs
+it — the same pattern as `blizzard:ci-workflows`.
+
+Falsify it by planting an unknown key in the file and observing `validate` reject it, then reverting.
+
 ### blizzard:ci
 
 `gh run watch --repo paul-gross/blizzard <run-id> --exit-status` — watch a GitHub Actions run, the `push` merge-gate on
