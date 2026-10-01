@@ -61,6 +61,25 @@ The guard is a pure equality check with no forward-compatibility carve-out — u
 policy, an unknown field or a reordered parameter is exactly the drift this method exists to catch, ahead of the CLI's
 decomposition into by-concept packages: the surface must render identically at every step of that move.
 
+### blizzard:trace-contract
+
+`uv run pytest tests/test_trace_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the span shape the
+hub assembles for a step against the corpus `contracts/traces/`: `dictionary.json`, authored by hand, and one
+`golden/<scenario>.json` per seeded scenario, written only by regeneration — `BLIZZARD_REGEN_TRACE_CONTRACT=1` on the
+same command, which rewrites the golden and never the dictionary. The seeds are built from `tests/trace_fixtures.py`
+with no store and no OpenTelemetry import.
+
+The dictionary binds to the code and to the docs from both sides: its attribute names equal
+`blizzard.hub.domain.tracing.attributes`' declared set plus the resource keys, its scope and version constants equal the
+code's, and its id vectors reproduce through `blizzard.foundation.trace_ids`. The golden's span names, event names, link
+reasons and attribute keys equal the dictionary's — a newly declared attribute no seed emits fails the test rather than
+going unpinned — and every value has its dictionary type. The live assembly must equal the golden byte for byte. The
+tables in `docs/deployment/tracing.md` must equal the dictionary, and `docs/versioning.md` must name
+`blizzard.trace.schema_version`.
+
+Falsify it by renaming one attribute constant in `attributes.py` locally and observing red, then reverting
+(`bzh:case-pins-its-own-name`). The change policy lives in `docs/versioning.md`.
+
 ### blizzard:restatement-sweep
 
 The check fails on a census fact (`scripts/restated-invariants.json`) stated at an undeclared site (`new`), a declared
