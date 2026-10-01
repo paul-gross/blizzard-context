@@ -164,6 +164,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `kit-tooltip.shell-sweep.spec.ts` covers `KitTooltip`: a real pointer hover and a real keyboard `Tab` focus each open
   the trigger's overlay panel, and `aria-describedby` resolves to that panel's own id in the rendered DOM — real
   pointer, focus, and DOM-relationship claims jsdom cannot make.
+- `kit-select.shell-sweep.spec.ts` covers `KitSelect`'s popup at 390px: a long list stays height-capped and scrollable
+  without squeezing its options, keyboard focus scrolls the last option into view, and a short list keeps its natural
+  height without scrolling.
 - `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields, mounted directly with
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
   stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and
