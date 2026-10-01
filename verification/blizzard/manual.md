@@ -414,6 +414,51 @@ and a scratch workdir it can run non-interactively in with `-p`.
 **Passes when.** Every name in `WorkerSettings.DENIED_TOOLS` is unreachable under the emitted settings document in every
 mapped permission mode, and `TaskOutput`, `TaskStop`, and backgrounded `Bash` remain reachable under the same document.
 
+### `blizzard:manual-claude-code-bundle`
+
+**Surface.** An operator's `claude-code/` bundle published with the runner's required wiring composed in, then loaded by
+a real `claude`: whether the operator's tools, MCP servers, plugins, agents, and hooks reach the worker beside the
+runner's heartbeat, session-end hook, and denials. The mock tiers prove only argv threading and that the mock executes
+the composed hooks ([`./gaps.md`](./gaps.md#the-claude-code-bundle)); which ambient settings the composed `--settings`
+file cannot override is only measurable against the real CLI.
+
+**Setup.** A real Claude Code CLI inside the admitted range, a scratch workdir, and a runtime directory whose
+`[harness] config_dir` names a bundle holding all four entry points — a `settings.json` with an unrelated key, an
+operator `permissions.deny` entry, and an operator `PostToolUse` hook that writes a marker file; an `mcp.json` with a
+stdio server; an `agents.json`; and a `plugins/` folder with one plugin. Start the runner once so the snapshot is
+published; `blizzard runner harness status` prints the effective settings path and the flags to reuse. Never touch the
+operator's real `~/.claude`: point `CLAUDE_CONFIG_DIR` at a scratch user scope.
+
+**Steps.**
+
+Part (a), the CLI direct against the published snapshot:
+
+1. Run `claude -p --output-format stream-json --verbose --include-hook-events` with the flags `harness status` prints,
+   once per permission mode `[harness] autonomy` maps to. Read the `system/init` event: `tools` omits every
+   runner-denied and operator-denied tool, `mcp_servers` lists the operator's server, `plugins` lists the plugin, and
+   `agents` lists the agent. The operator's marker hook and the runner's heartbeat hook both execute.
+2. Put an unrelated key and `disableAllHooks: true` in a scratch user-scope `settings.json`, and again in a project
+   `.claude/settings.json`; repeat step 1. Hooks still fire. Record each key a user or project scope can set that the
+   composed `--settings` cannot override — each is a row the ambient-conflict rule table owes.
+3. Take a `--resume` turn and a judgement-shaped turn with the same flags; both keep the operator's and the runner's
+   wiring.
+4. Have a `Task` subagent attempt an operator-denied tool and list its MCP tools; it is refused the tool and sees the
+   server.
+5. Where `/etc/claude-code` is writable, place each managed rule's key in `managed-settings.json` and observe the
+   effect; otherwise record managed scope as unwalked.
+
+Part (b), through a real runner, with `blizzard:manual-live-node`'s setup and `[harness] config_dir` set:
+
+6. Run a node. The lease's heartbeat advances, the node's judgement runs, and the transcript shows the operator-denied
+   tool refused.
+7. Point the runner at a managed-settings fixture holding a conflicting key through its injected search path, and read
+   `GET /api/harness-health`: Claude Code is unavailable with `config_conflict`.
+
+**Passes when.** Every step's observation holds in every mapped permission mode, and step 2's measurement is recorded
+with the outcome that fixes the ambient rule table's user and project rows.
+
+**Hazards.** As `blizzard:manual-live-node`'s: never the systemd runners' stores, and never the hosted hub.
+
 ### `blizzard:manual-rollback-drill`
 
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
