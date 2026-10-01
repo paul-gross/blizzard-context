@@ -407,9 +407,12 @@ and a scratch workdir it can run non-interactively in with `-p`.
    direct call is refused.
 3. Repeat for `TaskOutput`, `TaskStop`, and a backgrounded `Bash` invocation, confirming each still succeeds under the
    same settings file.
+4. Repeat steps 2 and 3 under each Claude Code `--permission-mode` that `[harness] autonomy` maps to — `manual`, `auto`,
+   and `bypassPermissions` — adding `--permission-prompts none` under `manual`. Under `manual`, a tool call that needs
+   approval must be refused promptly as a tool error, never hang the turn.
 
-**Passes when.** Every name in `WorkerSettings.DENIED_TOOLS` is unreachable under the emitted settings document, and
-`TaskOutput`, `TaskStop`, and backgrounded `Bash` remain reachable under the same document.
+**Passes when.** Every name in `WorkerSettings.DENIED_TOOLS` is unreachable under the emitted settings document in every
+mapped permission mode, and `TaskOutput`, `TaskStop`, and backgrounded `Bash` remain reachable under the same document.
 
 ### `blizzard:manual-rollback-drill`
 
@@ -673,11 +676,11 @@ with a routine's charge.
 - The verification runner has its own runtime directory (`blizzard runner init`, then set `runner_id`, `workspace_envs`
   to the dedicated env, `max_agents = 1`, `[worker] path_prepend` to the mise shims, and `[opencode] enabled = false`),
   a `hub_url` at the env-local hub, `BZ_HARNESS_BINARY` set to the real harness, and `base_branch` set to the branch
-  under test. It starts from a clean environment, never the env band, so no mock fence or permission-mode override
-  reaches the real harness. The runner resets the dedicated env to `base_branch` on every acquire; a branch already
-  checked out in another env's worktree cannot be that base, so name a remote-tracking ref that only the verification
-  needs (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its own main, so
-  the ref is set only in the repo under test.
+  under test. It starts from a clean environment, never the env band, so no mock fence reaches the real harness. The
+  runner resets the dedicated env to `base_branch` on every acquire; a branch already checked out in another env's
+  worktree cannot be that base, so name a remote-tracking ref that only the verification needs
+  (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its own main, so the ref
+  is set only in the repo under test.
 - The delta run needs a baseline that both carries the command under test and leaves changed functions with mutants. An
   older commit alone cannot: it may predate the command, or the range may change only functions the method cannot see.
   Build the base as an older commit with the command's own commit cherry-picked onto it, and confirm with a direct run
