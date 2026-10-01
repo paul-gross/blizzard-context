@@ -324,7 +324,8 @@ untouched. From `<env>/blizzard`, source `winter env <env>` and run
 `uv run python scripts/probe_opencode_bundle_runner.py --chunk-id <disposable-ready-chunk-id>`. The script starts a
 disposable bundle-backed runner against that env's hub, waits for an active mock OpenCode lease, records a heartbeat,
 confirms its timestamp after a later tick via the runner API and CLI, then stops the runner and detaches the test chunk
-back to ready. The caller must supply a disposable chunk that is ready before the run.
+back to ready. Its local hub gateway admits only the selected chunk at queue peek and claim, regardless of other ready
+chunks' positions. The caller must supply a disposable chunk that is ready before the run.
 
 **Retained evidence.** Keep sanitized resolved-config output, the effective file's path and hash, CLI/tool events,
 plugin instrumentation and per-invocation heartbeat counts alongside the change under verification.
