@@ -118,6 +118,16 @@ shipping lane, which ships disabled by default (`[transcripts] ship = false`) an
   proving the tab, the lazy per-segment fetch, the thinking render, the nested-versus-standalone sidechain split, and
   the resume-seam links.
 
+## test_triage_history_browser_e2e
+
+The packaged default graph routes a claimed triage worker step into a lane. Its migration carries the same origin and
+epoch as the submitted rationale artifact and shipped transcript segment.
+
+- `test_triage_migration_selects_transcript_and_artifact` — opens the served hub board's Node history tab in real
+  Chromium, selects the authored-edge migration, and reads the triage transcript and `triage-findings` artifact. It
+  repeats the selection at desktop and ~390px widths, including the phone drill-down Back control, and checks for failed
+  API requests.
+
 ## test_graphs_diagram_browser_e2e
 
 The graph-explorer diagram: a real Chromium over the served board visits `/graphs` and opens a minted graph's detail
