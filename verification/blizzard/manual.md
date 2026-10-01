@@ -295,6 +295,13 @@ admitted range and a working provider login confined to this test home. Build th
 production bundle publisher and launch through `OpenCodeAdapter`, not the compatibility probe. Record the CLI version,
 source paths and effective directory; redact credentials and substitution contents from retained output.
 
+From `<env>/blizzard`, run `uv run python scripts/probe_opencode_operator_bundle.py --login <auth.json>` with
+`BLIZZARD_TMPDIR` set to the lease scratch directory. The source login must have at least an hour remaining on its
+access token. The script copies it into the disposable `XDG_DATA_HOME` (never symlinks it), stages all three config
+scopes, launches through the production adapter and prints a sanitized result with per-invocation tool names and
+plugin/heartbeat counts. It removes the disposable home on exit. Its heartbeat recorder intercepts the runner plugin's
+real CLI command; the env-local runner API check below proves that command's endpoint separately.
+
 **Steps.**
 
 1. Inspect `opencode debug config` from the worker cwd with the adapter's exact `OPENCODE_CONFIG`,
@@ -311,6 +318,13 @@ source paths and effective directory; redact credentials and substitution conten
    and confirm the error names the native source file and the previously published snapshot remains readable. Repeat
    duplicate plugin identity tests across bundle, project and user JSON entries and native plugin directories. A
    duplicate must either resolve to one explicitly selected source or fail before the worker launches with both paths.
+
+For the separate `blizzard:manual-runner` check on a provisioned feature env, keep the standing runner's paused fixtures
+untouched. From `<env>/blizzard`, source `winter env <env>` and run
+`uv run python scripts/probe_opencode_bundle_runner.py --chunk-id <disposable-ready-chunk-id>`. The script starts a
+disposable bundle-backed runner against that env's hub, waits for an active mock OpenCode lease, records a heartbeat,
+confirms its timestamp after a later tick via the runner API and CLI, then stops the runner and detaches the test chunk
+back to ready. The caller must supply a disposable chunk that is ready before the run.
 
 **Retained evidence.** Keep sanitized resolved-config output, the effective file's path and hash, CLI/tool events,
 plugin instrumentation and per-invocation heartbeat counts alongside the change under verification.
