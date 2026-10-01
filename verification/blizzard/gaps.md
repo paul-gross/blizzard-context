@@ -138,6 +138,16 @@ Standing in for a tier: `blizzard:manual-worker-deny-list` closes this as a live
 [`blizzard:manual-autocompact-window`](./manual.md#blizzardmanual-autocompact-window) — an external harness's live
 permission enforcement sits outside a hermetic, network-free CI tier's reach.
 
+## The Claude Code bundle
+
+The runner composes an operator's `claude-code/` bundle with its own wiring and passes the result to every unattended
+invocation. The mock-visible tiers prove only that composition produces the expected document and that the argv carries
+it; `blizzard-mock`'s `claude_code` facade parses `--mcp-config`, `--agents`, and `--plugin-dir` and executes the
+composed hooks, but loads no MCP server, plugin, agent, or ambient settings file. Whether the real CLI honors the
+composed file beside user, project, and managed settings is outside a hermetic CI tier's reach.
+
+Standing in for a tier: `blizzard:manual-claude-code-bundle` closes this as a live procedure.
+
 ## Claude Code transcript normalization
 
 `blizzard-mock`'s `ClaudeTranscriptWriter` (`blizzard-mock/src/blizzard_mock/harness/facades/_transcript.py`)
