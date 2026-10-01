@@ -10,7 +10,9 @@ deliver.
 
 ## test_escalation_e2e
 
-Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`.
+Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`. It also proves its fleet traces —
+the `fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is
+present, and that subtest alone skips without one.
 
 - `test_retries_exhausted_escalates_and_takeover_resumes_session` — proves the chunk derives `needs_human` and the
   surfaced takeover command, run verbatim, resumes the parked mock session (its persisted turn advances); the
@@ -20,7 +22,9 @@ Two verdict-less exits exhaust the node's retry budget and escalate to `needs_hu
 
 ## test_ask_answer_e2e
 
-A build worker runs the real `blizzard runner ask` and exits.
+A build worker runs the real `blizzard runner ask` and exits. It also proves its fleet traces — the `fleet traces`
+subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present, and that
+subtest alone skips without one.
 
 - `test_ask_parks_then_answer_resumes_session_to_done` — proves the chunk parks `waiting_on_human` with the reap clock
   stopped (extra ticks reap nothing and consume no retry; the same single question stays open), then
@@ -29,7 +33,9 @@ A build worker runs the real `blizzard runner ask` and exits.
 
 ## test_gate_decision_e2e
 
-A graph with a human `approve-gate` ahead of deliver.
+A graph with a human `approve-gate` ahead of deliver. It also proves its fleet traces — the `fleet traces` subtest reads
+the hub's exported spans back from a real `otelcol-contrib` — when a collector is present, and that subtest alone skips
+without one.
 
 - `test_graph_gate_parks_a_decision_then_decide_delivers` — proves an open Decision parks carrying the build's
   git-commit artifact, `blizzard hub decisions` lists it, `blizzard hub decide … approve` resolves it first-write-wins,

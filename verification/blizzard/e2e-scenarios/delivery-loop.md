@@ -14,7 +14,9 @@ single-repo checkout.
 
 ## test_acceptance_loop
 
-The happy path: build, then a scripted-PASS review, then deliver, to landed.
+The happy path: build, then a scripted-PASS review, then deliver, to landed. It also proves its fleet traces — the
+`fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present,
+and that subtest alone skips without one.
 
 - `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts both that the commit is reachable from bare `main` and
   that the hub's facts derive `done`.
@@ -32,7 +34,9 @@ child invokes winter. The mock harness owns creation of the feature branch; the 
 
 ## test_review_cycle_e2e
 
-The cycle where review fails once, then passes, and the chunk lands.
+The cycle where review fails once, then passes, and the chunk lands. It also proves its fleet traces — the
+`fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present,
+and that subtest alone skips without one.
 
 - `test_review_cycle_fails_once_then_delivers` — proves the findings asset and the fail edge's `prompt_addendum` thread
   back into build's re-entry envelope — the addendum's committed marker lands on bare `main` — with build running twice
@@ -56,7 +60,9 @@ choice, `to: graph:triage-delivery`, handing the chunk off. The crash-tier compa
 `test_kill9_at_migrate_crash_point`, the `migrate.after-record.before-response` window. The scenario's git and
 fleet-truth assertions run in-process regardless; with Chromium installed it also drives the served board and `/graphs`
 explorer to prove the two-graph timeline renders, degrading to the in-process assertions — never skipping the module —
-without Chromium, and taking no built-bundle guard, so that browser half fails loudly on an unbuilt bundle.
+without Chromium, and taking no built-bundle guard, so that browser half fails loudly on an unbuilt bundle. It also
+proves its fleet traces — the `fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` —
+when a collector is present, and that subtest alone skips without one.
 
 - `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — proves taking the choice records a
   migration (never a transition), re-pins `graph_id`, and re-queues the chunk at the target graph's own `build` node

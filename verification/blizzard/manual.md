@@ -627,6 +627,49 @@ deriving it from facts internally removes that read's own statement cost entirel
 count was already flat in fleet size before this change, per the queue-peek reading above. The hosted reading is owed
 separately, by an operator, once this change has redeployed there.
 
+### `blizzard:manual-trace-backends`
+
+**Surface.** One hub's fleet traces leaving through one operator collector, running the documented config
+(`packaging/otel-collector/collector.yaml` in `blizzard`) unmodified, to **two real backends at once** — a self-hosted
+store and a hosted service — and a reader finding a chunk's slowest step in each. `blizzard:e2e`'s `fleet traces`
+subtests prove the exported shape through a file exporter and `blizzard:collector-config` proves the config parses;
+neither delivers a span to a backend or reads one back.
+
+**Blind spot.** The self-hosted store is Jaeger all-in-one, not Tempo, which the config's comments name; both speak OTLP
+gRPC, so the exporter block is the same. A backend's own query and retention behavior beyond the one chunk read here is
+not measured.
+
+**Setup.**
+
+- Jaeger all-in-one in docker: `docker run -d -p 4317:4317 -p 16686:16686 jaegertracing/jaeger:latest` (OTLP gRPC on
+  4317, UI and query API on 16686).
+- Honeycomb as the hosted service. The key is the operator's own: ask for it through `blizzard runner ask`, naming only
+  where it lives, never its value, and pass it to the collector as `HOSTED_TRACES_API_KEY` from that location.
+- The documented collector config, the file itself unchanged, with `TRACE_STORE_ENDPOINT=127.0.0.1:4317`,
+  `TRACE_STORE_INSECURE=true`, `HOSTED_TRACES_ENDPOINT=https://api.honeycomb.io` and the key. Where the machine already
+  holds the config's default ports (`4318` for the receiver, `8888` for the collector's own metrics), move them with
+  command-line `--set` overrides — `--set receivers.otlp.protocols.http.endpoint=127.0.0.1:<port>` and
+  `--set service.telemetry.metrics.level=none` — rather than editing the file.
+- A hub traced through it: an env-local hub from a feature env, never the hosted hub, started with
+  `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:<port>` and `[tracing] sweep_seconds = 1` / `settle_seconds = 0` so
+  steps export as they close. `blizzard`'s e2e harness (`tests/e2e/test_acceptance_loop.py`'s `_hub`) is such a hub.
+
+**Steps.**
+
+1. Start Jaeger, then the collector, and confirm the collector is listening before the hub starts — the export cursor
+   opens at enable time, and a failed first export backs off for minutes.
+2. Drive one chunk through a bounce on the env-local hub — the delivery-conflict scenario's chunk (`merge_conflict`
+   lever armed) goes build → deliver → bounce → build.
+3. In Jaeger, find the chunk's traces by `blizzard.chunk.id` and read each step root's duration; the longest is the
+   slowest step.
+4. In Honeycomb, query the same chunk by `blizzard.chunk.id` over root spans (`parent_span_id` does not exist) and read
+   `duration_ms` per step; again the longest.
+5. Change nothing in `blizzard` between the two reads.
+
+**Passes when.** Both backends show the same step roots for the chunk, each backend yields the slowest step by name and
+duration, and no `blizzard` file changed between the two reads. Record each backend's slowest step with the query or
+view used.
+
 ### `blizzard:manual-sweep-pass-cost`
 
 **Surface.** One `EventDerivationReconciler.sweep()` pass's wall time, statement count, and bytes `zlib.decompress`
