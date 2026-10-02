@@ -138,6 +138,15 @@ Standing in for a tier: `blizzard:manual-worker-deny-list` closes this as a live
 [`blizzard:manual-autocompact-window`](./manual.md#blizzardmanual-autocompact-window) — an external harness's live
 permission enforcement sits outside a hermetic, network-free CI tier's reach.
 
+## Headless permission handling
+
+The runner composes OpenCode's `ask` rules to `deny` in `normal` autonomy, and relies on `claude -p` refusing an `ask`
+rule as a tool error. The mock-visible tiers prove only the composed document and argv against a fake resolver; whether
+a real CLI returns a tool error rather than rejecting the turn, or resolves the request under `--auto`, is outside a
+hermetic CI tier's reach.
+
+Standing in for a tier: `blizzard:manual-headless-permission-refusal` closes this as a live procedure.
+
 ## The Claude Code bundle
 
 The runner composes an operator's `claude-code/` bundle with its own wiring and passes the result to every unattended
