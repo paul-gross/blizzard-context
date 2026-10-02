@@ -16,7 +16,9 @@ without `BLIZZARD_E2E=1`, and uses no browser.
 A delivery conflict at the default graph's `deliver` node lands zero repos: with the mock forge's `merge_conflict` lever
 armed, the PR the build node opened is not cleanly mergeable, nothing lands, the bounce routes back to `build`, and the
 route is kept. It also proves its fleet traces — the `fleet traces` subtest reads the hub's exported spans back from a
-real `otelcol-contrib` — when a collector is present, and that subtest alone skips without one.
+real `otelcol-contrib` — when a collector is present, and that subtest alone skips without one. The hub runs with
+platform spans on at a zero root sample ratio, so the subtest also proves that the deliver step's `hub run step`
+platform spans parent on that trace's exported `hub exec` span: the hub's inline derivation and the sweep agree.
 
 - `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — proves the chunk's route holds at
   `build` with a `bounce-envelope` artifact recorded, cause `conflict`; the conflicted PR stays open and unmerged at the
