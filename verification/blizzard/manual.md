@@ -281,6 +281,59 @@ evidence directory.
 records `complete: true` and `admissible: true`. This diagnostic result is not production adapter availability or a
 harness-selection decision.
 
+### `blizzard:manual-opencode-operator-bundle`
+
+**Surface.** The production OpenCode binding's effective operator bundle on a real admitted CLI, including native loader
+precedence, plugin discovery and events that a mock CLI cannot establish. The compatibility diagnostic uses its own
+isolated scratch configuration and does not exercise this binding.
+
+**Setup.** Use a disposable home (`HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`) and scratch git project, all under the
+lease scratch directory. Give both user and project scopes distinct benign config settings and plugins in their native
+OpenCode locations (`opencode.json` and `plugins/`); place an operator `opencode/opencode.json`, a plugin in
+`opencode/plugins/`, and a relative `{file:…}` companion in a test bundle. Use a real `opencode` in the runner's
+admitted range and a working provider login confined to this test home. Build the effective snapshot through the
+production bundle publisher and launch through `OpenCodeAdapter`, not the compatibility probe. Record the CLI version,
+source paths and effective directory; redact credentials and substitution contents from retained output.
+
+From `<env>/blizzard`, run `uv run python scripts/probe_opencode_operator_bundle.py --login <auth.json>` with
+`BLIZZARD_TMPDIR` set to the lease scratch directory. The source login must have at least an hour remaining on its
+access token. The script copies it into the disposable `XDG_DATA_HOME` (never symlinks it), stages all three config
+scopes, launches through the production adapter and prints a sanitized result with per-invocation tool names and
+plugin/heartbeat counts. It removes the disposable home on exit. Its heartbeat recorder intercepts the runner plugin's
+real CLI command; the env-local runner API check below proves that command's endpoint separately.
+
+**Steps.**
+
+1. Inspect `opencode debug config` from the worker cwd with the adapter's exact `OPENCODE_CONFIG`,
+   `OPENCODE_CONFIG_CONTENT`, and `OPENCODE_CONFIG_DIR` environment. Compare its resolved settings and plugin list to
+   the source scopes; inspect the published JSON and companion paths. Relative `{file:…}` substitutions in
+   `OPENCODE_CONFIG_CONTENT` use absolute snapshot paths, since OpenCode resolves them against the worker cwd. Each
+   independent setting survives and the runner's `permission.question` remains `deny`.
+2. Launch a fresh real worker turn that uses a permitted tool and attempts both an operator-denied tool and `question`.
+   Read the tool/permission events and plugin instrumentation, including the runner heartbeat endpoint: denied calls are
+   refused without waiting, each plugin loads once, and exactly one heartbeat arrives for each completed tool call.
+3. Resume the same session, send a nudge, run a judgement and invoke a child `task` session. For each invocation compare
+   the adapter's effective environment, resolved config, plugin execution count and heartbeat count to the tool events.
+4. Introduce a collision with `question` and separately with the runner plugin in the operator bundle; attempt startup
+   and confirm the error names the native source file and the previously published snapshot remains readable. Repeat
+   duplicate plugin identity tests across bundle, project and user JSON entries and native plugin directories. A
+   duplicate must either resolve to one explicitly selected source or fail before the worker launches with both paths.
+
+For the separate `blizzard:manual-runner` check on a provisioned feature env, keep the standing runner's paused fixtures
+untouched. From `<env>/blizzard`, source `winter env <env>` and run
+`uv run python scripts/probe_opencode_bundle_runner.py --chunk-id <disposable-ready-chunk-id>`. The script starts a
+disposable bundle-backed runner against that env's hub, waits for an active mock OpenCode lease, records a heartbeat,
+confirms its timestamp after a later tick via the runner API and CLI, then stops the runner and detaches the test chunk
+back to ready. Its local hub gateway admits only the selected chunk at queue peek and claim, regardless of other ready
+chunks' positions. The caller must supply a disposable chunk that is ready before the run.
+
+**Retained evidence.** Keep sanitized resolved-config output, the effective file's path and hash, CLI/tool events,
+plugin instrumentation and per-invocation heartbeat counts alongside the change under verification.
+
+**Passes when.** All settings and companion files load with the documented precedence, denied calls are refused, runner
+and operator plugins execute once each, exactly one heartbeat is emitted per tool call through fresh, resume, nudge,
+judgement and child sessions, and collisions fail with actionable paths without replacing a valid snapshot.
+
 ### `blizzard:manual-opencode-compatibility-rehearsal`
 
 **Surface.** That `blizzard/docs/deployment/opencode-compatibility.md`'s stated offline rehearsal path — emit a
