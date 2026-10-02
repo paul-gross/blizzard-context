@@ -64,21 +64,23 @@ decomposition into by-concept packages: the surface must render identically at e
 ### blizzard:trace-contract
 
 `uv run pytest tests/test_trace_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the span shape the
-hub assembles for a step against the corpus `contracts/traces/`: `dictionary.json`, authored by hand, and one
-`golden/<scenario>.json` per seeded scenario, written only by regeneration — `BLIZZARD_REGEN_TRACE_CONTRACT=1` on the
-same command, which rewrites the golden and never the dictionary. The seeds are built from `tests/trace_fixtures.py`
-with no store and no OpenTelemetry import.
+hub assembles for a step, and a runner for a lease, against the corpus `contracts/traces/`: `dictionary.json`, authored
+by hand, and one `golden/<scenario>.json` per seeded scenario, written only by regeneration —
+`BLIZZARD_REGEN_TRACE_CONTRACT=1` on the same command, which rewrites the golden and never the dictionary. The seeds are
+built from `tests/trace_fixtures.py` and `tests/runner_trace_fixtures.py` with no store and no OpenTelemetry import.
 
-The dictionary binds to the code and to the docs from both sides: its attribute names equal
-`blizzard.hub.domain.tracing.attributes`' declared set plus the resource keys, its scope and version constants equal the
-code's, and its id vectors reproduce through `blizzard.foundation.trace_ids`. The golden's span names, event names, link
-reasons and attribute keys equal the dictionary's — a newly declared attribute no seed emits fails the test rather than
-going unpinned — and every value has its dictionary type. The live assembly must equal the golden byte for byte. The
-tables in `docs/deployment/tracing.md` must equal the dictionary, and `docs/versioning.md` must name
+The dictionary binds to the code and to the docs from both sides: its attribute names equal the declared sets of
+`blizzard.hub.domain.tracing.attributes` and `blizzard.runner.domain.tracing.attributes` plus the resource keys; its
+event names equal both modules' `EVENT_*` constants; its roles equal `SpanRole` and `RunnerSpanRole`, each bound to its
+daemon's scope; its scope and version constants equal the code's; and its id vectors, a runner `worker` vector among
+them, reproduce through `blizzard.foundation.trace_ids`. The golden's span names, event names, link reasons and
+attribute keys equal the dictionary's — a newly declared attribute no seed emits fails the test rather than going
+unpinned — and every value has its dictionary type. The live assembly must equal the golden byte for byte. The tables in
+`docs/deployment/tracing.md` must equal the dictionary, and `docs/versioning.md` must name
 `blizzard.trace.schema_version`.
 
-Falsify it by renaming one attribute constant in `attributes.py` locally and observing red, then reverting
-(`bzh:case-pins-its-own-name`). The change policy lives in `docs/versioning.md`.
+Falsify it by renaming one attribute constant, or one runner event name, in either `attributes.py` locally and observing
+red, then reverting (`bzh:case-pins-its-own-name`). The change policy lives in `docs/versioning.md`.
 
 ### blizzard:restatement-sweep
 

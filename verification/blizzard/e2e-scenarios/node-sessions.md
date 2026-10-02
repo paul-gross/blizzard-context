@@ -61,7 +61,11 @@ One traversal, one graph: a `build` node (default Claude Code, no `session_harne
 through a real daemon pair instead. The runner daemon is cleanly restarted (SIGTERM, unarmed — no crash-point) twice:
 once right at the lineage boundary, before `opencode-review`'s fresh mint is ever attempted, and once more mid-way
 through that same OpenCode session, while it is hung open — proving a graceful operator restart survives both a harness
-handoff and a resume inside an already-open session on the harness it lands in.
+handoff and a resume inside an already-open session on the harness it lands in. Where a collector is present, both
+daemons export to a real `otelcol-contrib` from their first start, and the `runner traces` subtest proves the runner
+host's own sweep tells both nodes' lease spans across the restarts, nested on the hub's step roots by id alone, with
+`build`'s invocations carrying Claude Code and `opencode-review`'s carrying OpenCode in the one run; that subtest alone
+skips without one.
 
 - `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` — asserts every dispatch lands on
   the correct adapter with no cross-harness leakage (the runner store's own `harness_id` per lease); the second restart

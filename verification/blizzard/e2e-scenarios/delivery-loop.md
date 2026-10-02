@@ -16,7 +16,10 @@ single-repo checkout.
 
 The happy path: build, then a scripted-PASS review, then deliver, to landed. It also proves its fleet traces — the
 `fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present,
-and that subtest alone skips without one.
+and that subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with every
+runner node on a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest
+on the hub's step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips
+with `fleet traces`.
 
 - `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts both that the commit is reachable from bare `main` and
   that the hub's facts derive `done`.
@@ -36,7 +39,10 @@ child invokes winter. The mock harness owns creation of the feature branch; the 
 
 The cycle where review fails once, then passes, and the chunk lands. It also proves its fleet traces — the
 `fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present,
-and that subtest alone skips without one.
+and that subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with every
+runner node on a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest
+on the hub's step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips
+with `fleet traces`.
 
 - `test_review_cycle_fails_once_then_delivers` — proves the findings asset and the fail edge's `prompt_addendum` thread
   back into build's re-entry envelope — the addendum's committed marker lands on bare `main` — with build running twice
