@@ -361,3 +361,29 @@ an orphan directory behind a lease that is already closed, never a still-active 
 
 The write earns **no window at all**: neither half has a partner write to be separated from, and the worst either
 ordering leaves a crash to interrupt is one orphan directory, collected at the next restart.
+
+## The trace export sweep
+
+`LeaseTraceSweep.sweep` (`blizzard/src/blizzard/runner/domain/tracing/sweep.py`) tells closed leases to the configured
+exporter, then appends a runner `trace_cursor` row recording how far it told. Its one dangerous window is registered:
+`leasetrace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not yet
+appended), swept by one dedicated scenario against an in-test OTLP sink
+(`tests/crash/test_kill9_sweep.py::test_kill9_at_lease_trace_crash_point`). A crash there leaves the cursor unmoved, so
+the next pass re-reads and re-sends the same leases under the same span ids — delivery is at-least-once, and a backend
+deduplicates on span id. A crash before the exporter accepts loses nothing durable.
+
+Its other writes earn **no window at all**:
+
+- **The failure latch.** A `trace-export-failed` or `trace-export-recovered` announcement appends its
+  `trace_export_latch` row and enqueues its `event.recorded` fact in one transaction, on the `record_local_pause`
+  precedent, so a crash leaves both or neither. Losing both re-announces on the next state change, and the next start
+  seeds its latch from the newest row, so a restart mid-outage does not announce again.
+- **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append. A crash before it
+  commits leaves the cursor where it was, and the next pass re-derives the same jump from a fresh read.
+- **The window-skipped event.** It is enqueued before its jump row, so a crash between the two re-derives the jump and
+  enqueues the note again — a duplicate informational event, never a lost cursor move.
+- **The config-rejected event.** One enqueue per `runner host` start with no partner write; a crash before it commits is
+  followed by a start that announces it again.
+
+The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed leases past its own
+cursor, never a corpus it would rescan to find nothing changed.
