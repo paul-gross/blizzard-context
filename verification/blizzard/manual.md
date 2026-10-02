@@ -461,11 +461,31 @@ and a scratch workdir it can run non-interactively in with `-p`.
 3. Repeat for `TaskOutput`, `TaskStop`, and a backgrounded `Bash` invocation, confirming each still succeeds under the
    same settings file.
 4. Repeat steps 2 and 3 under each Claude Code `--permission-mode` that `[harness] autonomy` maps to — `manual`, `auto`,
-   and `bypassPermissions` — adding `--permission-prompts none` under `manual`. Under `manual`, a tool call that needs
-   approval must be refused promptly as a tool error, never hang the turn.
+   and `bypassPermissions` — adding `--permission-prompts none` under `manual`. What a call that needs approval
+   does is owned by [`blizzard:manual-headless-permission-refusal`](#blizzardmanual-headless-permission-refusal).
 
 **Passes when.** Every name in `WorkerSettings.DENIED_TOOLS` is unreachable under the emitted settings document in every
 mapped permission mode, and `TaskOutput`, `TaskStop`, and backgrounded `Bash` remain reachable under the same document.
+
+### `blizzard:manual-headless-permission-refusal`
+
+**Surface.** What a live headless CLI does with a permission request under each `[harness] autonomy` value. OpenCode
+auto-rejects an unanswered ask and the rejection ends the agent loop, so `normal` composes every ask to `deny`; no
+mock-driven tier observes either CLI's handling ([`./gaps.md`](./gaps.md#headless-permission-handling)).
+
+**Setup.** Real `opencode` in the runner's admitted range and a real `claude` with a login, from `<env>/blizzard` with
+`BLIZZARD_TMPDIR` set. OpenCode runs against a deterministic loopback OpenAI-compatible stub, so its tool call is
+guaranteed and it needs no credential; Claude Code runs a cheap model.
+
+**Steps.** Run `uv run python scripts/probe_headless_permission_refusal.py` (`--skip-claude` omits Claude Code). Per
+autonomy value it launches through the production adapters under a disposable home and scratch project. OpenCode
+cells ask from the operator bundle, user config, project config, project `agent.build.permission`, and a built-in default
+(a `.env` read). The Claude Code cell has an operator `permissions.ask` rule on a Bash command.
+
+**Passes when.** The script exits 0. In `normal`, every OpenCode cell ends with the call refused as a tool result, a
+final reply, and no `auto-rejecting` on stderr. In `auto` and `dangerous`, every OpenCode cell resolves the request
+without a prompt. Every Claude Code cell refuses the `ask` rule with a `permission_denials` entry and completes the
+turn. No cell times out.
 
 ### `blizzard:manual-claude-code-bundle`
 
