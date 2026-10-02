@@ -79,6 +79,12 @@ unpinned — and every value has its dictionary type. The live assembly must equ
 `docs/deployment/tracing.md` must equal the dictionary, and `docs/versioning.md` must name
 `blizzard.trace.schema_version`.
 
+The dictionary's `platform` section binds the same way: its scopes equal the hub's and the runner's
+`PLATFORM_INSTRUMENTATION_SCOPE` constants, its HTTP and database semconv versions equal
+`blizzard.foundation.platform_tracing.semconv`, and its attribute names equal the daemon-side platform keys, with the
+`### Platform attributes` table in `docs/deployment/tracing.md` equal to them. Platform spans are not assembled, so no
+golden covers them.
+
 Falsify it by renaming one attribute constant, or one runner event name, in either `attributes.py` locally and observing
 red, then reverting (`bzh:case-pins-its-own-name`). The change policy lives in `docs/versioning.md`.
 
