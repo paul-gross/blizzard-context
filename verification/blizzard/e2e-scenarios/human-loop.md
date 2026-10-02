@@ -12,11 +12,15 @@ deliver.
 
 Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`. It also proves its fleet traces —
 the `fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is
-present, and that subtest alone skips without one.
+present, and that subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with
+every runner node on a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease
+spans nest on the hub's step roots by id alone, each invocation carrying its harness, model and token counts; that
+subtest skips with `fleet traces`.
 
 - `test_retries_exhausted_escalates_and_takeover_resumes_session` — proves the chunk derives `needs_human` and the
-  surfaced takeover command, run verbatim, resumes the parked mock session (its persisted turn advances); the
-  escalation's `wrapped_takeover_command` is also shape-checked — the runner-composed
+  surfaced takeover command, run verbatim, opens the parked mock session — under Claude Code it resumes it (its
+  persisted turn advances); `mock-opencode`'s interactive shape only names it, never automating a turn; the escalation's
+  `wrapped_takeover_command` is also shape-checked — the runner-composed
   `blizzard runner takeover <chunk_id> --dir <resolved runner dir>` form, checked against the run's own resolved runner
   directory — though the verbatim raw command is the one executed.
 
@@ -24,7 +28,10 @@ present, and that subtest alone skips without one.
 
 A build worker runs the real `blizzard runner ask` and exits. It also proves its fleet traces — the `fleet traces`
 subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present, and that
-subtest alone skips without one.
+subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with every runner node on
+a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest on the hub's
+step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips with
+`fleet traces`.
 
 - `test_ask_parks_then_answer_resumes_session_to_done` — proves the chunk parks `waiting_on_human` with the reap clock
   stopped (extra ticks reap nothing and consume no retry; the same single question stays open), then
