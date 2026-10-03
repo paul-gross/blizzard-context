@@ -9,7 +9,8 @@ question is open and restarts when the answer's resume runs.
 ## Answering
 
 Exactly one answer ever exists — the first write wins — and later answerers are shown who won and what they said.
-Answering resumes the dormant agent session with the answer delivered into it.
+Answering resumes the dormant agent session with the answer delivered into it. The answer stays readable to every later
+session on the chunk, and binds them: none asks again what a person already decided, or contradicts it.
 
 Answered and delivered are distinct derived states: a person decided, versus the resume ran and the agent heard. A
 question row surfaces both, so the answerer sees the return trip rather than inferring it from the chunk moving.
