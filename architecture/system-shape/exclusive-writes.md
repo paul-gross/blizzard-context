@@ -66,6 +66,9 @@ Stated so a reviewer need not re-derive them:
     outgoing edge the delete releases, so a concurrent fold of that other chunk, locking only its own survivor and merge
     ids, could otherwise remint the edge with the deleted chunk as its dependent.
   - `DependencyService.release` — as its only lock, being exempt from the row lock (Scope above).
+  - `EgressSweep.sweep` and `EgressReset.reset` — the export's pass lock, which keeps an operator's cursor move from
+    being overwritten by the advanced cursor a pass in flight appends. `egress_cursor` holds no row known to exist to
+    lock, and the sweep it serializes against is itself a single-process background loop.
 - **The hub-exec slot's empty-table gap.** `acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`) locks
   via a table-wide no-op `UPDATE` against `hub_exec_slot`, which carries no unique constraint (`hub/store/schema.py`).
   On an empty table that `UPDATE` matches and locks no row, so two concurrent acquires on a freshly-migrated store are
