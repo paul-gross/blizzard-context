@@ -27,8 +27,8 @@ carries domain markup (rows, cards, forms) rather than delegating to a child; a 
 
 - `chunk-detail.ts` (the container — owns the query, maps `actionError` and the derived async state, forwards `detail`)
   renders the presentational `chunk-detail-panel.ts`, passing data down and re-emitting its outputs unchanged.
-- Under the exception: `local-identity.ts` (its own session read and logout mutation) and `local-pause-control.ts` (its
-  own status read and pause mutation) render straight off kit primitives (`KitBadge`, `KitButton`) inside the runner
+- Under the exception: `app-identity.ts` (its own session read and logout mutation) and `app-pause-control.ts` (its own
+  status read and pause mutation) render straight off kit primitives (`KitBadge`, `KitButton`) inside the runner
   header's `[header-trailing]` slot, owing no presentational sibling.
 
 **Don't.** A single component both injecting `injectHubRunnersQuery()` and rendering the registry table inline — testing

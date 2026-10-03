@@ -24,9 +24,9 @@ path to `errorMessage` — these two halves are review questions, not tooled.
 
 **Do.**
 
-- `local-panel/src/lib/status.query.ts`'s `injectLocalPauseMutation` returns `queryClient.invalidateQueries(...)` from
-  `onSettled` rather than voiding it; `local-pause-control.ts` binds `[disabled]="pending()"` off that same mutation's
-  `isPending()`, scoped to its own control.
+- `runner/src/app/status/status.query.ts`'s `injectLocalPauseMutation` returns `queryClient.invalidateQueries(...)` from
+  `onSettled` rather than voiding it; `machine/app-pause-control.ts` binds `[disabled]="pending()"` off that same
+  mutation's `isPending()`, scoped to its own control.
 
 **Don't.** `onSuccess: () => { void queryClient.invalidateQueries({ queryKey: someKey }); }` — the mutation reports
 settled before the refetch lands, and the view can show stale data as if the action had already taken effect.

@@ -91,15 +91,15 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   rule: the `:hover` tint backgrounds in `board-card.css` and `chunk-timeline.css`, the selected-row backgrounds pointed
   at `--tint-hover` instead of `--tint-selected`, and `chunk-artifacts.css`'s `:has()` re-scoped to
   `.artifact-plain:hover`.
-- `local-panel-mobile.shell-sweep.spec.ts` covers the runner's mobile chunk list — `LocalPanelMobile` then `ChunkCard`,
+- `app-panel-mobile.shell-sweep.spec.ts` covers the runner's mobile chunk list — `LocalPanelMobile` then `ChunkCard`,
   the component the narrow-viewport tier rule actually names, mounted beneath the persistent `MobileTabBar` (the rule's
   "mobile shell's bottom nav"). With five work items on a card, at 390px and 320px the `-webkit-line-clamp: 2` `.wi`
   lines must genuinely stack — distinct `top`s per line — with no horizontal overflow and no page error; proven able to
   fail by forcing `.wi` back to `display: inline` inside a `white-space: nowrap` container, which collapses every line
   onto one. The desktop `LocalPanelLayout`/`ChunkRow` pair is never reached below the mobile breakpoint and deliberately
   has no shell-sweep spec.
-- `chunk-detail-page.shell-sweep.spec.ts` covers the runner-local chunk detail page (`ChunkDetailPage`): at 390px and
-  320px it walks all four tabs — General, Node history, Artifacts, Transcripts — each checked for no horizontal
+- `chunk-page-runner-layout.shell-sweep.spec.ts` covers the runner's chunk page (the shared fleet `ChunkPage`): at 390px
+  and 320px it walks all four tabs — General, Node history, Artifacts, Transcripts — each checked for no horizontal
   overflow, exercising the General tab's `@media (min-width: 720px)` collapse and a long unbroken artifact key. Only
   General's own sections (`section-`-prefixed testids) are checked for stacking; Node history, Artifacts, and
   Transcripts — the last rendered through the shared `fleet-chunk-transcripts-container` — are each one nav-plus-viewer
@@ -119,11 +119,6 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   overlap, and long claim ids and subscription names remain inside both their card and the surrounding panel — including
   the same aging/stale colour and long-miss-reason claims `runner-view.shell-sweep.spec.ts` covers, since the mobile
   view renders the identical shared subscription-pace group component.
-- `transcript-panel.shell-sweep.spec.ts` covers the runner's `TranscriptPanel` in closed-lease-from-hub states: at 390px
-  and 320px a truncated archived read must render the archived badge and truncation banner (`transcript-archived-badge`,
-  `transcript-truncated`), and a hub-unreachable read (`hub_unreachable: true`) its degrade banner
-  (`transcript-hub-unreachable`), each with no element or panel overflow; proven able to fail by adding
-  `white-space: nowrap` to `.degrade-banner`.
 - `session-recovery-view.shell-sweep.spec.ts` covers `SessionRecoveryView`, which the runner app renders in place of the
   whole panel when a federation bounce could not complete silently: at 390px and 320px its headline/detail block and
   retry control must render with no view-wide horizontal overflow; proven able to fail by adding `white-space: nowrap`
@@ -243,7 +238,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `machine-detail-header.shell-sweep.spec.ts` covers the machine detail dock's own header: a real pointer hover on
   Pause/Resume must open the wired `KitTooltip` naming the claiming runner — a real CDK overlay claim jsdom cannot make
   — and the header's two clusters (identity, actions) must never overflow with a long chunk id and runner name live at
-  once, at 390px/320px (the mobile shell `local-panel-mobile.html` mounts `local-machine-detail` inside,
+  once, at 390px/320px (the mobile shell `app-panel-mobile.html` mounts `app-machine-detail` inside,
   `bzh:narrow-viewport-tier-rule`) and at a `LocalPanelLayout` desktop width.
 - `chunk-artifact-structured.shell-sweep.spec.ts` covers the two structured readings of a garden asset artifact —
   `ChunkArtifactDelta` and `ChunkArtifactSurvey` — mounted through `ChunkArtifactBody` inside a height-capped flex
@@ -293,10 +288,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   narrow width, with no page error and no horizontal overflow. A second case, mounting both the timeline and the Node
   history tab's Selection list over a step carrying only a runner-reported estimate, proves the estimate renders on each
   folded into the step's one cost figure, with no PARTIAL marker and no horizontal overflow at the same width.
-- `chunk-detail-view-provenance.shell-sweep.spec.ts` covers the runner's local-panel escalation resume box's
-  harness-provenance badge: it renders beside the resume command at the runner's own narrow width, with no page error
-  and no horizontal overflow.
+- `chunk-detail-view-provenance.shell-sweep.spec.ts` covers the runner's escalation resume box's harness-provenance
+  badge: it renders beside the resume command at the runner's own narrow width, with no page error and no horizontal
+  overflow.
 - `chunk-awaiting-human.shell-sweep.spec.ts` covers the Gate panel's origin line: a long runner id in "gated by runner …
   (runner config)" wraps inside the panel at about 390px rather than forcing horizontal scroll.
-- `local-info-view.shell-sweep.spec.ts` covers the runner panel's info section with a runner imposing several gates: the
+- `app-info-view.shell-sweep.spec.ts` covers the runner panel's info section with a runner imposing several gates: the
   Gates fact row stays inside the panel at about 390px rather than forcing horizontal scroll.

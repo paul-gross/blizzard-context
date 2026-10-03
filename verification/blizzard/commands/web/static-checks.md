@@ -58,6 +58,16 @@ classes (`KitPanel`'s `.panel`/`.p-hdr`/`.p-body`/`.lbl`, `KitAsyncState`'s `.st
 `REAL_TIMER_EXEMPT_FILES` idiom. Its own fixture self-test, `assertKitFloorDetectorWorks`, runs alongside
 `assertRealTimerDetectorWorks` before either sweep does.
 
+The same script also runs the placement sweep (`web/scripts/placement-sweep.js`, over the TypeScript compiler API;
+[`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
+`bzh:frontend-placement`): each direct child of `fleet/src/lib/` must be reached by the non-spec code of both `hub` and
+`runner`, with reach resolved to the symbol through the `fleet` and `fleet/shell` barrels and through `fleet`-internal
+imports, and no `fleet` file may import from `projects/hub` or `projects/runner`. A violation names the unit and the
+single app that reaches it, or no app when the unit is dead. `testing/` and the declaration-free `format/` barrel are
+exempt in `PLACEMENT_EXEMPT_UNITS`, each with its reason; mixed folders reached by both apps pass at the folder level.
+Its self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a
+both-app unit — runs first.
+
 The script also censuses every TypeScript, template, and stylesheet below `web/projects` for the retired board Top/group
 contract: its type, inputs, handlers, grouping mutation facade, and test handles. Generated grouping-client symbols are
 deliberately outside that census: API and CLI grouping remain supported. `assertBoardControlDetectorWorks` first
@@ -101,10 +111,10 @@ temp directory) and resolves the initial chunk from it twice. At output granular
 `main.ts`, plus every output it reaches over a static `import-statement` edge, a `dynamic-import` edge starting a lazy
 chunk instead — it prints the per-area byte breakdown (framework, CDK, each fleet area) that a bundle-size change
 records. At source-file granularity, over the same metafile's module graph, it enforces the gate: a source file
-reachable eagerly that matches a forbidden pattern — the fleet `chunk-detail/`, `garden/`, `graphs/`, or `transcripts/`
-sub-barrels, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay`/`listbox` bundles — fails the run, named together with
-the file that imports it. Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one eager import matching
-a forbidden pattern, one eager import that does not, and a forbidden pattern reached only through a dynamic import —
-runs before the walk is trusted (`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json` is the size
-backstop the same build enforces. Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside
-`web:structural-gate`.
+reachable eagerly that matches a forbidden pattern — the fleet `chunk-detail/` or `transcripts/` sub-barrels, the hub's
+`gardening/`, `graphs/`, or `board/chunk-dock/` folders, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay`/`listbox`
+bundles — fails the run, named together with the file that imports it. Its own fixture self-test,
+`assertBundleCompositionDetectorWorks` — one eager import matching a forbidden pattern, one eager import that does not,
+and a forbidden pattern reached only through a dynamic import — runs before the walk is trusted
+(`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json` is the size backstop the same build enforces.
+Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside `web:structural-gate`.
