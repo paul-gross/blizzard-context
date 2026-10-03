@@ -90,6 +90,35 @@ Its other writes are exempt:
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps past its own cursor
 — the rows it has not yet told — never a corpus it would rescan to find nothing changed.
 
+## The egress export sweep
+
+`EgressSweep.sweep` (`blizzard/src/blizzard/hub/domain/egress/sweep.py`) writes closed steps and usage as immutable
+files, commits a manifest naming them, then appends an `egress_cursor` row recording how far it wrote. Its two dangerous
+windows are registered, both swept by one dedicated scenario against a real temporary directory
+(`tests/crash/test_kill9_sweep.py::test_kill9_at_egress_crash_point`):
+
+- `egress.after-write.before-commit`: the pass's files are placed; the manifest that lists them is not.
+- `egress.after-commit.before-cursor`: the files and the manifest are placed; the cursor row that records them is not.
+
+A crash at either leaves the cursor unmoved, so the next pass re-reads the same rows and writes them again to new file
+names — delivery is at-least-once, and a reader keeps the copy with the latest `exported_at`. The killed pass's files
+are never opened or replaced again; a loader that reads only files a manifest names never sees the first pass's unlisted
+files. The scenario asserts the re-written rows equal the killed pass's rows apart from `exported_at`, and that every
+cursor row names files and a manifest that exist and agree.
+
+Its other writes are exempt:
+
+- **Event-log rows.** The `egress-write-failed`, `egress-write-recovered`, and `egress-config-rejected` rows are
+  informational, append-only, and each a single-statement write. A crash before one commits loses only that row: a lost
+  failure or recovery row is recorded again on the next state change, and a rejection is recorded again on the next
+  start.
+- **Anchor and idle rows.** The first pass's anchor row, and an advance that wrote no rows, are each one cursor-row
+  append with no partner write. A crash before one commits leaves the cursor where it was, and the next pass derives the
+  same row from a fresh read.
+
+The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps and usage past its
+own cursors — the rows it has not yet written — never a corpus it would rescan to find nothing changed.
+
 ## The marker-write capability token
 
 `MarkerAuthority` (`blizzard/src/blizzard/hub/delivery/marker_auth.py`) mints an in-memory, process-scoped token per
