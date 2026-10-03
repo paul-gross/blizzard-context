@@ -112,6 +112,9 @@ Its other writes are exempt:
   informational, append-only, and each a single-statement write. A crash before one commits loses only that row: a lost
   failure or recovery row is recorded again on the next state change, and a rejection is recorded again on the next
   start.
+- **Operator reset.** `EgressReset` appends one cursor row, then records its `egress-cursor-reset` event; it holds the
+  sweep's pass lock across the append, so the move is never overwritten by a pass in flight. A crash between the two
+  writes keeps the move and loses only the informational event row; the cursor is a fact, and `status` shows it.
 - **Anchor and idle rows.** The first pass's anchor row, and an advance that wrote no rows, are each one cursor-row
   append with no partner write. A crash before one commits leaves the cursor where it was, and the next pass derives the
   same row from a fresh read.
