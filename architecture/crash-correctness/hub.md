@@ -49,8 +49,10 @@ what keeps a second dangerous window closed here: written separately, a crash be
 transiently pending against an already-terminal ref, the exact shape `hub:no-pending-intent-against-terminal-ref` flags
 — and the armed crash point is checked for invariants immediately after the kill, before any recovery pass runs, so that
 shape would be a guaranteed trip, not a rare race. A crash before the folded transaction commits loses nothing (the
-closer's own contract is idempotent, so the next pass's re-attempt is a clean no-op); a crash after it, before the event
-write, loses only the informational, append-only event, never the fact or the retirement.
+closer's own contract is idempotent, so the next pass's re-attempt is a clean no-op — the GitHub closer's trace comment
+is deduped by a hidden per-chunk marker read before posting, so a re-attempt after a posted comment, a failed close, or
+a crash here never double-posts); a crash after it, before the event write, loses only the informational, append-only
+event, never the fact or the retirement.
 
 The sweep's per-intent backoff (`close_intent_attempts`) opens no window of its own. A `failed` outcome's attempt row
 rides `record_work_item_closure`'s own transaction above — the same one that writes the outcome fact — so it is exactly

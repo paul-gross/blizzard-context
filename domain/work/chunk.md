@@ -19,6 +19,8 @@ re-ingesting the same item mints a fresh chunk. An item already wrapped by a liv
 A chunk's work refs are closed at their own source through its binding once the chunk lands or an operator marks it done
 by hand — best-effort, eventually convergent, not atomic with the landing, and independent of whether the chunk keeps
 running. A chunk that lands and is only later abandoned still closes its work items, because it was in fact delivered.
+Closing a delivered item leaves a note at its source naming what landed it, once per chunk however often the close is
+retried.
 
 ## Materialization
 
