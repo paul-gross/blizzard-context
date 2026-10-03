@@ -88,6 +88,30 @@ golden covers them.
 Falsify it by renaming one attribute constant, or one runner event name, in either `attributes.py` locally and observing
 red, then reverting (`bzh:case-pins-its-own-name`). The change policy lives in `docs/versioning.md`.
 
+### blizzard:egress-contract
+
+`uv run pytest tests/test_egress_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the `steps` and
+`invocations` datasets the hub exports against the corpus `contracts/egress/`: `dictionary.json` and the two newest-copy
+view `.sql` files, authored by hand, and the generated `_schema/*.v1.json` and `golden/<scenario>/` —
+`BLIZZARD_REGEN_EGRESS_CONTRACT=1` on the same command rewrites those and the generated dictionary block of
+`docs/deployment/egress.md`, never the dictionary or the views. The contract is authoritative and the code is checked
+against it: the `DatasetSchema` built from the dictionary must equal `STEPS_SCHEMA` and `INVOCATIONS_SCHEMA` in column
+order, type, nullability and meaning, and its closed enumerated values must equal `StepKind`, `StepOutcome` and
+`PrecededBy`.
+
+The golden is the real `DirectoryEgressWriter` run over the shared tracing scenarios, exported in a first pass and a
+second that repeats one step and one invocation, with the token, pass stamps and `exported_at` fixed; it holds
+decompressed NDJSON files and manifests without digests. The NDJSON output must equal it, the Parquet output decoded
+must equal its rows, and the Parquet Arrow schema must equal the one `ColumnType` maps the contract to. `_schema/` must
+equal the contract rendered by the writer's own serializer and the bytes the writer places. The dictionary block in
+`docs/deployment/egress.md` must equal the contract rendered, and the page's published newest-copy views run in DuckDB
+over the golden, returning one row per identity at its latest `exported_at`. `docs/versioning.md` must name the egress
+contract. `duckdb` is a dev dependency, never an optional import, so the view check cannot skip.
+
+Falsify it by changing one `meaning` in `hub/domain/egress/schema.py`, a value in `step_row`'s output, one `StepOutcome`
+value in the dictionary, or the view's `exported_at DESC` ordering followed by regeneration, observing red for each,
+then reverting (`bzh:case-pins-its-own-name`). The change policy lives in `docs/versioning.md`.
+
 ### blizzard:restatement-sweep
 
 The check fails on a census fact (`scripts/restated-invariants.json`) stated at an undeclared site (`new`), a declared
