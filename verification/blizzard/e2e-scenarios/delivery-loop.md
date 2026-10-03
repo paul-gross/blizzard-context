@@ -28,12 +28,11 @@ the review's findings artifact, and fails on any; that subtest skips with `fleet
 
 - `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts both that the commit is reachable from bare `main` and
   that the hub's facts derive `done`.
-- `test_a_tail_sampling_decision_wait_splits_or_keeps_the_step_trace` — runs the loop behind a collector whose
-  `tail_sampling` keeps a trace only if it holds a step root, with the hub and runner settling for three seconds, and
-  reads what the collector received against what it kept. A one-second `decision_wait` decides on each trace's first
-  platform span, before its root, so it keeps no step root and no worker command span; the `decision_wait` the operator
-  docs give for the run's own settle, sweep and longest step keeps every root with its platform chain. It skips without
-  a collector.
+- `test_a_tail_sampling_decision_wait_splits_or_keeps_the_chunk_trace` (ids `short` and `whole-chunk`) — runs the loop
+  behind a collector whose `tail_sampling` keeps a trace only if it holds a step root, with the hub and runner settling
+  for three seconds, and reads what the collector received against what it kept. A one-second `decision_wait` decides on
+  the chunk trace's first platform span, before any root, so it keeps no step root and no worker command span; a
+  `decision_wait` longer than the whole chunk keeps the step roots and the platform chain. It skips without a collector.
 - `test_build_worker_reads_work_item_through_the_passthrough` — the build worker fetches its issue body and comment
   through the runner-to-hub work-item pass-through and commits the fetched text, asserted reachable from bare `main` —
   MVP criterion 1 at the e2e tier.
