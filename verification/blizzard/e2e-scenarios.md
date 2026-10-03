@@ -23,3 +23,4 @@ no module sections; the routing table below is the routing map and the discovery
 | [board.md](./e2e-scenarios/board.md)                     | The browser proofs over the hub-served web app — board views, live SSE updates, the graph explorer                       |
 | [runner-panel.md](./e2e-scenarios/runner-panel.md)       | The panel a runner serves itself                                                                                         |
 | [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden graphs' run paths                                                                                    |
+| [egress.md](./e2e-scenarios/egress.md)                   | A night of chunks exported to files, read back from the directories alone                                                |
