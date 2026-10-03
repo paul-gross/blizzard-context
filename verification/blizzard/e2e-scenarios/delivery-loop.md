@@ -26,8 +26,9 @@ command carries on to the runner's call to the hub, the hub's request under it a
 the raw exported file for the workers' lease tokens, the runner's route token, its hub bearer and the sentinel body of
 the review's findings artifact, and fails on any; that subtest skips with `fleet traces`.
 
-- `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts both that the commit is reachable from bare `main` and
-  that the hub's facts derive `done`.
+- `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts that the commit is reachable from bare `main`, that the
+  hub's facts derive `done`, that the merged PR's body names the issue's forge reference and the chunk id, and that bare
+  `main`'s merge commit message carries the same reference.
 - `test_a_tail_sampling_decision_wait_splits_or_keeps_the_chunk_trace` (ids `short` and `whole-chunk`) — runs the loop
   behind a collector whose `tail_sampling` keeps a trace only if it holds a step root, with the hub and runner settling
   for three seconds, and reads what the collector received against what it kept. A one-second `decision_wait` decides on
