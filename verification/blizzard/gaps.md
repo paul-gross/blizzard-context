@@ -85,25 +85,6 @@ Standing in for a tier: `blizzard:unit-test` covers the chosen `unreadable` defa
 parser can name; a live `opencode export` against a genuinely absent session id would be the evidence for a narrower
 `not_found` path, and does not exist yet. Do not add a stderr-string match invented rather than captured from a run.
 
-## OpenCode's analytics dialect has no proven read/skill tool-name mapping
-
-`dialects.py`'s `_OPENCODE_EXPORT_1` registers only `KIND_AGENT_SPAWN` (`tool_name="task"`), fixture-proven off the
-admitted-version corpus; its own comment says plainly that a read or a skill invocation "have no proven tool name yet" —
-unlike `_CLAUDE_CODE_JSONL_2`, which maps all three kinds. Nothing stands in for the missing two: inventing a
-`tool_name`/`argument_key` pair for either would be guessing at OpenCode's real tool vocabulary rather than reading it
-off a captured run, exactly the shape "OpenCode transcript reads never distinguish `not_found`" above already refuses.
-`blizzard:service-test`'s mixed-harness dispatch gate (`test_mixed_harness_dispatch_service.py`) exercises an
-`agent-spawn` kind through the OpenCode lineage's own (proven) dialect and a `skill-invocation` kind through the Claude
-Code lineage's own (proven) dialect — never the reverse. OpenCode's own dialect deliberately stops at that one proven
-kind, for this reason, so the missing OpenCode read/skill mapping above is still not closed by this test.
-
-Standing in for a tier: a live OpenCode run whose transcript actually reads a file or invokes a skill, captured into a
-committed corpus inside the runner's admitted range (currently `>=1.18.25,<2.0`), today only
-`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — the same way the spawn mapping itself was proven,
-is the only evidence that would extend `_OPENCODE_EXPORT_1` correctly. Do not add a mock- or unit-invented tool name to
-close this — a mock's own vocabulary is authored, not observed, and would prove nothing about what OpenCode actually
-calls its tools.
-
 ## Capability-matched peek's hold-vs-pass-over distinction, and a bare node's chunk-declared default at spawn
 
 `test_mixed_harness_dispatch_service.py`'s own module docstring and section comments record two proofs the mock hub's
