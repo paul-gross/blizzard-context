@@ -31,6 +31,8 @@ subtest reads the hub's exported spans back from a real `otelcol-contrib` — wh
 subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with every runner node on
 a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest on the hub's
 step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips with
+`fleet traces`. Its `platform spans` subtest proves what the acceptance loop's does for worker commands under their step
+roots, across the park and the resume, and its leak scan also covers the worker's question text; it skips with
 `fleet traces`.
 
 - `test_ask_parks_then_answer_resumes_session_to_done` — proves the chunk parks `waiting_on_human` with the reap clock

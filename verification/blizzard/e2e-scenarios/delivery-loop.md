@@ -19,10 +19,21 @@ The happy path: build, then a scripted-PASS review, then deliver, to landed. It 
 and that subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with every
 runner node on a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest
 on the hub's step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips
-with `fleet traces`.
+with `fleet traces`. Its `platform spans` subtest runs the hub and the runner with platform spans at a zero root sample
+ratio, the runner enrolled at the hub and ticking over the one traced process graph its local API serves, and proves
+every worker command's span sits under its step's root with the runner's request as its child; a `runner work-items`
+command carries on to the runner's call to the hub, the hub's request under it and a store query under that. It scans
+the raw exported file for the workers' lease tokens, the runner's route token, its hub bearer and the sentinel body of
+the review's findings artifact, and fails on any; that subtest skips with `fleet traces`.
 
 - `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts both that the commit is reachable from bare `main` and
   that the hub's facts derive `done`.
+- `test_a_tail_sampling_decision_wait_splits_or_keeps_the_step_trace` — runs the loop behind a collector whose
+  `tail_sampling` keeps a trace only if it holds a step root, with the hub and runner settling for three seconds, and
+  reads what the collector received against what it kept. A one-second `decision_wait` decides on each trace's first
+  platform span, before its root, so it keeps no step root and no worker command span; the `decision_wait` the operator
+  docs give for the run's own settle, sweep and longest step keeps every root with its platform chain. It skips without
+  a collector.
 - `test_build_worker_reads_work_item_through_the_passthrough` — the build worker fetches its issue body and comment
   through the runner-to-hub work-item pass-through and commits the fetched text, asserted reachable from bare `main` —
   MVP criterion 1 at the e2e tier.
