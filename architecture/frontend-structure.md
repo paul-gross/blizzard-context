@@ -9,6 +9,7 @@ than restating them. Each spoke's rules use the slot skeleton `winter-canon:/rul
 | [`./frontend-structure/containers.md`](./frontend-structure/containers.md)         | You are placing a component's logic, or deciding what a data-backed view may render before its read resolves          |
 | [`./frontend-structure/kit.md`](./frontend-structure/kit.md)                       | You are building a component's chrome and choosing between the shared kit and a local copy                            |
 | [`./frontend-structure/disjoint-diffs.md`](./frontend-structure/disjoint-diffs.md) | You are adding to a shared file — a barrel, the SSE registry — and two agents' diffs must not collide                 |
+| [`./frontend-structure/placement.md`](./frontend-structure/placement.md)           | You are deciding whether code belongs in `fleet` or in an app, or writing a view both daemons serve                   |
 | [`./frontend-structure/mutations.md`](./frontend-structure/mutations.md)           | You are writing a mutation hook, or rendering a control's predictable outcome before its mutation settles             |
 | [`./frontend-structure/eager-shell.md`](./frontend-structure/eager-shell.md)       | You are importing `fleet` from the hub's app root or nav chrome, or adding chrome the shell needs only on interaction |
 | [`../standards/frontend.md`](../standards/frontend.md)                             | You need the Angular toolchain rules — lint, test, the generated client                                               |

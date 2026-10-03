@@ -12,7 +12,7 @@ re-exported once from the root `public-api.ts`; what a sub-barrel exports is dec
 feature directory — a sibling only the feature's own components mount stays unexported, so the public surface names what
 is actually re-stackable. A live feature registers its invalidated query keys as a declarative row in its own daemon's
 SSE dispatch registry — the hub's board in `sse/fleet-live.ts`'s `EVENT_INVALIDATION_REGISTRY`, the runner's local panel
-in its own disjoint `RUNNER_EVENT_INVALIDATION_REGISTRY` (`local-panel/src/lib/runner-live-updates.ts`) — never a `case`
+in its own disjoint `RUNNER_EVENT_INVALIDATION_REGISTRY` (`runner/src/app/live/runner-live-updates.ts`) — never a `case`
 added to the shared `LiveInvalidationSpine.dispatch()` (`fleet/sse/live-invalidation-spine.ts`) both registries drive.
 The two daemons' registries never share a line range because they never share a file.
 
@@ -33,9 +33,9 @@ not contended.
 
 **Do.**
 
-- `chunks/index.ts` re-exports every chunks-feature symbol a consumer outside `chunks/` imports, and `public-api.ts`
-  carries one `export * from './lib/chunks'` line; `chunk-detail/`'s `ChunkDetailHeader`, mounted only by its own
-  feature, stays unexported.
+- `transcripts/index.ts` re-exports every transcripts-feature symbol a consumer outside `transcripts/` imports, and
+  `public-api.ts` carries one `export * from './lib/transcripts'` line; a sibling mounted only by its own feature stays
+  unexported.
 - A new live board feature adds a row keyed by its event type to `EVENT_INVALIDATION_REGISTRY` — a
   `Record<HubEventType, (data) => readonly (readonly unknown[])[]>`, exhaustive over `HUB_EVENT_TYPES` so an unhandled
   event type is a compile error — and a new live runner-panel read does the same in

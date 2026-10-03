@@ -12,8 +12,8 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 `mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
 (`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, hub↔runner wire compatibility
-(`blizzard:wire-compat`), then eslint, vitest, the web structural gate's real-timer, kit-floor, and
-retired-board-control sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`), and
+(`blizzard:wire-compat`), then eslint, vitest, the web structural gate's real-timer, kit-floor, retired-board-control,
+and placement sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`), and
 generated-client drift over `web/`. Stage regenerated `openapi/` or `web/` client output before running it: the drift
 checks are a working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails
 (`web:client-drift`).

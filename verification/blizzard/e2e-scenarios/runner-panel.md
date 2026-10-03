@@ -23,5 +23,5 @@ Chromium, skipping cleanly without `BLIZZARD_E2E=1` or without any of those.
   `done` under the same live loop, each transition another `lease-changed` frame over the same open connection, and the
   panel settles to `0 live` once `deliver` (a hub node, no runner lease) lands the chunk, on a timeout equal to the poll
   backstop — so the closing settle proves end-to-end completion, not that every intermediate flip was SSE-driven.
-  Together the two halves prove the publish → stream → `local-panel` `RunnerLiveUpdates` registry → re-read chain, the
+  Together the two halves prove the publish → stream → the runner's `RunnerLiveUpdates` registry → re-read chain, the
   runner counterpart of `test_board_browser_e2e`'s hub-side live-pause proof ([board.md](./board.md)).

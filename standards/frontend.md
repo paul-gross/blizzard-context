@@ -49,7 +49,7 @@ construction.
 **Detect.** Hand-written request code against the hub or runner API; a stale or uncommitted generated client; a
 `.gitignore` entry hiding it from review.
 
-**Do.** `fleet/lib/health/health.query.ts` reaching the hub health endpoint through the generated surface
+**Do.** `hub/src/app/board/health/health.query.ts` reaching the hub health endpoint through the generated surface
 (`fleet/lib/api/{hub,runner}/`):
 
 ```ts
@@ -82,7 +82,8 @@ status-color table — turns one formatting fix into an edit spanning every file
 - **Id shortening** — `compactRef` (`fleet/lib/compact-ref.ts`) owns every id shortening; a raw `id.slice(0, N)` is a
   violation.
 - **Status to color** — the shared Tone vocabulary (`fleet/lib/kit/tone.ts`), reached through
-  `fleet/lib/chunk-lanes.ts`'s `STATUS_TONE` map and `local-panel/chunk-status.ts`'s `deriveMachineChunkStatus`.
+  `fleet/lib/chunk-lanes.ts`'s `STATUS_TONE` map and `runner/src/app/board/chunk-list/chunk-status.ts`'s
+  `deriveMachineChunkStatus`.
 - **Relative age** — `ageMs`, `formatAge`, and `formatSeenAgo` implement the bounded-skew clause of `./wire.md`'s
   `bzh:utc-instants` once for every consumer: a derived age tolerates bounded clock skew, then falls through to the
   backend-derived liveness — never clamping a large negative value to a confident zero.
@@ -112,19 +113,19 @@ Detect names the classes) is tooled instead, by `web:structural-gate`'s kit-floo
 
 ## Selector prefixes (`bzh:frontend-selector-prefix`)
 
-**Rule.** Every Angular library owns one selector prefix — `fleet-*` for fleet, `local-*` for local-panel — enforced by
-each project's own eslint `@angular-eslint/component-selector` and `@angular-eslint/directive-selector` config, and no
-two libraries declare a component class of the same name.
+**Rule.** Every Angular project owns one selector prefix — `fleet-*` for fleet, `app-*` for each app — enforced by each
+project's own eslint `@angular-eslint/component-selector` and `@angular-eslint/directive-selector` config, and no two
+projects declare a component class of the same name where one app consumes both.
 
-**Why.** Apps consume the libraries from source via tsconfig paths, so a selector or class-name collision stays
-invisible until the first page composes both libraries.
+**Why.** Apps consume `fleet` from source via a tsconfig path, so a selector or class-name collision stays invisible
+until the first page composes both.
 
-**Detect.** A selector outside its library's configured prefix; a component class name declared in more than one
-library's `public-api.ts` surface.
+**Detect.** A selector outside its project's configured prefix; a component class name declared in both `fleet`'s
+`public-api.ts` surface and the consuming app.
 
-**Do.** `local-panel/eslint.config.js` sets `prefix: "local"` on both the `@angular-eslint/component-selector` and
-`@angular-eslint/directive-selector` rules, and `local-panel/lib/chunk-detail.ts` declares
-`selector: 'local-machine-detail'` under it.
+**Do.** `runner/eslint.config.js` sets `prefix: "app"` on both the `@angular-eslint/component-selector` and
+`@angular-eslint/directive-selector` rules, and `runner/src/app/board/chunk-dock/chunk-detail.ts` declares
+`selector: 'app-machine-detail'` under it.
 
-**Don't.** A local-panel component declaring `selector: 'machine-detail'` — outside the configured prefix, so the
-project's own eslint config rejects it.
+**Don't.** A runner component declaring `selector: 'machine-detail'` — outside the configured prefix, so the project's
+own eslint config rejects it.
