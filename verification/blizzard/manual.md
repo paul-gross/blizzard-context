@@ -757,6 +757,57 @@ Jaeger's other roots were `step deliver` (epoch 2) 142.7 ms, `step build` (epoch
 API refuses, so the readback was by eye and the step's name was not recorded there. No `blizzard` file changed between
 the two reads.
 
+### `blizzard:manual-egress-warehouse`
+
+**Surface.** A kept fact-egress directory copied to object storage with the docs' own `rclone` recipe, loaded into a
+warehouse from each manifest's file list, and read in a BI tool: cost by node by day and the slowest station of the
+week, equal to the DuckDB recipes over the same directory. `blizzard:e2e`'s night module proves the files and the DuckDB
+recipes; no tier proves a warehouse and a BI tool can read them from the dictionary alone.
+
+**Blind spot.** The format read is Parquet, from the night module's second export; NDJSON is not loaded. MinIO,
+ClickHouse and Grafana stand in for the operator's own bucket, warehouse and BI tool, and a loader's behavior beyond
+these two reads is not measured.
+
+**Setup.** All local docker on one user-defined network, no credentials of the operator's own.
+
+- The directory: `BLIZZARD_E2E=1 uv run pytest tests/e2e/test_egress_night_e2e.py --basetemp <dir>`, then the
+  `export-parquet` directory under it.
+- MinIO (`cgr.dev/chainguard/minio`, as `minio/minio` is no longer pulled from Docker Hub) with a throwaway root key,
+  and `rclone/rclone` for the copy.
+- `clickhouse/clickhouse-server` and `grafana/grafana` with `GF_INSTALL_PLUGINS=grafana-clickhouse-datasource`, the
+  official ClickHouse data source.
+
+**Steps.**
+
+1. Run the night module with `--basetemp`.
+2. `rclone copy` the Parquet directory into a MinIO bucket as `docs/deployment/egress.md`
+   `### Object storage with rclone` gives it, the manifests last.
+3. In ClickHouse, create one `MergeTree` table per dataset from the `s3` table function over the file list the manifests
+   name, then the dictionary's newest-copy view over each as `<dataset>_newest`.
+4. In Grafana, add the ClickHouse data source and build two table panels over `steps_newest` from the dictionary alone:
+   cost by node by day, and the station with the highest mean `duration_ms` over the last seven days.
+5. Run the docs' two DuckDB recipes over the same directory and record each answer beside Grafana's. Change nothing in
+   `blizzard` between the reads.
+
+**Passes when.** Grafana's two panels give the same stations, days, billed and estimated cost and slowest station as
+DuckDB over the same directory, and no `blizzard` file changed between the reads. Record both answers.
+
+**Recorded reading** (one night run, kept with `--basetemp`; the Parquet export held a live pass and a backfill pass, so
+each row existed twice and the newest-copy view collapsed 36 `steps` rows to 18 and 52 `invocations` rows to 26; the
+queries ran through Grafana's data source query API, the panels' own path):
+
+| Station (`default-delivery`) | Day        | Billed USD, Grafana | Billed USD, DuckDB | Estimated USD, Grafana | Estimated USD, DuckDB |
+| ---------------------------- | ---------- | ------------------- | ------------------ | ---------------------- | --------------------- |
+| `approve-gate`               | 2026-10-03 | null                | null               | null                   | null                  |
+| `assemble`                   | 2026-10-03 | 0.253276            | 0.253276           | 0.125                  | 0.125                 |
+| `build`                      | 2026-10-03 | 0.023736            | 0.023736           | null                   | null                  |
+| `clarify`                    | 2026-10-03 | 0.005085            | 0.005085           | null                   | null                  |
+| `deliver`                    | 2026-10-03 | null                | null               | null                   | null                  |
+| `review`                     | 2026-10-03 | 0.009768            | 0.009768           | null                   | null                  |
+
+The slowest station was `default-delivery` / `assemble`, mean 18494 ms, in Grafana and in DuckDB. The loader needed no
+step `### A warehouse loader` leaves unstated.
+
 ### `blizzard:manual-sweep-pass-cost`
 
 **Surface.** One `EventDerivationReconciler.sweep()` pass's wall time, statement count, and bytes `zlib.decompress`
