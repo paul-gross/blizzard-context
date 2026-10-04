@@ -42,9 +42,10 @@ Stated so a reviewer need not re-derive them:
   row itself: `garden_proposal_closures` holds it as its own immutable, at-most-one-per-proposal fact row (enforced by
   `UniqueConstraint("proposal_id")`), conforming for the same reason `work_items.closed_at`/`closure` do — it is
   recorded state no query over other rows can produce — just kept in its own table rather than in-row.
-- A configured record (`work_sources`, `secrets`) is a mutable entity whose `revision` moves in place with its fields,
-  the same recorded-state position `work_items` holds. `config_changes` and the `*_lifecycle_facts` tables are its
-  facts: immutable rows of a definite write at a definite time, with retirement derived from the newest lifecycle fact.
+- A configured record (`work_sources`, `repositories`, `secrets`) is a mutable entity whose `revision` moves in place
+  with its fields, the same recorded-state position `work_items` holds. `config_changes` and the `*_lifecycle_facts`
+  tables are its facts: immutable rows of a definite write at a definite time, with retirement derived from the newest
+  lifecycle fact.
 
 ## Open facts declare their closure (`bzh:open-facts-declare-closure`)
 
