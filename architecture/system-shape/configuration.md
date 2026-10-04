@@ -18,17 +18,6 @@ sparse merge, a `revision` that every committed write increments, one `config_ch
 transaction as each write, and retirement in place of deletion. A sparse merge leaves an absent field unchanged, sets a
 present field, and takes an explicit `null` as clearing a nullable field, refusing it on any other.
 
-**Why.** Sparse merge is the only patch meaning under which two writers editing different fields do not overwrite each
-other, and the only one a declarative apply's per-field difference maps onto without restating the record. One verb set
-and one change log across kinds mean every door — API, CLI, board, document — changes a record the same way and leaves
-the same trace.
-
-**Scope.** Binds the five kinds named above and any kind added beside them. A graph is an immutable mint, so its
-definition takes no patch — an edit is a new mint — and only its mutable flags take the sparse `PATCH`, beside its
-retire and enable. A work item is work, not configuration: its patch carries the sparse-merge meaning, and it takes no
-revision, no change row, and keeps its `DELETE`. A secret's value is replaced whole rather than patched; the replace
-still increments the revision and appends its change row.
-
 | Verb   | Route                           |
 | ------ | ------------------------------- |
 | create | `POST /api/<kind>`              |
@@ -38,21 +27,35 @@ still increments the revision and appends its change row.
 | retire | `POST /api/<kind>/{key}/retire` |
 | enable | `POST /api/<kind>/{key}/enable` |
 
-Enable reverses a retirement; every CLI noun carries the same six verbs.
+Enable reverses a retirement. Every CLI noun carries the same six verbs, a secret's replace standing in for its edit.
+
+**Why.** Sparse merge is the only patch meaning under which two writers editing different fields do not overwrite each
+other, and the only one a declarative apply's per-field difference maps onto without restating the record. One verb set
+and one change log across kinds mean every door — API, CLI, board, document — changes a record the same way and leaves
+the same trace.
+
+**Scope.** Binds the five kinds named above and any kind added beside them. A graph is an immutable mint, so its
+definition takes no patch — an edit is a new mint — and only its mutable flags take the sparse `PATCH`, beside its
+retire and enable. A work item is work, not configuration: its patch carries the sparse-merge meaning, and it takes no
+revision, no change row, and keeps its `DELETE`. A secret takes replace in place of edit: its value is replaced whole by
+`PUT /api/secrets/{name}/value` — on the CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the
+replace still increments the revision and appends its change row.
 
 **Detect.**
 
-- A `PATCH` request model with a required field, or one that does not forbid extra fields — a full replace under a patch
-  verb — or a `PUT` that replaces a whole record.
+- A `PATCH` request model with a required field — a full replace under a patch verb.
+- A `PATCH` request model that does not forbid extra fields, so an unknown field is silently dropped.
+- A `PUT` that replaces a whole record, other than a secret's value replace.
 - A `DELETE` route on a configured record.
 - A write to a configured record with no `config_changes` row in its transaction, or one that leaves `revision` where it
   was.
 - A patch handler that cannot tell an omitted field from an explicit `null`.
 
-**Do.** `WorkItemPatchRequest` (`blizzard/src/blizzard/wire/work_source.py`) is the reference patch: every field
-optional, an omitted field told from an explicit `null` through `model_fields_set` and `UNSET`
-(`blizzard/src/blizzard/hub/domain/edit.py`). Retirement is an appended lifecycle fact, the newest row deciding, as
-`scope_lifecycle_facts` holds it (`bzh:facts-not-status`, [./store-facts.md](./store-facts.md)).
+**Do.** `WorkItemPatchRequest` (`blizzard/src/blizzard/wire/work_source.py`) is the reference for telling an omitted
+field from an explicit `null`: every field optional, `extra="forbid"`, and its nullable `stated_priority` told apart
+through `model_fields_set` and `UNSET` (`blizzard/src/blizzard/hub/domain/edit.py`). A non-nullable field refuses an
+explicit `null` with a 422 rather than reading it as unchanged. Retirement is an appended lifecycle fact, the newest row
+deciding, as `scope_lifecycle_facts` holds it (`bzh:facts-not-status`, [./store-facts.md](./store-facts.md)).
 
 **Don't.** An edit request that requires every field and a restated `name` under `PATCH` — two operators changing
 different fields of one record silently revert each other.
@@ -63,10 +66,10 @@ service.
 
 ## Every ingested document decodes through the codec seam (`bzh:config-codec`)
 
-**Rule.** Decode every document the hub ingests — a declarative configuration document, a graph definition — through
-`IConfigCodec`, and validate the decoded mapping against its kind's one wire model. The codec turns bytes into a plain
-mapping and back and names the media types and file extensions it serves; validation happens after decoding, never
-inside a binding.
+**Rule.** Decode every document the hub ingests or the CLI reads for it — a declarative configuration document, a graph
+definition — through `IConfigCodec`, and validate the decoded mapping against its kind's one wire model. The codec turns
+bytes into a plain mapping and back and names the media types and file extensions it serves; validation happens after
+decoding, never inside a binding.
 
 **Why.** With one validator behind every format, a record means the same thing and fails with the same message whether
 it arrived as YAML, JSON, or a later format. A parser called directly brings its own reading of the bytes — YAML 1.1
@@ -149,6 +152,9 @@ the change that brings it under the rule:
   carries a `revision`.
 - **Routine and scope edits are full replaces.** `RoutineEditRequest` (`blizzard/src/blizzard/wire/routine.py`) requires
   every field and a restated `name`, and the scope edit replaces its one field.
+- **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
+  its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
+  than refusing it.
 - **Graph definitions are parsed directly.** `yaml.safe_load` is called in `blizzard/src/blizzard/hub/graph_sync.py`,
   `blizzard/src/blizzard/hub/graphs/__init__.py`, and `blizzard/src/blizzard/hub/api/graphs.py`.
 - **Work sources and forge settings are read once at start.** `blizzard/src/blizzard/hub/app.py` builds the work-source
