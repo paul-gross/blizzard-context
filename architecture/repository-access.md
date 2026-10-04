@@ -105,7 +105,8 @@ substituting it is safe only where the consumer's reaches sit inside the set it 
 **Detect.** A singular getter called inside a loop, a comprehension, or a per-item resolver; a read Protocol whose only
 reads are one id and every id, with nothing keyed by a set between them; a plural form building one unbatched `IN (...)`
 over a caller-supplied list, which trades the fan-out for the driver's bind-parameter ceiling; a narrowed plural
-substituted for the wide one at a call site whose consumer reaches outside the set the narrowed form names.
+substituted for the wide one at a call site whose consumer reaches outside the set the narrowed form names; a plural
+form made from a singular newest-fact read by dropping its `LIMIT 1`, which `bzh:newest-per-key-read` judges.
 
 **Do.** `blizzard/src/blizzard/hub/domain/chunks/facts.py`'s `IReadChunkFactsRepository` pairs `load_facts` with the
 *wide* plural `load_facts_for`, which returns exactly what calling `load_facts` per id would; `status_facts_for` is the
@@ -123,8 +124,9 @@ Protocol declaring no `load_facts_for` for that comprehension to collapse into.
 `IN` stays inside. [`./system-shape/seam-size.md`](./system-shape/seam-size.md) `bzh:seam-size-ceiling` — a narrowed
 plural is preferred partly because it lets a seam split along consumer lines rather than widening one seam toward the
 cap. `blizzard/tests/support.py`'s `count_queries` is how a call site's statement count is held flat as the fleet grows.
-`bzh:page-bounded-read` below — the reads this rule leaves alone, and the bound they owe instead. `bzh:probe-gated-pass`
-below — whether a periodic pass runs at all, which this rule takes as given.
+`bzh:page-bounded-read` below — the reads this rule leaves alone, and the bound they owe instead.
+`bzh:newest-per-key-read` below — the row bound a plural form owes when the singular it batches reads a newest fact.
+`bzh:probe-gated-pass` below — whether a periodic pass runs at all, which this rule takes as given.
 
 ## Bound a read by its page (`bzh:page-bounded-read`)
 
@@ -142,7 +144,9 @@ nobody has questioned.
 endpoint, or a runner tick step draining an outbound buffer — which is exactly what `bzh:bulk-reconstitution` leaves
 alone. A singular read is outside it: its statement count is judged against its own need by reading, not by this rule. A
 periodic pass's corpus read is outside it too: the pass has no page to bound it by, and whether that read runs at all is
-`bzh:probe-gated-pass`'s concern.
+`bzh:probe-gated-pass`'s concern. This rule bounds how many keys a read reaches, not how many rows it reads per key: a
+read inside the page that fetches each key's whole fact history to answer with the newest fact is
+`bzh:newest-per-key-read`'s.
 
 **Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
 as `blizzard/tests/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do, and a count that
@@ -162,9 +166,9 @@ loads each page row's facts through the singular getter — bounded in rows retu
 growing in statements per page row.
 
 **See also.** `bzh:bulk-reconstitution` above — the plural form that lets a read stop at the page's ids, and the seam
-rule for the per-item reads this rule's measurement exposes.
-[`../verification/blizzard.md`](../verification/blizzard.md) `blizzard:component-test` — the tier the two-fixture-size
-count lives in.
+rule for the per-item reads this rule's measurement exposes. `bzh:newest-per-key-read` below — the row bound per key,
+which a page-sized key set does not supply. [`../verification/blizzard.md`](../verification/blizzard.md)
+`blizzard:component-test` — the tier the two-fixture-size count lives in.
 
 ## Read the live set on a hot path (`bzh:live-set-read`)
 
@@ -193,6 +197,49 @@ in its query; the queue reads bound their position and record lookups by the liv
 
 **See also.** `domain/work/statuses.md` — terminal chunks never un-stop or un-complete, and restart refuses a terminal
 chunk, which is what makes the exclusion sound.
+
+## Read the newest fact per key (`bzh:newest-per-key-read`)
+
+**Rule.** Select only the newest fact per key in the store query when a read answers with the newest fact for each of a
+set of keys: the rows it reads are bounded by the key count and stay flat as each key's fact history deepens. A plural
+form batching a singular newest read keeps that bound — the singular's `ORDER BY id DESC LIMIT 1` becomes a group-by-max
+join, never the same select with the `LIMIT` dropped and the newest row picked in Python.
+
+**Why.** Fact tables are append-only and keep every superseded fact (`bzh:facts-not-status`), so a newest read that
+fetches the history charges every past write on a key to every future call, behind a statement count that stays flat. A
+`LIMIT 1` cannot span keys, so batching loses the singular form's bound unless the query restates it per key.
+
+**Scope.** This binds a read whose consumer uses only the newest fact per key, whether the keys are a caller-supplied
+set or every key a filter leaves, the whole table included. A read whose consumer derives from more than the newest fact
+— a fact projection reconstituted for the domain to derive from — is outside it: the history is that read's answer.
+
+**Detect.** Measured: `blizzard/tests/support.py`'s `count_rows_read` over the same keys at two history depths, as
+`blizzard/tests/test_newest_fact_reads.py` does — a row count above the key count, or one that grows with the depth, is
+the finding, and a statement count cannot show it. By reading: a select ordered ascending by `id` with no `limit`, whose
+rows a loop folds into a dict keyed by the key column so that later rows overwrite earlier ones; a comment excusing that
+fold as newest-fact-wins; a `[-1]` or `[0]` taken from a whole-history select fetched for nothing else. The fix is the
+group-by-max join, batched through `id_batches` when the keys are caller-supplied.
+
+**Do.** `blizzard/src/blizzard/hub/store/internal/newest_fact.py`'s `newest_fact_select` joins a fact table to a
+`max(id) ... GROUP BY key` subquery over the keys asked for, and the stores' plural newest reads share it.
+`blizzard/src/blizzard/hub/store/internal/finding_store.py`'s `FindingStore.newest_by_scope_for_routine` is the same
+join over every scope one routine has run against — the keys a `where` on the routine name leaves, not a supplied set.
+
+**Don't.**
+
+```python
+rows = conn.execute(select(facts.c.key, facts.c.retired).order_by(facts.c.id)).all()
+newest: dict[str, bool] = {}
+for row in rows:
+    newest[row.key] = row.retired  # ascending id order overwrites
+```
+
+**See also.** `bzh:bulk-reconstitution` above — the plural form this bound has to survive. `bzh:page-bounded-read` and
+`bzh:live-set-read` above — they bound which keys a read reaches; this rule bounds the rows read per key.
+[`../standards/persistence.md`](../standards/persistence.md) `bzh:sql-portable` — the group-by-max join stays inside the
+portable surface, and its ordering clause governs a read that does index into a history.
+[`../verification/blizzard.md`](../verification/blizzard.md) `blizzard:component-test` — the tier the two-depth row
+count lives in.
 
 ## A probe-gated pass (`bzh:probe-gated-pass`)
 

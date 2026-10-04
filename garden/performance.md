@@ -14,6 +14,7 @@ target:
   is a fixed interval where a change signal would do.
 - A value re-read or recomputed per iteration that the loop never varies.
 - A list endpoint or store read with no bound, whose cost is set by fleet size rather than by the page asked for.
+- A newest-fact read that fetches each key's whole fact history and keeps the last row.
 - Decoding, parsing, or validating a payload to answer a question its raw bytes already answer.
 
 ## Scope
@@ -37,6 +38,7 @@ shape.
 | A sweep rescanning its corpus each interval, and a fixed cadence where a change signal would do         | [`../architecture/repository-access.md`](../architecture/repository-access.md) `bzh:probe-gated-pass`    |
 | A list endpoint or store read with no bound                                                             | [`../architecture/repository-access.md`](../architecture/repository-access.md) `bzh:page-bounded-read`   |
 | A hot read that derives every chunk ever minted and discards the terminal ones                          | [`../architecture/repository-access.md`](../architecture/repository-access.md) `bzh:live-set-read`       |
+| A newest-fact read that fetches each key's whole fact history                                           | [`../architecture/repository-access.md`](../architecture/repository-access.md) `bzh:newest-per-key-read` |
 | A loop-invariant value re-read per iteration; a payload decoded to answer what its bytes already answer | No rule — judged by reading; a finding cites the weed's own bullet above and carries no `bzh:` id        |
 
 Index coverage is out of range: it belongs to its gate, [`blizzard:component-test`](../verification/blizzard.md)
