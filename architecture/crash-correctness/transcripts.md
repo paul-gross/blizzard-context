@@ -86,9 +86,11 @@ fingerprints.
 Its two durable write paths are each one transaction: `TranscriptEventStore.replace_segment_events`, which deletes that
 `(segment_id, extractor_version)` pair's rows, inserts the fresh set, and writes the marker; and `drop_segments`, one
 set-scoped transaction for every segment that left the visible set, reusing the same candidacy read's
-`visible_segment_ids` rather than evaluating it a second time. A crash in either path leaves a segment underived, fully
-derived, or fully dropped, never half, and the next pass re-reaches it: an underived segment is still a candidate, and a
-dropped-but-unnoticed one is recomputed from `derived_segment_ids()` minus the next pass's own fresh candidacy read.
+`visible_segment_ids` rather than evaluating it a second time, and which writes each segment's drop fact in the same
+transaction as the deletes. A crash in either path leaves a segment underived, fully derived, or fully dropped with its
+drop fact, never half and never deleted without one, and the next pass re-reaches it: an underived segment is still a
+candidate, and a dropped-but-unnoticed one is recomputed from `derived_segment_ids()` minus the next pass's own fresh
+candidacy read.
 
 Per-segment-per-version uniqueness on `(segment_id, extractor_version, kind, turn_path, occurrence)` is a store-level
 unique constraint the engine enforces, not a derived cross-fact invariant the checker must recompute.
