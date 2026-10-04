@@ -91,6 +91,10 @@ status-color table — turns one formatting fix into an edit spanning every file
 **Don't.** `Date.now()` inside a `computed()` — the read is untracked, so the component freezes at whatever its input
 signals last produced instead of ticking; `injectNowSignal` closes exactly that gap.
 
+**See also.** A status map in fleet picks a display tone or board lane only; whether a status is finished or terminal is
+a backend judgment read from a wire field — `bzh:frontend-wire-conformist`
+([`../architecture/frontend-structure/wire.md`](../architecture/frontend-structure/wire.md)).
+
 ## Kit chrome (`bzh:frontend-kit`)
 
 **Rule.** Resolve any overlay wash in a component style through a `design/tokens.css` `--overlay-*` token — never a raw
