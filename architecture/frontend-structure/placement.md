@@ -51,7 +51,9 @@ edge. A unit is a folder below the project's source root — `fleet/src/lib/`, `
 a file belongs to the longest unit that prefixes its path, so `garden` owns only the files directly in `garden/`. Every
 folder directly under a source root, or under `garden/`, is a unit, and no file sits loose at a source root. Every unit
 may also import its project's kernel, and the kernel imports no other unit. An app reaches `fleet` only through the
-`fleet`, `fleet/shell`, and `fleet/testing` entry points, never by a relative path.
+`fleet`, `fleet/shell`, and `fleet/testing` entry points, never by a relative path. A unit's layer orders its table: no
+edge points to a higher layer, but a row may list a unit of its own layer — a declared feature-to-feature edge such as
+`board` → `runners` — unlike `bzh:domain-package-layers`, whose edges all point strictly down.
 
 `fleet`, rooted at `fleet/src/lib/`, has no kernel, so every edge is listed; a `*.spec.ts` in any unit may also import
 `testing`:
@@ -105,25 +107,19 @@ may also import its project's kernel, and the kernel imports no other unit. An a
 along. Without it the app root drifts back into being both shell and kernel — importing every feature while every
 feature imports it — and folder cycles form unseen.
 
-**Scope.** Binds every git-tracked `.ts` and `.css` file below the three source roots and its relative imports: static,
-type-only, dynamic `import()`, and CSS `@import`. The `fleet` barrels (`fleet/src/public-api.ts`, `shell-api.ts`) and
-each app's `src/main.ts` sit outside the source roots and are not bound. Which project a unit belongs to is
-`bzh:frontend-placement`'s call; this rule governs the edges inside one project. A new edge or unit changes the gate's
-table and this one in the same change.
+**Scope.** Binds every git-tracked `.ts`, `.css`, and `.html` file below the three source roots and its relative edges:
+static, type-only, and dynamic imports, a component's `styleUrl`, `styleUrls`, and `templateUrl`, and CSS `@import`. The
+`fleet` barrels (`fleet/src/public-api.ts`, `shell-api.ts`) and each app's `src/main.ts` sit outside the source roots
+and are not bound. Which project a unit belongs to is `bzh:frontend-placement`'s call; this rule governs the edges
+inside one project. These tables own each project's graph; `web/scripts/structural-gate.js`'s `FLEET_LAYERS`,
+`HUB_LAYERS`, and `RUNNER_LAYERS` mirror them, so a new edge or unit changes a table here and its mirror in the same
+change.
 
-**Detect.** The package-layers sweep inside `web:structural-gate` (`web/scripts/structural-gate.js`,
-[`../../verification/blizzard.md`](../../verification/blizzard.md)) carries the three tables as data, with no exemption
-list, and fails on:
-
-- an import from one unit into another that its row does not list and that is not the kernel or a spec's `testing`;
-- a file in no unit — loose at a source root, or in a folder the table does not declare;
-- a table unit with no folder, or an edge naming an undeclared unit;
-- a cycle in the table, counting every unit's implicit edge to the kernel;
-- a relative import that leaves its project.
-
-Its self-test, `assertPackageLayersDetectorWorks`, must-catches an undeclared feature-to-feature import, a stray
-app-root file, and a planted table cycle, and must-passes a declared edge, a kernel import, and a spec importing
-`testing`.
+**Detect.** The package-layers sweep inside `web:structural-gate`, proven first by `assertPackageLayersDetectorWorks`,
+carries the three tables as data with no exemption list and fails an import its table does not allow, a file in no
+declared unit, and a cycle in a table.
+[`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
+owns the sweep's full fail list and self-test cases.
 
 **Do.** `hub/src/app/board/board-page.ts` and `runners/runner-rows.ts` both read `core/chunks.query.ts`: the chunks read
 two features need sits in the kernel, so `board` → `runners` stays the only edge between them. The routine detail in

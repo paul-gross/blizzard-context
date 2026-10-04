@@ -69,16 +69,35 @@ reaches it, or no app when the unit is dead. `testing/` and the declaration-free
 self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a both-app
 unit — runs first.
 
+The same script also runs the two wire-conformist sweeps (`web/scripts/wire-conformist-sweep.js`;
+[`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
+`bzh:frontend-wire-conformist`), neither with an exemption list, both over every `.ts` below `web/projects` except specs
+and the generated `fleet/src/lib/api/`:
+
+- The backend-citation sweep fails a backend Python module cited in a comment or string, by `.py` path or by dotted
+  `blizzard.<package>` module path, printing each site under `backend .py citations in hand-written TS`. Its self-test,
+  `assertBackendCitationDetectorWorks`, must-catches path, bare-file, and dotted citations and the reported line, and
+  must-passes `.pyc`, `numpy`, `mypy.ini`, and a `blizzard.`-prefixed storage key.
+- The client-call placement sweep reads every `export const` of `fleet/src/lib/api/{hub,runner}/sdk.gen.ts` at run time
+  and fails a whole-word use of one outside a `*.query.ts` or `*.mutations.ts` file, after stripping comments and plain
+  `export … from` re-exports but not a renaming one, printing each site under
+  `generated client functions outside *.query.ts / *.mutations.ts`. Its self-test,
+  `assertClientCallPlacementDetectorWorks`, must-catches a named import, an aliased import, a namespace access, a value
+  reference, and a renaming re-export, and must-passes a comment, a plain or type-only re-export, and a generated type
+  name.
+
 The same script also runs the package-layers sweep
 ([`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
 `bzh:frontend-package-layers`), which owns the three layer tables the sweep declares as data, with no exemption list.
-Over every git-tracked `.ts` and `.css` file below `fleet/src/lib/`, `hub/src/app/`, and `runner/src/app/`, it resolves
-each relative import — static, type-only, dynamic `import()`, and CSS `@import` — to a file and its unit, and fails on
-an import its table does not allow, a file in no unit, a table unit with no folder or an edge naming an undeclared one,
-a cycle in a table counting the implicit kernel edges, and a relative import that leaves its project. Its self-test,
-`assertPackageLayersDetectorWorks` — must-catch an undeclared feature-to-feature import, a stray app-root file, and a
-planted table cycle; must-pass a declared edge, a kernel import, and a spec importing `testing` — runs before the sweep
-is trusted.
+Over every git-tracked `.ts`, `.css`, and `.html` file below `fleet/src/lib/`, `hub/src/app/`, and `runner/src/app/`, it
+resolves each relative edge — a static, type-only, or dynamic import, a component's `styleUrl`, `styleUrls`, or
+`templateUrl`, and a CSS `@import` — to a file and its unit, and fails on an import its table does not allow, a file in
+no unit, a table unit with no folder or an edge naming an undeclared one, a cycle in a table counting the implicit
+kernel edges, a relative import that leaves its project, and a file below a source root importing its own project's
+package entry, save a spec taking the spec-support entry. Its self-test, `assertPackageLayersDetectorWorks` — must-catch
+an undeclared feature-to-feature import, an undeclared stylesheet or template edge, a stray app-root file, a file
+reaching its own package entry, and a planted table cycle; must-pass a declared edge, a kernel import, and a spec
+importing `testing` — runs before the sweep is trusted.
 
 The same script also runs the containers-compose sweep (`web/scripts/containers-compose-sweep.js`, over the TypeScript
 compiler API;

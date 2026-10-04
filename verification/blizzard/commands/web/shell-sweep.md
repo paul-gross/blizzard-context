@@ -115,7 +115,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   roster's aging and stale members: their "refreshed … ago" labels must resolve to genuinely distinct, non-body-text
   computed colours (amber/red), and a never-sampled member's "no sample yet" row, carrying a long miss reason, must stay
   inside the panel rather than overflowing it.
-- `fleet-view.shell-sweep.spec.ts` covers the mobile Fleet screen at 390px and 320px: runner cards stack without
+- `runners-view.shell-sweep.spec.ts` covers the mobile Fleet screen at 390px and 320px: runner cards stack without
   overlap, and long claim ids and subscription names remain inside both their card and the surrounding panel — including
   the same aging/stale colour and long-miss-reason claims `runner-view.shell-sweep.spec.ts` covers, since the mobile
   view renders the identical shared subscription-pace group component.
