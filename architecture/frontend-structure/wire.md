@@ -52,7 +52,8 @@ field on the view that already carries the raw value.
 
 - `if (detail.pausable)` — the view field `ChunkDetail.pausable` carries the judgment.
 - `Object.values(FindingSeverity)` populates a severity filter from the generated `const`.
-- A container injects a query hook from `gardening/finding.query.ts`, which alone imports `listFindingsApiFindingsGet`.
+- A container injects a query hook from `garden/core/finding.query.ts`, which alone imports
+  `listFindingsApiFindingsGet`.
 
 **Don't.**
 

@@ -60,7 +60,7 @@ A command method passes when its command exits 0.
 | `web:lint`                       | `npm run lint` in `web/` — eslint over the Angular workspace, including the `max-lines` ceiling *(more)*                                                           |
 | `web:typecheck`                  | `npm run build` in `web/` — a real AOT compile of both Angular apps *(more)*                                                                                       |
 | `web:unit-test`                  | `npm run test` in `web/` — vitest, the frontend unit/component tier                                                                                                |
-| `web:structural-gate`            | `npm run structural-gate` in `web/` — the real-timer, kit-floor, retired-board-control, mutation-invalidation, mutation-cache-write, and placement sweeps *(more)* |
+| `web:structural-gate`            | `npm run structural-gate` in `web/` — the real-timer, kit-floor, retired-board-control, mutation-hook, placement, and package-layers sweeps, among others *(more)* |
 | `web:shell-sweep`                | `npm run shell-sweep` in `web/` — the real-Chromium proof for what jsdom cannot evaluate *(more)*                                                                  |
 | `web:bundle-composition`         | `npm run bundle-check` in `web/` — the hub's initial chunk resolved from esbuild's metafile, failing on a forbidden feature module *(more)*                        |
 | `web:client-drift`               | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`) *(more)*                                                              |

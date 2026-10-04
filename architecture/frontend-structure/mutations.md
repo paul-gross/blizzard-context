@@ -11,7 +11,7 @@ refetched: every `queryClient.invalidateQueries(...)` call inside the hook is re
 from `onSettled`, never fired with `void` from `onSuccess`. The control that triggers the mutation is disabled while it
 is pending, scoped to the specific item it acts on — one row's control does not disable a sibling row's. A mutation's
 failure renders through the view's existing inline `actionError` slot via `errorMessage`
-(`fleet/src/lib/error-message.ts`); no mutation fails silently.
+(`fleet/src/lib/core/error-message.ts`); no mutation fails silently.
 
 **Why.** Without this, the UI acknowledges a click as "done" before the visible state has actually changed — the change
 only appears on the next SSE/poll-driven refetch, so a user can't tell whether their click worked, and nothing stops a
@@ -24,7 +24,7 @@ path to `errorMessage` — these two halves are review questions, not tooled.
 
 **Do.**
 
-- `runner/src/app/status/status.query.ts`'s `injectLocalPauseMutation` returns `queryClient.invalidateQueries(...)` from
+- `runner/src/app/core/status.query.ts`'s `injectLocalPauseMutation` returns `queryClient.invalidateQueries(...)` from
   `onSettled` rather than voiding it; `machine/app-pause-control.ts` binds `[disabled]="pending()"` off that same
   mutation's `isPending()`, scoped to its own control.
 
@@ -38,7 +38,7 @@ the in-flight mutation's variables through `injectMutationState` (filtered by `m
 applying them over the query data in a `computed()` — never by writing to the query cache (no `setQueryData`, no
 `onMutate` snapshot/rollback). When the mutation settles, the override disappears and the view renders the refetched
 server data; on failure the item reverts to its prior state and the error renders per
-`bzh:frontend-mutation-settles-on-refresh`. A shared helper (`fleet/src/lib/mutation-pending/`) provides the
+`bzh:frontend-mutation-settles-on-refresh`. A shared helper (`fleet/src/lib/core/mutation-pending/`) provides the
 pending-state read and the per-item lookup; every override site uses it rather than writing `injectMutationState`
 plumbing of its own. Containers apply the override; presentational components only receive the result as inputs, per
 `bzh:frontend-container-presentational`. A pending override never re-derives a status precedence ladder that already has

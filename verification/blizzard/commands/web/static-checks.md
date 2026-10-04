@@ -60,13 +60,25 @@ classes (`KitPanel`'s `.panel`/`.p-hdr`/`.p-body`/`.lbl`, `KitAsyncState`'s `.st
 
 The same script also runs the placement sweep (`web/scripts/placement-sweep.js`, over the TypeScript compiler API;
 [`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
-`bzh:frontend-placement`): each direct child of `fleet/src/lib/` must be reached by the non-spec code of both `hub` and
-`runner`, with reach resolved to the symbol through the `fleet` and `fleet/shell` barrels and through `fleet`-internal
-imports, and no `fleet` file may import from `projects/hub` or `projects/runner`. A violation names the unit and the
-single app that reaches it, or no app when the unit is dead. `testing/` and the declaration-free `format/` barrel are
-exempt in `PLACEMENT_EXEMPT_UNITS`, each with its reason; mixed folders reached by both apps pass at the folder level.
-Its self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a
-both-app unit — runs first.
+`bzh:frontend-placement`): each direct child of `fleet/src/lib/` — or, under the grouping folders `core/`, `chunk/`, and
+`shell/`, each child of that folder — must be reached by the non-spec code of both `hub` and `runner`, with reach
+resolved to the symbol through the `fleet` and `fleet/shell` barrels and through `fleet`-internal imports, and no
+`fleet` file may import from `projects/hub` or `projects/runner`. A violation names the unit and the single app that
+reaches it, or no app when the unit is dead. `testing/` and the declaration-free `core/format/` barrel are exempt in
+`PLACEMENT_EXEMPT_UNITS`, each with its reason; mixed folders reached by both apps pass at the folder level. Its
+self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a both-app
+unit — runs first.
+
+The same script also runs the package-layers sweep
+([`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
+`bzh:frontend-package-layers`), which owns the three layer tables the sweep declares as data, with no exemption list.
+Over every git-tracked `.ts` and `.css` file below `fleet/src/lib/`, `hub/src/app/`, and `runner/src/app/`, it resolves
+each relative import — static, type-only, dynamic `import()`, and CSS `@import` — to a file and its unit, and fails on
+an import its table does not allow, a file in no unit, a table unit with no folder or an edge naming an undeclared one,
+a cycle in a table counting the implicit kernel edges, and a relative import that leaves its project. Its self-test,
+`assertPackageLayersDetectorWorks` — must-catch an undeclared feature-to-feature import, a stray app-root file, and a
+planted table cycle; must-pass a declared edge, a kernel import, and a spec importing `testing` — runs before the sweep
+is trusted.
 
 The script also censuses every TypeScript, template, and stylesheet below `web/projects` for the retired board Top/group
 contract: its type, inputs, handlers, grouping mutation facade, and test handles. Generated grouping-client symbols are
@@ -112,7 +124,7 @@ temp directory) and resolves the initial chunk from it twice. At output granular
 chunk instead — it prints the per-area byte breakdown (framework, CDK, each fleet area) that a bundle-size change
 records. At source-file granularity, over the same metafile's module graph, it enforces the gate: a source file
 reachable eagerly that matches a forbidden pattern — the fleet `chunk-detail/` or `transcripts/` sub-barrels, the hub's
-`gardening/`, `graphs/`, or `board/chunk-dock/` folders, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay`/`listbox`
+`garden/`, `graphs/`, or `board/chunk-dock/` folders, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay`/`listbox`
 bundles — fails the run, named together with the file that imports it. Its own fixture self-test,
 `assertBundleCompositionDetectorWorks` — one eager import matching a forbidden pattern, one eager import that does not,
 and a forbidden pattern reached only through a dynamic import — runs before the walk is trusted

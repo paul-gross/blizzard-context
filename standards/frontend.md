@@ -73,16 +73,16 @@ status-color table — turns one formatting fix into an edit spanning every file
 
 **Do.** Resolve each display concern through its owner:
 
-- **Time strings** — `fleet/lib/when.ts` (`formatWhen`, `formatAbsolute`, `formatAge`, `ageMs`, `formatSeenAgo`, and
-  siblings); a component adds only a thin display wrapper where a surface needs exact text.
-- **Short stamp with hover tooltip** — `<fleet-when>` (`fleet/lib/when-display/`) owns the short stamp that also needs
-  the full-datetime tooltip `formatAbsolute` renders.
-- **Self-advancing display** — `injectNowSignal` (`fleet/lib/now-signal/`) owns any display that must advance on its own
-  rather than only when fresh data arrives.
-- **Id shortening** — `compactRef` (`fleet/lib/compact-ref.ts`) owns every id shortening; a raw `id.slice(0, N)` is a
-  violation.
+- **Time strings** — `fleet/lib/core/when.ts` (`formatWhen`, `formatAbsolute`, `formatAge`, `ageMs`, `formatSeenAgo`,
+  and siblings); a component adds only a thin display wrapper where a surface needs exact text.
+- **Short stamp with hover tooltip** — `<fleet-when>` (`fleet/lib/core/when-display/`) owns the short stamp that also
+  needs the full-datetime tooltip `formatAbsolute` renders.
+- **Self-advancing display** — `injectNowSignal` (`fleet/lib/core/now-signal/`) owns any display that must advance on
+  its own rather than only when fresh data arrives.
+- **Id shortening** — `compactRef` (`fleet/lib/core/compact-ref.ts`) owns every id shortening; a raw `id.slice(0, N)` is
+  a violation.
 - **Status to color** — the shared Tone vocabulary (`fleet/lib/kit/tone.ts`), reached through
-  `fleet/lib/chunk-lanes.ts`'s `STATUS_TONE` map and `runner/src/app/board/chunk-list/chunk-status.ts`'s
+  `fleet/lib/core/chunk-lanes.ts`'s `STATUS_TONE` map and `runner/src/app/board/chunk-list/chunk-status.ts`'s
   `deriveMachineChunkStatus`.
 - **Relative age** — `ageMs`, `formatAge`, and `formatSeenAgo` implement the bounded-skew clause of `./wire.md`'s
   `bzh:utc-instants` once for every consumer: a derived age tolerates bounded clock skew, then falls through to the
@@ -97,8 +97,8 @@ a backend judgment read from a wire field — `bzh:frontend-wire-conformist`
 
 ## Kit chrome (`bzh:frontend-kit`)
 
-**Rule.** Resolve any overlay wash in a component style through a `design/tokens.css` `--overlay-*` token — never a raw
-`rgba(0, 0, 0, ...)` literal.
+**Rule.** Resolve any overlay wash in a component style through a `core/design/tokens.css` `--overlay-*` token — never a
+raw `rgba(0, 0, 0, ...)` literal.
 
 **Why.** One token vocabulary means an overlay wash is restyled in one place rather than per component.
 
