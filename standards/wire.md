@@ -40,3 +40,10 @@ What UTC-aware means at each boundary:
 
 - `x.isoformat()` on a store-sourced datetime makes the wire lie, because sqlite drops the tzinfo.
 - `Math.max(0, age)` on the frontend turns a five-hour-stale runner into "seen 0s ago".
+
+## See also
+
+- `bzh:frontend-wire-conformist`
+  ([../architecture/frontend-structure/wire.md](../architecture/frontend-structure/wire.md)) — read it for the backend
+  half when a frontend consumer needs a vocabulary, classification, or shape the wire does not yet carry: the gap is
+  closed on the wire, never in TypeScript.
