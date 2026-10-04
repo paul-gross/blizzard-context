@@ -433,7 +433,7 @@ handful of turns crosses a low declared window.
 3. Read each turn's context size the way the runner already does — the main-chain record's
    `message.usage.input_tokens + cache_read_input_tokens + cache_creation_input_tokens` in
    `~/.claude/projects/<project>/<session-id>.jsonl`, per `ClaudeCodeTranscriptSource.context_tokens` in
-   `claude_code_transcript.py`.
+   `claude_code/transcript.py`.
 4. Repeat the whole run with `--autocompact` omitted, same prompts and same turn count.
 
 **Passes when.** The declared-window run's context size drops sharply back toward a small fraction of 100k within a turn
@@ -581,8 +581,8 @@ into `default-delivery` ends the chunk after the one `triage` node.
 
 **Passes when.** The probe exits 0 and its reading is recorded with the `claude` version: outcome A or B per source, the
 scope names, and the parenting. Part (b)'s observations hold. Walk it again whenever the admitted range in
-`blizzard/src/blizzard/runner/harness/internal/claude_code_health.py` or the installed `claude`'s minor version moves:
-the precedence is undocumented behavior.
+`blizzard/src/blizzard/runner/harness/claude_code/health.py` or the installed `claude`'s minor version moves: the
+precedence is undocumented behavior.
 
 **Hazards.** As `blizzard:manual-live-node`'s: never the systemd runners' stores, and never the hosted hub. An
 operator's own `~/.claude/settings.json` `env` beats the runner's process env, so it could redirect a signal or reach a
