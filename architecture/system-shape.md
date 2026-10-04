@@ -48,9 +48,9 @@ store rather than through an injected seam Protocol; or a test that cannot run w
 seam exists to bind a mock to.
 
 **Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
-basic workspace provider by configuration, alongside Claude Code, while tests bind the blizzard-mock fleet. The hub
-reaches its external systems through `IWorkSource` and its capability family, `IOAuthProvider`, and
-`IHubCommandRunner`/`IHubWorkdir`.
+basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while
+tests bind the blizzard-mock fleet. The hub reaches its external systems through `IWorkSource` and its capability
+family, `IOAuthProvider`, and `IHubCommandRunner`/`IHubWorkdir`.
 
 **Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
 mock harness.
@@ -90,6 +90,40 @@ Stated so a reviewer need not re-derive them:
   qualifies a repo from the `git_commit` artifact's recorded origin before a land script ever runs, and the script falls
   back to `BZ_FORGE_OWNER` only when that origin was still a bare name; and a chunk whose first pointer is a `hub:` item
   gets no branch links, because `HubWorkSource.branch_url` is always `None`.
+
+### Seams answer their binding's facts (`bzh:seam-answers-binding-facts`)
+
+**Rule.** A seam answers its binding's specific facts itself, and no consumer compares a binding's config name — a
+`workspace_provider` value or a harness id — outside the selection point that picks the binding.
+
+**Why.** A consumer that branches on a binding's name hard-codes that binding's behavior where the seam cannot see it:
+the branch is silently wrong for every other binding, and adding a binding means finding every such branch by hand
+rather than implementing one declaration.
+
+**Detect.** The `bzh:binding-name-selection` ast-grep rule
+(`blizzard/contracts/ast-grep/rules/binding-name-selection.yml`, run by `blizzard:structural-gate`) flags a comparison
+of `workspace_provider` or of a harness-id string literal outside the selection points, the bindings' own modules, and
+migrations. By eye: an `if … == "winter"` or `== "claude_code"` anywhere a seam is already injected.
+
+**Do.** Ask the seam. The workspace provider reports where a worker is spawned (`IWorkspaceProvider.spawn_root`), how
+many environments it may hold (`capacity`), and its environment pool (`pool`), in
+`blizzard/src/blizzard/runner/environments/provider.py`; the selection point is the factory registry in
+`runner/environments/factory.py`. Harnesses are iterated, never named: `blizzard/src/blizzard/runner/harness/catalog.py`
+holds `HARNESS_CATALOG` and its walks (`declared`, `enabled`, `declared_normalizer_versions`), each entry an
+`IHarnessDeclaration` (`harness/declaration.py`) paired with its `IHarnessSection` (`harness/sections.py`). A third
+harness is a new declaration and section kind added to the catalog, not a new branch in its consumers.
+
+**Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
+second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.
+
+#### Recorded positions
+
+- The hub's analytics dialect registry (`DIALECTS` in `blizzard/src/blizzard/hub/domain/analytics/dialects.py`) stays
+  hub-owned and keyed by the wire's `normalizer_version`, not built from the runner catalog: it must interpret
+  historical segments from runners and harness versions that no longer exist, and the hub never imports
+  `blizzard.runner` (`bzh:domain-core`). Adding a harness without a dialect is made un-forgettable by guard instead —
+  `blizzard/tests/test_analytics_dialect_corpus_guard.py` iterates the catalog's `declared_normalizer_versions()` and
+  fails on any without a `DIALECTS` entry.
 
 ## See also
 
