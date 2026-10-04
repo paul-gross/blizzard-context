@@ -38,7 +38,7 @@ The tier's other named coverage:
   also catch identical re-forks.
 - `test_artifacts_storage.py` — with the git-commit coverage in `test_runner_loop.py` and `test_runner_gates.py`, pins
   the worker-declares/runner-verifies split: a fake `IWorktreeGit.verify` drives ADVANCE's collection, and
-  `GitCommitArtifact`/`ArtifactRow` round-trip losslessly with `forge` carried. A verified declaration becomes a
+  `GitCommitArtifact`/`StoredArtifact` round-trip losslessly with `forge` carried. A verified declaration becomes a
   `GIT_COMMIT` `SubmittedArtifact` carrying its manifest-named origin; an unverified one is dropped and reported as a
   `command-failed` the worker can act on — reported deliberately, since a silent drop lets a chunk reach `done` having
   delivered nothing.

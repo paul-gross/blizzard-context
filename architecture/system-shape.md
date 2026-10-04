@@ -67,7 +67,7 @@ Stated so a reviewer need not re-derive them:
   — outside the configured-entry loop, in `WorkSourceEntry.registry` — not the seam itself.
 - The hub work source's editor capability, `IWorkEditor`, is seated the same always-on in-process way, and it is
   structural rather than a configurable opt-in because every `IWorkEditor` method returns the hub repository's own
-  record types — `WorkItemRecord` for `list`, `get`, `edit`, and `withdraw`, and `CreatedWorkItem` for `create`, which
+  record types — `HubWorkItem` for `list`, `get`, `edit`, and `withdraw`, and `CreatedWorkItem` for `create`, which
   alone also mints a chunk — types no binding without a hub-owned store behind it could render, unlike
   `IWorkSource.fetch`'s seam-local `WorkItem` dataclass. The editor gate also covers the read verbs `list` and `get`,
   because `IWorkSource` declares no enumeration method, so no non-hub binding could serve them anyway; the read half is
