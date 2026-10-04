@@ -24,6 +24,9 @@ mints work and never fixes code itself. Each verb's `--help` owns its flags.
 - **Live findings.** No verb lists every finding, so enumerate them. For each routine (`hub routine list`) and each
   scope (`hub scope list`), run `hub finding list --routine <routine> --scope <scope> --source routine --json`. For each
   scope, run `hub finding list --source review --scope <scope> --json`. Dedupe by `finding_id`.
+- **Check every call.** A failed list call leaves no output, which looks exactly like an empty scope. Check each call's
+  exit status, keep its stderr, and retry a failure until it succeeds. A pair that never succeeds is a gap in the
+  inventory, not an empty result.
 - **Join.** Map each finding to the proposals whose `findings` cite it, and to each proposal's closure.
 
 ## 2. Re-verify against `master`
@@ -81,7 +84,11 @@ blizzard hub garden-proposal accept <proposal-id>             # only the proposa
 
 An accept mints a chunk, and minting a chunk owes the marshal steps at once ([marshalling.md](./marshalling.md)).
 
-## 6. Report
+## 6. Re-count, then report
+
+Re-run the inventory after the writes. Every live finding should now be one the user chose to leave, one an accepted
+proposal cites, or one first observed after the inventory. Any other live finding is an inventory gap: sweep it before
+reporting.
 
 Report these to the user:
 
