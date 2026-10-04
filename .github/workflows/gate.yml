@@ -3,6 +3,9 @@
 # `pr.yml` runs it on every pull request; `push.yml` calls it too, so the gate is defined
 # once and never drifts between triggers.
 #
+# The `reference lint` job runs the reference-integrity lint over the repo itself (bzh ids,
+# links and anchors, hub routing, path notation) and its script tests.
+#
 # `registry-drift` (verifiability.md) stays local-only and does not run here: it needs
 # the sibling `blizzard` and `blizzard-mock` checkouts a single-repo CI runner does not
 # carry, and running it against their `master` would redden a PR whenever a chunk changes
@@ -42,3 +45,13 @@ jobs:
         run: python3 tests/test_check_registry_drift.py
       - name: lint-markdown-style script tests
         run: python3 tests/test_lint_markdown_style.py
+
+  reference-lint:
+    name: reference lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: reference-lint script tests
+        run: python3 tests/test_lint_references.py
+      - name: reference lint
+        run: python3 scripts/lint-references.py --gate .

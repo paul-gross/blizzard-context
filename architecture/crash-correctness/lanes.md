@@ -1,4 +1,4 @@
-# The lane contract (`bzh:lane-contract`)
+# The lane contract
 
 A **lane** is a periodic pass or store-and-forward pass that moves facts toward a sink. On the hub, every pass hosted by
 the `Sweep` driver is a lane: the annotation, event-derivation, and materialization reconcilers, the close drain, the

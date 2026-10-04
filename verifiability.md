@@ -15,6 +15,8 @@ Every command method below runs from the repo root.
 | `blizzard-context:registry-drift`       | `python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate` |
 | `blizzard-context:registry-drift-tests` | `python3 tests/test_check_registry_drift.py`                                                             |
 | `blizzard-context:lint-script-tests`    | `python3 tests/test_lint_markdown_style.py`                                                              |
+| `blizzard-context:reference-lint`       | `python3 scripts/lint-references.py --gate .`                                                            |
+| `blizzard-context:reference-lint-tests` | `python3 tests/test_lint_references.py`                                                                  |
 | `blizzard-context:ci-workflows`         | `mise x actionlint@1.7.12 -- actionlint`                                                                 |
 
 `blizzard-context:markdown-format` is the format gate `dprint.json` declares; `dprint fmt` writes the fix, and both
@@ -27,20 +29,31 @@ marker, `<!-- vale Blizzard.ProcessReference = NO -->` before the exhibited exam
 repo-wide `TokenIgnores` entry.
 
 `.github/workflows/{pr,push}.yml` run `blizzard-context:markdown-format`, `:markdown-lint`, `:markdown-prose-lint`,
-`:registry-drift-tests`, and `:lint-script-tests` as the `gate / dprint + rumdl + vale` and
-`gate / registry-drift + lint-markdown-style script tests` checks, each tool pinned to an exact version inline in the
-workflow rather than declared in a `mise.toml` (`blizzard-context:ci-workflows` below states why this repo carries
-none). Passing `--gate` to the registry-drift check refuses a green on any skipped check, not only on a `fail`.
-`blizzard-context:registry-drift` is local-only and **deliberately excluded from the PR gate**: it needs the sibling
-`blizzard` checkout with its `.venv` and the sibling `blizzard-mock` checkout, which a feature env supplies and a
-single-repo CI runner does not; running it against their `master` would also redden a PR whenever a chunk changes a
-citation here together with the sibling repo it cites, before that sibling half has landed.
-`blizzard-context:registry-drift-tests` exercises every check against stdlib-only fixtures and needs no blizzard
-checkout, so it runs in CI even though `registry-drift` itself does not.
+`:registry-drift-tests`, `:lint-script-tests`, `:reference-lint`, and `:reference-lint-tests` as the
+`gate / dprint + rumdl + vale`, `gate / registry-drift + lint-markdown-style script tests`, and `gate / reference lint`
+checks, each tool pinned to an exact version inline in the workflow rather than declared in a `mise.toml`
+(`blizzard-context:ci-workflows` below states why this repo carries none). Passing `--gate` to the registry-drift check
+refuses a green on any skipped check, not only on a `fail`. `blizzard-context:registry-drift` is local-only and
+**deliberately excluded from the PR gate**: it needs the sibling `blizzard` checkout with its `.venv` and the sibling
+`blizzard-mock` checkout, which a feature env supplies and a single-repo CI runner does not; running it against their
+`master` would also redden a PR whenever a chunk changes a citation here together with the sibling repo it cites, before
+that sibling half has landed. `blizzard-context:registry-drift-tests` exercises every check against stdlib-only fixtures
+and needs no blizzard checkout, so it runs in CI even though `registry-drift` itself does not.
 
 `blizzard-context:lint-script-tests` exercises the `winter lint` check this extension contributes
 (`scripts/lint-markdown-style.py`, wired through `winter-ext.toml`'s `lint` field) against stubbed binaries, so none of
 the three tools need be installed.
+
+`blizzard-context:reference-lint` is the reference-integrity lint (`scripts/lint-references.py`, wired through
+`winter-ext.toml`'s `lint` field beside the style gate). It checks four things over every Markdown file outside fenced
+code: each `bzh:` citation resolves to exactly one defining heading (`bzh-id-integrity`); each relative link,
+`#fragment`, and `§Heading` after a link or path-notation path reaches an existing path and a whole heading
+(`reference-links`); each leaf is linked from its nearest hub (`hub-routing`); each `<module>:/path` notation reaches an
+existing file (`path-notation-targets`). `--gate` exits 1 on any `fail`; without it the script always exits 0, per the
+lint contract. Run it with `WINTER_WORKSPACE_DIR` set to the workspace root to resolve `workspace:` and
+installed-extension paths; without it each such module is one `warn`, never a `fail`, which is the mode the CI runner is
+in. `blizzard-context:reference-lint-tests` exercises each check against fixture repos through the `winter lint` env
+contract, one seeded violation per check, and needs nothing installed.
 
 `blizzard-context:ci-workflows` is this repo's own workflow-lint method (no declared method proved a GitHub Actions
 workflow file before it): `actionlint`, run from the repo root, scans `.github/workflows/` by default. It is local-only
@@ -60,7 +73,8 @@ gh api -X PUT repos/paul-gross/blizzard-context/branches/master/protection --inp
     "strict": false,
     "checks": [
       {"context": "gate / dprint + rumdl + vale"},
-      {"context": "gate / registry-drift + lint-markdown-style script tests"}
+      {"context": "gate / registry-drift + lint-markdown-style script tests"},
+      {"context": "gate / reference lint"}
     ]
   },
   "enforce_admins": false,
@@ -74,18 +88,16 @@ EOF
 
 ### `blizzard-context:manual-reference-check`
 
-A by-hand reference and routing pass over the changed files. The surface it covers is every `blizzard-context:` /
-`winter-canon:` / `workspace:` path notation, every code pointer in `bzh:one-prose-home`'s Pointer forms, every relative
-link, every inbound public URL naming a file here, and every registry count or enumeration the changed files state. The
-inbound URLs are on that list because a published surface points at this repo by URL, so renaming a heading here breaks
-a document this repo cannot see.
+A by-hand reference pass over the changed files, covering what `blizzard-context:reference-lint` does not reach: every
+code pointer in `bzh:one-prose-home`'s Pointer forms, including a `§` after a code path or a rule id; every inbound
+public URL naming a file here; every registry count or enumeration the changed files state; and the precision of each
+hub row's trigger. The inbound URLs are on that list because a published surface points at this repo by URL, so renaming
+a heading here breaks a document this repo cannot see.
 
-It passes when each reference resolves to a file with the claimed shape and anchor, every cited `bzh:` id is defined,
-every new or moved leaf has a hub row and every repointed or deleted row lands in the same change
+It passes when each code pointer resolves to a file with the claimed shape and anchor, each new or moved leaf's hub row
+names a trigger that routes to it and every repointed or deleted row lands in the same change
 (`winter-canon:/progressive-disclosure.md`, `canon:index-scrutiny`), and each stated registry count or enumeration is
 either reached by check F or dispositioned by hand against its named owner.
-
-**Gap.** No automated path-notation, routing-reference, or anchor check ships in this repo.
 
 **Gap.** Check F's residual classes, enumerated by `scripts/check-registry-drift.py`'s own Declared limitations block,
 reach into the `blizzard/` and `blizzard-mock/` trees no method covers and this by-hand pass does not open.
