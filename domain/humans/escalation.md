@@ -12,6 +12,23 @@ acceptable harness can serve a mint: a fresh mint exhausts harness selection, or
 current acceptable set, so requeue refuses to switch owners. The hub itself escalates when a migrating choice's target
 graph fails to resolve, or when a node's bounce cap is crossed.
 
+## Why it escalated
+
+Every escalation records its cause, from a closed vocabulary, and a one-line detail, at the moment it is written:
+
+| Origin                                                                 | Cause                           |
+| ---------------------------------------------------------------------- | ------------------------------- |
+| a worker's retries exhausted, or death without a verdict past the cap  | `retries-exhausted`             |
+| an existing session's recorded harness owner is unknown or unavailable | `owner-unresolvable`            |
+| no acceptable harness can serve a mint                                 | `no-acceptable-harness`         |
+| the chunk's spend cap is reached                                       | `spend-cap`                     |
+| a node's bounce cap is crossed (hub-authored)                          | `bounce-cap`                    |
+| a migrating choice's target graph fails to resolve (hub-authored)      | `migration-target-unresolvable` |
+
+A missing cause means the cause was not recorded — the escalation predates causes, or an older runner wrote it — never
+that it had none. A worker's ask is never an escalation: it parks the chunk waiting on a human through a question, so no
+cause names it.
+
 ## The commands an escalation carries
 
 A present wrapped takeover verb guarantees the raw resume command is present as well; the converse does not hold — the
