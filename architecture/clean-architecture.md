@@ -8,6 +8,9 @@ When the behavior you are placing touches persistence or a controller, read
 takes. When a module under `blizzard/src/blizzard/hub/domain/` needs another concept package's types or data, the table
 in `bzh:domain-package-layers` below decides whether it may import that package or the code must move.
 
+When you add a runner loop step or give one something new to read, `bzh:narrow-seams` below owns the step's own context
+Protocol.
+
 ## Domain core (`bzh:domain-core`)
 
 **Rule.** Business rules live in a domain layer that depends on nothing outward — no FastAPI, SQLAlchemy, click, httpx,
@@ -79,7 +82,7 @@ the same process graph with explicit lifetimes:
 - `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core builds the shared stores
   and leaf services once; `build_services` takes it and builds none of them
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py`, injected into the served app in
-  `blizzard/src/blizzard/runner/app.py` and the periodic loop in `blizzard/src/blizzard/runner/loop/build.py`
+  `blizzard/src/blizzard/runner/app.py` and the periodic loop's wiring in `blizzard/src/blizzard/runner/loop_wiring.py`
 
 The CLI modules below are roots for short-lived commands — they wire collaborators once, inline, at the top of the
 command body, without joining the hosted process graph:
@@ -101,6 +104,76 @@ The same reasoning extends to a helper a command's own root calls into rather th
   outside a composition root.
 
 **Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
+
+## Narrow seams and step context Protocols (`bzh:narrow-seams`)
+
+**Rule.** Type each collaborator's dependencies as the seams it uses, never as a bundle that carries every seam. Only a
+composition root, the runner's loop driver, or an API or CLI edge holds a bundle.
+
+**Why.** A bundle parameter hides what a collaborator touches: a test must build the whole bundle, and a reviewer cannot
+tell from the signature which state a change can reach. A narrow seam states the dependency in the type, so pyright
+fails any caller that supplies less and any member the collaborator starts reading without declaring it.
+
+**Scope.** The bundles are the runner's store bundles — `RunnerStores`, `RunnerReadStores`, and the `IReadRunnerStore` /
+`IWriteRunnerStore` Protocols they satisfy, all in `blizzard/src/blizzard/runner/stores.py` — and the loop's
+`LoopContext`. The composition roots are those `bzh:dependency-injection` names; the loop driver is
+`runner/loop/context.py`, `runner/loop/tick.py`, and `runner/loop/steps.py`; the edges are everything under
+`runner/api/` and `runner/cli/`. The hub's `HubServices`, held by its API edge, is out of scope. Tests are out of scope:
+they act as their own roots.
+
+**Detect.** A step or domain service typed by a bundle while its body reads a handful of the bundle's members.
+`tests/test_layering.py` fails the unit tier on each check below, and each has its own self-tests over a temporary tree:
+
+- `test_only_the_loop_driver_and_composition_roots_name_loop_context` — `LoopContext` named, in any form, under
+  `blizzard/src/blizzard/` outside the loop driver and the composition roots. Self-tests:
+  `test_loop_context_check_catches_every_naming_form`,
+  `test_loop_context_check_admits_the_driver_and_other_context_names`.
+- `test_only_the_roots_driver_and_edges_name_a_runner_store_bundle` — a store-bundle name under `runner/` outside
+  `stores.py`, the loop driver, the composition roots, `runner/api/`, and `runner/cli/`. Self-tests:
+  `test_store_bundle_check_catches_a_bundle_outside_the_edges`, `test_store_bundle_check_admits_the_edges_and_driver`.
+- `test_no_runner_loop_module_is_a_composition_root_or_imports_composition` — a composition root placed under
+  `runner/loop/`, or a `runner/loop/` module importing `blizzard.runner.composition`. Self-test:
+  `test_loop_composition_check_catches_every_import_form`.
+- `test_every_loop_step_types_its_context_by_a_protocol_it_declares` — a `ctx` parameter or `ctx:` field under
+  `runner/`, outside the driver, roots, and edges, not typed by a `Protocol` its own module declares. Self-tests:
+  `test_step_context_check_catches_a_foreign_or_bundle_context`, `test_step_context_check_admits_a_local_protocol`.
+- `test_loop_context_has_a_conformance_sentinel_for_every_step_context` — a step context Protocol with no `_conforms_*`
+  sentinel in `runner/loop/context.py` proving `LoopContext` satisfies it. Self-test:
+  `test_conformance_check_catches_a_step_context_without_a_sentinel`.
+
+The fix is to declare what the module reads, never to widen an exemption.
+
+**Do.** A loop step module declares its own context Protocol beside its steps, inheriting the Protocol of any step it
+hands its context to, and `runner/loop/context.py` proves the driver's bundle satisfies it:
+
+```python
+# runner/loop/attempt.py: hands its ctx to a spawn step
+class AttemptContext(SpawnContext, Protocol): ...
+
+# runner/loop/context.py
+if TYPE_CHECKING:
+    from blizzard.runner.loop.attempt import AttemptContext
+
+    def _conforms_to_attempt(ctx: LoopContext) -> AttemptContext:
+        return ctx
+```
+
+Adding a step, or giving a step something new to read — a probe, a config value, a store — takes the same three moves:
+put the logic in a step module, never inline in a `steps.py` phase; add the member to that module's context Protocol and
+to `LoopContext`; and keep a `_conforms_*` sentinel for that Protocol. The driver holds `LoopContext` only to hand it to
+step modules, so new step logic in `steps.py` escapes this rule rather than satisfying it. A pluggable seam such as a
+probe (`bzh:pluggable-seams` in [./system-shape.md](./system-shape.md)) is one member the step's Protocol declares; it
+never stands in for that Protocol.
+
+A domain service takes one keyword parameter per repository seam:
+`TakeoverService(clock, process, *, takeover, asks, outbound, tokens, elicitations, ...)`.
+
+**Don't.** A domain service taking `stores: RunnerReadStores` to read seven of its repositories, or a step dataclass
+with a `ctx: LoopContext` field. A new gate added inline to a `steps.py` phase, reading a new `LoopContext` member that
+no step Protocol declares.
+
+**See also.** `bzh:seam-size-ceiling` ([./system-shape/seam-size.md](./system-shape/seam-size.md)) caps how wide one
+Protocol grows; this rule governs which Protocols a collaborator depends on.
 
 ## Internal visibility (`bzh:internal-visibility`)
 

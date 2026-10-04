@@ -28,7 +28,9 @@ between FILL and ADVANCE.
 
 **See also.** [`./repository-access.md`](./repository-access.md) `bzh:probe-gated-pass` — what a converging pass or a
 pruning tick step checks before it rescans; a phase that reacts within a tick, as each of REAP, PULL, FILL, and ADVANCE
-does, is outside it.
+does, is outside it. [`./clean-architecture.md`](./clean-architecture.md) `bzh:narrow-seams` — what a runner step's
+context is typed by: a step module declares its own context Protocol, and a new step or a new member a step reads goes
+into that Protocol, into `LoopContext`, and under a `_conforms_*` sentinel.
 
 ## An injected clock (`bzh:injected-clock`)
 

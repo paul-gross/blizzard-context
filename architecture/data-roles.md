@@ -86,7 +86,9 @@ an async method, or a classmethod returning another type. Such a class is a `@do
 | orchestration | A data class with a field annotated directly as a collaborator, under the guard below                                          |
 
 - **Collaborator**: a port — an `I[A-Z]…` name that some Protocol under `blizzard/src/blizzard/` declares, so
-  `IPv4Network` is not one — or a clock, any name ending `Clock`, or a class that itself infers orchestration.
+  `IPv4Network` is not one — or a clock, any name ending `Clock`, a class that itself infers orchestration, or a
+  Protocol that exposes a collaborator through an attribute or property of its own or of a Protocol base — a runner
+  step's context Protocol is one, so a step holding it is orchestration.
 - **Directly**: the whole annotation, or an arm of a union, `Optional`, `Annotated`, `InitVar`, or `Final` — never a
   container's type argument. Inherited fields count.
 - **Guard**: such a field infers orchestration only if the constructor requires it (no default, no `default_factory`,
