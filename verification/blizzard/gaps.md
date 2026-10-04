@@ -138,6 +138,30 @@ composed file beside user, project, and managed settings is outside a hermetic C
 
 Standing in for a tier: `blizzard:manual-claude-code-bundle` closes this as a live procedure.
 
+## Claude Code telemetry precedence
+
+When an `OTEL_*` destination is named in both Claude Code's process env and a settings document's `env`, which wins is
+undocumented behavior of the CLI, and the telemetry it exports carries scope names and trace parenting the runner admits
+on. `blizzard-mock`'s `claude_code` facade executes `--settings` hooks but never applies settings `env`, so a facade
+test could pin only the facade, and no hermetic tier runs the real exporter.
+
+Standing in for a tier: `blizzard:manual-claude-code-harness-telemetry` closes this as a live procedure. Do not add a
+facade test that claims to pin the precedence.
+
+Observed on `claude` 2.1.288 to 2.1.289:
+
+- `--settings` env and user-settings env each beat a same-named process env for all three signals (outcome A for both
+  sources); a process signal-specific endpoint beats a settings generic one.
+- Scopes: `com.anthropic.claude_code` (metrics), `com.anthropic.claude_code.events` (logs),
+  `com.anthropic.claude_code.tracing` (traces). The resource's own `service.name` is `claude-code`.
+- Spans carry the `TRACEPARENT` trace id and the root span parents on the env span; a `Bash` subprocess's `TRACEPARENT`
+  names that tool's `claude_code.tool.execution` span. `claude_code.interaction` parents on the step root.
+- With `ENABLE_BETA_TRACING_DETAILED` on, `BETA_TRACING_ENDPOINT` takes traces and logs from the documented exporters,
+  as OTLP/JSON, while metrics stay on the documented exporter.
+- Without `CLAUDE_CODE_ENABLE_TELEMETRY` and `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA` a named destination receives nothing;
+  with only the first, metrics and logs arrive and traces do not.
+- The node's judgement turn, a `--resume` of the same session, exported metrics and logs but no spans.
+
 ## Claude Code transcript normalization
 
 `blizzard-mock`'s `ClaudeTranscriptWriter` (`blizzard-mock/src/blizzard_mock/harness/facades/_transcript.py`)

@@ -532,6 +532,64 @@ with the outcome that fixes the ambient rule table's user and project rows.
 
 **Hazards.** As `blizzard:manual-live-node`'s: never the systemd runners' stores, and never the hosted hub.
 
+### `blizzard:manual-claude-code-harness-telemetry`
+
+**Surface.** Which source Claude Code honors when an `OTEL_*` destination is named in both its process env and a
+settings document's `env`, and whether the telemetry it exports reaches a runner's own receivers under the scopes and
+trace parenting the runner admits ([`./gaps.md`](./gaps.md#claude-code-telemetry-precedence) owns why no hermetic tier
+stands in).
+
+**Setup.** A real Claude Code CLI inside the admitted range, from `<env>/blizzard` with `BLIZZARD_TMPDIR` set. Part (a)
+needs no login and spends no tokens. Part (b) uses `blizzard:manual-live-node`'s setup with
+`[tracing] harness_telemetry` on and a local OTLP sink as the runner's export destination. Managed-settings precedence
+is not probed: it stays the static reading (managed `env` wins per signal family) unless walked by hand.
+
+**Steps.**
+
+Part (a), the precedence probe:
+
+1. Run `uv run python scripts/probe_claude_code_telemetry_precedence.py`. It points the model endpoint at a closed
+   loopback port under a disposable `CLAUDE_CONFIG_DIR`, home, and project, and observes two local sinks. It runs the
+   `baseline`, `flag-same-name`, `user-same-name`, `generic-in-settings`, `beta-endpoint`, `switch-off`, and
+   `enable-only` cells and writes one sanitized protobuf export body per signal to
+   `blizzard/tests/fixtures/claude_code_telemetry/` (`--fixtures-dir` redirects them when the walk is not meant to
+   refresh the fixtures). `--fallback-model-turn` runs one cheapest-model turn only when the baseline emits nothing
+   without a reply, and the output reports that it did.
+2. Record the `claude` version and, per cell and signal, which sink received it: `settings` means the settings
+   document's `env` beat the process env (outcome A), `process` means the process env won (outcome B).
+3. Record the scope names.
+4. Record whether spans parent on the `TRACEPARENT` span.
+5. Record which signals the `beta-endpoint` cell's endpoint took from the documented exporters, in any encoding.
+6. Record which signals reached a sink in the `switch-off` cell, which names destinations but sets neither Claude Code
+   telemetry switch.
+7. Record which signals reached a sink in `enable-only`, which sets only `CLAUDE_CODE_ENABLE_TELEMETRY`.
+
+Part (b), through a real runner, with `blizzard:manual-live-node`'s setup. Give the worker a scratch user scope:
+`CLAUDE_CONFIG_DIR` and `CLAUDE_CODE_OAUTH_TOKEN`, holding the current access token, which cannot refresh, in
+`[worker] env_passthrough`. Mapping every tier to `haiku` in `[models.aliases]` and ingesting an already-satisfied item
+into `default-delivery` ends the chunk after the one `triage` node.
+
+8. Run one node with `harness_telemetry` on and no operator destination in the worker settings. The sink holds Claude
+   Code metrics, logs, and spans under `blizzard-claude-code`, each stamped with the node's chunk, lease, and runner;
+   the spans sit under the step root; a span from a `blizzard` command the worker ran parents on the step root, since
+   the CLI reads only `BLIZZARD_TRACEPARENT`; `blizzard runner status` shows all three signals captured.
+9. For the handoff to programs that read `TRACEPARENT`, run one `haiku` `claude -p` turn under the same switches, with a
+   known `TRACEPARENT` and a traces sink, that runs `printenv TRACEPARENT` through `Bash`: the printed span id is one of
+   Claude Code's spans.
+10. Put one signal's exporter in the `--settings` document's `env`, and rerun. That signal reaches the operator's
+    destination and `runner status` shows it as operator-configured.
+
+**Passes when.** The probe exits 0 and its reading is recorded with the `claude` version: outcome A or B per source, the
+scope names, and the parenting. Part (b)'s observations hold. Walk it again whenever the admitted range in
+`blizzard/src/blizzard/runner/harness/internal/claude_code_health.py` or the installed `claude`'s minor version moves:
+the precedence is undocumented behavior.
+
+**Hazards.** As `blizzard:manual-live-node`'s: never the systemd runners' stores, and never the hosted hub. An
+operator's own `~/.claude/settings.json` `env` beats the runner's process env, so it could redirect a signal or reach a
+hosted backend, and a copied credentials file could rotate the shared refresh token. Placing a `managed-settings.json`
+under `/etc/claude-code` by hand is machine-wide: it also reaches the instance runners' workers on this host, so do it
+only on a host with none, and remove it afterward.
+
 ### `blizzard:manual-rollback-drill`
 
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
