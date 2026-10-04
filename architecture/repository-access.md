@@ -291,4 +291,5 @@ every interval, changed or not.
 
 **See also.** [`./crash-correctness.md`](./crash-correctness.md) `bzh:steppable-loop` — the pass this rule gates is one
 of its step functions — and `bzh:injected-clock` there, whose clock the floor reads. `bzh:bulk-reconstitution` above —
-what the pass owes per item once it does run.
+what the pass owes per item once it does run. [`./crash-correctness/lanes.md`](./crash-correctness/lanes.md)
+`bzh:lane-contract` — what a periodic pass owes around its body: its bound, failure shape, and isolation.
