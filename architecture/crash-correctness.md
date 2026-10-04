@@ -136,6 +136,8 @@ chunk looking landed while an invariant is silently violated.
 
 ## See also
 
+- [./crash-correctness/lanes.md](./crash-correctness/lanes.md) — `bzh:lane-contract`, what a periodic pass or
+  store-and-forward lane owes around its body, including the crash-point family clause these requirements impose on it.
 - [./system-shape.md](./system-shape.md) — `bzh:deterministic-shell`, and, through its
   [store-facts spoke](./system-shape/store-facts.md), `bzh:facts-not-status` — the invariants these requirements rest
   on.
