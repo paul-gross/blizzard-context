@@ -39,22 +39,37 @@ workflow edge deterministically.
 
 **Rule.** Every external system is reached only through a seam — a Protocol interface — whose concrete bindings are
 swappable adapters selected by configuration. A seam is the external-system application of dependency inversion
-(`bzh:dependency-inversion`).
+(`bzh:dependency-inversion`). A seam whose adapters span several modules gives each adapter a package of its own, named
+only by the seam's wiring module and the composition roots: the seam's core never imports an adapter, one adapter never
+imports another, and nothing in the seam's package imports the loop that consumes it.
 
 **Why.** Seams let tests bind the blizzard-mock fleet in place of the real stack — the entire service and e2e strategy
-runs seams-mocked, spending no tokens and touching no network.
+runs seams-mocked, spending no tokens and touching no network. An adapter in its own package stays replaceable: neither
+the core nor a sibling adapter changes when it does.
 
 **Detect.** A vendor SDK, the GitHub API, or a claude/harness binary invoked directly from a loop step, the domain, or a
 store rather than through an injected seam Protocol; or a test that cannot run without a real external system because no
-seam exists to bind a mock to.
+seam exists to bind a mock to. For the harness seam,
+`test_adapters_are_named_only_by_the_harness_wiring_and_the_composition_roots` in `blizzard/tests/test_layering.py`
+fails the unit tier, resolving relative imports, on each breach:
+
+- a harness-core module importing `harness/claude_code/` or `harness/opencode/`;
+- one adapter importing the other;
+- any module but `harness/wiring.py` and a composition root importing either adapter;
+- a module under `harness/` importing `runner/loop/`.
+
+`test_adapter_isolation_catches_every_breach` proves the check catches each form.
 
 **Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
 basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while
 tests bind the blizzard-mock fleet. The hub reaches its external systems through `IWorkSource` and its capability
-family, `IOAuthProvider`, and `IHubCommandRunner`/`IHubWorkdir`.
+family, `IOAuthProvider`, and `IHubCommandRunner`/`IHubWorkdir`. `blizzard/src/blizzard/runner/harness/wiring.py` is the
+one module naming both harness adapters; the harness core reaches them only through `IHarnessDeclaration` and
+`IHarnessSection`.
 
 **Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
-mock harness.
+mock harness. Nor a harness-core module importing an adapter's constant — a denied-tool list, a section kind — so the
+core changes whenever that adapter does.
 
 ### Recorded positions
 
@@ -109,10 +124,10 @@ anywhere a seam is already injected.
 **Do.** Ask the seam. The workspace provider reports where a worker is spawned (`IWorkspaceProvider.spawn_root`), how
 many environments it may hold (`capacity`), and its environment pool (`pool`), in
 `blizzard/src/blizzard/runner/environments/provider.py`; the selection point is the factory registry in
-`runner/environments/factory.py`. Harnesses are iterated, never named: `blizzard/src/blizzard/runner/harness/catalog.py`
+`runner/environments/factory.py`. Harnesses are iterated, never named: `blizzard/src/blizzard/runner/harness/wiring.py`
 holds `HARNESS_CATALOG` and its walks (`declared`, `enabled`, `declared_normalizer_versions`), each entry an
-`IHarnessDeclaration` (`harness/declaration.py`) paired with its `IHarnessSection` (`harness/sections.py`). A third
-harness is a new declaration and section kind added to the catalog, not a new branch in its consumers.
+`IHarnessDeclaration` paired with its `IHarnessSection` (both in `harness/declaration.py`). A third harness is a new
+declaration and section kind added to the catalog, not a new branch in its consumers.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.

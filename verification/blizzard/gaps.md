@@ -77,9 +77,9 @@ proven, and do not add a tier that would assert a hand-authored spelling against
 
 `IHarnessTranscriptSource.turns_since`'s `TranscriptReadReason` names `not_found` and `unreadable` as distinct outcomes,
 but `opencode export <session-id>` gives no confirmed signal separating "no such session" from any other export failure
-— the compatibility probe's own `_export_session` (`opencode_probe.py`) does not distinguish them either, always folding
-a non-zero exit into one generic error string. `OpenCodeTranscriptSource` therefore reports every export failure as
-`unreadable`, never `not_found`, until a live run's exit code or stderr shape is captured and confirmed.
+— the compatibility probe's own `_export_session` (`opencode/compatibility/probe.py`) does not distinguish them either,
+always folding a non-zero exit into one generic error string. `OpenCodeTranscriptSource` therefore reports every export
+failure as `unreadable`, never `not_found`, until a live run's exit code or stderr shape is captured and confirmed.
 
 Standing in for a tier: `blizzard:unit-test` covers the chosen `unreadable` default against every failure shape this
 parser can name; a live `opencode export` against a genuinely absent session id would be the evidence for a narrower
@@ -168,8 +168,8 @@ Observed on `claude` 2.1.288 to 2.1.289:
 deliberately mints none of the shapes involved, so no mock-driven `blizzard:service-test` or `blizzard:e2e` exercises
 the normalizer, which could drift from a future Claude Code CLI with every tier green. `test_transcript_tab_browser_e2e`
 does not close it either: it seeds hand-authored `TurnSegmentView` JSON straight to `POST /api/fleet/transcripts`, so no
-normalizer output ever reaches it. OpenCode's own `opencode_normalizer` is a separate code path this gap does not reach
-either way — it is exercised by `blizzard-mock`'s `OpenCodeTranscriptWriter` through a real mock-driven
+normalizer output ever reaches it. OpenCode's own `opencode.transcript.normalizer` is a separate code path this gap does
+not reach either way — it is exercised by `blizzard-mock`'s `OpenCodeTranscriptWriter` through a real mock-driven
 `blizzard:service-test`, which this one is not.
 
 Standing in for a tier: sidechain and thinking-turn normalization is proven only against hand-authored fixtures, pinned
