@@ -79,8 +79,7 @@ blizzard hub garden-proposal create --title "…" --class remediate --body-file 
 blizzard hub garden-proposal accept <proposal-id>             # only the proposals the user accepts
 ```
 
-An accept mints a chunk, and minting a chunk owes the marshal steps at once
-(`workspace:/context/project/local-instance.md` §Marshalling the backlog).
+An accept mints a chunk, and minting a chunk owes the marshal steps at once ([marshalling.md](./marshalling.md)).
 
 ## 6. Report
 

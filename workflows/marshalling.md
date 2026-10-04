@@ -1,0 +1,28 @@
+# Marshalling the backlog (`bzh:marshal`)
+
+**Rule.** To **marshal** is to turn the resting backlog into ordered, claimable work. When the user says to marshal,
+carry every `not_ready` chunk through the steps below, promotion included. Anything that mints a chunk —
+`hub chunk ingest`, `hub garden-proposal accept`, `hub item create` — owes steps 1–3 at once, unasked. Only promotion
+waits for the word.
+
+**Why.** Promotion order is the queue order, and a runner claims whatever reaches the head of `ready`. Unless chunks
+that collide are grouped or linked before then, two lanes edit the same files in parallel and one of them lands into a
+conflict.
+
+**Scope.** An operator session against the instance's hub. Every `blizzard hub` verb needs `$BZ_HUB_URL` and a session
+(`workspace:/context/project/local-instance.md` §The operator CLI needs a session).
+
+1. **Map the ground.** For each `not_ready` chunk, read its work item and locate the code and docs it will change on
+   `origin/master`. Map every unfinished chunk too — `ready`, `running`, `delivering` — since a resting chunk can
+   collide with work already in flight.
+2. **Group** chunks that are one change — the same defect from two angles, or small changes to the same files for the
+   same reason: `hub chunk group <survivor> <merged-id>…`. A group is one lane and one PR, so keep it a size one lane
+   carries. Every id must be unacquired.
+3. **Link** chunks that are separable but would collide — they edit the same files, or one builds on what the other
+   introduces: `hub chunk depend <dependent> <prerequisite>`. The foundation goes first, or else the smaller. A resting
+   chunk that would collide with in-flight work depends on that in-flight chunk.
+4. **Promote in priority order** with `hub chunk promote <chunk-id>`, most urgent first. Defects that operators or the
+   fleet hit come before latent ones, and both come before prose. Promotion lands each chunk at the tail of the `ready`
+   queue, so promoting in order is the ordering. A dependent rests there, blocked, until its prerequisites finish.
+5. **Reorder** only where the new work must jump chunks already `ready`: `hub queue move <chunk-id> <position>`.
+6. **Report** each group, edge, and reorder with its reason — the file or seam the chunks share.
