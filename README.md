@@ -61,12 +61,16 @@ mise x vale@3.22.0 -- vale --output=line . # process-reference prose lint
 python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate
 python3 tests/test_check_registry_drift.py
 python3 tests/test_lint_markdown_style.py
+python3 scripts/lint-references.py --gate .
+python3 tests/test_lint_references.py
 ```
 
 The drift check is the interesting one: it reads a committed census and fails when a registry's stated shape and its
 actual enumeration disagree — including at sites in the sibling `blizzard` and `blizzard-mock` checkouts, which is why
 it wants them present. The markdown gates also run through `winter lint`, since this extension contributes the check —
-`blizzard-context:lint-script-tests` is that check's own test against stubbed binaries.
+`blizzard-context:lint-script-tests` is that check's own test against stubbed binaries. A second check, the reference
+lint, fails on a dangling `bzh:` id, a broken link or anchor, a leaf its hub does not route, or a path notation that
+reaches nothing.
 
 Beyond the mechanical passes, a rule addition or a routing change owes a **cold-spawn eval** — put the change in front
 of a fresh agent context and see whether it actually routes there. `winter-canon:/evaluating-harness-changes.md` owns

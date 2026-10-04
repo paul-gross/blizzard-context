@@ -3,7 +3,7 @@
 A graph may declare a top-level `artifacts:` map (name → file reference) — a sibling of the node set, not a node facet
 (graph definition: [../graphs.md](../graphs.md)); declaring none means an empty map. Definitional — a taxonomy of the
 map's authoring surface: what an author writes and what load and mint-time validation reject (`canon:rule-shape` §File
-kinds); worker read-back is owned by [../artifacts.md](../artifacts.md) §Artifact. Part of the
+kinds); worker read-back is owned by [../artifacts/model.md](../artifacts/model.md) §Artifact. Part of the
 [domain model](../index.md).
 
 ## Names

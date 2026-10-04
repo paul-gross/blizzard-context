@@ -241,12 +241,12 @@ recompute.
 
 `ChunkDecisionsStore.record_decision_resolution` (`blizzard/src/blizzard/hub/store/internal/chunk_decisions_store.py`)
 inserts each struck proposal's `work_item_strikes` row on the same connection, inside the same `engine.begin()`, as the
-`decision_resolutions` row it accompanies — the same one-transaction shape §Proposed work items above takes for a step's
-own proposals. A crash before that commit loses the whole write, strikes included, exactly as it already loses the
-resolution; a crash after it has nothing left to lose. The delivery-materialization sweep below reads
-`work_item_strikes` to exclude a struck proposal forever, but only once the chunk has reached the graph's reserved
-terminal, well after this write's own transaction has closed one way or the other, so that read changes nothing about
-this write's own correctness.
+`decision_resolutions` row it accompanies — the same one-transaction shape §Proposed work items, riding the completion's
+own write above takes for a step's own proposals. A crash before that commit loses the whole write, strikes included,
+exactly as it already loses the resolution; a crash after it has nothing left to lose. The delivery-materialization
+sweep below reads `work_item_strikes` to exclude a struck proposal forever, but only once the chunk has reached the
+graph's reserved terminal, well after this write's own transaction has closed one way or the other, so that read changes
+nothing about this write's own correctness.
 
 The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.

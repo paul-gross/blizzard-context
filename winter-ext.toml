@@ -13,7 +13,8 @@ prefix = "bzh"
 # owned by CONTRIBUTING.md §"Authoring conventions".
 requires = ["winter-canon", "winter-github"]
 
-# `winter lint` contribution: runs the repo-local markdown style gates
-# (dprint format, rumdl lint, vale prose) over every scoped repo carrying
-# their configs.
-lint = "scripts/lint-markdown-style.py"
+# `winter lint` contributions: the repo-local markdown style gates (dprint
+# format, rumdl lint, vale prose) over every scoped repo carrying their
+# configs, and the reference-integrity checks (bzh ids, links and anchors, hub
+# routing, path notation) over every scoped blizzard-context repo.
+lint = ["scripts/lint-markdown-style.py", "scripts/lint-references.py"]

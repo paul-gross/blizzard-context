@@ -48,8 +48,10 @@ pass criteria; what belongs here is only *which* a change owes:
   every change: the mechanical style gates every markdown file here is held to. They also run through `winter lint`:
   this extension contributes the check (`winter-ext.toml`'s `lint` field), so a routine env lint catches the same drift;
   `blizzard-context:lint-script-tests` covers the contribution itself.
+- `blizzard-context:reference-lint` and `blizzard-context:reference-lint-tests` — every change: the `bzh:` id,
+  link-and-anchor, hub-routing, and path-notation checks. The lint also runs through `winter lint`.
 - `blizzard-context:manual-reference-check` — every change: the by-hand pass covering the reference checks no tool here
-  runs — path notation, routing references, anchors.
+  runs — code pointers, inbound public URLs, registry counts, hub-row trigger precision.
 - `blizzard-context:manual-cold-eval` — a rule addition, a trigger broadening, or a routing change (`canon:cold-eval`).
 
 ## Delivery

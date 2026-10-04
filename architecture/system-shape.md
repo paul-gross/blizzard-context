@@ -101,10 +101,10 @@ Stated so a reviewer need not re-derive them:
 the branch is silently wrong for every other binding, and adding a binding means finding every such branch by hand
 rather than implementing one declaration.
 
-**Detect.** The `bzh:binding-name-selection` ast-grep rule
-(`blizzard/contracts/ast-grep/rules/binding-name-selection.yml`, run by `blizzard:structural-gate`) flags a comparison
-of `workspace_provider` or of a harness-id string literal outside the selection points, the bindings' own modules, and
-migrations. By eye: an `if … == "winter"` or `== "claude_code"` anywhere a seam is already injected.
+**Detect.** The ast-grep rule in `blizzard/contracts/ast-grep/rules/binding-name-selection.yml` (run by
+`blizzard:structural-gate`) flags a comparison of `workspace_provider` or of a harness-id string literal outside the
+selection points, the bindings' own modules, and migrations. By eye: an `if … == "winter"` or `== "claude_code"`
+anywhere a seam is already injected.
 
 **Do.** Ask the seam. The workspace provider reports where a worker is spawned (`IWorkspaceProvider.spawn_root`), how
 many environments it may hold (`capacity`), and its environment pool (`pool`), in
