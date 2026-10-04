@@ -54,14 +54,13 @@ it.
 
 **Detect.** Tooled by `web:structural-gate`'s containers-compose sweep, proven first by
 `assertContainersComposeDetectorWorks`: an `if`, `switch`, `?:`, loop, or collection-transform call (`.filter`, `.map`,
-`.reduce`, `.sort`, `.find`, `.some`, and their kin) anywhere in a container's `computed()` callback, nested arrows and
-followed `this.<member>()` calls included. The sweep has no exemption list. The fix keeps the `computed()` field, its
-name, and its type, and replaces only its body with a call into the model, so specs keep reaching the same field.
-Outside the sweep, review asks:
+`.reduce`, `.sort`, `.slice`, `.find`, `.some`, and their kin, plus `Array.from` and `Object.entries`, `.keys`,
+`.values`, and `.fromEntries`) anywhere in a container's `computed()` callback, nested arrows and followed
+`this.<member>()` calls included. The sweep has no exemption list. The fix keeps the `computed()` field, its name, and
+its type, and replaces only its body with a call into the model, so specs keep reaching the same field. Outside the
+sweep, review asks:
 
 - Does an event-handler method no `computed()` reaches derive what a model should own?
-- Does a non-component `inject*` wrapper derive inside its own `computed()`, as `hub/src/app/runners/runner-rows.ts`'s
-  `injectRunnerRows` does?
 - Does a query-option lambda (`injectFooQuery(() => x()?.id ?? null)`) carry more than a null guard?
 - Does a moved derivation restate a backend classification?
 
