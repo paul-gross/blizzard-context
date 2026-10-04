@@ -228,7 +228,7 @@ A node-step's proposed work items (`work_item_proposals`) ride whichever write a
 (`blizzard/src/blizzard/hub/store/internal/chunk_decisions_store.py`) each take the step's proposal rows on the same
 connection, inside the same `engine.begin()`, as the transition, migration, or decision fact they accompany. Only the
 proposal insert runs through a shared `insert_proposals` helper
-(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — each write's own `ArtifactRow`s stay their own separate
+(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — each write's own `StoredArtifact`s stay their own separate
 inline loop. A crash before that commit loses the whole write, proposals included, exactly as it already loses the fact
 and its artifacts; a crash after it has nothing left to lose. The delivery-materialization sweep below consumes these
 rows, but only once the chunk has reached the graph's reserved terminal, well after this write's own transaction has
