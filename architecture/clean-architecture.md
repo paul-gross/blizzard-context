@@ -353,8 +353,8 @@ graph.
 | L8    | `stores`              | `auth`, `environments`, `harness`, `hub`, `leases`, `lifecycle`, `operator`, `throttle`, `tracing`, `transcripts`, `usage`                                             |
 | L9    | `loop`                | `config_table`, `process`, `events`, `environments`, `harness`, `subscriptions`, `leases`, `hub`, `transcripts`, `throttle`, `usage`, `lifecycle`, `tracing`, `stores` |
 
-Import a module by its full module path: a package's surface is its modules outside `internal/`
-(`bzh:internal-visibility`), and its `__init__.py` re-exports nothing.
+Import a module by its full module path, and a name from the module that defines it: a package's surface is its modules
+outside `internal/` (`bzh:internal-visibility`), and its `__init__.py` re-exports nothing.
 
 **Why.** Edges that only point down let a package change without breaking any package below it, and leave no
 package-level cycle for a `TYPE_CHECKING` guard or a function-level import to hide. One import path per name means a
@@ -362,29 +362,32 @@ moved type leaves no second spelling behind.
 
 **Scope.** The table governs imports of `blizzard.hub.domain.*` made by modules under `hub/domain/`; imports inside one
 package are free. Adapters — `hub/api/`, `hub/store/`, the composition roots, tests — depend inward on any package
-(`bzh:domain-core`). The runner table governs imports of `blizzard.runner.*` made by modules of its nodes; imports
-inside one node are free. `runner/api/`, `runner/cli/`, `runner/store/`, `config`, `composition`, `app`, `runtime`,
-`listeners`, `loop_wiring`, and tests are edges: they depend inward on any node, and no node imports them — a concept
-package takes config values by injection (a settings object or a structural Protocol), never `RunnerConfig`.
+(`bzh:domain-core`), but they too take each name from the module that defines it. The runner table governs imports of
+`blizzard.runner.*` made by modules of its nodes; imports inside one node are free. `runner/api/`, `runner/cli/`,
+`runner/store/`, `config`, `composition`, `app`, `runtime`, `listeners`, `loop_wiring`, and tests are edges: they depend
+inward on any node, and no node imports them — a concept package takes config values by injection (a settings object or
+a structural Protocol), never `RunnerConfig`.
 
 **Detect.** A domain module importing a package its row does not list — at module level, inside a function, under
 `TYPE_CHECKING`, or by relative import — or importing the bare `blizzard.hub.domain` umbrella; a `.py` directly under
 `hub/domain/` other than `__init__.py`, or a package directory the table does not declare; a package `__init__.py` that
-imports a name to re-export it. `tests/test_layering.py` fails the unit tier on all five:
+imports a name to re-export it; any module under `src/` or `tests/` importing a name from a domain module that only
+imports it. `tests/test_layering.py` fails the unit tier on all six:
 `test_hub_domain_packages_import_only_what_their_layer_allows` walks every domain module against the table's mirror,
 `_DOMAIN_PACKAGE_LAYERS`, `test_hub_domain_package_layers_are_acyclic` holds that dict acyclic with its keys equal to
 the package directories, and `test_hub_domain_package_inits_re_export_nothing` holds every package `__init__.py` to a
-docstring and the `__future__` import. `test_domain_layer_check_counts_every_import_form`,
-`test_domain_layer_cycle_check_catches_a_cycle`, and `test_a_domain_init_that_imports_a_name_is_flagged` prove the
-walker, the cycle check, and the re-export check fire on planted trees.
-`test_runner_packages_import_only_what_their_layer_allows` walks every module of a runner node against the runner
-table's mirror, `_RUNNER_PACKAGE_LAYERS`, failing on an edge the row does not list and on any import of an edge module
-or the bare `blizzard.runner` package; `test_runner_package_layers_are_acyclic` holds that dict acyclic and every
-package under `runner/` outside `api/`, `cli/`, and `store/` mapped to a node.
-`test_runner_layer_check_counts_every_import_form`, `test_runner_package_check_catches_an_undeclared_package`, and
-`test_runner_layer_cycle_check_catches_a_cycle` prove the walker fires on planted trees. The fix moves the shared type
-down into the lower package, or the dependent code up; a new edge is a change to this table and the dict together, and
-only one that keeps both acyclic.
+docstring and the `__future__` import, and `test_each_hub_domain_name_has_one_import_path` holds every import of a
+domain module's name to the module defining it. `test_domain_layer_check_counts_every_import_form`,
+`test_domain_layer_cycle_check_catches_a_cycle`, `test_a_domain_init_that_imports_a_name_is_flagged`, and
+`test_domain_second_spelling_check_flags_an_import_through_an_importer` prove the walker, the cycle check, the re-export
+check, and the second-spelling check fire on planted trees. `test_runner_packages_import_only_what_their_layer_allows`
+walks every module of a runner node against the runner table's mirror, `_RUNNER_PACKAGE_LAYERS`, failing on an edge the
+row does not list and on any import of an edge module or the bare `blizzard.runner` package;
+`test_runner_package_layers_are_acyclic` holds that dict acyclic and every package under `runner/` outside `api/`,
+`cli/`, and `store/` mapped to a node. `test_runner_layer_check_counts_every_import_form`,
+`test_runner_package_check_catches_an_undeclared_package`, and `test_runner_layer_cycle_check_catches_a_cycle` prove the
+walker fires on planted trees. The fix moves the shared type down into the lower package, or the dependent code up; a
+new edge is a change to this table and the dict together, and only one that keeps both acyclic.
 
 **Do.** `UNSET` lives in `blizzard/src/blizzard/hub/domain/kernel/unset.py`, so `config`, `garden`, and `work_items`
 take it without importing `operations`. The requeue and attachment repository seams live in
