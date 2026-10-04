@@ -76,7 +76,8 @@ it arrived as YAML, JSON, or a later format. A parser called directly brings its
 turning `no` into a boolean, a duplicate key silently winning — that the other doors do not share.
 
 **Detect.** `yaml.safe_load`, `json.loads`, or any other parser called on an ingested document outside a codec binding;
-a second model validating a kind that already has a wire model; a binding that validates or defaults fields itself.
+a second model validating a kind that already has a wire model; a binding that validates or defaults fields itself. The
+`bzh:config-codec` ast-grep rule fails a PyYAML import anywhere under `blizzard/src/blizzard/` outside the YAML binding.
 
 **Do.** A new format is a new `IConfigCodec` binding selected by `Content-Type` on the API and by file extension in the
 CLI (`bzh:pluggable-seams`, [../system-shape.md](../system-shape.md)); the YAML binding loads strictly — booleans are
@@ -147,16 +148,13 @@ wires the store-backed reader, not the records it reads.
 Stated so a reviewer need not re-derive them — each is a site the rules above name as a violation and that stands until
 the change that brings it under the rule:
 
-- **The seams and the change log are not yet in the tree.** `IConfigCodec`, `SecretValue`, `ISecretReader`, and
-  `config_changes` have no implementation; of the five kinds, only scopes and routines exist as records, and neither
-  carries a `revision`.
+- **The seams and the change log are not yet in the tree.** `SecretValue`, `ISecretReader`, and `config_changes` have no
+  implementation; of the five kinds, only scopes and routines exist as records, and neither carries a `revision`.
 - **Routine and scope edits are full replaces.** `RoutineEditRequest` (`blizzard/src/blizzard/wire/routine.py`) requires
   every field and a restated `name`, and the scope edit replaces its one field.
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
   its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
   than refusing it.
-- **Graph definitions are parsed directly.** `yaml.safe_load` is called in `blizzard/src/blizzard/hub/graph_sync.py`,
-  `blizzard/src/blizzard/hub/graphs/__init__.py`, and `blizzard/src/blizzard/hub/api/graphs.py`.
 - **Work sources and forge settings are read once at start.** `blizzard/src/blizzard/hub/app.py` builds the work-source
   registry from the hub's file and reads the forge endpoint and token from `BZ_FORGE_*` in the process environment — the
   configured forge endpoint `bzh:pluggable-seams`'s recorded positions describe.
