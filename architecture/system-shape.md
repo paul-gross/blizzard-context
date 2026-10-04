@@ -124,10 +124,12 @@ anywhere a seam is already injected.
 **Do.** Ask the seam. The workspace provider reports where a worker is spawned (`IWorkspaceProvider.spawn_root`), how
 many environments it may hold (`capacity`), and its environment pool (`pool`), in
 `blizzard/src/blizzard/runner/environments/provider.py`; the selection point is the factory registry in
-`runner/environments/factory.py`. Harnesses are iterated, never named: `blizzard/src/blizzard/runner/harness/wiring.py`
-holds `HARNESS_CATALOG` and its walks (`declared`, `enabled`, `declared_normalizer_versions`), each entry an
-`IHarnessDeclaration` paired with its `IHarnessSection` (both in `harness/declaration.py`). A third harness is a new
-declaration and section kind added to the catalog, not a new branch in its consumers.
+`runner/environments/factory.py`, whose builders take a `WorkspaceSettings` (built by
+`RunnerConfig.workspace_settings`), not `RunnerConfig`. Harnesses are iterated, never named:
+`blizzard/src/blizzard/runner/harness/wiring.py` holds `HARNESS_CATALOG` and its walks (`declared`, `enabled`,
+`declared_normalizer_versions`), each entry an `IHarnessDeclaration` paired with its `IHarnessSection` (both in
+`harness/declaration.py`). A third harness is a new declaration and section kind added to the catalog, not a new branch
+in its consumers.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.

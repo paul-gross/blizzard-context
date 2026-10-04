@@ -32,10 +32,10 @@ The tier's other named coverage:
 
 - `test_produces_coverage_agreement.py` — drives the hub backstop (`Produces.rejection`,
   `hub/domain/execution/auth/produces.py`) and the runner nudge check (`ProducesReconciler.missing`,
-  `runner/loop/produces.py`) over one scenario matrix, asserting both return the same, and the expected, verdict — the
-  anti-drift guard on the shared `wire.completion.Coverage` predicate. Neither side's own tests can see such a
-  disagreement — `test_produces_auth.py` sees only the hub, the component-tier `test_runner_nudge.py` only the runner —
-  and the expected-verdict assertions also catch identical re-forks.
+  `runner/lifecycle/judgement/produces.py`) over one scenario matrix, asserting both return the same, and the expected,
+  verdict — the anti-drift guard on the shared `wire.completion.Coverage` predicate. Neither side's own tests can see
+  such a disagreement — `test_produces_auth.py` sees only the hub, the component-tier `test_runner_nudge.py` only the
+  runner — and the expected-verdict assertions also catch identical re-forks.
 - `test_artifacts_storage.py` — with the git-commit coverage in `test_runner_loop.py` and `test_runner_gates.py`, pins
   the worker-declares/runner-verifies split: a fake `IWorktreeGit.verify` drives ADVANCE's collection, and
   `GitCommitArtifact`/`StoredArtifact` round-trip losslessly with `forge` carried. A verified declaration becomes a

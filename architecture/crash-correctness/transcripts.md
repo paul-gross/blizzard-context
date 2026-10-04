@@ -7,17 +7,17 @@ the registry, the invariant checker, and the obligation to record a decision her
 
 ## The pump read
 
-`TranscriptPump` (`blizzard/src/blizzard/runner/loop/transcript_pump.py`) reads a segment's next batch of turns from the
-harness transcript source through `turns_since` — an external file read, not a store write — then advances the cursor
-and enqueues the deltas in one `record_transcript_deltas` transaction. A crash between the read and the write loses only
-the read, since `turns_since` is a pure forward read of an immutable log and the next tick re-reads from the same
-unadvanced cursor for the same batch.
+`TranscriptPump` (`blizzard/src/blizzard/runner/transcripts/transcript_pump.py`) reads a segment's next batch of turns
+from the harness transcript source through `turns_since` — an external file read, not a store write — then advances the
+cursor and enqueues the deltas in one `record_transcript_deltas` transaction. A crash between the read and the write
+loses only the read, since `turns_since` is a pure forward read of an immutable log and the next tick re-reads from the
+same unadvanced cursor for the same batch.
 
 The write half sits behind the boundary the `transcript.*` crash-point family already guards — the drain's submit/ack
-window in `TranscriptDrain` (`blizzard/src/blizzard/runner/loop/transcript_drain.py`), which the generic sweep reaches
-with no dedicated scenario, because every lease closure enqueues a final marker regardless of `[transcripts] ship`. The
-pump needs no invariant-checker assertion beyond the lane's gapless-sequence and exactly-once checks that the family's
-registered points already exercise.
+window in `TranscriptDrain` (`blizzard/src/blizzard/runner/transcripts/transcript_drain.py`), which the generic sweep
+reaches with no dedicated scenario, because every lease closure enqueues a final marker regardless of
+`[transcripts] ship`. The pump needs no invariant-checker assertion beyond the lane's gapless-sequence and exactly-once
+checks that the family's registered points already exercise.
 
 ## Truncation outcomes
 
@@ -51,10 +51,10 @@ the same ground and at the same price.
 
 ## The backfill verb
 
-`TranscriptBackfill` (`blizzard/src/blizzard/runner/loop/transcript_backfill.py`) is an operator verb rather than a loop
-step, so no sweep family reaches it, and it holds no state between runs, re-deriving its work list every time from
-`transcript_backfill_leases()` — every session-bearing lease the runner holds, each flagged with whether its session
-already carries a segment — with `TranscriptBackfill.run` skipping the flagged ones.
+`TranscriptBackfill` (`blizzard/src/blizzard/runner/transcripts/transcript_backfill.py`) is an operator verb rather than
+a loop step, so no sweep family reaches it, and it holds no state between runs, re-deriving its work list every time
+from `transcript_backfill_leases()` — every session-bearing lease the runner holds, each flagged with whether its
+session already carries a segment — with `TranscriptBackfill.run` skipping the flagged ones.
 
 Its one multi-write sequence is `open_transcript_segment`, then any number of `record_transcript_deltas`, then
 `finalize_transcript_segment`, and every interruption of it lands on the same recoverable state: an open segment. An

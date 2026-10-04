@@ -30,7 +30,7 @@ classification, and provider-overload classification (`src/blizzard/runner/harne
 resolves the full adapter: the registry exposes one accessor per consumer role, each declared to return exactly the
 slice that role calls — `lifecycle`, `lifecycle_and_verdict`, `self_test`, `model_resolution`, `usage_accounting`,
 `usage_limits`, `provider_overload` (`IHarnessRegistry` in `src/blizzard/runner/harness/registry.py`). The domain
-services (`domain/takeover.py`, `domain/status.py`) take `IHarnessLifecycleRegistry`, which declares only `lifecycle`.
+services (`lifecycle/takeover.py`, `status/view.py`) take `IHarnessLifecycleRegistry`, which declares only `lifecycle`.
 `LoopContext.harnesses` stays the composed `IHarnessRegistry`, a pass-through every loop step reads its role accessor
 from. The selftest canary's widened roster — lifecycle, verdict parsing, usage accounting, plus `transcript_source` —
 takes its own `IHarnessSelfTestSeam`. The full `IHarnessAdapter` lives only in `HarnessBinding` and the composition-side
