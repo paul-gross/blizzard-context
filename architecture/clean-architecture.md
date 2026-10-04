@@ -20,11 +20,15 @@ filesystem, or network — with frameworks, stores, and transports outside it, d
 swap untouched.
 
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
-app. `tests/test_layering.py` fails the unit tier on a `hub/domain/` or `runner/domain/` module importing fastapi,
-starlette, sqlalchemy, click, or httpx.
+app. `tests/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module, importing
+fastapi, starlette, sqlalchemy, click, or httpx. A runner domain-core module is any module of a
+`bzh:domain-package-layers` runner node that declares a `@domain_model` class or a `Protocol` port
+(`_runner_domain_core_files`); the same selection may import neither `blizzard.runner.store` nor `blizzard.runner.api`.
 
-**Do.** `blizzard/src/blizzard/hub/domain/` and `blizzard/src/blizzard/runner/domain/` import no web, ORM, or CLI
-package; `blizzard/src/blizzard/hub/api/` and `blizzard/src/blizzard/hub/store/` depend on them, never the reverse.
+**Do.** `blizzard/src/blizzard/hub/domain/` and the runner's concept packages (`runner/leases/`, `runner/lifecycle/`,
+`runner/tracing/`, …) import no web, ORM, or CLI package; `hub/api/`, `hub/store/`, `runner/api/`, and `runner/store/`
+depend on them, never the reverse. The runner's FastAPI federation router lives at `runner/api/federation.py`, not under
+`runner/auth/`.
 
 **Don't.** A domain function that opens a SQLAlchemy session or reads a request object.
 
@@ -147,12 +151,12 @@ The fix is to declare what the module reads, never to widen an exemption.
 hands its context to, and `runner/loop/context.py` proves the driver's bundle satisfies it:
 
 ```python
-# runner/loop/attempt.py: hands its ctx to a spawn step
+# runner/lifecycle/attempt.py: hands its ctx to a spawn step
 class AttemptContext(SpawnContext, Protocol): ...
 
 # runner/loop/context.py
 if TYPE_CHECKING:
-    from blizzard.runner.loop.attempt import AttemptContext
+    from blizzard.runner.lifecycle.attempt import AttemptContext
 
     def _conforms_to_attempt(ctx: LoopContext) -> AttemptContext:
         return ctx
@@ -234,17 +238,20 @@ framework map.
 rather than for the concept it serves.
 
 **Do.** Blizzard's concept packages sit inside each daemon — `blizzard/src/blizzard/hub/auth/`,
-`blizzard/src/blizzard/hub/delivery/`, `blizzard/src/blizzard/runner/harness/`,
-`blizzard/src/blizzard/runner/transcripts/` — each owning that concept's domain types and repository seam. Inside
-`blizzard/src/blizzard/hub/domain/`, the hub's business rules split the same way into the concept packages
-`bzh:domain-package-layers` orders (`chunk/`, `execution/`, `operations/`, `garden/`, …).
+`blizzard/src/blizzard/hub/delivery/`, `blizzard/src/blizzard/runner/harness/`, `blizzard/src/blizzard/runner/leases/`,
+`blizzard/src/blizzard/runner/lifecycle/`, `blizzard/src/blizzard/runner/transcripts/` — each owning that concept's
+domain types and repository seam. Inside `blizzard/src/blizzard/hub/domain/`, the hub's business rules split the same
+way into the concept packages `bzh:domain-package-layers` orders (`chunk/`, `execution/`, `operations/`, `garden/`, …);
+the runner's concept packages sit directly under `blizzard/src/blizzard/runner/`, ordered by the same rule's runner
+table.
 
 **Don't.** `models/`, `routers/`, and `crud/`, where one chunk change touches three unrelated directories.
 
 ## Domain package layers (`bzh:domain-package-layers`)
 
 **Rule.** Put every hub-domain module in one of the concept packages under `blizzard/src/blizzard/hub/domain/`, and
-import another domain package only where this table lets the importer's package; every package may also import `kernel`.
+every runner module outside the edges in one of the runner's nodes; import another package only where the importer's
+table row allows it. Every hub package may also import `kernel`.
 
 | Layer | Package         | May import (besides `kernel`)            |
 | ----- | --------------- | ---------------------------------------- |
@@ -260,6 +267,35 @@ import another domain package only where this table lets the importer's package;
 | L6    | `garden`        | `work_items`, `chunk`, `graph`           |
 | L7    | `observability` | `chunk`, `graph`, `runners`              |
 
+The runner's table. `harness/claude_code`, `harness/opencode`, and `harness/wiring` are nodes of their own; any other
+`runner/<first segment>` is that segment, so `config_table.py` and `stores.py` are the two top-level modules in the
+graph.
+
+| Layer | Node                  | May import                                                                                                                                                             |
+| ----- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L0    | `config_table`        | —                                                                                                                                                                      |
+| L0    | `process`             | —                                                                                                                                                                      |
+| L0    | `events`              | —                                                                                                                                                                      |
+| L0    | `environments`        | —                                                                                                                                                                      |
+| L0    | `subscriptions`       | —                                                                                                                                                                      |
+| L0    | `auth`                | —                                                                                                                                                                      |
+| L1    | `harness`             | `config_table`, `environments`, `process`                                                                                                                              |
+| L2    | `harness/claude_code` | `config_table`, `harness`, `process`, `subscriptions`                                                                                                                  |
+| L2    | `harness/opencode`    | `config_table`, `harness`, `process`                                                                                                                                   |
+| L2    | `leases`              | `environments`, `events`, `harness`, `process`                                                                                                                         |
+| L3    | `harness/wiring`      | `config_table`, `harness`, `process`, `harness/claude_code`, `harness/opencode`                                                                                        |
+| L3    | `hub`                 | `auth`, `events`, `leases`                                                                                                                                             |
+| L4    | `transcripts`         | `environments`, `harness`, `hub`, `leases`                                                                                                                             |
+| L4    | `throttle`            | `events`, `harness`, `leases`                                                                                                                                          |
+| L5    | `usage`               | `environments`, `events`, `harness`, `leases`, `process`, `subscriptions`, `transcripts`                                                                               |
+| L6    | `lifecycle`           | `auth`, `environments`, `events`, `harness`, `hub`, `leases`, `process`, `throttle`, `transcripts`, `usage`                                                            |
+| L7    | `operator`            | `auth`, `leases`, `lifecycle`                                                                                                                                          |
+| L7    | `tracing`             | `harness`, `hub`, `leases`, `transcripts`                                                                                                                              |
+| L7    | `selftest`            | `environments`, `harness`, `lifecycle`, `process`                                                                                                                      |
+| L7    | `status`              | `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`                                                                                                    |
+| L8    | `stores`              | `auth`, `environments`, `harness`, `hub`, `leases`, `lifecycle`, `operator`, `throttle`, `tracing`, `transcripts`, `usage`                                             |
+| L9    | `loop`                | `config_table`, `process`, `events`, `environments`, `harness`, `subscriptions`, `leases`, `hub`, `transcripts`, `throttle`, `usage`, `lifecycle`, `tracing`, `stores` |
+
 Import a module by its full module path: a package's surface is its modules outside `internal/`
 (`bzh:internal-visibility`), and its `__init__.py` re-exports nothing.
 
@@ -269,7 +305,10 @@ moved type leaves no second spelling behind.
 
 **Scope.** The table governs imports of `blizzard.hub.domain.*` made by modules under `hub/domain/`; imports inside one
 package are free. Adapters — `hub/api/`, `hub/store/`, the composition roots, tests — depend inward on any package
-(`bzh:domain-core`).
+(`bzh:domain-core`). The runner table governs imports of `blizzard.runner.*` made by modules of its nodes; imports
+inside one node are free. `runner/api/`, `runner/cli/`, `runner/store/`, `config`, `composition`, `app`, `runtime`,
+`listeners`, `loop_wiring`, and tests are edges: they depend inward on any node, and no node imports them — a concept
+package takes config values by injection (a settings object or a structural Protocol), never `RunnerConfig`.
 
 **Detect.** A domain module importing a package its row does not list — at module level, inside a function, under
 `TYPE_CHECKING`, or by relative import — or importing the bare `blizzard.hub.domain` umbrella; a `.py` directly under
@@ -278,16 +317,27 @@ imports a name to re-export it. `tests/test_layering.py` fails the unit tier on 
 `test_hub_domain_packages_import_only_what_their_layer_allows` walks every domain module against the table's mirror,
 `_DOMAIN_PACKAGE_LAYERS`, and `test_hub_domain_package_layers_are_acyclic` holds that dict acyclic with its keys equal
 to the package directories. `test_domain_layer_check_counts_every_import_form` and
-`test_domain_layer_cycle_check_catches_a_cycle` prove the walker and the cycle check fire on planted trees. The fix
-moves the shared type down into the lower package, or the dependent code up; a new edge is a change to this table and
-the dict together, and only one that keeps both acyclic.
+`test_domain_layer_cycle_check_catches_a_cycle` prove the walker and the cycle check fire on planted trees.
+`test_runner_packages_import_only_what_their_layer_allows` walks every module of a runner node against the runner
+table's mirror, `_RUNNER_PACKAGE_LAYERS`, failing on an edge the row does not list and on any import of an edge module
+or the bare `blizzard.runner` package; `test_runner_package_layers_are_acyclic` holds that dict acyclic and every
+package under `runner/` outside `api/`, `cli/`, and `store/` mapped to a node.
+`test_runner_layer_check_counts_every_import_form`, `test_runner_package_check_catches_an_undeclared_package`, and
+`test_runner_layer_cycle_check_catches_a_cycle` prove the walker fires on planted trees. The fix moves the shared type
+down into the lower package, or the dependent code up; a new edge is a change to this table and the dict together, and
+only one that keeps both acyclic.
 
 **Do.** `ActivityEntry` lives in `blizzard/src/blizzard/hub/domain/runners/activity.py`: the runner registry returns it
 and `chunk/model.py` imports it from there. `UNSET` lives in `kernel/unset.py`, so `config`, `garden`, and `work_items`
-take it without importing `operations`.
+take it without importing `operations`. The requeue and attachment repository seams live in
+`blizzard/src/blizzard/runner/leases/operator_requests.py`: the L6 claim and dormant steps read through
+`IReadRequeueRepository` and `IReadAttachmentRepository`, and the L7 `operator/` services import the write seams from
+there. `WorktreeGitError` sits beside `IWorktreeGit` in `runner/environments/worktree.py`, so
+`lifecycle/judgement/git_commits.py` names no `internal/` module.
 
 **Don't.** `runners/registration.py` importing a chunk port under `TYPE_CHECKING` — an L1 package reaching up into L2 —
-or `from blizzard.hub.domain.chunk import Chunk` through a re-exporting `chunk/__init__.py`.
+or `from blizzard.hub.domain.chunk import Chunk` through a re-exporting `chunk/__init__.py`. `runner/auth/roles.py`
+importing `RunnerConfig` — a concept package reaching an edge; it takes a `RolePolicy` instead.
 
 **See also.** `bzh:domain-core` governs what every domain package may not import outward; `bzh:shared-kernel` governs
 the `wire/` vocabulary both daemons' domains import.

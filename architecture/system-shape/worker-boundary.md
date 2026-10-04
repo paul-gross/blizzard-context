@@ -38,9 +38,9 @@ residue is lossy — a detached worktree's `git rev-parse --abbrev-ref HEAD` ret
 runner that both infers and pushes wedges on a branch named `HEAD`. The split means the runner neither fabricates a
 pointer from residue nor merely trusts an unverified claim.
 
-**Scope.** Governs the runner's `IWorktreeGit` seam (`src/blizzard/runner/loop/worktree.py`) and its ADVANCE collection
-step; the runner still holds the only credentialed copy of the leased environment — only the git mutation within it
-belongs to the worker.
+**Scope.** Governs the runner's `IWorktreeGit` seam (`src/blizzard/runner/environments/worktree.py`) and its ADVANCE
+collection step; the runner still holds the only credentialed copy of the leased environment — only the git mutation
+within it belongs to the worker.
 
 **Detect.** A runner-side `git push` or `git commit`, or any runner git call resolving which branch or commit to act on
 from repository state rather than from the worker's declaration through the local API.

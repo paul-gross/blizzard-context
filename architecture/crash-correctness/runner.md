@@ -50,12 +50,13 @@ branches already do, so it inherits the same atomic guarantee and needs no entry
 
 The runner store's `session_preamble_facts` table (`blizzard/src/blizzard/runner/store/schema.py`) holds, per harness
 session, a digest of the standing spawn-preamble prose that session was last sent, so a resumed spawn can skip an
-unchanged layer and announce a changed one. `Spawner.spawn` (`blizzard/src/blizzard/runner/loop/spawn.py`) is the only
-caller: the fingerprint write sits inside the SPAWN step immediately after `record_identified_spawn`, once the launched
-process's identity is durable, but lands only after the spawn call itself returns, so a durable fingerprint always
-implies the prose actually reached the process. A dormant session's own wake
-(`blizzard/src/blizzard/runner/loop/dormant.py`) resumes the same session through `record_spawn` instead, delivering a
-short wake message rather than a re-rendered preamble, so that path never reads or writes this table at all.
+unchanged layer and announce a changed one. `Spawner.spawn` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) is the
+only caller: the fingerprint write sits inside the SPAWN step immediately after `record_identified_spawn`, once the
+launched process's identity is durable, but lands only after the spawn call itself returns, so a durable fingerprint
+always implies the prose actually reached the process. A dormant session's own wake
+(`blizzard/src/blizzard/runner/lifecycle/dormant.py`) resumes the same session through `record_spawn` instead,
+delivering a short wake message rather than a re-rendered preamble, so that path never reads or writes this table at
+all.
 
 A crash that loses the fingerprint leaves the next resume reading `None` and rendering all three preamble layers in
 full, a token cost rather than a safety break.
@@ -120,25 +121,27 @@ raising costs that lane's pass, not the other three, and it retries at the next 
 
 ## The graph-artifact mirror
 
-`Spawner._mint` (`blizzard/src/blizzard/runner/loop/spawn.py`) records a pinned mint's graph-scope declarations into the
-runner's own `graph_artifacts` table, insert-if-absent keyed on `graph_id`, immediately before `record_lease` — ahead of
-the lease those rows exist to serve. The presence check and every insert behind it are one transaction, so a mint's
-declarations land all or none and the `graph_id`-granular check can never mistake a half-written set for a complete one
-and skip the remainder for that mint's life. A crash between the artifact write and `record_lease` leaves at most a
-complete orphan set keyed to an immutable mint, and the retried mint writes identical rows, insert-if-absent making the
-retry a no-op past the first success. A `graph_artifacts` row owes the checker nothing because it is a durable fact
-about an immutable mint, never revised once written, so agreement between readers after a crash is structural.
+`Spawner._mint` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) records a pinned mint's graph-scope declarations
+into the runner's own `graph_artifacts` table, insert-if-absent keyed on `graph_id`, immediately before `record_lease` —
+ahead of the lease those rows exist to serve. The presence check and every insert behind it are one transaction, so a
+mint's declarations land all or none and the `graph_id`-granular check can never mistake a half-written set for a
+complete one and skip the remainder for that mint's life. A crash between the artifact write and `record_lease` leaves
+at most a complete orphan set keyed to an immutable mint, and the retried mint writes identical rows, insert-if-absent
+making the retry a no-op past the first success. A `graph_artifacts` row owes the checker nothing because it is a
+durable fact about an immutable mint, never revised once written, so agreement between readers after a crash is
+structural.
 
 The pin guarantee reaches exactly as far as the mint, and the window past it is accepted rather than repaired. A lease
 already in flight resumes through `Spawner.preamble`, which re-mints only the capability token and never re-enters
 `_mint`, so a lease whose mint predates any recorded rows resumes on an empty pin — the emptiness
-`IReadGraphArtifactRepository.graph_artifacts_for_graph` (`blizzard/src/blizzard/runner/domain/artifacts.py`) reports
-from the read side. No engine code path reads a graph declaration at all — the runner's only reader is that
-worker-facing route — so no admission, routing, epoch, or completion decision can observe the window. An empty pin fails
-by name rather than answering emptily: `artifact get <name> --scope graph` is a `404` naming the pinned mint, which the
-worker CLI raises as a non-zero `ClickException` (`blizzard/src/blizzard/runner/api/artifacts.py`,
-`blizzard/src/blizzard/runner/cli_worker.py`). What carries a worker through an empty pin is the fallback every prompt
-pointing at a graph declaration owes (`bzh:graph-artifact-pointer-fallback`,
+`IReadGraphArtifactRepository.graph_artifacts_for_graph`
+(`blizzard/src/blizzard/runner/lifecycle/judgement/artifacts.py`) reports from the read side. No engine code path reads
+a graph declaration at all — the runner's only reader is that worker-facing route — so no admission, routing, epoch, or
+completion decision can observe the window. An empty pin fails by name rather than answering emptily:
+`artifact get <name> --scope graph` is a `404` naming the pinned mint, which the worker CLI raises as a non-zero
+`ClickException` (`blizzard/src/blizzard/runner/api/artifacts.py`, `blizzard/src/blizzard/runner/cli_worker.py`). What
+carries a worker through an empty pin is the fallback every prompt pointing at a graph declaration owes
+(`bzh:graph-artifact-pointer-fallback`,
 [`../../standards/worker-nodes/graph-artifact-pointers.md`](../../standards/worker-nodes/graph-artifact-pointers.md)),
 which is written against a failed read and not only an empty one.
 
@@ -147,9 +150,9 @@ because no fallback in authored prose can stand in for a decision the engine mak
 
 ## The elicitation relaunch record-before-launch gap
 
-`Judgement._relaunch` (`blizzard/src/blizzard/runner/loop/judgement.py`) re-launches a detached verdict elicitation
-whose prior attempt exited without writing anything readable — the loss-recovery counterpart to the ordinary first
-launch, whose own record-before-launch gap earns the `advance.after-elicit-record.before-launch` /
+`Judgement._relaunch` (`blizzard/src/blizzard/runner/lifecycle/judgement/judgement.py`) re-launches a detached verdict
+elicitation whose prior attempt exited without writing anything readable — the loss-recovery counterpart to the ordinary
+first launch, whose own record-before-launch gap earns the `advance.after-elicit-record.before-launch` /
 `advance.after-elicit-launch` registry points because the generic sweep scenario reaches it on every ordinary judgement.
 A relaunch's own gap does not: it opens only once a prior elicitation has already been launched, exited, and left an
 unreadable output file — a condition the generic scenario never creates, so `bzh:crash-point-registry`'s family-coverage
@@ -169,35 +172,36 @@ consequence since the orphaned attempt's own output file is simply never read on
 
 ## The elicitation-clear-after-collect ordering
 
-`Judgement.collect` (`blizzard/src/blizzard/runner/loop/judgement.py`) clears the in-flight elicitation record, and
-sweeps its output files, only AFTER a collected reply is fully processed — never before. Clearing first would open two
-windows. A crash between the clear and `_judged` completing would leave a lease with no elicitation record and no
-buffered outcome, re-entering the ordinary judge path and launching a **second, redundant** elicitation — a second model
-turn spent on a verdict already in hand, and one the usage ledger cannot show, since `judge` usage is keyed
-`(lease, generation, kind)` and a judge elicitation opens no new generation, so the ledger ends with one `judge` fact
-either way. And a staleness-exceeded branch that cleared the record before calling `Attempt.fail` would let a crash in
-that gap silently reset the never-resettable staleness baseline on the next pass's fresh `_launch`.
+`Judgement.collect` (`blizzard/src/blizzard/runner/lifecycle/judgement/judgement.py`) clears the in-flight elicitation
+record, and sweeps its output files, only AFTER a collected reply is fully processed — never before. Clearing first
+would open two windows. A crash between the clear and `_judged` completing would leave a lease with no elicitation
+record and no buffered outcome, re-entering the ordinary judge path and launching a **second, redundant** elicitation —
+a second model turn spent on a verdict already in hand, and one the usage ledger cannot show, since `judge` usage is
+keyed `(lease, generation, kind)` and a judge elicitation opens no new generation, so the ledger ends with one `judge`
+fact either way. And a staleness-exceeded branch that cleared the record before calling `Attempt.fail` would let a crash
+in that gap silently reset the never-resettable staleness baseline on the next pass's fresh `_launch`.
 
 The first window is closed by ordering, not by a registry point: `collect` clears the record and sweeps the files only
 once `_judged` returns. The second is narrowed rather than closed: the staleness-exceeded branch calls `Attempt.fail`
 directly, which kills and clears the record itself as one link in its own closing sequence — no separate write of
 `collect`'s own precedes it — so the only span left is inside `Attempt.fail`
-(`blizzard/src/blizzard/runner/loop/attempt.py`), from the elicitation record's clear to the lease's closure — a span
-the locally-paused escalation deferral, which returns without closing, never ends at all. A crash in that span, or that
-deferral lifting, lands the lease back in the ordinary judge path with no elicitation record, so at most one elicitation
-is spent again, on a fresh baseline, from a point the staleness bound was already past. That is the accepted-loss
-ground: the loss is one re-spent elicitation, tolerable because it is bounded by the same threshold and self-healing on
-the next pass, and its only durable trace is the `elicitation past its staleness bound — failing attempt` warning the
-failing pass logs — the usage ledger cannot show it, because a killed elicitation books no `judge` fact and the fresh
-one records the generation's only `judge` sample. It is not a fresh window `bzh:crash-point-registry` owes a point to.
+(`blizzard/src/blizzard/runner/lifecycle/attempt.py`), from the elicitation record's clear to the lease's closure — a
+span the locally-paused escalation deferral, which returns without closing, never ends at all. A crash in that span, or
+that deferral lifting, lands the lease back in the ordinary judge path with no elicitation record, so at most one
+elicitation is spent again, on a fresh baseline, from a point the staleness bound was already past. That is the
+accepted-loss ground: the loss is one re-spent elicitation, tolerable because it is bounded by the same threshold and
+self-healing on the next pass, and its only durable trace is the
+`elicitation past its staleness bound — failing attempt` warning the failing pass logs — the usage ledger cannot show
+it, because a killed elicitation books no `judge` fact and the fresh one records the generation's only `judge` sample.
+It is not a fresh window `bzh:crash-point-registry` owes a point to.
 
 ## The pause-park teardown
 
-`Attempt.park_paused` (`blizzard/src/blizzard/runner/loop/attempt.py`) only signals: a SIGINT to the worker's group and
-to any in-flight elicitation's, then the durable park, which names that elicitation by record id. The registry point
+`Attempt.park_paused` (`blizzard/src/blizzard/runner/lifecycle/attempt.py`) only signals: a SIGINT to the worker's group
+and to any in-flight elicitation's, then the durable park, which names that elicitation by record id. The registry point
 `pause.after-interrupt.before-park` covers the one window there; recovery re-runs `park_paused`, whose guarded interrupt
 re-signals only a still-live owned group. Completing the teardown is `DormantSession.on_unpause`'s first act
-(`blizzard/src/blizzard/runner/loop/dormant.py`), on every tick the park is open: a group still alive within
+(`blizzard/src/blizzard/runner/lifecycle/dormant.py`), on every tick the park is open: a group still alive within
 `SHUTDOWN_DRAIN_DEADLINE` of `parked_at` is left alone, one alive past it is SIGKILLed, and a named elicitation that has
 exited books its `judge` usage against the paused generation through the recorder and is then cleared, its files swept —
 the same usage-then-clear order as `Judgement.collect`. Those two writes are the teardown's only durable ones, and
@@ -215,7 +219,7 @@ named record that has since vanished, or a park naming none, leaves the teardown
 ## The identity-failure-mark-before-close gap
 
 `Reap.run`'s provisional-generation branch and `Spawner.spawn`'s `WorkerIdentityError` handler
-(`blizzard/src/blizzard/runner/loop/steps.py`, `blizzard/src/blizzard/runner/loop/spawn.py`) both call
+(`blizzard/src/blizzard/runner/loop/steps.py`, `blizzard/src/blizzard/runner/lifecycle/spawn.py`) both call
 `record_identity_failed` to close a durably-provisional generation as unidentified — the first ahead of `Attempt.fail`'s
 own kill-then-close, the second ahead of re-raising `HarnessSpawnError` with the lease left open for REAP's next pass.
 `record_identity_failed` is its own transaction, so in either caller a `kill -9` right after it commits, and before what
@@ -236,11 +240,11 @@ halves are independently harmless, and the existing REAP re-scan is the recovery
 
 ## The unresolvable-pool-owner escalation mint
 
-`Spawner._escalate_unresolvable_resume_owner` (`blizzard/src/blizzard/runner/loop/spawn.py`) mints a zero-budget,
+`Spawner._escalate_unresolvable_resume_owner` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) mints a zero-budget,
 never-spawned lease purely to give `Attempt.escalate_owner_unresolvable`
-(`blizzard/src/blizzard/runner/loop/attempt.py`) an existing lease to close, when an existing recorded session's owner
-cannot be dispatched to at node entry — a named pool's head, or a plain, un-pooled resume's own latest session alike;
-`SessionResolver.resolve_resume` surfaces both shapes through the same `ResumeTarget.owner_unresolvable`, so
+(`blizzard/src/blizzard/runner/lifecycle/attempt.py`) an existing lease to close, when an existing recorded session's
+owner cannot be dispatched to at node entry — a named pool's head, or a plain, un-pooled resume's own latest session
+alike; `SessionResolver.resolve_resume` surfaces both shapes through the same `ResumeTarget.owner_unresolvable`, so
 `enter_node` routes both through this one mint. Between that mint's own `record_lease` and the escalation's own closure
 landing, the lease sits exactly as any other post-mint, pre-spawn lease does, so `_CP_AFTER_MINT`
 (`spawn.after-lease-mint.before-spawn`) is reused rather than duplicated: a `kill -9` here leaves the identical "lease
@@ -307,7 +311,7 @@ its own transaction. Both are **no-window** writes: a `kill -9` on either commit
 re-classifying the same exit on a later pass re-checks and writes nothing past the first success.
 
 The fact these rows feed — whether a lease is currently backing off — is derived at read time (`backing_off_facts`,
-`blizzard/src/blizzard/runner/domain/overload.py`), never stored: an open fact closes by the lease's own current
+`blizzard/src/blizzard/runner/leases/overload.py`), never stored: an open fact closes by the lease's own current
 generation (worker) or elicitation launch instant (judge) no longer matching the identity the fact recorded, not by a
 separate closing write. A lease that closes without ever recording a later generation or elicitation launch closes the
 fact a second way (`bzh:open-facts-declare-closure`): `OverloadStore.open_overload_facts` anti-joins `lease_closures`
@@ -345,10 +349,10 @@ is never cross-checked against the credential file it describes.
 
 ## The per-lease scratch directory
 
-`WorkerScratchDirs` (`blizzard/src/blizzard/runner/loop/worker_scratch.py`) is filesystem state, not a store write:
-`Spawner.preamble` and `Spawner._worker_preamble` (`blizzard/src/blizzard/runner/loop/spawn.py`) call `ensure` ahead of
-every resume and fresh spawn respectively, and `Attempt.close` (`blizzard/src/blizzard/runner/loop/attempt.py`) calls
-`remove` after `record_closure` commits, never before.
+`WorkerScratchDirs` (`blizzard/src/blizzard/runner/process/worker_scratch.py`) is filesystem state, not a store write:
+`Spawner.preamble` and `Spawner._worker_preamble` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) call `ensure`
+ahead of every resume and fresh spawn respectively, and `Attempt.close`
+(`blizzard/src/blizzard/runner/lifecycle/attempt.py`) calls `remove` after `record_closure` commits, never before.
 
 Both halves are independently harmless. `ensure` is idempotent — recreating an already-present directory is a no-op — so
 a crash between it and the spawn it precedes leaves nothing to reconcile; the next `ensure` on the same lease id
@@ -364,7 +368,7 @@ ordering leaves a crash to interrupt is one orphan directory, collected at the n
 
 ## The trace export sweep
 
-`LeaseTraceSweep.sweep` (`blizzard/src/blizzard/runner/domain/tracing/sweep.py`) tells closed leases to the configured
+`LeaseTraceSweep.sweep` (`blizzard/src/blizzard/runner/tracing/sweep.py`) tells closed leases to the configured
 exporter, then appends a runner `trace_cursor` row recording how far it told. Its one dangerous window is registered:
 `leasetrace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not yet
 appended), swept by one dedicated scenario against an in-test OTLP sink

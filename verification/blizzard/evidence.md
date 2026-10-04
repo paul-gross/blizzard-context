@@ -129,10 +129,10 @@ author's intent — the change that grew it is the one moment its author knows w
 **Detect.** A `blizzard` hunk that reads a new literal key an author writes, resolves an omitted value against a
 configured or constant default, or raises a parse rejection or appends a validator error or warning at mint, while the
 home the Rule names states nothing of it — neither already, nor in a companion `blizzard-context` hunk of the same
-change. The common tells sit under `blizzard/src/blizzard/hub/domain/` and `blizzard/src/blizzard/runner/loop/`, but the
-trigger is the author-facing surface wherever it is parsed or resolved, not those two trees. The question to ask of the
-hunk: could a graph author, reading only `blizzard-context:/domain/` and the standards it delegates to, predict what it
-does?
+change. The common tells sit under `blizzard/src/blizzard/hub/domain/` and the runner's concept packages
+(`runner/lifecycle/`, `runner/leases/`, …), but the trigger is the author-facing surface wherever it is parsed or
+resolved, not those trees. The question to ask of the hunk: could a graph author, reading only
+`blizzard-context:/domain/` and the standards it delegates to, predict what it does?
 
 A second signature, once the statement itself lands: the branch, default, or warning it names carries no gating-tier
 assertion that would fail were the branch deleted or the warning's trigger inverted — `bzh:mutation-review-selection`'s

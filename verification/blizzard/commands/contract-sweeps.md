@@ -70,11 +70,11 @@ by hand, and one `golden/<scenario>.json` per seeded scenario, written only by r
 built from `tests/trace_fixtures.py` and `tests/runner_trace_fixtures.py` with no store and no OpenTelemetry import.
 
 The dictionary binds to the code and to the docs from both sides: its attribute names equal the declared sets of
-`blizzard.hub.domain.observability.tracing.attributes` and `blizzard.runner.domain.tracing.attributes` plus the resource
-keys; its event names equal both modules' `EVENT_*` constants; its roles equal `SpanRole` and `RunnerSpanRole`, each
-bound to its daemon's scope; its scope and version constants equal the code's; and its id vectors, a runner `worker`
-vector among them, reproduce through `blizzard.foundation.trace_ids`. The golden's span names, event names, link reasons
-and attribute keys equal the dictionary's — a newly declared attribute no seed emits fails the test rather than going
+`blizzard.hub.domain.observability.tracing.attributes` and `blizzard.runner.tracing.attributes` plus the resource keys;
+its event names equal both modules' `EVENT_*` constants; its roles equal `SpanRole` and `RunnerSpanRole`, each bound to
+its daemon's scope; its scope and version constants equal the code's; and its id vectors, a runner `worker` vector among
+them, reproduce through `blizzard.foundation.trace_ids`. The golden's span names, event names, link reasons and
+attribute keys equal the dictionary's — a newly declared attribute no seed emits fails the test rather than going
 unpinned — and every value has its dictionary type. The live assembly must equal the golden byte for byte. The tables in
 `docs/deployment/tracing.md` must equal the dictionary, and `docs/versioning.md` must name
 `blizzard.trace.schema_version`.
