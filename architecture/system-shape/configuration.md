@@ -148,11 +148,13 @@ wires the store-backed reader, not the records it reads.
 Stated so a reviewer need not re-derive them — each is a site the rules above name as a violation and that stands until
 the change that brings it under the rule:
 
-- **The seams and the change log are not yet in the tree.** `config_changes` has no implementation; `SecretValue` and
-  `ISecretReader` are in the tree but no consumer reads through them yet. Of the five kinds, scopes, routines, and
-  secrets exist as records, and only secrets carry a `revision`.
-- **Secret writes append no change row, and the secret view carries no `references`.** Both arrive with the
-  `config_changes` log and the first record that references a secret.
+- **Only work sources and secrets are configured records so far.** `config_changes` and `ConfigAuthoring` are in the
+  tree and carry both; `SecretValue` and `ISecretReader` are in the tree but no consumer reads through them yet. Scopes
+  and routines exist as records without a `revision` or change rows, and repositories and graphs are not yet records
+  under the rule.
+- **A secret's retire and enable move no revision.** Each appends a change row at the secret's unchanged revision,
+  because its value is sealed against `(name, revision)` and a revision moved without resealing would leave the value
+  undecryptable. A work source's retire and enable do move its revision.
 - **Routine and scope edits are full replaces.** `RoutineEditRequest` (`blizzard/src/blizzard/wire/routine.py`) requires
   every field and a restated `name`, and the scope edit replaces its one field.
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
