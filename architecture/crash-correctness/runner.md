@@ -354,7 +354,7 @@ Both halves are independently harmless. `ensure` is idempotent — recreating an
 a crash between it and the spawn it precedes leaves nothing to reconcile; the next `ensure` on the same lease id
 recomputes the identical path. `remove` runs only once the closure is already durable, so a crash between the two leaves
 an orphan directory behind a lease that is already closed, never a still-active lease with its directory gone.
-`LoopWiring.context`'s own one-shot sweep (`blizzard/src/blizzard/runner/loop/build.py`), run only from
+`LoopWiring.context`'s own one-shot sweep (`blizzard/src/blizzard/runner/loop_wiring.py`), run only from
 `PeriodicDriver`'s daemon-start build, ahead of its first tick, removes exactly that kind of orphan — anything under
 `worker-tmp/` whose name is not a currently active lease id — and is not a candidate for `bzh:probe-gated-pass` or
 `Retention`, since it runs once at daemon start rather than on a recurring cadence.
