@@ -88,6 +88,9 @@ Its other writes are exempt:
 - **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append with no partner
   write. A crash before it commits leaves the cursor where it was, and the next pass re-derives the same jump from a
   fresh read.
+- **Idle-advance rows.** A pass that read closing facts but told nothing appends one cursor row moving past the newest
+  instant it read, or to the frontier. It is a single-statement write with no partner. A crash before it commits leaves
+  the cursor where it was, and the next pass re-reads the same facts and re-derives the same row.
 
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps past its own cursor
 — the rows it has not yet told — never a corpus it would rescan to find nothing changed.
