@@ -32,7 +32,7 @@ What UTC-aware means at each boundary:
 - **Wire** — every wire timestamp is serialized with `iso_utc`, so the string always carries an explicit offset.
 - **TS consumer** — the frontend never clamps a large negative derived age to a confident zero: a bounded tolerance
   reads a few tens of seconds of benign clock skew as "now", and anything past that falls through to the source-of-truth
-  liveness boolean the backend already derived. `ageMs`, `formatAge`, and `formatSeenAgo` in `fleet/lib/when.ts`
+  liveness boolean the backend already derived. `ageMs`, `formatAge`, and `formatSeenAgo` in `fleet/lib/core/when.ts`
   implement this bounded-skew-then-fall-through clause once for every relative-age render — see
   [./frontend.md](./frontend.md) `bzh:frontend-formatters`.
 

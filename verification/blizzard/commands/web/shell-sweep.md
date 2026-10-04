@@ -85,7 +85,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   real Playwright pointer (`userEvent.hover`) must distinguish hovered from resting `background-color` and, on the board
   card and `ChunkTimeline`'s `selected` row, from a selected-but-unhovered row's. It also pins that hovering an
   `.artifact-link` washes its row while a contentless `.artifact-plain` row stays unwashed. The tokens live in the
-  global stylesheet `web/projects/fleet/src/lib/design/tokens.css`, loaded by every app build but by no standalone
+  global stylesheet `web/projects/fleet/src/lib/core/design/tokens.css`, loaded by every app build but by no standalone
   component test, so the spec reads the sheet's real text via `commands.readFile` — the vitest browser command exposed
   for exactly this — and injects it as a `<style>` element. Every assertion is proven able to fail by reverting its own
   rule: the `:hover` tint backgrounds in `board-card.css` and `chunk-timeline.css`, the selected-row backgrounds pointed

@@ -37,7 +37,7 @@ component rendering a concept an existing one already renders gets its own prefi
 
 `artifacts-tab-artifact-key` is unreachable by grep from the component side, where it is never a literal but only
 synthesized as `` `${testid()}-key` ``, so it carries a named spec —
-`web/projects/fleet/src/lib/chunk-page/chunk-page-artifacts-tab.spec.ts` — rather than a sweep.
+`web/projects/fleet/src/lib/chunk/chunk-page/chunk-page-artifacts-tab.spec.ts` — rather than a sweep.
 
 ## The browser tiers run the built bundle
 

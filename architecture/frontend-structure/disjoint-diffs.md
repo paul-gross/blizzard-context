@@ -12,9 +12,9 @@ re-exported once from the root `public-api.ts`; what a sub-barrel exports is dec
 feature directory — a sibling only the feature's own components mount stays unexported, so the public surface names what
 is actually re-stackable. A live feature registers its invalidated query keys as a declarative row in its own daemon's
 SSE dispatch registry — the hub's board in `sse/fleet-live.ts`'s `EVENT_INVALIDATION_REGISTRY`, the runner's local panel
-in its own disjoint `RUNNER_EVENT_INVALIDATION_REGISTRY` (`runner/src/app/live/runner-live-updates.ts`) — never a `case`
-added to the shared `LiveInvalidationSpine.dispatch()` (`fleet/sse/live-invalidation-spine.ts`) both registries drive.
-The two daemons' registries never share a line range because they never share a file.
+in its own disjoint `RUNNER_EVENT_INVALIDATION_REGISTRY` (`runner/src/app/core/live/runner-live-updates.ts`) — never a
+`case` added to the shared `LiveInvalidationSpine.dispatch()` (`fleet/sse/live-invalidation-spine.ts`) both registries
+drive. The two daemons' registries never share a line range because they never share a file.
 
 **Why.** A monolithic `public-api.ts` and a hand-written dispatch `switch` are guaranteed merge conflicts — every
 in-flight feature touches the same line range; sub-barrels and a data-shaped registry make adding a feature additive,
