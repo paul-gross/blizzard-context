@@ -370,11 +370,13 @@ package takes config values by injection (a settings object or a structural Prot
 **Detect.** A domain module importing a package its row does not list — at module level, inside a function, under
 `TYPE_CHECKING`, or by relative import — or importing the bare `blizzard.hub.domain` umbrella; a `.py` directly under
 `hub/domain/` other than `__init__.py`, or a package directory the table does not declare; a package `__init__.py` that
-imports a name to re-export it. `tests/test_layering.py` fails the unit tier on the first four:
+imports a name to re-export it. `tests/test_layering.py` fails the unit tier on all five:
 `test_hub_domain_packages_import_only_what_their_layer_allows` walks every domain module against the table's mirror,
-`_DOMAIN_PACKAGE_LAYERS`, and `test_hub_domain_package_layers_are_acyclic` holds that dict acyclic with its keys equal
-to the package directories. `test_domain_layer_check_counts_every_import_form` and
-`test_domain_layer_cycle_check_catches_a_cycle` prove the walker and the cycle check fire on planted trees.
+`_DOMAIN_PACKAGE_LAYERS`, `test_hub_domain_package_layers_are_acyclic` holds that dict acyclic with its keys equal to
+the package directories, and `test_hub_domain_package_inits_re_export_nothing` holds every package `__init__.py` to a
+docstring and the `__future__` import. `test_domain_layer_check_counts_every_import_form`,
+`test_domain_layer_cycle_check_catches_a_cycle`, and `test_a_domain_init_that_imports_a_name_is_flagged` prove the
+walker, the cycle check, and the re-export check fire on planted trees.
 `test_runner_packages_import_only_what_their_layer_allows` walks every module of a runner node against the runner
 table's mirror, `_RUNNER_PACKAGE_LAYERS`, failing on an edge the row does not list and on any import of an edge module
 or the bare `blizzard.runner` package; `test_runner_package_layers_are_acyclic` holds that dict acyclic and every
@@ -384,8 +386,7 @@ package under `runner/` outside `api/`, `cli/`, and `store/` mapped to a node.
 down into the lower package, or the dependent code up; a new edge is a change to this table and the dict together, and
 only one that keeps both acyclic.
 
-**Do.** `ActivityEntry` lives in `blizzard/src/blizzard/hub/domain/runners/activity.py`: the runner registry returns it
-and `chunk/model.py` imports it from there. `UNSET` lives in `kernel/unset.py`, so `config`, `garden`, and `work_items`
+**Do.** `UNSET` lives in `blizzard/src/blizzard/hub/domain/kernel/unset.py`, so `config`, `garden`, and `work_items`
 take it without importing `operations`. The requeue and attachment repository seams live in
 `blizzard/src/blizzard/runner/leases/operator_requests.py`: the L6 claim and dormant steps read through
 `IReadRequeueRepository` and `IReadAttachmentRepository`, and the L7 `operator/` services import the write seams from

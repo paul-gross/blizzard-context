@@ -76,6 +76,27 @@ These produce no activity-feed row:
 - a runner's subscription-usage samples and misses — rate-limit telemetry for its registry row, not fleet activity;
 - a deleted chunk's facts — once a chunk is deleted, every fact of that chunk is suppressed except the deletion itself.
 
+## Re-telling and reflecting the record
+
+An operator can have the record told again, or reflected elsewhere, without changing it:
+
+- **A window ending in the future is refused.** A trace replay or a fact-egress backfill names a window that must end at
+  or before now; one reaching past now is refused outright, before anything is told.
+- **A backfill past the live position is written anyway.** Backfill rows reaching beyond a dataset's live cursor are
+  written, and the live export writes those rows again when its cursor gets there — the repetition is expected.
+- **A dry run needs no destination.** A dry-run backfill or replay only counts, so it runs with the export or tracing
+  turned off; a real one with nowhere to write is refused.
+- **A re-derive counts only what it derived.** Re-deriving a chunk's or the fleet's transcript events reports the
+  segments it actually derived: one gone by then, or whose chunk has no graph to place it on, is not counted. A
+  re-derive naming a chunk or segment the hub does not hold answers with nothing derived rather than an error — it is a
+  convergence trigger, not a read.
+- **A transcript record's first write wins.** A re-shipped record under a key already accepted is acknowledged as
+  applied without comparing its content; a runner that needs to change what it shipped ships a superseding segment.
+- **Forge labels follow the annotating set.** A work source the hub annotates carries status labels on its forge items.
+  The hub remembers which sources it annotates across restarts, so a source taken out of annotation has every status
+  label it carries cleared once; a source removed from the hub's configuration entirely keeps its labels, with nothing
+  left to clear them through. A hub that never annotated a source never clears it.
+
 ## See also
 
 - [./work.md](./work.md) — the transitions and statuses the activity feed reconstructs from.

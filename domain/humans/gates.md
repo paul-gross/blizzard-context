@@ -19,7 +19,10 @@ its gate set to the hub, which reports it and never enforces it.
 Pending derives: a decision is open while no resolving fact references it, and the chunk derives `waiting_on_human` from
 an open one. Resolution is recorded once — first write wins, like an answer ([./asks.md](./asks.md)) — and the holding
 runner then writes the ordinary transition ([../work/transitions.md](../work/transitions.md)) referencing the decision:
-the runner still advances the chunk. A decision resolves by one of:
+the runner still advances the chunk. Until a resolving fact references a runner-configured gate, the runner's plain
+completion out of that node-step — one naming no decision — is refused, whether the gate is still open or already
+resolved: only the transition naming the decision moves on, and only to the resolved choice. A decision resolves by one
+of:
 
 - the holding runner's transition — the ordinary case;
 - a migration record, when the chosen choice migrates cross-graph — a migration writes no transition
