@@ -18,9 +18,11 @@ together, so there is nothing left to reach past locally. Either way an operator
 hold at the first unusable entry and claim nothing that tick, or pass over it — strictness the runner chooses, not a
 fleet-wide rule.
 
-A claim is refused, checked in this order, when the chunk has ended (`stopped` or `done`), its route is held, it is not
-`ready` ([../work/statuses.md](../work/statuses.md)), a prerequisite is unmet, the runner is retired, or the runner's
-capabilities do not fit the chunk. Rekeying a route token is refused once the chunk has ended, as a claim on it is.
+A claim is refused first on the runner, before any race: it is not registered at the hub, it is retired, or the hub has
+paused it. Then, under the claim lock, it is refused on the chunk, in this order: the chunk has ended (`stopped` or
+`done`), its route is held, it is not `ready` ([../work/statuses.md](../work/statuses.md)), or a prerequisite is unmet;
+and last when the runner's capabilities do not fit the chunk. Rekeying a route token is refused once the chunk has
+ended, as a claim on it is.
 
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 

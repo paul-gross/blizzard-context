@@ -8,6 +8,8 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
 
 - **Fleet-wide serialization.** One fleet-wide execution slot admits one chunk's hub node at a time — any hub node, not
   delivery specifically; a chunk finding it held tries again on a later tick.
+- **Only a live, promoted chunk is driven.** A chunk standing at a hub node is run there only while it is promoted and
+  has not ended: one resting un-promoted, or stopped or done, is never driven through it.
 - **Per-repository landing, with reconciliation.** A delivery script that lands a multi-repository chunk serially per
   repository records its own `merged/<repo>` marker immediately after each push; a re-run — after a crash, or a
   kicked-back redelivery — skips every repository whose marker is already durable. The engine imposes no per-repository
