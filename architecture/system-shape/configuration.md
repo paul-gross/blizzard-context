@@ -53,9 +53,9 @@ replace still increments the revision and appends its change row.
 
 **Do.** `WorkItemPatchRequest` (`blizzard/src/blizzard/wire/work_source.py`) is the reference for telling an omitted
 field from an explicit `null`: every field optional, `extra="forbid"`, and its nullable `stated_priority` told apart
-through `model_fields_set` and `UNSET` (`blizzard/src/blizzard/hub/domain/edit.py`). A non-nullable field refuses an
-explicit `null` with a 422 rather than reading it as unchanged. Retirement is an appended lifecycle fact, the newest row
-deciding, as `scope_lifecycle_facts` holds it (`bzh:facts-not-status`, [./store-facts.md](./store-facts.md)).
+through `model_fields_set` and `UNSET` (`blizzard/src/blizzard/hub/domain/kernel/unset.py`). A non-nullable field
+refuses an explicit `null` with a 422 rather than reading it as unchanged. Retirement is an appended lifecycle fact, the
+newest row deciding, as `scope_lifecycle_facts` holds it (`bzh:facts-not-status`, [./store-facts.md](./store-facts.md)).
 
 **Don't.** An edit request that requires every field and a restated `name` under `PATCH` — two operators changing
 different fields of one record silently revert each other.

@@ -37,11 +37,11 @@ never close a cycle, so nothing it writes needs a row lock.
 
 **Do.** `lock_chunk_row` (`hub/store/internal/chunk_rows.py`) — a no-op `UPDATE` on the chunk's own row, already minted
 before any claim, edit, or dependency write can reach it — called as the transaction's first statement, with every guard
-read that follows it on the same connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunks/exclusive.py`) is the
-one place this crosses the domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock on
-Postgres, where two writers naming the same set in different orders could otherwise wait on each other) before yielding
-`ILockedChunkRead` — a domain-facing handle carrying no connection. A sibling write repository's own `*_locked` method
-takes that same handle and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a
+read that follows it on the same connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunk/ports/exclusive.py`) is
+the one place this crosses the domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock
+on Postgres, where two writers naming the same set in different orders could otherwise wait on each other) before
+yielding `ILockedChunkRead` — a domain-facing handle carrying no connection. A sibling write repository's own `*_locked`
+method takes that same handle and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a
 package-private cast only the store layer ever calls — the domain layer never sees a `Connection`.
 
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the

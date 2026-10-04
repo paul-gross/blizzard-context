@@ -8,25 +8,26 @@ transcript lane is recorded in [`./transcripts.md`](./transcripts.md) instead.
 
 ## Promote, then tail-stamp
 
-`PromoteService.promote` (`blizzard/src/blizzard/hub/domain/promote.py`) calls
+`PromoteService.promote` (`blizzard/src/blizzard/hub/domain/operations/promote.py`) calls
 `ChunkQueueStore.record_promote_with_tail_position` (`blizzard/src/blizzard/hub/store/internal/chunk_queue_store.py`),
 which inserts the `chunk_promoted.promoted_at` fact and an explicit `queue_positions` tail-position fact — stamping the
 newly-ready chunk past every currently-ready chunk — in one write transaction (`insert_promote_rows`,
 `blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). No window: a crash ahead of that transaction's commit loses
 both facts together, and a retry re-derives the same tail position from a fresh read.
 
-`QueueService._effective_position`'s (`blizzard/src/blizzard/hub/domain/queue.py`) fallback — an un-positioned chunk
-sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small explicit-position
-float assigned to another chunk — guards a chunk promoted with no queue position by some other route, not a crash inside
-this one transaction.
+`QueueService._effective_position`'s (`blizzard/src/blizzard/hub/domain/operations/queue.py`) fallback — an
+un-positioned chunk sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small
+explicit-position float assigned to another chunk — guards a chunk promoted with no queue position by some other route,
+not a crash inside this one transaction.
 
 ## The close-intent drain sweep
 
-`CloseIntentDrainer.sweep()` (`blizzard/src/blizzard/hub/domain/work_closure.py`) retires pending `close_intents` rows a
-landing or completion transaction enqueued. Its two windows are both registered: `close.after-enqueue.before-drain` (a
-landing marker and its intents are durable; no drain has run yet) and `close.after-close.before-record` (a close attempt
-returned; the outcome-and-retirement write has not landed yet), swept by one dedicated scenario driving the built-in
-`hub` work source with no forge (`tests/crash/test_kill9_sweep.py::test_kill9_at_close_crash_point`).
+`CloseIntentDrainer.sweep()` (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) retires pending `close_intents`
+rows a landing or completion transaction enqueued. Its two windows are both registered:
+`close.after-enqueue.before-drain` (a landing marker and its intents are durable; no drain has run yet) and
+`close.after-close.before-record` (a close attempt returned; the outcome-and-retirement write has not landed yet), swept
+by one dedicated scenario driving the built-in `hub` work source with no forge
+(`tests/crash/test_kill9_sweep.py::test_kill9_at_close_crash_point`).
 
 Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) rides its own
 caller's transaction, so none has a window of its own — each leaves its intents durable together with the fact that
@@ -71,10 +72,10 @@ point the folded transaction ever leaves one standing alone.
 
 ## The trace export sweep
 
-`TraceExportSweep.sweep` (`blizzard/src/blizzard/hub/domain/tracing/sweep.py`) tells closed node steps to the configured
-exporter, then appends a `trace_cursor` row recording how far it told. Its one dangerous window is registered:
-`trace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not yet
-appended), swept by one dedicated scenario against an in-test OTLP sink
+`TraceExportSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/tracing/sweep.py`) tells closed node steps to
+the configured exporter, then appends a `trace_cursor` row recording how far it told. Its one dangerous window is
+registered: `trace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not
+yet appended), swept by one dedicated scenario against an in-test OTLP sink
 (`tests/crash/test_kill9_sweep.py::test_kill9_at_trace_crash_point`). A crash there leaves the cursor unmoved, so the
 next pass re-reads and re-sends the same steps under the same span ids — delivery is at-least-once, and a backend
 deduplicates on span id. A crash before the exporter accepts loses nothing durable.
@@ -97,9 +98,9 @@ The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads o
 
 ## The egress export sweep
 
-`EgressSweep.sweep` (`blizzard/src/blizzard/hub/domain/egress/sweep.py`) writes closed steps and usage as immutable
-files, commits a manifest naming them, then appends an `egress_cursor` row recording how far it wrote. Its two dangerous
-windows are registered, both swept by one dedicated scenario against a real temporary directory
+`EgressSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) writes closed steps and usage as
+immutable files, commits a manifest naming them, then appends an `egress_cursor` row recording how far it wrote. Its two
+dangerous windows are registered, both swept by one dedicated scenario against a real temporary directory
 (`tests/crash/test_kill9_sweep.py::test_kill9_at_egress_crash_point`):
 
 - `egress.after-write.before-commit`: the pass's files are placed; the manifest that lists them is not.
@@ -172,13 +173,13 @@ of them runs on the same connection inside one `engine.begin()` in `WorkItemStor
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) and `insert_run_context_row`
 (`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape §The item-creation chunk
 mint already takes, widened from one table to three: what lets a single caller open one transaction over all four at
-once. `work_item_runs` is what garden delivery's own read (`blizzard/src/blizzard/hub/domain/run_context.py`) resolves a
-chunk's run identity through; landing it outside this transaction would reopen exactly the window this section exists to
-close.
+once. `work_item_runs` is what garden delivery's own read (`blizzard/src/blizzard/hub/domain/garden/run_context.py`)
+resolves a chunk's run identity through; landing it outside this transaction would reopen exactly the window this
+section exists to close.
 
 The chunk is written with no promote fact and no queue position: it rests `not_ready` until the standalone promote.
 
-One narrower window is named and accepted here. `RunService.run` (`blizzard/src/blizzard/hub/domain/routine_run.py`)
+One narrower window is named and accepted here. `RunService.run` (`blizzard/src/blizzard/hub/domain/garden/runs/run.py`)
 allocates the run's `ref` through `WorkItemStore.allocate_ref` before this transaction opens, identical in shape to §The
 item-creation chunk mint's own: under the allocator's own already-accepted gap-tolerant contract, a crash in between
 burns that one `ref`, never reused. The run's effective scope carries no write of its own to window: the API edge
@@ -198,9 +199,9 @@ free function shared the same way `insert_chunk_rows` is for the mint side; the 
 `WorkItemStore._close_conn`, the same connection-scoped update `close` itself calls. A `forge:`-sourced pointer on the
 same chunk is left untouched — only `hub:`-source items close.
 
-`DeleteService.delete` (`blizzard/src/blizzard/hub/domain/delete.py`) reaches this write from both a direct chunk delete
-and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, always inside the same locked transaction
-`ClaimService`/`EditService`/`RestartService` share (`bzh:store-exclusive-write`,
+`DeleteService.delete` (`blizzard/src/blizzard/hub/domain/operations/delete.py`) reaches this write from both a direct
+chunk delete and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, always inside the same locked
+transaction `ClaimService`/`EditService`/`RestartService` share (`bzh:store-exclusive-write`,
 [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md)) — the chunk's row lock is the
 transaction's first statement, ahead of the guard reads and the composite write alike, so a claim cannot land on a chunk
 this write is mid-way through deleting. That row lock closes a cross-process concurrency race — a single-writer lock the
@@ -253,7 +254,7 @@ recompute.
 
 ## The delivery-materialization sweep
 
-`WorkItemMaterializationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/work_item_materialization.py`) re-derives
+`WorkItemMaterializationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/work_items/materialization.py`) re-derives
 its candidate set — every not-yet-judged proposal of a chunk that has moved into the graph's reserved terminal
 ([`../../domain/work/chunk.md`](../../domain/work/chunk.md) §Materialization) — from the store on every pass and holds
 no state between passes: no durable outbox of its own, unlike the close-intent drain above. A crash mid-pass loses only
@@ -363,15 +364,16 @@ on the same connection, inside its own `store.write` transaction. Neither has a 
 inside: `declare_locked`'s insert either lands whole or not at all, and `release`'s read-then-write has nothing outside
 the transaction observing the read before the write commits.
 
-`DependencyService` (`blizzard/src/blizzard/hub/domain/dependencies.py`) runs `declare_locked` and `release` under locks
-[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns — which
-each holds, and why. None is a crash guard. `declare_locked`'s guards wrap the same not-a-crash-window shape §Chunk
-delete, then hub-item withdrawal already takes for its own composite write: its own re-derived reads — the dependent's
-status, the prerequisite's ephemerality, the standing set the cycle check walks — all run before its one atomic
-transaction, never protecting against a crash mid-transaction. Those same guards serialize the ephemerality read against
-every writer that can make a prerequisite ephemeral, grouping included, so `NoStandingDependencyOntoEphemeralChunk`
-(`hub:no-standing-dependency-onto-ephemeral-chunk`) is a `bzh:invariant-checker` assertion as a backstop against a
-regression in that serialization, not a guard against a live gap.
+`DependencyService` (`blizzard/src/blizzard/hub/domain/chunk/dependencies.py`) runs `declare_locked` and `release` under
+locks [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns —
+which each holds, and why. None is a crash guard. `declare_locked`'s guards wrap the same not-a-crash-window shape
+§Chunk delete, then hub-item withdrawal already takes for its own composite write: its own re-derived reads — the
+dependent's status, the prerequisite's ephemerality, the standing set the cycle check walks — all run before its one
+atomic transaction, never protecting against a crash mid-transaction. Those same guards serialize the ephemerality read
+against every writer that can make a prerequisite ephemeral, grouping included, so
+`NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`) is a
+`bzh:invariant-checker` assertion as a backstop against a regression in that serialization, not a guard against a live
+gap.
 
 Neither `declare` nor `release` earns a `bzh:crash-point-registry` entry — the "no window at all" ground: `declare`'s
 insert and `release`'s read-then-write are each whole inside their own single transaction. `declare` alone introduces
@@ -388,7 +390,7 @@ no standing edge, so it introduces no derived invariant of its own.
 takes every target a fold carries and records each one's `chunk_grouped` row — via `record_grouped_row_conn`
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — plus its own release/mint edge rewrite, on the fold's
 already-locked connection (`bzh:store-exclusive-write`). `GroupService.group`
-(`blizzard/src/blizzard/hub/domain/queue.py`) opens that one locked transaction for the whole fold and calls
+(`blizzard/src/blizzard/hub/domain/operations/queue.py`) opens that one locked transaction for the whole fold and calls
 `record_fold_locked` exactly once inside it, covering every target the fold carries, so no target's `chunk_grouped` row
 can ever commit ahead of a sibling target's own edge release/mint — the condition
 `hub:no-standing-dependency-onto-ephemeral-chunk` forbids: a standing edge naming an already-grouped-away chunk.
@@ -415,10 +417,10 @@ unrelated repeat of the same close.
 
 ## Runner fact ingest: the high-water mark, persisted per fact
 
-`FactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/facts.py`) walks a runner's pushed batch in seq order and,
-for each fact that applies, writes that fact's own domain row and then, as a second write, advances `runner_high_water`
-to that fact's seq through `set_runner_high_water` — inside the same loop iteration, before moving to the next fact,
-rather than once after the whole batch.
+`FactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/execution/facts.py`) walks a runner's pushed batch in seq
+order and, for each fact that applies, writes that fact's own domain row and then, as a second write, advances
+`runner_high_water` to that fact's seq through `set_runner_high_water` — inside the same loop iteration, before moving
+to the next fact, rather than once after the whole batch.
 
 The span between a fact's domain write landing and its own mark-write committing is a real window, and what a crash
 inside it loses is bounded to that one fact: a replay resubmits every seq the runner's own ack never confirmed, the

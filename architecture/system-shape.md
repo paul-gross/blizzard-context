@@ -119,10 +119,11 @@ second `opencode_*` parameter through the composition root, the probes, and the 
 
 #### Recorded positions
 
-- The hub's analytics dialect registry (`DIALECTS` in `blizzard/src/blizzard/hub/domain/analytics/dialects.py`) stays
-  hub-owned and keyed by the wire's `normalizer_version`, not built from the runner catalog: it must interpret
-  historical segments from runners and harness versions that no longer exist, and the hub never imports
-  `blizzard.runner` (`bzh:domain-core`). Adding a harness without a dialect is made un-forgettable by guard instead —
+- The hub's analytics dialect registry (`DIALECTS` in
+  `blizzard/src/blizzard/hub/domain/observability/analytics/dialects.py`) stays hub-owned and keyed by the wire's
+  `normalizer_version`, not built from the runner catalog: it must interpret historical segments from runners and
+  harness versions that no longer exist, and the hub never imports `blizzard.runner` (`bzh:domain-core`). Adding a
+  harness without a dialect is made un-forgettable by guard instead —
   `blizzard/tests/test_analytics_dialect_corpus_guard.py` iterates the catalog's `declared_normalizer_versions()` and
   fails on any without a `DIALECTS` entry.
 

@@ -17,11 +17,11 @@ narrowest one its job needs.
 one.
 
 **Scope.** A seam whose reads only project other concepts' own fact tables, with no mutation of its own, stays read-only
-rather than pairing with an empty write half: `blizzard/src/blizzard/hub/domain/chunks/facts.py`'s
+rather than pairing with an empty write half: `blizzard/src/blizzard/hub/domain/chunk/ports/facts.py`'s
 `IReadChunkFactsRepository` has no write counterpart because `load_facts`/`load_all_facts` project the union of the
 other seams' own writes, and splitting that projection per concept would turn one bounded read into one per seam.
 
-**Do.** `blizzard/src/blizzard/hub/domain/chunks/record.py` pairs `IReadChunkRecordRepository` with
+**Do.** `blizzard/src/blizzard/hub/domain/chunk/ports/record.py` pairs `IReadChunkRecordRepository` with
 `IWriteChunkRecordRepository`, the write variant extending the read one; the composition root binds the write variant
 only where mutation is required.
 
@@ -73,8 +73,8 @@ exist. The scope is data, not behavior, and never grows into one.
 **Detect.** A domain signature typed `chunk_id: str` rather than `chunk: Chunk`, or a domain method loading an entity
 from an id it was passed.
 
-**Do.** `blizzard/src/blizzard/hub/domain/complete.py` declares `complete(self, chunk: Chunk, *, by: str)`; the
-controller resolves that chunk through a read repository first. Where no aggregate exists,
+**Do.** `blizzard/src/blizzard/hub/domain/operations/complete.py` declares `complete(self, chunk: Chunk, *, by: str)`;
+the controller resolves that chunk through a read repository first. Where no aggregate exists,
 `blizzard/src/blizzard/runner/api/chunk_scope.py` mints the typed scope instead — `TakeoverService.open` takes a
 `TakeoverOpenScope` resolved there, never a bare `chunk_id`.
 
@@ -108,10 +108,10 @@ over a caller-supplied list, which trades the fan-out for the driver's bind-para
 substituted for the wide one at a call site whose consumer reaches outside the set the narrowed form names; a plural
 form made from a singular newest-fact read by dropping its `LIMIT 1`, which `bzh:newest-per-key-read` judges.
 
-**Do.** `blizzard/src/blizzard/hub/domain/chunks/facts.py`'s `IReadChunkFactsRepository` pairs `load_facts` with the
-*wide* plural `load_facts_for`, which returns exactly what calling `load_facts` per id would; `status_facts_for` is the
-*narrowed* sibling, reading only the fact families a `ChunkStatusView` reaches and naming that set in its own docstring
-rather than every family `load_facts_for` loads. `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s
+**Do.** `blizzard/src/blizzard/hub/domain/chunk/ports/facts.py`'s `IReadChunkFactsRepository` pairs `load_facts` with
+the *wide* plural `load_facts_for`, which returns exactly what calling `load_facts` per id would; `status_facts_for` is
+the *narrowed* sibling, reading only the fact families a `ChunkStatusView` reaches and naming that set in its own
+docstring rather than every family `load_facts_for` loads. `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s
 `FindingStore.get_many` batches both its row read and its `_facts_for_many` facts read through
 `blizzard/src/blizzard/foundation/store/batching.py`'s shared `id_batches`.
 
@@ -266,13 +266,14 @@ form's case: it owes a floor, not a probe. A pass that enforces a window without
 altogether: it owes its reaction on the tick the cap is crossed, and a floor there would let spend overshoot the cap for
 up to one floor. A pass whose job is to act on work as it comes due — reaping a lease, advancing or filling, draining a
 queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases — is outside it, on either side:
-`CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_closure.py` and the runner's `Reap` and `Advance`
-steps are that shape. Such a pass's due-set is the live work the pass exists to answer, often made due by time passing
-alone, so no change probe sees it and a floor would delay the reaction it owes. A pass that opens on a read returning
-only its not-yet-acted-on rows and returns when that read is empty — `WorkItemMaterializationReconciler.sweep`'s
-`unmaterialized_proposals()` in `blizzard/src/blizzard/hub/domain/work_item_materialization.py` — is already gated: that
-read is its probe, and it owes no floor, since it reads the pending rows themselves rather than a signal about them. A
-per-item resolution inside the pass is `bzh:bulk-reconstitution`'s, not this rule's.
+`CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_items/closure.py` and the runner's `Reap` and
+`Advance` steps are that shape. Such a pass's due-set is the live work the pass exists to answer, often made due by time
+passing alone, so no change probe sees it and a floor would delay the reaction it owes. A pass that opens on a read
+returning only its not-yet-acted-on rows and returns when that read is empty —
+`WorkItemMaterializationReconciler.sweep`'s `unmaterialized_proposals()` in
+`blizzard/src/blizzard/hub/domain/work_items/materialization.py` — is already gated: that read is its probe, and it owes
+no floor, since it reads the pending rows themselves rather than a signal about them. A per-item resolution inside the
+pass is `bzh:bulk-reconstitution`'s, not this rule's.
 
 **Detect.** A converging pass whose first statement is its full-corpus read, with no value compared against the previous
 pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that prunes a
@@ -280,12 +281,12 @@ day-scale window unconditionally every tick. The fix is a probe seam on the stor
 answering in one statement — compared against the value the pass last converged on, plus a recorded last-full-pass
 instant checked against the floor; for a pruning pass, the recorded instant and the floor alone.
 
-**Do.** `blizzard/src/blizzard/hub/domain/analytics/derivation.py`'s `EventDerivationReconciler.sweep` reads
-`derivation_signature()` first, returns when it matches the last converged signature and the ten-minute floor is not
-due, and otherwise runs the full pass and records both the signature and the instant. An unchanged pass costs the
+**Do.** `blizzard/src/blizzard/hub/domain/observability/analytics/derivation.py`'s `EventDerivationReconciler.sweep`
+reads `derivation_signature()` first, returns when it matches the last converged signature and the ten-minute floor is
+not due, and otherwise runs the full pass and records both the signature and the instant. An unchanged pass costs the
 probe's one statement.
 
-**Don't.** `blizzard/src/blizzard/hub/domain/forge_status.py`'s `AnnotationReconciler.sweep`, which reads
+**Don't.** `blizzard/src/blizzard/hub/domain/observability/forge_status.py`'s `AnnotationReconciler.sweep`, which reads
 `live_work_refs()` and every source's `marked_refs()` unconditionally on each pass, so an idle fleet pays the whole diff
 every interval, changed or not.
 

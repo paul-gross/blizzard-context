@@ -29,8 +29,8 @@ front of them, and a published surface takes the public-URL form regardless of t
 | Harness doc       | Harness path, section named as `§Section` from the heading text — never the `#anchor` slug                             | `blizzard-context:/domain/humans/escalation.md` §The commands an escalation carries                                                |
 | Published surface | Markdown link whose text names the repo and file; URL to the owning file, section-anchored where the fact lives in one | [`blizzard-context/verification/blizzard.md`](https://github.com/paul-gross/blizzard-context/blob/master/verification/blizzard.md) |
 
-A human-read pointer may name a code symbol with its enclosing class for clarity — `src/blizzard/hub/domain/claim.py`'s
-`ClaimService.rekey`.
+A human-read pointer may name a code symbol with its enclosing class for clarity —
+`src/blizzard/hub/domain/execution/claim.py`'s `ClaimService.rekey`.
 
 The harness form is in-tree only, resolving through the winter-generated path-notation block the workspace instruction
 file imports. A published surface is text rendered to a reader with no source tree at all — Click/argparse `--help`
