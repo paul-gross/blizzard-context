@@ -98,10 +98,10 @@ The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads o
 
 ## The egress export sweep
 
-`EgressSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) writes closed steps and usage as
-immutable files, commits a manifest naming them, then appends an `egress_cursor` row recording how far it wrote. Its two
-dangerous windows are registered, both swept by one dedicated scenario against a real temporary directory
-(`tests/crash/test_kill9_sweep.py::test_kill9_at_egress_crash_point`):
+`EgressSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) writes closed steps, usage, and
+the events dataset's derivations and drops as immutable files, commits a manifest naming them, then appends an
+`egress_cursor` row recording how far it wrote. Its two dangerous windows are registered, both swept by one dedicated
+scenario against a real temporary directory (`tests/crash/test_kill9_sweep.py::test_kill9_at_egress_crash_point`):
 
 - `egress.after-write.before-commit`: the pass's files are placed; the manifest that lists them is not.
 - `egress.after-commit.before-cursor`: the files and the manifest are placed; the cursor row that records them is not.
@@ -111,6 +111,9 @@ names — delivery is at-least-once, and a reader keeps the copy with the latest
 are never opened or replaced again; a loader that reads only files a manifest names never sees the first pass's unlisted
 files. The scenario asserts the re-written rows equal the killed pass's rows apart from `exported_at`, and that every
 cursor row names files and a manifest that exist and agree.
+
+The events dataset keeps the no-probe claim: it reads derivation markers and drops past its cursor through their
+time-leading indexes, never a corpus it would rescan to find nothing changed.
 
 Its other writes are exempt:
 
