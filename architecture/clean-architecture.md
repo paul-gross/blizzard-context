@@ -5,7 +5,8 @@ skeleton `winter-canon:/rule-shape.md` owns (`canon:rule-shape`), with its `bzh:
 
 When the behavior you are placing touches persistence or a controller, read
 [`./repository-access.md`](./repository-access.md): it owns which repository each layer holds and what a domain call
-takes.
+takes. When a module under `blizzard/src/blizzard/hub/domain/` needs another concept package's types or data, the table
+in `bzh:domain-package-layers` below decides whether it may import that package or the code must move.
 
 ## Domain core (`bzh:domain-core`)
 
@@ -35,7 +36,7 @@ the store, forge, harness, or workspace adapter satisfies it.
 **Detect.** A domain service importing a concrete adapter, or a Protocol defined in the adapter package and imported
 inward.
 
-**Do.** `blizzard/src/blizzard/hub/domain/chunks/` declares per-concept read/write Protocol pairs (for example
+**Do.** `blizzard/src/blizzard/hub/domain/chunk/ports/` declares per-concept read/write Protocol pairs (for example
 `IReadChunkRecordRepository` and `IWriteChunkRecordRepository`) plus one read-only-only seam (`facts`);
 `ChunkRecordStore` in `blizzard/src/blizzard/hub/store/internal/chunk_record_store.py` implements that pair
 structurally, one adapter per seam, and the domain never imports any of them.
@@ -161,6 +162,59 @@ rather than for the concept it serves.
 
 **Do.** Blizzard's concept packages sit inside each daemon — `blizzard/src/blizzard/hub/auth/`,
 `blizzard/src/blizzard/hub/delivery/`, `blizzard/src/blizzard/runner/harness/`,
-`blizzard/src/blizzard/runner/transcripts/` — each owning that concept's domain types and repository seam.
+`blizzard/src/blizzard/runner/transcripts/` — each owning that concept's domain types and repository seam. Inside
+`blizzard/src/blizzard/hub/domain/`, the hub's business rules split the same way into the concept packages
+`bzh:domain-package-layers` orders (`chunk/`, `execution/`, `operations/`, `garden/`, …).
 
 **Don't.** `models/`, `routers/`, and `crud/`, where one chunk change touches three unrelated directories.
+
+## Domain package layers (`bzh:domain-package-layers`)
+
+**Rule.** Put every hub-domain module in one of the concept packages under `blizzard/src/blizzard/hub/domain/`, and
+import another domain package only where this table lets the importer's package; every package may also import `kernel`.
+
+| Layer | Package         | May import (besides `kernel`)            |
+| ----- | --------------- | ---------------------------------------- |
+| L0    | `kernel`        | —                                        |
+| L0    | `artifact`      | —                                        |
+| L0    | `config`        | —                                        |
+| L1    | `graph`         | `artifact`                               |
+| L1    | `runners`       | —                                        |
+| L2    | `chunk`         | `graph`, `runners`, `artifact`           |
+| L3    | `execution`     | `chunk`, `graph`, `runners`, `artifact`  |
+| L4    | `operations`    | `execution`, `chunk`, `graph`, `runners` |
+| L5    | `work_items`    | `operations`, `chunk`, `graph`           |
+| L6    | `garden`        | `work_items`, `chunk`, `graph`           |
+| L7    | `observability` | `chunk`, `graph`, `runners`              |
+
+Import a module by its full module path: a package's surface is its modules outside `internal/`
+(`bzh:internal-visibility`), and its `__init__.py` re-exports nothing.
+
+**Why.** Edges that only point down let a package change without breaking any package below it, and leave no
+package-level cycle for a `TYPE_CHECKING` guard or a function-level import to hide. One import path per name means a
+moved type leaves no second spelling behind.
+
+**Scope.** The table governs imports of `blizzard.hub.domain.*` made by modules under `hub/domain/`; imports inside one
+package are free. Adapters — `hub/api/`, `hub/store/`, the composition roots, tests — depend inward on any package
+(`bzh:domain-core`).
+
+**Detect.** A domain module importing a package its row does not list — at module level, inside a function, under
+`TYPE_CHECKING`, or by relative import — or importing the bare `blizzard.hub.domain` umbrella; a `.py` directly under
+`hub/domain/` other than `__init__.py`, or a package directory the table does not declare; a package `__init__.py` that
+imports a name to re-export it. `tests/test_layering.py` fails the unit tier on the first four:
+`test_hub_domain_packages_import_only_what_their_layer_allows` walks every domain module against the table's mirror,
+`_DOMAIN_PACKAGE_LAYERS`, and `test_hub_domain_package_layers_are_acyclic` holds that dict acyclic with its keys equal
+to the package directories. `test_domain_layer_check_counts_every_import_form` and
+`test_domain_layer_cycle_check_catches_a_cycle` prove the walker and the cycle check fire on planted trees. The fix
+moves the shared type down into the lower package, or the dependent code up; a new edge is a change to this table and
+the dict together, and only one that keeps both acyclic.
+
+**Do.** `ActivityEntry` lives in `blizzard/src/blizzard/hub/domain/runners/activity.py`: the runner registry returns it
+and `chunk/model.py` imports it from there. `UNSET` lives in `kernel/unset.py`, so `config`, `garden`, and `work_items`
+take it without importing `operations`.
+
+**Don't.** `runners/registration.py` importing a chunk port under `TYPE_CHECKING` — an L1 package reaching up into L2 —
+or `from blizzard.hub.domain.chunk import Chunk` through a re-exporting `chunk/__init__.py`.
+
+**See also.** `bzh:domain-core` governs what every domain package may not import outward; `bzh:shared-kernel` governs
+the `wire/` vocabulary both daemons' domains import.

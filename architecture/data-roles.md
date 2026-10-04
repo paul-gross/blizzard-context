@@ -128,7 +128,7 @@ class NodeRow:
     def of(self, row: Any, *, choices: list[Choice]) -> Node: ...
 ```
 
-`blizzard/src/blizzard/hub/domain/findings.py::FindingPage`, a port's output, is a `@dto`; `::Finding` is a
+`blizzard/src/blizzard/hub/domain/garden/findings/model.py::FindingPage`, a port's output, is a `@dto`; `::Finding` is a
 `@domain_model`, the concept even with no methods.
 
 ## Don't

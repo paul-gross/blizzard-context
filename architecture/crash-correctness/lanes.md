@@ -46,11 +46,12 @@ neither a registry point nor a recorded exemption; a lane whose own fields hold 
 a failing flag; a failure event emitted per failed pass, or emitted again after a restart mid-outage; a lane step whose
 raise reaches its host; a lane on a sink class that gives it a backoff or latch its class does not name.
 
-**Do.** `TraceExportSweep` and `EgressSweep` (`blizzard/src/blizzard/hub/domain/tracing/sweep.py`,
-`blizzard/src/blizzard/hub/domain/egress/sweep.py`) hold an `OutageLatch` from `foundation/lane_retry.py`, ask it
-whether a pass is due, and announce only when it says a failure opens or a success closes an outage.
-`CloseIntentDrainer` (`blizzard/src/blizzard/hub/domain/work_closure.py`) attempts a fixed number of due intents per
-pass and computes each intent's due time with `backoff_delay`. `TranscriptDrain` catches every failure inside `run()`.
+**Do.** `TraceExportSweep` and `EgressSweep` (`blizzard/src/blizzard/hub/domain/observability/tracing/sweep.py`,
+`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) hold an `OutageLatch` from `foundation/lane_retry.py`,
+ask it whether a pass is due, and announce only when it says a failure opens or a success closes an outage.
+`CloseIntentDrainer` (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) attempts a fixed number of due intents
+per pass and computes each intent's due time with `backoff_delay`. `TranscriptDrain` catches every failure inside
+`run()`.
 
 **Don't.** A new lane that hand-copies a failure counter, a next-due instant, and a failing flag, then re-implements the
 doubling and the open/close transitions beside them, instead of taking the helper. The copies drift: one lane clamps the
