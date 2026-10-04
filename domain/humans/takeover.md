@@ -45,5 +45,5 @@ Hand-back is a separate step, and explicit: the person requeues the chunk throug
 ([../execution/recovery.md](../execution/recovery.md)), clearing the `needs_human` hold — a forced entry, which parks
 nothing, has no such hand-back: the verb refuses a chunk that is not `needs_human`. The order is fixed: the holding
 runner's requeue is refused while a takeover is open, so the session ends first and the hand-back follows. The hub's
-requeue carries no such refusal, and supersedes the park; neither requeue is ever what ends a takeover. An operator can end a takeover whose session is gone, which clears the
-runner's requeue refusal.
+requeue carries no such refusal, and supersedes the park; neither requeue is ever what ends a takeover. An operator can
+end a takeover whose session is gone, which clears the runner's requeue refusal.
