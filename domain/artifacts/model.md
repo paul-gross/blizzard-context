@@ -21,7 +21,10 @@ and bounces the chunk. There is deliberately no fencing at the branch ref — a 
 never land wrong work (`bzh:epoch-fencing`, [fencing](../execution/fencing.md)).
 
 A worker node's asset is normally submitted by explicit worker declaration per the node's `produces:` list
-([declarations](../../standards/worker-nodes/declarations.md)).
+([declarations](../../standards/worker-nodes/declarations.md)). A declared asset's content is never empty. Declaring
+stays open after the worker exits — while its exit is judged — and the latest content under a name wins until the
+node-step's completion is submitted. A commit pointer declared once the node-step's outcome is already settled is
+refused: nothing would submit it.
 
 ## Scopes
 

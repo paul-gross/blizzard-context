@@ -2,8 +2,11 @@
 
 Blizzard's domain-model hub: the concepts, how they behave, and how they intertwine — with no technical detail. It is
 the correctness reference — read it when planning against intent or verifying behavior against the model;
-[`architecture/`](../architecture/index.md) owns code structure, this tree owns concept behavior. The tree fills the
-`domain/` slot of the harness shape at `winter-canon:/harness-structure.md`. Parent hub: [../index.md](../index.md).
+[`architecture/`](../architecture/index.md) owns code structure, this tree owns concept behavior. A change that adds a
+rule to a concept — a refusal, guard, or legal transition — reads both: this tree for what the rule decides,
+[`architecture/clean-architecture.md`](../architecture/clean-architecture.md) (`bzh:domain-orchestration-split`) for
+where it lives in code. The tree fills the `domain/` slot of the harness shape at `winter-canon:/harness-structure.md`.
+Parent hub: [../index.md](../index.md).
 
 Per `bzh:one-prose-home`, a domain-concept fact restated in code prose relocates here for good, the code sites reducing
 to pointers at its section; and where domain and code disagree, code is current — fix the domain file.
