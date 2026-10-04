@@ -39,4 +39,5 @@ retired — and must be enrolled afresh; enrolling a retired runner is refused, 
 
 An operator can revoke a runner's token without retiring it: the runner stays registered and unenrolled until enrolled
 afresh. Every revoked token stays refused for good, even after re-enrollment, and is refused under every runner-auth
-mode rather than merely failing to resolve.
+mode rather than merely failing to resolve. Re-enrolling an enrolled runner rotates its token the same way: the token it
+replaces is recorded revoked, so a rotated-out token is refused under every runner-auth mode too.

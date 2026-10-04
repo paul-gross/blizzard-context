@@ -49,6 +49,8 @@ reliable process kills.
   mint lands only on an epoch its own runner already owns. The route here only refuses, never admits.
 - Refuse a runner's write, never recording it, when its attempt does not own the write's epoch — a hub-owned epoch, or
   one another runner owns.
+- Refuse a completion or decision that, at the current epoch, does not come from the chunk's current node — the epoch
+  alone does not place the write ([../work/transitions.md](../work/transitions.md) owns the guards at the write).
 - Derive a fencing write's own epoch inside the transaction recording it, never from a read the write no longer holds.
 - The party honoring the fence reads it generously — the hub's floor lags leases it has not yet heard of, so a fencing
   write can land level with the attempt it displaces, and level is displaced.

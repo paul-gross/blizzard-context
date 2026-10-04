@@ -27,3 +27,6 @@ the runner still advances the chunk. A decision resolves by one of:
 - an escalation, when that migration's target is unresolvable;
 - an operator's restart, whose move off the gate closes it undecided — no choice is invented for the runner to
   transition along.
+
+The chunk ending — `stopped` or `done` — closes an open decision undecided too. A decision closed undecided, by a
+restart or by the chunk ending, leaves the open list, and resolving it is refused.

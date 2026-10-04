@@ -16,7 +16,9 @@ hold.
 **Rule.** Give every configured record the same verb set — create, list, show, edit, retire, enable — an edit that is a
 sparse merge, a `revision` that every committed write increments, one `config_changes` row appended in the same
 transaction as each write, and retirement in place of deletion. A sparse merge leaves an absent field unchanged, sets a
-present field, and takes an explicit `null` as clearing a nullable field, refusing it on any other.
+present field, and takes an explicit `null` as clearing a nullable field, refusing it on any other. A retire of a
+retired record, or an enable of an enabled one, writes nothing; an edit of a retired record is legal and leaves it
+retired.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
@@ -36,10 +38,12 @@ the same trace.
 
 **Scope.** Binds the five kinds named above and any kind added beside them. A graph is an immutable mint, so its
 definition takes no patch — an edit is a new mint — and only its mutable flags take the sparse `PATCH`, beside its
-retire and enable. A work item is work, not configuration: its patch carries the sparse-merge meaning, and it takes no
-revision, no change row, and keeps its `DELETE`. A secret takes replace in place of edit: its value is replaced whole by
-`PUT /api/secrets/{name}/value` — on the CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the
-replace still increments the revision and appends its change row.
+retire and enable, each of which appends a fact even when it repeats the standing value
+([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A work item is work, not configuration: its patch
+carries the sparse-merge meaning, and it takes no revision, no change row, and keeps its `DELETE`. A secret takes
+replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on the CLI,
+`blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision and appends
+its change row.
 
 **Detect.**
 
@@ -90,7 +94,7 @@ longer the document the API accepts.
 
 **Rule.** Never return or record a secret value: no route reads one back, and no response, log line, span attribute,
 event, or change row carries one. A value enters in the body of a create or replace, is decrypted only at the moment it
-is used, and lives only inside the object built from it.
+is used, and lives only inside the object built from it. A value is never blank: every door refuses a blank one.
 
 **Why.** Every surface that can return or record a value is a place it leaks from and a copy that survives its
 replacement. A value that nothing can read back needs no read permission to guard and leaves nothing behind to scrub.

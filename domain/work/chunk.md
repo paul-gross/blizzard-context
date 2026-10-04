@@ -14,13 +14,20 @@ A chunk never stores item contents: it holds work refs, and reads pass through t
 is the hub itself for an item authored at the hub — the hub owns such an item outright and holds its title and body as
 its own authored record — and is foreign for an item the hub ingested from elsewhere, whose contents it never holds. The
 work item is the durable referent and the chunk is ephemeral — an unacquired chunk may be grouped away or deleted, and
-re-ingesting the same item mints a fresh chunk. An item already wrapped by a live chunk cannot be ingested again.
+re-ingesting the same item mints a fresh chunk. An item already wrapped by a live chunk cannot be ingested again, and an
+ingest naming one item twice wraps it once, in first-seen order.
 
 A chunk's work refs are closed at their own source through its binding once the chunk lands or an operator marks it done
 by hand — best-effort, eventually convergent, not atomic with the landing, and independent of whether the chunk keeps
 running. A chunk that lands and is only later abandoned still closes its work items, because it was in fact delivered.
 Closing a delivered item leaves a note at its source naming what landed it, once per chunk however often the close is
 retried.
+
+A hub item is `open`, `delivered`, or `withdrawn`, and both closures are terminal. Its title and body are never blank,
+whichever door writes them. Editing, withdrawing, and appending evidence apply to an open item only, and an edit naming
+no field still stamps the item's last-edit instant. Delivery, and the withdrawal deleting its chunk cascades, apply to
+an open item and are no-ops on a closed one; a withdrawal racing a delivery is refused, the item no longer editable. A
+withdrawn item no longer reads through its source; a delivered one still does.
 
 ## Materialization
 
@@ -32,16 +39,17 @@ them to strike, but nothing materializes a proposal before the chunk reaches the
 The reserved-terminal transition materializes them: it turns every accumulated, unstruck proposal of a chunk that has
 moved into the graph's reserved terminal into a real work item, best-effort, eventually convergent, and not atomic with
 the transition it keys on. A `create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk, and
-node — resting on its own fresh `not_ready` chunk, exactly as a human-filed item does. An `update` appends its evidence
-to the pointed-at item's body and stamps its last-edit instant, when that item is open and its source can be edited;
-closed, withdrawn, nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason instead, and
-materialization is never blocked by it. Every proposal is judged exactly once — replaying the same materialization pass
-mints no duplicate item and appends no duplicate evidence — but carries no epoch filter: two proposals from two epochs
-of the same node both materialize, since both rode a fence-accepted completion. Materialization keys on the graph's
-reserved terminal transition, however the chunk reached it, while Work refs' closure keys on the chunk landing or being
-marked done by hand, so the two gates diverge in both directions. A chunk stopped after it lands but before it reaches
-the terminal closes its refs and materializes nothing, exactly as a chunk an operator marks done by hand does. A chunk
-routed to the terminal with no landing behind it does the reverse: its proposals materialize, and no ref closes.
+node — resting on its own fresh `not_ready` chunk, exactly as a human-filed item does; one with a blank title or body is
+recorded unresolved instead. An `update` appends its evidence to the pointed-at item's body and stamps its last-edit
+instant, when that item is open and its source can be edited; closed, withdrawn, nonexistent, or unresolvably-sourced,
+it is recorded unresolved with its reason instead, and materialization is never blocked by it. Every proposal is judged
+exactly once — replaying the same materialization pass mints no duplicate item and appends no duplicate evidence — but
+carries no epoch filter: two proposals from two epochs of the same node both materialize, since both rode a
+fence-accepted completion. Materialization keys on the graph's reserved terminal transition, however the chunk reached
+it, while Work refs' closure keys on the chunk landing or being marked done by hand, so the two gates diverge in both
+directions. A chunk stopped after it lands but before it reaches the terminal closes its refs and materializes nothing,
+exactly as a chunk an operator marks done by hand does. A chunk routed to the terminal with no landing behind it does
+the reverse: its proposals materialize, and no ref closes.
 
 An operator resolving a gate may strike some of the chunk's pending proposals — its proposals carrying neither a
 materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded with the
@@ -51,6 +59,12 @@ permanent and exclusive of the judgment a `create`/`update`/unresolved outcome r
 materializes, on any later materialization pass; the loser of a concurrent resolution strikes nothing at all, the same
 first-write-wins reading its choice takes. Striking is explicit — a resolution naming none passes every one of the
 chunk's pending proposals, unstruck.
+
+## Grouping
+
+Grouping folds unacquired chunks into a survivor, which absorbs their work refs, gated on the same unacquired predicate
+as deletion below. It is not a reorder: a `ready` and a `not_ready` chunk may fold together, the survivor keeps the
+status it derives, and a folded chunk's promotion and queue position vanish with it.
 
 ## Deletion
 
@@ -76,9 +90,9 @@ logs.
 
 A chunk is pinned to exactly one immutable graph, set at mint from a default. While the chunk is unclaimed and has never
 moved — `not_ready` or unclaimed `ready` — the pin is a plain editable selection, the operator's pre-flight repin
-window. Once the chunk has moved, the pin is immutable and changes only when a migration
-([./migration.md](./migration.md)) applies. A chunk detached back to `ready` mid-graph is past that window: it stands on
-a node another graph need not contain, so only a migration can move it.
+window, and editing the pin to its current value is an idempotent no-op. Once the chunk has moved, the pin is immutable
+and changes only when a migration ([./migration.md](./migration.md)) applies. A chunk detached back to `ready` mid-graph
+is past that window: it stands on a node another graph need not contain, so only a migration can move it.
 
 ### Model, effort, and harness defaults
 

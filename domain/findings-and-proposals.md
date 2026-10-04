@@ -28,7 +28,8 @@ it defers are minted, and a passing review cannot hold a blocking one, so no rev
 It also names the chunk whose review raised it. It is visible to every routine run sweeping that same scope, exactly as
 if that routine had raised it itself, and a run may answer it with `observed`/`gone` like any other. It arrives in no
 finding set — the one exception to the finding set's own "one per artifact" rule above — because a review delta spans
-whatever scopes its entries name and has no run behind it to measure.
+whatever scopes its entries name and has no run behind it to measure. A review raises findings once per chunk: a later
+review delivery on the same chunk, at any node or epoch, is recorded and mints nothing.
 
 ## A run emits a delta, not a state
 
@@ -42,7 +43,8 @@ Whether a finding is live is never a stored state; it is the newest thing a run 
 **gone** does not ordinarily close it — it flags the finding for a person, because leaving the live set is a human
 judgment, never a pass's word alone. A later run observing the same finding again restores it — but only while it is
 merely `gone`. Once a person has exited it, a run's own ops go no further: a run cannot revive what a person closed,
-only a person's own `reopened` can, the same authority that closed it in the first place.
+only a person's own `reopened` can, the same authority that closed it in the first place. A run repeating `gone` on a
+finding already `gone` is legal and refreshes its note.
 
 One state is recorded by no hand at the moment it lands, and it is not an exit: delivery of the item an accepted garden
 proposal minted closes that proposal's still-live findings to **delivered**, carrying the accepter's own authority —
@@ -51,18 +53,22 @@ the five exits below; nobody has confirmed the delivery's claim yet. It stays vi
 finding, and only that routine's own next run clears it — a `gone` op against a `delivered` finding is the one case
 where a run's own word does settle it for good, completing the exit to **resolved** that the delivery only claimed; an
 `observed` op against one instead reads as the delivery having been wrong or premature, and restores it to `live`,
-exactly like reviving a merely-`gone` finding.
+exactly like reviving a merely-`gone` finding. That rule governs settling the delivery's claim, not a person: a person's
+exit applies to a `delivered` finding as to a live one.
 
 A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
-**not-a-finding**, **superseded** — and **reopened** undoes any of them, the same append-only fact the way `gone` and
-`observed` already are: never a stored column, always a newest-fact-wins read. **superseded** is the one verb that names
-another finding: the one absorbing it, which must itself be live and is never the finding being exited. The five split
-into two kinds of exit. **Outflow** — resolved, gone-confirmed — is the ground itself changing: work landed, or a person
-confirmed by hand that the finding no longer reproduces, the same kind of event a `gone` fact already reports, just said
-with a person's authority instead of a run's. **Withdrawn** — wont-fix, not-a-finding, superseded — is a judgment call
-about the finding itself, never the code: the ground hasn't moved, a person has decided the finding doesn't merit
-standing regardless. Both are exits and both leave the live set for good — the split exists because what a fleet later
-reports about outflow and withdrawal answers different questions, not because one exit outranks another.
+**not-a-finding**, **superseded** — and **reopened** undoes any of them, or a `gone` flag, or a delivery, the same
+append-only fact the way `gone` and `observed` already are: never a stored column, always a newest-fact-wins read.
+**superseded** is the one verb that names another finding: the one absorbing it, which must itself be live and is never
+the finding being exited, though it may belong to any routine or scope. An exit verb on a finding already exited is
+refused — reopen it first — and `reopened` on a live finding is refused, as is one request naming the same finding
+twice. The five split into two kinds of exit. **Outflow** — resolved, gone-confirmed — is the ground itself changing:
+work landed, or a person confirmed by hand that the finding no longer reproduces, the same kind of event a `gone` fact
+already reports, just said with a person's authority instead of a run's. **Withdrawn** — wont-fix, not-a-finding,
+superseded — is a judgment call about the finding itself, never the code: the ground hasn't moved, a person has decided
+the finding doesn't merit standing regardless. Both are exits and both leave the live set for good — the split exists
+because what a fleet later reports about outflow and withdrawal answers different questions, not because one exit
+outranks another.
 
 ## `class` and `locus` are opaque
 
@@ -101,7 +107,8 @@ origin — a routine-run proposal is exactly as editable as an operator-authored
 passed or accepted, no further edit, attach, or detach reaches it. This is a plain in-place replacement, not an
 append-only history — the newest edit is the only one that survives, never a superseded trail of prior versions. An edit
 replaces only the fields it names: a field it leaves out keeps its value, so two edits naming different fields both
-survive.
+survive. An attach or detach naming no finding is refused. A proposal's title, class, and body are never blank,
+whichever origin wrote them — a routine run's delivery included.
 
 ## Never confused with a work-item proposal
 
@@ -119,17 +126,20 @@ proposal's own (or the accept's override) wrapped in a template naming the findi
 worker the item reaches can tell which findings it answers; a proposal naming none mints an item whose body carries no
 such template at all. Minting stays the default; declining to mint is the deliberate act, because a spurious backlog
 item is visible and deletable while a real commission that silently mints nothing is a decision nobody can find again.
+An accept's reason is optional, and a blank one is stored as none; a body override on an accept that mints nothing is
+refused. On a closed proposal every verb, pass included, is refused as closed before any other refusal.
 
 Acceptance does not promote the item it mints — it rests behind the ordinary promote gate a person still has to open —
 and it does not move the findings behind the proposal: work being under way is not an observation that the ground
 changed. The item landing is. When the item an accepted proposal minted is delivered, the proposal's findings that are
 still live are closed to **delivered** in that same act — carrying the accepter's authority and naming the proposal it
 answered, but not yet an exit — while a finding a run has since reported gone, or a person has already exited, is left
-exactly as it stands. The closure lands once per proposal: a retry of the delivery never redoes it. What settles a
-`delivered` finding for good is the owning routine's own next run, not the delivery itself (§Liveness is derived, and
-reversible) — a later `reopened` on one that has already settled to `resolved` is a person's word that only a person can
-answer again. Until that delivery, an accepted proposal's findings stay live unless a run reports them gone or a person
-exits them.
+exactly as it stands. The closure lands once per proposal: a retry of the delivery never redoes it. Delivering an item
+already withdrawn leaves its closure withdrawn, yet still reports the close and still closes the proposal's live
+findings to **delivered**. What settles a `delivered` finding for good is the owning routine's own next run, not the
+delivery itself (§Liveness is derived, and reversible) — a later `reopened` on one that has already settled to
+`resolved` is a person's word that only a person can answer again. Until that delivery, an accepted proposal's findings
+stay live unless a run reports them gone or a person exits them.
 
 ## What the hub does not do
 

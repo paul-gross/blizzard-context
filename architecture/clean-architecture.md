@@ -32,6 +32,63 @@ depend on them, never the reverse. The runner's FastAPI federation router lives 
 
 **Don't.** A domain function that opens a SQLAlchemy session or reads a request object.
 
+## Domain-orchestration split (`bzh:domain-orchestration-split`)
+
+**Rule.** A concept's business rules live on its model — methods on its types, or pure functions in its own module —
+taking loaded objects and plain values, the current instant included, and returning a decision: the fact or record to
+write, or a refusal. A use-case service only orchestrates: it reads the clock, calls the model, hands the decision to a
+port, and absorbs a lost write race. A controller only resolves ids, calls the service, and maps a domain error to its
+status.
+
+**Why.** A rule interleaved with ports is testable only through fakes and reusable only by copying, so it drifts outward
+into a controller or goes unwritten. On the model it is tested by value, and the concept's legal transitions are
+declared in one place.
+
+**Scope.** A decision on a loaded object's state is a rule. Choosing what to load, ordering writes, the post-write
+re-check that turns a lost race into the domain error, and the store's own guard are orchestration and adapter concerns,
+not the rule restated. The rule binds where a decision is made, not its form: a pure function the service calls already
+complies.
+
+**Detect.** The anemic domain model — types that carry state while services decide for them. Its tells:
+
+- A `*Service` method raising a domain error from a field of an object it was handed.
+- A rule whose branch a test reaches only through a fake repository or clock.
+- A controller raising a 4xx for anything but an unknown id or a mapped domain error.
+- A concept carrying a state with no declared table of which verbs are legal from which state.
+
+The fix is the pass [`../workflows/domain-orchestration-split.md`](../workflows/domain-orchestration-split.md) owns
+(`bzh:domain-orchestration-split-pass`).
+
+**Do.**
+
+```python
+class Finding:
+    def supersede_into(self, absorber: Finding, *, note: str, actor: str, at: datetime) -> FactEntry:
+        if not absorber.live:
+            raise AbsorberNotLive(absorber.finding_id)
+        return FactEntry(finding_id=self.finding_id, kind="superseded", at=at, note=require_note(note), actor=actor)
+
+
+class FindingExitService:
+    def supersede(self, findings: Sequence[Finding], absorber: Finding, *, note: str, actor: str) -> None:
+        at = self._clock.now()
+        self._repo.record_facts([f.supersede_into(absorber, note=note, actor=actor, at=at) for f in findings])
+```
+
+**Don't.**
+
+```python
+class ProposalClosureService:
+    def pass_(self, proposal: Proposal, *, reason: str, by: str) -> Closure:
+        if not reason.strip():  # a rule, reachable only past the repository and clock this service holds
+            raise PassReasonRequired()
+        at = self._clock.now()
+        ...
+```
+
+**See also.** `bzh:domain-core` — what the model may not depend on. `bzh:domain-takes-objects`
+([./repository-access.md](./repository-access.md)) — an id a rule needs arrives as its loaded object.
+
 ## Dependency inversion (`bzh:dependency-inversion`)
 
 **Rule.** The inner layer owns the interface and the outer implements it — the domain declares the Protocol seam, and
