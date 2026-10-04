@@ -46,7 +46,10 @@ a code path branching on the configured backend; a consumer indexing `[-1]` or `
 total `order_by`.
 
 **Do.** `ChunkFactsStore.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
-because a consumer reads the newest pause fact via `[-1]`.
+because the fact projection it reconstitutes carries the chunk's pause history and a consumer indexes that list's tail.
+The example shows the ordering a history read owes, not how to read a newest fact: a read that answers with only the
+newest fact per key never fetches the history —
+[../architecture/repository-access.md](../architecture/repository-access.md) `bzh:newest-per-key-read`.
 
 **Don't.** The same `select(s.chunk_pause_facts).where(...)` with the `order_by` dropped — sqlite's rowid order hides
 the omission; postgres does not.
