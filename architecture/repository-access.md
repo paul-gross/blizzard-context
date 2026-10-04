@@ -210,8 +210,8 @@ fetches the history charges every past write on a key to every future call, behi
 `LIMIT 1` cannot span keys, so batching loses the singular form's bound unless the query restates it per key.
 
 **Scope.** This binds a read whose consumer uses only the newest fact per key, whether the keys are a caller-supplied
-set or every key the table holds. A read whose consumer derives from more than the newest fact — a fact projection
-reconstituted for the domain to derive from — is outside it: the history is that read's answer.
+set or every key a filter leaves, the whole table included. A read whose consumer derives from more than the newest fact
+— a fact projection reconstituted for the domain to derive from — is outside it: the history is that read's answer.
 
 **Detect.** Measured: `blizzard/tests/support.py`'s `count_rows_read` over the same keys at two history depths, as
 `blizzard/tests/test_newest_fact_reads.py` does — a row count above the key count, or one that grows with the depth, is
@@ -223,7 +223,7 @@ group-by-max join, batched through `id_batches` when the keys are caller-supplie
 **Do.** `blizzard/src/blizzard/hub/store/internal/newest_fact.py`'s `newest_fact_select` joins a fact table to a
 `max(id) ... GROUP BY key` subquery over the keys asked for, and the stores' plural newest reads share it.
 `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s `FindingStore.newest_by_scope_for_routine` is the same
-join over every key the table holds.
+join over every scope one routine has run against — the keys a `where` on the routine name leaves, not a supplied set.
 
 **Don't.**
 
