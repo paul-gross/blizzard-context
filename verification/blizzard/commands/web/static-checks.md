@@ -80,6 +80,19 @@ a cycle in a table counting the implicit kernel edges, and a relative import tha
 planted table cycle; must-pass a declared edge, a kernel import, and a spec importing `testing` — runs before the sweep
 is trusted.
 
+The same script also runs the containers-compose sweep (`web/scripts/containers-compose-sweep.js`, over the TypeScript
+compiler API;
+[`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
+`bzh:frontend-containers-compose`), with no exemption list. It grows the query-bearing `inject*` helpers to a fixed
+point from the TanStack inject functions, treats every `@Component` class calling one as a container, and walks each
+`computed()` imported from `@angular/core` in it — nested arrows and same-class `this.<member>()` calls followed — for
+an `if`, `switch`, `?:`, loop, or collection-transform call. Each site prints one line — file, line, the `computed()`
+field, and the deriving kinds — under `deriving computed() callbacks in containers (bzh:frontend-containers-compose)`.
+Its self-test, `assertContainersComposeDetectorWorks` — must-catch each deriving node kind, a ternary reached through a
+same-class helper, and a component injecting only through a project-local wrapper; must-pass `??` and comparison
+composition, an event-handler ternary, a presentational component, a non-component helper, and a local `computed` not
+imported from Angular — runs before the sweep is trusted.
+
 The script also censuses every TypeScript, template, and stylesheet below `web/projects` for the retired board Top/group
 contract: its type, inputs, handlers, grouping mutation facade, and test handles. Generated grouping-client symbols are
 deliberately outside that census: API and CLI grouping remain supported. `assertBoardControlDetectorWorks` first

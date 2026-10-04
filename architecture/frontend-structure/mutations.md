@@ -57,9 +57,10 @@ tooled by `web:structural-gate`'s `assertNoCacheWriteDetectorWorks` sweep. Which
 whether a given override site reuses the shared helper instead of a bespoke `injectMutationState` call, is a review
 question.
 
-**Do.** A container reads `injectPendingMutationVariables(promoteChunkMutationKey)` and derives
-`computed(() => isPendingFor(pending(), v => v.chunkId === card.id) ? 'ready' : card.status)`, handing the result to a
-presentational card as an input.
+**Do.** `board-page.ts` reads `injectPendingMutationVariables(promoteChunkMutationKey)` and composes
+`computed(() => withPendingBoardChanges(this.chunks(), this.pendingPromotes(), this.pendingDeletes()))`, handing the
+result to the presentational board as an input; `board-page.model.ts` owns the prediction itself,
+`pendingIds.has(chunk.chunk_id) ? { ...chunk, status: 'ready' } : chunk`, per `bzh:frontend-containers-compose`.
 
 **Don't.**
 `onMutate: async (vars) => { const prev = queryClient.getQueryData(key); queryClient.setQueryData(key,
