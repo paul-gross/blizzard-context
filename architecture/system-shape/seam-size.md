@@ -34,7 +34,8 @@ services (`domain/takeover.py`, `domain/status.py`) take `IHarnessLifecycleRegis
 `LoopContext.harnesses` stays the composed `IHarnessRegistry`, a pass-through every loop step reads its role accessor
 from. The selftest canary's widened roster — lifecycle, verdict parsing, usage accounting, plus `transcript_source` —
 takes its own `IHarnessSelfTestSeam`. The full `IHarnessAdapter` lives only in `HarnessBinding` and the composition-side
-registry builders that fill it (`harness/internal/harness_registry.py`, `harness/internal/opencode_registry.py`).
+registry builder that fills it from the harness catalog (`harness/internal/harness_registry.py`, iterating
+`harness/catalog.py`'s declarations).
 
 **Don't.** Leaving a Protocol to grow past the ceiling because splitting it "later" is easier than registering the width
 now, or registering an exception without a reason — either loses the one signal a reviewer has for "this seam grew wider

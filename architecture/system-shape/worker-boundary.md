@@ -52,6 +52,7 @@ before submitting the `GIT_COMMIT` artifact. The `origin_url` comes from the env
 workspace provider (`IWorkspaceProvider.repos`), never from the worker.
 
 **Don't.** Derive a repo's origin from the calling process's cwd — the same lossy-residue mistake: workers are spawned
-at the workspace root, so `git remote get-url origin` there walks up past the environment and returns the enclosing
-workspace repo for every repo alike, a plausible wrong value rather than an error. Look a fact up where it is owned
-instead of inferring it from ambient state.
+where the workspace provider says (`IWorkspaceProvider.spawn_root`) — under winter, the workspace root — so
+`git remote get-url origin` there walks up past the environment and returns the enclosing workspace repo for every repo
+alike, a plausible wrong value rather than an error. Look a fact up where it is owned instead of inferring it from
+ambient state.
