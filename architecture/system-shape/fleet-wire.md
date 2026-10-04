@@ -29,3 +29,6 @@ outside the declared surface, extending `blizzard:wire-compat`'s surface constan
 
 `bzh:fleet-wire-additive` is tooled by `blizzard:wire-compat`
 ([../../verification/blizzard.md](../../verification/blizzard.md)); no exemption stands.
+
+**See also.** `bzh:shared-kernel` ([../clean-architecture.md](../clean-architecture.md)): where a vocabulary type the
+wire carries is defined.

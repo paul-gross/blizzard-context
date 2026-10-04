@@ -122,6 +122,32 @@ share.
 **Don't.** A store adapter in one package importing an adapter or helper from another package's `internal/`, rather than
 taking the seam or a public module.
 
+## Shared kernel (`bzh:shared-kernel`)
+
+**Rule.** `blizzard/src/blizzard/wire/`, `foundation/`, and `auth_core/` are the shared kernel both daemons import, and
+none of them imports a blizzard package outside it — `hub`, `runner`, `cli`, or `tools` — directly or transitively.
+Every vocabulary type a wire model carries has exactly one definition, in the kernel (`foundation/`, one module per
+vocabulary); the daemons import it from there, with no re-export at an old home, no mirror, and no mapping layer. The
+business rules over that vocabulary stay in each daemon's domain (`bzh:domain-core`).
+
+**Why.** A wire model importing a daemon's domain type makes importing the wire load that daemon, so the hub loads
+runner modules and the runner loads hub modules through it. The wire stops being the one place a vocabulary changes, and
+a second copy of an enum can drift unseen.
+
+**Detect.** `tests/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard package
+(check A), on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and
+on a hub or runner composition root loading the other daemon. Its moved-vocabulary check (D) fails an import of a moved
+name through any home but its `foundation/` one.
+
+**Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
+`wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.
+
+**Don't.** A `wire/` module importing from `hub/domain/` or `runner/`, or a daemon-side copy of a wire enum paired with
+a function mapping between the two.
+
+**See also.** `bzh:fleet-wire-additive` ([./system-shape/fleet-wire.md](./system-shape/fleet-wire.md)) governs what may
+change on the wire; this rule makes the kernel the only place it can change.
+
 ## Screaming architecture (`bzh:screaming-architecture`)
 
 **Rule.** Group functionality by the domain concept it serves and name the grouping for that concept, so the layout
