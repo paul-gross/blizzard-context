@@ -29,7 +29,9 @@ in place against its existing retry budget.
 
 Detach is an operator's forcible release of a chunk from its runner: it releases the route and supersedes nothing, so
 the chunk re-derives on its remaining facts — ready only when nothing else holds it — and the next claim's reserved
-epoch fences the old runner out.
+epoch fences the old runner out. Detach stays legal at `delivering` — the operator's forcible lever, as a forced
+retirement is ([./retirement.md](./retirement.md)) — and is refused on a terminal chunk whose route is only its
+finisher's leftover, which holds no claim to release.
 
 Detach **ends** the chunk rather than parking it: the worker is killed and the session is discarded, not resumable — the
 inverse of a per-chunk pause's park, which keeps the same session for a later resume ([./pause.md](./pause.md)). Pinning

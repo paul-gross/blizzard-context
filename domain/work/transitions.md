@@ -10,10 +10,13 @@ Transitions are authored by the holder: the holding runner reports them, and the
 hub-executed nodes. At a gate the node-step's completion lands as an open decision, and no transition exists until the
 human's resolving choice writes one referencing that decision ([../humans/gates.md](../humans/gates.md)).
 
-Two guards hold at the write:
+Three guards hold at the write:
 
 - A transition carries its attempt's epoch, and a stale one is rejected rather than recorded (`bzh:epoch-fencing`,
   [../execution/fencing.md](../execution/fencing.md)).
 - A node-step's transition, its artifacts, and its proposed work items ([../graphs/nodes.md](../graphs/nodes.md)) are
   committed as one write, so a rejected transition's artifacts and proposals never exist
   ([../artifacts.md](../artifacts.md)).
+- A runner's completion or decision is refused when, at the current epoch, it does not come from the chunk's current
+  node; when its attempt's own escalation or question is open; when it comes out of a hub-executed node; or when a
+  runner-config gate decision is open at that node-step ([../humans/gates.md](../humans/gates.md)).

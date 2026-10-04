@@ -6,15 +6,19 @@ A chunk has exactly one status at a time — a derived condition, checked in fix
 fact vocabulary and derivation queries live in the code.
 
 - **`not_ready`** — minted and resting: visible on the board, never claimed; an explicit promote moves it to `ready`.
-- **`ready`** — ingested and unclaimed: in the hub's queue with no live route.
+- **`ready`** — ingested and unclaimed: in the hub's queue with no live route. The only claimable status: a claim on any
+  other is refused — `not_ready`, an unclaimed `paused` chunk, and a human-gated or `delivering` chunk with no live
+  route included.
 - **`running`** — claimed by a runner and being worked.
 - **`delivering`** — in the hub's own hands: queued for or undergoing delivery — the runner keeping its environments
   until the outcome is known.
 - **`paused`** — held on an operator's per-chunk pause fact: on a live route the runner interrupts the worker, then
   kills a survivor, but keeps the lease, route, epoch, environments, and retry budget so resume respawns in place, while
   an unclaimed chunk is withheld from the queue. A pause is admitted at every status but `done`, `stopped`, and
-  `delivering` — a delivery already in the hub's own hands runs to its outcome — and a resume is never refused. Ranks
-  below the human-gated statuses and above `delivering` and `running` ([../execution/pause.md](../execution/pause.md)).
+  `delivering` — a delivery already in the hub's own hands runs to its outcome — and a resume is never refused. Pause is
+  a process brake, not a fence: a completion, migration, or gate decision still lands on a paused chunk, and one racing
+  the pause does not refuse it. Ranks below the human-gated statuses and above `delivering` and `running`
+  ([../execution/pause.md](../execution/pause.md)).
 - **`waiting_on_human`** — parked on invited human input — an open ask or unresolved gate decision
   ([../humans/asks.md](../humans/asks.md), [../humans/gates.md](../humans/gates.md)); the reap clock stops.
 - **`needs_human`** — parked on failure: the system ran out of moves, runner- or hub-authored, and a person must requeue
@@ -33,6 +37,14 @@ Landing is not itself terminal: a graph may route further runner work after it b
 
 Deleting or grouping an unacquired chunk is not a status: the chunk simply vanishes from every listing, the work item
 remaining the durable referent.
+
+## Promotion
+
+Promote moves a never-promoted chunk from `not_ready` to `ready`, and is refused on a never-promoted `stopped` or `done`
+chunk. On a chunk already promoted, promote is a replay that writes nothing, at any status. Promotion and the per-chunk
+brake are orthogonal: a never-promoted `paused` chunk may be promoted, and joins the `ready` queue on resume. A restart
+of a never-promoted chunk re-aims it without promoting it, so it keeps deriving `not_ready` — even re-aimed onto a
+hub-executed node.
 
 ## The blocked marking
 
@@ -60,6 +72,11 @@ Folding a chunk away carries its standing edges onto the survivor rather than re
 marking a dependent carries continues to resolve through the survivor after the fold, never left naming a chunk that no
 longer exists. Each carried edge keeps the instant it was first declared, so the earliest-declared naming holds across a
 fold; where carried edges collapse onto one pair, the earliest instant wins.
+
+A prerequisite may stand at any status but ephemeral (grouped away or deleted): `stopped` and `done` are admitted, a
+`done` prerequisite born satisfied. Declaring an already-standing pair is an idempotent replay that writes nothing, and
+it outranks every other check on a declare — the dependent's window and the prerequisite's ephemerality included.
+Release has no status window, so a standing edge never strands its dependent.
 
 The standing dependency graph stays acyclic: a declare that would close a cycle is refused, and so is a group whose
 remapped edges would close one, even when only standing edges cause it.

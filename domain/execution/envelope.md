@@ -3,7 +3,8 @@
 What a worker session is primed with, and how a change reaches it. Spoke of the [execution hub](../execution.md).
 
 A worker session never discovers its work: the runner primes it with the node envelope the hub assembles for the chunk's
-current node.
+current node. An ended chunk — `stopped`, or `done` whether by a transition or by an operator — primes no session:
+reading its envelope is refused.
 
 ## What it carries
 

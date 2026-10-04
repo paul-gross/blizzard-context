@@ -24,3 +24,13 @@ orthogonal: retiring and re-enabling says nothing about whether chunks follow.
 - **`follow-latest`** states whether the graph's chunks drift to newer mints of its name. It is three-valued — yes, no,
   or unset. Unset is the default and defers to the fleet-wide setting; an explicit value overrides that setting for this
   graph's chunks.
+
+A repeated retire, enable, or `follow-latest` set is legal and appends a duplicate fact, which the newest-fact-wins read
+takes as no change.
+
+## Retiring every mint of a name
+
+Work ingested naming no graph lands on the newest enabled mint of the default name. With every mint of that name
+retired, the ingest — a work-item create or a garden proposal accept included — is refused rather than minting again
+over the brake. Reconciling a name whose every mint is retired mints a new, enabled graph when the definition changed —
+a new definition is a new graph, so the brake lifts — and mints nothing when it is unchanged.
