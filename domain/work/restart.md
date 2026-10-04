@@ -60,6 +60,10 @@ with, so deferral at the runner is the whole mechanism, and the chunk reads as m
 epoch. Against a chunk parked `needs_human`, whose lease the escalation already closed, nothing defers the re-entry
 ([../humans/takeover.md](../humans/takeover.md)).
 
+The runner's own brake ([../execution/pause.md](../execution/pause.md)) defers only the re-entry: the displaced worker
+is killed and its attempt closed at once, and the moved node is entered once the brake lifts. A runner restarting after
+downtime treats a session the move fenced out the same way — it preempts the session rather than waking it.
+
 ## What it refuses
 
 - A terminal chunk: there is nothing to re-enter.

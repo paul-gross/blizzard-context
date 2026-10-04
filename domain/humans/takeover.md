@@ -9,12 +9,15 @@ Ordinarily the chunk is already parked `needs_human`, so no live attempt is disp
 
 The reference session's recorded harness owner must be known and available to the runner. Entry resolves that owner
 before recording the takeover fact; an unknown or unavailable owner refuses entry and records nothing, regardless of
-what parked the chunk.
+what parked the chunk. Entry is also refused while a requeue through the holding runner is pending: the next fill would
+start a fresh attempt in the person's workdir.
 
 Entering through the wrapped verb ([./escalation.md](./escalation.md)) records the takeover fact with the daemon before
 anything resumes, so no loop step can respawn or judge the held session while a person holds it. The same fact
 authorizes the resumed session's verbs — `attach`, `ask`, `artifact …` — against the reference lease it names, active or
-closed, without minting or reopening one.
+closed, without minting or reopening one. A closed reference lease rides no further completion, so there the
+authorization holds but acceptance does not: an ask is refused, since nothing would forward it, and so is an artifact
+submission, since nothing would publish it. A git-commit declaration is accepted, riding no completion.
 
 ## Forced entry
 
@@ -31,7 +34,9 @@ No attempt runs during a takeover while the runner still holds the session's lea
 the displaced worker's lease open rather than closing it. Where the escalation already closed the lease, on the ordinary
 parked entry, the guarantee lasts exactly as long as the park: supersede that park at the hub and the held workdir goes
 to a fresh attempt. The takeover contributes no condition of its own: the chunk goes on deriving from its own facts, and
-carries human-in-session detail exactly while the takeover is open.
+carries human-in-session detail exactly while the takeover is open. Nor does the runner move the chunk on under the
+person: it neither resolves a decided gate nor enters a node the hub advanced the chunk to. It still steps a chunk
+parked at a hub node, and gives the environments back once the chunk ends.
 
 An operator's restart ([../work/restart.md](../work/restart.md)) recorded against a taken-over chunk lands in full — the
 hub keeps no takeover state to refuse it — and supersedes any park with it. Against a still-open lease the runner defers
@@ -42,6 +47,10 @@ follow; against a lease the escalation already closed, nothing defers it.
 
 A takeover ends when the person leaves the interactive session. A chunk ending — stopped or done — while a takeover is
 open closes the takeover fact through the hub's own terminal fact, though nothing infers a person is done.
+
+A takeover holds its reference lease and the epochs up to its fence, not the chunk for good. Once the chunk's route is
+released and the chunk claimed again, the fresh attempt the new claim starts sits above that reach and is the loop's,
+though the takeover itself stays open until it is ended.
 
 Hand-back is a separate step, and explicit: the person requeues the chunk through the runner holding it
 ([../execution/recovery.md](../execution/recovery.md)), clearing the `needs_human` hold — a forced entry, which parks

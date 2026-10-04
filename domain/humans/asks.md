@@ -6,6 +6,9 @@ of the human-entry hub, [../humans.md](../humans.md).
 A question is free-form or carries options, which a board or bot renders as buttons. The reap clock stops while a
 question is open and restarts when the answer's resume runs.
 
+A worker may ask on any lease still open, an attempt parked or backing off included. An ask that has not yet reached the
+hub is superseded by a newer ask on the same lease: only the newest reads as open.
+
 ## Answering
 
 Exactly one answer ever exists — the first write wins — and later answerers are shown who won and what they said.

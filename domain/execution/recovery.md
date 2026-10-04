@@ -23,7 +23,9 @@ the one lease is reached, at which point it falls through to an ordinary judged 
 Requeue names two operations. The hub's supersedes the escalation and releases the route, returning the chunk to the
 queue for the next claimant. The holding runner's own — the hand-back after a takeover
 ([../humans/takeover.md](../humans/takeover.md)) — keeps route, environments, and tenure, re-attempting the current node
-in place against its existing retry budget.
+in place against its existing retry budget. The runner refuses its own requeue of a chunk that holds no environment
+there, since nothing on that runner could re-attempt it — that chunk is requeued at the hub instead — and a requeue
+asked while one is already pending changes nothing.
 
 ## Detach
 
