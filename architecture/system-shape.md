@@ -76,7 +76,7 @@ basic workspace provider by configuration, and every enabled harness the catalog
 tests bind the blizzard-mock fleet. The hub reaches its external systems through `IWorkSource` and its capability
 family, `IOAuthProvider`, and `IHubCommandRunner`/`IHubWorkdir`. `blizzard/src/blizzard/runner/harness/wiring.py` is the
 one module naming both harness adapters; the harness core reaches them only through `IHarnessDeclaration` and
-`IHarnessSection`.
+`HarnessSection`.
 
 **Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
 mock harness. Nor a harness-core module importing an adapter's constant — a denied-tool list, a section kind — so the
@@ -140,9 +140,9 @@ many environments it may hold (`capacity`), and its environment pool (`pool`), i
 `RunnerConfig.workspace_settings`), not `RunnerConfig`. Harnesses are iterated, never named:
 `blizzard/src/blizzard/runner/harness/wiring.py` holds the cached `harness_catalog()` of `IHarnessDeclaration`s and its
 walks (`declared`, `enabled`, `declared_normalizer_versions`), `declared` and `enabled` pairing each declaration with
-its `IHarnessSection` (both in `harness/declaration.py`). Importing `wiring.py` loads only each adapter's section
-module; an adapter's declaration loads on the catalog's first call. A third harness is a new declaration and section
-kind added to the catalog, not a new branch in its consumers.
+its `HarnessSection` (both in `harness/declaration.py`). Importing `wiring.py` loads only each adapter's section module;
+an adapter's declaration loads on the catalog's first call. A third harness is a new declaration and section kind added
+to the catalog, not a new branch in its consumers.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.
