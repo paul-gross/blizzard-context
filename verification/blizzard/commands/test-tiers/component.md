@@ -15,7 +15,7 @@ The component spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md).
 - `test_checks_gate_agreement.py` — applies the produces-coverage guard's anti-drift shape to the `requires_checks`
   gate: both real decision sites — the runner's local gate at worker exit and the hub's completion backstop — must reach
   the same, and the expected, accept/reject verdict over one scenario matrix, so re-deriving "is a gated choice red?"
-  inline instead of calling the shared `wire.completion.ChecksGate.violated` predicate fails.
+  inline instead of calling the shared `foundation.completion_gates.ChecksGate.violated` predicate fails.
 - `test_fleet_spend_api.py` — proves `GET /api/spend?since=` sums usage facts by `recorded_at` across every chunk,
   excluding facts recorded before `since` — distinct from a chunk's own derived total — with a row carrying neither a
   billed nor an estimated amount giving a lower bound flagged `cost_partial`, and a malformed `since` rejected 422.

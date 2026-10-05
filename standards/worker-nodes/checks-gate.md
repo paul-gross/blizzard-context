@@ -9,8 +9,8 @@ Parent: [../worker-nodes.md](../worker-nodes.md).
 **Rule.** A choice may declare `requires_checks: true`; selecting it while any of the node's `checks:` is red is treated
 as a failure, not a judgement — the engine consumes a retry and re-queues a fresh attempt, injecting the red evidence
 into the re-attempt's judgement. No config flag governs the gate: it applies iff a choice declares `requires_checks`.
-The gate is enforced twice off one shared predicate (`ChecksGate.violated` in `wire/completion.py`) — the runner's own
-gate plus the hub's completion backstop — so a runner that skips its gate is still fenced by the hub.
+The gate is enforced twice off one shared predicate (`ChecksGate.violated` in `foundation/completion_gates.py`) — the
+runner's own gate plus the hub's completion backstop — so a runner that skips its gate is still fenced by the hub.
 
 **Why.** Without the gate, "checks are green" is enforced only socially — prompt prose plus the worker's honest
 self-report — and the prose and the `checks:` YAML can silently drift. The gate makes the graph author's intent
