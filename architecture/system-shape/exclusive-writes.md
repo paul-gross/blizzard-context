@@ -21,10 +21,12 @@ before any later read; on Postgres it takes the row lock a concurrent locker of 
 
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
 stop, complete, detach, and requeue — and the epoch-fenced writes (`bzh:epoch-fencing`), which the row lock serialises
-against stop and restart. A macro-shape constraint on deployment topology, on what holds once more than one hub process
-may share a store — not a `kill -9` crash-correctness requirement; one hub process already serializes every one of these
-correctly today. Dependency **release** is exempt rather than uncovered: it can only shrink the standing set and can
-never close a cycle, so nothing it writes needs a row lock.
+against stop and restart. It also governs three decisions whose guard reads facts the write itself creates: chunk
+ingest's pointer-held refusal, the default graph's first mint, and promote's promotability judgment. A macro-shape
+constraint on deployment topology, on what holds once more than one hub process may share a store — not a `kill -9`
+crash-correctness requirement; one hub process already serializes every one of these correctly today. Dependency
+**release** is exempt rather than uncovered: it can only shrink the standing set and can never close a cycle, so nothing
+it writes needs a row lock.
 
 **Detect.**
 
@@ -33,7 +35,7 @@ never close a cycle, so nothing it writes needs a row lock.
   which flags any `import threading` under `src/blizzard/hub/**`.
 - A locked transaction whose row lock targets a row that may not yet exist when two writers race to create it — a no-op
   `UPDATE` locks nothing on an empty table, so the exclusion never engages. Not mechanically checkable; judged at
-  review.
+  review. The remedy is the keyed-lock-row form under **Do**.
 
 **Do.** `lock_chunk_row` (`hub/store/internal/chunk_rows.py`) — a no-op `UPDATE` on the chunk's own row, already minted
 before any claim, edit, or dependency write can reach it — called as the transaction's first statement, with every guard
@@ -43,6 +45,15 @@ on Postgres, where two writers naming the same set in different orders could oth
 yielding `ILockedChunkRead` — a domain-facing handle carrying no connection. A sibling write repository's own `*_locked`
 method takes that same handle and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a
 package-private cast only the store layer ever calls — the domain layer never sees a `Connection`.
+
+A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
+locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/internal/chunk_rows.py`). The table is lock-only:
+it holds no state, nothing reads it as a fact, and its rows are never deleted. For each key, in sorted order, the helper
+inserts the row if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op `UPDATE` on it, so the
+first statements of the transaction lock a row that exists. Each decision keys by its own namespace: a pointer by
+`(source, ref)` encoded injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.locked_work_refs`
+and `IWriteGraphRepository.locked_name`, each yielding a handle of its own — never an `ILockedChunkRead`, so a handle
+that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
 write calls on its own connection after the lock and its replay probe and before its first insert. It reads the terminal
