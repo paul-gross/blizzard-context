@@ -350,9 +350,9 @@ graph.
 | L1    | `harness`             | `config_table`, `environments`, `node_steps`, `process`                                                                                                |
 | L2    | `harness/claude_code` | `config_table`, `harness`, `node_steps`, `process`, `subscriptions`                                                                                    |
 | L2    | `harness/opencode`    | `config_table`, `harness`, `node_steps`, `process`                                                                                                     |
-| L2    | `leases`              | `environments`, `events`, `harness`                                                                                                                    |
+| L2    | `leases`              | `environments`, `events`, `harness`, `node_steps`                                                                                                      |
 | L3    | `harness/wiring`      | `config_table`, `harness`, `process`, `harness/claude_code`, `harness/opencode`                                                                        |
-| L3    | `hub`                 | `auth`, `events`, `leases`, `node_steps`                                                                                                               |
+| L3    | `hub`                 | `auth`, `events`, `harness`, `leases`, `node_steps`                                                                                                    |
 | L4    | `transcripts`         | `environments`, `harness`, `hub`, `leases`                                                                                                             |
 | L4    | `throttle`            | `events`, `harness`, `leases`                                                                                                                          |
 | L5    | `usage`               | `environments`, `events`, `harness`, `leases`, `subscriptions`, `transcripts`                                                                          |
