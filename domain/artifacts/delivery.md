@@ -7,7 +7,9 @@ Delivery is graph-authored content, not built-in engine machinery: a generic hub
 like a worker node's judgement ([edges](../graphs/edges.md)).
 
 - **Fleet-wide serialization.** One fleet-wide execution slot admits one chunk's hub node at a time — any hub node, not
-  delivery specifically; a chunk finding it held tries again on a later tick.
+  delivery specifically; a chunk finding it held tries again on a later tick. The slot is not reentrant: a chunk's own
+  live run is never re-entered, and a hub node runs only while its chunk still stands at it, so a re-submitted
+  completion or a hub-advance never starts a second run, nor re-runs a node the chunk has left.
 - **Only a live, promoted chunk is driven.** A chunk standing at a hub node is run there only while it is promoted and
   has not ended: one resting un-promoted, or stopped or done, is never driven through it.
 - **Per-repository landing, with reconciliation.** A delivery script that lands a multi-repository chunk serially per

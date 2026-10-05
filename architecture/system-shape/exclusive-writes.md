@@ -82,6 +82,9 @@ Stated so a reviewer need not re-derive them:
     ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The marker-write capability token).
   - **Background sweeps** — loops with no cross-process coordination.
   - **Migrate-on-boot** — a migration run assumed uncontended at boot.
+  - **The boot release of live hub-execution slots** — a live slot at startup is taken to belong to a dead process's run
+    and is released before the hub serves ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The boot release
+    of live hub-execution slots).
 
 ## See also
 

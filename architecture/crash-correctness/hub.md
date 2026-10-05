@@ -147,6 +147,18 @@ and no crash-sweep assertion depends on an orphan's rejected write landing.
 The token needs neither mechanism because it is in-memory, credential-shaped state with no durable form and no
 partial-write window of its own.
 
+## The boot release of live hub-execution slots
+
+`HubNodeExecutor.release_orphaned_slots` runs once from the hub daemon's startup, before the hub serves, and releases
+every live `hub_exec_slot` row in one statement. The slot is not reentrant, so a row left live by a `kill -9` mid-node
+would otherwise defer the chunk's own resume until `slot_stale_after`; at boot such a row belongs to a run the dead
+process held, since one hub process serves the store
+([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt).
+
+It has no window: the release is a single statement, and a crash before it commits leaves the same rows for the next
+boot to release. Composition never calls it, so a CLI or test build over shared stores cannot release a live daemon's
+slot.
+
 ## The item-creation chunk mint
 
 `POST /api/work-sources/hub/items` writes the item's `work_items` row and its resting `not_ready` chunk's rows —
