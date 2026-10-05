@@ -206,9 +206,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   without overflowing the panel — real CSS layout claims jsdom cannot make.
 - `board-card-blocked.shell-sweep.spec.ts` covers `BoardCardComponent`'s blocked marking: mounted once with no
   `blockedOn` and once with one, at 800px (wider than any real board column) and at 390px/320px
-  (`bzh:narrow-viewport-tier-rule`), the marking must render directly below the status row without moving the status's
-  own position and without its own right edge overflowing the card — a real CSS layout claim jsdom cannot make, since
-  `ChunkBlocked` mounts outside the card's own open button (a nested interactive element inside it is invalid HTML).
+  (`bzh:narrow-viewport-tier-rule`), the marking must render inside the status row, immediately after the status it
+  qualifies, without moving the status's own position and without its own right edge overflowing the card — a real CSS
+  layout claim jsdom cannot make, since it never lays out `board-card.css`'s flex row.
 - `board-card-cost.shell-sweep.spec.ts` covers `BoardCardComponent`'s right-hand meta group at its fullest: a done-lane
   card carrying its completion stamp and its one combined cost figure, billed, estimated, and partial at once. At 800px
   and at 390px/320px (`bzh:narrow-viewport-tier-rule`) the two must sit side by side on one line, neither overlapping

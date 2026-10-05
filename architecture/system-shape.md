@@ -39,13 +39,22 @@ workflow edge deterministically.
 
 **Rule.** Every external system is reached only through a seam — a Protocol interface — whose concrete bindings are
 swappable adapters selected by configuration. A seam is the external-system application of dependency inversion
-(`bzh:dependency-inversion`). A seam whose adapters span several modules gives each adapter a package of its own, named
-only by the seam's wiring module and the composition roots: the seam's core never imports an adapter, one adapter never
-imports another, and nothing in the seam's package imports the loop that consumes it.
+(`bzh:dependency-inversion`). The seam's core never imports an adapter, one adapter never imports another, and nothing
+in the seam's package imports the loop that consumes it. House each adapter by the modules that belong to it alone:
+
+- An adapter of several modules gets a package of its own, named only by the seam's wiring module and the composition
+  roots — the harness seam's `harness/claude_code/` and `harness/opencode/`, named by `harness/wiring.py`.
+- An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
+  composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
+  `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
 
 **Why.** Seams let tests bind the blizzard-mock fleet in place of the real stack — the entire service and e2e strategy
-runs seams-mocked, spending no tokens and touching no network. An adapter in its own package stays replaceable: neither
-the core nor a sibling adapter changes when it does.
+runs seams-mocked, spending no tokens and touching no network. An adapter kept apart from the core and its siblings
+stays replaceable: neither changes when it does.
+
+**Exception.** The runner workspace-provider seam's winter adapter spans `winter_provider.py` and `winter_cli.py`, flat
+beside `basic_provider.py` and the shared `git.py` in `runner/environments/internal/`, selected by
+`environments/factory.py` rather than held in a package of its own.
 
 **Detect.** A vendor SDK, the GitHub API, or a claude/harness binary invoked directly from a loop step, the domain, or a
 store rather than through an injected seam Protocol; or a test that cannot run without a real external system because no
@@ -56,9 +65,11 @@ fails the unit tier, resolving relative imports, on each breach:
 - a harness-core module importing `harness/claude_code/` or `harness/opencode/`;
 - one adapter importing the other;
 - any module but `harness/wiring.py` and a composition root importing either adapter;
-- a module under `harness/` importing `runner/loop/`.
+- a harness module other than `harness/wiring.py` importing `wiring.py`, which reaches every adapter through it;
+- a module under `harness/` importing `runner/loop/` or the loop's composition root, `runner/loop_wiring.py`.
 
-`test_adapter_isolation_catches_every_breach` proves the check catches each form.
+`test_adapter_isolation_catches_every_breach` proves the check catches each form. On every other seam a reviewer asks
+whether an adapter imports a sibling, or has grown a second module of its own while still flat in `internal/`.
 
 **Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
 basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while
@@ -94,12 +105,13 @@ Stated so a reviewer need not re-derive them:
   `IWorkSource` for work items and branch links, `IWorkCloser` for closing work items, `IWorkAnnotator` for the periodic
   forge-status annotation sweep, and `IOAuthProvider` for login. The family's fourth member, `IWorkEditor`, never
   reaches it — only the built-in hub source seats one, per the recorded position above, and that source has no external
-  forge behind it. `GitHubCommitResolver` reaches it behind the `garden_delivery.CommitResolver` callable: an injected,
-  composition-root-selected seam whose interface is a one-call type alias rather than a Protocol, satisfying the Rule's
-  swappability intent without being one. Graph land scripts reach it directly through the `run:` env contract's
-  `BZ_FORGE_*` variables, outside the Rule's sites (a loop step, domain, or store) because the script is the landing
-  policy ([../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md) owns how tests bind the mock
-  forge for this path). Land scripts and `GitHubCommitResolver` share the hub's one configured forge endpoint
+  forge behind it. `GitHubCommitResolver` reaches it behind the `CommitResolver` callable
+  (`hub/domain/garden/delivery/validation.py`): an injected, composition-root-selected seam whose interface is a
+  one-call type alias rather than a Protocol, satisfying the Rule's swappability intent without being one. Graph land
+  scripts reach it directly through the `run:` env contract's `BZ_FORGE_*` variables, outside the Rule's sites (a loop
+  step, domain, or store) because the script is the landing policy
+  ([../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md) owns how tests bind the mock forge
+  for this path). Land scripts and `GitHubCommitResolver` share the hub's one configured forge endpoint
   (`BZ_FORGE_URL`/`BZ_FORGE_TOKEN`/`BZ_FORGE_OWNER`); the work-source family and the OAuth provider each declare their
   own endpoint through their own config entry instead. The garden commit resolver sees only bare repo names, so it
   always qualifies by `BZ_FORGE_OWNER`, defaulting to `hub/app.py::DEFAULT_FORGE_OWNER` when unset; delivery instead
@@ -126,10 +138,11 @@ many environments it may hold (`capacity`), and its environment pool (`pool`), i
 `blizzard/src/blizzard/runner/environments/provider.py`; the selection point is the factory registry in
 `runner/environments/factory.py`, whose builders take a `WorkspaceSettings` (built by
 `RunnerConfig.workspace_settings`), not `RunnerConfig`. Harnesses are iterated, never named:
-`blizzard/src/blizzard/runner/harness/wiring.py` holds `HARNESS_CATALOG` and its walks (`declared`, `enabled`,
-`declared_normalizer_versions`), each entry an `IHarnessDeclaration` paired with its `IHarnessSection` (both in
-`harness/declaration.py`). A third harness is a new declaration and section kind added to the catalog, not a new branch
-in its consumers.
+`blizzard/src/blizzard/runner/harness/wiring.py` holds the cached `harness_catalog()` of `IHarnessDeclaration`s and its
+walks (`declared`, `enabled`, `declared_normalizer_versions`), `declared` and `enabled` pairing each declaration with
+its `IHarnessSection` (both in `harness/declaration.py`). Importing `wiring.py` loads only each adapter's section
+module; an adapter's declaration loads on the catalog's first call. A third harness is a new declaration and section
+kind added to the catalog, not a new branch in its consumers.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.

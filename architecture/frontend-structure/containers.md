@@ -39,8 +39,10 @@ the table then needs a stubbed client even when only row markup changed.
 **Rule.** Keep every `computed()` in a container to composition — read signals and query results, combine them with
 `&&`, `||`, `??`, `?.`, and comparisons, and call imported functions. Branching, loops, and collection transforms live
 in a pure `*.model.ts` beside the feature: it takes plain values (a `now: number`, never a clock), imports no Angular,
-query, or `inject`, and is pinned by a sibling `*.model.spec.ts` that needs no `TestBed`. A derivation that is really a
-backend classification goes onto the wire instead, per `bzh:frontend-wire-conformist`.
+query, or `inject`, and is pinned by a sibling `*.model.spec.ts` that needs no `TestBed`. A structural query-handle
+interface the model declares or imports, such as `AsyncStateQuery` or `WorkItemsQuery`, counts as a plain value: the
+container passes its live query, and the spec passes a literal. A derivation that is really a backend classification
+goes onto the wire instead, per `bzh:frontend-wire-conformist`.
 
 **Why.** A branch inside a container's `computed()` is reachable only through a component fixture with stubbed queries,
 so it goes untested or gets tested through markup; a pure function over plain values is tested case by case, and a
@@ -50,7 +52,8 @@ restated backend judgment shows up there as a function with no frontend reason t
 any `inject*` function whose body calls one, transitively — header-slot mini-containers included. The rule binds each
 `computed()` imported from `@angular/core` in such a class, together with any same-class method, getter, or
 function-valued property the callback calls. Presentational components and non-component `inject*` helpers are outside
-it.
+it, and so is an `@Injectable` class that holds a query, even one a container provides and reads: the rule binds only
+the container's own class.
 
 **Detect.** Tooled by `web:structural-gate`'s containers-compose sweep, proven first by
 `assertContainersComposeDetectorWorks`: an `if`, `switch`, `?:`, loop, or collection-transform call (`.filter`, `.map`,
