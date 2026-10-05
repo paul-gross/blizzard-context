@@ -23,8 +23,9 @@ mock-hub response model to the hub schema it mirrors and diffs field sets agains
 model must be mapped or explicitly declared unschemaed — `RouteClaimConflict` is the one unschemaed entry. The guard
 separately maps the transcript lane's request-body mirrors in `mock_hub.api.deps`, which are invisible to the
 response-model sweep. It also diffs the batched `/events` fact vocabulary against
-`blizzard/src/blizzard/wire/facts.py`'s constants — a kind the mock never learned fails here, not silently at runtime —
-and sweeps the mirror service entry points for two adjacent same-typed positional parameters, which transpose silently.
+`blizzard/src/blizzard/foundation/fact_kinds.py`'s constants — a kind the mock never learned fails here, not silently at
+runtime — and sweeps the mirror service entry points for two adjacent same-typed positional parameters, which transpose
+silently.
 
 The guard is local-only and fail-closed: it reads the sibling `blizzard` worktree (`$BLIZZARD_SOURCE` overrides the
 default path) and fails rather than skips when it cannot resolve one — parity never checked is not a green.
