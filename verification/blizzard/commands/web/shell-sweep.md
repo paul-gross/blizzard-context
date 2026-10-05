@@ -137,6 +137,13 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   action must both be present, the panel's own `scrollWidth` must stay within its `clientWidth`, and the
   related-routines list's must too — the long name breaks inside the list rather than widening the panel — with no page
   error. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `admin-config.shell-sweep.spec.ts` covers the Admin config surfaces' two layouts, mounting the presentational
+  `ConfigRecordPanel` and `ConfigMaster` directly with the inputs each layout receives. At 1280px the detail must carry
+  its write controls and no CLI command, and the list must offer New. At 390px and 320px the detail must render none of
+  Edit, Replace, Retire, or Enable and must show the `blizzard hub …` command, and the list must not offer New. At every
+  width the detail, the command, and the list must stay within their own width — a long record name wraps rather than
+  widening them — with no page error. Which layout a width gets is decided by `configActions`, which `web:unit-test`
+  covers. The phone is read-only, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `gardening-routines-page.shell-sweep.spec.ts` covers the container's own `.gr-layout` list-beside-panel grid, which
   `routine-panel.shell-sweep.spec.ts` never mounts since it stands `FleetRoutinePanel` up alone. At 1280px the list and
   panel must sit side by side; at 740px, 700px, 390px, and 320px the bare route must show only the list, while a
