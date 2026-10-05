@@ -128,7 +128,7 @@ Stated so a reviewer need not re-derive them:
 the branch is silently wrong for every other binding, and adding a binding means finding every such branch by hand
 rather than implementing one declaration.
 
-**Detect.** The ast-grep rule in `blizzard/contracts/ast-grep/rules/binding-name-selection.yml` (run by
+**Detect.** The ast-grep rule in `blizzard/contracts/ast-grep/rules/seam-answers-binding-facts.yml` (run by
 `blizzard:structural-gate`) flags a comparison of `workspace_provider` or of a harness-id string literal outside the
 selection points, the bindings' own modules, and migrations. By eye: an `if … == "winter"` or `== "claude_code"`
 anywhere a seam is already injected.
