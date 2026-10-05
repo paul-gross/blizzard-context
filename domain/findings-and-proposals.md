@@ -37,6 +37,11 @@ What a run delivers is not the routine's new standing state; it is the change to
 finding is never a claim about it — a finding outside a run's scope keeps its last word, and a scoped or delta run stays
 honest without asking anything of an agent's discipline.
 
+A delivery names the delta artifacts it carries and the proposals artifacts beside them. A named delta that does not
+resolve refuses the whole delivery, as does naming none, since a missing delta would silently drop a scope's
+measurement. A named proposals artifact that does not resolve is tolerated — the delivery proceeds without it — because
+a run with no response to propose reaches delivery without drafting one.
+
 ## Liveness is derived, and reversible
 
 Whether a finding is live is never a stored state; it is the newest thing a run said about it. A run reporting a finding
