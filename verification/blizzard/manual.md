@@ -464,7 +464,7 @@ and a scratch workdir it can run non-interactively in with `-p`.
    and `bypassPermissions` — adding `--permission-prompts none` under `manual`. What a call that needs approval does is
    owned by [`blizzard:manual-headless-permission-refusal`](#blizzardmanual-headless-permission-refusal).
 
-**Passes when.** Every name in `WorkerSettings.DENIED_TOOLS` is unreachable under the emitted settings document in every
+**Passes when.** Every name in `CLAUDE_CODE_DENIED_TOOLS` is unreachable under the emitted settings document in every
 mapped permission mode, and `TaskOutput`, `TaskStop`, and backgrounded `Bash` remain reachable under the same document.
 
 ### `blizzard:manual-headless-permission-refusal`

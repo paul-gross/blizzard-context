@@ -48,9 +48,10 @@ follow; against a lease the escalation already closed, nothing defers it.
 A takeover ends when the person leaves the interactive session. A chunk ending — stopped or done — while a takeover is
 open closes the takeover fact through the hub's own terminal fact, though nothing infers a person is done.
 
-A takeover holds its reference lease and the epochs up to its fence, not the chunk for good. Once the chunk's route is
-released and the chunk claimed again, the fresh attempt the new claim starts sits above that reach and is the loop's,
-though the takeover itself stays open until it is ended.
+A takeover holds every epoch up to the highest of its reference lease's, its fence's, and the chunk's latest when it
+opened — so an escalation's sessionless lease above the reference lease stays the person's — not the chunk for good.
+Once the chunk's route is released and the chunk claimed again, the fresh attempt the new claim starts sits above that
+reach and is the loop's, though the takeover itself stays open until it is ended.
 
 Hand-back is a separate step, and explicit: the person requeues the chunk through the runner holding it
 ([../execution/recovery.md](../execution/recovery.md)), clearing the `needs_human` hold — a forced entry, which parks

@@ -22,7 +22,10 @@ seam is.
 
 **Detect.** `tests/test_seam_size.py`'s AST scan: a class declaring `Protocol` among its own bases with more than twelve
 own (non-underscore) methods, unless its name is in that test's `_ACCEPTED_VIOLATIONS` set — a name-only membership
-test; a reason for the entry is a review obligation, not something the gate itself checks.
+test; a reason for the entry is a review obligation, not something the gate itself checks. A Protocol base nothing else
+names counts toward each Protocol composing it, so a split made only to clear the ceiling still fails; a stale entry
+fails too. The one registered exception is `SpawnContext` (`runner/lifecycle/spawn.py`): `Spawner` and `Attempt` hand
+each other their context, so it is the union of what either reads.
 
 **Do.** The runner's harness seam splits `IHarnessAdapter`'s methods into narrower Protocols along its consumers' own
 lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, usage accounting, usage-limit
@@ -33,8 +36,8 @@ slice that role calls — `lifecycle`, `lifecycle_and_verdict`, `self_test`, `mo
 services (`lifecycle/takeover.py`, `status/view.py`) take `IHarnessLifecycleRegistry`, which declares only `lifecycle`.
 `LoopContext.harnesses` stays the composed `IHarnessRegistry`, a pass-through every loop step reads its role accessor
 from. The selftest canary's widened roster — lifecycle, verdict parsing, usage accounting, plus `transcript_source` —
-takes its own `IHarnessSelfTestSeam`. The full `IHarnessAdapter` lives only in `HarnessBinding` and the composition-side
-registry builder that fills it from the harness catalog's declarations, both in `harness/wiring.py`.
+takes its own `IHarnessSelfTestSeam`. The full `IHarnessAdapter` lives only in `HarnessBinding` (`harness/registry.py`)
+and the composition-side registry builder in `harness/wiring.py` that fills it from the harness catalog's declarations.
 
 **Don't.** Leaving a Protocol to grow past the ceiling because splitting it "later" is easier than registering the width
 now, or registering an exception without a reason — either loses the one signal a reviewer has for "this seam grew wider

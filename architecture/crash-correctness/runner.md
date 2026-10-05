@@ -81,7 +81,7 @@ open-takeover fact gates REAP's and ADVANCE's per-tick skip of a taken-over chun
 reach through the worker-authorization resolver. `record_takeover_end` is the same call the CLI's end-PATCH already
 makes on the ordinary hand-back path, so the loop's closure is a second caller of an existing idempotent write. A
 closure row admitted twice is equally harmless — `escalation_closures` reads through an `Unsuperseded` existence test
-and `OPEN_TAKEOVER` through an `Unclosed` plain `NOT IN`, so N marks read as one — which is also why the loop and the
+and `_OPEN_TAKEOVER` through an `Unclosed` plain `NOT IN`, so N marks read as one — which is also why the loop and the
 CLI's end-PATCH racing to close one takeover is safe rather than conflicting.
 
 Neither closure table owes the invariant checker anything: supersession is an ordering comparison and
@@ -139,7 +139,7 @@ already in flight resumes through `Spawner.preamble`, which re-mints only the ca
 a graph declaration at all — the runner's only reader is that worker-facing route — so no admission, routing, epoch, or
 completion decision can observe the window. An empty pin fails by name rather than answering emptily:
 `artifact get <name> --scope graph` is a `404` naming the pinned mint, which the worker CLI raises as a non-zero
-`ClickException` (`blizzard/src/blizzard/runner/api/artifacts.py`, `blizzard/src/blizzard/runner/cli_worker.py`). What
+`ClickException` (`blizzard/src/blizzard/runner/api/artifacts.py`, `blizzard/src/blizzard/runner/cli/artifact.py`). What
 carries a worker through an empty pin is the fallback every prompt pointing at a graph declaration owes
 (`bzh:graph-artifact-pointer-fallback`,
 [`../../standards/worker-nodes/graph-artifact-pointers.md`](../../standards/worker-nodes/graph-artifact-pointers.md)),

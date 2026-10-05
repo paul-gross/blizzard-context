@@ -52,6 +52,6 @@ The tier's other named coverage:
   findings-docket format also names `blizzard runner artifact get docket --scope graph` (the `PACKAGED` loader bakes the
   referenced file's text into the doc verbatim). The guard's prompt set is a vocabulary match on raw prompt text, not an
   authored list — a prompt growing docket vocabulary without the pointer goes red — and, distinct from that firing
-  condition, `test_the_docket_vocabulary_census_is_exactly_ten_files` pins the matched set by name: the guard on the
+  condition, `test_the_docket_vocabulary_census_is_exactly_six_files` pins the matched set by name: the guard on the
   guard against a pattern silently ceasing to match. No docket assertion reaches content agreement: editing the docket
   format means re-checking each restatement against `docket.md` by hand.

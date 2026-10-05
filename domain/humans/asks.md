@@ -7,7 +7,8 @@ A question is free-form or carries options, which a board or bot renders as butt
 question is open and restarts when the answer's resume runs.
 
 A worker may ask on any lease still open, an attempt parked or backing off included. An ask that has not yet reached the
-hub is superseded by a newer ask on the same lease: only the newest reads as open.
+hub is superseded for good by any newer ask on the same lease: it never reads as open again, even once the newer ask is
+answered.
 
 ## Answering
 

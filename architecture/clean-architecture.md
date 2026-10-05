@@ -22,13 +22,16 @@ swap untouched.
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
 app. `tests/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module, importing
 fastapi, starlette, sqlalchemy, click, or httpx. A runner domain-core module is any module of a
-`bzh:domain-package-layers` runner node that declares a `@domain_model` class or a `Protocol` port
-(`_runner_domain_core_files`); the same selection may import neither `blizzard.runner.store` nor `blizzard.runner.api`.
+`bzh:domain-package-layers` runner node outside an `internal/` package (`_runner_domain_core_files`): a concept
+package's public surface holds its models, ports, and the services carrying its rules, and the adapter binding a
+framework or driver sits in its `internal/`. The layer gate already keeps every such module off `blizzard.runner.store`
+and `blizzard.runner.api`, which no row lists.
 
 **Do.** `blizzard/src/blizzard/hub/domain/` and the runner's concept packages (`runner/leases/`, `runner/lifecycle/`,
 `runner/tracing/`, …) import no web, ORM, or CLI package; `hub/api/`, `hub/store/`, `runner/api/`, and `runner/store/`
-depend on them, never the reverse. The runner's FastAPI federation router lives at `runner/api/federation.py`, not under
-`runner/auth/`.
+depend on them, never the reverse. The hub-JWKS seam `IJwksCache` sits in `runner/auth/jwks_cache.py`; its httpx binding
+sits in `runner/auth/internal/http_jwks_cache.py`, built only in the app composition root. The runner's FastAPI
+federation router lives at `runner/api/federation.py`, not under `runner/auth/`.
 
 **Don't.** A domain function that opens a SQLAlchemy session or reads a request object.
 
@@ -169,7 +172,17 @@ The same reasoning extends to a helper a command's own root calls into rather th
 ## Narrow seams and step context Protocols (`bzh:narrow-seams`)
 
 **Rule.** Type each collaborator's dependencies as the seams it uses, never as a bundle that carries every seam. Only a
-composition root, the runner's loop driver, or an API or CLI edge holds a bundle.
+composition root, the runner's loop driver, or an API or CLI edge holds a bundle. Adding a runner loop step, or giving a
+step something new to read — a probe, a config value, a store — takes three moves:
+
+1. Put the logic in a step module, never inline in a `steps.py` phase: the driver holds `LoopContext` only to hand it to
+   step modules. Combining a new check's result with existing ones is step logic too: the phase makes one call into a
+   step module and branches on that one result.
+2. Add the member to that module's context Protocol and to `LoopContext`.
+3. Keep a `_conforms_*` sentinel for that Protocol in `runner/loop/context.py`.
+
+A pluggable seam such as a probe (`bzh:pluggable-seams` in [./system-shape.md](./system-shape.md)) is one member the
+step's Protocol declares; it never stands in for that Protocol.
 
 **Why.** A bundle parameter hides what a collaborator touches: a test must build the whole bundle, and a reviewer cannot
 tell from the signature which state a change can reach. A narrow seam states the dependency in the type, so pyright
@@ -196,8 +209,10 @@ they act as their own roots.
   `runner/loop/`, or a `runner/loop/` module importing `blizzard.runner.composition`. Self-test:
   `test_loop_composition_check_catches_every_import_form`.
 - `test_every_loop_step_types_its_context_by_a_protocol_it_declares` — a `ctx` parameter or `ctx:` field under
-  `runner/`, outside the driver, roots, and edges, not typed by a `Protocol` its own module declares. Self-tests:
-  `test_step_context_check_catches_a_foreign_or_bundle_context`, `test_step_context_check_admits_a_local_protocol`.
+  `runner/`, outside the driver, roots, and edges, not typed by a `Protocol` its own module declares; or a parameter or
+  field of any other name typed — bare, module-qualified, or wrapped in a union — by `LoopContext` or another module's
+  step context. Self-tests: `test_step_context_check_catches_a_foreign_or_bundle_context`,
+  `test_step_context_check_admits_a_local_protocol`.
 - `test_loop_context_has_a_conformance_sentinel_for_every_step_context` — a step context Protocol with no `_conforms_*`
   sentinel in `runner/loop/context.py` proving `LoopContext` satisfies it. Self-test:
   `test_conformance_check_catches_a_step_context_without_a_sentinel`.
@@ -218,13 +233,6 @@ if TYPE_CHECKING:
     def _conforms_to_attempt(ctx: LoopContext) -> AttemptContext:
         return ctx
 ```
-
-Adding a step, or giving a step something new to read — a probe, a config value, a store — takes the same three moves:
-put the logic in a step module, never inline in a `steps.py` phase; add the member to that module's context Protocol and
-to `LoopContext`; and keep a `_conforms_*` sentinel for that Protocol. The driver holds `LoopContext` only to hand it to
-step modules, so new step logic in `steps.py` escapes this rule rather than satisfying it. A pluggable seam such as a
-probe (`bzh:pluggable-seams` in [./system-shape.md](./system-shape.md)) is one member the step's Protocol declares; it
-never stands in for that Protocol.
 
 A domain service takes one keyword parameter per repository seam:
 `TakeoverService(clock, process, *, takeover, asks, outbound, tokens, elicitations, ...)`.
@@ -328,30 +336,33 @@ The runner's table. `harness/claude_code`, `harness/opencode`, and `harness/wiri
 `runner/<first segment>` is that segment, so `config_table.py` and `stores.py` are the two top-level modules in the
 graph.
 
-| Layer | Node                  | May import                                                                                                                                                             |
-| ----- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| L0    | `config_table`        | —                                                                                                                                                                      |
-| L0    | `process`             | —                                                                                                                                                                      |
-| L0    | `events`              | —                                                                                                                                                                      |
-| L0    | `environments`        | —                                                                                                                                                                      |
-| L0    | `subscriptions`       | —                                                                                                                                                                      |
-| L0    | `auth`                | —                                                                                                                                                                      |
-| L1    | `harness`             | `config_table`, `environments`, `process`                                                                                                                              |
-| L2    | `harness/claude_code` | `config_table`, `harness`, `process`, `subscriptions`                                                                                                                  |
-| L2    | `harness/opencode`    | `config_table`, `harness`, `process`                                                                                                                                   |
-| L2    | `leases`              | `environments`, `events`, `harness`, `process`                                                                                                                         |
-| L3    | `harness/wiring`      | `config_table`, `harness`, `process`, `harness/claude_code`, `harness/opencode`                                                                                        |
-| L3    | `hub`                 | `auth`, `events`, `leases`                                                                                                                                             |
-| L4    | `transcripts`         | `environments`, `harness`, `hub`, `leases`                                                                                                                             |
-| L4    | `throttle`            | `events`, `harness`, `leases`                                                                                                                                          |
-| L5    | `usage`               | `environments`, `events`, `harness`, `leases`, `process`, `subscriptions`, `transcripts`                                                                               |
-| L6    | `lifecycle`           | `auth`, `environments`, `events`, `harness`, `hub`, `leases`, `process`, `throttle`, `transcripts`, `usage`                                                            |
-| L7    | `operator`            | `auth`, `leases`, `lifecycle`                                                                                                                                          |
-| L7    | `tracing`             | `harness`, `hub`, `leases`, `transcripts`                                                                                                                              |
-| L7    | `selftest`            | `environments`, `harness`, `lifecycle`, `process`                                                                                                                      |
-| L7    | `status`              | `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`                                                                                                    |
-| L8    | `stores`              | `auth`, `environments`, `harness`, `hub`, `leases`, `lifecycle`, `operator`, `throttle`, `tracing`, `transcripts`, `usage`                                             |
-| L9    | `loop`                | `config_table`, `process`, `events`, `environments`, `harness`, `subscriptions`, `leases`, `hub`, `transcripts`, `throttle`, `usage`, `lifecycle`, `tracing`, `stores` |
+| Layer | Node                  | May import                                                                                                                                             |
+| ----- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| L0    | `config_table`        | —                                                                                                                                                      |
+| L0    | `process`             | —                                                                                                                                                      |
+| L0    | `events`              | —                                                                                                                                                      |
+| L0    | `environments`        | —                                                                                                                                                      |
+| L0    | `subscriptions`       | —                                                                                                                                                      |
+| L0    | `auth`                | —                                                                                                                                                      |
+| L1    | `harness`             | `config_table`, `environments`, `process`                                                                                                              |
+| L2    | `harness/claude_code` | `config_table`, `harness`, `process`, `subscriptions`                                                                                                  |
+| L2    | `harness/opencode`    | `config_table`, `harness`, `process`                                                                                                                   |
+| L2    | `leases`              | `environments`, `events`, `harness`                                                                                                                    |
+| L3    | `harness/wiring`      | `config_table`, `harness`, `process`, `harness/claude_code`, `harness/opencode`                                                                        |
+| L3    | `hub`                 | `auth`, `events`, `leases`                                                                                                                             |
+| L4    | `transcripts`         | `environments`, `harness`, `hub`, `leases`                                                                                                             |
+| L4    | `throttle`            | `events`, `harness`, `leases`                                                                                                                          |
+| L5    | `usage`               | `environments`, `events`, `harness`, `leases`, `subscriptions`, `transcripts`                                                                          |
+| L6    | `lifecycle`           | `auth`, `environments`, `events`, `harness`, `hub`, `leases`, `process`, `throttle`, `transcripts`, `usage`                                            |
+| L7    | `operator`            | `leases`, `lifecycle`                                                                                                                                  |
+| L7    | `tracing`             | `harness`, `hub`, `leases`, `transcripts`                                                                                                              |
+| L7    | `selftest`            | `environments`, `harness`, `lifecycle`, `process`                                                                                                      |
+| L7    | `status`              | `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`                                                                                    |
+| L8    | `stores`              | `auth`, `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`, `tracing`, `transcripts`, `usage`                                         |
+| L9    | `loop`                | `process`, `events`, `environments`, `harness`, `subscriptions`, `leases`, `hub`, `transcripts`, `throttle`, `usage`, `lifecycle`, `tracing`, `stores` |
+
+A row's layer orders its table: every package or node a row may import sits on a strictly lower layer, `kernel` aside,
+so no declared edge runs between two rows of one layer.
 
 Import a module by its full module path, and a name from the module that defines it: a package's surface is its modules
 outside `internal/` (`bzh:internal-visibility`), and its `__init__.py` re-exports nothing.
@@ -383,11 +394,15 @@ domain module's name to the module defining it. `test_domain_layer_check_counts_
 check, and the second-spelling check fire on planted trees. `test_runner_packages_import_only_what_their_layer_allows`
 walks every module of a runner node against the runner table's mirror, `_RUNNER_PACKAGE_LAYERS`, failing on an edge the
 row does not list and on any import of an edge module or the bare `blizzard.runner` package;
-`test_runner_package_layers_are_acyclic` holds that dict acyclic and every package under `runner/` outside `api/`,
-`cli/`, and `store/` mapped to a node. `test_runner_layer_check_counts_every_import_form`,
-`test_runner_package_check_catches_an_undeclared_package`, and `test_runner_layer_cycle_check_catches_a_cycle` prove the
-walker fires on planted trees. The fix moves the shared type down into the lower package, or the dependent code up; a
-new edge is a change to this table and the dict together, and only one that keeps both acyclic.
+`test_every_runner_layer_edge_is_one_the_code_uses` fails on a declared edge no import walks, so the dict carries no
+slack an unreviewed import could later pass along; `test_runner_package_layers_are_acyclic` holds that dict acyclic and
+every package under `runner/` outside `api/`, `cli/`, and `store/`, and every top-level runner module outside the edge
+modules, mapped to a node. `test_runner_layer_check_counts_every_import_form`,
+`test_runner_node_check_catches_an_undeclared_package_or_module`,
+`test_runner_unused_edge_check_catches_an_edge_no_import_walks`, and `test_runner_layer_cycle_check_catches_a_cycle`
+prove each check fires on planted trees. The fix moves the shared type down into the lower package, or the dependent
+code up; a new edge is a change to this table and the dict together, made only when an import needs it and only when
+both stay acyclic, and an edge whose last import is removed leaves both.
 
 **Do.** `UNSET` lives in `blizzard/src/blizzard/hub/domain/kernel/unset.py`, so `config`, `garden`, and `work_items`
 take it without importing `operations`. The requeue and attachment repository seams live in

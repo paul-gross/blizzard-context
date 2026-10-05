@@ -81,7 +81,10 @@ the controller resolves that chunk through a read repository first. Where no agg
 **Don't.** `advance(chunk_id: str)`, loading the chunk inside the domain.
 
 `bzh:domain-takes-objects` is tooled by `blizzard:structural-gate`'s ast-grep scan
-([`../verification/blizzard.md`](../verification/blizzard.md)), scoped to the hub and runner domain trees.
+([`../verification/blizzard.md`](../verification/blizzard.md)), scoped to `hub/domain/` and the runner's domain core
+(`bzh:domain-core`): one glob per top-level `bzh:domain-package-layers` runner node, with `**/internal/**` ignored.
+`blizzard/tests/test_layering.py` holds those globs equal to the runner layer table, so a new node is in scope with no
+edit to the rule.
 
 ## Reconstitute in bulk (`bzh:bulk-reconstitution`)
 

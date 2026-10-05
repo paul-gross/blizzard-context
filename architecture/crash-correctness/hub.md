@@ -15,8 +15,8 @@ newly-ready chunk past every currently-ready chunk — in one write transaction 
 `blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). No window: a crash ahead of that transaction's commit loses
 both facts together, and a retry re-derives the same tail position from a fresh read.
 
-`QueueService._effective_position`'s (`blizzard/src/blizzard/hub/domain/operations/queue.py`) fallback — an
-un-positioned chunk sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small
+`QueueRanking.effective_position`'s (`blizzard/src/blizzard/hub/domain/operations/queue.py`) fallback — an un-positioned
+chunk sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small
 explicit-position float assigned to another chunk — guards a chunk promoted with no queue position by some other route,
 not a crash inside this one transaction.
 
@@ -191,13 +191,14 @@ recompute.
 
 ## Chunk delete, then hub-item withdrawal
 
-`WorkItemStore.delete_chunk_and_withdraw_hub_items` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`)
-writes the chunk's `chunk_deleted` row and closes every open `hub:`-source item it holds as withdrawn, both on one
-`engine.begin()` connection — the same single-transaction shape `create_with_chunk` above uses for its own pairing. The
-`chunk_deleted` insert runs through `record_deleted_row` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`), a
-free function shared the same way `insert_chunk_rows` is for the mint side; the `work_items` closures reuse
-`WorkItemStore._close_conn`, the same connection-scoped update `close` itself calls. A `forge:`-sourced pointer on the
-same chunk is left untouched — only `hub:`-source items close.
+`WorkItemStore.delete_chunk_and_withdraw_hub_items_locked`
+(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the chunk's `chunk_deleted` row and closes every
+open `hub:`-source item it holds as withdrawn, both on the handle's already-locked connection — the same
+single-transaction shape `create_with_chunk` above uses for its own pairing. The `chunk_deleted` insert runs through
+`record_deleted_row` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`), a free function shared the same way
+`insert_chunk_rows` is for the mint side; the `work_items` closures reuse `WorkItemStore._close_conn`, the same
+connection-scoped update `close` itself calls. A `forge:`-sourced pointer on the same chunk is left untouched — only
+`hub:`-source items close.
 
 `DeleteService.delete` (`blizzard/src/blizzard/hub/domain/operations/delete.py`) reaches this write from both a direct
 chunk delete and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, always inside the same locked
