@@ -34,11 +34,12 @@ being read.
 
 ## Session stickiness, effective model, and context accounting
 
-The mint-only model contract — a session's model applied where the session is minted and on no resume after it — rests
-on the harness restoring a resumed session's own model. The live OpenCode compatibility diagnostic now checks that the
-requested provider/model and variant survive fresh and resumed exports, but it deliberately supplies them on every
-invocation and therefore does not assert effective model stickiness when they are omitted. No tier asserts the effective
-context accounting a harness ran under, because the mock façade sees argv and nothing else. `blizzard:e2e`'s
+The session-model contract — owned by [declared sessions](../../domain/graphs/declared-sessions.md#model-preference) —
+is proven at the flag, never at the model a harness ran under. Where a harness takes no model on resume, the contract
+rests on that harness restoring a resumed session's own model. The live OpenCode compatibility diagnostic now checks
+that the requested provider/model and variant survive fresh and resumed exports, but it deliberately supplies them on
+every invocation and therefore does not assert effective model stickiness when they are omitted. No tier asserts the
+effective context accounting a harness ran under, because the mock façade sees argv and nothing else. `blizzard:e2e`'s
 `test_session_modes_e2e.py::test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model` asserts the flag
 — the mint and every resume carry the same resolved model — and stops there.
 

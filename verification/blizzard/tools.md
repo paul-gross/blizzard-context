@@ -29,7 +29,7 @@ counterparts `blizzard:service-test` drives the real daemons against. Each mock 
 response-distortion/capture plane and a control/drive plane for seeding; each mock's README.md owns its lever catalog.
 
 The claude_code façade records each turn's `--model`/`--effort` flags on per-session state, acting on neither — the
-observable for asserting blizzard's mint-only model contract; the shape is owned at
+observable for asserting which model each invocation of a session was launched with; the shape is owned at
 `src/blizzard_mock/harness/README.md`. It executes the `--settings` document's hook commands as real subprocesses, so a
 fleet-tier worker fires its own hooks; semantics owned at `src/blizzard_mock/harness/README.md` §"Hook execution". It
 also mints a real Claude-Code-shaped JSONL transcript per run; the mechanism, and why codex/opencode mint nothing, is

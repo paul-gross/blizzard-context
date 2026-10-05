@@ -33,8 +33,13 @@ native-name-only list can fall back to the runner's default for a sole acceptabl
 `blizzard:`-namespaced tier instead requires resolution of at least one preference: a harness resolving none is skipped,
 even if it is the only one, in which case selection fails. With no authored harness set, selection is bypassed: the
 runner chooses its default harness, whose model resolution falls back to its default even for an entirely unresolvable
-tier list. Model changes take effect only where a pool starts a session, never on a resume: a mid-chunk edit rotates the
-pool at its next member rather than switching a running session's model.
+tier list.
+
+A session's model is resolved once, where a pool starts the session, and is that session's model for its whole lineage.
+Every resume runs under the same resolved model, never a re-resolved one: the runner reasserts it on each resume
+wherever the harness takes a model there, rather than trusting the harness to restore it. Model changes therefore take
+effect only where a pool starts a session: a mid-chunk edit rotates the pool at its next member rather than switching a
+running session's model.
 
 ## Effort
 
@@ -44,8 +49,8 @@ vocabulary, extended by runner configuration.
 ## Compaction window
 
 The compaction window is a tuning knob, not a preference: an opaque string the harness adapter passes straight through
-(Claude Code's `--autocompact`), hub-checked only for non-emptiness, reasserted on every invocation — unlike model,
-trusted only at mint — and declaration-only, with no chunk-level default.
+(Claude Code's `--autocompact`), hub-checked only for non-emptiness, reasserted on every invocation, and
+declaration-only, with no chunk-level default.
 
 The window is commensurable only with `rotate.max_context_tokens` (both in tokens, unlike the other bounds): compaction
 shrinks context within a step, rotation ends the lineage across steps. A window below `max_context_tokens` means

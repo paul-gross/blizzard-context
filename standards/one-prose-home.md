@@ -124,14 +124,14 @@ coverage.
 ## Do
 
 ```python
-# Mint-only model application: see IHarnessAdapter.spawn.
+# Per-invocation model reassertion: see IHarnessAdapter.spawn.
 ```
 
 ## Don't
 
 ```python
-# Model is applied at mint only — a resume passes no model flag and leans on the
-# harness restoring the session's own (the same contract IHarnessAdapter.spawn states).
+# The session's resolved model is reasserted on every invocation — a resume is not
+# trusted to restore it (the same contract IHarnessAdapter.spawn states).
 ```
 
 ## See also
