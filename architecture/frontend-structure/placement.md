@@ -119,7 +119,8 @@ change.
 carries the three tables as data with no exemption list and fails an import its table does not allow, a file in no
 declared unit, and a cycle in a table.
 [`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
-owns the sweep's full fail list and self-test cases.
+owns the sweep's full fail list and self-test cases. `scripts/check-registry-drift.py` check H fails when a table here
+and its mirror in `structural-gate.js` differ in a unit or an edge.
 
 **Do.** `hub/src/app/board/board-page.ts` and `runners/runner-rows.ts` both read `core/chunks.query.ts`: the chunks read
 two features need sits in the kernel, so `board` → `runners` stays the only edge between them. The routine detail in

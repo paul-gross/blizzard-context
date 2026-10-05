@@ -556,6 +556,8 @@ class RunEffectivenessGateTests(unittest.TestCase):
         self.blizzard_mock.mkdir()
         self.blizzard = Path(self.tmp.name) / "blizzard"
         (self.blizzard / "tests").mkdir(parents=True)
+        # Check H's inputs: the layer tables and the gate data they mirror.
+        _write_layer_fixture(self.repo_root, self.blizzard)
         _write(self.blizzard / "mise.toml", '[tasks.gate]\nrun = "./scripts/ci-gate.sh"\n\n[tools]\nvale = "3.22.0"\n')
         _write(self.blizzard / "web" / "package.json", '{"scripts": {}}')
         # Check G's inputs: the shared rule, byte-identical, plus an agreeing vale pin —
@@ -1225,6 +1227,134 @@ class CheckFTests(unittest.TestCase):
         # limitations): `one` reads on ordinary prose far more often than on a real
         # cardinality, so a registry of one member is a declared miss, not a bug.
         self.assertEqual(drift._stated_counts("the one check that remains", "checks?"), [])
+
+
+DOMAIN_DOC = """## Domain package layers (`bzh:domain-package-layers`)
+
+| Layer | Package | May import (besides `kernel`) |
+| ----- | ------- | ----------------------------- |
+| L0    | `kernel` | —                            |
+| L1    | `chunk`  | `graph`, `runners`           |
+
+The runner's table.
+
+| Layer | Node  | May import |
+| ----- | ----- | ---------- |
+| L0    | `auth` | —         |
+| L1    | `hub`  | `auth`    |
+"""
+
+FRONTEND_DOC = """## Folders import only what their project's layer table allows (`bzh:frontend-package-layers`)
+
+`fleet`, rooted at `fleet/src/lib/`:
+
+| Unit  | Layer | May import  |
+| ----- | ----- | ----------- |
+| `api` | L0    | —           |
+| `core` | L1   | `api`       |
+
+`hub`, rooted at `hub/src/app/`:
+
+| Unit     | Layer | May import |
+| -------- | ----- | ---------- |
+| `core`   | L0    | —          |
+| `garden/core` | L1 | —        |
+| `garden` | L1    | `garden/core` |
+
+`runner`, rooted at `runner/src/app/`:
+
+| Unit   | Layer | May import |
+| ------ | ----- | ---------- |
+| `core` | L0    | —          |
+| `board` | L1   | `core`     |
+
+## Next
+"""
+
+PY_GATE = """_DOMAIN_PACKAGE_LAYERS: dict[str, frozenset[str]] = {
+    "kernel": frozenset(),
+    "chunk": frozenset({"graph", "runners"}),
+}
+_RUNNER_PACKAGE_LAYERS: dict[str, frozenset[str]] = {
+    "auth": frozenset(),
+    "hub": frozenset({"auth"}),
+}
+"""
+
+JS_GATE = """const FLEET_LAYERS = {
+  api: [],
+  core: ['api'],
+};
+
+const HUB_LAYERS = {
+  core: [],
+  'garden/core': [],
+  garden: [
+    'garden/core',
+  ],
+};
+
+const RUNNER_LAYERS = {
+  core: [],
+  board: ['core'],
+};
+"""
+
+
+def _write_layer_fixture(context: Path, blizzard: Path) -> None:
+    _write(context / "architecture" / "clean-architecture.md", DOMAIN_DOC)
+    _write(context / "architecture" / "frontend-structure" / "placement.md", FRONTEND_DOC)
+    _write(blizzard / "tests" / "test_layering.py", PY_GATE)
+    _write(blizzard / "web" / "scripts" / "structural-gate.js", JS_GATE)
+
+
+class CheckHTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.context = Path(self.tmp.name) / "blizzard-context"
+        self.blizzard = Path(self.tmp.name) / "blizzard"
+        _write_layer_fixture(self.context, self.blizzard)
+
+    def _run(self):
+        return drift.check_H(self.context, {"blizzard": self.blizzard})
+
+    def test_matching_tables_and_gate_data_pass(self):
+        findings = self._run()
+        self.assertEqual([f for f in findings if f.status == "fail"], [])
+        self.assertEqual(len([f for f in findings if f.status == "pass"]), 5)
+
+    def test_a_planted_python_edge_mismatch_fails(self):
+        _write(self.blizzard / "tests" / "test_layering.py", PY_GATE.replace('"hub": frozenset({"auth"})', '"hub": frozenset()'))
+        fails = [f for f in self._run() if f.status == "fail"]
+        self.assertEqual(len(fails), 1)
+        self.assertIn("_RUNNER_PACKAGE_LAYERS", fails[0].message)
+        self.assertIn("`hub` edges differ", fails[0].message)
+
+    def test_a_planted_js_edge_mismatch_fails(self):
+        _write(self.blizzard / "web" / "scripts" / "structural-gate.js", JS_GATE.replace("'garden/core',\n  ]", "'garden/core', 'core',\n  ]"))
+        fails = [f for f in self._run() if f.status == "fail"]
+        self.assertEqual(len(fails), 1)
+        self.assertIn("HUB_LAYERS", fails[0].message)
+        self.assertEqual(fails[0].file, "architecture/frontend-structure/placement.md")
+
+    def test_a_unit_only_the_gate_holds_fails(self):
+        _write(self.blizzard / "web" / "scripts" / "structural-gate.js", JS_GATE.replace("  board: ['core'],\n", "  board: ['core'],\n  extra: [],\n"))
+        fails = [f for f in self._run() if f.status == "fail"]
+        self.assertEqual(len(fails), 1)
+        self.assertIn("unit `extra` is only in RUNNER_LAYERS", fails[0].message)
+
+    def test_a_missing_gate_name_fails(self):
+        _write(self.blizzard / "tests" / "test_layering.py", "X = 1\n")
+        fails = [f for f in self._run() if f.status == "fail"]
+        self.assertEqual(len(fails), 2)
+        self.assertTrue(all("not found" in f.message for f in fails))
+
+    def test_a_missing_doc_table_fails(self):
+        (self.context / "architecture" / "clean-architecture.md").unlink()
+        fails = [f for f in self._run() if f.status == "fail"]
+        self.assertEqual(len(fails), 2)
+        self.assertTrue(all("no layer table" in f.message for f in fails))
 
 
 class CheckGTests(unittest.TestCase):

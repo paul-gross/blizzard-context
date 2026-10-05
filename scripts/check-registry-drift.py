@@ -1750,6 +1750,177 @@ def check_G(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
 
 
 # --------------------------------------------------------------------------
+# Check H — layer tables against their gate data
+# --------------------------------------------------------------------------
+
+# Each layer table in the docs mirrors data a gate holds: where the table lives, which
+# section it sits under, how it is picked out, and the
+# gate file and name holding its edges.
+LAYER_TABLES_DOC_PYTHON = "architecture/clean-architecture.md"
+LAYER_TABLES_DOC_FRONTEND = "architecture/frontend-structure/placement.md"
+LAYER_GATE_PYTHON = "tests/test_layering.py"
+LAYER_GATE_JS = "web/scripts/structural-gate.js"
+
+# (doc file, section marker, how the table is picked out, gate file, gate name, label)
+# The Python tables are told apart by their unit-column header; the frontend tables all
+# share one header and are told apart by the project name opening the paragraph above.
+LAYER_TABLES = (
+    (LAYER_TABLES_DOC_PYTHON, "bzh:domain-package-layers", ("header", "Package"), LAYER_GATE_PYTHON, "_DOMAIN_PACKAGE_LAYERS"),
+    (LAYER_TABLES_DOC_PYTHON, "bzh:domain-package-layers", ("header", "Node"), LAYER_GATE_PYTHON, "_RUNNER_PACKAGE_LAYERS"),
+    (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "fleet"), LAYER_GATE_JS, "FLEET_LAYERS"),
+    (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "hub"), LAYER_GATE_JS, "HUB_LAYERS"),
+    (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "runner"), LAYER_GATE_JS, "RUNNER_LAYERS"),
+)
+
+
+def _doc_layer_tables(text: str, marker: str) -> list[tuple[str, int, list[str], list[tuple[int, list[str]]]]]:
+    """Every table in the ``## `` section whose heading carries ``marker``: the paragraph
+    opening just above it, the table's first line, its header cells, and its body rows as
+    (line, cells)."""
+    lines = text.splitlines()
+    start = next((i for i, ln in enumerate(lines) if ln.startswith("## ") and marker in ln), None)
+    if start is None:
+        return []
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    tables = []
+    i = start + 1
+    while i < end:
+        if not lines[i].startswith("|"):
+            i += 1
+            continue
+        first = i
+        block = []
+        while i < end and lines[i].startswith("|"):
+            block.append((i + 1, [c.strip() for c in lines[i].strip().strip("|").split("|")]))
+            i += 1
+        j = first - 1
+        while j > start and not lines[j].strip():
+            j -= 1
+        k = j
+        while k > start and lines[k - 1].strip():
+            k -= 1
+        lead = " ".join(lines[k : j + 1])
+        tables.append((lead, first + 1, block[0][1], block[2:]))
+    return tables
+
+
+def _doc_layer_edges(header: list[str], rows: list[tuple[int, list[str]]]) -> dict[str, frozenset[str]]:
+    """Unit -> its "May import" edges; the unit column is the header named Package, Node, or Unit."""
+    unit_col = next(i for i, h in enumerate(header) if h in ("Package", "Node", "Unit"))
+    edges: dict[str, frozenset[str]] = {}
+    for _line, cells in rows:
+        unit = re.search(r"`([^`]+)`", cells[unit_col])
+        if unit is None:
+            continue
+        edges[unit.group(1)] = frozenset(re.findall(r"`([^`]+)`", cells[-1]))
+    return edges
+
+
+def _py_layer_edges(path: Path, name: str) -> dict[str, frozenset[str]] | None:
+    """The dict assigned to module-level ``name``, its values ``frozenset({...})`` calls."""
+    import ast
+
+    tree = ast.parse(path.read_text())
+    for node in tree.body:
+        targets = [node.target] if isinstance(node, ast.AnnAssign) else getattr(node, "targets", [])
+        if any(isinstance(t, ast.Name) and t.id == name for t in targets) and isinstance(node.value, ast.Dict):
+            edges: dict[str, frozenset[str]] = {}
+            for key, value in zip(node.value.keys, node.value.values):
+                members = value.args[0].elts if isinstance(value, ast.Call) and value.args else []
+                edges[ast.literal_eval(key)] = frozenset(ast.literal_eval(m) for m in members)
+            return edges
+    return None
+
+
+def _js_layer_edges(path: Path, name: str) -> dict[str, frozenset[str]] | None:
+    """The object literal assigned to ``const name``, its values arrays of string literals."""
+    match = re.search(r"^const " + re.escape(name) + r" = \{(.*?)^\};", path.read_text(), re.MULTILINE | re.DOTALL)
+    if match is None:
+        return None
+    entry = re.compile(r"(?:'([^']+)'|([A-Za-z_]\w*))\s*:\s*\[(.*?)\]", re.DOTALL)
+    return {
+        (quoted or bare): frozenset(re.findall(r"'([^']+)'", members))
+        for quoted, bare, members in entry.findall(match.group(1))
+    }
+
+
+def check_H(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
+    """A doc layer table and the gate data it mirrors must hold the same units and the same
+    edges per unit; a missing table or gate name is a fail, since the comparison cannot
+    be made without it. An absent blizzard checkout is the caller's skip."""
+    findings: list[Finding] = []
+    blizzard = checkouts["blizzard"]
+    docs: dict[str, str] = {}
+    for doc_rel, marker, pick, gate_rel, gate_name in LAYER_TABLES:
+        if doc_rel not in docs:
+            doc_path = repo_root / doc_rel
+            docs[doc_rel] = doc_path.read_text(errors="replace") if doc_path.is_file() else ""
+        kind, wanted = pick
+        table = next(
+            (
+                t
+                for t in _doc_layer_tables(docs[doc_rel], marker)
+                if (kind == "header" and wanted in t[2]) or (kind == "lead" and t[0].startswith(f"`{wanted}`"))
+            ),
+            None,
+        )
+        if table is None:
+            findings.append(
+                Finding(
+                    "H",
+                    "fail",
+                    f"no layer table for {gate_name} under {marker} in {doc_rel}",
+                    doc_rel,
+                    None,
+                    f"Restore the table the gate's {gate_name} mirrors.",
+                )
+            )
+            continue
+        gate_path = blizzard / gate_rel
+        gate = None
+        if gate_path.is_file():
+            reader = _py_layer_edges if gate_rel.endswith(".py") else _js_layer_edges
+            gate = reader(gate_path, gate_name)
+        if gate is None:
+            findings.append(
+                Finding(
+                    "H",
+                    "fail",
+                    f"{gate_name} not found in blizzard {gate_rel}",
+                    doc_rel,
+                    table[1],
+                    f"Restore {gate_name}, or update LAYER_TABLES if the gate data moved.",
+                )
+            )
+            continue
+        doc = _doc_layer_edges(table[2], table[3])
+        problems = []
+        for unit in sorted(doc.keys() - gate.keys()):
+            problems.append(f"unit `{unit}` is only in the doc table")
+        for unit in sorted(gate.keys() - doc.keys()):
+            problems.append(f"unit `{unit}` is only in {gate_name}")
+        for unit in sorted(doc.keys() & gate.keys()):
+            if doc[unit] != gate[unit]:
+                only_doc = sorted(doc[unit] - gate[unit])
+                only_gate = sorted(gate[unit] - doc[unit])
+                problems.append(f"`{unit}` edges differ (doc only: {only_doc}, gate only: {only_gate})")
+        if problems:
+            findings.append(
+                Finding(
+                    "H",
+                    "fail",
+                    f"layer table drifted from {gate_name} in blizzard {gate_rel}: " + "; ".join(problems),
+                    doc_rel,
+                    table[1],
+                    f"Change the doc table and {gate_name} together so they list the same edges.",
+                )
+            )
+        else:
+            findings.append(Finding("H", "pass", f"{gate_name} matches its doc table ({len(doc)} units)"))
+    return findings
+
+
+# --------------------------------------------------------------------------
 # Interpreter / collection
 # --------------------------------------------------------------------------
 
@@ -1783,7 +1954,7 @@ def _collect(cmd_prefix: list[str], blizzard_root: Path, marker: str) -> list[st
 # checks against, so a check dropped by a missing checkout, interpreter, or
 # registry input (rather than run and passing) is caught explicitly instead
 # of inferred from warn text.
-ALL_CHECKS = ("A", "B1", "B2", "C", "C2", "D", "D2", "E", "F", "G")
+ALL_CHECKS = ("A", "B1", "B2", "C", "C2", "D", "D2", "E", "F", "G", "H")
 
 # Check F's swept markdown inside each sibling checkout. This dict instantiates
 # `bzh:one-prose-home` §Scope's Binds list, one glob per bound tree that can hold
@@ -2022,6 +2193,10 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
     findings += check_G(repo_root, checkouts)
     if {"blizzard", "blizzard-mock"} <= set(checkouts):
         executed.add("G")
+
+    if "blizzard" in checkouts:
+        findings += check_H(repo_root, checkouts)
+        executed.add("H")
 
     fail_count = sum(1 for f in findings if f.status == "fail")
     skipped = set(ALL_CHECKS) - executed
