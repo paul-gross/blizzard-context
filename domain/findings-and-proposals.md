@@ -58,14 +58,13 @@ exit applies to a `delivered` finding as to a live one.
 
 A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
 **not-a-finding**, **superseded** — and **reopened** undoes any of them, or a `gone` flag, or a delivery, the same
-append-only fact the way `gone` and `observed` already are: never a stored column, always a newest-fact-wins read.
-A routine's trend counts a `reopened` only when it undoes an exit; a reopen from `gone` or `delivered` undoes none, so it is
-not trend inflow.
-**superseded** is the one verb that names another finding: the one absorbing it, which must itself be live and is never
-the finding being exited, though it may belong to any routine or scope. An exit verb on a finding already exited is
-refused — reopen it first — and `reopened` on a live finding is refused, as is one request naming the same finding
-twice. Two people acting on one finding at once are judged in turn: the second is refused as if it had read the first
-one's verb, so a finding is never exited twice. The five split into two kinds of exit. **Outflow** — resolved,
+append-only fact the way `gone` and `observed` already are: never a stored column, always a newest-fact-wins read. A
+routine's trend counts a `reopened` only when it undoes an exit; a reopen from `gone` or `delivered` undoes none, so it
+is not trend inflow. **superseded** is the one verb that names another finding: the one absorbing it, which must itself
+be live and is never the finding being exited, though it may belong to any routine or scope. An exit verb on a finding
+already exited is refused — reopen it first — and `reopened` on a live finding is refused, as is one request naming the
+same finding twice. Two people acting on one finding at once are judged in turn: the second is refused as if it had read
+the first one's verb, so a finding is never exited twice. The five split into two kinds of exit. **Outflow** — resolved,
 gone-confirmed — is the ground itself changing: work landed, or a person confirmed by hand that the finding no longer
 reproduces, the same kind of event a `gone` fact already reports, just said with a person's authority instead of a
 run's. **Withdrawn** — wont-fix, not-a-finding, superseded — is a judgment call about the finding itself, never the
