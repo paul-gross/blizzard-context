@@ -28,13 +28,14 @@ default scope, or its run preferences, but never what it is named.
 
 A scope and a routine each carry the same reversible, append-only retirement brake a graph does: retiring one and
 re-enabling it are both facts recorded over time, never a destructive edit, and either direction leaves the retired
-thing's own stored fields untouched. A repeated retire or enable is legal and appends another identical fact, which the
-newest-fact-wins read takes as no change. What retiring a scope does is withdraw it from selection — a retired scope is
-offered to no new run, and a routine's record of when it last swept each scope covers a retired one only where that
-routine has already swept it — while nothing recorded under it moves: its findings keep whatever state they had, and
-stay queryable, and its membership in a routine's declared set stands until an explicit unlink. Naming a retired scope
-again, by minting it or as a routine's default, is not refused, and neither is editing its description or linking it
-into a routine's declared set; running against it is ([What refuses](#what-refuses)).
+thing's own stored fields untouched. A repeated retire or enable is legal and writes nothing — no fact, no change —
+where a graph's repeated retire or enable appends another identical fact, which the newest-fact-wins read takes as no
+change. What retiring a scope does is withdraw it from selection — a retired scope is offered to no new run, and a
+routine's record of when it last swept each scope covers a retired one only where that routine has already swept it —
+while nothing recorded under it moves: its findings keep whatever state they had, and stay queryable, and its membership
+in a routine's declared set stands until an explicit unlink. Naming a retired scope again, by minting it or as a
+routine's default, is not refused, and neither is editing its description or linking it into a routine's declared set;
+running against it is ([What refuses](#what-refuses)).
 
 Retiring a routine withdraws it from running only: it keeps every run, finding, proposal, and closure recorded under it,
 each staying exactly as queryable as before, and it stays editable and fully readable — naming it, viewing it, changing
