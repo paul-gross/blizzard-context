@@ -271,7 +271,9 @@ taking the seam or a public module.
 none of them imports a blizzard package outside it — `hub`, `runner`, `cli`, or `tools` — directly or transitively.
 Every vocabulary type a wire model carries has exactly one definition, in the kernel (`foundation/`, one module per
 vocabulary); the daemons import it from there, with no re-export at an old home, no mirror, and no mapping layer. The
-business rules over that vocabulary stay in each daemon's domain (`bzh:domain-core`).
+business rules over that vocabulary stay in each daemon's domain (`bzh:domain-core`). Within a daemon, a `wire/` model
+is named only at its app boundary, which maps it to domain models (`bzh:data-roles`,
+[./data-roles.md](./data-roles.md)).
 
 **Why.** A wire model importing a daemon's domain type makes importing the wire load that daemon, so the hub loads
 runner modules and the runner loads hub modules through it. The wire stops being the one place a vocabulary changes, and
@@ -416,4 +418,4 @@ or `from blizzard.hub.domain.chunk import Chunk` through a re-exporting `chunk/_
 importing `RunnerConfig` — a concept package reaching an edge; it takes a `RolePolicy` instead.
 
 **See also.** `bzh:domain-core` governs what every domain package may not import outward; `bzh:shared-kernel` governs
-the `wire/` vocabulary both daemons' domains import.
+the `foundation/` vocabulary both daemons' domains share with `wire/`.
