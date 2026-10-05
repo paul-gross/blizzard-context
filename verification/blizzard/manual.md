@@ -818,8 +818,9 @@ the two reads.
 ### `blizzard:manual-egress-warehouse`
 
 **Surface.** A kept fact-egress directory copied to object storage with the docs' own `rclone` recipe, loaded into a
-warehouse from each manifest's file list, and read in a BI tool: cost by node by day and the slowest station of the
-week, equal to the DuckDB recipes over the same directory. `blizzard:e2e`'s night module proves the files and the DuckDB
+warehouse from each manifest's file list, and read in a BI tool: cost by node by day, the slowest station of the
+week, and from the events dataset the files a station read last week and counts by skill, equal to the DuckDB recipes
+over the same directory. `blizzard:e2e`'s night module proves the files and the DuckDB
 recipes; no tier proves a warehouse and a BI tool can read them from the dictionary alone.
 
 **Blind spot.** The format read is Parquet, from the night module's second export; NDJSON is not loaded. MinIO,
@@ -847,8 +848,16 @@ these two reads is not measured.
 5. Run the docs' two DuckDB recipes over the same directory and record each answer beside Grafana's. Change nothing in
    `blizzard` between the reads.
 
+6. Run `BLIZZARD_E2E=1 uv run pytest tests/e2e/test_egress_events_e2e.py --basetemp <dir>` and copy its NDJSON `export`
+   directory the same way. In ClickHouse, create a table over the `events` files from the manifests' file list, and
+   paste `contracts/egress/events_current.sql` over it unchanged as `events_current`.
+7. In Grafana, add a table panel of the files each station read in the last seven days and one of counts by skill, from
+   `events_current` alone. Run the docs' `files-a-station-read-last-week` recipe and a count by `subject` over
+   `kind = 'skill_invocation'` in DuckDB over the same directory, and record each beside Grafana's.
+
 **Passes when.** Grafana's two panels give the same stations, days, billed and estimated cost and slowest station as
-DuckDB over the same directory, and no `blizzard` file changed between the reads. Record both answers.
+DuckDB over the same directory, its events panels give the same files by station and skill counts as DuckDB, and no
+`blizzard` file changed between the reads. Record all answers.
 
 **Recorded reading** (one night run, kept with `--basetemp`; the Parquet export held a live pass and a backfill pass, so
 each row existed twice and the newest-copy view collapsed 36 `steps` rows to 18 and 52 `invocations` rows to 26; the
