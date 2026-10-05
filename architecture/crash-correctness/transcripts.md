@@ -25,6 +25,11 @@ A record-cap shrink (`record_cap_exceeded`) or an unshippable record (`record_un
 transactions in sequence: `record_transcript_deltas`, then `mark_transcript_record_truncated` for the segment's own
 reason field, latched per segment and reason, then `OutboundFacts.transcript_truncated`, the fact-lane `warning` event.
 
+The hub's two per-record rejections latch through that same reason-field-then-fact pair, from `TranscriptDrain`'s ack
+loop rather than the pump: a record the hub capped marks `hub_capped`, and a record it refused — its chunk and epoch
+belong to the hub or another runner, so it stored none of it — marks `hub_refused`, the worst-ranked reason. Both are
+acked so the FIFO never wedges.
+
 A chunk-budget breach (`chunk_budget_exceeded`) is a different write shape, not the same one under another reason
 string: neither of `TranscriptPump._pump_one`'s two call sites writes a delta at all, and each fires
 `stop_transcript_segment_shipping` and then the same fact-lane warning. A budget breach's reason field is re-derived
