@@ -111,13 +111,14 @@ Stated so a reviewer need not re-derive them:
   scripts reach it directly through the `run:` env contract's `BZ_FORGE_*` variables, outside the Rule's sites (a loop
   step, domain, or store) because the script is the landing policy
   ([../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md) owns how tests bind the mock forge
-  for this path). Land scripts and `GitHubCommitResolver` share the hub's one configured forge endpoint
-  (`BZ_FORGE_URL`/`BZ_FORGE_TOKEN`/`BZ_FORGE_OWNER`); the work-source family and the OAuth provider each declare their
-  own endpoint through their own config entry instead. The garden commit resolver sees only bare repo names, so it
-  always qualifies by `BZ_FORGE_OWNER`, defaulting to `hub/app.py::DEFAULT_FORGE_OWNER` when unset; delivery instead
-  qualifies a repo from the `git_commit` artifact's recorded origin before a land script ever runs, and the script falls
-  back to `BZ_FORGE_OWNER` only when that origin was still a bare name; and a chunk whose first pointer is a `hub:` item
-  gets no branch links, because `HubWorkSource.branch_url` is always `None`.
+  for this path). The hub holds no shared forge endpoint and no owner fallback: each repository is a record naming its
+  forge, owner, base branch and secret, and a `deliver` step and the garden commit resolver each resolve the repository
+  they act on to its record on every use; the work-source family and the OAuth provider each declare their own endpoint
+  through their own record or config entry likewise. A `deliver` step resolves the chunk's commit pointers before any
+  command runs and fills the `BZ_FORGE_*` and `BZ_HUB_BASE_BRANCH` variables from the one record they resolve to; the
+  pointers must resolve, and agree, or the step is refused. The garden commit resolver sees only bare repo names, so it
+  resolves a name or `owner/repo` against the enabled records and answers nothing for one no record names; and a chunk
+  whose first pointer is a `hub:` item gets no branch links, because `HubWorkSource.branch_url` is always `None`.
 
 ### Seams answer their binding's facts (`bzh:seam-answers-binding-facts`)
 
