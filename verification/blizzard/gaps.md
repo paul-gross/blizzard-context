@@ -339,3 +339,14 @@ hub): one real node-step observed showing its `~`-marked figure on the board and
 folded into the billed amount. Nothing repeats that observation automatically, so the change's author owes it by hand.
 Do not add a real-token/live-OpenCode CI tier to close this — an external harness's live pricing behavior sits outside a
 hermetic, network-free CI tier's reach.
+
+## Per-key non-serialization of keyed write locks
+
+`keyed_locks` rows (`bzh:store-exclusive-write`) serialize two ingests of one pointer, or two first mints of one graph
+name, while letting writers of different keys proceed. That per-key property holds only on Postgres. Every tier runs on
+SQLite, whose single writer lock serializes every writer whatever its key, so no tier can observe a writer of a
+different key proceeding, or a concurrent insert of one key losing to an `IntegrityError`.
+
+Standing in for a tier: the per-key structure, asserted at `blizzard:component-test` on what is written — each ingest
+locks only the `keyed_locks` rows of its own pointers — together with the same-key interleaving, which SQLite does
+exercise. Do not add a Postgres tier to close this.
