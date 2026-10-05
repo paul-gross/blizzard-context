@@ -328,24 +328,29 @@ cross-fact invariant a second writer could disagree with.
 
 ## The credential-renewal window
 
-`ExternalUsageSample._sample_one` (`blizzard/src/blizzard/runner/loop/steps.py`) asks a subscription's renewer binding
-to `renew_if_due()` before the sample it is about to take, and only then records the attempt — outcome, miss reason, and
-renewal outcome — through `UsageStore.record_external_usage_attempt`
-(`blizzard/src/blizzard/runner/store/internal/usage_store.py`), which lands the attempt row and its outbound report in
-one transaction. The renewal itself is the vendor CLI's own rewrite of its credential file, driven as a bounded one-shot
-subprocess (`blizzard/src/blizzard/runner/subscriptions/internal/openai_credential_renewer.py`): blizzard never opens
-that file for writing (`bzh:subscriptions-no-write`).
+`CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on its own driver in
+`runner host`, never in the tick. Per slug it gates on the newest claim's cadence, asks the renewer binding whether a
+renewal is due, then writes three steps in order: it commits a claim through `UsageStore.claim_credential_renewal`,
+fires the renewal, and commits the outcome through `UsageStore.record_credential_renewal_outcome`
+(`blizzard/src/blizzard/runner/store/internal/usage_store.py`). The claim and the outcome are separate append-only
+facts, and the claim is never updated. The renewal itself is the vendor CLI's own rewrite of its credential file, driven
+as a bounded one-shot subprocess (`blizzard/src/blizzard/runner/subscriptions/internal/openai_credential_renewer.py`):
+blizzard never opens that file for writing (`bzh:subscriptions-no-write`).
 
-This is a **real window**, and its loss is **accepted**: a `kill -9` between the vendor's rewrite landing and blizzard's
-attempt row committing loses only that attempt row and the `renewal` outcome it would have carried. The credential file
-is the vendor's own atomic, lock-guarded write either way, so the renewed token is on disk regardless; the next cadence
-re-reads its expiry, finds it not due, samples, and records an attempt row as if the lost one had never been owed.
-Nothing derives from the missing row: the slug's cadence anchor is the newest attempt, so the only cost is one cadence
-sampling early, and the runner-local diagnostics showing the previous attempt's renewal outcome until the next one
-lands.
+The window runs from the claim, through the vendor's rewrite, to the outcome. It is a **real window**, and its loss is
+**accepted**, an exemption rather than a crash point. A `kill -9` inside it loses only the outcome row. The claim is
+already durable, so the slug's newest renewal reads as *unrecorded* in the runner-local diagnostics. The claim also
+anchors the slug's renewal cadence, so the renewal is never repeated within that cadence. A claim that fails to commit
+fires no renewal at all, and an outcome write that fails leaves the same standing claim a crash does. The credential
+file is the vendor's own atomic, lock-guarded write either way, so a renewed token is on disk regardless, and the slug's
+next sample reads it.
 
-The write owes the invariant checker nothing: the attempt row is an append-only fact, and the renewal outcome it carries
-is never cross-checked against the credential file it describes.
+A renewal still in flight when `runner host` shuts down is the same case. The driver's `stop()` waits a bounded time,
+then abandons the pass. The vendor child leads its own session and finishes its own atomic write, and the outcome it
+would have recorded is lost, reading as unrecorded.
+
+The writes owe the invariant checker nothing: both are append-only facts, and the outcome is never cross-checked against
+the credential file it describes.
 
 ## The per-lease scratch directory
 
