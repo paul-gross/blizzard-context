@@ -36,16 +36,15 @@ parked entry, the guarantee lasts exactly as long as the park: supersede that pa
 to a fresh attempt. The takeover contributes no condition of its own: the chunk goes on deriving from its own facts, and
 carries human-in-session detail exactly while the takeover is open. Nor does the runner move the chunk on under the
 person: it neither resolves a decided gate nor enters a node the hub advanced the chunk to. It still steps a chunk
-parked at a hub node, and gives the environments back once the chunk ends. A runner restarted while holding such a
-chunk reconciles its binding the same way: a restart-entry adopt holds while a takeover is open at the chunk's latest
-epoch, and proceeds once it ends or a re-claim mints above its reach; the release, reclaim, and requeue-resume arms
-still run.
+parked at a hub node, and gives the environments back once the chunk ends. A runner restarted while holding such a chunk
+reconciles its binding the same way: a restart-entry adopt holds while a takeover is open at the chunk's latest epoch,
+and proceeds once it ends or a re-claim mints above its reach; the release, reclaim, and requeue-resume arms still run.
 
 An operator's restart ([../work/restart.md](../work/restart.md)) recorded against a taken-over chunk lands in full — the
 hub keeps no takeover state to refuse it — and supersedes any park with it. Against a still-open lease the runner defers
 the teardown indefinitely while the person works at the now-stale epoch, and ending the takeover lets the re-entry
-follow; against a lease the escalation already closed, the restart's adoption holds the same way — the runner
-keeps its binding and spawns nothing into the person's workdir until the takeover ends.
+follow; against a lease the escalation already closed, the restart's adoption holds the same way — the runner keeps its
+binding and spawns nothing into the person's workdir until the takeover ends.
 
 ## Ending
 
