@@ -35,13 +35,14 @@ being read.
 ## Session stickiness, effective model, and context accounting
 
 The session-model contract — owned by [declared sessions](../../domain/graphs/declared-sessions.md#model-preference) —
-is proven at the flag, never at the model a harness ran under. Where a harness takes no model on resume, the contract
-rests on that harness restoring a resumed session's own model. The live OpenCode compatibility diagnostic now checks
-that the requested provider/model and variant survive fresh and resumed exports, but it deliberately supplies them on
-every invocation and therefore does not assert effective model stickiness when they are omitted. No tier asserts the
-effective context accounting a harness ran under, because the mock façade sees argv and nothing else. `blizzard:e2e`'s
-`test_session_modes_e2e.py::test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model` asserts the flag
-— the mint and every resume carry the same resolved model — and stops there.
+is proven at the flag, never at the model a harness ran under. Where the runner supplies no model on resume — OpenCode,
+whose resume passes only the session — the contract rests on that harness restoring a resumed session's own model, and
+nothing asserts that restoration. The live OpenCode compatibility diagnostic now checks that the requested
+provider/model and variant survive fresh and resumed exports, but it deliberately supplies them on every invocation and
+therefore does not assert effective model stickiness when they are omitted, as the runner's resumes omit them. No tier
+asserts the effective context accounting a harness ran under, because the mock façade sees argv and nothing else.
+`blizzard:e2e`'s `test_session_modes_e2e.py::test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model`
+asserts the flag on the Claude Code façade — the mint and every resume carry the same resolved model — and stops there.
 
 Standing in for a tier: what backs the surrounding export behavior is a one-time empirical observation of Claude Code
 CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted range (currently `>=1.18.25,<2.0`).

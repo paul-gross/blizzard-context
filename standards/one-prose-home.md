@@ -124,14 +124,14 @@ coverage.
 ## Do
 
 ```python
-# Per-invocation model reassertion: see IHarnessAdapter.spawn.
+# Per-invocation knob application: see IHarnessAdapter.spawn.
 ```
 
 ## Don't
 
 ```python
-# The session's resolved model is reasserted on every invocation — a resume is not
-# trusted to restore it (the same contract IHarnessAdapter.spawn states).
+# Each binding applies the model/effort/compaction knobs its harness needs on every
+# invocation, resume included (the same contract IHarnessAdapter.spawn states).
 ```
 
 ## See also
