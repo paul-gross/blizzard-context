@@ -90,6 +90,43 @@ CLI (`bzh:pluggable-seams`, [../system-shape.md](../system-shape.md)); the YAML 
 **Don't.** A CLI verb that reads its file with `yaml.safe_load` and posts the result — the document it accepts is no
 longer the document the API accepts.
 
+## A declarative apply is a door, one transaction, and never a retire (`bzh:config-apply`)
+
+**Rule.** Treat a declarative apply as a door into the configured records and not an owner of them: it reconciles each
+record the document names through the verbs the record's model already decides — create when absent, a sparse edit of
+only the fields the entry states when present, enable when retired — and writes nothing for a record that already stands
+as declared. Commit every write of one apply in a single transaction, each beside its `config_changes` row, with the
+door set to `apply` by the server and every row sharing one `apply_id`. Never retire a record because the document omits
+it. A dry run is the same transaction rolled back, so it reaches every refusal a real apply reaches and returns the
+outcome the real apply would.
+
+**Why.** An apply that owned the records would read an omitted record as a wish to remove it, and a document that left
+out one entry could retire it. An apply that committed per record would leave a half-applied document behind its first
+refusal. A dry run assembled from reads cannot know what a write's own checks — secret availability, uniqueness, the
+compare-and-set — will refuse, so only the real transaction rolled back reports truthfully.
+
+**Scope.** Binds every kind a document carries, now and as scopes and routines join it. A kind added to the document
+adds its writes to the one transaction and its entries to the outcome rows; it takes no transaction of its own.
+
+**Detect.**
+
+- An apply path that commits per record or opens a second transaction.
+- A retire, or any lifecycle write other than enable, driven by a record's absence from the document.
+- A dry run that reads the store and predicts instead of running the writes and rolling them back.
+- A change row from an apply with a door other than `apply`, or without the shared `apply_id`.
+- An `apply` door value read from a request header or body.
+
+**Do.** `ConfigAuthoring.apply` (`blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan,
+`blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it) is the reference: the plan is pure, the writer
+runs each planned write through the same per-operation bodies the per-record adapters run, and a dry run raises a
+private sentinel after the last write so the store rolls back.
+
+**Don't.** A dry run that checks "would this name collide" with a select of its own — it passes while the real apply
+fails on a check the select did not know to make.
+
+**See also.** `bzh:configured-record` above owns the sparse merge and the change row; `bzh:config-codec` owns how the
+document decodes.
+
 ## A secret value is write-only (`bzh:secret-write-only`)
 
 **Rule.** Never return or record a secret value: no route reads one back, and no response, log line, span attribute,
