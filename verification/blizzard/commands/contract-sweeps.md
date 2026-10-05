@@ -93,13 +93,12 @@ red, then reverting (`bzh:case-pins-its-own-name`). The change policy lives in `
 `uv run pytest tests/test_egress_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the `steps`,
 `invocations` and `events` datasets the hub exports against the corpus `contracts/egress/`: `dictionary.json` and the
 view `.sql` files each dataset declares (`<dataset>_newest`, and for `events` `events_current` and `events_by_version`),
-authored by hand, and the generated `_schema/*.v1.json` and `golden/<scenario>/` —
-`BLIZZARD_REGEN_EGRESS_CONTRACT=1` on the same command rewrites those and the generated dictionary block of
-`docs/deployment/egress.md`, never the dictionary or the views. The contract is authoritative and the code is checked
-against it: the `DatasetSchema` built from the dictionary must equal `STEPS_SCHEMA`, `INVOCATIONS_SCHEMA` and `EVENTS_SCHEMA` in
-column order, type, nullability and meaning, and its closed enumerated values must equal `StepKind`, `StepOutcome`,
-`PrecededBy` and the `RECORD_*` constants. Each events column names the record types it appears on, and a golden row
-fills only those.
+authored by hand, and the generated `_schema/*.v1.json` and `golden/<scenario>/` — `BLIZZARD_REGEN_EGRESS_CONTRACT=1` on
+the same command rewrites those and the generated dictionary block of `docs/deployment/egress.md`, never the dictionary
+or the views. The contract is authoritative and the code is checked against it: the `DatasetSchema` built from the
+dictionary must equal `STEPS_SCHEMA`, `INVOCATIONS_SCHEMA` and `EVENTS_SCHEMA` in column order, type, nullability and
+meaning, and its closed enumerated values must equal `StepKind`, `StepOutcome`, `PrecededBy` and the `RECORD_*`
+constants. Each events column names the record types it appears on, and a golden row fills only those.
 
 The golden is the real `DirectoryEgressWriter` run over the shared tracing scenarios, exported in a first pass and a
 second that repeats one step and one invocation, with the token, pass stamps and `exported_at` fixed; it holds
@@ -109,8 +108,8 @@ equal the contract rendered by the writer's own serializer and the bytes the wri
 `docs/deployment/egress.md` must equal the contract rendered, and the page's published newest-copy views run in DuckDB
 over the golden, returning one row per identity at its latest `exported_at`; the two events views run there too, and the
 test states each golden segment's expected outcome (upgraded, old-version-only, emptied, dropped, revived, exported
-twice, two kinds at one place, a depth-two sidechain). `docs/versioning.md` must name the egress
-contract. `duckdb` is a dev dependency, never an optional import, so the view check cannot skip.
+twice, two kinds at one place, a depth-two sidechain). `docs/versioning.md` must name the egress contract. `duckdb` is a
+dev dependency, never an optional import, so the view check cannot skip.
 
 Falsify it by changing one `meaning` in `hub/domain/observability/egress/schema.py`, a value in `step_row`'s output, one
 `StepOutcome` value in the dictionary, or the view's `exported_at DESC` ordering followed by regeneration, observing red

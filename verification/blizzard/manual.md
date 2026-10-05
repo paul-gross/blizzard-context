@@ -818,10 +818,10 @@ the two reads.
 ### `blizzard:manual-egress-warehouse`
 
 **Surface.** A kept fact-egress directory copied to object storage with the docs' own `rclone` recipe, loaded into a
-warehouse from each manifest's file list, and read in a BI tool: cost by node by day, the slowest station of the
-week, and from the events dataset the files a station read last week and counts by skill, equal to the DuckDB recipes
-over the same directory. `blizzard:e2e`'s night module proves the files and the DuckDB
-recipes; no tier proves a warehouse and a BI tool can read them from the dictionary alone.
+warehouse from each manifest's file list, and read in a BI tool: cost by node by day, the slowest station of the week,
+and from the events dataset the files a station read last week and counts by skill, equal to the DuckDB recipes over the
+same directory. `blizzard:e2e`'s night module proves the files and the DuckDB recipes; no tier proves a warehouse and a
+BI tool can read them from the dictionary alone.
 
 **Blind spot.** The format read is Parquet, from the night module's second export; NDJSON is not loaded. MinIO,
 ClickHouse and Grafana stand in for the operator's own bucket, warehouse and BI tool, and a loader's behavior beyond
