@@ -405,7 +405,8 @@ modules, mapped to a node. `test_runner_layer_check_counts_every_import_form`,
 `test_runner_unused_edge_check_catches_an_edge_no_import_walks`, and `test_runner_layer_cycle_check_catches_a_cycle`
 prove each check fires on planted trees. The fix moves the shared type down into the lower package, or the dependent
 code up; a new edge is a change to this table and the dict together, made only when an import needs it and only when
-both stay acyclic, and an edge whose last import is removed leaves both.
+both stay acyclic, and an edge whose last import is removed leaves both. `scripts/check-registry-drift.py` check H fails
+when either table here and its dict differ in a unit or an edge.
 
 **Do.** `UNSET` lives in `blizzard/src/blizzard/hub/domain/kernel/unset.py`, so `config`, `garden`, and `work_items`
 take it without importing `operations`. The requeue and attachment repository seams live in
