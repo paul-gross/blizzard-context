@@ -68,9 +68,20 @@ model lives here.
 | `blizzard/src/blizzard/runner/cli/` | The runner's operator commands                                         |
 | `blizzard/src/blizzard/cli/`        | The top-level `blizzard` command                                       |
 
-A DTO is named only inside the boundary, by the adapter that sends or receives it (`blizzard/src/blizzard/runner/hub/`
-for `wire/`), and by a composition root (`bzh:dependency-injection`). A domain or adapter module importing a `wire/`
-model is a violation the gate holds to a closed list that only shrinks ([Detect](#detect)).
+A DTO is named only inside the boundary, by a composition root (`bzh:dependency-injection`), and by the adapters that
+send or receive the `wire/` contract itself:
+
+- `blizzard/src/blizzard/runner/hub/` — the runner's hub client, which maps the wire to the runner's domain models
+- `blizzard/src/blizzard/hub/events/broker.py` and `blizzard/src/blizzard/runner/events/broker.py` — the two daemons'
+  SSE brokers, which publish the wire's frame payloads
+- `http_archived_transcript_repository.py` and `segment_projection.py` under
+  `blizzard/src/blizzard/runner/transcripts/internal/` — the runner's read-back of its own shipped transcript segments
+
+Any other module importing a `wire/` model is a violation ([Detect](#detect)). A format the boundary already validated
+on ingest — a transcript's turns — is rebuilt from the store into domain models, like any row. A JSON format a worker
+writes into an artifact and the hub stores raw — a garden delta — is parsed at the boundary behind a port the domain
+declares (`blizzard/src/blizzard/hub/domain/garden/formats.py`'s `IGardenFormats`, bound in
+`blizzard/src/blizzard/hub/api/garden_formats.py`).
 
 ### Domain model
 
@@ -153,9 +164,8 @@ handle — infers orchestration instead and carries no marker.
   class or a non-data class, or a data class built by a call.
 - `test_a_dto_lives_at_the_app_boundary` — a `@dto` or a pydantic model outside the [app boundary](#app-boundary), or a
   `@domain_model` or `@adapter_model` inside it.
-- `test_only_the_boundary_names_a_wire_model` — a module outside the boundary, `runner/hub/`, and the composition roots
-  importing from `blizzard.wire`, unless the closed list in the test names it; a listed module that no longer imports
-  one fails too, so the list only shrinks.
+- `test_only_the_boundary_names_a_wire_model` — a module outside the boundary, the wire adapters, and the composition
+  roots importing from `blizzard.wire`.
 - `test_an_adapter_model_crosses_no_protocol` — a Protocol member naming an `@adapter_model`.
 - `test_a_domain_model_holds_no_collaborator` — a `@domain_model` field mentioning a collaborator: a port, a clock, a
   driver handle, or a `@collaborator`, at any depth.
