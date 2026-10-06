@@ -53,10 +53,9 @@ machine-checkable halves — seeder per-chunk status agrees with the hub's own `
 the seeded rows with no restart — leaving this method only the human-eye half: whether the board renders the seeded
 facts correctly.
 
-**Setup.** Before seeding, confirm the env's hub runtime config carries zero `[[work_source]]` blocks —
-`cat $BZ_HUB_RUNTIME/blizzard-hub.toml`; a fresh `hub init` scaffold emits the work-source block only as a commented-out
-example — and that no forge fixture has been minted for the env: `blizzard-mock-fixture` was never run against it, so
-`tool:mock-fleet`'s forge is up but fronts no origins.
+**Setup.** Before seeding, confirm the env's hub holds zero work source records — `blizzard hub source list` shows only
+the built-in `hub` source — and that no forge fixture has been minted for the env: `blizzard-mock-fixture` was never run
+against it, so `tool:mock-fleet`'s forge is up but fronts no origins.
 
 **Steps.**
 
