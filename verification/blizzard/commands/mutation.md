@@ -57,9 +57,9 @@ changed function is `no-changes` and is not run. Changed files no scope owns —
 exclusions — are listed, not run. A `REV` that names no commit exits 2 and runs nothing.
 
 `--delta-budget` is one wall-clock budget for the whole delta, preparation included; its default, 1800 seconds, lives in
-`scripts/mutation.py`. It is not `--budget`, which bounds one scope's execution only, and passing both is refused. A
-scope still running at the deadline is killed and reported `over-budget`, and a scope not yet started is reported
-`over-budget` too; scopes already finished keep their results.
+`scripts/mutation.py`. It is not `--budget`, which bounds one scope's execution only, and passing both is refused, as is
+`--delta-budget` with a named scope. A scope still running at the deadline is killed and reported `over-budget`, and a
+scope not yet started is reported `over-budget` too; scopes already finished keep their results.
 
 The delta run always writes `mutants/delta-report.json` beside `mutants/report.json` and exits 0 whenever it does. The
 report records `since`, the budget, total `elapsed_seconds`, `unscoped_files`, and one entry per touched scope with its
