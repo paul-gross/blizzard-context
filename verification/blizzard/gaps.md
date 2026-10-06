@@ -90,25 +90,27 @@ parser can name; a live `opencode export` against a genuinely absent session id 
 ## Capability-matched peek's hold-vs-pass-over distinction, and a bare node's chunk-declared default at spawn
 
 `test_mixed_harness_dispatch_service.py`'s own module docstring and section comments record two proofs the mock hub's
-fidelity leaves unreachable. First, `[queue] strict`'s hold-vs-pass-over distinction for capability-matched peek:
-`POST /api/fleet/queue/peek`'s matched form resolves the calling runner from a bare `runner_id` query param, never sent
-by the real production `HttpHubClient` (which carries none — the real hub instead resolves the caller from its own
-authenticated principal, a scheme this mock's fleet routes never implement). A real runner's peek against this mock
-therefore always 401s the matched form and falls back to the legacy, capability-unfiltered read, so both
-`[queue] strict` configurations send the peek the same now-ignored `policy` value and the distinction itself is
-genuinely unreachable here — the CLAIM endpoint's own capability revalidation is still real and proven end to end
-regardless, keyed off the claiming `runner_id` from the claim body rather than peek identity. Second, a bare node
-honoring the chunk's own declared default all the way through spawn: `blizzard-mock-hub`'s own `envelope()` route,
-unlike the real hub's `EffectiveSession.of`, never bakes the chunk's `default_harnesses` back onto the node before
-handing the envelope to the runner, so while a bare node's real CLAIM does honor the chunk's own declared default
-(proven), the SPAWN that follows still falls through to `Spawner.spawn`'s own no-`session_harnesses` fallback — this
-runner's own configured default, never the chunk's declared one.
+fidelity leaves unreachable:
 
-Standing in for a tier: a `blizzard-mock` fidelity fix to the matched-peek route — resolving the calling runner the way
-the real hub does, off its authenticated principal rather than a bare query param — would close the first limitation;
-baking `default_harnesses` onto the envelope's node the way `EffectiveSession.of` does would close the second. Do not
-invent either behavior at the unit or component tier: both are hub-side routing decisions this suite means to prove
-against the real production `HttpHubClient`/`Spawner.spawn` path, never a hand-built substitute.
+1. **`[queue] strict`'s hold-vs-pass-over distinction for capability-matched peek.** `POST /api/fleet/queue/peek`'s
+   matched form resolves the calling runner from a bare `runner_id` query param, never sent by the real production
+   `HttpHubClient` (which carries none — the real hub instead resolves the caller from its own authenticated principal,
+   a scheme this mock's fleet routes never implement). A real runner's peek against this mock therefore always 401s the
+   matched form and falls back to the legacy, capability-unfiltered read, so both `[queue] strict` configurations send
+   the peek the same ignored `policy` value and the distinction itself is unreachable here — the CLAIM endpoint's own
+   capability revalidation is real and proven end to end regardless, keyed off the claiming `runner_id` from the claim
+   body rather than peek identity. A `blizzard-mock` fidelity fix to the matched-peek route — resolving the calling
+   runner the way the real hub does, off its authenticated principal rather than a bare query param — would close it.
+2. **A bare node honoring the chunk's own declared default all the way through spawn.** `blizzard-mock-hub`'s own
+   `envelope()` route, unlike the real hub's `EffectiveSession.of`, never bakes the chunk's `default_harnesses` back
+   onto the node before handing the envelope to the runner, so while a bare node's real CLAIM does honor the chunk's own
+   declared default (proven), the SPAWN that follows falls through to `Spawner.spawn`'s own no-`session_harnesses`
+   fallback — this runner's own configured default, never the chunk's declared one. Baking `default_harnesses` onto the
+   envelope's node the way `EffectiveSession.of` does would close it.
+
+Standing in for a tier: neither item has one. Do not invent either behavior at the unit or component tier: both are
+hub-side routing decisions this suite means to prove against the real production `HttpHubClient`/`Spawner.spawn` path,
+never a hand-built substitute.
 
 ## The worker deny list
 
@@ -268,9 +270,9 @@ correctly, or that `retrospective` can reconstruct the journey from the chunk's 
 memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-push` — is asserted by nothing: a prompt is an input to a model
 no tier runs.
 
-The same residue now also covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and
-`bas-hwf`'s `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through
-on every lane — and each lane's `pre-push.md` rebase-to-empty qualifier. `land_pr_ci`'s own classification is proven by
+The same residue covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and `bas-hwf`'s
+`iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through on every lane
+— and each lane's `pre-push.md` rebase-to-empty qualifier. `land_pr_ci`'s own classification is proven by
 `blizzard:unit-test`'s scripted-forge cases and `tests/test_graph_authoring.py`'s per-lane edge/addendum pins; that a
 worker reads the addendum's repair charge correctly, or applies the loop bound's chunk-history check rather than
 repeating the repair a second time, is not. Nor is whether a `failure` bounce's own-defect case is actually triaged
@@ -278,17 +280,17 @@ repeating the repair a second time, is not. Nor is whether a `failure` bounce's 
 tier asserts that a repair worker reads a foreign-advance `failure` correctly, rather than adopting the foreign commit
 under `resolved`.
 
-Every lane's `retrospective.md` now verifies landing by the PR's own merge state and its merged sha's reachability from
+Every lane's `retrospective.md` verifies landing by the PR's own merge state and its merged sha's reachability from
 base, never the sha pre-push declared — no tier reads this leg back; a worker misreading it (checking the wrong sha, or
 skipping the merge-state read) is silent until a live chunk exposes it.
 
-`adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-push.md` addenda, now scope a second or later visit to
-the delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method
-covers pass without a re-run. The byte bars and `tests/test_adw_docket.py`'s pointer census still hold the prompts'
-mechanics; that a re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix,
-scopes by the change's own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the
-prior report records as failed, and records the scoping decision in the new report is asserted by nothing — a scoping
-that quietly skips a method the delta touches passes the same as an honest one until a live chunk exposes it.
+`adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-push.md` addenda, scope a second or later visit to the
+delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method covers
+pass without a re-run. The byte bars and `tests/test_adw_docket.py`'s pointer census hold the prompts' mechanics; that a
+re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix, scopes by the change's
+own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the prior report records
+as failed, and records the scoping decision in the new report is asserted by nothing — a scoping that quietly skips a
+method the delta touches passes the same as an honest one until a live chunk exposes it.
 
 `adv-dwf`'s `mutation.md`, `mutation.judgement.md`, and `review.from-mutation.md`, and the survivor bullet in
 `build.from-review.md`, carry the delivery-time mutation report's whole method: run the project's declared diff-scoped

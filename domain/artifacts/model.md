@@ -38,12 +38,12 @@ scope-qualified ([declarations](../../standards/worker-nodes/declarations.md)) �
 ([envelope](../execution/envelope.md)). What a graph-scope read costs is owned by `bzh:graph-scope-reads-local` in
 [artifact-scopes](../../architecture/system-shape/artifact-scopes.md).
 
-**System scope** — a global, slash-bearing name that is not per-graph: blizzard itself publishes the content, once, in a
-namespace every graph and every chunk reads the same copy of. It is read-only the same way graph scope is — no worker
-ever produces a system artifact, and `create`, `commit`, and `staged` all refuse it — but unlike graph scope, every read
-is a live hub call, never answered from anything the runner mirrors locally. What that liveness costs, and why it binds
-system scope and not graph scope, is owned by `bzh:system-scope-reads-live` in
-[artifact-scopes](../../architecture/system-shape/artifact-scopes.md).
+**System scope** — a global name that is not per-graph and may be slash-grouped (`garden/finding-format`): blizzard
+itself publishes the content, once, in a namespace every graph and every chunk reads the same copy of. It is read-only
+the same way graph scope is — no worker ever produces a system artifact, and `create`, `commit`, and `staged` all refuse
+it — but unlike graph scope, every read is a live hub call, never answered from anything the runner mirrors locally.
+What that liveness costs, and why it binds system scope and not graph scope, is owned by `bzh:system-scope-reads-live`
+in [artifact-scopes](../../architecture/system-shape/artifact-scopes.md).
 
 Provenance discriminates the scopes: a node-scope artifact knows the chunk, the exact node, and the attempt that
 produced it; a graph-scope artifact's only provenance is the mint that baked it; and a system-scope artifact's only

@@ -22,6 +22,11 @@ mint-time validator rejects. A red check reported through a non-gated choice (`f
 and the gate only on a single-application graph, never a reusable one: `checks:` makes a graph application-specific
 (`bzh:app-agnostic-graphs`, [../../architecture/system-shape/graphs.md](../../architecture/system-shape/graphs.md)).
 
+**Detect.** A graph whose prompt or judgement text tells the worker to take a choice only when its checks pass, with no
+`requires_checks: true` on that choice; or an edge, transition handler, or completion path that special-cases a red
+check to block or reroute a choice instead of evaluating `ChecksGate.violated` against the choice's `requires_checks`
+declaration.
+
 **Do.** Gate the choice that must not be taken over red — typically build's `pass`, never its `fail`.
 
 **Don't.** An engine-routed "check-failed" edge that overrides the worker's choice — rejected by design: it would split

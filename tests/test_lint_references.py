@@ -99,6 +99,23 @@ class LintReferencesTest(unittest.TestCase):
         self.write({"spoke.md": "# Spokes\n\n## Spoke heading in full\n\n- [leaf](./spoke/leaf.md)\n"})
         self.assertEqual({f["file"] for f in self.fails("reference-links")}, {"ctx/rules/one.md"})
 
+    def test_section_after_a_named_target_is_not_a_same_file_citation(self) -> None:
+        cited = (
+            "\nSee `bzh:the-rule` §Not a heading here, `scripts/tool.py` §Also not here,"
+            " and spoke.md §Not here either; bzh:the-rule §Nor this.\n"
+        )
+        self.write({"rules/one.md": CLEAN["rules/one.md"] + cited})
+        self.assertEqual(self.lint(), [])
+
+    def test_quoted_section_heading_resolves_against_a_real_heading(self) -> None:
+        self.write({"rules/one.md": CLEAN["rules/one.md"] + '\nSee [spoke](../spoke.md) §"Spoke heading".\n'})
+        self.assertEqual(self.lint(), [])
+
+    def test_prose_preceded_same_file_section_with_a_missing_heading_fails(self) -> None:
+        self.write({"rules/one.md": CLEAN["rules/one.md"] + "\nThe fix is under §No such heading.\n"})
+        found = self.fails("reference-links")
+        self.assertIn("§No such heading", found[0]["message"])
+
     def test_missing_link_target_fails(self) -> None:
         self.write({"rules/one.md": CLEAN["rules/one.md"] + "\n[gone](./nope.md)\n"})
         self.fails("reference-links")

@@ -54,12 +54,16 @@ the new route `404`.
 member — lands `blizzard`'s `_fake_binary` (`tests/service/test_opencode_compatibility_service.py`) kwarg and
 name-mapping in the same change, kept 1:1 with the enum, and updates `_fake_binary`'s `len(lever_flags)` pin to match.
 
-**Why.** `blizzard` deliberately holds no dependency on `blizzard-mock` (`tests/support.py::github_double`'s established
-stance), so nothing mechanical diffs the two rosters — a member landed on one side alone drifts silently, covered only
-by [`./gaps.md`](./gaps.md#the-cross-repo-opencode-lever-roster).
+**Why.** A member landed on one side alone drifts silently: a lever no service-tier case arms, or a kwarg naming a
+retired lever. [`./gaps.md`](./gaps.md#the-cross-repo-opencode-lever-roster) owns why nothing mechanical diffs the two
+rosters.
 
 **Detect.** None — this rule is the standing check; `_fake_binary`'s count pin only catches a size mismatch, never a
 same-count rename.
+
+**Do.** One change adds the `blizzard-mock` member `Lever.DROP_CONFIG_SHELL` and, in `blizzard`, the `_fake_binary`
+kwarg `drop_config_shell`, its `"DROP_CONFIG_SHELL": drop_config_shell` entry in `lever_flags`, and the bumped
+`len(lever_flags)` pin.
 
 **Don't.** A `blizzard-mock` commit adding `Lever.NEW_MISBEHAVIOUR` to the roster with no companion `blizzard` change —
 the new lever emits correctly but no service-tier case ever arms it.

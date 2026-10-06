@@ -14,13 +14,6 @@ as a candidate, not a finding. Concretely, on this target:
 - Code whose mutation is invisible because nothing observable depends on the code.
 - An equivalent mutant left unsuppressed on a line the marker could take, returning as noise on every run.
 
-This axis and the `tests` axis blizzard's garden plan names are opposite readings of the same suite: this one finds what
-is unpinned — the behavior a green suite would let regress — where `tests` prunes what is excess — the duplicate, the
-ceremony, the case welded to an implementation. A finding here names an assertion to add; a finding there names a case
-to remove. A test that executes a line and asserts nothing about it is in range for both, and the split is by remedy:
-naming the assertion that would kill the mutant is this axis's, and judging whether the test earns its place once it
-asserts something is the other's.
-
 ## Scope
 
 The slugs `mise run mutation` accepts, one per scope row in `blizzard/scripts/mutation.py` — that table is the one home
@@ -58,6 +51,7 @@ Where a command already judges the same question, it owns that judgement and thi
 - What the method cannot see is out of range here;
   [`../verification/blizzard/commands/mutation.md`](../verification/blizzard/commands/mutation.md) states that reach,
   and a production path pinned only above `unit` is `bzh:gating-tier-pins-production-paths`'s, judged per change.
+- Whether a test that already asserts something earns its place is out of range here.
 
 ## Measurement
 

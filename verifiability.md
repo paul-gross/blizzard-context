@@ -55,13 +55,12 @@ installed-extension paths; without it each such module is one `warn`, never a `f
 in. `blizzard-context:reference-lint-tests` exercises each check against fixture repos through the `winter lint` env
 contract, one seeded violation per check, and needs nothing installed.
 
-`blizzard-context:ci-workflows` is this repo's own workflow-lint method (no declared method proved a GitHub Actions
-workflow file before it): `actionlint`, run from the repo root, scans `.github/workflows/` by default. It is local-only
-— run it by hand whenever a workflow file changes; it is not wired into `gate.yml` itself, so its pin lives only in the
-Commands table row above, not in any workflow file. This repo carries no `mise.toml`: it installs into a workspace as
-`.winter/ext/context/`, where a mise config would trip the workspace's per-worktree trust prompts, so `dprint`, `rumdl`,
-and `vale` — the tools `gate.yml` actually runs — are each installed and pinned inline in the workflow
-(`mise x <tool>@<version> --`) rather than declared as `[tools]`.
+`blizzard-context:ci-workflows` is this repo's own workflow-lint method: `actionlint`, run from the repo root, scans
+`.github/workflows/` by default. It is local-only — run it by hand whenever a workflow file changes; it is not wired
+into `gate.yml` itself, so its pin lives only in the Commands table row above, not in any workflow file. This repo
+carries no `mise.toml`: it installs into a workspace as `.winter/ext/context/`, where a mise config would trip the
+workspace's per-worktree trust prompts, so `dprint`, `rumdl`, and `vale` — the tools `gate.yml` actually runs — are each
+installed and pinned inline in the workflow (`mise x <tool>@<version> --`) rather than declared as `[tools]`.
 
 **Required checks on `master`.** The `pr.yml`/`push.yml` checks below are the set an operator applies and verifies via
 `blizzard:manual-branch-protection`:
@@ -89,10 +88,10 @@ EOF
 ### `blizzard-context:manual-reference-check`
 
 A by-hand reference pass over the changed files, covering what `blizzard-context:reference-lint` does not reach: every
-code pointer in `bzh:one-prose-home`'s Pointer forms, including a `§` after a code path or a rule id; every inbound
-public URL naming a file here; every registry count or enumeration the changed files state; and the precision of each
-hub row's trigger. The inbound URLs are on that list because a published surface points at this repo by URL, so renaming
-a heading here breaks a document this repo cannot see.
+code pointer in `bzh:one-prose-home`'s Pointer forms, including a `§` after a code path, a rule id, or a bare file name;
+every inbound public URL naming a file here; every registry count or enumeration the changed files state; and the
+precision of each hub row's trigger. The inbound URLs are on that list because a published surface points at this repo
+by URL, so renaming a heading here breaks a document this repo cannot see.
 
 It passes when each code pointer resolves to a file with the claimed shape and anchor, each new or moved leaf's hub row
 names a trigger that routes to it and every repointed or deleted row lands in the same change

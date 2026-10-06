@@ -52,18 +52,8 @@ delivery, and [`verifiability.md`](./verifiability.md) for how a change *here* i
 ## A harness held to its own standard
 
 Convention repos rot quietly — a rule drifts from the code it governs and nothing fails. So this one ships gates of its
-own, declared as methods in [`verifiability.md`](./verifiability.md) and run before every push:
-
-```shell
-dprint check                        # markdown format
-rumdl check .                       # structural markdown lint
-mise x vale@3.22.0 -- vale --output=line . # process-reference prose lint
-python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate
-python3 tests/test_check_registry_drift.py
-python3 tests/test_lint_markdown_style.py
-python3 scripts/lint-references.py --gate .
-python3 tests/test_lint_references.py
-```
+own, run before every push and declared as methods, each command with its pin (`vale@3.22.0` among them), in
+[`verifiability.md`](./verifiability.md) §Commands.
 
 The drift check is the interesting one: it reads a committed census and fails when a registry's stated shape and its
 actual enumeration disagree — including at sites in the sibling `blizzard` and `blizzard-mock` checkouts, which is why

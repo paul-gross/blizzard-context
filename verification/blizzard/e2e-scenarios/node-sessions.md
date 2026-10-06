@@ -67,11 +67,15 @@ host's own sweep tells both nodes' lease spans across the restarts, nested on th
 `build`'s invocations carrying Claude Code and `opencode-review`'s carrying OpenCode in the one run; that subtest alone
 skips without one.
 
-- `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` — asserts every dispatch lands on
-  the correct adapter with no cross-harness leakage (the runner store's own `harness_id` per lease); the second restart
-  resumes the SAME lease/epoch/session opencode-review already held rather than minting a retry; the resume-intent it
-  marks is cleared once recovery completes; each node's resolved effort and model carry the provenance its own session
-  declared or inherited (build the chunk default, opencode-review its own session's); the board's per-node-step usage
-  attributes the right harness/model/version to the right node, cross-checked against the runner's own ground truth, and
-  the hub's derived analytics events attribute the right harness/model to the right node (this test does not assert
-  their `harness_version`); and both nodes' commits land on bare main exactly once.
+- `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` asserts:
+  - Every dispatch lands on the correct adapter with no cross-harness leakage (the runner store's own `harness_id` per
+    lease).
+  - The second restart resumes the SAME lease/epoch/session opencode-review already held rather than minting a retry.
+  - The resume-intent it marks is cleared once recovery completes.
+  - Each node's resolved effort and model carry the provenance its own session declared or inherited (build the chunk
+    default, opencode-review its own session's).
+  - The board's per-node-step usage attributes the right harness/model/version to the right node, cross-checked against
+    the runner's own ground truth.
+  - The hub's derived analytics events attribute the right harness/model to the right node (this test does not assert
+    their `harness_version`).
+  - Both nodes' commits land on bare main exactly once.
