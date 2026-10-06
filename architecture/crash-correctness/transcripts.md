@@ -107,10 +107,10 @@ fleet-driven invocation — a worker spawn generation, a resume generation, a ju
 `InvocationBoundaryStore.record_boundary_open` before that invocation's process launches, so interrupted-usage recovery
 has a durable range to read even if the launch itself is the thing that crashes.
 
-Spawn's and a plain resume's own boundary writes (`Spawner.spawn`, `DormantSession._wake`) are genuinely new pre-launch
-writes, each guarded by its own registered point (`spawn.after-boundary-record.before-spawn`,
-`resume.wake.after-boundary-record.before-launch`) in the family its scenario already belongs to — no new family, since
-neither opens a window a fresh generic or RESUME sweep scenario does not already reach.
+Spawn's and a plain resume's own boundary writes (`Spawner.spawn`, `DormantSession._wake`) are pre-launch writes of
+their own, each guarded by its own registered point (`spawn.after-boundary-record.before-spawn`,
+`resume.wake.after-boundary-record.before-launch`) in the family its scenario belongs to — no family of their own, since
+neither opens a window a generic or RESUME sweep scenario does not reach.
 
 Judgement's and the nudge's own boundary writes take the narrower ground instead: each is its own transaction,
 immediately after an *existing* pre-launch write — `record_elicitation_launch` (`Judgement._launch`) and

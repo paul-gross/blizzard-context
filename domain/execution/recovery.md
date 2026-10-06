@@ -36,11 +36,7 @@ retirement is ([./retirement.md](./retirement.md)) — and is refused on a termi
 finisher's leftover, which holds no claim to release.
 
 Detach **ends** the chunk rather than parking it: the worker is killed and the session is discarded, not resumable — the
-inverse of a per-chunk pause's park, which keeps the same session for a later resume ([./pause.md](./pause.md)). Pinning
-tests are `blizzard/tests/test_runner_detach.py::test_pull_abandons_a_live_detached_chunk` for the worker-killed half
-and
-`blizzard/tests/test_runner_detach.py::test_a_chunk_detached_mid_node_and_reclaimed_starts_a_fresh_session_not_a_resume`
-for the session-discarded half.
+inverse of a per-chunk pause's park, which keeps the same session for a later resume ([./pause.md](./pause.md)).
 
 ## Reassignment
 

@@ -11,9 +11,9 @@ renewer asks the vendor CLI to refresh it, through an injected seam, and reads t
 flow — its lock, its atomic write, its refresh-token rotation — reached only as `bzh:pluggable-seams` reaches any
 external system.
 
-**Why.** The file is shared with every worker the runner spawns and with the vendor CLI itself. A second writer can
-corrupt it mid-refresh, and an in-process refresh that rotates the refresh token can invalidate the login the vendor
-just renewed. Delegating keeps one owner of the write.
+**Why.** The file is shared with every worker the runner spawns and with the vendor CLI itself, so a second writer can
+corrupt it mid-refresh. An in-process refresh that rotates the refresh token can also invalidate the login the vendor
+just renewed.
 
 **Detect.** A `.write_text(`, `.write_bytes(`, or write-mode `open(` under `runner/subscriptions/`; a renewer binding
 that parses a refresh response and stores its tokens itself.
@@ -23,8 +23,8 @@ writes nothing. When asked to renew, it drives `codex app-server` over a one-sho
 or `failed` with a cause; the refreshed tokens land on disk as the vendor's side effect. The two halves are separate
 calls, so the renewal pass records its claim between them.
 
-**Don't.** A renewer that calls the provider's token endpoint and rewrites `auth.json` — blizzard now owns a write it
-cannot coordinate with the vendor's lock.
+**Don't.** A renewer that calls the provider's token endpoint and rewrites `auth.json` — blizzard owns a write it cannot
+coordinate with the vendor's lock.
 
 `bzh:subscriptions-no-write` is tooled by `blizzard:structural-gate`'s ast-grep scan
 ([../../verification/blizzard.md](../../verification/blizzard.md)), scoped to `runner/subscriptions/`; no exemption

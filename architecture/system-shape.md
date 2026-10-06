@@ -12,6 +12,7 @@ the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 | [system-shape/artifact-scopes.md](./system-shape/artifact-scopes.md)                   | Reading or writing an artifact through `--scope system`, or reasoning about why a graph-scope and a system-scope read differ                                                                            |
 | [system-shape/transcript-read-plane.md](./system-shape/transcript-read-plane.md)       | Adding or widening a read of transcript data for runner consumption — which plane may serve it                                                                                                          |
 | [system-shape/seam-size.md](./system-shape/seam-size.md)                               | Adding a method to a Protocol, or deciding whether one has grown wide enough to split or register as an exception                                                                                       |
+| [system-shape/seam-positions.md](./system-shape/seam-positions.md)                     | Deciding whether a reach into an external system — the forge above all — must go through a configured seam, or why the hub work source and editor are always seated                                     |
 | [system-shape/subscription-credentials.md](./system-shape/subscription-credentials.md) | Reading, sampling, or renewing a subscription credential file                                                                                                                                           |
 | [system-shape/fleet-wire.md](./system-shape/fleet-wire.md)                             | Changing a route, schema, or enum a runner reaches on the hub — what a hub change may do to it across the skew window                                                                                   |
 | [system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)                 | Adding or reviewing a write enforcing an exactly-one-wins decision, or a write another such decision's guard reads consult                                                                              |
@@ -82,43 +83,8 @@ one module naming both harness adapters; the harness core reaches them only thro
 mock harness. Nor a harness-core module importing an adapter's constant — a denied-tool list, a section kind — so the
 core changes whenever that adapter does.
 
-### Recorded positions
-
-Stated so a reviewer need not re-derive them:
-
-- The built-in hub work source, `HubWorkSource`, implements the `IWorkSource` seam, but its binding is in-process and
-  always seated — never a work source record with a credential — because the hub's own store is the item's system of
-  record: there is no external system for a record to point at. Its concrete wiring stays at the composition root,
-  `hub/app.py::build_hosted_app`, per `bzh:dependency-injection`; only the walk that seats it differs — outside the
-  record-built loop, in `WorkSourceEntry.registry` — not the seam itself.
-- The hub work source's editor capability, `IWorkEditor`, is seated the same always-on in-process way, and it is
-  structural rather than a configurable opt-in because every `IWorkEditor` method returns the hub repository's own
-  record types — `HubWorkItem` for `list`, `get`, `edit`, and `withdraw`, and `CreatedWorkItem` for `create`, which
-  alone also mints a chunk — types no binding without a hub-owned store behind it could render, unlike
-  `IWorkSource.fetch`'s seam-local `WorkItem` dataclass. The editor gate also covers the read verbs `list` and `get`,
-  because `IWorkSource` declares no enumeration method, so no non-hub binding could serve them anyway; the read half is
-  what splits out of `IWorkEditor` the day a binding gains a real enumeration capability, and not before. Consequently
-  `editor(name) is None` means structurally never edited for every source but the hub, not merely not opted in.
-- No single forge seam Protocol exists; the forge is reached through several of the seams already named above, plus one
-  path outside the Rule entirely. `IWorkSource`, `IWorkCloser`, and `IWorkAnnotator` — three of the work-source
-  capability family's Protocols — and `IOAuthProvider` are real Protocol seams that happen to reach the forge:
-  `IWorkSource` for work items and branch links, `IWorkCloser` for closing work items, `IWorkAnnotator` for the periodic
-  forge-status annotation sweep, and `IOAuthProvider` for login. The family's fourth member, `IWorkEditor`, never
-  reaches it — only the built-in hub source seats one, per the recorded position above, and that source has no external
-  forge behind it. `GitHubCommitResolver` reaches it behind the `CommitResolver` callable
-  (`hub/domain/garden/delivery/validation.py`): an injected, composition-root-selected seam whose interface is a
-  one-call type alias rather than a Protocol, satisfying the Rule's swappability intent without being one. Graph land
-  scripts reach it directly through the `run:` env contract's `BZ_FORGE_*` variables, outside the Rule's sites (a loop
-  step, domain, or store) because the script is the landing policy
-  ([../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md) owns how tests bind the mock forge
-  for this path). The hub holds no shared forge endpoint and no owner fallback: each repository is a record naming its
-  forge, owner, base branch and secret, and a `deliver` step and the garden commit resolver each resolve the repository
-  they act on to its record on every use; the work-source family and the OAuth provider each declare their own endpoint
-  through their own record or config entry likewise. A `deliver` step resolves the chunk's commit pointers before any
-  command runs and fills the `BZ_FORGE_*` and `BZ_HUB_BASE_BRANCH` variables from the one record they resolve to; the
-  pointers must resolve, and agree, or the step is refused. The garden commit resolver sees only bare repo names, so it
-  resolves a name or `owner/repo` against the enabled records and answers nothing for one no record names; and a chunk
-  whose first pointer is a `hub:` item gets no branch links, because `HubWorkSource.branch_url` is always `None`.
+**See also.** [./system-shape/seam-positions.md](./system-shape/seam-positions.md) owns this rule's recorded positions —
+the always-seated hub work source and editor, and every path that reaches the forge.
 
 ### Seams answer their binding's facts (`bzh:seam-answers-binding-facts`)
 

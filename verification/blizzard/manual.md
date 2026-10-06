@@ -11,9 +11,8 @@ section per row, in that table's order. The `web:` methods live in [`./manual-we
 
 **Surface.** A running hub driven by hand from outside the process — its HTTP API under `/api/`, and the operator CLI
 (`blizzard hub …`), itself a client of that API — for behavior a change makes observable on a live daemon: a route's
-response, a verb's effect on the fleet view, a transition's derived status. A narrower `blizzard:manual-*` row whose
-claim is the changed behavior wins over this one, and auth-gated behavior is `blizzard:manual-standing-idp`'s, because
-the hub this method stands up serves everything unauthenticated.
+response, a verb's effect on the fleet view, a transition's derived status. Auth-gated behavior is
+`blizzard:manual-standing-idp`'s, because the hub this method stands up serves everything unauthenticated.
 
 **Setup.** `tool:service-up` stands the stack up, run from the workspace root; the sourced band is what sets
 `$BZ_HUB_URL` and points the shell at the env's own hub:
@@ -77,9 +76,8 @@ The env's runner spawns the fenced mock harness (`tool:mock-fleet`), never a rea
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns why on both counts.
 
 Restart the env's runner — to pick up an edited `blizzard-runner.toml`, say — with
-`winter service restart <env>/runner`, and stop a runner you launched by hand by its own pid. Never kill by a pattern
-such as `pkill -f "blizzard runner host"`: it matches every runner on the machine, including a live fleet runner that
-may be hosting your own session, and a runner exits cleanly on that signal, so its supervisor does not bring it back.
+`winter service restart <env>/runner`; `workspace:/context/project/local-instance.md` §Traps on this machine owns how to
+stop any other runner.
 
 **Steps.**
 

@@ -51,10 +51,11 @@ unauthorized write is swallowed and the script proceeds to report success anyway
 **Do.**
 
 - `land_default.py` reads `BZ_HUB_GIT_COMMITS`/`BZ_HUB_ARTIFACT_NAMES` to compute which repos still need landing, and
-  `BZ_FORGE_URL`/`BZ_FORGE_TOKEN`/`BZ_FORGE_OWNER` to talk to the forge directly — the forge-access position under
-  `bzh:pluggable-seams` in [../../architecture/system-shape.md](../../architecture/system-shape.md) is why this is not a
-  seam. The executor resolves those variables from the chunk's repository record before the first step runs, and refuses
-  the visit, running nothing, when they do not resolve.
+  `BZ_FORGE_URL`/`BZ_FORGE_TOKEN`/`BZ_FORGE_OWNER` to talk to the forge directly — the forge row for land scripts in
+  [../../architecture/system-shape/seam-positions.md](../../architecture/system-shape/seam-positions.md) is why this is
+  not a seam. The executor resolves the chunk's commit pointers, and from the one repository record they resolve to
+  fills those variables and `BZ_HUB_BASE_BRANCH`, before the first step runs; it refuses the visit, running nothing,
+  when the pointers do not resolve or do not agree.
 - `land_common.MarkerWriter` — the one marker channel every land script holds, as `LandRun.markers` — treats any non-2xx
   as fatal, raising rather than returning, so a merge can never land with no durable record of it.
 - `land_common.LandRun` assembles a PR body and merge message from `BZ_HUB_WORK_ITEMS`, `BZ_HUB_CHUNK_ID`, and

@@ -61,6 +61,8 @@ PATH_NOTATION_RE = re.compile(r"(?<![\w/.:-])([A-Za-z][\w-]*):(/(?!/)[^\s`)\]>\"
 TRAILING_PATH_NOTATION_RE = re.compile(r"(?<![\w/.:-])([A-Za-z][\w-]*):(/[^\s`]*)$")
 SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 SLUG_TAIL = r"[a-z0-9]+(?:-[a-z0-9]+)*"
+BARE_NAME_BEFORE_SECTION_RE = re.compile(
+    r"(?<![\w/.-])(?:[\w.-]+/)*[\w-]+\.[A-Za-z0-9]+$|(?<![\w-])[a-z][\w-]*:" + SLUG_TAIL + "$")
 
 
 def emit(check: str, status: str, message: str, *, file: str | None = None, line: int | None = None, remediation: str | None = None) -> None:
@@ -275,7 +277,9 @@ def section_target(run: Run, doc: Doc, pos: int, repo: Path, link_ends: dict[int
     else:
         m = TRAILING_PATH_NOTATION_RE.search(before[-300:])
         if m is None:
-            return doc.path if before[-1] not in "]" else None
+            if before[-1] == "]" or BARE_NAME_BEFORE_SECTION_RE.search(before[-300:]):
+                return None
+            return doc.path
     if m is None:
         return None
     root = run.module_root(m.group(1), repo)

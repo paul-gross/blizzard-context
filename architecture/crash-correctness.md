@@ -116,9 +116,15 @@ The transcript lane is split out of both daemon files: a runner-side or hub-side
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 
 **Rule.** A checker of assertions evaluated over both stores' facts after any crash → restart → recover cycle holds the
-durable invariants: no duplicate env binding, at most one accepted transition per node-step epoch, one live route per
-chunk, no double delivery with per-repo lands idempotent, every derived status computable with exactly one match, a
-gapless outbound-buffer sequence, and usage attributed exactly once per `(lease, generation, kind)`.
+durable invariants:
+
+- no duplicate env binding;
+- at most one accepted transition per node-step epoch;
+- one live route per chunk;
+- no double delivery, with per-repo lands idempotent;
+- every derived status computable with exactly one match;
+- a gapless outbound-buffer sequence;
+- usage attributed exactly once per `(lease, generation, kind)`.
 
 **Why.** Because both stores are facts-only (`bzh:facts-not-status`), the checker is essentially a library of SQL
 assertions plus the status-derivation queries themselves — and a failure names the exact violated invariant rather than

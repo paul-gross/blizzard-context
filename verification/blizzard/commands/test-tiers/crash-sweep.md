@@ -29,13 +29,26 @@ documented local command above and runs in the tag `release` workflow. Both CI w
 multi-repo checkout — `blizzard`, `blizzard-mock`, and the public `blizzard-workspace` (the winter source) as siblings,
 `BLIZZARD_MOCK_WINTER_SOURCE` pointed at the last.
 
-The registry's boundary families are `resume.`, `abandon.`, `pause.`, `hubnode.` (the generic hub command node's
-per-step and pending-poll windows), `migrate.`, `attach.`, `declare-commit.`, `nudge.`, `checks.`, `preempt.`, `close.`
-(the close-intent outbox's enqueue-then-drain windows), `trace.` (the trace export sweep's after-export, before-cursor
-window), `leasetrace.` (the runner's lease trace sweep's after-export, before-cursor window), and `usagelimit.` (the
-runner's own usage-limit brake-then-park window, on a worker generation's exit and a judge elicitation's exit alike),
-plus ungrouped generic build-to-deliver points that mostly fire in the runner loop (`bzh:crash-point-registry`). No case
-count is kept — the predicate is the membership test, not a number that drifts.
+The registry's boundary families (`bzh:crash-point-registry`):
+
+- `resume.`
+- `abandon.`
+- `pause.`
+- `hubnode.` — the generic hub command node's per-step and pending-poll windows.
+- `migrate.`
+- `attach.`
+- `declare-commit.`
+- `nudge.`
+- `checks.`
+- `preempt.`
+- `close.` — the close-intent outbox's enqueue-then-drain windows.
+- `trace.` — the trace export sweep's after-export, before-cursor window.
+- `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
+- `usagelimit.` — the runner's own usage-limit brake-then-park window, on a worker generation's exit and a judge
+  elicitation's exit alike.
+
+Ungrouped generic build-to-deliver points, which mostly fire in the runner loop, sit beside them. No case count is kept
+— the predicate is the membership test, not a number that drifts.
 
 `claim.` — the route-claim boundary between persisting the route with its capability-token fact and the runner reading
 the plaintext token back — is the first ungrouped point armed on the hub, recovered generically by the runner's

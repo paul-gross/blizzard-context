@@ -260,23 +260,16 @@ floor alone keeps aged rows at most one floor past its window.
 **Scope.** This binds the pass itself — a periodic `sweep()` or tick step `run()` body, hub or runner alike — not the
 `Sweep` driver in `blizzard/src/blizzard/hub/app.py`, which owns cadence and jitter and steps the pass as a black box. A
 fixed cadence where a change signal would do is judged here, at the pass: the probe is what makes a fixed interval
-cheap, so the answer to it is a gated pass, not a re-timed driver. A pass is in range when it rescans a corpus to
-converge a derived state from it, as the hub's annotation and event-derivation reconcilers do, or when it prunes or
-expires what has aged past a window far longer than its floor — the runner's `Retention` step in
-`blizzard/src/blizzard/runner/loop/steps.py`, which prunes its day-scale lanes on a one-hour floor, is that floor-only
-form's case: it owes a floor, not a probe. A pass that enforces a window without pruning it — the runner's
-`SpendCeiling` step, which engages the pause brake once rolling-window spend reaches its cap — is outside this rule
-altogether: it owes its reaction on the tick the cap is crossed, and a floor there would let spend overshoot the cap for
-up to one floor. A pass whose job is to act on work as it comes due — reaping a lease, advancing or filling, draining a
-queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases — is outside it, on either side:
-`CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_items/closure.py` and the runner's `Reap` and
-`Advance` steps are that shape. Such a pass's due-set is the live work the pass exists to answer, often made due by time
-passing alone, so no change probe sees it and a floor would delay the reaction it owes. A pass that opens on a read
-returning only its not-yet-acted-on rows and returns when that read is empty —
-`WorkItemMaterializationReconciler.sweep`'s `unmaterialized_proposals()` in
-`blizzard/src/blizzard/hub/domain/work_items/materialization.py` — is already gated: that read is its probe, and it owes
-no floor, since it reads the pending rows themselves rather than a signal about them. A per-item resolution inside the
-pass is `bzh:bulk-reconstitution`'s, not this rule's.
+cheap, so the answer to it is a gated pass, not a re-timed driver. A per-item resolution inside the pass is
+`bzh:bulk-reconstitution`'s, not this rule's. Each pass shape owes:
+
+| Shape                                                                                                                                                                | Example                                                                                                                                      | Owes                                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rescans a corpus to converge a derived state from it                                                                                                                 | The hub's annotation and event-derivation reconcilers                                                                                        | A probe and a floor                                                                                                                                                                                           |
+| Prunes or expires what has aged past a window far longer than its floor                                                                                              | The runner's `Retention` step in `blizzard/src/blizzard/runner/loop/steps.py`, pruning its day-scale lanes on a one-hour floor               | A floor, not a probe                                                                                                                                                                                          |
+| Enforces a window without pruning it                                                                                                                                 | The runner's `SpendCeiling` step, which engages the pause brake once rolling-window spend reaches its cap                                    | Nothing here — it is outside this rule: it owes its reaction on the tick the cap is crossed, and a floor would let spend overshoot the cap for up to one floor                                                |
+| Acts on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases | `CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_items/closure.py`; the runner's `Reap` and `Advance` steps              | Nothing here — it is outside this rule: its due-set is the live work the pass exists to answer, often made due by time passing alone, so no change probe sees it and a floor would delay the reaction it owes |
+| Opens on a read returning only its not-yet-acted-on rows and returns when that read is empty                                                                         | `WorkItemMaterializationReconciler.sweep`'s `unmaterialized_proposals()` in `blizzard/src/blizzard/hub/domain/work_items/materialization.py` | Nothing more — that read is its probe, and it owes no floor, since it reads the pending rows themselves rather than a signal about them                                                                       |
 
 **Detect.** A converging pass whose first statement is its full-corpus read, with no value compared against the previous
 pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that prunes a
