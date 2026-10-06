@@ -331,7 +331,7 @@ table row allows it. Every hub package may also import `kernel`.
 | L3    | `execution`     | `chunk`, `graph`, `runners`, `artifact`  |
 | L4    | `operations`    | `execution`, `chunk`, `graph`, `runners` |
 | L5    | `work_items`    | `operations`, `chunk`, `graph`           |
-| L6    | `garden`        | `work_items`, `chunk`, `graph`           |
+| L6    | `garden`        | `work_items`, `chunk`, `graph`, `config` |
 | L7    | `observability` | `chunk`, `graph`, `runners`              |
 
 The runner's table. `harness/claude_code`, `harness/opencode`, and `harness/wiring` are nodes of their own; any other

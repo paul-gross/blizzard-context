@@ -189,15 +189,14 @@ wires the store-backed reader, not the records it reads.
 Stated so a reviewer need not re-derive them — each is a site the rules above name as a violation and that stands until
 the change that brings it under the rule:
 
-- **Only work sources, repositories, and secrets are configured records so far.** `config_changes` and `ConfigAuthoring`
-  are in the tree and carry all three; `SecretValue` and `ISecretReader` are in the tree but no consumer reads through
-  them yet. Repository records are inert: delivery reads none of them. Scopes and routines exist as records without a
-  `revision` or change rows, and graphs are not yet records under the rule.
+- **Only work sources, repositories, secrets, scopes, and routines are configured records so far.** `config_changes`
+  carries all five, and `ConfigAuthoring` the first three; `SecretValue` and `ISecretReader` are in the tree but no
+  consumer reads through them yet. Repository records are inert: delivery reads none of them. Graphs are not records
+  under the rule: a graph's mutable flag is a sparse `PATCH` that appends a policy fact, with no `revision` or change
+  row.
 - **A secret's retire and enable move no revision.** Each appends a change row at the secret's unchanged revision,
   because its value is sealed against `(name, revision)` and a revision moved without resealing would leave the value
   undecryptable. A work source's or a repository's retire and enable do move its revision.
-- **Routine and scope edits are full replaces.** `RoutineEditRequest` (`blizzard/src/blizzard/wire/routine.py`) requires
-  every field and a restated `name`, and the scope edit replaces its one field.
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
   its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
   than refusing it.
