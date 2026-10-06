@@ -23,8 +23,7 @@ paused it. Then, under the claim lock, it is refused on the chunk, in this order
 `done`), its route is held, it is not `ready` ([../work/statuses.md](../work/statuses.md)), or a prerequisite is unmet;
 and last when the runner's capabilities do not fit the chunk. A runner reporting no capabilities fits no chunk: it is
 eligible for nothing, so the matched peek hands it no entry and a claim by it is refused, the same answer at both
-places. Rekeying a route token is refused once the chunk has
-ended, as a claim on it is.
+places. Rekeying a route token is refused once the chunk has ended, as a claim on it is.
 
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 
