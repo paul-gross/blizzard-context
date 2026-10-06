@@ -828,7 +828,7 @@ these two reads is not measured.
 **Setup.** All local docker on one user-defined network, no credentials of the operator's own.
 
 - The directory: `BLIZZARD_E2E=1 uv run pytest tests/e2e/test_egress_night_e2e.py --basetemp <dir>`, then the
-  `export-parquet` directory under it.
+  `night0/export-parquet` directory under it.
 - MinIO (`cgr.dev/chainguard/minio`, as `minio/minio` is no longer pulled from Docker Hub) with a throwaway root key,
   and `rclone/rclone` for the copy.
 - `clickhouse/clickhouse-server` and `grafana/grafana` with `GF_INSTALL_PLUGINS=grafana-clickhouse-datasource`, the
