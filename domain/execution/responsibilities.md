@@ -22,9 +22,8 @@ the runner computed about itself — a missing binary, an incompatible or unmapp
 version, a failed provider authentication, or a failed conformance selftest all withhold it, never reported as a reason
 to the hub, only as the flag itself. A version is unknown where a binding declares the versions it supports and the
 runner could not observe one, or where a binding that also classifies the versions it admits could not classify the one
-observed; it withholds exactly as an incompatible one does. Availability is the same kind of fact the brakes above are:
-a runner's own assertion, superseded whole on its next registration, never a condition the hub derives from other rows
-or from a capability's absence over time.
+observed. Availability is the same kind of fact the brakes above are: a runner's own assertion, superseded whole on its
+next registration, never a condition the hub derives from other rows or from a capability's absence over time.
 
 The entry also reports subscription usage, keyed off the runner's own declared roster: at registration a runner declares
 its subscription roster — slug, name, and provider — and the next registration replaces the whole roster, the same way
