@@ -25,15 +25,16 @@ The browser half of the e2e tier: a real Chromium driven by Playwright over the 
 `blizzard hub host` mounting the built Angular app at `/`.
 
 - `test_board_browser_live_group_reorder_answer_and_pause` — loads the board once, never reloading, proving the status
-  chip flips live over SSE as facts land and the detail drawer renders node history plus the artifact store. The same
-  function groups two ready chunks through `POST /api/chunks/{id}/group`, then observes the survivor live in the READY
-  lane after the merged card vanishes. It asserts decorative grips in the ranked BACKLOG and READY lanes and no retired
-  board controls, then reorders the grouped survivor's whole card to the READY lane's top with real pointer events (the
-  `@angular/cdk` drop list the lane arms; the drop-to-anchor arithmetic is fenced at `web:unit-test` with a synthesized
-  `CdkDragDrop`), the next FILL claiming the grouped plural-pointer survivor first, both honored. It also proves a
-  parked chunk's question is answered from the board and the chunk resumes to `done`. It proves a running chunk is
-  paused directly from its chunk detail dock — the claim-keeping, one-chunk lever, distinct from the runner-level brake:
-  the chip flips to `paused` live with no reload (the one status a pause-parked chunk's chip shows —
+  chip flips live over SSE as facts land and the detail drawer renders node history plus the artifact store. Its runner
+  registry lists the runner `runner init` added as never connected, then online once its first pull registers it, with
+  no reload. The same function groups two ready chunks through `POST /api/chunks/{id}/group`, then observes the survivor
+  live in the READY lane after the merged card vanishes. It asserts decorative grips in the ranked BACKLOG and READY
+  lanes and no retired board controls, then reorders the grouped survivor's whole card to the READY lane's top with real
+  pointer events (the `@angular/cdk` drop list the lane arms; the drop-to-anchor arithmetic is fenced at `web:unit-test`
+  with a synthesized `CdkDragDrop`), the next FILL claiming the grouped plural-pointer survivor first, both honored. It
+  also proves a parked chunk's question is answered from the board and the chunk resumes to `done`. It proves a running
+  chunk is paused directly from its chunk detail dock — the claim-keeping, one-chunk lever, distinct from the
+  runner-level brake: the chip flips to `paused` live with no reload (the one status a pause-parked chunk's chip shows —
   [domain/work/statuses.md](../../../domain/work/statuses.md) ranks `paused` below the human-gated statuses, so the
   proof needs a chunk caught genuinely running, not already parked on a question), the chunk relocates to the WAIT/HUMAN
   column, the claim survives the runner interrupting the worker and killing only a survivor of that interrupt while

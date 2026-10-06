@@ -47,8 +47,11 @@ uv run blizzard-mock-data scenario fleet --chunks 6 --seed 1 --hub-dir "$BZ_HUB_
 
 It names its two stores explicitly and separately, and neither half falls back to `$DATABASE_URL`. A `--dir`-family flag
 resolves only after `winter service up <env>` has brought that daemon up at least once, because the daemon's first start
-is what writes the `blizzard-hub.toml` or `blizzard-runner.toml` the flag reads; `--runner-dir` reads the pinned
-`runner_id` from that file as well as `db_url`.
+is what writes the `blizzard-hub.toml` or `blizzard-runner.toml` the flag reads `db_url` from. `--runner-dir` pins the
+runner's id from the runner store's identity row, which only the runner's first registration with that hub writes, and
+refuses a runner that has never registered. After a `reset --store hub`, the hub no longer knows the runner's token: run
+`winter service restart <env>/runner`, whose `runner init --allow-readd` adds the runner again under a new id, and seed
+once its log shows a `tick end`.
 
 Do not reach for `fixture list` or `fixture apply`: the named, versioned, cross-store scenario surface is still a stub,
 and `scenario board` and `scenario fleet` are the one-command preset surfaces that exist.
@@ -60,9 +63,9 @@ than as live running leases — an active lease with no worker process behind it
 tick. Leave the seeded runner's own local pause engaged and do not clear it from the panel: one click unbrakes FILL,
 which claims the board's `ready` chunks and spawns real workers.
 
-A seed made once the runtime config exists survives every later restart or shutdown, daemon up or down: the runner falls
-back to the same `runner-local` id on every start because the workspace injects no override, and the runner store is
-never cleared.
+A seed made once the runner has registered survives every later restart or shutdown, daemon up or down: the runner's
+token survives in its runtime dir's `.env`, so it registers under the same id on every start, and the runner store is
+never cleared. A reset of the hub store ends that, since the runner comes back under a new id the seed never pinned.
 
 ## When a write meets a moved schema
 

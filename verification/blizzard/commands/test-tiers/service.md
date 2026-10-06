@@ -123,6 +123,15 @@ unregistered redirect form, replayed code, and expired code — is pinned by the
 the loopback listener and paste-code mechanics sit with the unit-tier `test_cli_login_mechanics.py` and
 `test_hub_cli_login.py`.
 
+**Joining a runner with `blizzard runner init`** (`test_runner_init_service.py`) is proven over the real wire only at
+this tier: init runs in its own process against a real hub on `auth.mode = "none"`, adds the runner through
+`POST /api/runners`, and leaves the minted token in the directory's `.env`; the daemon then registers under the
+hub-minted `rn_` id. The same id survives a rename by restart and a deleted runner store. Against a retired runner, init
+refuses, names `blizzard hub runner reinstate <id>`, and leaves `.env` byte-identical. After a reset of the hub's data,
+init refuses without `--allow-readd`, naming the hub URL it asked, adding nothing, and leaving `.env` byte-identical;
+with the flag it adds a fresh runner and replaces the token. Every in-process `runner init` at the unit and component
+tiers joins the suite-wide fake hub in `tests/runner_init_fakes.py` instead.
+
 **Runner SSO federation's JWT/JWKS wire leg** (`test_idp_federation_service.py`) is the browserless companion to e2e's
 `test_runner_federation_e2e.py`: a real hub delivers a hub-signed, audience-bound JWT via `response_mode=form_post` to a
 real `blizzard runner host`'s `POST /api/auth/callback` — the whole chain real over localhost — ending in a

@@ -87,30 +87,19 @@ Standing in for a tier: `blizzard:unit-test` covers the chosen `unreadable` defa
 parser can name; a live `opencode export` against a genuinely absent session id would be the evidence for a narrower
 `not_found` path, and does not exist yet. Do not add a stderr-string match invented rather than captured from a run.
 
-## Capability-matched peek's hold-vs-pass-over distinction, and a bare node's chunk-declared default at spawn
+## A bare node's chunk-declared default at spawn
 
-`test_mixed_harness_dispatch_service.py`'s own module docstring and section comments record two proofs the mock hub's
-fidelity leaves unreachable:
+`test_mixed_harness_dispatch_service.py` records a proof the mock hub's fidelity leaves unreachable: a bare node
+honoring the chunk's own declared default all the way through spawn. `blizzard-mock-hub`'s own `envelope()` route,
+unlike the real hub's `EffectiveSession.of`, never bakes the chunk's `default_harnesses` back onto the node before
+handing the envelope to the runner, so while a bare node's matched peek does honor the chunk's own declared default
+(proven), the SPAWN that follows falls through to `Spawner.spawn`'s own no-`session_harnesses` fallback — this runner's
+own configured default, never the chunk's declared one. Baking `default_harnesses` onto the envelope's node the way
+`EffectiveSession.of` does would close it.
 
-1. **`[queue] strict`'s hold-vs-pass-over distinction for capability-matched peek.** `POST /api/fleet/queue/peek`'s
-   matched form resolves the calling runner from a bare `runner_id` query param, never sent by the real production
-   `HttpHubClient` (which carries none — the real hub instead resolves the caller from its own authenticated principal,
-   a scheme this mock's fleet routes never implement). A real runner's peek against this mock therefore always 401s the
-   matched form and falls back to the legacy, capability-unfiltered read, so both `[queue] strict` configurations send
-   the peek the same ignored `policy` value and the distinction itself is unreachable here — the CLAIM endpoint's own
-   capability revalidation is real and proven end to end regardless, keyed off the claiming `runner_id` from the claim
-   body rather than peek identity. A `blizzard-mock` fidelity fix to the matched-peek route — resolving the calling
-   runner the way the real hub does, off its authenticated principal rather than a bare query param — would close it.
-2. **A bare node honoring the chunk's own declared default all the way through spawn.** `blizzard-mock-hub`'s own
-   `envelope()` route, unlike the real hub's `EffectiveSession.of`, never bakes the chunk's `default_harnesses` back
-   onto the node before handing the envelope to the runner, so while a bare node's real CLAIM does honor the chunk's own
-   declared default (proven), the SPAWN that follows falls through to `Spawner.spawn`'s own no-`session_harnesses`
-   fallback — this runner's own configured default, never the chunk's declared one. Baking `default_harnesses` onto the
-   envelope's node the way `EffectiveSession.of` does would close it.
-
-Standing in for a tier: neither item has one. Do not invent either behavior at the unit or component tier: both are
-hub-side routing decisions this suite means to prove against the real production `HttpHubClient`/`Spawner.spawn` path,
-never a hand-built substitute.
+Standing in for a tier: none. Do not invent the behavior at the unit or component tier: it is a hub-side routing
+decision this suite means to prove against the real production `HttpHubClient`/`Spawner.spawn` path, never a hand-built
+substitute.
 
 ## The worker deny list
 

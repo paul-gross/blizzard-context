@@ -10,8 +10,8 @@ to the runner survive, so historical views keep naming it. It is independent of 
 ## What retirement stops
 
 A retired runner's credential is dead, it is hidden from the default fleet views, and the hub refuses its registration,
-its contact, and its claims outright, keyed on its id — so a caller with no token is refused as well. The refusal holds
-under every runner-auth mode. A claim refusal reuses the paused-claim denial shape, so an older runner reads it as one.
+its contact, and its claims outright, keyed on its id. A claim refusal reuses the paused-claim denial shape, so an older
+runner reads it as one.
 
 Human federation through the retired runner's IdP client stops too. Once the redirect URI matches one the runner
 registered, the hub refuses the retired runner distinctly; an unknown client or an unregistered redirect URI keeps the
@@ -37,9 +37,9 @@ retired — and must be enrolled afresh; enrolling a retired runner is refused, 
 
 ## Token revocation
 
-An operator can revoke a runner's token without retiring it: the runner stays registered and unenrolled until enrolled
-afresh. Every revoked token stays refused for good, even after re-enrollment, and is refused under every runner-auth
-mode rather than merely failing to resolve. Re-enrolling an enrolled runner rotates its token the same way: the token it
-replaces is recorded revoked, so a rotated-out token is refused under every runner-auth mode too; two rotations at once
-still leave every replaced token revoked. A retired runner still carrying a token — an enrollment that raced its
-retirement — can have that token revoked the same way; a runner holding no token has nothing to revoke.
+An operator can revoke a runner's token without retiring it: the runner stays added and unenrolled until enrolled
+afresh. Every revoked token stays refused for good, even after re-enrollment. Re-enrolling an enrolled runner rotates
+its token the same way: the token it replaces is recorded revoked, the one minted when the runner was added included, so
+a rotated-out token is refused too; two rotations at once still leave every replaced token revoked. A retired runner
+still carrying a token — an enrollment that raced its retirement — can have that token revoked the same way; a runner
+holding no token has nothing to revoke.
