@@ -224,6 +224,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
   target; the grip introduces no drag handle.
+- `board-shell.shell-sweep.spec.ts` covers `BoardShell`'s lane grid under a long current-node name: one running chunk
+  whose node name runs to 120 characters, mounted at 1440px, must leave every lane equal-width and inside the viewport,
+  with the name clipped inside its card and readable whole from the card's `title` — a layout claim jsdom cannot make,
+  since it never lays out the lane grid.
 - `gardening-page-grids.shell-sweep.spec.ts` covers the three gardening sub-tabs that arrived with the five-way tab
   split and share one claim rather than each carrying its own file — Scopes, Runs, and Findings — each scoping the same
   desktop master/detail split and mobile route-driven drill-down. Table-driven over the three pages: at 1280px the list
