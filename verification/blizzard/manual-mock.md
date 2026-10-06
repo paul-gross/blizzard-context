@@ -111,17 +111,25 @@ tick.
 
 **Steps.**
 
-1. From `alpha/blizzard-mock`, reset both stores, then seed one coherent fleet:
+1. From `alpha/blizzard-mock`, reset both stores, then restart the runner so it joins the reset hub:
 
    ```bash
    uv run blizzard-mock-data reset --store hub --dir "$BZ_HUB_RUNTIME"
    uv run blizzard-mock-data reset --store runner --dir "$BZ_RUNNER_RUNTIME"
+   winter service restart alpha/runner
+   ```
+
+   The reset hub no longer knows the runner's token, so the service's `runner init --allow-readd` adds the runner again
+   under a new id, and the daemon's first registration records that id in the runner store. Wait for one `tick end` in
+   the runner's log — 30 seconds by default — then seed one coherent fleet:
+
+   ```bash
    uv run blizzard-mock-data scenario fleet --chunks 6 --seed 1 --hub-dir "$BZ_HUB_RUNTIME" --runner-dir "$BZ_RUNNER_RUNTIME"
    ```
 
-   Seed after `winter service up`, never before: `--runner-dir` has no `blizzard-runner.toml` to resolve `db_url` and
-   `runner_id` from until the runner's first start writes it —
-   [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) §Seeding both stores together owns why.
+   Seed only after that first registration: `--runner-dir` pins the runner's id from its store's identity row, which
+   only a registration with the reset hub writes — [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md)
+   §Seeding both stores together owns why.
 
 2. Open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`, confirm the six seeded chunks render with their statuses,
    and note the census.
@@ -149,17 +157,13 @@ tick.
    sqlite3 "$BZ_RUNNER_RUNTIME/data/runner.db" 'select chunk_id from usage_facts; select chunk_id from transcript_segments;'
    ```
 
-7. Do not check the HUB panel's `link` and `loop` rows before the first tick: the runner-store reset deleted the
-   `hub_control` row — `reset` only clears rows, so the table itself survives — and only the next tick's registry sync
-   re-inserts the row, so `link` reads `UNREACHABLE` regardless of the seed until then. Wait at least one tick — 30
-   seconds by default, watching the runner's log for `tick end` — then re-check every panel, now including the HUB
-   panel: `link` `CONNECTED` and `loop` `PAUSED` — the seeded local brake — now that the runner's registry sync has
-   recreated `hub_control`.
+7. Wait at least one tick after the seed — watching the runner's log for `tick end` — then re-check every panel, now
+   including the HUB panel: `link` `CONNECTED` and `loop` `PAUSED`, the seeded local brake.
 
-8. Expect the LOCAL FACT LOG to grow on that first tick: the reset emptied `external_usage_samples`, so the cadence
-   anchor `max(sampled_at)` is `None` and the interval gate does not apply — the usage sampler runs unconditionally,
-   landing an `external_subscription_usage.sampled` fact only if a readable access token lets it return a snapshot. The
-   two seeded facts must still be there and still ticked.
+8. Expect the LOCAL FACT LOG to hold more than the two seeded facts: the reset emptied `external_usage_samples`, so on
+   the restarted runner's first tick the cadence anchor `max(sampled_at)` was `None` and the interval gate did not apply
+   — the usage sampler ran unconditionally, landing an `external_subscription_usage.sampled` fact only if a readable
+   access token let it return a snapshot. The two seeded facts must still be there and still ticked.
 
 9. Re-open the board and confirm every chunk's status and the overall census are unchanged.
 

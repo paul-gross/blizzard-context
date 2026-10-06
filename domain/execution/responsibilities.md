@@ -11,6 +11,13 @@ runner's machine.
 The hub is designed to hold references to code, never code, and holds conversation only as the transcript lane's capped
 segments — rule `bzh:never-code`, owned by [../artifacts/never-code.md](../artifacts/never-code.md).
 
+The hub adds every runner: it mints the runner's id when an operator adds it, and a runner has no identity before that,
+nor any way to create one. The id never changes, and it is the runner's identity everywhere — every route, every fact
+the runner authors, every operator action. The runner's name is its own and display-only: not unique, keyed on by
+nothing, and superseded on its next registration the way its capabilities are. A runner added but never registered is
+reported as never connected, with no capabilities, which is not the same as offline. Until its first registration a
+runner claims nothing; after it, the runner keeps its id and name across a restart even while the hub is unreachable.
+
 A runner's registry entry derives everything observable, never stored flags: liveness from its most recent contact, each
 brake from the newest fact in its own stream — rule `bzh:facts-not-status`, owned by
 [../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md). Whether the runner is

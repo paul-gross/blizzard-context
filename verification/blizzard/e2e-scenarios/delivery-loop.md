@@ -20,11 +20,11 @@ and that subtest alone skips without one. It runs under both mock harnesses — 
 runner node on a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest
 on the hub's step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips
 with `fleet traces`. Its `platform spans` subtest runs the hub and the runner with platform spans at a zero root sample
-ratio, the runner enrolled at the hub and ticking over the one traced process graph its local API serves, and proves
-every worker command's span sits under its step's root with the runner's request as its child; a `runner work-items`
-command carries on to the runner's call to the hub, the hub's request under it and a store query under that. It scans
-the raw exported file for the workers' lease tokens, the runner's route token, its hub bearer and the sentinel body of
-the review's findings artifact, and fails on any; that subtest skips with `fleet traces`.
+ratio, the runner joined to the hub through `runner init` and ticking over the one traced process graph its local API
+serves, and proves every worker command's span sits under its step's root with the runner's request as its child; a
+`runner work-items` command carries on to the runner's call to the hub, the hub's request under it and a store query
+under that. It scans the raw exported file for the workers' lease tokens, the runner's route token, its hub bearer and
+the sentinel body of the review's findings artifact, and fails on any; that subtest skips with `fleet traces`.
 
 - `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts that the commit is reachable from bare `main`, that the
   hub's facts derive `done`, that the merged PR's body names the issue's forge reference and the chunk id, and that bare

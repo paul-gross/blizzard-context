@@ -396,3 +396,32 @@ Its other writes earn **no window at all**:
 
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed leases past its own
 cursor, never a corpus it would rescan to find nothing changed.
+
+## The identity row
+
+`Registration.run` (`blizzard/src/blizzard/runner/lifecycle/registration.py`), run by PULL's registry sync, records the
+id and name each successful registration answers with as the store's single `runner_identity` row, through
+`RunnerIdentityStore.record_runner_identity` (`blizzard/src/blizzard/runner/store/internal/identity_store.py`). The
+delete of the previous row and the insert of the new one share one transaction, on the `trace_export_latch` precedent
+above, so a `kill -9` leaves the previous identity or the new one, never neither and never both. The in-process holder
+it updates next is restart-erased and reseeded from the row at boot. This is a **no-window** write: there is no partner
+write a crash could separate it from, and a lost write is made again by the next tick's registration.
+
+The write owes the invariant checker nothing: the row is the newest registration's own answer, never derived from other
+facts.
+
+## The add-then-write-token window
+
+`runner init` joins a runner that holds no token, or one holding a token its hub does not know under `--allow-readd`, in
+two steps: `RunnerBootstrap.join` (`blizzard/src/blizzard/runner/hub/bootstrap.py`) adds the runner at the hub, which
+commits the new registration and its token hash before answering, then writes the token it returns to the runtime dir's
+`.env` through `HubTokenFile.write` (`blizzard/src/blizzard/runner/hub/token_file.py`). The token write itself is
+atomic, a fsynced temp file renamed over the original, so the file holds the old token or the new one, never half of
+either.
+
+The window between the add and the write is a **real window**, and its loss is **accepted** and named. A `kill -9` or a
+failed write inside it leaves the hub holding a runner as never connected, under a token nobody holds, while `.env`
+keeps what it had. A failed write exits naming `blizzard hub runner retire <id> --hub-url <hub>`; after a crash the same
+runner shows as never connected in `hub runner list`, and retiring it by its id is the recovery either way. The loss is
+one inert registry row: it holds no route and claims nothing, and re-running init adds the runner afresh. No crash point
+stands in for it.

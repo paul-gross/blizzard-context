@@ -127,6 +127,10 @@ Its other writes are exempt:
 - **Anchor and idle rows.** The first pass's anchor row, and an advance that wrote no rows, are each one cursor-row
   append with no partner write. A crash before one commits leaves the cursor where it was, and the next pass derives the
   same row from a fresh read.
+- **Schema widening.** When the current schema widens a dataset's existing `_schema/` document with nullable columns,
+  `DirectoryEgressWriter` (`blizzard/src/blizzard/hub/egress/internal/files.py`) swaps the document whole for the wider
+  one in one atomic `os.replace`, with no partner write. A crash before the swap leaves the narrower document, which the
+  next pass that writes the dataset swaps again.
 
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps and usage past its
 own cursors — the rows it has not yet written — never a corpus it would rescan to find nothing changed.

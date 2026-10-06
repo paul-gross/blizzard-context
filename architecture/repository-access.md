@@ -43,8 +43,8 @@ repositories belong to the domain layer alone.
 **Scope.** A controller answering a query straight from a read model is fine: reads bypass no invariant.
 
 **Detect.** A router or CLI handler injecting a write repository, or a mutation performed in an edge handler instead of
-delegated. `tests/test_layering.py` fails the unit tier on `IWriteSessionStore` named anywhere under `hub/cli/` other
-than `hub/cli/sessions/` (the Protocol's own package) and its composition root — `login`/`logout` take the
+delegated. `tests/test_layering.py` fails the unit tier on `IWriteSessionStore` named anywhere other than
+`foundation/operator_sessions/` (the Protocol's own package) and the composition roots — `login`/`logout` take the
 `SessionService` application service instead, never the raw seam.
 
 **Do.** `blizzard/src/blizzard/hub/api/queue.py` stays read-only over the store and delegates its writes to the queue

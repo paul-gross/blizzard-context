@@ -20,6 +20,8 @@ below is one proof, reading the directories back the way a warehouse would.
   excluding `exported_at`, and that neither dataset is empty.
 - `test_both_exports_hold_the_hubs_record` — proves every step in the chunks' history and every usage fact on the
   `spend-chunks` surface, tokens and billed cost, is in both exports.
+- `test_both_exports_name_the_runner_by_its_minted_id_and_its_name` — proves every step the runner ran and every
+  invocation carries, in both formats, the `rn_` id the hub minted for the runner beside its configured name.
 - `test_manifests_name_every_file` — proves every data file, live and backfilled, is named by exactly one manifest with
   its row count and SHA-256, and every file a manifest names exists.
 - `test_nothing_planted_leaves` — proves a scan of the decoded rows, manifests and schemas finds none of the planted

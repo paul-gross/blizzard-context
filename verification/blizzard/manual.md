@@ -111,11 +111,12 @@ while `host` accepts either form and is the only one that binds `--port`:
 
 ```bash
 blizzard hub init <dir> && blizzard hub host --dir <dir> --port <p>
-blizzard runner init <dir> && blizzard runner host --dir <dir> --port <p>
+blizzard runner init <dir> --hub <hub-url> && blizzard runner host --dir <dir> --port <p>
 ```
 
 The probe is not hub-only — the runner serves the identical stream shape at its own `GET /api/events/stream` — so a run
-is scoped to one daemon at a time and never needs both up.
+probes one daemon at a time. The runner's `init` adds it at a hub, though, so probing the runner needs a hub answering
+at `<hub-url>`; one on `auth.mode = "none"` needs no sign-in.
 
 **Steps.**
 
@@ -964,9 +965,10 @@ with a routine's charge.
   link it.
 - The hub holds no repository record — create none. With the env's mock forge, delivery resolves each cited commit
   against fixture origins that hold no real commit, and rejects every delta.
-- The verification runner has its own runtime directory (`blizzard runner init`, then set `runner_id`, `workspace_envs`
-  to the dedicated env, `max_agents = 1`, `[worker] path_prepend` to the mise shims, and `[opencode] enabled = false`),
-  a `hub_url` at the env-local hub, `BZ_HARNESS_BINARY` set to the real harness, and `base_branch` set to the branch
+- The verification runner has its own runtime directory, joined to the env-local hub with
+  `blizzard runner init <dir> --hub <env-local hub url>`, which adds it there and writes its token to `<dir>/.env`. Then
+  set `name`, `workspace_envs` to the dedicated env, `max_agents = 1`, `[worker] path_prepend` to the mise shims, and
+  `[opencode] enabled = false`, with `BZ_HARNESS_BINARY` set to the real harness and `base_branch` set to the branch
   under test. It starts from a clean environment, never the env band, so no mock fence reaches the real harness. The
   runner resets the dedicated env to `base_branch` on every acquire; a branch already checked out in another env's
   worktree cannot be that base, so name a remote-tracking ref that only the verification needs

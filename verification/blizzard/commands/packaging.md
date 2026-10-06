@@ -40,12 +40,12 @@ regression explanations, are not gated. `gate.yml` runs the command as its own d
 `mise run wire-compat` (`uv run blizzard-wire-compat --baseline merge-base --against origin/master`) fails on a breaking
 change to the declared hub↔runner wire surface (`bzh:fleet-wire-additive`,
 [`../../../architecture/system-shape/fleet-wire.md`](../../../architecture/system-shape/fleet-wire.md)):
-`openapi/hub.openapi.json`'s `/api/fleet/*` paths, the `/api/auth/jwks.json`/`/api/auth/authorize` federation routes,
-the query and path parameters of those operations, and every component schema they reach. Walks `HEAD`'s merge-base with
-`origin/master` one first-parent commit at a time, failing unless a commit the step lands carries a `!`
-(`bzh:fleet-wire-additive`). `gate.yml`'s `wire-compat` job runs this only when the triggering event is `pull_request`;
-`push.yml`'s `wire-compat-deployed` job runs `--baseline deployed` instead, diffing against the last commit `edge` was
-published from, and `dev-image` needs it.
+`openapi/hub.openapi.json`'s `/api/fleet/*` paths, the `POST /api/runners` operation `runner init` adds a runner
+through, the `/api/auth/jwks.json`/`/api/auth/authorize` federation routes, the query and path parameters of those
+operations, and every component schema they reach. Walks `HEAD`'s merge-base with `origin/master` one first-parent
+commit at a time, failing unless a commit the step lands carries a `!` (`bzh:fleet-wire-additive`). `gate.yml`'s
+`wire-compat` job runs this only when the triggering event is `pull_request`; `push.yml`'s `wire-compat-deployed` job
+runs `--baseline deployed` instead, diffing against the last commit `edge` was published from, and `dev-image` needs it.
 
 ### blizzard:wheel
 
@@ -58,8 +58,10 @@ version for dev builds and tag releases.
 
 The P5 exit criterion: the serve smoke on the built wheel in a node-free venv. `blizzard hub init <dir>` (idempotent,
 store migrated to head), then `blizzard hub host --dir <dir> --port <p>` serves the embedded board — `GET /` returns the
-Angular `index.html`, deep routes falling back to it — and `GET /api/health` returns `200`; likewise
-`blizzard runner init`/`host`.
+Angular `index.html`, deep routes falling back to it — and `GET /api/health` returns `200`. Then, with that hub still
+serving, likewise `blizzard runner init <dir> --hub http://127.0.0.1:<p>`/`host`: init adds the runner at that hub,
+which the scaffold's `auth.mode = "none"` lets it do with no sign-in, and exits non-zero, adding nothing, when no hub
+answers.
 
 ### blizzard:image-smoke
 
