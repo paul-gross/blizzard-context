@@ -33,8 +33,8 @@ below is one proof, reading the directories back the way a warehouse would.
   slowest-station recipe names the station built to be slowest on its own graph.
 - `test_cost_by_node_splits_a_shared_node_name_by_graph` — proves the cost recipe keeps `build` and `deliver` as a
   distinct station on each graph that names them, never one row per node name.
-- `test_published_newest_views_return_the_newest_copies` — proves the dictionary's published newest-copy views return the
-  identities the rows' own newest copies name, in both formats.
+- `test_published_newest_views_return_the_newest_copies` — proves the dictionary's published newest-copy views return
+  the identities the rows' own newest copies name, in both formats.
 
 ## test_egress_events_e2e
 
