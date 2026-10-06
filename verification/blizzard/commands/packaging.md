@@ -41,10 +41,11 @@ regression explanations, are not gated. `gate.yml` runs the command as its own d
 change to the declared hub↔runner wire surface (`bzh:fleet-wire-additive`,
 [`../../../architecture/system-shape/fleet-wire.md`](../../../architecture/system-shape/fleet-wire.md)):
 `openapi/hub.openapi.json`'s `/api/fleet/*` paths, the `/api/auth/jwks.json`/`/api/auth/authorize` federation routes,
-and every component schema they reach. Walks `HEAD`'s merge-base with `origin/master` one first-parent commit at a time,
-failing unless the landing commit's subject carries a `!`. `gate.yml`'s `wire-compat` job runs this only when the
-triggering event is `pull_request`; `push.yml`'s `wire-compat-deployed` job runs `--baseline deployed` instead, diffing
-against the last commit `edge` was published from, and `dev-image` needs it.
+the query and path parameters of those operations, and every component schema they reach. Walks `HEAD`'s merge-base with
+`origin/master` one first-parent commit at a time, failing unless a commit the step lands carries a `!`
+(`bzh:fleet-wire-additive`). `gate.yml`'s `wire-compat` job runs this only when the triggering event is `pull_request`;
+`push.yml`'s `wire-compat-deployed` job runs `--baseline deployed` instead, diffing against the last commit `edge` was
+published from, and `dev-image` needs it.
 
 ### blizzard:wheel
 
