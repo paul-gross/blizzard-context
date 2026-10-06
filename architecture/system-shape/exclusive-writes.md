@@ -76,7 +76,10 @@ Stated so a reviewer need not re-derive them:
   - `DeleteService.delete`, for its whole transaction — the deleted chunk's row lock does not reach the other end of an
     outgoing edge the delete releases, so a concurrent fold of that other chunk, locking only its own survivor and merge
     ids, could otherwise remint the edge with the deleted chunk as its dependent.
-  - `DependencyService.release` — as its only lock, being exempt from the row lock (Scope above).
+  - `DependencyService.release` — as its only lock. Release is exempt from the row lock (Scope above) because it can
+    only shrink the standing set, so it can never close a cycle, and its read-then-write of the standing row runs inside
+    one transaction; the cycle lock is belt-and-braces, holding the standing set still under a `declare` or `group`
+    cycle walk in flight, though a shrink alone could never turn that walk's verdict wrong.
   - `EgressSweep.sweep` and `EgressReset.reset` — the export's pass lock, which keeps an operator's cursor move from
     being overwritten by the advanced cursor a pass in flight appends. `egress_cursor` holds no row known to exist to
     lock, and the sweep it serializes against is itself a single-process background loop.

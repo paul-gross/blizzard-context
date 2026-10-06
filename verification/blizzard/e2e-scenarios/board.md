@@ -86,9 +86,9 @@ The operational event log, holding both in-process and browser-driven assertions
   operational event that reads back off the live `GET /api/events` and fans out as an `event-logged` SSE frame read off
   the stream's replay tail — the runner-emit, hub-fold, read-and-fan-out chain, no browser.
 - `test_the_events_tab_renders_filters_and_updates_live_in_the_browser` — seeds a mixed-severity feed through
-  `POST /api/fleet/events`, opens the Events tab from `nav-events`, and proves rows render severity-then-recency (the
-  critical row first though it arrived last), the severity filter narrows then restores, a fresh post-load event arrives
-  live over SSE with no reload, and a row deep-links to its chunk.
+  `POST /api/fleet/events`, opens the Events tab from `nav-events`, and proves rows render newest-first (the critical
+  row first because it arrived last), the severity filter narrows then restores, a fresh post-load event arrives live
+  over SSE with no reload, and a row deep-links to its chunk.
 - `test_the_events_grid_does_not_collapse_at_a_narrow_viewport` — proves the Events tab's time-first grid's
   narrow-viewport fallback: at a real ~390px width a long-message row stays bounded in height and the page gains no
   horizontal scroll.
