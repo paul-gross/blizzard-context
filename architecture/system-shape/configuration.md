@@ -190,16 +190,12 @@ Stated so a reviewer need not re-derive them — each is a site the rules above 
 the change that brings it under the rule:
 
 - **Only work sources, repositories, secrets, scopes, and routines are configured records so far.** `config_changes`
-  carries all five, and `ConfigAuthoring` the first three; `SecretValue` and `ISecretReader` are in the tree but no
-  consumer reads through them yet. Repository records are inert: delivery reads none of them. Graphs are not records
-  under the rule: a graph's mutable flag is a sparse `PATCH` that appends a policy fact, with no `revision` or change
-  row.
+  carries all five, and `ConfigAuthoring` the first three; the hub reads work sources and repositories on use. Graphs
+  are not records under the rule: a graph's mutable flag is a sparse `PATCH` that appends a policy fact, with no
+  `revision` or change row.
 - **A secret's retire and enable move no revision.** Each appends a change row at the secret's unchanged revision,
   because its value is sealed against `(name, revision)` and a revision moved without resealing would leave the value
   undecryptable. A work source's or a repository's retire and enable do move its revision.
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
   its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
   than refusing it.
-- **Work sources and forge settings are read once at start.** `blizzard/src/blizzard/hub/app.py` builds the work-source
-  registry from the hub's file and reads the forge endpoint and token from `BZ_FORGE_*` in the process environment — the
-  configured forge endpoint `bzh:pluggable-seams`'s recorded positions describe.

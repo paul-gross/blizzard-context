@@ -964,8 +964,8 @@ with a routine's charge.
 - The routine's graph is minted: `blizzard hub graph sync`, then `hub routine create` for the routine, plus one
   throwaway routine per extra scope slug (a scope is minted by the routine that names it) so `routine scope add` can
   link it.
-- The hub has no forge configured — start it without `BZ_FORGE_URL`. With the env's mock forge, delivery resolves each
-  cited commit against fixture origins that hold no real commit, and rejects every delta.
+- The hub holds no repository record — create none. With the env's mock forge, delivery resolves each cited commit
+  against fixture origins that hold no real commit, and rejects every delta.
 - The verification runner has its own runtime directory (`blizzard runner init`, then set `runner_id`, `workspace_envs`
   to the dedicated env, `max_agents = 1`, `[worker] path_prepend` to the mise shims, and `[opencode] enabled = false`),
   a `hub_url` at the env-local hub, `BZ_HARNESS_BINARY` set to the real harness, and `base_branch` set to the branch
