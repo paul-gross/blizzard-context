@@ -197,10 +197,10 @@ by default, or the declaration's own `credentials_path`) is inside the renewer's
 access-token `exp` — and a working `codex` binary the runner's environment can reach. Record the credential file's own
 `tokens.refresh_token` and access-token `exp` before starting.
 
-**Steps.** Let one of the runner's own sampling cadences fire naturally (`ExternalUsageSample` calls `renew_if_due()`
-before every due sample), or drive it directly via a normal tick with the subscription's cadence already elapsed.
-Optionally, run `codex` by hand at the same time (e.g. `codex login status`), so the live proof also covers the
-concurrent-writer path the mock only simulates.
+**Steps.** Run the runner under `blizzard runner host` and let its credential-renewal pass fire naturally: the pass runs
+on its own driver, beside the tick, and renews a due credential once the subscription's cadence has elapsed since its
+newest renewal. A `runner tick` never renews. Optionally, run `codex` by hand at the same time (e.g.
+`codex login status`), so the live proof also covers the concurrent-writer path the mock only simulates.
 
 **Passes when.** The credential file's `tokens.refresh_token` and access-token `exp` have both changed from what was
 recorded in Setup, `codex login status` (or an equivalent vendor-CLI check) still reports the login as active afterward,

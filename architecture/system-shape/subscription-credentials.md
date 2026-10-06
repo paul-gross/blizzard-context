@@ -18,8 +18,10 @@ just renewed. Delegating keeps one owner of the write.
 **Detect.** A `.write_text(`, `.write_bytes(`, or write-mode `open(` under `runner/subscriptions/`; a renewer binding
 that parses a refresh response and stores its tokens itself.
 
-**Do.** The OpenAI renewer drives `codex app-server` over a one-shot subprocess seam and reports `renewed`, `not due`,
-or `failed` with a cause; the refreshed tokens land on disk as the vendor's side effect.
+**Do.** The OpenAI renewer reads the credential's expiry to answer whether a renewal is due, a read-only check that
+writes nothing. When asked to renew, it drives `codex app-server` over a one-shot subprocess seam and reports `renewed`,
+or `failed` with a cause; the refreshed tokens land on disk as the vendor's side effect. The two halves are separate
+calls, so the renewal pass records its claim between them.
 
 **Don't.** A renewer that calls the provider's token endpoint and rewrites `auth.json` — blizzard now owns a write it
 cannot coordinate with the vendor's lock.
