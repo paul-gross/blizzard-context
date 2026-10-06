@@ -17,9 +17,9 @@ The unit spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md). Read
 The four sweep guards, each the mechanical signature of a defect class otherwise caught only by hand in review:
 
 - `test_config_keys_reach_a_gating_tier.py` — fails on any key of an operator-written config dataclass — the
-  `RunnerConfig`/`HubConfig` roots and the nested blocks a `[[work_source]]` or `[[auth.oauth.provider]]` binds — that
-  no gating-tier test names (`bzh:gating-tier-pins-production-paths`). A floor only, since `test_runner_loop_build.py`
-  pins the actual threading of the keys it covers.
+  `RunnerConfig`/`HubConfig` roots and the nested blocks an `[[auth.oauth.provider]]` binds — that no gating-tier test
+  names (`bzh:gating-tier-pins-production-paths`). A floor only, since `test_runner_loop_build.py` pins the actual
+  threading of the keys it covers.
 - `test_no_duplicate_test_bodies.py` — fails on two cases sharing a body, module constants folded into the key so two
   files reading their own same-named constant are not duplicates (`bzh:case-pins-its-own-name`).
 - `test_openapi_descriptions.py` — scans both committed specs, and the `wire/` models no spec reaches, for prose an

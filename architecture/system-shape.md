@@ -87,10 +87,10 @@ core changes whenever that adapter does.
 Stated so a reviewer need not re-derive them:
 
 - The built-in hub work source, `HubWorkSource`, implements the `IWorkSource` seam, but its binding is in-process and
-  always seated — never a `[[work_source]]` config entry with a credential — because the hub's own store is the item's
-  system of record: there is no external system for a config entry to point at. Its concrete wiring stays at the
-  composition root, `hub/app.py::build_hosted_app`, per `bzh:dependency-injection`; only the walk that seats it differs
-  — outside the configured-entry loop, in `WorkSourceEntry.registry` — not the seam itself.
+  always seated — never a work source record with a credential — because the hub's own store is the item's system of
+  record: there is no external system for a record to point at. Its concrete wiring stays at the composition root,
+  `hub/app.py::build_hosted_app`, per `bzh:dependency-injection`; only the walk that seats it differs — outside the
+  record-built loop, in `WorkSourceEntry.registry` — not the seam itself.
 - The hub work source's editor capability, `IWorkEditor`, is seated the same always-on in-process way, and it is
   structural rather than a configurable opt-in because every `IWorkEditor` method returns the hub repository's own
   record types — `HubWorkItem` for `list`, `get`, `edit`, and `withdraw`, and `CreatedWorkItem` for `create`, which
