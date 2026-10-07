@@ -415,7 +415,7 @@ facts.
 `runner init` joins a runner that holds no token, or one holding a token its hub does not know under `--allow-readd`, in
 two steps: `RunnerBootstrap.join` (`blizzard/src/blizzard/runner/hub/bootstrap.py`) adds the runner at the hub, which
 commits the new registration and its token hash before answering, then writes the token it returns to the runtime dir's
-`.env` through `HubTokenFile.write` (`blizzard/src/blizzard/runner/hub/token_file.py`). The token write itself is
+`.env` through `HubTokenFile.write` (`blizzard/src/blizzard/runner/hub/internal/token_file.py`). The token write itself is
 atomic, a fsynced temp file renamed over the original, so the file holds the old token or the new one, never half of
 either.
 
