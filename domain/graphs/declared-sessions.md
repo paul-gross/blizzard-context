@@ -63,10 +63,11 @@ bounds an ordinary lineage — declaring both chooses that deliberately, and nei
 ## Rotation bounds
 
 Rotation bounds make a lineage finite: a session continues only while every measurable declared bound is under
-threshold; past one, the next member starts a new session in the same pool. That new session is a fresh mint, its owner sourced as [Harness set](#harness-set) and
-[Model preference](#model-preference) state, never carried from the session it replaces. Bounds cover context size, transcript size,
-and harness invocations — the last counting spawns, resumes, and judgements, so a node-step spends two or three. An
-unmeasurable bound is not a breach; a missing measurement leaves the session standing.
+threshold; past one, the next member starts a new session in the same pool. That new session is a fresh mint, its owner
+sourced as [Harness set](#harness-set) and [Model preference](#model-preference) state, never carried from the session
+it replaces. Bounds cover context size, transcript size, and harness invocations — the last counting spawns, resumes,
+and judgements, so a node-step spends two or three. An unmeasurable bound is not a breach; a missing measurement leaves
+the session standing.
 
 ## Harness set
 
