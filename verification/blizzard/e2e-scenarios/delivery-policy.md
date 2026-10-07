@@ -78,7 +78,8 @@ the real mock forge.
   drive flips it to `blizzard:in-progress` before `done`, where both clear — snapshotting label history every tick
   because the sweep lands asynchronously on its own interval, not in lockstep with runner ticks. The same function
   proves a chunk stopped before any runner claims it has its marker cleared on the next sweep, and a hand-deleted label
-  is re-asserted on the next sweep — the hub holds no annotation state, so it re-derives rather than repairs. It stands
-  in an outage with the forge's own `unreachable` lever — a process kill would wipe the forge's in-memory issue/label
-  state and defeat proving re-convergence — and proves the hub keeps serving reads and transitions throughout, the
-  daemon log records a `sources_skipped` entry naming the source, and the label lands once the lever clears.
+  is re-asserted within one full-pass floor (five sweep intervals) — the hub holds only in-memory probe state, so it
+  re-derives rather than repairs. It stands in an outage, longer than the floor, with the forge's own `unreachable`
+  lever — a process kill would wipe the forge's in-memory issue/label state and defeat proving re-convergence — and
+  proves the hub keeps serving reads and transitions throughout, the daemon log records a `sources_skipped` entry naming
+  the source, and the label lands once the lever clears.
