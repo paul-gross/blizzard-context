@@ -8,11 +8,12 @@ Parent: [../hub-nodes.md](../hub-nodes.md).
 
 **Rule.** An `executor: hub` node declares its work as `run:` — an ordered list of steps — never as a `prompt` a worker
 interprets. `run:` is legal only on `executor: hub`; a hub node must not declare `prompt`, `checks`, or
-`judgement.prompt`, and must declare a judgement — the mint-time validator rejects each violation as meaningless on a
-node no agent ever works. Each step is a `command` string, an optional human-readable `name` defaulting to the step's
-1-based position, and an optional `produces` naming a completion marker the executor itself records once the step exits
-0 — the signal a later re-run skips that step on ([./step-idempotence.md](./step-idempotence.md),
-`bzh:hub-node-step-idempotence`).
+`judgement.prompt`, and must declare a judgement authoring the reserved `failure` choice — a nonzero exit, a refusal,
+and a poll timeout all route it, so every hub node needs its edge. The mint-time validator rejects each violation, the
+first group as meaningless on a node no agent ever works. Each step is a `command` string, an optional human-readable
+`name` defaulting to the step's 1-based position, and an optional `produces` naming a completion marker the executor
+itself records once the step exits 0 — the signal a later re-run skips that step on
+([./step-idempotence.md](./step-idempotence.md), `bzh:hub-node-step-idempotence`).
 
 **Why.** A declared command list is replayable, reviewable text rather than a generated one, and forbidding the
 worker-only fields keeps "structurally agentless" mechanically enforceable instead of a convention a node could quietly
@@ -27,7 +28,7 @@ expected to submit, while a hub step's `produces` is a completion marker the exe
 content the step chooses.
 
 **Detect.** `run:` authored on a node whose `executor` is not `hub`; a hub node also declaring `prompt`, `checks`, or
-`judgement.prompt`; a hub node with no judgement at all.
+`judgement.prompt`; a hub node with no judgement at all; a hub node authoring no `failure` choice.
 
 **Do.** The `deliver` node in `src/blizzard/hub/graphs/basic-development-workflow/graph.yaml` is `executor: hub` with
 the single `run:` step `land-every-repo` (`command: python3 -m blizzard.hub.graphs.scripts.land_pr_ci`) and a judgement
