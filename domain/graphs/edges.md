@@ -37,7 +37,10 @@ steps judge for it, selecting an authored choice by exit code and stdout — the
 ## Failure, not judgement
 
 A missing or unparseable selection is a failure, not a judgement — it consumes a retry rather than an edge; so is a
-selection naming a choice the node does not declare. Selecting a `requires_checks` choice while any check is red is the
-same retry-consuming failure: the engine refuses the edge and fails the attempt, never overriding the worker's routing,
-and the retry's fresh session re-runs the checks. A red check reported through a non-gated choice — a fail with the
-worker's why — routes normally; that context-rich path stays open.
+selection naming a choice the node does not declare. An open ask takes precedence over that failure: a verdict-less
+reply — nothing selected, or an undeclared choice named — from a worker that asked instead of choosing parks the chunk
+on its ask ([../humans/asks.md](../humans/asks.md)) and spends no retry; the answer's resume continues the step. Only a
+verdict-less reply with no open ask behind it fails the attempt. Selecting a `requires_checks` choice while any check is
+red is the same retry-consuming failure: the engine refuses the edge and fails the attempt, never overriding the
+worker's routing, and the retry's fresh session re-runs the checks. A red check reported through a non-gated choice — a
+fail with the worker's why — routes normally; that context-rich path stays open.

@@ -31,6 +31,9 @@ takes as no change.
 ## Retiring every mint of a name
 
 Work ingested naming no graph lands on the newest enabled mint of the default name. With every mint of that name
-retired, the ingest — a work-item create or a garden proposal accept included — is refused rather than minting again
-over the brake. Reconciling a name whose every mint is retired mints a new, enabled graph when the definition changed —
-a new definition is a new graph, so the brake lifts — and mints nothing when it is unchanged.
+retired, an ingest a person drives — a work-item create, a chunk ingest by token, or a garden proposal accept — is
+refused rather than minting again over the brake. An ingest the fleet drives is deferred instead: delivery
+materialization ([../work/chunk.md](../work/chunk.md) §Materialization) holds a `create` proposal unjudged and retries
+it each pass, materializing it once a mint of the name is enabled again, so a chunk's `create` proposals wait on the
+brake rather than being lost to it. Reconciling a name whose every mint is retired mints a new, enabled graph when the
+definition changed — a new definition is a new graph, so the brake lifts — and mints nothing when it is unchanged.
