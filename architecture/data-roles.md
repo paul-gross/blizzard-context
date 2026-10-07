@@ -141,10 +141,10 @@ handle — infers orchestration instead and carries no marker.
 
 - **Collaborator**: a port — an `I[A-Z]…` name that some Protocol under `blizzard/src/blizzard/` declares, so
   `IPv4Network` is not one — or a clock, any name ending `Clock`; a driver handle, any type imported from `fastapi`,
-  `starlette`, `sqlalchemy`, `click`, or `httpx`, the packages `bzh:domain-core` keeps out of a domain core; a class
-  marked `@collaborator` or that itself infers orchestration; or a Protocol that exposes a collaborator through an
-  attribute or property of its own or of a Protocol base — a runner step's context Protocol is one, so a step holding it
-  is orchestration.
+  `starlette`, `sqlalchemy`, `click`, `httpx`, `os`, `shutil`, `subprocess`, or `tempfile`, the packages
+  `bzh:domain-core` keeps out of a domain core; a class marked `@collaborator` or that itself infers orchestration; or a
+  Protocol that exposes a collaborator through an attribute or property of its own or of a Protocol base — a runner
+  step's context Protocol is one, so a step holding it is orchestration.
 - **Port names**: the `I` prefix declares a port, so a Protocol that only describes data a consumer reads — a view
   shared by domain models, such as `HarnessSection` — takes a plain name.
 - **Directly**: the whole annotation, or an arm of a union, `Optional`, `Annotated`, `InitVar`, or `Final` — never a

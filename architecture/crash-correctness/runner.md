@@ -354,7 +354,8 @@ the credential file it describes.
 
 ## The per-lease scratch directory
 
-`WorkerScratchDirs` (`blizzard/src/blizzard/runner/process/worker_scratch.py`) is filesystem state, not a store write:
+`IWorkerScratchDirs` (`blizzard/src/blizzard/runner/process/worker_scratch.py`), driven by `WorkerScratchDirs`
+(`blizzard/src/blizzard/runner/process/internal/worker_scratch_dirs.py`), is filesystem state, not a store write:
 `Spawner.preamble` and `Spawner._worker_preamble` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) call `ensure`
 ahead of every resume and fresh spawn respectively, and `Attempt.close`
 (`blizzard/src/blizzard/runner/lifecycle/attempt.py`) calls `remove` after `record_closure` commits, never before.
