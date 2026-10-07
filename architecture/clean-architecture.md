@@ -45,6 +45,9 @@ service types a delivery collaborator by a domain Protocol, as `ApplyService` do
 
 **Don't.** A domain function that opens a SQLAlchemy session or reads a request object.
 
+**See also.** `bzh:shared-kernel` owns which business rules leave a daemon's domain for `foundation/` — the ones both
+daemons evaluate identically.
+
 ## Domain-orchestration split (`bzh:domain-orchestration-split`)
 
 **Rule.** A concept's business rules live on its model — methods on its types, or pure functions in its own module —
@@ -281,24 +284,34 @@ taking the seam or a public module.
 none of them imports a blizzard package outside it — `hub`, `runner`, `cli`, or `tools` — directly or transitively.
 Every vocabulary type a wire model carries has exactly one definition, in the kernel (`foundation/`, one module per
 vocabulary); the daemons import it from there, with no re-export at an old home, no mirror, and no mapping layer. The
-business rules over that vocabulary stay in each daemon's domain (`bzh:domain-core`). Within a daemon, a `wire/` model
-is named only at its app boundary, which maps it to domain models (`bzh:data-roles`,
-[./data-roles.md](./data-roles.md)).
+business rules over that vocabulary stay in each daemon's domain (`bzh:domain-core`), with one carve-out: a rule both
+daemons must evaluate identically, so that neither accepts what the other refuses, lives once in `foundation/` as a pure
+function over kernel vocabulary with no I/O and no collaborators; a rule only one daemon applies stays in that daemon's
+domain. Within a daemon, a `wire/` model is named only at its app boundary, which maps it to domain models
+(`bzh:data-roles`, [./data-roles.md](./data-roles.md)).
 
 **Why.** A wire model importing a daemon's domain type makes importing the wire load that daemon, so the hub loads
 runner modules and the runner loads hub modules through it. The wire stops being the one place a vocabulary changes, and
-a second copy of an enum can drift unseen.
+a second copy of an enum — or of a predicate both daemons apply — drifts unseen until the runner accepts what the hub
+refuses.
 
 **Detect.** `tests/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard package
 (check A), on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and
 on a hub or runner composition root loading the other daemon. Its moved-vocabulary check (D) fails an import of a moved
-name through any home but its `foundation/` one.
+name through any home but its `foundation/` one. A `foundation/` function that takes a repository, clock, or client,
+performs I/O, or states a rule only one daemon applies is that daemon's business rule placed in the kernel; the fix
+moves it into that daemon's domain.
 
 **Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
-`wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.
+`wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain. A rule both daemons
+judge by lives once in `foundation/` as a pure function over kernel vocabulary: `foundation/completion_gates.py` holds
+the node-step completion predicates the runner judges before it submits and the hub re-checks before it accepts, and
+`foundation/usage_windows.py` holds `admit_usage_window`, which the runner applies before it sends a usage window and
+the hub applies at intake. Both daemons import each from there; neither calls the other for the verdict.
 
 **Don't.** A `wire/` module importing from `hub/domain/` or `runner/`, or a daemon-side copy of a wire enum paired with
-a function mapping between the two.
+a function mapping between the two. Two hand-synced copies of a completion predicate, one per daemon; or one daemon
+calling the other over the wire for a verdict it can compute from the facts it already holds.
 
 **See also.** `bzh:fleet-wire-additive` ([./system-shape/fleet-wire.md](./system-shape/fleet-wire.md)) governs what may
 change on the wire; this rule makes the kernel the only place it can change.
@@ -430,4 +443,4 @@ or `from blizzard.hub.domain.chunk import Chunk` through a re-exporting `chunk/_
 importing `RunnerConfig` — a concept package reaching an edge; it takes a `RolePolicy` instead.
 
 **See also.** `bzh:domain-core` governs what every domain package may not import outward; `bzh:shared-kernel` governs
-the `foundation/` vocabulary both daemons' domains share with `wire/`.
+the `foundation/` vocabulary both daemons' domains share with `wire/`, and the rules both daemons evaluate identically.
