@@ -52,10 +52,11 @@ vocabulary, extended by runner configuration.
 
 The compaction window is a tuning knob, not a preference: a string hub-checked only for non-emptiness, reasserted on
 every invocation, and declaration-only, with no chunk-level default. Its vocabulary is the harness adapter's, not the
-hub's — nothing at mint knows which adapter will serve the session — and an adapter forwards only what its harness
-takes, logging and dropping any other value, so an unrecognized window surfaces in the runner's log rather than as a
-mint error. The Claude Code adapter forwards `auto` or a token count, bare or `k`-suffixed (`400000`, `400k`), as its
-`--autocompact`; the OpenCode adapter has no counterpart and forwards nothing.
+hub's — nothing at mint knows which adapter will serve the session — and an adapter forwards only a value shaped like
+its harness's vocabulary, logging and dropping any other, so a misshapen window surfaces in the runner's log rather than
+as a mint error. The Claude Code adapter forwards `auto` or a token count, bare or `k`-suffixed (`400000`, `400k`), as
+its `--autocompact`; the count's range is the CLI's own to enforce, so a well-shaped value outside it is forwarded and
+refused by the harness. The OpenCode adapter has no counterpart and forwards nothing.
 
 The window is commensurable only with `rotate.max_context_tokens` (both in tokens, unlike the other bounds): compaction
 shrinks context within a step, rotation ends the lineage across steps. A window below `max_context_tokens` means
