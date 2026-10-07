@@ -25,13 +25,16 @@ fastapi, starlette, sqlalchemy, click, or httpx. A runner domain-core module is 
 `bzh:domain-package-layers` runner node outside an `internal/` package (`_runner_domain_core_files`): a concept
 package's public surface holds its models, ports, and the services carrying its rules, and the adapter binding a
 framework or driver sits in its `internal/`. The layer gate already keeps every such module off `blizzard.runner.store`
-and `blizzard.runner.api`, which no row lists.
+and `blizzard.runner.api`, which no row lists. The same layer walker fails a `hub/domain/` module importing
+`blizzard.hub.config` or `blizzard.hub.delivery`, in any import form.
 
 **Do.** `blizzard/src/blizzard/hub/domain/` and the runner's concept packages (`runner/leases/`, `runner/lifecycle/`,
 `runner/tracing/`, …) import no web, ORM, or CLI package; `hub/api/`, `hub/store/`, `runner/api/`, and `runner/store/`
 depend on them, never the reverse. The hub-JWKS seam `IJwksCache` sits in `runner/auth/jwks_cache.py`; its httpx binding
 sits in `runner/auth/internal/http_jwks_cache.py`, built only in the app composition root. The runner's FastAPI
-federation router lives at `runner/api/federation.py`, not under `runner/auth/`.
+federation router lives at `runner/api/federation.py`, not under `runner/auth/`. A config value the hub domain reads is
+a domain-owned type the config edge builds (`hub/config.py` parses and renders; the domain holds the value). A domain
+service types a delivery collaborator by a domain Protocol, as `ApplyService` does with `IHubNodeExecutor`.
 
 **Don't.** A domain function that opens a SQLAlchemy session or reads a request object.
 
