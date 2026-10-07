@@ -25,12 +25,14 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   `{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }`; it is a review reference, not a signal that
   a person must merge. A replacement PR gets its own marker, so the latest recorded reference for a repo — latest in the
   order the references were durably written — is open and superseded references remain closed history; the earlier
-  `delivery-pr/<repo>` form remains readable. The repo's `merged/<repo>` marker content is the landed revision, not the
-  submitted branch tip. A landing that changes nothing lands at the target branch's revision, so that revision is its
-  landed revision. A delivery that cannot establish its landed revision records no landing for that repository. A policy
-  that deliberately parks for a person's merge may author an `awaiting-external-merge` marker in the same delivery epoch
-  as its PR reference; only that marker signals a human merge wait. The hub read projects these markers alongside
-  per-repo landing facts: closed PRs stay in history, while landed rows name only repos with a landed SHA. Writers are
+  `delivery-pr/<repo>` form remains readable. Where two references' write order was never recorded and they share one
+  write instant, which one is latest cannot be known; the read's deterministic pick is not evidence of the later write.
+  The repo's `merged/<repo>` marker content is the landed revision, not the submitted branch tip. A landing that changes
+  nothing lands at the target branch's revision, so that revision is its landed revision. A delivery that cannot
+  establish its landed revision records no landing for that repository. A policy that deliberately parks for a person's
+  merge may author an `awaiting-external-merge` marker in the same delivery epoch as its PR reference; only that marker
+  signals a human merge wait. The hub read projects these markers alongside per-repo landing facts: closed PRs stay in
+  history, while landed rows name only repos with a landed SHA. Writers are
   `blizzard/src/blizzard/hub/graphs/scripts/land_common.py` and the land scripts using it; readers are
   `blizzard/src/blizzard/hub/domain/chunk/delivery_read.py` through
   `blizzard/src/blizzard/hub/store/internal/chunk_artifacts_store.py`.
