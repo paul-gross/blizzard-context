@@ -65,7 +65,7 @@ assignment. Decision logic in a property body is therefore never mutated, and mu
 predates the rule carries a `# ast-grep-ignore: bzh:property-delegates` directive on its `def` line; the gate's
 unused-suppression check makes that list shrink-only.
 
-**Do.** `LeaseActivity.state` in `src/blizzard/runner/leases/__init__.py` returns `self._derive_state()`, a plain method
+**Do.** `LeaseActivity.state` in `src/blizzard/runner/leases/activity.py` returns `self._derive_state()`, a plain method
 that holds the precedence chain.
 
 **Don't.** A `# pragma: no mutate` workaround, a second decorator on the delegate (any decorator but a lone
