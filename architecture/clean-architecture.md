@@ -21,12 +21,19 @@ swap untouched.
 
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
 app. `tests/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module, importing
-fastapi, starlette, sqlalchemy, click, or httpx. A runner domain-core module is any module of a
-`bzh:domain-package-layers` runner node outside an `internal/` package (`_runner_domain_core_files`): a concept
-package's public surface holds its models, ports, and the services carrying its rules, and the adapter binding a
-framework or driver sits in its `internal/`. The layer gate already keeps every such module off `blizzard.runner.store`
-and `blizzard.runner.api`, which no row lists. The same layer walker fails a `hub/domain/` module importing
-`blizzard.hub.config` or `blizzard.hub.delivery`, in any import form.
+fastapi, starlette, sqlalchemy, click, httpx, os, shutil, subprocess, or tempfile. A harness binding package
+(`runner/harness/claude_code/`, `runner/harness/opencode/`) is an adapter, not a concept package: it may bind a process
+or the filesystem, so it is exempt from the `os`, `shutil`, `subprocess`, and `tempfile` half of the check and still
+held to the framework five. The binding set is named explicitly, so a new binding fails the gate until it is named. Any
+other module's stdlib-driver import needs a reasoned entry in the per-module exemption map in `tests/test_layering.py`,
+which admits only the packages it names; an entry whose module no longer imports a package it admits is stale and fails
+the gate. Pure path arithmetic (`posixpath`, `PurePosixPath`) needs no exemption, and the import check cannot see
+pathlib I/O (`Path.read_text`, `Path.mkdir`). A runner domain-core module is any module of a `bzh:domain-package-layers`
+runner node outside an `internal/` package (`_runner_domain_core_files`): a concept package's public surface holds its
+models, ports, and the services carrying its rules, and the adapter binding a framework or driver sits in its
+`internal/`. The layer gate already keeps every such module off `blizzard.runner.store` and `blizzard.runner.api`, which
+no row lists. The same layer walker fails a `hub/domain/` module importing `blizzard.hub.config` or
+`blizzard.hub.delivery`, in any import form.
 
 **Do.** `blizzard/src/blizzard/hub/domain/` and the runner's concept packages (`runner/leases/`, `runner/lifecycle/`,
 `runner/tracing/`, …) import no web, ORM, or CLI package; `hub/api/`, `hub/store/`, `runner/api/`, and `runner/store/`
