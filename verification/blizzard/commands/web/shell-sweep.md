@@ -98,8 +98,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   "mobile shell's bottom nav"). With five work items on a card, at 390px and 320px the `-webkit-line-clamp: 2` `.wi`
   lines must genuinely stack — distinct `top`s per line — with no horizontal overflow and no page error; proven able to
   fail by forcing `.wi` back to `display: inline` inside a `white-space: nowrap` container, which collapses every line
-  onto one. The desktop `LocalPanelLayout`/`ChunkRow` pair is never reached below the mobile breakpoint and deliberately
-  has no shell-sweep spec.
+  onto one. At 390px a running lease's agent-row state must render as a kit badge in `--amber`, the same computed colour
+  as its chunk card's status badge. The desktop `LocalPanelLayout`/`ChunkRow` pair is never reached below the mobile
+  breakpoint and deliberately has no shell-sweep spec.
 - `chunk-page-runner-layout.shell-sweep.spec.ts` covers the runner's chunk page (the shared fleet `ChunkPage`): at 390px
   and 320px it walks all four tabs — General, Node history, Artifacts, Transcripts — each checked for no horizontal
   overflow, exercising the General tab's `@media (min-width: 720px)` collapse and a long unbroken artifact key. Only
@@ -116,7 +117,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   stack both windows' bars within the fleet panel's width, with no overflow and no page error. It also covers a declared
   roster's aging and stale members: their "refreshed … ago" labels must resolve to genuinely distinct, non-body-text
   computed colours (amber/red), and a never-sampled member's "no sample yet" row, carrying a long miss reason, must stay
-  inside the panel rather than overflowing it.
+  inside the panel rather than overflowing it. At 390px and 1280px a runner both locally and hub paused must render its
+  LOCALLY PAUSED and HUB PAUSED badges as soft kit pills — the never-connected badge's radius and size — in
+  `--label-dim` and `--amber-hi`, with no row overflow.
 - `runners-view.shell-sweep.spec.ts` covers the mobile Fleet screen at 390px and 320px: runner cards stack without
   overlap, and long claim ids and subscription names remain inside both their card and the surrounding panel — including
   the same aging/stale colour and long-miss-reason claims `runner-view.shell-sweep.spec.ts` covers, since the mobile
@@ -131,7 +134,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   distinct `top`s — with no horizontal overflow of the panel itself, and the last-swept table's own `scrollWidth` must
   stay within its `clientWidth` rather than the long hashes forcing it wider. Proven able to fail by dropping
   `table-layout: fixed`/`overflow-wrap: anywhere` from `routine-panel.css`'s table rule, which lets a long hash push the
-  table past its section. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
+  table past its section. The record's lifecycle state renders as a kit label — retired in `--red` at every swept width,
+  enabled in `--cyan` at 1280px and 390px. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
   (`bzh:narrow-viewport-tier-rule`).
 - `scope-panel.shell-sweep.spec.ts` covers the gardening tab's scope panel (`FleetScopePanel`), stood up alone with
   `canEdit` on so the description editor and the retire action both render, and with a related-routines list whose
@@ -150,9 +154,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `fleet-kit-master-detail` host — which `routine-panel.shell-sweep.spec.ts` never mounts since it stands
   `FleetRoutinePanel` up alone. At 1280px the list and panel must sit side by side; at 740px, 700px, 390px, and 320px
   the bare route must show only the list, while a selected route must show only the detail and its Back control, with no
-  horizontal overflow. Above 720px the list and the detail column scroll independently within their bounded panes.
-  Proven able to fail by dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits in the hub's
-  mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  horizontal overflow. Above 720px the list and the detail column scroll independently within their bounded panes. At
+  1280px, 390px, and 320px a retired and a blocked routine row each carry a `--red` kit label. Proven able to fail by
+  dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits in the hub's mobile bottom tab bar,
+  so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `graph-detail.shell-sweep.spec.ts` covers the graphs container/presentational split's `GraphDetailLifecycle`, mounted
   directly with plain inputs. Its action-error line and entry line — blocks that were direct children of `.body`'s own
   `flex-direction: column; gap: 10px` (`graph-detail.css`) before the split — must genuinely stack with a real gap,
@@ -176,7 +181,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
   stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and
   the delta baseline block's finding-set-id line must sit above its per-repo landed-since lines — real CSS layout claims
-  jsdom cannot make.
+  jsdom cannot make. The previously-swept marker renders as an uppercase `--cyan` kit label inside its option row.
 - `garden-runs.shell-sweep.spec.ts` covers the gardening runs-and-findings tab's two presentational components, each
   mounted directly with plain inputs. `FleetRunList`'s escalated row, at 390px, must carry a genuinely different
   computed `background-color` from a normal row, while its `border-left-color` must equal the normal row's, since the
@@ -238,9 +243,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   the list and detail sit side by side; at 740px, 700px, 390px, and 320px the bare route shows only the list, while a
   selected route shows only the detail and its Back control, with no horizontal overflow. A separate long-list case
   proves detail opens at its own top with Back visible above the detail panel, the list stays mounted but hidden, and
-  Back restores the list's scroll position. Proven able to fail by dropping the `.kmd-pane--hidden` rule from
-  `kit-master-detail.css`. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
-  (`bzh:narrow-viewport-tier-rule`).
+  Back restores the list's scroll position. A retired scope row carries a `--red` kit label inside the list at 1280px
+  and 390px. Proven able to fail by dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits
+  in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every in-flow control live
   at once — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real dock share)
   and at 390px/320px (`bzh:narrow-viewport-tier-rule`): neither Pause nor the `⋯` overflow trigger nor the close button
@@ -256,7 +261,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   Pause/Resume must open the wired `KitTooltip` naming the claiming runner — a real CDK overlay claim jsdom cannot make
   — and the header's two clusters (identity, actions) must never overflow with a long chunk id and runner name live at
   once, at 390px/320px (the mobile shell `app-panel-mobile.html` mounts `app-machine-detail` inside,
-  `bzh:narrow-viewport-tier-rule`) and at a `LocalPanelLayout` desktop width.
+  `bzh:narrow-viewport-tier-rule`) and at a `LocalPanelLayout` desktop width. At 1024px and 390px the status label
+  renders as a kit badge in its tone's colour, the node and attempt suffix plain text after it.
 - `chunk-artifact-structured.shell-sweep.spec.ts` covers the two structured readings of a garden asset artifact —
   `ChunkArtifactDelta` and `ChunkArtifactSurvey` — mounted through `ChunkArtifactBody` inside a height-capped flex
   column. Each must bound itself at the cap and scroll its own overflow (`.rd-body`'s `scrollHeight` exceeding its
@@ -302,7 +308,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   inside the table's own full width.
 - `chunk-transcripts-provenance.shell-sweep.spec.ts` covers the transcripts tab's per-segment harness-provenance badges:
   two segments recording distinct harnesses render two genuinely distinct badges, at the board's own narrow,
-  mobile-reachable width, with no page error and no horizontal overflow.
+  mobile-reachable width, with no page error and no horizontal overflow. An open, truncated segment's `open` and
+  `truncated` tags render as kit pills in `--label-dim` and `--amber`, each bordered in its own colour.
+- `mobile-tab-bar.shell-sweep.spec.ts` covers the shared mobile bottom tab bar (`MobileTabBar`) carrying the four-tab
+  runner strip with a two-digit Asks count: at 390px and 320px the count renders as the kit's `--amber` count chip,
+  inside its own tab and the bar, with no horizontal overflow of the bar.
 - `chunk-timeline-provenance.shell-sweep.spec.ts` covers the node-history timeline's harness-provenance badges: two
   steps recording distinct harnesses render two genuinely distinct badges beside their own usage figures, at the same
   narrow width, with no page error and no horizontal overflow. A second case, mounting both the timeline and the Node
@@ -318,4 +328,5 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-awaiting-human.shell-sweep.spec.ts` covers the Gate panel's origin line: a long runner id in "gated by runner …
   (runner config)" wraps inside the panel at about 390px rather than forcing horizontal scroll.
 - `app-info-view.shell-sweep.spec.ts` covers the runner panel's info section with a runner imposing several gates: the
-  Gates fact row stays inside the panel at about 390px rather than forcing horizontal scroll.
+  Gates fact row stays inside the panel at about 390px rather than forcing horizontal scroll. Its fleet strip's counts
+  colour through their chunk-status tones — ready `--label-dim`, running `--amber`, waiting `--amber-hi`, needs `--red`.

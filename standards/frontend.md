@@ -86,8 +86,11 @@ ladder.
 - **Id shortening** — `compactRef` (`fleet/lib/core/compact-ref.ts`) owns every id shortening; a raw `id.slice(0, N)` is
   a violation.
 - **Status to color** — the shared Tone vocabulary (`fleet/lib/kit/tone.ts`), reached through
-  `fleet/lib/core/chunk-lanes.ts`'s `STATUS_TONE` map and `runner/src/app/board/chunk-list/chunk-status.ts`'s
-  `deriveMachineChunkStatus`.
+  `fleet/lib/core/chunk-lanes.ts`'s `STATUS_TONE` map, `runner/src/app/core/lease-status.ts`'s `deriveLeaseStatus` (a
+  lease's own state), `runner/src/app/board/chunk-list/chunk-status.ts`'s `deriveMachineChunkStatus` (a held chunk,
+  falling through to the lease fold), and `hub/src/app/core/lifecycle-tone.ts`'s `lifecycleTone` (a hub record's
+  enabled/retired lifecycle). A label renders through `KitBadge`; a surface needing the bare colour instead binds
+  `toneColor(tone)` (`fleet/lib/kit/kit-badge.ts`) rather than re-typing the ladder.
 - **Relative age** — `ageMs`, `formatAge`, and `formatSeenAgo` implement the bounded-skew clause of `./wire.md`'s
   `bzh:utc-instants` once for every consumer: a derived age tolerates bounded clock skew, then falls through to the
   backend-derived liveness — never clamping a large negative value to a confident zero.
