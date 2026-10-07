@@ -57,7 +57,8 @@ A pause suppresses rather than refuses it: the chunk stays parked and the move i
 lifts. An open takeover suppresses it only while the runner still holds the displaced session's lease — the person is
 inside that session, and killing it under them is worse than a pending move. The hub holds no takeover state to refuse
 with, so deferral at the runner is the whole mechanism, and the chunk reads as moved while the human works at the stale
-epoch. Against a chunk parked `needs_human`, whose lease the escalation already closed, nothing defers the re-entry
+epoch. Against a chunk parked `needs_human`, whose lease the escalation already closed, nothing defers the re-entry: it
+may land in a workdir a person has taken over, and that is left to the operator
 ([../humans/takeover.md](../humans/takeover.md)).
 
 The runner's own brake ([../execution/pause.md](../execution/pause.md)) defers only the re-entry: the displaced worker
