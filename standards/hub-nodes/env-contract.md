@@ -58,6 +58,10 @@ unauthorized write is swallowed and the script proceeds to report success anyway
   when the pointers do not resolve or do not agree.
 - `land_common.MarkerWriter` — the one marker channel every land script holds, as `LandRun.markers` — treats any non-2xx
   as fatal, raising rather than returning, so a merge can never land with no durable record of it.
+- A land script's two delivery markers carry, as `content`: for `delivery-pr/<repo>/<number>`, the JSON object
+  `{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }`; for `merged/<repo>`, the landed revision.
+  These are the shapes the hub's delivery read projects — what each marker means is
+  [delivery](../../domain/artifacts/delivery.md)'s.
 - `land_common.LandRun` assembles a PR body and merge message from `BZ_HUB_WORK_ITEMS`, `BZ_HUB_CHUNK_ID`, and
   `BZ_HUB_CHUNK_URL` as finished strings, never parsing a work ref itself; a missing or malformed `BZ_HUB_WORK_ITEMS`
   degrades to no items, as an absent `BZ_HUB_FEATURE_TITLE` degrades to the branch name.

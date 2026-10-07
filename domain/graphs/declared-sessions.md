@@ -37,10 +37,9 @@ chooses its default harness, whose model resolution falls back to its default ev
 list.
 
 A session's model is resolved once, where a pool starts the session, and is that session's model for its whole lineage;
-a resume never re-resolves it. Where the runner supplies a model on resume, as it does for Claude Code, it reasserts the
-resolved model on each resume rather than trusting the harness to restore it. Where it supplies none, as for OpenCode
-today, the resume relies on the harness restoring the session's own model. Model changes therefore take effect only
-where a pool starts a session: a mid-chunk edit rotates the pool at its next member rather than switching a running
+a resume never re-resolves it. A harness that takes a model on resume is handed the resolved model each time rather than
+trusted to restore it; one that takes none restores the session's own model itself. Model changes therefore take effect
+only where a pool starts a session: a mid-chunk edit rotates the pool at its next member rather than switching a running
 session's model.
 
 ## Effort

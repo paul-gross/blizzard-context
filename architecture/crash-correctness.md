@@ -7,6 +7,10 @@ expensive to retrofit. Crash correctness is an orthogonal dimension, not a fifth
 sweep that exercises them is a verification method (`blizzard:crash-sweep`) in the matrix. Each rule follows the slot
 skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
+| Spoke                                                        | Read when…                                                                                                                                                 |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [./crash-correctness/lanes.md](./crash-correctness/lanes.md) | Adding or changing a periodic pass or a store-and-forward pass, on the hub or the runner — what it owes around its body beyond the four requirements below |
+
 ## A steppable loop (`bzh:steppable-loop`)
 
 **Rule.** The daemon loop's phases — the runner's REAP, PULL, FILL, ADVANCE, and the hub's coordinator loop — are
@@ -142,8 +146,6 @@ chunk looking landed while an invariant is silently violated.
 
 ## See also
 
-- [./crash-correctness/lanes.md](./crash-correctness/lanes.md) — `bzh:lane-contract`, what a periodic pass or
-  store-and-forward lane owes around its body, including the crash-point family clause these requirements impose on it.
 - [./system-shape.md](./system-shape.md) — `bzh:deterministic-shell`, and, through its
   [store-facts spoke](./system-shape/store-facts.md), `bzh:facts-not-status` — the invariants these requirements rest
   on.

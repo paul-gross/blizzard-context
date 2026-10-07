@@ -12,11 +12,10 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 `mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
 (`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, hub↔runner wire compatibility
-(`blizzard:wire-compat`), then eslint, vitest, the web structural gate's real-timer, kit-floor, retired-board-control,
-placement, and package-layers sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`),
-and generated-client drift over `web/`. Stage regenerated `openapi/` or `web/` client output before running it: the
-drift checks are a working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one
-fails (`web:client-drift`).
+(`blizzard:wire-compat`), then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`), the
+bundle-composition check (`web:bundle-composition`), and generated-client drift over `web/`. Stage regenerated
+`openapi/` or `web/` client output before running it: the drift checks are a working-tree-vs-index `git diff`, so a
+staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
 
 `mise run gate` is not the full master merge gate — it omits `blizzard:service-test` and the bounded crash-sweep CI
 profile (`mise run crash-sweep-ci`); the `pr` and `push` workflows run both as separate real gate jobs, so a PR breaking
@@ -29,11 +28,10 @@ green `blizzard:gate` already covers it; the row below exists for running the ru
 `mise run process-ref-lint` (`vale --output=line .`) from the repo root — `styles/Blizzard/ProcessReference.yml` and
 `styles/Blizzard/ChangeHistory.yml` against `.vale.ini`'s `[*.md]`, `[{src,tests,scripts}/**/*.py]`,
 `[src/**/*.{yaml,yml}]`, and `[web/projects/**/*.{ts,css}]` sections. A process reference (tracker, issue or PR number,
-review/finding id, phase, or lettered-change token) or crisp change-history narration (`split out of`,
-`moved here from`, `formerly`, `once did`, `before this phase`) is a hard failure. The generated web clients are
-excluded; `.html` templates are outside the configured extensions. Other history shapes, including `used to` in
-regression explanations, are not gated. `gate.yml` runs the command as its own dedicated job, installing Vale through
-`jdx/mise-action`.
+review/finding id, phase, or lettered-change token) or crisp change-history narration — the shapes `ChangeHistory.yml`'s
+own token list names — is a hard failure. The generated web clients are excluded; `.html` templates are outside the
+configured extensions. Other history shapes, including `used to` in regression explanations, are not gated. `gate.yml`
+runs the command as its own dedicated job, installing Vale through `jdx/mise-action`.
 
 ### blizzard:wire-compat
 

@@ -1,8 +1,8 @@
 # Workflows
 
-How blizzard work reaches `master`, and the named passes that feed it — the harness's workflows routing hub. Each
-workflow document owns choreography and landing roles; the facts a step acts on stay with their owners, pointed to.
-Parent hub: [../index.md](../index.md).
+The procedures the harness choreographs end to end — how blizzard work reaches `master`, and the passes an operator or
+agent drives by hand — the harness's workflows routing hub. Each workflow document owns choreography and landing roles;
+the facts a step acts on stay with their owners, pointed to. Parent hub: [../index.md](../index.md).
 
 | File                                                             | When to read                                                                                                                                          |
 | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
