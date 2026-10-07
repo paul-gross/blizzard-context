@@ -59,8 +59,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
     estimate, the token breakdown's and the timeline's one combined `~$X.XX` figure must each render with no horizontal
     overflow of the tab.
   - Transcripts-tab stacking: the tab composes `fleet-kit-master-detail`, whose nav-beside-viewer split collapses below
-    `@media (min-width: 720px)` — with one stubbed segment open at 390px, the step nav's `top` must sit above the segment
-    body's, with no horizontal overflow; proven able to fail by forcing `kit-master-detail.css`'s base `:host`
+    `@media (min-width: 720px)` — with one stubbed segment open at 390px, the step nav's `top` must sit above the
+    segment body's, with no horizontal overflow; proven able to fail by forcing `kit-master-detail.css`'s base `:host`
     `flex-direction` to `row`.
   - Scroll: serves a 60-turn segment at 390×700 — the tab's box must stay bounded by the viewport, and `.tx-view` must
     genuinely scroll (`scrollTop` round-trips past 0); proven able to fail by deleting the transcripts container's
@@ -75,8 +75,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
     phone widths.
 - `chunk-artifacts-tab-layout.shell-sweep.spec.ts` covers the hub Artifacts tab's composed chain through a real router,
   proving the panel host's `flex: 1; min-height: 0` carries the flex chain to a definite height for the composed
-  `fleet-kit-master-detail` split and an overflowing artifact nav list genuinely scrolls; proven able to fail by deleting
-  that pair from `chunk-artifacts-panel.css`'s `:host`, which leaves the tab's box unbounded.
+  `fleet-kit-master-detail` split and an overflowing artifact nav list genuinely scrolls; proven able to fail by
+  deleting that pair from `chunk-artifacts-panel.css`'s `:host`, which leaves the tab's box unbounded.
 - `chunk-facts-alignment.shell-sweep.spec.ts` covers the chunk detail facts/usage table pair — `ChunkFacts` with
   `ChunkTokenBreakdown` projected as its sibling `<dl class="kv">` — a geometry check that the shared
   `--kv-label-col`/`--chunk-facts-pad` custom properties keep the tables' columns aligned when a long wrapped Runner
@@ -149,10 +149,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `gardening-routines-page.shell-sweep.spec.ts` covers the container's `.gr-layout` list-beside-panel split — its
   `fleet-kit-master-detail` host — which `routine-panel.shell-sweep.spec.ts` never mounts since it stands
   `FleetRoutinePanel` up alone. At 1280px the list and panel must sit side by side; at 740px, 700px, 390px, and 320px
-  the bare route must show only the list, while a selected route must show only the detail and its Back control, with
-  no horizontal overflow. Above 720px the list and the detail column scroll independently within their bounded panes.
-  Proven able to fail by dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits in the hub's mobile bottom tab
-  bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  the bare route must show only the list, while a selected route must show only the detail and its Back control, with no
+  horizontal overflow. Above 720px the list and the detail column scroll independently within their bounded panes.
+  Proven able to fail by dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits in the hub's
+  mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `graph-detail.shell-sweep.spec.ts` covers the graphs container/presentational split's `GraphDetailLifecycle`, mounted
   directly with plain inputs. Its action-error line and entry line — blocks that were direct children of `.body`'s own
   `flex-direction: column; gap: 10px` (`graph-detail.css`) before the split — must genuinely stack with a real gap,
@@ -188,11 +188,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `flex-direction` to `row`. Gardening sits in the hub's mobile bottom tab bar, so the narrow width binds
   (`bzh:narrow-viewport-tier-rule`).
 - `gardening-proposals-page.shell-sweep.spec.ts` covers the garden proposal docket container's `.gp-layout`
-  list-beside-panel split — its `fleet-kit-master-detail` host: the list and panel sit side by side at 1280px; at
-  740px, 700px, 390px, and 320px the bare route shows only the docket, while a selected route shows only the detail and
-  a visible Back control that returns to the docket, with no horizontal overflow. The real detail panel's evidence-row locus (`.pp-finding-locus`) also wraps a long, unbroken path at 390px
-  rather than widening the panel past its column, and a proposal citing no findings at all withholds the whole Evidence
-  section at 390px, with `.gp-layout` still not overflowing horizontally.
+  list-beside-panel split — its `fleet-kit-master-detail` host: the list and panel sit side by side at 1280px; at 740px,
+  700px, 390px, and 320px the bare route shows only the docket, while a selected route shows only the detail and a
+  visible Back control that returns to the docket, with no horizontal overflow. The real detail panel's evidence-row
+  locus (`.pp-finding-locus`) also wraps a long, unbroken path at 390px rather than widening the panel past its column,
+  and a proposal citing no findings at all withholds the whole Evidence section at 390px, with `.gp-layout` still not
+  overflowing horizontally.
 - `gardening-proposal-pass-dialog.shell-sweep.spec.ts` covers the Pass dialog's own view, mounted directly with plain
   inputs: at 390px and 1024px the footer's Cancel/Pass buttons must genuinely sit side by side, neither overflowing the
   dialog panel.
@@ -232,14 +233,14 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   with the name clipped inside its card and readable whole from the card's `title` — a layout claim jsdom cannot make,
   since it never lays out the lane grid.
 - `gardening-page-grids.shell-sweep.spec.ts` covers the three gardening sub-tabs that arrived with the five-way tab
-  split and share one claim rather than each carrying its own file — Scopes, Runs, and Findings — each composing the same
-  `fleet-kit-master-detail` split and mobile route-driven drill-down. Table-driven over the three pages: at 1280px the
-  list and detail sit side by side; at 740px, 700px, 390px, and 320px the bare route shows only the list, while a
+  split and share one claim rather than each carrying its own file — Scopes, Runs, and Findings — each composing the
+  same `fleet-kit-master-detail` split and mobile route-driven drill-down. Table-driven over the three pages: at 1280px
+  the list and detail sit side by side; at 740px, 700px, 390px, and 320px the bare route shows only the list, while a
   selected route shows only the detail and its Back control, with no horizontal overflow. A separate long-list case
   proves detail opens at its own top with Back visible above the detail panel, the list stays mounted but hidden, and
   Back restores the list's scroll position. Proven able to fail by dropping the `.kmd-pane--hidden` rule from
-  `kit-master-detail.css`. Gardening sits in the hub's mobile bottom tab bar,
-  so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  `kit-master-detail.css`. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
+  (`bzh:narrow-viewport-tier-rule`).
 - `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every in-flow control live
   at once — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real dock share)
   and at 390px/320px (`bzh:narrow-viewport-tier-rule`): neither Pause nor the `⋯` overflow trigger nor the close button
