@@ -14,7 +14,8 @@ default scope no scope yet holds, or a delivery lane's review round naming one i
 and does not overwrite what is already recorded against it: minting is idempotent, and a scope's description is changed
 only by explicitly editing it. The description at mint depends on what names the scope:
 
-- A routine naming its default scope mints a blank description.
+- A routine naming its default scope mints a blank description. The one path that does not mint is a configuration
+  document: its routine entry may only name a scope the document declares or one already stored.
 - An operator minting a scope directly supplies its description.
 - A review round's mint carries a hub-written description naming its chunk, an operator's to edit later.
 
@@ -77,10 +78,12 @@ sent to another scope or another graph.
   holding it.
 - **A scope that does not exist** — when a routine's declared set names one, grown or shrunk; the growing verb mints
   nothing of its own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
+- **A scope a configuration document's routine entry names that the document neither declares nor finds stored** — the
+  document never mints a scope implicitly.
 - **A graph that does not resolve** — no enabled graph carries the name, resolution being
-  [graphs/identity.md](./graphs/identity.md)'s — both when a routine is authored, create and edit alike, and when it
-  runs: a graph may retire after a routine came to point at it, and the run is refused rather than the routine
-  repointed.
+  [graphs/identity.md](./graphs/identity.md)'s — both when a routine is pointed at one, at create or at an edit that
+  changes its graph, and when it runs: a graph may retire after a routine came to point at it, and the run is refused
+  rather than the routine repointed. Restating the graph a routine already points at is not pointing.
 - **An effective scope outside the routine's own related set** — an explicit override naming a scope the routine has not
   linked in, or naming no scope at all
   ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)) — when a run is addressed at
