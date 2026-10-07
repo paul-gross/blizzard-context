@@ -161,26 +161,45 @@ the same process graph with explicit lifetimes:
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py`, injected into the served app in
   `blizzard/src/blizzard/runner/app.py` and the periodic loop's wiring in `blizzard/src/blizzard/runner/loop_wiring.py`
 
-The CLI modules below are roots for short-lived commands — they wire collaborators once, inline, at the top of the
-command body, without joining the hosted process graph:
+Every click command body under a `*/cli/` directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is a
+short-lived root: it wires collaborators once, inline, at the top, without joining the hosted process graph. A root
+resolves what a test may swap from `ctx.find_object(<carrier>)` and defaults to the production one when the invoker
+handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test patches is not a
+seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`; the root groups resolve
+it and pass it into `OperatorTrace` and `WorkerSession` as required arguments. `runner/cli/runtime.py`'s `init` resolves
+its own hub-clients carrier the same way, keeping the HTTP default out of the `runner` group so a worker verb never
+loads a daemon's stack.
 
-- `blizzard/src/blizzard/runner/cli/runtime.py`
-- `blizzard/src/blizzard/runner/cli/external_usage.py`
-- `blizzard/src/blizzard/runner/cli/opencode.py`
-- `blizzard/src/blizzard/tools/invariants.py`
-- `blizzard/src/blizzard/hub/cli/__init__.py` — the `hub` group callback, which every verb's context inherits `ctx.obj`
-  from
+This prose rule is wider than the mechanical roster: `tests/test_layering.py::_COMPOSITION_ROOTS` stays the narrower set
+of modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a CLI module
+outside it is not a violation.
 
-The same reasoning extends to a helper a command's own root calls into rather than repeating:
+The same reasoning extends to a helper a command's own root calls into rather than repeating, provided the root passes
+in whatever varies:
 
 - `blizzard/src/blizzard/runner/cli/daemon.py`'s `uds_client` builds the local UDS `httpx.Client` both
-  `RunnerDaemon.reach` and `runner/cli/transcript.py`'s `_daemon_holding` need, shared rather than duplicated, with
-  neither call site substituting a fake for it in a test.
+  `RunnerDaemon.reach` and `runner/cli/transcript.py`'s `_daemon_holding` need, shared rather than duplicated; each
+  caller passes the trace-header source its command resolved, so no call site reads one ambiently.
 - `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_stores` builds the runner's read-only store bundle and disposes
   the engine on exit, so `runner/cli/prompt.py`'s `_stored_override` calls into it instead of repeating the construction
   outside a composition root.
 
-**Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method.
+Example — a click command taking its swappable collaborators from the invoker:
+
+```python
+@click.command()
+@click.pass_context
+def init(ctx: click.Context, ...) -> None:
+    collaborators = ctx.find_object(InitCollaborators) or InitCollaborators(_http_hub_clients)
+    with collaborators.join_with(config) as (identity, admin):
+        _join_hub(config, identity, admin, allow_readd=allow_readd)
+
+
+# in a test: result = CliRunner().invoke(blizzard, ["runner", "init", ...], obj=InitCollaborators(fake_hub.clients))
+```
+
+**Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method; a module-level
+`client_factory` that a test monkeypatches.
 
 ## Narrow seams and step context Protocols (`bzh:narrow-seams`)
 
