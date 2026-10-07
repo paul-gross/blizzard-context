@@ -96,6 +96,23 @@ Its other writes are exempt:
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps past its own cursor
 — the rows it has not yet told — never a corpus it would rescan to find nothing changed.
 
+## The forge-status annotation sweep
+
+`AnnotationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/observability/forge_status.py`) writes forge labels and
+keeps a durable memory of the sources it annotates. It has no registered crash point: each effect and its record pair
+has no window that loses anything.
+
+- **Label writes on an annotating source** have no hub record. The forge's own markers are the record, and every full
+  pass re-reads them, so a crash between two writes leaves a gap the next full pass closes.
+- **A departure's clear before it is forgotten** replays as a no-op. A crash between them leaves the source remembered;
+  the next pass re-reads its markers, clears any remainder, and then forgets it.
+- **An entrant is remembered before its first label write.** A crash after the entry write leaves a remembered source
+  with nothing to clear. The entry write is ordered ahead of the effects so that a crash plus the source then being
+  disabled can never orphan labels no memory names.
+
+The probe and last-pass instant live in memory only. A restart runs a full pass, so no durable probe state is owed under
+`bzh:probe-gated-pass`'s floor.
+
 ## The egress export sweep
 
 `EgressSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) writes closed steps, usage, and

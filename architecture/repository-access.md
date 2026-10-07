@@ -282,9 +282,8 @@ reads `derivation_signature()` first, returns when it matches the last converged
 not due, and otherwise runs the full pass and records both the signature and the instant. An unchanged pass costs the
 probe's one statement.
 
-**Don't.** `blizzard/src/blizzard/hub/domain/observability/forge_status.py`'s `AnnotationReconciler.sweep`, which reads
-`live_work_refs()` and every source's `marked_refs()` unconditionally on each pass, so an idle fleet pays the whole diff
-every interval, changed or not.
+**Don't.** A converging `sweep()` that reads its whole corpus and every remote's state unconditionally on each pass, so
+an idle fleet pays the whole diff every interval, changed or not.
 
 **See also.** [`./crash-correctness.md`](./crash-correctness.md) `bzh:steppable-loop` — the pass this rule gates is one
 of its step functions — and `bzh:injected-clock` there, whose clock the floor reads. `bzh:bulk-reconstitution` above —
