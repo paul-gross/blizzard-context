@@ -34,7 +34,7 @@ it writes needs a row lock.
   writer — mechanically flagged by this rule's ast-grep rule (`contracts/ast-grep/rules/store-exclusive-write.yml`),
   which flags any `import threading` under `src/blizzard/hub/**`.
 - A `.with_for_update()` call under `src/blizzard/hub/**` — it renders nothing on SQLite, so the guard read holds no
-  writer lock. Mechanically flagged by `contracts/ast-grep/rules/store-no-for-update.yml` (`bzh:store-no-for-update`).
+  writer lock. Mechanically flagged by `contracts/ast-grep/rules/store-no-for-update.yml`.
 - A locked transaction whose row lock targets a row that may not yet exist when two writers race to create it — a no-op
   `UPDATE` locks nothing on an empty table, so the exclusion never engages. Not mechanically checkable; judged at
   review. The remedy is the keyed-lock-row form under **Do**.
