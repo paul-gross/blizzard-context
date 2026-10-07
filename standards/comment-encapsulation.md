@@ -9,7 +9,8 @@ A docstring or comment on a boundary — one of the seams §Scope lists for its 
 the boundary's own vocabulary: parameters, return, error contract, invariants. It never names a party on the other side:
 no concrete caller, no loop step, no CLI or UI surface, no consuming container, page, or spec, no sibling or concrete
 implementation. The discipline is symmetric — an implementation never re-explains the seam contract it implements, and a
-caller never explains its callee.
+caller never explains its callee. A shared-kernel module's reason for living there is the bare fact that it is shared,
+never what each side does with it.
 
 On a wire model, the boundary is per field, not per model (`bzh:one-prose-home`'s wire-field row): a field's own `#`
 comment states only that field's meaning, never the model's collective contract or another field's. Two fields — even on
@@ -34,7 +35,7 @@ Binds the same trees as `bzh:comment-locality`, and the seams it holds are each 
 
 | Tree                                                  | Seams                                                                                                                                   |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src` | A Protocol, an interface dataclass, a wire model, a store schema                                                                        |
+| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src` | A Protocol, an interface dataclass, a wire model, a store schema, a shared-kernel module's docstring (`bzh:shared-kernel`)              |
 | `blizzard/web/projects`                               | An exported `interface` or type alias, an `InjectionToken`, a component's `input()` and `output()` members, a library's `public-api.ts` |
 
 `blizzard-context`'s `exemplars/` files are expository teaching artifacts and are not bound.
@@ -70,6 +71,10 @@ blocked: BlockedView | None = None
 export const STREAM_SOURCE = new InjectionToken<StreamSourceFactory>('fleet.STREAM_SOURCE');
 ```
 
+```python
+"""The lease vocabulary the wire carries — one definition, shared by both daemons."""
+```
+
 ## Don't
 
 ```python
@@ -87,6 +92,10 @@ blocked: BlockedView | None = None
 /** Overridden by `live-feed.spec.ts` with a fake so reconnects run without a browser; `BoardShell`
  * provides the real one at bootstrap. */
 export const STREAM_SOURCE = new InjectionToken<StreamSourceFactory>('fleet.STREAM_SOURCE');
+```
+
+```python
+"""The lease vocabulary — shared by the hub that judges expiry and the runner that reads it to renew."""
 ```
 
 ## See also
