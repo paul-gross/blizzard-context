@@ -17,7 +17,8 @@ reads newest first across every severity, each row keeping its severity, and is 
 chunk.
 
 Both vocabularies are closed: the hub refuses an `event.recorded` fact whose kind is not in §Event kinds, or whose
-severity is not the one that kind declares.
+severity is not the one that kind declares. It also refuses an `event.recorded` fact of a kind the log only projects —
+`needs-human` is projected from open escalations, never recorded.
 
 The log is bounded, at most 200 rows per read, the filters applied first and the cap after recency ordering — it keeps
 the newest rows, whatever their severity. The route caps below the hub's general list maximum.
@@ -35,19 +36,19 @@ the newest rows, whatever their severity. The route caps below the hub's general
 | `repositories-disagree`        | `critical` | A deliver hub node's chunk spans repository records that name different forges, owners, base branches or secrets, so there is no single landing target; the step is refused before any command runs and routes its failure choice                                                                   |
 | `attempt-failed`               | `warning`  | An attempt died and a retry will run                                                                                                                                                                                                                                                                |
 | `command-failed`               | `warning`  | A captured spawn, git-push, or environment-prep command failed, carrying the command and its stderr tail                                                                                                                                                                                            |
-| `work-item-close-failed`       | `warning`  | A closure attempt failed, and a later sweep retries it; or found the item gone at its source, which retires the closure unretried                                                                                                                                                                   |
+| `work-item-close-failed`       | `warning`  | A closure attempt failed, and a later sweep retries it; or found the item gone at its source, which retires the closure unretried — announced once per item and outcome, however often the retry fails                                                                                              |
 | `transcript-truncated`         | `warning`  | A transcript segment stopped shipping content — recorded on the segment itself as well, never silent                                                                                                                                                                                                |
 | `transcript-sidechain-dropped` | `warning`  | A transcript segment observed unlinked sidechain turns it cannot attribute, latched so it warns once per (segment, agent)                                                                                                                                                                           |
 | `worker-context-warned`        | `warning`  | A worker session's context tokens crossed the configured warn line — reported once per lease, on its first crossing                                                                                                                                                                                 |
-| `trace-export-failed`          | `warning`  | A daemon's trace export failed after a success; its cursor holds and its sweep retries with backoff — announced once per outage                                                                                                                                                                     |
-| `trace-window-skipped`         | `warning`  | A daemon's trace cursor jumped forward, carrying the skipped window so it can be replayed                                                                                                                                                                                                           |
+| `trace-export-failed`          | `warning`  | A daemon's trace export failed; its cursor holds and its sweep retries with backoff — announced on the first failure of an outage, including one before any success                                                                                                                                 |
+| `trace-window-skipped`         | `warning`  | A daemon's trace cursor jumped forward past unsent work, carrying the skipped window so it can be replayed; a jump over a window that held nothing to send announces nothing                                                                                                                        |
 | `trace-config-rejected`        | `warning`  | Tracing was configured in a way the daemon cannot honor, naming the setting; that daemon serves with tracing off                                                                                                                                                                                    |
-| `egress-write-failed`          | `warning`  | A fact-egress pass failed after a success — a missing or unwritable directory, a full disk, a name collision, a row the format cannot hold — carrying the cause; its cursor holds and its sweep retries with backoff, announced once per outage                                                     |
-| `egress-config-rejected`       | `warning`  | The export was configured in a way the hub cannot honor — Parquet without its install extra, naming it, or a hashing file path policy whose `path_key_env` variable is unset, naming the variable; the hub serves with the export off, or with only the events dataset off for a missing key        |
+| `egress-write-failed`          | `warning`  | A fact-egress pass failed — a missing or unwritable directory, a full disk, a name collision, a row the format cannot hold — carrying the cause; its cursor holds and its sweep retries with backoff, announced on the first failure of an outage, including one before any success                 |
+| `egress-config-rejected`       | `warning`  | The export was configured in a way the hub cannot honor — Parquet without its install extra, naming it, or a hashing file path policy without the key it hashes file paths with, naming the setting; the hub serves with the export off, or with only the events dataset off for a missing key      |
 | `attempt-abandoned`            | `info`     | Given up because the chunk moved on (reassigned or detached), not because the work failed                                                                                                                                                                                                           |
 | `work-item-closed`             | `info`     | A landed chunk's work item was closed at its own source ([./work/chunk.md](./work/chunk.md))                                                                                                                                                                                                        |
 | `trace-export-recovered`       | `info`     | A daemon's first trace export to succeed after a failure                                                                                                                                                                                                                                            |
-| `egress-write-recovered`       | `info`     | The first fact-egress pass to succeed after a failure                                                                                                                                                                                                                                               |
+| `egress-write-recovered`       | `info`     | The first fact-egress pass after a failure that placed something; a pass that wrote nothing announces no recovery                                                                                                                                                                                   |
 | `egress-cursor-reset`          | `info`     | An operator moved a fact-egress dataset's cursor, carrying the dataset, the position it left, the one it moved to, and whether the window between was skipped or repeated — a reset to the position it already stands at reads as repeated                                                          |
 
 An escalation ([./humans/escalation.md](./humans/escalation.md)) remains its own fact under its own supersession rule;
@@ -82,8 +83,13 @@ These produce no activity-feed row:
 
 An operator can have the record told again, or reflected elsewhere, without changing it:
 
-- **A window ending in the future is refused.** A trace replay or a fact-egress backfill names a window that must end at
-  or before now; one reaching past now is refused outright, before anything is told.
+- **A window out of bounds is refused.** A trace replay or a fact-egress backfill names a window that must start before
+  it ends, span no wider than the verb's configured maximum window, and end at or before now; one that fails is refused
+  outright, before anything is told — checked in that order, so an inverted or empty window is refused as such before
+  its width or its end is judged.
+- **A backfill is refused before anything is told.** Its refusals are checked in order: a real run with nowhere to
+  write, then the window, then — for the events dataset — a missing key the export hashes file paths with, then a
+  dataset the export does not configure.
 - **A backfill past the live position is written anyway.** Backfill rows reaching beyond a dataset's live cursor are
   written, and the live export writes those rows again when its cursor gets there — the repetition is expected.
 - **A dry run needs no destination.** A dry-run backfill or replay only counts, so it runs with the export or tracing
@@ -91,12 +97,14 @@ An operator can have the record told again, or reflected elsewhere, without chan
 - **A re-derive counts only what it derived.** Re-deriving a chunk's or the fleet's transcript events reports the
   segments it actually derived: one gone by then, or whose chunk has no graph to place it on, is not counted. A
   re-derive naming a chunk or segment the hub does not hold answers with nothing derived rather than an error — it is a
-  convergence trigger, not a read.
-- **A transcript record's first write wins.** A re-shipped record under a key already accepted is acknowledged as
-  applied without comparing its content; a runner that needs to change what it shipped ships a superseding segment.
+  convergence trigger, not a read. A re-derive naming both a segment and a chunk is refused; it names one or the other.
+- **An accepted transcript record's first write wins.** A re-shipped record under a key already accepted is acknowledged
+  as applied without comparing its content; a runner that needs to change what it shipped ships a superseding segment.
+- **A capped record is judged by its sequence.** A record under a key the cap rejected is adjudicated afresh when it
+  arrives under a fresh sequence, and reported capped again when it arrives under a replayed one.
 - **Forge labels follow the annotating set.** A work source the hub annotates carries status labels on its forge items.
-  The hub remembers which sources it annotates across restarts, so a source taken out of annotation has every status
-  label it carries cleared once; a source removed from the hub's configuration entirely keeps its labels, with nothing
+  The hub remembers which sources it annotates across restarts, so a source switched off or retired has every status
+  label it carries cleared once; only a retired source whose credentials are also retired keeps its labels, with nothing
   left to clear them through. A hub that never annotated a source never clears it.
 
 ## See also
