@@ -20,7 +20,11 @@ number itself; in practice the files it has caught were also
 container/presentational concerns, but the ceiling now reaches every `.ts` file this config reads, not only components.
 Also carries a `no-restricted-syntax` rule over `ExportAllDeclaration` in `projects/*/src/lib/*/index.ts` —
 [`../../../../architecture/frontend-structure/disjoint-diffs.md`](../../../../architecture/frontend-structure/disjoint-diffs.md)
-`bzh:frontend-disjoint-diffs`'s ban on a sub-barrel `export *`, scoped so fleet's own `public-api.ts` stays legal.
+`bzh:frontend-disjoint-diffs`'s ban on a sub-barrel `export *`, scoped so fleet's own `public-api.ts` stays legal. The
+same rule bans a zero-arg `new Date()` and `Date.now()` in non-spec `projects/**/*.ts`
+([`../../../../standards/frontend.md`](../../../../standards/frontend.md) `bzh:frontend-formatters`), exempting only
+`fleet/lib/core/now-signal/`; the `lib/**/index.ts` block restates both selector sets, since flat config replaces a
+rule's options per matching block.
 
 ### web:typecheck
 
