@@ -28,12 +28,13 @@ preference, never a model the fleet must have: tier-to-model mapping is runner c
 harness-agnostic (`bzh:app-agnostic-graphs` in
 [../../architecture/system-shape.md](../../architecture/system-shape.md)).
 
-Model resolution is left-to-right; an unresolvable entry is skipped. With an authored harness set, a wholly unresolvable
-native-name-only list can fall back to the runner's default for a sole acceptable harness. A list containing a
-`blizzard:`-namespaced tier instead requires resolution of at least one preference: a harness resolving none is skipped,
-even if it is the only one, in which case selection fails. With no authored harness set, selection is bypassed: the
-runner chooses its default harness, whose model resolution falls back to its default even for an entirely unresolvable
-tier list.
+Model resolution is left-to-right; an unresolvable entry is skipped. With a harness set in effect — authored, or
+inherited as [Harness set](#harness-set) states — a wholly unresolvable native-name-only list can fall back to the
+runner's default for a sole acceptable harness. A list containing a `blizzard:`-namespaced tier instead requires
+resolution of at least one preference: a harness resolving none is skipped, even if it is the only one, in which case
+selection fails. Only an empty effective harness set — none authored and none inherited — bypasses selection: the runner
+chooses its default harness, whose model resolution falls back to its default even for an entirely unresolvable tier
+list.
 
 A session's model is resolved once, where a pool starts the session, and is that session's model for its whole lineage;
 a resume never re-resolves it. Where the runner supplies a model on resume, as it does for Claude Code, it reasserts the
@@ -49,9 +50,12 @@ vocabulary, extended by runner configuration.
 
 ## Compaction window
 
-The compaction window is a tuning knob, not a preference: an opaque string the harness adapter passes straight through
-(Claude Code's `--autocompact`), hub-checked only for non-emptiness, reasserted on every invocation, and
-declaration-only, with no chunk-level default.
+The compaction window is a tuning knob, not a preference: a string hub-checked only for non-emptiness, reasserted on
+every invocation, and declaration-only, with no chunk-level default. Its vocabulary is the harness adapter's, not the
+hub's — nothing at mint knows which adapter will serve the session — and an adapter forwards only what its harness
+takes, logging and dropping any other value, so an unrecognized window surfaces in the runner's log rather than as a
+mint error. The Claude Code adapter forwards `auto` or a token count, bare or `k`-suffixed (`400000`, `400k`), as its
+`--autocompact`; the OpenCode adapter has no counterpart and forwards nothing.
 
 The window is commensurable only with `rotate.max_context_tokens` (both in tokens, unlike the other bounds): compaction
 shrinks context within a step, rotation ends the lineage across steps. A window below `max_context_tokens` means
@@ -72,11 +76,14 @@ the session standing.
 ## Harness set
 
 The harness set is an ordered, unique, nonempty list when authored — unlike model, whose empty list is itself a valid
-no-preference declaration, an authored empty harness list is rejected outright; omit the key to accept every harness.
-Resolution is harness-primary, model-secondary: a fresh mint walks the set in declared order, and only for whichever
-harness can serve does its own model preference resolve, never the reverse — a later harness's earlier-preferred model
-still loses to an earlier harness's later one. A member the fleet doesn't hold is still valid authored policy: which
-harnesses a runner actually binds is a runner-time fact, never a mint-validation concern, so authoring an id no runner
-yet binds mints cleanly. A single-harness set follows [Model preference](#model-preference), including its authored-tier
-resolution requirement; a multi-harness set requires strict per-harness resolution for any nonempty model preference
-list — a harness resolving none of it is skipped rather than falling back within it.
+no-preference declaration, an authored empty harness list is rejected outright. Omitting the key inherits the chunk's
+default harness set ([../work/chunk.md](../work/chunk.md) §Model, effort, and harness defaults), and selection walks the
+inherited set exactly as it walks an authored one; an empty inherited set is the one case that bypasses selection
+([Model preference](#model-preference)). Resolution is harness-primary, model-secondary: a fresh mint walks the set in
+declared order, and only for whichever harness can serve does its own model preference resolve, never the reverse — a
+later harness's earlier-preferred model still loses to an earlier harness's later one. A member the fleet doesn't hold
+is still valid authored policy: which harnesses a runner actually binds is a runner-time fact, never a mint-validation
+concern, so authoring an id no runner yet binds mints cleanly. A single-harness set follows
+[Model preference](#model-preference), including its authored-tier resolution requirement; a multi-harness set requires
+strict per-harness resolution for any nonempty model preference list — a harness resolving none of it is skipped rather
+than falling back within it.
