@@ -82,7 +82,9 @@ answers different questions, not because one exit outranks another.
 Both a finding's `class` and a proposal's `class` are the deployment's own vocabulary — a kind of weed, a kind of
 response. The hub indexes and counts them, and never interprets either: it can tell how often a class recurs without
 knowing what the name means, which is what any case for mechanizing a judgment rests on. A finding's `locus` is where it
-lives, read and stored the same way.
+lives, read and stored the same way. Opaque is not the same as optional: a finding's `class`, `locus`, and `summary` are
+never blank, whichever route mints it — a run's delta or a review's round — and a single blank or whitespace-only one
+refuses the whole delivery, since a finding nobody can read is no observation at all.
 
 ## A proposal's findings are optional
 
