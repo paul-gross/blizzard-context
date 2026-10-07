@@ -69,7 +69,9 @@ scheme, or status-to-color ladder; each resolves through its single owner in fle
 status-color table — turns one formatting fix into an edit spanning every file with its own copy.
 
 **Detect.** Hand-rolled date parsing, formatting, or tooltip strings; `Date.now()` or `new Date()` inside a
-`computed()`; raw id slicing; a component-local status-color `Record` or CSS ladder.
+`computed()`; a raw `Date.now()` or zero-arg `new Date()` in non-spec code (`web:lint`'s `no-restricted-syntax` clock
+selectors flag it); a time helper called without a `now`; raw id slicing; a component-local status-color `Record` or CSS
+ladder.
 
 **Do.** Resolve each display concern through its owner:
 
@@ -79,6 +81,8 @@ status-color table — turns one formatting fix into an edit spanning every file
   needs the full-datetime tooltip `formatAbsolute` renders.
 - **Self-advancing display** — `injectNowSignal` (`fleet/lib/core/now-signal/`) owns any display that must advance on
   its own rather than only when fresh data arrives.
+- **Single clock reading** — `FLEET_CLOCK` (`fleet/lib/core/now-signal/`) owns a one-shot reading — an event stamp, a
+  query window cut once. Every time helper takes `now` from `injectNowSignal` or `FLEET_CLOCK`; none defaults it.
 - **Id shortening** — `compactRef` (`fleet/lib/core/compact-ref.ts`) owns every id shortening; a raw `id.slice(0, N)` is
   a violation.
 - **Status to color** — the shared Tone vocabulary (`fleet/lib/kit/tone.ts`), reached through
@@ -89,7 +93,8 @@ status-color table — turns one formatting fix into an edit spanning every file
   backend-derived liveness — never clamping a large negative value to a confident zero.
 
 **Don't.** `Date.now()` inside a `computed()` — the read is untracked, so the component freezes at whatever its input
-signals last produced instead of ticking; `injectNowSignal` closes exactly that gap.
+signals last produced instead of ticking; `injectNowSignal` closes exactly that gap. A raw `Date.now()` or zero-arg
+`new Date()` outside `fleet/lib/core/now-signal/` — a hidden clock no spec can pin.
 
 **See also.** A status map in fleet picks a display tone or board lane only; whether a status is finished or terminal is
 a backend judgment read from a wire field — `bzh:frontend-wire-conformist`
