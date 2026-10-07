@@ -400,8 +400,9 @@ imports it. `tests/test_layering.py` fails the unit tier on all six:
 `test_hub_domain_packages_import_only_what_their_layer_allows` walks every domain module against the table's mirror,
 `_DOMAIN_PACKAGE_LAYERS`, `test_hub_domain_package_layers_are_acyclic` holds that dict acyclic with its keys equal to
 the package directories, and `test_hub_domain_package_inits_re_export_nothing` holds every package `__init__.py` to a
-docstring and the `__future__` import, and `test_each_hub_domain_name_has_one_import_path` holds every import of a
-domain module's name to the module defining it. `test_domain_layer_check_counts_every_import_form`,
+docstring and the `__future__` import, `test_runner_node_package_inits_re_export_nothing` holds every runner node's
+package `__init__.py` to the same, and `test_each_hub_domain_name_has_one_import_path` holds every import of a domain
+module's name to the module defining it. `test_domain_layer_check_counts_every_import_form`,
 `test_domain_layer_cycle_check_catches_a_cycle`, `test_a_domain_init_that_imports_a_name_is_flagged`, and
 `test_domain_second_spelling_check_flags_an_import_through_an_importer` prove the walker, the cycle check, the re-export
 check, and the second-spelling check fire on planted trees. `test_runner_packages_import_only_what_their_layer_allows`
