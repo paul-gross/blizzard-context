@@ -285,9 +285,9 @@ none of them imports a blizzard package outside it — `hub`, `runner`, `cli`, o
 Every vocabulary type a wire model carries has exactly one definition, in the kernel (`foundation/`, one module per
 vocabulary); the daemons import it from there, with no re-export at an old home, no mirror, and no mapping layer. The
 business rules over that vocabulary stay in each daemon's domain (`bzh:domain-core`), with one carve-out: a rule both
-daemons must evaluate identically, so that neither accepts what the other refuses, lives once in `foundation/` as a pure
-function over kernel vocabulary with no I/O and no collaborators; a rule only one daemon applies stays in that daemon's
-domain. Within a daemon, a `wire/` model is named only at its app boundary, which maps it to domain models
+daemons must evaluate identically, so that neither accepts what the other refuses, lives once in `foundation/` as pure
+functions or methods of frozen kernel types, with no I/O and no collaborators; a rule only one daemon applies stays in
+that daemon's domain. Within a daemon, a `wire/` model is named only at its app boundary, which maps it to domain models
 (`bzh:data-roles`, [./data-roles.md](./data-roles.md)).
 
 **Why.** A wire model importing a daemon's domain type makes importing the wire load that daemon, so the hub loads
@@ -298,16 +298,15 @@ refuses.
 **Detect.** `tests/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard package
 (check A), on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and
 on a hub or runner composition root loading the other daemon. Its moved-vocabulary check (D) fails an import of a moved
-name through any home but its `foundation/` one. A `foundation/` function that takes a repository, clock, or client,
-performs I/O, or states a rule only one daemon applies is that daemon's business rule placed in the kernel; the fix
-moves it into that daemon's domain.
+name through any home but its `foundation/` one. A business rule in `foundation/` that only one daemon applies is that
+daemon's rule placed in the kernel; the fix moves it into that daemon's domain. One both daemons apply that takes a
+repository, clock, or client, or performs I/O, is made pure, with the facts and the instant passed in as values.
 
 **Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
-`wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain. A rule both daemons
-judge by lives once in `foundation/` as a pure function over kernel vocabulary: `foundation/completion_gates.py` holds
-the node-step completion predicates the runner judges before it submits and the hub re-checks before it accepts, and
-`foundation/usage_windows.py` holds `admit_usage_window`, which the runner applies before it sends a usage window and
-the hub applies at intake. Both daemons import each from there; neither calls the other for the verdict.
+`wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.
+`foundation/completion_gates.py` holds the node-step completion predicates — `Coverage.unmet`, `ChecksGate.violated` —
+the runner judges before it submits and the hub re-checks before it accepts, and `foundation/usage_windows.py` holds
+`admit_usage_window`, which the runner applies before it sends a usage window and the hub applies at intake.
 
 **Don't.** A `wire/` module importing from `hub/domain/` or `runner/`, or a daemon-side copy of a wire enum paired with
 a function mapping between the two. Two hand-synced copies of a completion predicate, one per daemon; or one daemon
