@@ -23,7 +23,8 @@ not contended.
 **Detect.**
 
 - A new top-level export added directly to `public-api.ts` instead of a feature sub-barrel; a sub-barrel export no
-  consumer outside its own feature directory imports.
+  consumer outside its own feature directory imports — `web:structural-gate`'s disjoint-diffs sweep catches both
+  mechanically.
 - A sub-barrel `export *`, which re-exports the feature directory's whole surface with no diff on the barrel when it
   grows — `web:lint`'s `no-restricted-syntax` rule over `ExportAllDeclaration` in `projects/*/src/lib/*/index.ts`
   catches this one mechanically; the root `public-api.ts` itself is exempt, since it legitimately stars its sub-barrels.
