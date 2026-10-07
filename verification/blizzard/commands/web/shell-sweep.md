@@ -306,6 +306,16 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   the harness list must render inside its own column rather than being swallowed by a neighbor — a real layout claim
   jsdom cannot make. Proven able to fail by widening the table's cell padding far enough that the row no longer fits
   inside the table's own full width.
+- `events-scroll.shell-sweep.spec.ts` covers the Events page's feed, mounted inside a bounded, clipping stand-in for the
+  app shell at 1280px and 390px with more events than the viewport holds. The rows list — and only the rows list — must
+  overflow its own box and scroll to the last event, proving the host chain's `min-height: 0` / `display: flex` that
+  jsdom never lays out.
+- `graph-detail-header.shell-sweep.spec.ts` covers `GraphDetailHeader`'s lifecycle badge, framed in a `KitPanel` header
+  bar at 800px for a retired and an enabled graph. The badge must render as a text-variant kit badge — no pill or soft
+  class, no border — whose computed colour equals the lifecycle tone's resolved token (`--red` retired, `--cyan`
+  enabled), and must lead the bar's right-aligned trailing cluster: well clear of the graph id, followed only by the
+  retire/re-enable control flush against the bar's right edge. Proven able to fail by dropping the badge's
+  `margin-left: auto`.
 - `chunk-transcripts-provenance.shell-sweep.spec.ts` covers the transcripts tab's per-segment harness-provenance badges:
   two segments recording distinct harnesses render two genuinely distinct badges, at the board's own narrow,
   mobile-reachable width, with no page error and no horizontal overflow. An open, truncated segment's `open` and
