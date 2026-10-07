@@ -9,14 +9,16 @@ Parent: [../hub-nodes.md](../hub-nodes.md).
 **Rule.** A step's last non-blank stdout line is the node's authored choice when it names one of the node's judgement
 choices; the resulting choice routes through the node's authored edges exactly like a worker's judged choice
 ([../../domain/graphs/edges.md](../../domain/graphs/edges.md)). A step exiting 0 without naming a choice falls through
-to the next step, and a run in which no step ever names one defaults to the reserved `success` choice. A step exiting
-nonzero always yields `failure`, the other reserved default, unless its last stdout line explicitly names one of the
-node's own choices — a nonzero exit can never select a success outcome by accident, however the script prints.
+to the next step, and a run in which no step ever names one defaults to the reserved `success` choice when the node
+authors it, and to `failure` otherwise. A step exiting nonzero always yields `failure`, the other reserved default,
+unless its last stdout line explicitly names one of the node's own choices — a nonzero exit can never select a success
+outcome by accident, however the script prints.
 
 Exit 0 with the last line reading the reserved literal `pending` is neither success nor failure: no marker is recorded,
 no transition happens, the poll-attempt fact is recorded, and the fleet-wide `hub_exec_slot` is released immediately.
-`pending`, like `success` and `failure`, is machinery-reserved and never authored as one of a node's own choices. After
-a `pending`, the whole node re-runs — skipping any step whose `produces` marker already exists
+`pending` is machinery-reserved and never authored as one of a node's own choices; `success` and `failure` are reserved
+names whose edges a node authors — every hub node authors `failure`, and `success` is opt-in. After a `pending`, the
+whole node re-runs — skipping any step whose `produces` marker already exists
 ([./step-idempotence.md](./step-idempotence.md), `bzh:hub-node-step-idempotence`) — once `poll_interval` has elapsed
 since the last attempt (default 30s, overridable per node). Pending itself spends no retry and no bounce budget; only a
 poll timeout or an incomplete-delivery crossing does.
