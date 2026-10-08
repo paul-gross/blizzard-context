@@ -119,8 +119,8 @@ rule leaking to the edge: it moves to the domain model the DTO is mapped from, o
 ### Collaborator
 
 The marker declares what the shape cannot show: a class whose fields are plain values yet whose job is work, such as
-`MigrationRunner(script_location, url)`. A class whose fields do show it — one requiring a port, a clock, or a driver
-handle — infers orchestration instead and carries no marker.
+`Tcp(host, port)`. A class whose fields do show it — one requiring a port, a clock, or a driver handle — infers
+orchestration instead and carries no marker.
 
 - **Work**: it declares, or inherits from a class under `blizzard/src/blizzard/`, a method or property other than a
   constructor; a methodless carrier is never a collaborator.
@@ -204,9 +204,9 @@ class NodeRow:
     def of(self, row: Any, *, choices: list[Choice]) -> Node: ...
 ```
 
-`blizzard/src/blizzard/foundation/store/migrations.py::MigrationRunner` holds a path and a URL and drives Alembic, so it
-is a `@collaborator`; `blizzard/src/blizzard/tools/invariants.py::QueryCheck` holds a SQLAlchemy `Connection`, so it
-infers orchestration and carries no marker.
+`blizzard/src/blizzard/runner/listeners.py::Tcp` holds a host and a port and binds a listening socket, so it is a
+`@collaborator`; `blizzard/src/blizzard/tools/invariants.py::QueryCheck` holds a SQLAlchemy `Connection`, so it infers
+orchestration and carries no marker.
 
 ## Don't
 
