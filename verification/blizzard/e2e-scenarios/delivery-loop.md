@@ -48,12 +48,8 @@ child invokes winter. The mock harness owns creation of the feature branch; the 
 
 ## test_review_cycle_e2e
 
-The cycle where review fails once, then passes, and the chunk lands. It also proves its fleet traces — the
-`fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present,
-and that subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with every
-runner node on a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest
-on the hub's step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips
-with `fleet traces`.
+The cycle where review fails once, then passes, and the chunk lands. It runs under both mock harnesses, and its
+`fleet traces` and `runner traces` subtests prove what the acceptance loop's do.
 
 - `test_review_cycle_fails_once_then_delivers` — proves the findings asset and the fail edge's `prompt_addendum` thread
   back into build's re-entry envelope — the addendum's committed marker lands on bare `main` — with build running twice
@@ -77,9 +73,8 @@ choice, `to: graph:triage-delivery`, handing the chunk off. The crash-tier compa
 `test_kill9_at_migrate_crash_point`, the `migrate.after-record.before-response` window. The scenario's git and
 fleet-truth assertions run in-process regardless; with Chromium installed it also drives the served board and `/graphs`
 explorer to prove the two-graph timeline renders, degrading to the in-process assertions — never skipping the module —
-without Chromium, and taking no built-bundle guard, so that browser half fails loudly on an unbuilt bundle. It also
-proves its fleet traces — the `fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` —
-when a collector is present, and that subtest alone skips without one.
+without Chromium, and taking no built-bundle guard, so that browser half fails loudly on an unbuilt bundle. Its
+`fleet traces` subtest proves what the acceptance loop's does.
 
 - `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — proves taking the choice records a
   migration (never a transition), re-pins `graph_id`, and re-queues the chunk at the target graph's own `build` node

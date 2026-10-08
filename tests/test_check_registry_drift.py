@@ -571,7 +571,6 @@ class RunEffectivenessGateTests(unittest.TestCase):
             self.repo_root / ".github" / "workflows" / "gate.yml",
             "      - run: mise x vale@3.22.0 -- vale --output=line .\n",
         )
-        _write(self.repo_root / "README.md", "`mise x vale@3.22.0 -- vale --output=line .`\n")
         _write(self.repo_root / "verifiability.md", "`mise x vale@3.22.0 -- vale --output=line .`\n")
         # A repo under check carries its own registry-copy census (check F reads it
         # from `repo_root`, never from beside the script) — one entry with no copies
@@ -1373,7 +1372,6 @@ class CheckGTests(unittest.TestCase):
             self.context / ".github" / "workflows" / "gate.yml",
             "      - run: mise x vale@3.22.0 -- vale --output=line .\n",
         )
-        _write(self.context / "README.md", "mise x vale@3.22.0 -- vale --output=line . # process-reference prose lint\n")
         _write(self.context / "verifiability.md", "| `blizzard-context:markdown-prose-lint` | `mise x vale@3.22.0 -- vale --output=line .` |\n")
         self.checkouts = {"blizzard": self.blizzard, "blizzard-mock": self.mock}
 
@@ -1422,17 +1420,17 @@ class CheckGTests(unittest.TestCase):
     def test_a_missing_own_doc_pin_fails(self):
         self._write_sibling(self.blizzard, self.RULE_TEXT)
         self._write_sibling(self.mock, self.RULE_TEXT)
-        (self.context / "README.md").unlink()
+        (self.context / "verifiability.md").unlink()
         findings = drift.check_G(self.context, self.checkouts)
         fails = [f for f in findings if f.status == "fail"]
         self.assertEqual(len(fails), 1)
-        self.assertIn("README.md", fails[0].message)
+        self.assertIn("verifiability.md", fails[0].message)
         self.assertIn("could not be resolved", fails[0].message)
 
     def test_own_doc_pins_disagreeing_fails(self):
         self._write_sibling(self.blizzard, self.RULE_TEXT)
         self._write_sibling(self.mock, self.RULE_TEXT)
-        _write(self.context / "README.md", "mise x vale@3.21.0 -- vale --output=line .\n")
+        _write(self.context / "verifiability.md", "mise x vale@3.21.0 -- vale --output=line .\n")
         findings = drift.check_G(self.context, self.checkouts)
         own_fails = [f for f in findings if f.status == "fail" and "own vale pins disagree" in f.message]
         self.assertEqual(len(own_fails), 1)

@@ -10,12 +10,9 @@ deliver.
 
 ## test_escalation_e2e
 
-Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`. It also proves its fleet traces —
-the `fleet traces` subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is
-present, and that subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with
-every runner node on a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease
-spans nest on the hub's step roots by id alone, each invocation carrying its harness, model and token counts; that
-subtest skips with `fleet traces`.
+Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`. It runs under both mock harnesses,
+and its `fleet traces` and `runner traces` subtests prove what the
+[acceptance loop](./delivery-loop.md#test_acceptance_loop)'s do.
 
 - `test_retries_exhausted_escalates_and_takeover_resumes_session` — proves the chunk derives `needs_human` and the
   surfaced takeover command, run verbatim, opens the parked mock session — under Claude Code it resumes it (its
@@ -26,14 +23,10 @@ subtest skips with `fleet traces`.
 
 ## test_ask_answer_e2e
 
-A build worker runs the real `blizzard runner ask` and exits. It also proves its fleet traces — the `fleet traces`
-subtest reads the hub's exported spans back from a real `otelcol-contrib` — when a collector is present, and that
-subtest alone skips without one. It runs under both mock harnesses — Claude Code, and OpenCode with every runner node on
-a graph-level session pinned to it — and its `runner traces` subtest proves the runner's lease spans nest on the hub's
-step roots by id alone, each invocation carrying its harness, model and token counts; that subtest skips with
-`fleet traces`. Its `platform spans` subtest proves what the acceptance loop's does for worker commands under their step
-roots, across the park and the resume, and its leak scan also covers the worker's question text; it skips with
-`fleet traces`.
+A build worker runs the real `blizzard runner ask` and exits. It runs under both mock harnesses, and its `fleet traces`
+and `runner traces` subtests prove what the acceptance loop's do. Its `platform spans` subtest proves what the
+acceptance loop's does for worker commands under their step roots, across the park and the resume, and its leak scan
+also covers the worker's question text; it skips with `fleet traces`.
 
 - `test_ask_parks_then_answer_resumes_session_to_done` — proves the chunk parks `waiting_on_human` with the reap clock
   stopped (extra ticks reap nothing and consume no retry; the same single question stays open), then
@@ -42,9 +35,7 @@ roots, across the park and the resume, and its leak scan also covers the worker'
 
 ## test_gate_decision_e2e
 
-A graph with a human `approve-gate` ahead of deliver. It also proves its fleet traces — the `fleet traces` subtest reads
-the hub's exported spans back from a real `otelcol-contrib` — when a collector is present, and that subtest alone skips
-without one.
+A graph with a human `approve-gate` ahead of deliver. Its `fleet traces` subtest proves what the acceptance loop's does.
 
 - `test_graph_gate_parks_a_decision_then_decide_delivers` — proves an open Decision parks carrying the build's
   git-commit artifact, `blizzard hub decisions` lists it, `blizzard hub decide … approve` resolves it first-write-wins,

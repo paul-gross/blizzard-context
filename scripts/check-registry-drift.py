@@ -1705,7 +1705,6 @@ def check_G(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
         "blizzard-context/.github/workflows/gate.yml": _inline_vale_pin(
             repo_root / ".github" / "workflows" / "gate.yml"
         ),
-        "blizzard-context/README.md": _inline_vale_pin(repo_root / "README.md"),
         "blizzard-context/verifiability.md": _inline_vale_pin(repo_root / "verifiability.md"),
     }
     for source, pin in own_pin_sources.items():
@@ -1719,7 +1718,7 @@ def check_G(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
             Finding(
                 "G",
                 "fail",
-                f"blizzard-context's own vale pins disagree across gate.yml/README.md/verifiability.md: "
+                f"blizzard-context's own vale pins disagree across gate.yml/verifiability.md: "
                 f"{sorted(resolved_own)}",
                 remediation="Bring every in-repo mention of the vale pin to the same version.",
             )

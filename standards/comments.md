@@ -78,9 +78,9 @@ or e2e change, not a fresh obligation of its own.
 - A multi-sentence comment arguing a decision no test would fail on if the decision were reverted.
 - Alternative-rebuttal framing, greppable as "rather than", "instead of", "not X because".
 - Change-history framing, greppable as "unlike the old…", "previously…", "as of this change…" (`canon:no-retro`).
-- The crisp change-history shapes (`split out of`, `moved here from`, `formerly`, `once did`, `before this phase`) are
-  caught by `blizzard:process-ref-lint`'s `styles/Blizzard/ChangeHistory.yml` in `.md`, configured `.py` and `src/`
-  YAML, and web `.ts`/`.css`. The remaining history shapes need judgement; `.html` templates are outside Vale's scope.
+- The crisp change-history shapes are caught mechanically by `blizzard:process-ref-lint`'s
+  `styles/Blizzard/ChangeHistory.yml`, whose token list is the one statement of which shapes those are. The remaining
+  history shapes need judgement; `.html` templates are outside Vale's scope.
 - Per-parameter provenance — each field introduced with the issue that added it, change history organized by parameter.
 - A process reference — a repo or hub tracker number, an issue or PR number, a review-finding id, a bare decision or
   finding id, a phase, or a lettered-change token — for example,

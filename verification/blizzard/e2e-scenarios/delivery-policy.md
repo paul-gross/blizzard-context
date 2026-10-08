@@ -15,12 +15,11 @@ without `BLIZZARD_E2E=1`, and uses no browser.
 
 A delivery conflict at the default graph's `deliver` node lands zero repos: with the mock forge's `merge_conflict` lever
 armed, the PR the build node opened is not cleanly mergeable, nothing lands, the bounce routes back to `build`, and the
-route is kept. It also proves its fleet traces — the `fleet traces` subtest reads the hub's exported spans back from a
-real `otelcol-contrib` — when a collector is present, and that subtest alone skips without one. The hub runs with
-platform spans on at a zero root sample ratio, so the subtest also proves that the deliver step's `hub run step`
-platform spans parent on that trace's exported `hub exec` span: the hub's inline derivation and the sweep agree. Its
-`platform spans` subtest proves what the acceptance loop's does for worker commands under their step roots, across the
-bounce, and scans the export for the same planted tokens; it skips with `fleet traces`.
+route is kept. Its `fleet traces` subtest proves what the [acceptance loop](./delivery-loop.md#test_acceptance_loop)'s
+does, and — the hub running with platform spans on at a zero root sample ratio — also that the deliver step's
+`hub run step` platform spans parent on that trace's exported `hub exec` span: the hub's inline derivation and the sweep
+agree. Its `platform spans` subtest proves what the acceptance loop's does for worker commands under their step roots,
+across the bounce, and scans the export for the same planted tokens; it skips with `fleet traces`.
 
 - `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — proves the chunk's route holds at
   `build` with a `bounce-envelope` artifact recorded, cause `conflict`; the conflicted PR stays open and unmerged at the
@@ -30,9 +29,7 @@ bounce, and scans the export for the same planted tokens; it skips with `fleet t
 
 Delivery policy lives in YAML, not code: the module's graph differs from the default only in `deliver`'s `run:` script
 and poll cadence, names the same `land_pr_ci` script and choice names the shipped graph authors, and drives every route
-through the same generic `executor: hub` primitive. It also proves its fleet traces — the `fleet traces` subtest reads
-the hub's exported spans back from a real `otelcol-contrib` — when a collector is present, and that subtest alone skips
-without one.
+through the same generic `executor: hub` primitive. Its `fleet traces` subtest proves what the acceptance loop's does.
 
 - `test_pr_ci_bounces_a_dirty_conflict_back_to_build` — proves a real merge conflict routes the first recorded bounce,
   cause `conflict`, back to `build`, with nothing merged at the forge.

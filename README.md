@@ -52,7 +52,7 @@ delivery, and [`verifiability.md`](./verifiability.md) for how a change *here* i
 ## A harness held to its own standard
 
 Convention repos rot quietly — a rule drifts from the code it governs and nothing fails. So this one ships gates of its
-own, run before every push and declared as methods, each command with its pin (`vale@3.22.0` among them), in
+own, run before every push and declared as methods, each command with its pin, in
 [`verifiability.md`](./verifiability.md) §Commands.
 
 The drift check is the interesting one: it reads a committed census and fails when a registry's stated shape and its

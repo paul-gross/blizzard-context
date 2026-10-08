@@ -21,7 +21,7 @@ severity is not the one that kind declares. It also refuses an `event.recorded` 
 `needs-human` is projected from open escalations, never recorded.
 
 The log is bounded, at most 200 rows per read, the filters applied first and the cap after recency ordering — it keeps
-the newest rows, whatever their severity. The route caps below the hub's general list maximum.
+the newest rows, whatever their severity.
 
 ### Event kinds
 
@@ -62,13 +62,14 @@ A deliberately deferred failure — a runner that told its operator it will star
 
 The activity feed is reconstructed fresh from the durable facts the domain already keeps — transitions, questions, gate
 decisions, runner pauses, and event-log rows; no separate log is written for it. It is bounded: 24 hours by default, at
-most the 200 newest rows. The route caps below the hub's general list maximum.
+most the 200 newest rows.
 
 A route claim is its own occurrence, distinct from a node transition. Lease-mint and usage facts can refresh chunk,
-spend, and other views without adding another activity row: only the claim's route fact belongs in the feed, once. Live
-frames naming the same fact share one row even when they arrive on different event types or replay; keyless loggable
-occurrences remain separate. The live feed uses the same mapped chunk causes as the durable activity read, not the
-latest status displayed in a chunk-change frame.
+spend, and other views without adding another activity row: only the claim's route fact belongs in the feed, once. One
+fact is one row, however many times and by whatever path news of it arrives — announced as it happens, told again, or
+reconstructed from the record — while an occurrence with no identity of its own is a row each time. A row names the
+fact's own cause, the same whether the row arrives as it happens or is reconstructed, never the chunk's status at the
+moment the news arrived.
 
 These produce no activity-feed row:
 
