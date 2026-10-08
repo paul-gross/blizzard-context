@@ -35,10 +35,10 @@ test notices.
 
 Binds code prose in both of blizzard's languages, each in its own vocabulary:
 
-| Tree                                                  | Prose bound                                                                                                                                       |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src` | `#` comments and docstrings                                                                                                                       |
-| `blizzard/web/projects`                               | `//` and `/* */` comments and `/** */` TSDoc blocks in a `.ts` file, and the `<!-- -->` and `/* */` comments in a component's template and styles |
+| Tree                                                                                | Prose bound                                                                                                                                       |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, `blizzard-context/exemplars` | `#` comments and docstrings                                                                                                                       |
+| `blizzard/web/projects`                                                             | `//` and `/* */` comments and `/** */` TSDoc blocks in a `.ts` file, and the `<!-- -->` and `/* */` comments in a component's template and styles |
 
 The generated client, `blizzard/web/projects/fleet/src/lib/api/`, is not bound: its JSDoc is `blizzard/openapi/`'s
 description text rendered, held at the wire model that generates it under §Generated docstrings.

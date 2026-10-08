@@ -33,12 +33,10 @@ reading as a contract, and the next implementer or caller inherits one consumer'
 
 Binds the same trees as `bzh:comment-locality`, and the seams it holds are each language's own:
 
-| Tree                                                  | Seams                                                                                                                                   |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src` | A Protocol, an interface dataclass, a wire model, a store schema, a shared-kernel module's docstring (`bzh:shared-kernel`)              |
-| `blizzard/web/projects`                               | An exported `interface` or type alias, an `InjectionToken`, a component's `input()` and `output()` members, a library's `public-api.ts` |
-
-`blizzard-context`'s `exemplars/` files are expository teaching artifacts and are not bound.
+| Tree                                                                                | Seams                                                                                                                                   |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, `blizzard-context/exemplars` | A Protocol, an interface dataclass, a wire model, a store schema, a shared-kernel module's docstring (`bzh:shared-kernel`)              |
+| `blizzard/web/projects`                                                             | An exported `interface` or type alias, an `InjectionToken`, a component's `input()` and `output()` members, a library's `public-api.ts` |
 
 ## Detect
 
@@ -75,6 +73,10 @@ export const STREAM_SOURCE = new InjectionToken<StreamSourceFactory>('fleet.STRE
 """The lease vocabulary the wire carries — one definition, shared by both daemons."""
 ```
 
+```python
+# (minted_at, chunk_id) for newest-first bounded reads since a timestamp.
+```
+
 ## Don't
 
 ```python
@@ -96,6 +98,10 @@ export const STREAM_SOURCE = new InjectionToken<StreamSourceFactory>('fleet.STRE
 
 ```python
 """The lease vocabulary — shared by the hub that judges expiry and the runner that reads it to renew."""
+```
+
+```python
+# The events backfill's epochs-minted-in-a-window read.
 ```
 
 ## See also
