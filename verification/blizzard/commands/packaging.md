@@ -25,13 +25,15 @@ green `blizzard:gate` already covers it; the row below exists for running the ru
 
 ### blizzard:process-ref-lint
 
-`mise run process-ref-lint` (`vale --output=line .`) from the repo root — `styles/Blizzard/ProcessReference.yml` and
-`styles/Blizzard/ChangeHistory.yml` against `.vale.ini`'s `[*.md]`, `[{src,tests,scripts}/**/*.py]`,
-`[src/**/*.{yaml,yml}]`, and `[web/projects/**/*.{ts,css}]` sections. A process reference (tracker, issue or PR number,
-review/finding id, phase, or lettered-change token) or crisp change-history narration — the shapes `ChangeHistory.yml`'s
-own token list names — is a hard failure. The generated web clients are excluded; `.html` templates are outside the
-configured extensions. Other history shapes, including `used to` in regression explanations, are not gated. `gate.yml`
-runs the command as its own dedicated job, installing Vale through `jdx/mise-action`.
+`mise run process-ref-lint` (`vale --output=line .`) from the repo root — `styles/Blizzard/ProcessReference.yml`,
+`styles/Blizzard/ChangeHistory.yml`, and `styles/Blizzard/VariantHolder.yml` against `.vale.ini`'s `[*.md]`,
+`[{src,tests,scripts}/**/*.py]`, `[src/**/*.{yaml,yml}]`, and `[web/projects/**/*.{ts,css}]` sections. A process
+reference (tracker, issue or PR number, review/finding id, phase, or lettered-change token) or crisp change-history
+narration — the shapes `ChangeHistory.yml`'s own token list names — or a repository Protocol naming who holds its
+variant (`depends on this variant`, `held by read-path edges`) is a hard failure. The generated web clients are
+excluded; `.html` templates are outside the configured extensions. Other history shapes, including `used to` in
+regression explanations, are not gated. `gate.yml` runs the command as its own dedicated job, installing Vale through
+`jdx/mise-action`.
 
 ### blizzard:wire-compat
 
