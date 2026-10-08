@@ -111,6 +111,8 @@ those constants; it reads markdown only.
   non-Python signature of the same drift.
 - The same fact explained in more than one file, rather than stated once and pointed at from the rest.
 - A pointer that also summarizes its target: a pointer names the owner, never précises the content.
+- A short-form same-repo `.py` pointer — caught by `blizzard:process-ref-lint`'s `styles/Blizzard/ShortFormPointer.yml`,
+  which checks the form, not the target.
 - A hand-maintained count — `canon:parallel-structure` (`winter-canon:/principles.md`) names it a Detect signal, and
   `canon:row-is-router` forbids one in a hub row outright.
 
