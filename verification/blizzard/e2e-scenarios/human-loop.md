@@ -11,7 +11,8 @@ deliver.
 ## test_escalation_e2e
 
 Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`. It runs under both mock harnesses,
-and its `fleet traces` and `runner traces` subtests prove what the acceptance loop's do.
+and its `fleet traces` and `runner traces` subtests prove what the
+[acceptance loop](./delivery-loop.md#test_acceptance_loop)'s do.
 
 - `test_retries_exhausted_escalates_and_takeover_resumes_session` — proves the chunk derives `needs_human` and the
   surfaced takeover command, run verbatim, opens the parked mock session — under Claude Code it resumes it (its

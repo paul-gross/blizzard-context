@@ -33,6 +33,14 @@ A platform-owned script may be handed a hub callback beyond the marker one — `
 it still reaches the hub only over HTTP, authorized by the same `X-Blizzard-Marker-Token` this node visit already
 minted.
 
+A delivery marker's `content` takes the one shape its name fixes: a PR reference, `delivery-pr/<repo>/<number>` or the
+bare `delivery-pr/<repo>`, carries the JSON object
+`{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }` whose `repo`, and `number` where the name
+carries one, match the name; `merged/<repo>` carries the landed revision, and blank content records no landing;
+`awaiting-external-merge`'s content is never read. `delivery_read.DeliveryRead`, the hub's projection of these markers,
+skips a PR reference of any other shape without error. What each marker means is
+[delivery](../../domain/artifacts/delivery.md)'s.
+
 A non-2xx response to the marker-write POST is fatal — the script must raise rather than swallow it and proceed. Beyond
 the injected keys a step inherits the hub daemon's own environment, and the executor prepends the hub interpreter's own
 bin directory to `PATH`, so a bare `python3` in a `run:` command always resolves to the interpreter the hub itself runs
@@ -46,7 +54,8 @@ reading nothing.
 **Detect.** A `run:` script referencing an env var outside this contract; a script hardcoding a forge URL or token
 instead of reading the injected credential; a marker-write POST sent with no `BZ_HUB_MARKER_TOKEN` header; a
 marker-write closure whose POST result is never checked — the discarded-response shape in which a dropped or
-unauthorized write is swallowed and the script proceeds to report success anyway.
+unauthorized write is swallowed and the script proceeds to report success anyway; a delivery marker whose content
+departs from the shapes above.
 
 **Do.**
 
@@ -58,10 +67,6 @@ unauthorized write is swallowed and the script proceeds to report success anyway
   when the pointers do not resolve or do not agree.
 - `land_common.MarkerWriter` — the one marker channel every land script holds, as `LandRun.markers` — treats any non-2xx
   as fatal, raising rather than returning, so a merge can never land with no durable record of it.
-- A land script's two delivery markers carry, as `content`: for `delivery-pr/<repo>/<number>`, the JSON object
-  `{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }`; for `merged/<repo>`, the landed revision.
-  These are the shapes the hub's delivery read projects — what each marker means is
-  [delivery](../../domain/artifacts/delivery.md)'s.
 - `land_common.LandRun` assembles a PR body and merge message from `BZ_HUB_WORK_ITEMS`, `BZ_HUB_CHUNK_ID`, and
   `BZ_HUB_CHUNK_URL` as finished strings, never parsing a work ref itself; a missing or malformed `BZ_HUB_WORK_ITEMS`
   degrades to no items, as an absent `BZ_HUB_FEATURE_TITLE` degrades to the branch name.

@@ -20,19 +20,19 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   chunk-atomicity — checking every repository merges before pushing any — is one script's construction, not a property
   of delivery: a policy could advance repositories one at a time and accept a partial land, recovered the same way, per
   repository.
-- **Delivery references.** A policy that opens a PR records a reference to it, the `delivery-pr/<repo>/<number>` marker,
-  as a durable, idempotent mid-run marker as soon as the PR is known, before any wait or merge; it is a review
-  reference, not a signal that a person must merge. A replacement PR gets its own marker, so the latest recorded
-  reference for a repo — latest in the order the references were durably written — is open and superseded references
-  remain closed history; a reference recorded under the bare `delivery-pr/<repo>` name is read the same way. Where two
-  references' write order was never recorded and they share one write instant, which one is latest cannot be known; the
-  read's deterministic pick is not evidence of the later write. The repo's `merged/<repo>` marker records the landed
-  revision, not the submitted branch tip. A landing that changes nothing lands at the target branch's revision, so that
-  revision is its landed revision. A delivery that cannot establish its landed revision records no landing for that
-  repository. A policy that deliberately parks for a person's merge may author an `awaiting-external-merge` marker in
-  the same delivery epoch as its PR reference; only that marker signals a human merge wait. The hub projects these
-  markers alongside per-repo landing facts: closed PRs stay in history, while landed rows name only repos with a landed
-  revision. What each marker's content carries is the hub-node environment contract's to state
+- **Delivery references.** A policy that opens a PR records it as a `delivery-pr/<repo>/<number>` marker — durable,
+  idempotent, written mid-run as soon as the PR is known, before any wait or merge; it is a review reference, not a
+  signal that a person must merge. A replacement PR gets its own marker, so the latest recorded reference for a repo —
+  latest in the order the references were durably written — is open and superseded references remain closed history; a
+  reference recorded under the bare `delivery-pr/<repo>` name is read the same way. Where two references' write order
+  was never recorded and they share one write instant, which one is latest cannot be known; the read's deterministic
+  pick is not evidence of the later write. The repo's `merged/<repo>` marker records the landed revision, not the
+  submitted branch tip. A landing that changes nothing lands at the target branch's revision, so that revision is its
+  landed revision. A delivery that cannot establish its landed revision records no landing for that repository. A policy
+  that deliberately parks for a person's merge may author an `awaiting-external-merge` marker in the same delivery epoch
+  as its PR reference; only that marker signals a human merge wait. The hub projects these markers alongside per-repo
+  landing facts: closed PRs stay in history, while landed rows name only repos with a landed revision. What each
+  marker's content carries is the hub-node environment contract's to state
   ([env contract](../../standards/hub-nodes/env-contract.md)).
 - **Conflict is a judged, authored outcome**, not an engine special case: a dirty repository is one of the script's own
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or

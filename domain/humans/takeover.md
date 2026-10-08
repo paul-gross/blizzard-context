@@ -38,8 +38,8 @@ carries human-in-session detail exactly while the takeover is open. Nor does the
 person: it neither resolves a decided gate nor enters a node the hub advanced the chunk to. It still steps a chunk
 parked at a hub node, and gives the environments back once the chunk ends. A runner restarted while holding such a chunk
 re-adopts it on the same terms: while a takeover is open at the chunk's latest epoch the re-adopted attempt waits,
-proceeding once the takeover ends or a fresh claim mints above its reach, and the restart holds nothing else back — a
-chunk the runner should release, reclaim, or resume after a requeue is released, reclaimed, or resumed as usual.
+proceeding once the takeover ends or a fresh claim mints above the takeover's reach. The open takeover holds back
+nothing else: a chunk the restarted runner should release, reclaim, or resume after a requeue is handled as usual.
 
 An operator's restart ([../work/restart.md](../work/restart.md)) recorded against a taken-over chunk lands in full — the
 hub keeps no takeover state to refuse it — and supersedes any park with it. Against a still-open lease the runner defers
