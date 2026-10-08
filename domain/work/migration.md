@@ -49,8 +49,9 @@ A node's authored judgement choice may target another graph (`to: graph:<name>`,
 [../graphs/edges.md](../graphs/edges.md)); taking it is the trigger — the verdict ends the attempt there and records one
 migration fact re-pinning the chunk. The landing anchors the departed node's name — that node diverted rather than
 completed its own destination — falling back to the target's entry node when nothing matches. A choice whose target
-names no enabled graph escalates the chunk to `needs_human` rather than dropping the movement. A migrating choice naming
-a model re-pins that too, as the chunk's default model preference.
+names no enabled graph escalates the chunk to `needs_human` rather than dropping the movement, and a different verdict
+submitted after it is refused, so the movement is never dropped by a later one. A migrating choice naming a model
+re-pins that too, as the chunk's default model preference.
 
 When a human gate's resolved choice is the migrating choice, the migration closes the gate's decision — the escalation
 does when the target is unresolvable — since a migration records no transition, nothing else would ever close it

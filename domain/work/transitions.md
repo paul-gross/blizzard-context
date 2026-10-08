@@ -20,3 +20,8 @@ Three guards hold at the write:
 - A runner's completion or decision is refused when, at the current epoch, it does not come from the chunk's current
   node; when its attempt's own escalation or question is open; when it comes out of a hub-executed node; or when a
   runner-config gate decision is open at that node-step ([../humans/gates.md](../humans/gates.md)).
+  - A replay of a completion or decision already recorded at the same `(from_node, epoch)` answers with its original
+    outcome, ahead of this guard.
+  - While the hub's own unresolvable-target escalation is open, only a completion that would re-escalate — the same
+    cross-graph choice, its target still unresolvable — is answered, writing nothing; every other completion, and every
+    decision, is refused ([migration.md](./migration.md)).
