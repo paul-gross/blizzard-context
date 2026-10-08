@@ -54,6 +54,9 @@ Where a command already judges the same prose, it owns that judgement and this a
   Vale rule judges every such file, and the clause's own Detect entry names the shapes that rule matches and the method
   that runs it on each tree. A template's `.html` comment carries the same shapes but Vale cannot see it there, so it
   stays in range.
+- `bzh:comment-encapsulation`'s repository-variant holder phrase (`depends on this variant`, `held by read-path edges`)
+  is out of range in blizzard's `src/` Python: blizzard's own Vale rule judges it there, run by
+  `blizzard:process-ref-lint`. Any other holder wording stays in range.
 
 ## Measurement
 
