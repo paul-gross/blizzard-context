@@ -48,7 +48,8 @@ Where a command already judges the same prose, it owns that judgement and this a
   belongs to that sweep, which sees every site declaring it; a fact nobody registered is invisible to it and visible
   here.
 - `bzh:comment-locality`'s generated-docstring clause is out of range for the three shapes
-  `blizzard/tests/test_openapi_descriptions.py` scans the committed specs for.
+  `blizzard/tests/test_openapi_descriptions.py` scans the committed specs for, except a lowercase dotted path, which
+  that scan cannot tell from a wire event name.
 - `bzh:comment-locality`'s process-reference clause is out of range in a `.py`, `.ts`, `.css`, or `.md` file: the shared
   Vale rule judges every such file, and the clause's own Detect entry names the shapes that rule matches and the method
   that runs it on each tree. A template's `.html` comment carries the same shapes but Vale cannot see it there, so it
