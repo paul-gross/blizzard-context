@@ -23,7 +23,9 @@ verb reaching those services. A domain question the pass raises goes to the user
 4. **Move each rule onto the model**, returning the fact, record, or refusal, with the instant passed in. An id a rule
    needs becomes its loaded object, resolved at the edge.
 5. **Thin the edges.** Each service keeps only clock → model → port → race handling. Each controller keeps only
-   load-or-404 → service → domain error mapped to its status.
+   load-or-404 → service → domain error mapped to its status. The rule's prose moves with the rule: the model function's
+   docstring states it once, and the service, step, or controller that delegates to it keeps at most a pointer
+   (`bzh:one-prose-home`).
 6. **Pin by value.** Each moved rule gets a unit test that needs no fake. The existing service and API tests pass with
    their assertions unchanged; a changed assertion is a changed behavior, which this pass forbids.
 7. **Report** each rule moved, from and to, and each open cell from step 3.
