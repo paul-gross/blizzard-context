@@ -1,10 +1,10 @@
 # The lane contract
 
 A **lane** is a periodic pass or store-and-forward pass that moves facts toward a sink. On the hub, every pass hosted by
-the `Sweep` driver is a lane: the annotation, event-derivation, and materialization reconcilers, the close drain, the
-trace export sweep, and the egress sweep. On the runner, every pass that moves facts off the runner is one:
-`OutboundDrain`, `TranscriptDrain`, and `LeaseTraceSweep`. The core phases (REAP, PULL, FILL, ADVANCE, RESUME), the
-samplers, and `Retention` are not lanes; `bzh:steppable-loop` and `bzh:probe-gated-pass` in
+the `Sweep` driver is a lane: the annotation and event-derivation reconcilers, the close drain, the trace export sweep,
+and the egress sweep. On the runner, every pass that moves facts off the runner is one: `OutboundDrain`,
+`TranscriptDrain`, and `LeaseTraceSweep`. The core phases (REAP, PULL, FILL, ADVANCE, RESUME), the samplers, and
+`Retention` are not lanes; `bzh:steppable-loop` and `bzh:probe-gated-pass` in
 [`../crash-correctness.md`](../crash-correctness.md) and [`../repository-access.md`](../repository-access.md) govern
 them. Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 

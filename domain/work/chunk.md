@@ -20,46 +20,16 @@ ingest naming one item twice wraps it once, in first-seen order.
 A chunk's work refs are closed at their own source through its binding once the chunk lands or an operator marks it done
 by hand — best-effort, eventually convergent, not atomic with the landing, and independent of whether the chunk keeps
 running. A chunk that lands and is only later abandoned still closes its work items, because it was in fact delivered.
-Closing a delivered item leaves a note at its source naming what landed it, once per chunk however often the close is
-retried.
+Closing a delivered item leaves a note naming what landed it only at a source with its own comment surface, once per
+chunk however often the close is retried; a hub-authored item records nothing about its landing beyond its `delivered`
+closure and its work ref.
 
 A hub item is `open`, `delivered`, or `withdrawn`, and both closures are terminal. Its title and body are never blank,
-whichever door writes them. Editing, withdrawing, and appending evidence apply to an open item only, and an edit naming
-no field still stamps the item's last-edit instant. Delivery, and the withdrawal deleting its chunk cascades, apply to
-an open item and are no-ops on a closed one; a withdrawal racing a delivery is refused, the item no longer editable. A
-withdrawn item no longer reads through its source; a delivered one still does.
-
-## Materialization
-
-A node-step's completion may carry proposed work items (`proposes_work_items`, [../graphs/nodes.md](../graphs/nodes.md))
-— a `create` (a new item's title, body, and stated priority) or an `update` (an open item's pointer plus evidence to
-append) — riding the completion alongside its artifacts. They accumulate through the graph: a gate resolution may read
-them to strike, but nothing materializes a proposal before the chunk reaches the graph's reserved terminal.
-
-The reserved-terminal transition materializes them: it turns every accumulated, unstruck proposal of a chunk that has
-moved into the graph's reserved terminal into a real work item, best-effort, eventually convergent, and not atomic with
-the transition it keys on. A `create` mints a `hub`-owned item authored by the fleet — the proposing runner, chunk, and
-node — resting on its own fresh `not_ready` chunk, exactly as a human-filed item does; one with a blank title or body is
-recorded unresolved instead, and one arriving while every mint of the default graph's name is retired is held, not
-judged ([../graphs/identity.md](../graphs/identity.md) §Retiring every mint of a name). An `update` appends its evidence
-to the pointed-at item's body and stamps its last-edit instant, when that item is open and its source can be edited;
-closed, withdrawn, nonexistent, or unresolvably-sourced, it is recorded unresolved with its reason instead, and
-materialization is never blocked by it. Every proposal is judged exactly once — replaying the same materialization pass
-mints no duplicate item and appends no duplicate evidence — but carries no epoch filter: two proposals from two epochs
-of the same node both materialize, since both rode a fence-accepted completion. Materialization keys on the graph's
-reserved terminal transition, however the chunk reached it, while Work refs' closure keys on the chunk landing or being
-marked done by hand, so the two gates diverge in both directions. A chunk stopped after it lands but before it reaches
-the terminal closes its refs and materializes nothing, exactly as a chunk an operator marks done by hand does. A chunk
-routed to the terminal with no landing behind it does the reverse: its proposals materialize, and no ref closes.
-
-An operator resolving a gate may strike some of the chunk's pending proposals — its proposals carrying neither a
-materialization row nor a strike row yet — instead of passing them all. A strike is its own fact, recorded with the
-resolving identity and decision inside the resolution's own first-write-wins write, never a mutation of the proposal's
-own row and never a materialization outcome: it is a refusal *before* materialization ever judges the proposal,
-permanent and exclusive of the judgment a `create`/`update`/unresolved outcome represents. A struck proposal never
-materializes, on any later materialization pass; the loser of a concurrent resolution strikes nothing at all, the same
-first-write-wins reading its choice takes. Striking is explicit — a resolution naming none passes every one of the
-chunk's pending proposals, unstruck.
+whichever door writes them. Editing and withdrawing apply to an open item only, and an edit naming no field still stamps
+the item's last-edit instant. Delivery, and the withdrawal deleting its chunk cascades, apply to an open item and are
+no-ops on a closed one; a withdrawal racing a delivery is refused, the item no longer editable — even when the
+withdrawal has already deleted the item's unacquired holder chunk, which stays deleted. A withdrawn item no longer reads
+through its source; a delivered one still does.
 
 ## Grouping
 

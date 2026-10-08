@@ -119,12 +119,6 @@ replaces only the fields it names: a field it leaves out keeps its value, so two
 survive. An attach or detach naming no finding is refused. A proposal's title, class, and body are never blank,
 whichever origin wrote them — a routine run's delivery included.
 
-## Never confused with a work-item proposal
-
-A garden proposal and a work-item proposal (`domain/work.md`) are unrelated entities that happen to share a word. Both
-are always named in full — `garden proposal` for this one — so neither inherits an unqualified `proposal` the other
-could be mistaken for.
-
 ## Closing a proposal: pass or accept
 
 A garden proposal carries two closing verbs, and both leave a durable record — closure is terminal, exactly like a work

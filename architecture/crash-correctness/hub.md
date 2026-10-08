@@ -258,69 +258,6 @@ it closes.
 The pairing owes the checker nothing because it is a single-transaction insert-plus-update(s), not a derived cross-fact
 invariant to recompute.
 
-## Proposed work items, riding the completion's own write
-
-A node-step's proposed work items (`work_item_proposals`) ride whichever write already carries its artifacts:
-`ChunkMovementStore.record_transition`/`record_migration`
-(`blizzard/src/blizzard/hub/store/internal/chunk_movement_store.py`) and `ChunkDecisionsStore.record_decision`
-(`blizzard/src/blizzard/hub/store/internal/chunk_decisions_store.py`) each take the step's proposal rows on the same
-connection, inside the same `engine.begin()`, as the transition, migration, or decision fact they accompany. Only the
-proposal insert runs through a shared `insert_proposals` helper
-(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — each write's own `StoredArtifact`s stay their own separate
-inline loop. A crash before that commit loses the whole write, proposals included, exactly as it already loses the fact
-and its artifacts; a crash after it has nothing left to lose. The delivery-materialization sweep below consumes these
-rows, but only once the chunk has reached the graph's reserved terminal, well after this write's own transaction has
-closed one way or the other, so that consumer changes nothing about this write's own correctness.
-
-The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
-recompute.
-
-## A gate resolution's strike, riding the resolution's own write
-
-`ChunkDecisionsStore.record_decision_resolution` (`blizzard/src/blizzard/hub/store/internal/chunk_decisions_store.py`)
-inserts each struck proposal's `work_item_strikes` row on the same connection, inside the same `engine.begin()`, as the
-`decision_resolutions` row it accompanies — the same one-transaction shape §Proposed work items, riding the completion's
-own write above takes for a step's own proposals. A crash before that commit loses the whole write, strikes included,
-exactly as it already loses the resolution; a crash after it has nothing left to lose. The delivery-materialization
-sweep below reads `work_item_strikes` to exclude a struck proposal forever, but only once the chunk has reached the
-graph's reserved terminal, well after this write's own transaction has closed one way or the other, so that read changes
-nothing about this write's own correctness.
-
-The write owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
-recompute.
-
-## The delivery-materialization sweep
-
-`WorkItemMaterializationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/work_items/materialization.py`) re-derives
-its candidate set — every not-yet-judged proposal of a chunk that has moved into the graph's reserved terminal
-([`../../domain/work/chunk.md`](../../domain/work/chunk.md) §Materialization) — from the store on every pass and holds
-no state between passes: no durable outbox of its own, unlike the close-intent drain above. A crash mid-pass loses only
-that pass's remaining work; the next pass re-reads the same candidate set minus whatever the crashed pass already
-committed, and converges the same way a re-run always would. No new dangerous window opens, so this sweep earns no
-`bzh:crash-point-registry` entry of its own.
-
-Its two write paths are each a single atomic transaction, not a read-then-write pair a crash could split:
-
-- **Mint.** `WorkItemStore.materialize_create` inserts the proposal's `work_item_materializations` outcome row, the
-  item's `work_items` row, and its resting `not_ready` chunk's rows, all on one `engine.begin()` connection — the same
-  shape §The item-creation chunk mint's `create_with_chunk` uses, plus the outcome row folded into the same transaction.
-  It inherits that section's one named gap unchanged: `allocate_ref` still runs in its own transaction before this one
-  opens, so a crash in between still burns one `ref`, never reused.
-- **Append.** `WorkItemStore.materialize_update` appends the proposal's evidence to the item's body, stamps `edited_at`,
-  and inserts the outcome row, all on one `engine.begin()` connection, reaching `work_items`' own update and
-  `work_item_materializations`' insert through one repository adapter — the same seam bypass §The item-creation chunk
-  mint and §Chunk delete, then hub-item withdrawal both name as deliberate, not a layering gap, since it is what lets a
-  single caller open one transaction over both. The append itself is one SQL-level concatenation (`body || evidence`)
-  rather than a read-then-write pair, so there is no gap between reading the old body and writing the new one for a
-  crash, or a concurrent editor, to land inside.
-
-Each composite's own idempotency guard — checking the outcome row's existence before minting or appending — is what
-makes a replayed sweep write nothing a second time; a crash after either transaction commits leaves the proposal already
-judged, and the next pass's candidate read excludes it.
-
-Both write paths owe the checker nothing because each is a single-transaction insert (plus, for the append, one update),
-not a derived cross-fact invariant to recompute.
-
 ## Garden delivery, marker folded into its own transaction
 
 `GardenDeliveryStore.deliver` (`blizzard/src/blizzard/hub/store/internal/garden_delivery_store.py`) writes a garden
@@ -369,18 +306,16 @@ with its own in-transaction marker, not a derived cross-fact invariant to recomp
 
 `GardenProposalClosureStore.record_pass`/`record_accept_decline`
 (`blizzard/src/blizzard/hub/store/internal/garden_proposal_closure_store.py`) each write one `garden_proposal_closures`
-row in its own `store.write` transaction, checking the proposal's existing closure first as its own idempotence guard —
-the same shape §The delivery-materialization sweep's outcome-row check uses. A crash before commit loses the whole
-write, with nothing yet durable for a retried close to collide with; a crash after it leaves the closure already
-recorded, and a re-attempted close reads it back through `get` and refuses as already-closed, exactly as a live race
-would.
+row in its own `store.write` transaction, checking the proposal's existing closure first as its own idempotence guard. A
+crash before commit loses the whole write, with nothing yet durable for a retried close to collide with; a crash after
+it leaves the closure already recorded, and a re-attempted close reads it back through `get` and refuses as
+already-closed, exactly as a live race would.
 
 The accept-with-mint path is a second writer of the same table: `WorkItemStore.accept_create`
 (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the accepted-and-minted
 `garden_proposal_closures` row, the item's `work_items` row, and its resting `not_ready` chunk's rows, all on one
-`engine.begin()` connection — the same shape §The delivery-materialization sweep's mint path uses, plus the closure row
-in place of the materialization outcome row, reaching `insert_garden_proposal_closure_row` the same way that mint path
-reaches `insert_materialization_row`. The closure row is checked and inserted first, so an already-closed proposal mints
+`engine.begin()` connection — the same shape §The item-creation chunk mint's `create_with_chunk` uses, plus the closure
+row folded into the same transaction. The closure row is checked and inserted first, so an already-closed proposal mints
 nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref` still runs
 in its own transaction before this one opens, so a crash in between still burns one `ref`, never reused.
 
