@@ -400,29 +400,73 @@ cursor, never a corpus it would rescan to find nothing changed.
 
 ## The identity row
 
-`Registration.run` (`blizzard/src/blizzard/runner/lifecycle/registration.py`), run by PULL's registry sync, records the
-id and name each successful registration answers with as the store's single `runner_identity` row, through
-`RunnerIdentityStore.record_runner_identity` (`blizzard/src/blizzard/runner/store/internal/identity_store.py`). The
-delete of the previous row and the insert of the new one share one transaction, on the `trace_export_latch` precedent
-above, so a `kill -9` leaves the previous identity or the new one, never neither and never both. The in-process holder
-it updates next is restart-erased and reseeded from the row at boot. This is a **no-window** write: there is no partner
-write a crash could separate it from, and a lost write is made again by the next tick's registration.
+The store's single `runner_identity` row names the runner the store belongs to. Two callers write it, both through
+`RunnerIdentityStore.record_runner_identity` (`blizzard/src/blizzard/runner/store/internal/identity_store.py`):
+`IdentityCheck.run` (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`) and `Registration.run`
+(`blizzard/src/blizzard/runner/lifecycle/registration.py`). Either adopts the id the hub answers with only into a store
+whose row names no runner. Past that, registration refreshes the name under the same id, and nothing ever overwrites the
+id: a reply naming another runner writes nothing and turns the verdict to a mismatch. The delete of the previous row and
+the insert of the new one share one transaction, on the `trace_export_latch` precedent above, so a `kill -9` leaves the
+previous row or the new one, never neither and never both. The in-process identity holder is updated only after the row
+commits, and is restart-erased and reseeded from the row at boot. This is a **no-window** write: there is no partner
+write a crash could separate it from, and a lost adoption is made again by the next tick's check.
 
-The write owes the invariant checker nothing: the row is the newest registration's own answer, never derived from other
+The verdict the row is checked against is held only in the process: `IdentityVerdictHolder`
+(`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
+process `UNCHECKED`. A crash therefore loses it, and the restart re-derives it from a fresh check. The check is the head
+of every tick (`blizzard/src/blizzard/runner/loop/tick.py`): it asks the hub which runner the token belongs to and
+compares that id with the row's, before any other hub call. Until the verdict is `MATCHED`, every call through
+`VerifiedHubClient` (`blizzard/src/blizzard/runner/hub/verified.py`) answers a `HubClientError`, and the runner's hub
+proxy (`blizzard/src/blizzard/runner/api/hub_proxy.py`) answers 503. So an unchecked runner behaves exactly as it does
+during a hub outage, taking only the outage paths every step already owns. A `MISMATCHED` runner also skips the steps
+that drive leases or deliver facts until a check matches again, and a hub that does not answer leaves the verdict as it
+stood. Nothing durable is lost to any of this: restoring the right token or hub resumes the runner from what its store
+already holds.
+
+While refusing, each check first re-reads the token from the runtime dir's `.env` through `HubTokenHolder.reread`
+(`blizzard/src/blizzard/runner/hub/held_token.py`), so a corrected token takes effect without a restart. The re-read
+only reads the file and swaps the token in memory; a token the process environment supplied overrides the file, and so
+stays fixed until a restart.
+
+The write owes the invariant checker nothing: the row is the hub's own answer about the token, never derived from other
 facts.
+
+## The store reset
+
+`blizzard runner store reset` (`blizzard/src/blizzard/runner/cli/store.py`) runs while the daemon is down, refused while
+anything answers on the runtime's socket. It moves the store aside through `set_aside_sqlite`
+(`blizzard/src/blizzard/runner/runtime.py`) and never deletes. It first checkpoints the write-ahead log into the
+database (`PRAGMA wal_checkpoint(TRUNCATE)`), so the database holds the whole store. Then it renames the database
+(`runner.db` by default) and each present `-wal`, `-shm` and `-journal` sibling to the same `<name>.<UTC stamp>` name,
+refusing up front when any target is taken. Last, `Runtime.reset_store` migrates a fresh store to head under the old
+name.
+
+This is a **no-window** write. Each rename is atomic, and after the checkpoint the database moves whole in its one
+rename, so a crash between renames leaves a sibling behind that holds nothing a fresh store at the old name would
+replay. A crash before the fresh store is migrated leaves a store the daemon's startup revision guard refuses, naming
+the migrate command. Either way the old store is already whole under its stamped name, and re-running the reset, or the
+migrate it names, completes the job.
 
 ## The add-then-write-token window
 
-`runner init` joins a runner that holds no token, or one holding a token its hub does not know under `--allow-readd`, in
-two steps: `RunnerBootstrap.join` (`blizzard/src/blizzard/runner/hub/bootstrap.py`) adds the runner at the hub, which
-commits the new registration and its token hash before answering, then writes the token it returns to the runtime dir's
+`runner init` joins a runner that holds no token, or one holding a token its hub does not know under `--allow-readd`.
+`RunnerBootstrap.join` (`blizzard/src/blizzard/runner/hub/bootstrap.py`) adds the runner at the hub, which commits the
+new registration and its token hash before answering. It then writes the token the hub returns to the runtime dir's
 `.env` through `HubTokenFile.write` (`blizzard/src/blizzard/runner/hub/internal/token_file.py`). The token write itself
 is atomic, a fsynced temp file renamed over the original, so the file holds the old token or the new one, never half of
 either.
+
+A store belongs to the runner that wrote it, so a runner added in place of another never inherits its store. Under
+`--allow-readd` with a token the hub does not know, `join` sets the store aside through `IRunnerStoreAside.set_aside`
+before adding the runner, never after; that is the store reset's own move, described above. The same applies to a runner
+holding no token over a store whose identity row names a runner: init stops and names that runner, unless
+`--allow-readd` is given, which sets the store aside first. A crash between the set-aside and the add leaves the unknown
+token, or no token, over a fresh store, and re-running init adds the runner afresh. The other order could leave a token
+the hub knows over a store naming another runner, which the identity check refuses until the store is reset.
 
 The window between the add and the write is a **real window**, and its loss is **accepted** and named. A `kill -9` or a
 failed write inside it leaves the hub holding a runner as never connected, under a token nobody holds, while `.env`
 keeps what it had. A failed write exits naming `blizzard hub runner retire <id> --hub-url <hub>`; after a crash the same
 runner shows as never connected in `hub runner list`, and retiring it by its id is the recovery either way. The loss is
-one inert registry row: it holds no route and claims nothing, and re-running init adds the runner afresh. No crash point
-stands in for it.
+one inert registry row: it holds no route and claims nothing, and re-running init adds the runner afresh over the
+already fresh store. No crash point stands in for it.
