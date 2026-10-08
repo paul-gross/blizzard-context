@@ -17,6 +17,7 @@ the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 | [system-shape/fleet-wire.md](./system-shape/fleet-wire.md)                             | Changing a route, schema, or enum a runner reaches on the hub — what a hub change may do to it across the skew window                                                                           |
 | [system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)                 | Adding or reviewing a write enforcing an exactly-one-wins decision, or a write another such decision's guard reads consult                                                                      |
 | [system-shape/configuration.md](./system-shape/configuration.md)                       | Adding or changing anything an operator configures on a running hub — a configured record, its routes or CLI verbs, a document the hub ingests or applies, a secret, or a read of configuration |
+| [system-shape/tenancy.md](./system-shape/tenancy.md)                                   | Adding or changing a hub table, a store adapter or its statements, a uniqueness rule, or a read or pass that spans tenants — what keeps every row inside its tenant                             |
 
 ## Deterministic shell (`bzh:deterministic-shell`)
 
