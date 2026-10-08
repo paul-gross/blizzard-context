@@ -31,9 +31,8 @@ green `blizzard:gate` already covers it; the row below exists for running the ru
 reference (tracker, issue or PR number, review/finding id, phase, or lettered-change token) or crisp change-history
 narration — the shapes `ChangeHistory.yml`'s own token list names — or a repository Protocol naming who holds its
 variant (`depends on this variant`, `held by read-path edges`) is a hard failure. The generated web clients are
-excluded; `.html` templates are outside the configured extensions. Other history shapes, including `used to` in
-regression explanations, are not gated. `gate.yml` runs the command as its own dedicated job, installing Vale through
-`jdx/mise-action`.
+excluded; `.html` templates are outside the configured extensions. That token list is the one statement of what the gate
+flags. `gate.yml` runs the command as its own dedicated job, installing Vale through `jdx/mise-action`.
 
 ### blizzard:wire-compat
 
