@@ -35,10 +35,11 @@ the landing graph declares, never the departed graph's. The landed node's own ex
 ordinary transition or a migration's landing ([../graphs/nodes.md](../graphs/nodes.md)).
 
 The move consumes whatever parked or re-aimed the chunk: an open ask is answered (exactly one answer ever exists — an
-earlier answerer still wins), an open gate decision closes, and an open escalation is superseded as by a requeue
-([../humans/asks.md](../humans/asks.md), [../humans/gates.md](../humans/gates.md),
-[../humans/escalation.md](../humans/escalation.md)). A cross-graph move also clears any standing intended migration
-([./migration.md](./migration.md)); nothing survives to re-park or re-aim the chunk at a node it no longer stands on.
+earlier answerer still wins), a gate decision not yet closed closes whether or not a person resolved it, and an open
+escalation is superseded as by a requeue ([../humans/asks.md](../humans/asks.md),
+[../humans/gates.md](../humans/gates.md), [../humans/escalation.md](../humans/escalation.md)). A cross-graph move also
+clears any standing intended migration ([./migration.md](./migration.md)); nothing survives to re-park or re-aim the
+chunk at a node it no longer stands on.
 
 It spends no retry budget: the budget counts failed attempts and a preempted attempt was superseded, not failed —
 restarting a stuck step never carries it toward `retries.exhausted`. Durably recorded artifacts stay; a step's artifacts
