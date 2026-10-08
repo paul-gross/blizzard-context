@@ -67,8 +67,9 @@ inside this rule while making instants UTC-aware.
   stores' release cadences uncoupled.
 - Every revision has explicit `upgrade()` and `downgrade()`; applying is idempotent at the revision level, and migration
   scripts stay inside `bzh:sql-portable`'s surface so one tree serves both backends.
-- SQLite has no `ALTER` for a CHECK constraint, so widening one goes through Alembic's `batch_alter_table` table-copy
-  recreate — load-bearing there, not a style choice, wherever a revision touches one.
+- SQLite has no `ALTER` for a CHECK constraint, a column's nullability, or a foreign key, so changing one goes through
+  Alembic's `batch_alter_table` table-copy recreate — load-bearing there, not a style choice, wherever a revision
+  touches one. Putting a required key on a table that already holds rows follows `bzh:keyed-table-migration`.
 - `blizzard hub init <dir>` creates and migrates the runtime environment and is idempotent; `blizzard hub migrate`
   applies pending revisions and `migrate --down <rev>` reverses; the same verbs exist under `blizzard runner`.
 
@@ -119,3 +120,49 @@ foreign key.
 
 **Don't.** Resolve a `NoReferencedTableError` by deleting the offending `sa.ForeignKey` — that ships a fresh store with
 no constraint where `schema.py` declares one, a silent divergence a reviewer has to catch by hand.
+
+## Keying a table that holds rows (`bzh:keyed-table-migration`)
+
+**Rule.** A revision that puts a required key column — `tenant_id`, or any column a later read filters every row by — on
+a table that already holds rows adds it nullable, backfills it in batches of bounded size, and only then tightens it:
+`NOT NULL`, the foreign key, and the indexes and unique constraints rebuilt around it.
+
+- **Freeze before keying.** Every earlier revision that imports a table the keying reshapes is frozen
+  (`bzh:frozen-revisions`) in a change of its own, before the key lands in `schema.py`. The keying revision carries its
+  own frozen list of the tables it keys; it never derives that list from `schema.metadata` at migration time.
+- **Name every constraint.** Each foreign key, unique constraint, primary key, and index the revision creates carries an
+  explicit name of at most 63 characters, Postgres's identifier limit. An existing unnamed constraint is dropped by the
+  name reflection reports for it.
+- **Tighten one table per batch, with `recreate="auto"`.** Each table is its own `batch_alter_table` under the default
+  `recreate="auto"`: SQLite copies the table, Postgres alters it in place. `recreate="always"` is refused — it forces
+  the copy on Postgres too, dropping an autoincrement column's sequence.
+- **Guard each table on re-entry.** Before reshaping a table, the revision inspects it and skips the step already done —
+  the column present, the constraint already named, the column already non-null.
+
+**Why.** A required column added in one step to a populated table either fails or writes one unbounded statement, and a
+key nothing backfilled cannot be tightened. Each store's migration chain runs in one transaction, so no revision
+boundary commits on its own and a failure promises no known revision; the per-table guards are what let a rerun pick up
+where it stopped.
+
+**Scope.** Binds the hub and runner trees alike, and any later key of the same shape — a project id added to a populated
+table included. A table the revision itself creates is created tight and needs none of this.
+
+**Detect.**
+
+- A revision adding a `nullable=False` column to an existing table in one `add_column`, or backfilling it with one
+  `UPDATE` over the whole table.
+- A foreign key, unique constraint, or index created without a `name=`, or with a name over 63 characters.
+- `recreate="always"` in a keying revision; one `batch_alter_table` reshaping several tables.
+- A keying step with no inspection guard ahead of it, or a keying revision that imports from `schema.py` or computes its
+  table list from `schema.metadata`.
+
+**Do.**
+
+- Hub migration `20261006_1200_runner_minted_ids.py` — a frozen tuple naming every column it rewrites, and its
+  tightening `batch_alter_table` left on the default `recreate="auto"`.
+- `20260907_1000_event_log_runner_id_nullable.py` — the inspection guard (`_is_nullable`) ahead of its table's batch, so
+  a rerun skips the reshape and goes on to the backfill.
+
+**Don't.** `op.add_column("chunks", sa.Column("tenant_id", sa.String(), nullable=False, server_default="ten_…"))` — one
+statement rewrites every row at once, the default outlives the backfill it stood in for, and the foreign key it still
+lacks needs a second unguarded copy.
