@@ -26,6 +26,11 @@ same rule bans a zero-arg `new Date()` and `Date.now()` in non-spec `projects/**
 `fleet/lib/core/now-signal/`; the `lib/**/index.ts` block restates both selector sets, since flat config replaces a
 rule's options per matching block.
 
+The HTML template `no-restricted-syntax` selector rejects native `<button>`, `<select>`, and `<input>` outside
+`fleet/src/lib/kit/` (`bzh:frontend-kit-floor`), including a control with fresh CSS classes. A genuinely distinct native
+interaction uses a reasoned, element-level ESLint suppression; `web/scripts/kit-control-lint-probe.js` checks the AST
+gate's must-fail and must-pass cases (`node web/scripts/kit-control-lint-probe.js` from the app repo root).
+
 ### web:typecheck
 
 `npm run build` in `web/` — a real AOT compile of both Angular apps, the type check `web:unit-test`'s esbuild-based

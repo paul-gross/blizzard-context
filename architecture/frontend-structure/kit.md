@@ -15,12 +15,17 @@ state message) lands once.
 query, mutation, or client injection — keeping it presentational, testable by plain inputs, and at the bottom of the
 dependency graph; nothing in it may depend upward on a feature.
 
-**Detect.** A new component's sibling `.css` declaring the retired chrome classes
-`.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl` (plus `KitAsyncState`'s own hand-rolled precursors `.none`/`.hint`/`.rest`)
-outside `fleet/lib/kit/`, or a sibling `.html` hand-rolling `KitFactList`'s own `<dl class="kv">` grid — both tooled by
-`web:structural-gate`'s kit-floor sweep ([`../../verification/blizzard.md`](../../verification/blizzard.md)), with a
-reasoned exemption list for a site that genuinely should not convert; a kit component (`fleet/lib/kit/*`) importing a
-query, mutation, or the generated API client — this half stays a review question.
+**Detect.** `web:lint` refuses a native `<button>`, `<select>`, or `<input>` in application `.html` templates outside
+`fleet/src/lib/kit/`, independent of its class name. A genuinely distinct native interaction needs a reasoned
+element-level ESLint suppression; the shared kit remains the only general exemption. The ESLint AST probe in
+`web/scripts/kit-control-lint-probe.js` pins forbidden tags, kit controls, comments, and the exception form.
+
+A new component's sibling `.css` declaring the retired chrome classes `.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl` (plus
+`KitAsyncState`'s own hand-rolled precursors `.none`/`.hint`/`.rest`) outside `fleet/lib/kit/`, or a sibling `.html`
+hand-rolling `KitFactList`'s own `<dl class="kv">` grid — both tooled by `web:structural-gate`'s kit-floor sweep
+([`../../verification/blizzard.md`](../../verification/blizzard.md)), with a reasoned exemption list for a site that
+genuinely should not convert; a kit component (`fleet/lib/kit/*`) importing a query, mutation, or the generated API
+client — this half stays a review question.
 
 **Do.** A new panel imports `KitPanel`/`KitAsyncState`/`KitBadge` from `fleet` and composes them; a status message
 renders through `KitAsyncState`'s `loading`/`error`/`empty` states rather than a local `<p class="status">`.
