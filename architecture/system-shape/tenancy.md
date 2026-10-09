@@ -119,12 +119,14 @@ membership turns "where can a tenant leak?" into a list a reviewer can read whol
   hub-executed node's marker — each returning the tenant beside its principal;
 - a sweep's corpus read (`bzh:sweep-acts-in-row-tenant`), and the status reads of the hub's exports, whose cursors every
   tenant's rows share;
-- tenant administration — listing tenants, finding the deletions a teardown has yet to finish.
+- tenant administration — whether a tenant is open, and the open tenants with their names.
 
 A read of a global table is an ordinary hub-level read, not a member: memberships and hub administrators are global
 (`bzh:global-tables-closed`), so listing a person's tenants or the hub administrators reads through the identity
-repositories the hub-level services hold. A write never goes through it; a pass that must write across tenants loops
-over open tenants and writes through each one's own stores.
+repositories the hub-level services hold. Tenant deletion's own reads are hub-level the same way: the deletions a
+teardown has yet to finish are read from `tenant_deletions` on the hub-level connections
+(`TenantTeardownStore.underway`), not through the seam. A write never goes through it; a pass that must write across
+tenants loops over open tenants and writes through each one's own stores.
 
 **Detect.** The ast-grep rule `bzh:hub-scoped-reads-confined` (`contracts/ast-grep/rules/hub-scoped-reads-confined.yml`,
 run by `blizzard:structural-gate`) refuses any naming of the seam — `HubScopedReads`, any `hub_scoped_*` module, helper,

@@ -42,6 +42,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `checks.`
 - `preempt.`
 - `close.` — the close-intent outbox's enqueue-then-drain windows.
+- `teardown.` — a tenant deletion's after-close, between-batch, and after-drain windows.
 - `trace.` — the trace export sweep's after-export, before-cursor window.
 - `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
 - `usagelimit.` — the runner's own usage-limit brake-then-park window, on a worker generation's exit and a judge
@@ -89,6 +90,13 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   `close.after-close.before-record` — driven entirely through the built-in `hub` work source, no forge involved: the
   pending intent survives either kill and the item closes exactly once after convergence.
   `blizzard-context/architecture/crash-correctness/hub.md` owns both windows' own ground.
+- `teardown.`, a tenant deletion's windows armed on the hub, is swept by `test_kill9_at_teardown_crash_point` over all
+  three of its members — `teardown.after-close.before-drain`, `teardown.after-batch.before-next`, and
+  `teardown.after-drain.before-complete`. A hub holding two tenants, the doomed one filled past one drain batch, is
+  killed at the point by the delete request's own inline drain; the restarted hub's `tenant_teardown` sweep finishes the
+  deletion. Nothing of the tenant is left, its `rows_removed` counts every row it held exactly once, the other tenant
+  keeps every row, and the invariants are green at the kill and after. The bounded-CI representative is
+  `teardown.after-batch.before-next`. `blizzard-context/architecture/crash-correctness/hub.md` owns the windows' ground.
 - `trace.`, the trace export sweep's after-export, before-cursor window armed on the hub, is swept by
   `test_kill9_at_trace_crash_point` over its lone member, `trace.after-export.before-cursor`: tracing is enabled against
   an in-test OTLP sink before any step closes, since the cursor opens at enable time, with a zero settle window. After

@@ -8,11 +8,12 @@ What the hub's always-loaded shell may import, and how chrome it needs only on i
 
 **Rule.** A module statically reachable from the hub's `main.ts` — the hub's `shell/` folder (the app root, its config
 and route table, and the nav chrome the root mounts outside a `@defer` block) and the hub modules they reach
-(`core/auth/` and the board, spend, health, and questions reads) — imports the `fleet` library only through the
-`fleet/shell` entry point (`projects/fleet/src/shell-api.ts`, a file-by-file list of named re-exports); a `fleet` module
-on that eager path imports a sibling by file (`../../kit/kit-button`), never through a sub-barrel (`../../kit`); and
-chrome the shell needs only on interaction — the profile menu and the mobile titlebar, with the CDK menu stack behind
-them — is `@defer`-loaded.
+(`core/auth/` — among them the no-access screen and the tenant picker the root renders in place of the shell, and the
+tenant context and interceptor every hub call and the live stream read — and the board, spend, health, and questions
+reads) — imports the `fleet` library only through the `fleet/shell` entry point (`projects/fleet/src/shell-api.ts`, a
+file-by-file list of named re-exports); a `fleet` module on that eager path imports a sibling by file
+(`../../kit/kit-button`), never through a sub-barrel (`../../kit`); and chrome the shell needs only on interaction — the
+profile menu and the mobile titlebar, with the CDK menu stack behind them — is `@defer`-loaded.
 
 **Why.** esbuild keeps every decorated module a barrel on the eager path names, whether or not the shell reads its
 export, so one `from 'fleet'` in the app root ships every feature area before the board renders. A lazy route page keeps
@@ -32,7 +33,10 @@ it; the `initial` budget in `angular.json` is the size backstop for growth the f
 **Do.** `shell/app.ts` imports `AppShell` from `'fleet/shell'` and `injectMeQuery` from `'../core/auth/me.query'`;
 `app.html` mounts `<app-nav-menu>` inside `@defer (on immediate)` wrapped in
 `<ng-container ngProjectAs="[header-trailing]">`, because a `@defer` block does not carry its root node's slot attribute
-through content projection; `core/auth/pending-lobby.ts` imports `KitButton` from `'fleet/shell'`.
+through content projection; `core/auth/no-access.ts` and `core/auth/tenant-picker.ts` import `KitButton` from
+`'fleet/shell'`, and `core/auth/tenant.interceptor.ts` takes `hubClient`, `FetchEventSource`, and `EVENT_SOURCE_FACTORY`
+from it, so the one tenant context names the tenant on the generated client's requests and on the live stream's own
+`fetch`.
 
 **Don't.** `import { AppShell } from 'fleet'` in `shell/app.ts` — one line that puts the chunk-detail and transcripts
 barrels back into the initial chunk; an eager import of the hub's `garden/` or `graphs/` folder, which brings the whole
