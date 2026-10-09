@@ -5,8 +5,9 @@
 
 # Browser-auth e2e scenarios (`bzh:e2e-auth`)
 
-The scenarios driving a real browser through the human-auth surfaces — the hub's own login dance and the multi-daemon
-runner SSO bounce.
+The scenarios driving a real browser through the human-auth surfaces — the hub's own invite-only login dance and the
+multi-daemon runner SSO bounce. Both modules' hubs mark their stub-IdP provider `emails_authoritative`: an invitation
+admits an account only on a verified email from a provider so marked.
 
 The login module needs the built bundle `blizzard hub host` serves (`mise run e2e` declares `depends = ["web-build"]`),
 the federation module the bundle the runner itself serves; both need the sibling provisioned `blizzard-mock` worktree
@@ -16,23 +17,26 @@ adds no stub-IdP need beyond `_oauth_hub`/`require_stub_idp`.
 
 ## test_login_session_e2e
 
-The browser login dance and the mid-stream session-expiry redirect: a real Chromium over the served board under
-`auth.mode = "oauth"` against the real `blizzard-mock` stub IdP (`blizzard-mock-idp`), every seam real, no network
-beyond the two local subprocesses.
+The invite-only login dance, an invitation's acceptance, and the mid-stream session-expiry redirect: a real Chromium
+over the served board under `auth.mode = "oauth"` against the real `blizzard-mock` stub IdP (`blizzard-mock-idp`), every
+seam real, no network beyond the two local subprocesses.
 
 - `test_browser_login_dance_and_mid_stream_session_expiry` — proves the whole sequence below in one loaded page:
   - An unauthenticated hit is gated to `/login` by the app's own 401 seam, rendering the configured provider button
     (`login-provider-<name>`) and no board chrome (`board-header` absent) — never an auto-redirect even for a single
     provider.
-  - Clicking the provider button drives the real OAuth authorize-then-callback dance against the stub IdP, landing back
-    as a freshly minted `pending` identity — the bottom, no-access role — in the pending lobby ("signed in, awaiting
-    access", `pending-lobby-username` showing the handle) rather than a board silently 403ing every read; the lobby
-    render itself proves the dance produced a working session cookie.
-  - Promoted to `guest` directly in the hub store — the suite's mint-what-no-API-yet-exposes stand-in for a
-    role-assignment API — and reloaded, the page reaches the live board with its SSE stream open (`board-shell` present,
-    `pending-lobby` gone) over a seeded not-ready chunk whose card renders no Promote control: the end-to-end proof a
-    `guest` reads everything and mutates nothing.
-  - Promoted again to `contributor` and reloaded, that same card's Promote control is present.
+  - Clicking the provider button drives the real OAuth authorize-then-callback dance against the stub IdP for a person
+    the hub has never seen and holds no invitation for. The hub is invite-only, so the dance lands back on
+    `/login?refusal=invite_only` — the login page rendered, no board chrome, and no `bz_session` cookie: a refused
+    sign-in writes nothing.
+  - An invitation into the store's one tenant as `guest`, for the stub IdP's verified email, is minted in the store
+    (`tests/service/test_auth_login_service.py`'s `invite`, the suite's mint-what-no-route-reaches pattern for fixture
+    state) and opened as `GET /api/auth/<provider>/authorize?invite=<token>`. The dance accepts it and sets the session
+    cookie, and the board then renders its shell with the SSE stream open (`board-shell` present) over a seeded
+    not-ready chunk whose card renders no Promote control: the end-to-end proof a `guest` reads everything and mutates
+    nothing. The seeded graph, chunk, and memberships all name the store's one tenant.
+  - A newer `contributor` membership fact written directly in the store, then a reload: that same card's Promote control
+    is present.
   - With every `sessions` row deleted (an unambiguous expiry stand-in — the resolve path treats missing and expired
     identically) and the hub restarted, the restart force-drops the open SSE stream, the reconnect receives a 401
     through the fetch transport's one status-reading seam (`sse.service.ts`, the `authFailed` channel), and the app
@@ -46,11 +50,12 @@ beyond the two local subprocesses.
 ## test_runner_federation_e2e
 
 The multi-daemon runner SSO bounce: a hub under `auth.mode = "oauth"` against the `blizzard-mock` stub IdP and two
-runners, A and B, each added by the hub's signed-in superuser and joined through `runner init` under the token that add
-issued, each with its own federation identity, all real subprocesses. The runner's three-lane gating is pinned at the
-lower tiers — the served web mount and its human-lane JSON API session-gated under an oauth-mode hub, the worker-hook
-and CLI-socket lanes ungated (`tests/test_runner_route_gating.py`, `tests/test_runner_federation.py`); the e2e scenarios
-prove the browser-navigated bounce itself.
+runners, A and B, each added by the hub's signed-in superuser — whose first sign-in needs no invitation and claims an
+admin membership in the hub's one tenant, which a runner sign-in requires in the runner's tenant — and joined through
+`runner init` under the token that add issued, each with its own federation identity, all real subprocesses. The
+runner's three-lane gating is pinned at the lower tiers — the served web mount and its human-lane JSON API session-gated
+under an oauth-mode hub, the worker-hook and CLI-socket lanes ungated (`tests/test_runner_route_gating.py`,
+`tests/test_runner_federation.py`); the e2e scenarios prove the browser-navigated bounce itself.
 
 - `test_multi_daemon_sso_bounce` — proves a sessionless Chromium visit to runner A is bounced runner A → hub → (no hub
   session yet, so on through) the stub-IdP dance → back into a runner-A-domain session on runner A's served page with no

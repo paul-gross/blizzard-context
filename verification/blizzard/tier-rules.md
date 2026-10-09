@@ -29,6 +29,38 @@ Tests run against sqlite. Postgres is a configuration concern, held by staying i
 
 Stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`), never through ad-hoc SQL.
 
+## The tenant statement guard is on in every tier
+
+Every test the suite runs, at every tier, runs with the tenant statement guard on. The root `tests/conftest.py`'s
+`pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs the guard (`src/blizzard/hub/store/tenant_guard.py`) in
+the test process, and every hub a service, e2e, or crash test spawns inherits the variable and installs the guard as it
+opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`). Before a statement executes, the guard refuses one that
+reaches a tenant-owned table without naming its tenant — a select, update, or delete in which no condition scopes that
+table to a tenant, or an insert into it with no `tenant_id` — raising `UnscopedTenantStatement`. A statement marked
+hub-scoped passes unwalked, and raw SQL is never walked. Only the value `1` switches the guard on; a hub started outside
+the suite runs without it unless its environment sets that, and production leaves it off.
+
+A refusal is the finding, never something to switch off: scope the statement, or route a read that must span tenants
+through the seam `bzh:hub-scoped-reads-confined` names. Only `tests/test_tenant_guard.py`, whose subject is the switch
+itself, starts a case without the guard (its `no_hub_guard` fixture). Fixture SQL a test writes raw is outside the
+guard's reach, so it names the tenant itself.
+
+## Two tenants on one hub: the isolation scenario
+
+`tests/test_tenant_isolation.py`, at `blizzard:component-test`, stands two tenants up on one hub, seeds both with the
+same shape of records under names that never repeat across them, and proves through the API that neither reaches the
+other. A listing in either names none of the other's records; naming the other's record, by path or in a body, answers
+as for a record never minted and changes nothing there; a write in one leaves every read of the other byte for byte as
+before; each tenant's live stream replays its own events only; a runner-minted id posted in both is two rows; a route
+token acts in its chunk's tenant only; the packaged system artifacts read alike from either; the hub-level export routes
+refuse a tenant member; and every sweep acts in each open tenant and opens no closed one.
+`tests/test_tenant_isolation_adapters.py` proves the same at the store: every row a tenant wrote carries its id, and
+each tenant's adapters read back none of the other's records.
+
+The scenario's route table names every live tenant route beside the probe that proves its isolation, and
+`test_the_table_names_every_live_tenant_route_and_nothing_else` checks the table against the live app both ways, so a
+change adding a tenant route fails the tier until it adds the route's row and probe.
+
 ## One-sided service tests
 
 A one-sided service test drives the mock counterpart: runner service tests run against the mock hub, hub service tests

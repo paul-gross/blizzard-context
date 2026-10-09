@@ -142,25 +142,40 @@ mode it does not otherwise need costs more than the surface is worth.
 **Setup.** Start the stub IdP standing per `blizzard-mock/src/blizzard_mock/idp/README.md` §"Standing instance" —
 `blizzard-mock-idp --host 127.0.0.1 --port <idp-port>`, confirmed with `GET /healthz`. Run `mise run web-build` so the
 hub serves the built board. Give the hub a runtime dir — a scratch dir, or a provisioned env's own `$BZ_HUB_RUNTIME` if
-that env's hub is meant to run in `oauth` mode — carrying `[auth] mode = "oauth"` and one
-`[[auth.oauth.provider]] type = "oidc"` entry whose `issuer` points at the standing IdP. The auth mode value is
-`"oauth"`, not `"oidc"`; `oidc` is the provider `type` (`hub/config.py`'s `AUTH_MODE_OAUTH`). `auth.mode = "none"` is
-the default a `winter service up <env>`-started hub scaffolds via `blizzard hub init`, so a running env's own service
-stack serves everything unauthenticated until this setup is applied to it.
+that env's hub is meant to run in `oauth` mode — carrying `[auth] mode = "oauth"`, an `[auth] superuser` naming the
+email the IdP's first profile reports, and one `[[auth.oauth.provider]] type = "oidc"` entry whose `issuer` points at
+the standing IdP and that sets `emails_authoritative = true`, which an invitation's acceptance needs. The auth mode
+value is `"oauth"`, not `"oidc"`; `oidc` is the provider `type` (`hub/config.py`'s `AUTH_MODE_OAUTH`).
+`auth.mode = "none"` is the default a `winter service up <env>`-started hub scaffolds via `blizzard hub init`, so a
+running env's own service stack serves everything unauthenticated until this setup is applied to it.
 
 **Steps.**
 
 1. Start the hub with `blizzard hub host --dir <hub-dir> --port <hub-port>`.
-2. Drive a real browser to `http://127.0.0.1:<hub-port>/`, confirm the `/login` gate renders the configured provider's
-   button, click it, and confirm the dance lands authenticated — a fresh identity mints `pending`.
-3. Script a specific identity with `PUT /_levers/profile` on the IdP before a login, or flip it between two logins in a
-   fresh browser context each time to prove two distinct identities.
-4. Confirm role-dependent UI by setting a role directly in `<hub-dir>/data/hub.db`'s `users` table — the seam
-   `blizzard:e2e`'s login-session scenario uses ahead of a role-assignment API — and reloading on the same session
-   cookie: a not-ready chunk's Promote control is present for `contributor` and absent for `guest`.
+2. Drive a real browser to `http://127.0.0.1:<hub-port>/` and confirm the `/login` gate renders the configured
+   provider's button. Sign in as the identity whose email the runtime dir names as `[auth] superuser`: the claim admits
+   it without an invitation — a hub administrator with an `admin` membership in the hub's one tenant — and the board
+   renders.
+3. Script a second identity with `PUT /_levers/profile` on the IdP and sign in as it in a fresh browser context. The hub
+   is invite-only, so it lands on `/login?refusal=invite_only` showing *You don't have access to anything here yet.
+   Reach out to your administrator for access.*, with no board and no session.
+4. Invite that identity: `uv run blizzard hub invite create --email <email> --role guest` from the superuser's signed-in
+   CLI prints the link. Open it in the second context and sign in from its landing: the account lands in the tenant and
+   the board renders read-only — a not-ready chunk's Promote control absent. Opening the used link again lands on the
+   sign-in page with the `invitation_unusable` text, and a live link opened by an account without the invited email with
+   the `invitation_email_mismatch` text, the invitation staying live. Change the person's role from the members page and
+   reload on the same session cookie: the Promote control appears for `contributor`.
+5. Create a second tenant with `uv run blizzard hub tenant create <name> --admin <user_id>` for the second person. A
+   person holding one membership never sees a choice. With two, a fresh tab renders the tenant picker outside the shell;
+   the chosen tenant's name shows in the header, the profile menu's switcher moves the tab to the other, and a reload
+   keeps the tab in its tenant. A signed-in person with no membership renders the no-access screen outside the shell —
+   no header, no nav.
+6. Delete a tenant with `uv run blizzard hub tenant delete <tenant_id> --yes` and reload a member's tab: the deleted
+   tenant is gone from the picker and the switcher.
 
-**Passes when.** The browser reaches an authenticated board through the standing IdP and at least two roles are observed
-rendering visibly different UI on the same underlying state.
+**Passes when.** An uninvited sign-in is refused with its page text and writes no session, an invited one lands in its
+tenant, two roles render visibly different UI on the same state, and with two tenants the picker, the header's tenant
+name, the switcher, and the no-access screen each behave as stated.
 
 ### `blizzard:manual-external-usage-probe`
 

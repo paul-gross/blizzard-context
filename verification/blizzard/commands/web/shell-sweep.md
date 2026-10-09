@@ -30,17 +30,18 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 
 - `app-nav-menu.shell-sweep.spec.ts` and `app-header.shell-sweep.spec.ts` cover the shared header shells — `hub`'s
   `BoardHeader` plus `AppNavMenu`, and `runner`'s `AppHeader`. At widths 1400px down to 320px, straddling every declared
-  header breakpoint, and — runner only, the one content-dependent header width — usernames from authless to 64
-  characters, the profile menu trigger must sit fully inside the viewport, `elementFromPoint` at its center must hit
-  inside it, with no horizontal overflow and no page error. The hub fixture's spend cells each carry their own estimate
-  line too, so the sweep's widest natural content includes it. The sweep's shape follows `BoardHeader`'s geometry: a
-  stat strip and trailing cluster sharing equal flex-shrink priority squeeze the menu near the strip's 1150px breakpoint
-  — which is why the already-clipping stat strip carries an outsized `flex-shrink` (`board-header.css`'s `.stats` rule),
-  and why the swept widths straddle that breakpoint. The specs are proven able to fail by reverting `BoardHeader`'s
-  `.trailing` shrink fix (`flex: 0 1 auto; min-width: 0`, `board-header.css`), which reproduces the off-screen-menu
-  symptom. `app-header.shell-sweep.spec.ts` additionally sweeps the connection cell's `degraded` state — the longest
-  string that cell ever renders — over the same width range with a fixed username, asserting the cell reads `degraded`,
-  the profile menu stays on-viewport, and the header itself carries no horizontal overflow.
+  header breakpoint, and the one content-dependent width each header carries — on the runner, usernames from authless to
+  64 characters; on the hub, a long tenant name in `BoardHeader`'s tagline — the profile menu trigger must sit fully
+  inside the viewport, `elementFromPoint` at its center must hit inside it, with no horizontal overflow and no page
+  error. The hub fixture's spend cells each carry their own estimate line too, so the sweep's widest natural content
+  includes it. The sweep's shape follows `BoardHeader`'s geometry: a stat strip and trailing cluster sharing equal
+  flex-shrink priority squeeze the menu near the strip's 1150px breakpoint — which is why the already-clipping stat
+  strip carries an outsized `flex-shrink` (`board-header.css`'s `.stats` rule), and why the swept widths straddle that
+  breakpoint. The specs are proven able to fail by reverting `BoardHeader`'s `.trailing` shrink fix
+  (`flex: 0 1 auto; min-width: 0`, `board-header.css`), which reproduces the off-screen-menu symptom.
+  `app-header.shell-sweep.spec.ts` additionally sweeps the connection cell's `degraded` state — the longest string that
+  cell ever renders — over the same width range with a fixed username, asserting the cell reads `degraded`, the profile
+  menu stays on-viewport, and the header itself carries no horizontal overflow.
 - `app-nav.shell-sweep.spec.ts` covers the runner's top tab strip (`AppNav`). Its `KitTabStrip`/`KitTab` chrome carries
   no `@container` rule, so the claim is narrower: from 1400px to 320px both static labels render and the strip never
   overflows its own width.
@@ -152,6 +153,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   width the detail, the command, and the list must stay within their own width — a long record name wraps rather than
   widening them — with no page error. Which layout a width gets is decided by `configActions`, which `web:unit-test`
   covers. The phone is read-only, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `members-table.shell-sweep.spec.ts` covers the members page's table (`MembersTable`), mounted directly with a member
+  whose name and email are one long unbroken string. At 360px, 768px, and 1280px the page never scrolls sideways and the
+  panel stays inside the viewport; at 360px the table is wider than the phone, so it scrolls inside its own panel, and
+  the revoke control can still be scrolled into view there — with no page error at any width.
 - `gardening-routines-page.shell-sweep.spec.ts` covers the container's `.gr-layout` list-beside-panel split — its
   `fleet-kit-master-detail` host — which `routine-panel.shell-sweep.spec.ts` never mounts since it stands
   `FleetRoutinePanel` up alone. At 1280px the list and panel must sit side by side; at 740px, 700px, 390px, and 320px

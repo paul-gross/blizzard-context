@@ -11,17 +11,17 @@ A `*(more)*` marker on a row flags that a spoke carries the row's fuller detail:
 [`./blizzard/tools.md`](./blizzard/tools.md) for Tools rows — the route when standing up the state a verification needs.
 Full detail lives under `./blizzard/`, one file per reader question.
 
-| Spoke                                                         | Read when…                                                                                                                                     |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`tier-rules.md`](./blizzard/tier-rules.md)                   | The tier roster, writing a test at a tier, or changing a template or component style — what each tier answers, and what a change owes as proof |
-| [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md)             | Adding, renaming, or reading a `blizzard:e2e` scenario — what each one proves                                                                  |
-| [`markers.md`](./blizzard/markers.md)                         | A row carries a `P3`–`P7` or **Gap** marker, or its method does not exist yet                                                                  |
-| [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims, or planning the claims a change falsifies or newly owes                |
-| [`mutation-survivors.md`](./blizzard/mutation-survivors.md)   | A `blizzard:mutation` run reported survivors — sorting each into the class that names its remedy, and when one may be suppressed               |
-| [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing                                                       |
-| [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                                                                   |
-| [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                                                             |
-| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers — what stands in for one, and why                                                           |
+| Spoke                                                         | Read when…                                                                                                                                                                                                                          |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`tier-rules.md`](./blizzard/tier-rules.md)                   | The tier roster, writing a test at a tier, or changing a template or component style — what each tier answers, and what a change owes as proof; the tenant statement guard every tier runs under, and the tenant isolation scenario |
+| [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md)             | Adding, renaming, or reading a `blizzard:e2e` scenario — what each one proves                                                                                                                                                       |
+| [`markers.md`](./blizzard/markers.md)                         | A row carries a `P3`–`P7` or **Gap** marker, or its method does not exist yet                                                                                                                                                       |
+| [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims, or planning the claims a change falsifies or newly owes                                                                                                     |
+| [`mutation-survivors.md`](./blizzard/mutation-survivors.md)   | A `blizzard:mutation` run reported survivors — sorting each into the class that names its remedy, and when one may be suppressed                                                                                                    |
+| [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing                                                                                                                                            |
+| [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                                                                                                                                                        |
+| [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                                                                                                                                                  |
+| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers — what stands in for one, and why                                                                                                                                                |
 
 ## Commands
 
@@ -83,6 +83,11 @@ The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scope
 [`../architecture/crash-correctness.md`](../architecture/crash-correctness.md) owns the daemon requirements
 `blizzard:crash-sweep` exercises, and `blizzard:e2e`'s scenario registry is
 [`./blizzard/e2e-scenarios.md`](./blizzard/e2e-scenarios.md).
+
+Every `blizzard:` row that runs pytest — `blizzard:unit-test`, `blizzard:component-test`, `blizzard:service-test`,
+`blizzard:e2e`, and `blizzard:crash-sweep` among them — runs with the tenant statement guard (`BLIZZARD_TENANT_GUARD`)
+on, in the test process and in every hub it spawns; [`./blizzard/tier-rules.md`](./blizzard/tier-rules.md) owns what the
+guard refuses and the tenant isolation scenario.
 
 `blizzard:ci-workflows` and `blizzard-mock:ci-workflows` scan `.github/workflows/` by default (run from each repo's own
 root) and are local-only — neither is wired into that repo's own `gate.yml`. `blizzard:collector-config` is local-only

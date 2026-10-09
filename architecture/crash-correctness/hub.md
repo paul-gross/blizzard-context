@@ -170,10 +170,10 @@ partial-write window of its own.
 
 ## The boot release of live hub-execution slots
 
-`HubNodeExecutor.release_orphaned_slots` runs once from the hub daemon's startup, before the hub serves, and releases
-every live `hub_exec_slot` row in one statement. The slot is not reentrant, so a row left live by a `kill -9` mid-node
-would otherwise defer the chunk's own resume until `slot_stale_after`; at boot such a row belongs to a run the dead
-process held, since one hub process serves the store
+`HubNodeExecutor.release_orphaned_slots` runs from the hub daemon's startup, once in each open tenant before the hub
+serves, and releases that tenant's live `hub_exec_slot` rows in one statement. The slot is not reentrant, so a row left
+live by a `kill -9` mid-node would otherwise defer the chunk's own resume until `slot_stale_after`; at boot such a row
+belongs to a run the dead process held, since one hub process serves the store
 ([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt).
 
 It has no window: the release is a single statement, and a crash before it commits leaves the same rows for the next
@@ -199,6 +199,20 @@ session, all in one identity unit of work; the tenant-owned invitation fact join
 the sign-in written, and a retried sign-in accepts it afresh. The claim of a configured superuser that follows is a unit
 of work of its own, opened after this one commits: a crash between them leaves the target unclaimed, and the person's
 next sign-in claims it.
+
+## Tenant deletion: close, drain, complete
+
+Deleting a tenant (`blizzard/src/blizzard/hub/domain/tenancy/teardown.py`) runs three phases, each committing on its
+own: the close records the tenant's deletion fact, the drain removes the tenant's rows a bounded batch per transaction,
+and the completion removes the `tenants` row and the tenant's memberships and stamps `deleted_at`. The deletion fact is
+the resume marker: while it stands without `deleted_at`, the `tenant_teardown` sweep carries the drain on from wherever
+the tables stand, so a crash in any of the three windows is finished after restart — after the close and before any
+drain (`teardown.after-close.before-drain`), between two batches (`teardown.after-batch.before-next`), and after the
+drain and before the completion (`teardown.after-drain.before-complete`). A batch and its addition to the fact's
+`rows_removed` commit together, and every batch walks the tables from the top, so a re-walk neither redoes a committed
+batch nor counts a row twice. The `tenant-closed` and `tenant-deleted` hub events are recorded after their phase
+commits, so a crash between a phase and its event loses only that event row. The close's in-memory effects need no
+recovery: a restarted hub opens only the tenants with no deletion fact.
 
 ## The item-creation chunk mint
 

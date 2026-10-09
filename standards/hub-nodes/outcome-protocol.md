@@ -15,7 +15,7 @@ unless its last stdout line explicitly names one of the node's own choices — a
 outcome by accident, however the script prints.
 
 Exit 0 with the last line reading the reserved literal `pending` is neither success nor failure: no marker is recorded,
-no transition happens, the poll-attempt fact is recorded, and the fleet-wide `hub_exec_slot` is released immediately.
+no transition happens, the poll-attempt fact is recorded, and the tenant's `hub_exec_slot` is released immediately.
 `pending` is machinery-reserved and never authored as one of a node's own choices; `success` and `failure` are reserved
 names whose edges a node authors — every hub node authors `failure`, and `success` is opt-in. After a `pending`, the
 whole node re-runs — skipping any step whose `produces` marker already exists

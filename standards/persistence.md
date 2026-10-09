@@ -28,10 +28,7 @@ and only postgres's unordered contract exposes the gap.
   WAL/`busy_timeout` pair the factory sets preserves rather than removes, is what `lock_chunk_row`
   (`hub/store/internal/chunk_rows.py`, `bzh:store-exclusive-write`) already serializes concurrent callers on — a row
   lock on a row already known to exist, portable across both backends, only its sqlite implementation running through
-  the factory. This exception does not extend to `acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`),
-  whose lock is not portable:
-  [../architecture/system-shape/exclusive-writes.md](../architecture/system-shape/exclusive-writes.md) §Known debt owns
-  that gap.
+  the factory.
 - **The runner's outbound buffers.** `outbound_buffer` and the transcript lane's own `transcript_outbound_buffer` each
   set `sqlite_autoincrement=True` on their `seq` primary key: a sqlite-only pragma admitted because the hazard it guards
   is itself sqlite-only, so no portable equivalent exists. The hazard: both buffers prune acked rows past their own

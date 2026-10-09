@@ -96,11 +96,6 @@ Stated so a reviewer need not re-derive them:
   `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
   flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
   single-process background loop.
-- **The hub-exec slot's empty-table gap.** `acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`) locks
-  via a table-wide no-op `UPDATE` against `hub_exec_slot`, which carries no unique constraint (`hub/store/schema.py`).
-  On an empty table that `UPDATE` matches and locks no row, so two concurrent acquires on a freshly-migrated store are
-  unserialized on postgres; sqlite still serializes them, the statement taking its single writer lock whether or not a
-  row matches.
 - **Running more than one hub process.** No deployment topology stands up a second hub process against one store.
 - **Single-process components outside this rule.** Each is single-process by construction, and this rule governs none of
   them:

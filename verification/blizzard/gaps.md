@@ -343,3 +343,41 @@ different key proceeding, or a concurrent insert of one key losing to an `Integr
 Standing in for a tier: the per-key structure, asserted at `blizzard:component-test` on what is written — each ingest
 locks only the `keyed_locks` rows of its own pointers — together with the same-key interleaving, which SQLite does
 exercise. Do not add a Postgres tier to close this.
+
+## Tenancy's migrations and locks under Postgres
+
+Every tier runs on SQLite, whose single writer lock serializes every writer, and no tier runs a migration or a
+concurrent write against Postgres. The tenancy mechanisms below therefore hold on SQLite by construction and stay
+unverified on Postgres, where each statement of a READ COMMITTED transaction reads its own snapshot and foreign keys are
+enforced:
+
+- **The migration chain.** The tenancy revisions, `20261008_1100_tenants` through
+  `20261008_1720_tenant_deletion_closed_at` (`src/blizzard/hub/store/migrations/versions/`), have run on SQLite only.
+  Each is written to `bzh:sql-portable` — named constraints, identifiers within 63 characters, `batch_alter_table` — and
+  nothing has run the chain on Postgres.
+- **A scoped write's closed-tenant check.** A scoped write opens with one statement,
+  `UPDATE tenants … WHERE tenant_id = :t AND NOT EXISTS (<the tenant's deletion fact>)` (`_lock_open_tenant`,
+  `src/blizzard/hub/store/scoped.py`). On Postgres a write that blocks on a close's lock of that row re-checks, once the
+  close commits, the row against its condition, but evaluates the `NOT EXISTS` against the snapshot taken before it
+  blocked, so it can still write into the tenant just closed. The drain removes that late row on its next pass, and a
+  completion that meets it first fails on the foreign key until the next sweep pass. Closing the hole portably costs a
+  separate existence read after the row lock, on every scoped write.
+- **The drain under enforced foreign keys.** The drain deletes children before parents in the schema's own dependency
+  order (`DRAIN_ORDER`, `src/blizzard/hub/store/internal/tenant_teardown_store.py`) and relies on no cascade, because
+  SQLite runs with `foreign_keys` off. No tier drains with foreign keys enforced, so an order that breaks one surfaces
+  only on Postgres, as a failed batch.
+- **The hub-execution slot's per-tenant lock.** `acquire_hub_exec_slot`
+  (`src/blizzard/hub/store/internal/chunk_hub_exec_store.py`) reads the tenant's live slots and inserts one under the
+  scoped write's tenant-row lock, so two acquires in one tenant queue on that row while another tenant's never waits.
+  That the row lock alone keeps one live slot per tenant is unverified on Postgres; on SQLite the writer lock serializes
+  every acquire.
+- **The last-open-tenant check.** A tenant's close (`TenantTeardownStore.close`, same file as the drain) refuses to
+  close the last open tenant. Two closes of the last two open tenants could each see the other still open and both
+  commit, leaving none; the close guards against that by locking every `tenants` row in `tenant_id` order before the
+  check, so a second close queues behind the first and reads its committed deletion fact. On SQLite the writer lock
+  serializes the two closes whatever the lock order, so no tier can tell whether the ordered locks hold on Postgres.
+
+Standing in for a tier: each mechanism's interleavings that SQLite can run, at `blizzard:component-test`, and the
+portable SQL `bzh:sql-portable` holds each statement to. The hosted hub runs SQLite (`blizzard-infra`'s
+`deploy/compose.yaml`), so dogfooding exercises none of them on Postgres. The gap stays open, not permanent: it closes
+the day some tier gains a Postgres-backed run, which `packaging/docker/compose.yaml` already makes possible.
