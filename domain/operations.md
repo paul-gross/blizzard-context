@@ -58,6 +58,20 @@ kinds — the terminal failure is not double-counted.
 
 A deliberately deferred failure — a runner that told its operator it will start no processes — surfaces nothing.
 
+### The hub's own log
+
+The event log above is a tenant's: every event in it concerns that tenant's runners and chunks. The hub keeps a second
+log of its own occurrences, which concern no tenant, and only hub administrators read it ([./tenancy.md](./tenancy.md)).
+An occurrence is recorded in one log or the other, never both. The hub's own log takes the same shape — severity, kind,
+message, detail — reads newest first, and has its own closed vocabulary:
+
+- the eight trace-export and fact-egress kinds above, each at the severity it carries there, when the export failing,
+  recovering, skipping, or reset is the hub's own — a runner's own trace export still reports into its tenant's log;
+- `hub-started` (`info`) — the hub started and reached its store, naming its version and the store's revision;
+- `hub-migrated` (`info`) — the hub moved its store between schema revisions, naming both;
+- `tenant-closed` (`info`) — a tenant was closed, and its deletion began;
+- `tenant-deleted` (`info`) — a closed tenant's deletion finished.
+
 ## The activity feed
 
 The activity feed is reconstructed fresh from the durable facts the domain already keeps — transitions, questions, gate

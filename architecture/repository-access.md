@@ -21,6 +21,10 @@ rather than pairing with an empty write half: `blizzard/src/blizzard/hub/domain/
 `IReadChunkFactsRepository` has no write counterpart because `load_facts`/`load_all_facts` project the union of the
 other seams' own writes, and splitting that projection per concept would turn one bounded read into one per seam.
 
+A hub Protocol carries no tenant in its signatures: the tenant is the instance's, opened per tenant
+(`bzh:tenant-scoped-store`, [./system-shape/tenancy.md](./system-shape/tenancy.md)), so the read half a controller holds
+cannot widen to another tenant either.
+
 **Do.** `blizzard/src/blizzard/hub/domain/chunk/ports/record.py` pairs `IReadChunkRecordRepository` with
 `IWriteChunkRecordRepository`, the write variant extending the read one; the composition root binds the write variant
 only where mutation is required.

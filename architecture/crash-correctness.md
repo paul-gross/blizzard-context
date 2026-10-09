@@ -135,6 +135,11 @@ assertions plus the status-derivation queries themselves — and a failure names
 a vague corruption. It is the assertion the sweep runs after every armed crash, alongside the scenario's own expected
 outcome.
 
+**Scope.** The hub's query checks audit the store whole — every tenant's rows at once, on a connection marked
+hub-scoped, one of the statement guard's named exemptions (`bzh:tenant-scoped-store`,
+[./system-shape/tenancy.md](./system-shape/tenancy.md)). A chunk, route, or epoch id is hub-minted, so an invariant
+keyed by one holds across tenants exactly as within one.
+
 **Detect.** A crash test that asserts only "the process restarted" or "the chunk eventually landed" without checking the
 facts-level invariants; a new durable invariant added to the design with no assertion in the checker.
 

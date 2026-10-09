@@ -23,7 +23,11 @@ every one targets an `/api/fleet/...` path; a runner call reaching the hub outsi
 it.
 
 **Do.** A new optional response field; a new route kept beside its replacement; and, when a new runner→hub call reaches
-outside the declared surface, extending `blizzard:wire-compat`'s surface constant in the same change.
+outside the declared surface, extending `blizzard:wire-compat`'s surface constant in the same change. Naming the
+runner's tenant took the first form: `RunnerRegistrationResponse` and `RunnerIdentityView`
+(`src/blizzard/wire/runner.py`) gained `tenant_id` and `tenant_name`, each optional and `None` by default, so a
+previous-minor runner parses the reply it always did, and the route, the request, and the refusal shapes stayed as they
+were.
 
 **Don't.** A response enum gaining a value with no `!` on any commit the step lands — an older runner's closed-enum
 parse (e.g. `ChunkStatus`, `ApplyOutcome`) raises on the unrecognized value instead of round-tripping it.

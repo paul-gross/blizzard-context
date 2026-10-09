@@ -180,6 +180,26 @@ It has no window: the release is a single statement, and a crash before it commi
 boot to release. Composition never calls it, so a CLI or test build over shared stores cannot release a live daemon's
 slot.
 
+## Tenant creation, one identity unit of work
+
+`TenantAdministration.create` (`blizzard/src/blizzard/hub/domain/tenancy/administration.py`) writes a tenant's `tenants`
+row, its packaged graphs, its `hub` work-ref sequence, and, when one is named, its first admin's membership, inside one
+identity unit of work (`blizzard/src/blizzard/hub/auth/identity_transaction.py`). The tenant's writes join the unit's
+own connection through `ScopedConnections.founding` (`blizzard/src/blizzard/hub/store/scoped.py`), which opens by
+inserting the scope's `tenants` row where every other scoped write locks it, so each later write in the unit locks the
+row just inserted. No window: a crash ahead of the commit loses the tenant and everything minted into it together, and
+the in-memory open-tenant set is refreshed only after the commit.
+
+## Invitation acceptance, one identity unit of work
+
+`AuthService.accept_invitation` (`blizzard/src/blizzard/hub/auth/service.py`) resolves or creates the person, grants the
+invitation's role unless they already hold a membership in its tenant, records the invitation accepted, and mints their
+session, all in one identity unit of work; the tenant-owned invitation fact joins it through
+`IdentityWrites.tenant_connections`. No window: a crash ahead of the commit leaves the invitation live and nothing of
+the sign-in written, and a retried sign-in accepts it afresh. The claim of a configured superuser that follows is a unit
+of work of its own, opened after this one commits: a crash between them leaves the target unclaimed, and the person's
+next sign-in claims it.
+
 ## The item-creation chunk mint
 
 `POST /api/work-sources/hub/items` writes the item's `work_items` row and its resting `not_ready` chunk's rows —

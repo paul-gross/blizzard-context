@@ -106,7 +106,9 @@ refusal. A dry run assembled from reads cannot know what a write's own checks �
 compare-and-set — will refuse, so only the real transaction rolled back reports truthfully.
 
 **Scope.** Binds every kind a document carries, now and as scopes and routines join it. A kind added to the document
-adds its writes to the one transaction and its entries to the outcome rows; it takes no transaction of its own.
+adds its writes to the one transaction and its entries to the outcome rows; it takes no transaction of its own. An apply
+reconciles the records of the tenant its request resolved, in that tenant's one transaction; a document never reaches a
+second tenant.
 
 **Detect.**
 
@@ -140,6 +142,11 @@ replacement. A value that nothing can read back needs no read permission to guar
 ([../../standards/hub-nodes/env-contract.md](../../standards/hub-nodes/env-contract.md)) owns — the one place a value
 leaves the hub process, and no licence to log or return it there.
 
+**Scope.** A secret belongs to one tenant, like every configured record, and its name is unique within that tenant
+(`bzh:tenant-scoped-uniqueness`). The hub's one secret key seals every tenant's values, each against its own
+`(name, revision)` (`blizzard/src/blizzard/hub/secrets/internal/aes_gcm.py`); the tenant boundary on a value is the
+store's, never the cipher's.
+
 **Detect.** A `SecretValue` reaching a controller, a serializer, or a logger; an `ISecretReader` injected anywhere but
 an object the composition root builds to call an external system — which reveals a value per use
 (`bzh:config-read-on-use`), never once at start; a secret's view, change-row diff, or apply outcome with a value or
@@ -161,7 +168,9 @@ store is the only answer to what is configured; no process holds configuration i
 one hub process or several. A cache keyed by revision holds nothing true only in memory: a cold cache is correct, and a
 second process reading the same revisions builds equivalent objects.
 
-**Scope.** Binds configured records. Process settings in the hub's file — its root, store URL, bind address, auth and
+**Scope.** Binds configured records. Each tenant's records build into that tenant's own cache, opened with its services
+(`build_live_config`, `blizzard/src/blizzard/hub/composition.py`), so an object built from one tenant's record never
+serves another's request or pass. Process settings in the hub's file — its root, store URL, bind address, auth and
 tracing settings, and the hub secret key — are read at start and changed by a restart.
 
 **Detect.**
