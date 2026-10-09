@@ -96,7 +96,10 @@ import, a name, an attribute, a keyword argument, or a string — appears only i
 `hub/store/migrations/`; the same test fails a `ScopedConnections` constructed outside `hub/store/` and an import of the
 guard outside `hub/store/` and `hub/app.py`, which installs it. By eye: an adapter constructor typed
 `HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a raw `sa.select(table)` on a
-tenant-owned table inside an adapter.
+tenant-owned table inside an adapter. A guard refusal is the finding, never something to switch off: a test outside
+`tests/test_tenant_guard.py` that borrows its `no_hub_guard` fixture or unsets `BLIZZARD_TENANT_GUARD` is itself the
+violation
+([../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md#the-tenant-statement-guard-is-on-in-every-tier)).
 
 **Do.** An adapter's listing reads `conn.select(s.chunks).where(...)`, and the domain asks for `stores.chunks.list(...)`
 on the `TenantStores` its request resolved — neither line names a tenant.
