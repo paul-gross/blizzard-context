@@ -108,7 +108,10 @@ compare-and-set — will refuse, so only the real transaction rolled back report
 **Scope.** Binds every kind a document carries, now and as scopes and routines join it. A kind added to the document
 adds its writes to the one transaction and its entries to the outcome rows; it takes no transaction of its own. An apply
 reconciles the records of the tenant its request resolved, in that tenant's one transaction; a document never reaches a
-second tenant.
+second tenant. An apply composed with another write — seeding a tenant at its creation — either joins
+`TenantAdministration.create`'s unit of work through `ScopedConnections.founding`
+(`blizzard/src/blizzard/hub/store/scoped.py`), as [../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant
+creation, one identity unit of work describes, or names the window between its commits in that file.
 
 **Detect.**
 
