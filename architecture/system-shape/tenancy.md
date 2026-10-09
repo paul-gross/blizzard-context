@@ -20,16 +20,24 @@ request model, or wire schema carries a `tenant_id` into a write.
 exactly the predicate a hand-written query forgets. A key a caller supplies is a key a caller can get wrong, while a key
 the seam stamps is the scope the repository was opened with.
 
-**Scope.** A listing or range index leads with `tenant_id`, so one tenant's feed never scans another's rows; an index
-led by a hub-minted id keeps its shape, since that id already selects one tenant's rows. A primary key or unique
-constraint led by `tenant_id` counts as the table's tenant-led index. A pass that pages across tenants in cursor order
-keeps its hub-wide `(at, id)` index beside the tenant-led one.
+**Scope.** A listing or range index leads with `tenant_id`, so one tenant's feed never scans another's rows, and so does
+an index a scoped read looks rows up through by a hub- or runner-minted id: every scoped read carries `tenant_id = ?`,
+and SQLite, planning without statistics, picks whichever tenant-led index sits beside an id-led one and walks every row
+the tenant holds per call. An index that also serves an `ORDER BY` carries the ordering columns after the lookup ones. A
+primary key or unique constraint led by `tenant_id` counts as the table's tenant-led index, and a plain `tenant_id`
+index that a tenant-led lookup index makes redundant is dropped. Two kinds stay hub-wide: the `(at, id)` cursor index of
+a pass that pages across tenants in cursor order, kept beside the tenant-led one, and a credential's `token_hash` index,
+which a hub-scoped read resolves before any tenant is known.
 
 **Detect.** The tenant schema gate — a `blizzard:unit-test` over `schema.metadata` (`tests/test_tenant_schema_gate.py`)
 — fails a table outside the global list whose `tenant_id` is missing, nullable, or without its foreign key, or that has
 no index led by `tenant_id`. The test-suite statement guard (`bzh:tenant-scoped-store`'s Detect) fails an insert into a
-tenant-owned table whose values lack `tenant_id`. By eye: a `tenant_id` field on a domain dataclass, a request body, or
-a wire model that a write path reads; an adapter passing `tenant_id=` into `.values(...)` itself.
+tenant-owned table whose values lack `tenant_id`. The read-index gate (`tests/test_store_read_index_gate.py`, a
+`blizzard:unit-test`) reads a plan that seeks only the tenant prefix, or walks a whole named index in order, as reading
+the table whole, beside a bare scan and an automatic index; a read that walks by design names its reason in an
+`IndexWalkAllowance` (`tests/store_scan_allowlist.py`), scoped to that one read. By eye: a `tenant_id` field on a domain
+dataclass, a request body, or a wire model that a write path reads; an adapter passing `tenant_id=` into `.values(...)`
+itself.
 
 **Do.** A fact table under a chunk carries `tenant_id` beside `chunk_id`, stamped by the scoped `insert` the adapter
 built; the domain call that wrote it passed only the fact.
@@ -81,9 +89,14 @@ opened its stores before the close cannot write behind the drain.
 test suite switches on in every tier that opens a hub store, and production leaves off — fails a select, update, or
 delete naming a tenant-owned table without a `tenant_id` equality in its `WHERE` or join `ON`, and an insert whose
 values lack `tenant_id`. Only statements marked hub-scoped are exempt: `HubScopedReads`
-(`bzh:hub-scoped-reads-confined`), the invariant checker's cross-tenant audits, and migrations. By eye: an adapter
-constructor typed `HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a raw
-`sa.select(table)` on a tenant-owned table inside an adapter.
+(`bzh:hub-scoped-reads-confined`), the invariant checker's cross-tenant audits, and migrations. `tests/test_layering.py`
+confines the exemption by name: `HUB_SCOPED_OPTION`, or the `blizzard_hub_scoped` string it stands for — spelled as an
+import, a name, an attribute, a keyword argument, or a string — appears only in `hub/tenancy.py`,
+`hub/store/tenant_guard.py`, the `hub/store/internal/hub_scoped_*.py` modules, `tools/invariants.py`, and
+`hub/store/migrations/`; the same test fails a `ScopedConnections` constructed outside `hub/store/` and an import of the
+guard outside `hub/store/` and `hub/app.py`, which installs it. By eye: an adapter constructor typed
+`HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a raw `sa.select(table)` on a
+tenant-owned table inside an adapter.
 
 **Do.** An adapter's listing reads `conn.select(s.chunks).where(...)`, and the domain asks for `stores.chunks.list(...)`
 on the `TenantStores` its request resolved — neither line names a tenant.
@@ -106,16 +119,21 @@ membership turns "where can a tenant leak?" into a list a reviewer can read whol
   hub-executed node's marker — each returning the tenant beside its principal;
 - a sweep's corpus read (`bzh:sweep-acts-in-row-tenant`), and the status reads of the hub's exports, whose cursors every
   tenant's rows share;
-- tenant administration — listing tenants, finding the deletions a teardown has yet to finish;
-- the identity reads that list a person's memberships and the hub administrators.
+- tenant administration — listing tenants, finding the deletions a teardown has yet to finish.
 
-A write never goes through it; a pass that must write across tenants loops over open tenants and writes through each
-one's own stores.
+A read of a global table is an ordinary hub-level read, not a member: memberships and hub administrators are global
+(`bzh:global-tables-closed`), so listing a person's tenants or the hub administrators reads through the identity
+repositories the hub-level services hold. A write never goes through it; a pass that must write across tenants loops
+over open tenants and writes through each one's own stores.
 
 **Detect.** The ast-grep rule `bzh:hub-scoped-reads-confined` (`contracts/ast-grep/rules/hub-scoped-reads-confined.yml`,
-run by `blizzard:structural-gate`) refuses an import of `HubScopedReads` outside the modules its `files` allowlist
-names. By eye: a member added for a read a tenant-scoped repository could serve; a member that writes; an allowlist
-entry added for a route under a tenant's own family.
+run by `blizzard:structural-gate`) refuses any naming of the seam — `HubScopedReads`, any `hub_scoped_*` module, helper,
+or factory, or the `HubCore` field — whether as an import, an annotation, an attribute, or a string spelled for
+`importlib` or `getattr`; its `ignores` are the allowlist. The member groups live in
+`hub/store/internal/hub_scoped_<kind>.py` and are taken whole, through `build_hub_scoped_reads`:
+`tests/test_layering.py` fails an import of one member group anywhere outside those modules. By eye: a member added for
+a read a tenant-scoped repository could serve; a member that writes; an allowlist entry added for a route under a
+tenant's own family.
 
 **Do.** A runner's bearer token resolves through a `HubScopedReads` member to its registration and that registration's
 tenant; the request then opens that tenant's stores and does everything else through them.

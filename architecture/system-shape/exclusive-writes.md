@@ -12,12 +12,16 @@ guard read *of that row's own chunk state* the decision rests on, on that same c
 independently of the race itself (a paused runner, checked once before the lock opens) or that resolves a different
 aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs: nothing about the
 exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the lock, without
-reopening anything the lock closes.
+reopening anything the lock closes. The one statement allowed ahead of the decision's row lock is the scoped write's own
+opening lock on its tenant's row (`bzh:tenant-scoped-store`), which every write on a tenant's stores issues first — save
+the one that creates the tenant, which inserts that row instead.
 
 **Why.** An in-process lock only serializes callers inside one process; the moment a second hub process shares the
 store, two processes' own locks stop serializing each other, and the transaction is the only thing both still share.
 Locking first is what makes the guard reads atomic with the write: on SQLite the lock takes the single writer lock
-before any later read; on Postgres it takes the row lock a concurrent locker of the same row queues behind.
+before any later read; on Postgres it takes the row lock a concurrent locker of the same row queues behind. The
+tenant-row lock ahead of it changes neither: on SQLite it already took the writer lock, and on Postgres every writer
+takes the tenant row first and its chunk or keyed rows after, so the order two writers lock in never inverts.
 
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
 stop, complete, detach, and requeue — and the epoch-fenced writes (`bzh:epoch-fencing`), which the row lock serialises
@@ -35,27 +39,33 @@ it writes needs a row lock.
   which flags any `import threading` under `src/blizzard/hub/**`.
 - A `.with_for_update()` call under `src/blizzard/hub/**` — it renders nothing on SQLite, so the guard read holds no
   writer lock. Mechanically flagged by `contracts/ast-grep/rules/store-no-for-update.yml`.
+- A statement other than the scoped write's tenant-row lock running ahead of the decision's row lock on Postgres, or a
+  write that locks a chunk or keyed row before its tenant's row — two writers taking the same pair in opposite orders
+  deadlock. Not mechanically checkable; judged at review.
 - A locked transaction whose row lock targets a row that may not yet exist when two writers race to create it — a no-op
   `UPDATE` locks nothing on an empty table, so the exclusion never engages. Not mechanically checkable; judged at
   review. The remedy is the keyed-lock-row form under **Do**.
 
 **Do.** `lock_chunk_row` (`hub/store/internal/chunk_rows.py`) — a no-op `UPDATE` on the chunk's own row, already minted
-before any claim, edit, or dependency write can reach it — called as the transaction's first statement, with every guard
-read that follows it on the same connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunk/ports/exclusive.py`) is
-the one place this crosses the domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock
-on Postgres, where two writers naming the same set in different orders could otherwise wait on each other) before
-yielding `ILockedChunkRead` — a domain-facing handle carrying no connection. A sibling write repository's own `*_locked`
-method takes that same handle and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a
-package-private cast only the store layer ever calls — the domain layer never sees a `Connection`.
+before any claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
+`ScopedConnections.write` (`hub/store/scoped.py`) opens with, with every guard read that follows it on the same
+connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunk/ports/exclusive.py`) is the one place this crosses the
+domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock on Postgres, where two writers
+naming the same set in different orders could otherwise wait on each other) before yielding `ILockedChunkRead` — a
+domain-facing handle carrying no connection. A sibling write repository's own `*_locked` method takes that same handle
+and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a package-private cast only the
+store layer ever calls — the domain layer never sees a `Connection`.
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
 locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/internal/chunk_rows.py`). The table is lock-only:
 it holds no state, nothing reads it as a fact, and its rows are never deleted. For each key, in sorted order, the helper
 inserts the row if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op `UPDATE` on it, so the
-first statements of the transaction lock a row that exists. Each decision keys by its own namespace: a pointer by
-`(source, ref)` encoded injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.locked_work_refs`
-and `IWriteGraphRepository.locked_name`, each yielding a handle of its own — never an `ILockedChunkRead`, so a handle
-that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
+first statements after the tenant-row lock lock a row that exists. The table is keyed `(tenant_id, namespace, key)`, the
+scoped insert stamping the write's tenant, so two tenants locking one graph name each lock their own row
+(`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
+injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.locked_work_refs` and
+`IWriteGraphRepository.locked_name`, each yielding a handle of its own — never an `ILockedChunkRead`, so a handle that
+holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
 write calls on its own connection after the lock and its replay probe and before its first insert. It reads the terminal
@@ -69,21 +79,23 @@ serializing each other and the race reopens with nothing left to catch it.
 
 Stated so a reviewer need not re-derive them:
 
-- **The residual fleet-wide lock.** One in-process `threading.Lock` — `cycle_lock`, built in `hub/composition.py` —
-  stands where a row lock does not reach; each `import threading` it needs carries this rule's `ast-grep-ignore`. Moving
-  any of its holders onto a store-level singleton row needs a schema migration. Its holders:
-  - `DependencyService.declare` and `GroupService.group` — for the fleet-wide standing-dependency cycle check
-    (`hub:no-standing-dependency-cycle`), which reasons over the whole graph: two disjoint writers racing on different
-    rows can still together close a cycle neither alone would.
+- **The residual per-tenant lock.** One in-process `threading.Lock` per tenant — `cycle_lock`, built with the tenant's
+  stores in `hub/composition.py`'s `build_tenant_stores` — stands where a row lock does not reach; dependencies never
+  cross tenants, so one tenant's lock never waits on another's. Each `import threading` it needs carries this rule's
+  `ast-grep-ignore`. Moving any of its holders onto a store-level row needs a schema migration. Its holders:
+  - `DependencyService.declare` and `GroupService.group` — for the tenant-wide standing-dependency cycle check
+    (`hub:no-standing-dependency-cycle`), which reasons over the tenant's whole graph: two disjoint writers racing on
+    different rows can still together close a cycle neither alone would.
   - `DeleteService.delete`, for its whole transaction — the deleted chunk's row lock does not reach the other end of an
     outgoing edge the delete releases, so a concurrent fold of that other chunk, locking only its own survivor and merge
     ids, could otherwise remint the edge with the deleted chunk as its dependent.
   - `DependencyService.release` — as its only lock. Exempt from the row lock (Scope above), release is ordered against
     `group`'s edge rewrite by this lock alone, which keeps a fold from reminting an edge released between the fold's
     read of the standing set and its write.
-  - `EgressSweep.sweep` and `EgressReset.reset` — the export's pass lock, which keeps an operator's cursor move from
-    being overwritten by the advanced cursor a pass in flight appends. `egress_cursor` holds no row known to exist to
-    lock, and the sweep it serializes against is itself a single-process background loop.
+- **The export's pass lock.** `EgressSweep.sweep` and `EgressReset.reset` share one hub-wide in-process lock, built in
+  `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
+  flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
+  single-process background loop.
 - **The hub-exec slot's empty-table gap.** `acquire_hub_exec_slot` (`hub/store/internal/chunk_hub_exec_store.py`) locks
   via a table-wide no-op `UPDATE` against `hub_exec_slot`, which carries no unique constraint (`hub/store/schema.py`).
   On an empty table that `UPDATE` matches and locks no row, so two concurrent acquires on a freshly-migrated store are
@@ -97,6 +109,9 @@ Stated so a reviewer need not re-derive them:
     ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The marker-write capability token).
   - **Background sweeps** — loops with no cross-process coordination.
   - **Migrate-on-boot** — a migration run assumed uncontended at boot.
+  - **The open-tenant set and the tenant cache** — the open tenants with their names, and each opened tenant's stores
+    and services, held in memory (`hub/open_tenants.py`, `TenantCache` in `hub/composition.py`). A tenant another
+    process created is read on the first lookup that misses it, but a rename refreshes only the process that made it.
   - **The boot release of live hub-execution slots** — a live slot at startup is taken to belong to a dead process's run
     and is released before the hub serves ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The boot release
     of live hub-execution slots).

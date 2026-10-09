@@ -34,11 +34,21 @@ Three names are structlog's own call kwargs and can never be field keys: `event`
 log was the diagnostic. `event=` is the natural name for a hook or SSE field; name the field for its domain instead
 (`hook_event=`, `event_type=`).
 
+## Bound context
+
+A request's tenant joins every line it logs without the call site naming it: the tenant router dependency
+(`tenant_bound`, `src/blizzard/hub/api/auth_session.py`) binds `tenant_id` into structlog's context variables, and the
+configured processor chain merges them into each event (`src/blizzard/foundation/logging.py`). The binding is made in an
+async dependency so it lands in the request's own context rather than a worker thread's copy. A handler or service on a
+tenant-bound route never passes `tenant_id=` itself. A hub-level pass that acts across tenants has no request tenant
+bound, and names the tenant each line concerns as a field.
+
 ## Detect
 
 - Structured data interpolated into the message string instead of passed as fields.
 - A catch-log-rethrow that re-logs an error already logged at its wrap site.
 - A stdlib `logging.getLogger`, or a second logging library beside structlog.
+- A `tenant_id=` field passed at a call site on a tenant-bound request path, beside the one the context already binds.
 - A `print()` in daemon or service code: the injected reporter owns user-facing output and the logger owns diagnostics;
   `print()` belongs in CLI top-level glue only.
 

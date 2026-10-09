@@ -156,8 +156,13 @@ the same process graph with explicit lifetimes:
 
 - `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`, which runs `build_hub_core`, then the work-source registry,
   then `build_services`
-- `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core builds the shared stores
-  and leaf services once; `build_services` takes it and builds none of them
+- `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core builds the hub-level
+  stores once, and a tenant's stores and leaf services once per tenant, on its first `HubCore.open(scope)`, cached in
+  the core's `TenantCache`; `build_services` takes the core and builds none of them. It builds the hub-level
+  `HubServices` and has the cache serve each tenant's `TenantServices`, built from that tenant's `TenantStores` alone
+  (`build_tenant_services`) and cached beside them. A hub-level service reaches a tenant's services only through
+  `HubServices.tenants` (`TenantServicesOpener`); no service is built from the unscoped core (`bzh:tenant-scoped-store`,
+  [./system-shape/tenancy.md](./system-shape/tenancy.md))
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py`, injected into the served app in
   `blizzard/src/blizzard/runner/app.py` and the periodic loop's wiring in `blizzard/src/blizzard/runner/loop_wiring.py`
 
@@ -369,6 +374,7 @@ table row allows it. Every hub package may also import `kernel`.
 | L1    | `graph`         | `artifact`                               |
 | L1    | `runners`       | —                                        |
 | L2    | `chunk`         | `graph`, `runners`, `artifact`           |
+| L2    | `tenancy`       | `graph`                                  |
 | L3    | `execution`     | `chunk`, `graph`, `runners`, `artifact`  |
 | L4    | `operations`    | `execution`, `chunk`, `graph`, `runners` |
 | L5    | `work_items`    | `operations`, `chunk`, `graph`           |
