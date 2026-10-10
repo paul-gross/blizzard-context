@@ -347,3 +347,6 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `app-info-view.shell-sweep.spec.ts` covers the runner panel's info section with a runner imposing several gates: the
   Gates fact row stays inside the panel at about 390px rather than forcing horizontal scroll. Its fleet strip's counts
   colour through their chunk-status tones — ready `--label-dim`, running `--amber`, waiting `--amber-hi`, needs `--red`.
+- `tenant-picker.shell-sweep.spec.ts` covers the hub's tenant picker (`TenantPicker`), mounted with a short, a long, and
+  a one-letter tenant name: at 1280px, 390px, and 320px every option must share one width and left edge — the widest
+  name's, not each its own — with every option's right edge inside the viewport and no horizontal overflow of the page.
