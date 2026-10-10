@@ -7,6 +7,12 @@ class the way an artifact is, and both persist as evidence whether or not anyone
 [domain model](./index.md); the machinery both ride is `blizzard-product:/delivered/garden/machinery.md`, which this
 does not restate.
 
+Each finding and each proposal belongs to one project ([projects.md](./projects.md)): a run's finding takes its
+routine's project, a review-sourced finding takes the reviewed chunk's, and a proposal takes its routine's, or for an
+operator's the project the call names. A proposal cites only findings of its own project; naming a finding of another
+project is refused, naming that finding, wherever a proposal takes its findings — a run's delivery, an operator's
+`create` or `attach`.
+
 ## Identity is the hub's to assign
 
 A finding is minted only at delivery, with its own hub-assigned id — an agent never invents one, since a run names what
@@ -98,16 +104,17 @@ groups.
 A garden proposal is minted from one of two origins, a fact fixed at mint and never inferred from an absent routine: a
 **routine's run**, raised by its own delivery, or an **operator**, authored directly by a person through the hub API or
 CLI. An operator-authored proposal may name a routine or none — the routine is optional there, the way it never is for a
-routine-run proposal — and when it names findings, they may come from any routines and scopes at once: a proposal
-carries no scope of its own, so nothing about its origin narrows which findings it may group. A finding may belong to
-more than one proposal, of either origin, open or closed — grouping is not exclusive.
+routine-run proposal — and when it names findings, they may come from any routines and scopes of its project at once: a
+proposal carries no scope of its own, so nothing about its origin narrows which of its project's findings it may group.
+A finding may belong to more than one proposal, of either origin, open or closed — grouping is not exclusive.
 
 A routine's run is shown every finding it may cite: its routine's non-exited findings in every scope, plus
 review-sourced ones on its own scope. Its proposals may cite any of them — a run can only speak for what it swept, so
 another routine's finding is out of reach — while its finding set's `observed` and `gone` ops stay within its own scope.
 An operator's `create` and `attach` follow the same rule where findings are concerned: any non-exited finding,
-`delivered` and `gone` included, from any routine or scope; only an exited finding is refused. Both origins apply the
-same test of standing — not exited — and differ only in reach: a run's is bounded by its routine, an operator's is not.
+`delivered` and `gone` included, from any routine or scope of the proposal's project; only an exited finding, or one of
+another project, is refused. Both origins apply the same test of standing — not exited — and differ only in reach: a
+run's is bounded by its routine, an operator's is not.
 
 ## A proposal may be edited while it is open
 

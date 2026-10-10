@@ -381,3 +381,25 @@ Standing in for a tier: each mechanism's interleavings that SQLite can run, at `
 portable SQL `bzh:sql-portable` holds each statement to. The hosted hub runs SQLite (`blizzard-infra`'s
 `deploy/compose.yaml`), so dogfooding exercises none of them on Postgres. The gap stays open, not permanent: it closes
 the day some tier gains a Postgres-backed run, which `packaging/docker/compose.yaml` already makes possible.
+
+## Projects' migration and writes under Postgres
+
+The projects mechanisms below have the same exposure as tenancy's: every tier runs on SQLite, with one writer lock and
+foreign keys off, so each holds there by construction and stays unverified on Postgres.
+
+- **The projects revision.** `20261008_1800_projects` (`src/blizzard/hub/store/migrations/versions/`) has run on SQLite
+  only. There its eight-table `project_id` addition is a `batch_alter_table` rebuild; on Postgres it becomes native
+  `ALTER`s. Its correlated `UPDATE` stamping each row with its tenant's project, and the new `fk_<table>_projects` keys,
+  have never run where foreign keys are enforced. Nor has the tenant drain over rows those keys bind.
+- **The slug move.** A project's slug move (`update_project`, `src/blizzard/hub/store/internal/project_store.py`) runs
+  in one transaction. It reads for a current holder of the new slug, deletes the new slug's former-slug row, updates the
+  project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two
+  concurrent writes touching one slug leave is unverified: a uniqueness refusal in place of `ProjectSlugTaken`, or a
+  former-slug row the other write removed.
+- **The sole-project fallback.** An insert that names no project into a table carrying `project_id` takes the tenant's
+  project as a scalar subquery, `NULL` unless the tenant holds exactly one (`ScopedStatements.sole_project_fallback`,
+  `src/blizzard/hub/store/scoped.py`). The fallback is interim: it goes once every writer names its project. Whether an
+  insert racing the creation of a tenant's second project stamps the first or is refused is unverified on Postgres.
+
+Standing in for a tier: the revision's migration and carry-over tests, the slug-move and fallback tests on SQLite, and
+the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.

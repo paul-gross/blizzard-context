@@ -8,6 +8,9 @@ Ranking exists wherever a chunk can be reordered by hand: the `not_ready` list's
 operator promotes next, the `ready` queue's decides which unclaimed work a runner claims next. Reordering touches
 neither promotion nor acquisition itself — it only orders what is already resting in one list or the other.
 
+Each list is the whole tenant's: chunks of every project rest and rank in one `not_ready` list and one `ready` queue
+([../projects.md](../projects.md)).
+
 ## A chunk's rank
 
 A chunk's position in its list is its newest recorded explicit position, falling back — for a chunk never explicitly

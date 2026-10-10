@@ -366,20 +366,21 @@ table.
 every runner module outside the edges in one of the runner's nodes; import another package only where the importer's
 table row allows it. Every hub package may also import `kernel`.
 
-| Layer | Package         | May import (besides `kernel`)            |
-| ----- | --------------- | ---------------------------------------- |
-| L0    | `kernel`        | —                                        |
-| L0    | `artifact`      | —                                        |
-| L0    | `config`        | —                                        |
-| L1    | `graph`         | `artifact`                               |
-| L1    | `runners`       | —                                        |
-| L2    | `chunk`         | `graph`, `runners`, `artifact`           |
-| L2    | `tenancy`       | `graph`                                  |
-| L3    | `execution`     | `chunk`, `graph`, `runners`, `artifact`  |
-| L4    | `operations`    | `execution`, `chunk`, `graph`, `runners` |
-| L5    | `work_items`    | `operations`, `chunk`, `graph`           |
-| L6    | `garden`        | `work_items`, `chunk`, `graph`, `config` |
-| L7    | `observability` | `chunk`, `graph`, `runners`              |
+| Layer | Package         | May import (besides `kernel`)                        |
+| ----- | --------------- | ---------------------------------------------------- |
+| L0    | `kernel`        | —                                                    |
+| L0    | `artifact`      | —                                                    |
+| L0    | `config`        | —                                                    |
+| L1    | `projects`      | `config`                                             |
+| L1    | `graph`         | `artifact`                                           |
+| L1    | `runners`       | —                                                    |
+| L2    | `chunk`         | `graph`, `runners`, `artifact`                       |
+| L2    | `tenancy`       | `graph`, `config`, `projects`                        |
+| L3    | `execution`     | `chunk`, `graph`, `runners`, `artifact`              |
+| L4    | `operations`    | `execution`, `chunk`, `graph`, `runners`             |
+| L5    | `work_items`    | `operations`, `chunk`, `graph`                       |
+| L6    | `garden`        | `work_items`, `chunk`, `graph`, `config`, `projects` |
+| L7    | `observability` | `chunk`, `graph`, `runners`                          |
 
 The runner's table. `harness/claude_code`, `harness/opencode`, and `harness/wiring` are nodes of their own; any other
 `runner/<first segment>` is that segment, so `config_table.py` and `stores.py` are the two top-level modules in the

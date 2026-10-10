@@ -8,6 +8,10 @@ chunk stores no status: the current node derives from the newest movement fact �
 a restart's target — and status derives from recorded facts (`bzh:facts-not-status`,
 [../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md)).
 
+A chunk belongs to exactly one project of its tenant, set when it is minted and never changed; what the chunk
+accumulates belongs to that project through it ([../projects.md](../projects.md) §A chunk belongs to exactly one
+project). A chunk may wait on a chunk of another project, as it waits on any prerequisite.
+
 ## Work refs
 
 A chunk never stores item contents: it holds work refs, and reads pass through to the backing work source. That source

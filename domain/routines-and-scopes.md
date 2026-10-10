@@ -6,18 +6,26 @@ letters, digits, and hyphens, at least one character and nothing else; whatever 
 (model, effort); a run is the routine acting, addressed at itself and an effective scope. Part of the
 [domain model](./index.md).
 
+Every scope and routine belongs to one project ([projects.md](./projects.md)), fixed at its mint. A scope's slug and a
+routine's name are unique within its project, so two projects may each hold a scope of one slug or a routine of one
+name, and they are different records. Finding a scope or routine by its name, or minting one, acts in the project the
+call names, or the tenant's only project when it names none ([projects.md](./projects.md) §A call that needs a project);
+a listing that names no project reads the whole tenant.
+
 ## Mint-on-name
 
-A scope comes into existence the moment its slug is first named — an operator naming it directly, a routine naming a
-default scope no scope yet holds, or a delivery lane's review round naming one in a deferred finding at landing
-(`domain/findings-and-proposals.md`'s own review-sourced finding). Naming an already-existing slug again is not an error
-and does not overwrite what is already recorded against it: minting is idempotent, and a scope's description is changed
-only by explicitly editing it. The description at mint depends on what names the scope:
+A scope comes into existence the moment its slug is first named in a project — an operator naming it directly, a routine
+naming a default scope its project does not yet hold, or a delivery lane's review round naming one in a deferred finding
+at landing (`domain/findings-and-proposals.md`'s own review-sourced finding). Naming a slug its project already holds is
+not an error and does not overwrite what is already recorded against it: minting is idempotent within the project, and a
+scope's description is changed only by explicitly editing it. The same slug named in another project mints that
+project's own scope. The description at mint depends on what names the scope:
 
 - A routine naming its default scope mints a blank description. The one path that does not mint is a configuration
   document: its routine entry may only name a scope the document declares or one already stored.
 - An operator minting a scope directly supplies its description.
-- A review round's mint carries a hub-written description naming its chunk, an operator's to edit later.
+- A review round's mint is in the reviewed chunk's project, and carries a hub-written description naming its chunk, an
+  operator's to edit later. It is recorded in the change log like every other mint.
 
 ## The name is a routine's lineage
 
@@ -46,11 +54,11 @@ refused. Only starting a new run against it is ([What refuses](#what-refuses)).
 ## A routine sweeps a declared set of scopes
 
 A routine's default scope is not the only scope it may sweep: a routine also declares a set of scopes it belongs to, a
-many-to-many relationship between routines and scopes, and its default is always a member of that set. The set can only
-grow the default's membership, never lose it — a routine may come to declare several scopes, but never fewer than the
-one its default names. A scope joins the set only once it exists: unlike a routine's default, which mints the scope it
-names, growing the set never mints one, and naming a scope that does not exist is refused
-([What refuses](#what-refuses)).
+many-to-many relationship between routines and scopes, and its default is always a member of that set. The default and
+every member of the set are scopes of the routine's own project. The set can only grow the default's membership, never
+lose it — a routine may come to declare several scopes, but never fewer than the one its default names. A scope joins
+the set only once it exists: unlike a routine's default, which mints the scope it names, growing the set never mints
+one, and naming a scope that does not exist is refused ([What refuses](#what-refuses)).
 
 ## A run is an act of the pair
 
@@ -73,11 +81,13 @@ sent to another scope or another graph.
 - **A slug outside its shape** — empty, or carrying anything but lowercase letters, digits, and hyphens — wherever a
   scope is named: minting or editing one, a routine's default, a run's override, either verb over a routine's declared
   set.
-- **A routine name already taken** — at mint. A routine's name is claimed once, where a scope's slug is not
-  ([Mint-on-name](#mint-on-name)): a second routine under a name already held is refused, never merged into the routine
-  holding it.
+- **A routine name already taken in its project** — at mint. A routine's name is claimed once, where a scope's slug is
+  not ([Mint-on-name](#mint-on-name)): a second routine under a name already held is refused, never merged into the
+  routine holding it.
 - **A scope that does not exist** — when a routine's declared set names one, grown or shrunk; the growing verb mints
   nothing of its own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
+- **A scope of another project** — as a routine's default or in its declared set, at mint, at an edit, or from a
+  configuration document; a routine's scopes are always its own project's.
 - **A scope a configuration document's routine entry names that the document neither declares nor finds stored** — the
   document never mints a scope implicitly.
 - **A graph that does not resolve** — no enabled graph carries the name, resolution being

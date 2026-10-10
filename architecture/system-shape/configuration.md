@@ -6,10 +6,10 @@ read; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rul
 by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 A **configured record** is a row the hub holds as operator-set configuration and that an operator changes while the hub
-runs: a work source, a repository, a secret, a scope, a routine. The rules below name the seams and tables that keep
-them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so
-code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet
-hold.
+runs: a work source, a repository, a secret, a project, a scope, a routine. The rules below name the seams and tables
+that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations
+take, so code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code these rules do not
+yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
@@ -36,9 +36,14 @@ other, and the only one a declarative apply's per-field difference maps onto wit
 and one change log across kinds mean every door — API, CLI, board, document — changes a record the same way and leaves
 the same trace.
 
-**Scope.** Binds the five kinds named above and any kind added beside them. A graph is an immutable mint, so its
-definition takes no patch — an edit is a new mint — and only its mutable flags take the sparse `PATCH`, beside its
-retire and enable, each of which appends a fact even when it repeats the standing value
+**Scope.** Binds the six kinds named above and any kind added beside them. A project takes create and edit but no retire
+or enable: a project, once created, stays ([../../domain/projects.md](../../domain/projects.md)). Its links to sources
+and repositories carry the lifecycle in its place, each its own revisioned record whose change rows reuse the verbs —
+`create` for a link, `retire` for an unlink, `enable` for a relink — each beside its link fact. A change row of a
+project, a project's link, a scope, or a routine names that record's project, since its key means something only inside
+its project; one of a tenant-wide record — a work source, a repository, a secret — names none. A graph is an immutable
+mint, so its definition takes no patch — an edit is a new mint — and only its mutable flags take the sparse `PATCH`,
+beside its retire and enable, each of which appends a fact even when it repeats the standing value
 ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A work item is work, not configuration: its patch
 carries the sparse-merge meaning, and it takes no revision, no change row, and keeps its `DELETE`. A secret takes
 replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on the CLI,
@@ -53,6 +58,7 @@ its change row.
 - A `DELETE` route on a configured record.
 - A write to a configured record with no `config_changes` row in its transaction, or one that leaves `revision` where it
   was.
+- A change row of a project, a project's link, a scope, or a routine written without that record's project.
 - A patch handler that cannot tell an omitted field from an explicit `null`.
 
 **Do.** `WorkItemPatchRequest` (`blizzard/src/blizzard/wire/work_source.py`) is the reference for telling an omitted
@@ -111,7 +117,20 @@ reconciles the records of the tenant its request resolved, in that tenant's one 
 second tenant. An apply composed with another write — seeding a tenant at its creation — either joins
 `TenantAdministration.create`'s unit of work through `ScopedConnections.founding`
 (`blizzard/src/blizzard/hub/store/scoped.py`), as [../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant
-creation, one identity unit of work describes, or names the window between its commits in that file.
+creation, one identity unit of work describes, or names the window between its commits in that file, owing what
+[../crash-correctness.md](../crash-correctness.md) §Recorded exemptions — durable state the sweep does not arm sets for
+an entry on that ground.
+
+A document's `projects` section reconciles first, so a scope or routine entry may name a project the same document
+declares. The apply knows no project: the section is planned by the package that owns projects and handed to it planned
+(`blizzard/src/blizzard/hub/domain/projects/declarations.py`). A project entry's stated `sources` or `repositories` list
+is that project's whole set, so a name the list leaves out is unlinked — the one write an omission drives, retiring a
+link and never a record; a list the entry omits leaves the stored links. A project entry naming a slug some project has
+moved away from is refused, naming the project that left it, rather than taking the slug back. A scope or routine entry
+acts in the project its `project` names, by id or slug, or the tenant's only project when it names none, and is refused
+when the tenant holds several. Export writes each project by its slug, the `projects` section first, so applying an
+export back writes nothing. A legacy import links the sources and repositories it writes to the tenant's only project,
+and is refused when the tenant holds several.
 
 **Detect.**
 

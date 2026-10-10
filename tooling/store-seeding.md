@@ -8,7 +8,10 @@ Reach for the real wire path — a work source record, a minted forge fixture, a
 when the ingest path itself, rather than the data it produces, is what is under test. The sequence that path rides is
 owned by `blizzard:manual-hub` in [`../verification/blizzard.md`](../verification/blizzard.md). Create the source with
 `blizzard hub source create`; the hub reads its records on every call, so a created or edited source takes effect on the
-next ingest with no restart.
+next ingest with no restart. A source or repository created this way is the tenant's and linked to no project: a project
+reaches it only through a link, which a configuration document's `projects` entry writes (`bzh:config-apply`,
+[`../architecture/system-shape/configuration.md`](../architecture/system-shape/configuration.md)); a legacy import links
+what it creates to the tenant's only project.
 
 ## Running it
 
