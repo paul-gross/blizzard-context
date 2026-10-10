@@ -22,10 +22,11 @@ A claim is refused first on the runner, before any race: it is not registered at
 paused it. Under the claim lock the runner is judged again before anything else: a runner that is no longer registered
 or has since been retired is refused as such, never on the chunk. Then it is refused on the chunk, in this order: the
 chunk has ended (`stopped` or `done`), its route is held, it is not `ready`
-([../work/statuses.md](../work/statuses.md)), or a prerequisite is unmet; and last when the runner's capabilities do not
-fit the chunk. A runner reporting no capabilities fits no chunk: it is eligible for nothing, so the matched peek hands
-it no entry and a claim by it is refused, the same answer at both places. Rekeying a route token is refused once the
-chunk has ended, as a claim on it is.
+([../work/statuses.md](../work/statuses.md)), or a prerequisite is unmet — of any project, since a chunk may wait on
+another project's chunk ([../projects.md](../projects.md)); and last when the runner's capabilities do not fit the
+chunk. A runner reporting no capabilities fits no chunk: it is eligible for nothing, so the matched peek hands it no
+entry and a claim by it is refused, the same answer at both places. Rekeying a route token is refused once the chunk has
+ended, as a claim on it is.
 
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 

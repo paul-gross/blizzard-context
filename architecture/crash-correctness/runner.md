@@ -402,26 +402,39 @@ cursor, never a corpus it would rescan to find nothing changed.
 
 The store's single `runner_identity` row names the runner the store belongs to. Two callers write it, both through
 `RunnerIdentityStore.record_runner_identity` (`blizzard/src/blizzard/runner/store/internal/identity_store.py`):
-`IdentityCheck.run` (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`) and `Registration.run`
-(`blizzard/src/blizzard/runner/lifecycle/registration.py`). Either adopts the id the hub answers with only into a store
-whose row names no runner. Past that, registration refreshes the name under the same id, and nothing ever overwrites the
-id: a reply naming another runner writes nothing and turns the verdict to a mismatch. The delete of the previous row and
-the insert of the new one share one transaction, on the `trace_export_latch` precedent above, so a `kill -9` leaves the
-previous row or the new one, never neither and never both. The in-process identity holder is updated only after the row
-commits, and is restart-erased and reseeded from the row at boot. This is a **no-window** write: there is no partner
-write a crash could separate it from, and a lost adoption is made again by the next tick's check.
+`Registration.run` (`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
+(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). Only registration adopts an id, and only into a store
+whose row names no runner: it writes the id its reply names. Past that, registration refreshes the name and tenant under
+the same id, and a reply naming another runner writes nothing and turns the verdict to a mismatch. The check never
+adopts: a store naming no runner judges any token as matched and leaves the id to the first registration, and the check
+writes only to fill in the tenant a matching answer names. Nothing ever overwrites the id. The delete of the previous
+row and the insert of the new one share one transaction, on the `trace_export_latch` precedent above, so a `kill -9`
+leaves the previous row or the new one, never neither and never both. The in-process identity holder is updated only
+after the row commits, and is restart-erased and reseeded from the row at boot. This is a **no-window** write: there is
+no partner write a crash could separate it from, and a lost write is made again by the next registration or matching
+check.
 
 The verdict the row is checked against is held only in the process: `IdentityVerdictHolder`
 (`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
 process `UNCHECKED`. A crash therefore loses it, and the restart re-derives it from a fresh check. The check is the head
 of every tick (`blizzard/src/blizzard/runner/loop/tick.py`): it asks the hub which runner the token belongs to and
 compares that id with the row's, before any other hub call. Until the verdict is `MATCHED`, every call through
-`VerifiedHubClient` (`blizzard/src/blizzard/runner/hub/verified.py`) answers a `HubClientError`, and the runner's hub
-proxy (`blizzard/src/blizzard/runner/api/hub_proxy.py`) answers 503. So an unchecked runner behaves exactly as it does
-during a hub outage, taking only the outage paths every step already owns. A `MISMATCHED` runner also skips the steps
-that drive leases or deliver facts until a check matches again, and a hub that does not answer leaves the verdict as it
-stood. Nothing durable is lost to any of this: restoring the right token or hub resumes the runner from what its store
-already holds.
+`VerifiedHubClient` (`blizzard/src/blizzard/runner/hub/verified.py`) answers a `HubClientError`, so an unchecked loop
+behaves exactly as it does during a hub outage, taking only the outage paths every step already owns. The transcript
+operator verbs, backfill and reship, build their own process graph and run the same check once before their first hub
+call (`LoopWiring` in `blizzard/src/blizzard/runner/loop_wiring.py`).
+
+The runner's hub proxy (`blizzard/src/blizzard/runner/api/hub_proxy.py`) is a first contact of its own. While the loop
+has not checked, `ProxyIdentityCheck` (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`) has the proxy ask the
+hub which runner the token belongs to through its normal forward, with the same retries and outage answers, and judges
+the answer against the row. It remembers a match for the process, so the proxy asks once. A hub that does not answer
+fails a proxied read exactly as an outage fails any forward; a refused token, a hub without the identity read, or a
+mismatch forwards nothing and answers 503 naming the reason. The proxy writes neither the row nor the verdict: once the
+loop has checked, its verdict prevails, and a `MISMATCHED` one answers 503 without contacting the hub.
+
+A `MISMATCHED` runner also skips the steps that drive leases or deliver facts until a check matches again, and a hub
+that does not answer leaves the verdict as it stood. Nothing durable is lost to any of this: restoring the right token
+or hub resumes the runner from what its store already holds.
 
 While refusing, each check first re-reads the token from the runtime dir's `.env` through `HubTokenHolder.reread`
 (`blizzard/src/blizzard/runner/hub/held_token.py`), so a corrected token takes effect without a restart. The re-read
