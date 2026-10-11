@@ -69,7 +69,9 @@ its change row.
   project.
 - A create of a kind a project owns that does not take the call's project by id or slug (`--project` on the CLI), does
   not fall back to the tenant's only project when the call names none, or refuses otherwise with anything but
-  `422 project_required` listing the tenant's projects.
+  `422 project_required`, or whose refusal does not list the tenant's projects.
+- A list of a kind a project owns, or the change log, that does not take `?project=` to narrow to one project or does
+  not read the whole tenant without it.
 - A patch handler that cannot tell an omitted field from an explicit `null`.
 
 **Do.** `WorkItemPatchRequest` (`blizzard/src/blizzard/wire/work_source.py`) is the reference for telling an omitted
@@ -153,6 +155,8 @@ only project, and is refused when the tenant holds several.
 - An `apply` door value read from a request header or body.
 - An apply that plans the `projects` section or resolves an entry's project itself, rather than taking both planned from
   the package that owns projects.
+- A document entry of a kind a project owns that does not take `project` by id or slug, does not act in the tenant's
+  only project when it names none, or is not refused when the tenant holds several.
 
 **Do.** `ConfigAuthoring.apply` (`blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan,
 `blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it) is the reference: the plan is pure, the writer
