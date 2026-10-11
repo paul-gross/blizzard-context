@@ -36,25 +36,31 @@ other, and the only one a declarative apply's per-field difference maps onto wit
 and one change log across kinds mean every door — API, CLI, board, document — changes a record the same way and leaves
 the same trace.
 
-**Scope.** Binds the six kinds named above and any kind added beside them. A project takes create and edit but no retire
-or enable: a project, once created, stays ([../../domain/projects.md](../../domain/projects.md)). Its links to sources
-and repositories carry the lifecycle in its place, each its own revisioned record whose change rows reuse the verbs —
-`create` for a link, `retire` for an unlink, `enable` for a relink — each beside its link fact. A change row of a
-project, a project's link, a scope, or a routine names that record's project, since its key means something only inside
-its project; one of a tenant-wide record — a work source, a repository, a secret — names none. A graph is an immutable
-mint, so its definition takes no patch — an edit is a new mint — and only its mutable flags take the sparse `PATCH`,
-beside its retire and enable, each of which appends a fact even when it repeats the standing value
-([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A work item is work, not configuration: its patch
-carries the sparse-merge meaning, and it takes no revision, no change row, and keeps its `DELETE`. A secret takes
-replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on the CLI,
-`blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision and appends
-its change row.
+**Scope.** Binds the six kinds named above and any kind added beside them. A project takes create, list, show, and edit
+but no retire or enable: a project, once created, stays ([../../domain/projects.md](../../domain/projects.md)). Its
+links to sources and repositories carry the lifecycle in its place, each its own revisioned record whose change rows
+reuse the verbs — `create` for a link, `retire` for an unlink, `enable` for a relink — each beside its link fact. A link
+is named into being by `PUT /api/projects/{project}/source-links/{source}` (or `repository-links/{repository}`), which
+links or relinks and leaves a standing link as it is, and unlinked by that path's `POST …/retire`; on the CLI,
+`blizzard hub project link` and `unlink`. A record a project owns is created in a project the call names — `--project`
+on the CLI, by id or slug — or, when it names none, in the tenant's project if it holds exactly one, and is refused
+`422 project_required`, listing the tenant's projects, otherwise; its list, and the change log, take `?project=` to
+narrow to one project and read the whole tenant without it ([../../domain/projects.md](../../domain/projects.md) §A call
+that needs a project). A change row of a project, a project's link, a scope, or a routine names that record's project,
+since its key means something only inside its project; one of a tenant-wide record — a work source, a repository, a
+secret — names none. A graph is an immutable mint, so its definition takes no patch — an edit is a new mint — and only
+its mutable flags take the sparse `PATCH`, beside its retire and enable, each of which appends a fact even when it
+repeats the standing value ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A work item is work,
+not configuration: its patch carries the sparse-merge meaning, and it takes no revision, no change row, and keeps its
+`DELETE`. A secret takes replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on
+the CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision
+and appends its change row.
 
 **Detect.**
 
 - A `PATCH` request model with a required field — a full replace under a patch verb.
 - A `PATCH` request model that does not forbid extra fields, so an unknown field is silently dropped.
-- A `PUT` that replaces a whole record, other than a secret's value replace.
+- A `PUT` that replaces a whole record, other than a secret's value replace; a project link's `PUT` replaces no fields.
 - A `DELETE` route on a configured record.
 - A write to a configured record with no `config_changes` row in its transaction, or one that leaves `revision` where it
   was.

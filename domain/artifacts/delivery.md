@@ -43,7 +43,9 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   [feature delivery](../../workflows/feature-delivery.md) describes the shipped policy.
 - **A chunk delivers one project's work.** The chunk belongs to exactly one project, and the repositories it lands in
   are the tenant's records, which a project reaches only through a link ([../projects.md](../projects.md) §What a
-  project owns, and what it links).
+  project owns, and what it links). A chunk lands only in repositories its project links, as the links stand when the
+  landing step begins: a chunk commit naming a repository its project does not link is refused before any push, naming
+  the repository and the project ([../projects.md](../projects.md) §Where a chunk may land).
 - **Environment retention.** The holding runner keeps the chunk's environments throughout delivery, until the outcome is
   known.
 

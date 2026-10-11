@@ -11,7 +11,9 @@ owned by `blizzard:manual-hub` in [`../verification/blizzard.md`](../verificatio
 next ingest with no restart. A source or repository created this way is the tenant's and linked to no project: a project
 reaches it only through a link, which a configuration document's `projects` entry writes (`bzh:config-apply`,
 [`../architecture/system-shape/configuration.md`](../architecture/system-shape/configuration.md)); a legacy import links
-what it creates to the tenant's only project.
+what it creates to the tenant's only project. So link the created source to the project the ingest goes into —
+`blizzard hub project link`, or the document's `projects` entry — before the ingest: an ingest refuses a source its
+project does not link, naming the source, and never links one by itself.
 
 ## Running it
 

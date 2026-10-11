@@ -10,7 +10,12 @@ a restart's target — and status derives from recorded facts (`bzh:facts-not-st
 
 A chunk belongs to exactly one project of its tenant, set when it is minted and never changed; what the chunk
 accumulates belongs to that project through it ([../projects.md](../projects.md) §A chunk belongs to exactly one
-project). A chunk may wait on a chunk of another project, as it waits on any prerequisite.
+project). The ingest sets it: an ingest that names a project goes into it, and one that names none takes the project its
+items agree on — the one project each configured source among them is linked to, or, for hub items alone, the project
+they were created in — and is refused, naming the candidates, when they do not agree. Every configured source the ingest
+draws on must be linked to that project. A hub item is created in a project and chunked into it
+([../projects.md](../projects.md) §Which project an ingest goes into). A chunk may wait on a chunk of another project,
+as it waits on any prerequisite.
 
 ## Work refs
 
@@ -39,7 +44,8 @@ through its source; a delivered one still does.
 
 Grouping folds unacquired chunks into a survivor, which absorbs their work refs, gated on the same unacquired predicate
 as deletion below. It is not a reorder: a `ready` and a `not_ready` chunk may fold together, the survivor keeps the
-status it derives, and a folded chunk's promotion and queue position vanish with it.
+status it derives, and a folded chunk's promotion and queue position vanish with it. Grouping never crosses projects:
+folding in a chunk of another project than the survivor's is refused.
 
 ## Deletion
 

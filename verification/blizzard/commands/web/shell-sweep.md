@@ -350,3 +350,15 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `tenant-picker.shell-sweep.spec.ts` covers the hub's tenant picker (`TenantPicker`), mounted with a short, a long, and
   a one-letter tenant name: at 1280px, 390px, and 320px every option must share one width and left edge — the widest
   name's, not each its own — with every option's right edge inside the viewport and no horizontal overflow of the page.
+- `projects-table.shell-sweep.spec.ts` covers the admin projects table, mounted with a project whose name, slug, and
+  description have no break opportunity and whose "no runner" badge shows: at 360px, 768px, and 1280px the page never
+  scrolls sideways, the table stays inside the viewport, and the badge keeps a width and stays on screen.
+- `gardening-doorway.shell-sweep.spec.ts` covers the gardening doorway's project cards: at 1280px, 390px, and 320px the
+  cards reflow with no horizontal overflow, a long project name or routine list wraps inside its card rather than
+  widening it, and every card's way in stays inside the viewport.
+- `project-lens-control.shell-sweep.spec.ts` covers the project lens in two places. In the hub's view-tab row, a tenant
+  with more long-named projects than the row has room for keeps the row inside the viewport at every desktop width from
+  1400px down to 700px — the chips scroll inside the control — with every route tab and the lens's marked choice on
+  screen and hit-testable. In the mobile titlebar under a lens, at every phone width from 430px down to 320px, a long
+  tenant name and a long project name both truncate inside the bar, the project's name keeping a visible share, with the
+  live dot and the menu on screen and hit-testable.

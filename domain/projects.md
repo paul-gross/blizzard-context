@@ -118,7 +118,9 @@ travels in the link so a shared link opens through the same lens, and every view
 on All.
 
 - **Each view decides what the lens means for it.** The board and its events narrow to the project's chunks and the
-  counts follow; administration narrows sources to the ones the project links.
+  counts follow; the runner list narrows to the runners serving the project and the unassigned ones, each still showing
+  its claims across the whole tenant; administration narrows sources and repositories to the ones the project links, and
+  the change log to the project's changes and the tenant-wide ones.
 - **A view the lens does not touch says so.** The tenant's graph library, its members, and its secrets are the tenant's,
   and their views state that the lens does not apply rather than quietly ignoring it.
 - **Gardening is per project.** Through a project's lens, gardening is that project's scopes, routines, runs, findings,

@@ -396,10 +396,34 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two
   concurrent writes touching one slug leave is unverified: a uniqueness refusal in place of `ProjectSlugTaken`, or a
   former-slug row the other write removed.
-- **The sole-project fallback.** An insert that names no project into a table carrying `project_id` takes the tenant's
-  project as a scalar subquery, `NULL` unless the tenant holds exactly one (`ScopedStatements.sole_project_fallback`,
-  `src/blizzard/hub/store/scoped.py`). The fallback is interim: it goes once every writer names its project. Whether an
-  insert racing the creation of a tenant's second project stamps the first or is refused is unverified on Postgres.
+- **The project columns revision.** `20261008_1900_project_columns` adds `runner_registrations.projects` and
+  `delivery_repo_landed.repository_name` with native `ADD COLUMN`s, and backfills each runner's `projects` as JSON text
+  naming its tenant's one project, paged along `runner_id`. Neither the added columns nor the JSON text backfill has run
+  on Postgres.
+- **An ingest against a link or unlink.** An ingest takes the `keyed_locks` key of the project it mints into before its
+  pointers' keys, and every source link or unlink takes the same project's key (`PROJECT_SOURCE_LINKS_LOCK_NAMESPACE`,
+  `src/blizzard/hub/store/internal/project_link_store.py`), so the links an ingest read stand until it commits. That an
+  unlink racing an ingest under READ COMMITTED waits on the key rather than committing between the ingest's link read
+  and its mint is unverified; SQLite's writer lock serializes the two whatever the key.
+- **A landed repository row's keys.** `delivery_repo_landed`'s foreign keys to its chunk and its tenant have never been
+  enforced, and its `repository_name` carries neither a unique key nor a foreign key to the repository record: that a
+  landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
+  (`src/blizzard/tools/invariants.py`) alone, and its behavior under enforced keys is unverified.
+- **The `?project=` read plans.** Every read a `?project=` narrows has its `EXPLAIN QUERY PLAN` shape asserted on SQLite
+  only, so whether Postgres's planner uses the project read indexes for it stays unproven, as
+  [§The query-plan assertions never run under postgres](#the-query-plan-assertions-never-run-under-postgres) states for
+  every index.
 
-Standing in for a tier: the revision's migration and carry-over tests, the slug-move and fallback tests on SQLite, and
-the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
+Standing in for a tier: the revisions' migration and carry-over tests, the slug-move and link tests on SQLite, and the
+portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
+
+## What the project lens and the project columns do not cover
+
+Two project boundaries are drawn by no tier because the system does not draw them:
+
+- **The lens is not an access boundary.** The board's project lens narrows what a view reads, and a call naming no
+  project reads the whole tenant; access is decided by the tenant alone. Nothing proves a person sees only a project's
+  records, because nothing restricts them to one — a stated non-goal, not a missing check.
+- **Questions and decisions carry no project column.** A question or a decision reads its project only as labels from
+  its chunk; neither table carries a `project_id`, so no invariant or narrowed read binds one to a project the way the
+  chunk-owned tables are bound. Giving them a column is follow-up work.

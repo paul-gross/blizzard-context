@@ -5,8 +5,8 @@
 
 # Delivery-loop e2e scenarios (`bzh:e2e-delivery-loop`)
 
-The scenarios for the canonical `build → review → deliver` shape, the chunk shapes that ride it, and the graph edges
-that carry a chunk past its own graph or past the land.
+The scenarios for the canonical `build → review → deliver` shape, the chunk shapes that ride it, the graph edges that
+carry a chunk past its own graph or past the land, and the first offer that brings a freshly set-up runner into it.
 
 The spike, post-merge, and migration modules each need the sibling provisioned `blizzard-mock` worktree plus a local
 winter source, skip without `BLIZZARD_E2E=1`, and run in the tag `release` workflow's full e2e tier, not the `gate`/`pr`
@@ -45,6 +45,17 @@ child invokes winter. The mock harness owns creation of the feature branch; the 
 
 - `test_basic_workspace_chunk_lands_without_winter` — builds, reviews, and delivers a real chunk to bare `main` from a
   plain workspace directory, with the hub deriving `done` and no winter workspace or CLI invocation.
+
+## test_runner_serves_default_e2e
+
+A freshly set-up runner is offered work on its first registration, with no configuration edit between. Needs the sibling
+provisioned `blizzard-mock` worktree for its forge.
+
+- `test_a_freshly_initialized_runner_is_offered_a_default_chunk_on_first_registration` — joins a runner to a real hub
+  daemon through `blizzard-runner init`, whose scaffolded config serves `default`; one `blizzard-runner tick` registers
+  it, leaves the config byte-for-byte as scaffolded, and stores the hub's resolved answer in the runner's own store. The
+  hub's matched peek, asked under the runner's own token, then offers it the promoted chunk of `default`, naming the
+  project's id and slug.
 
 ## test_review_cycle_e2e
 

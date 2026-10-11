@@ -18,7 +18,12 @@ nothing. A registration that declares no name, or a blank one, keeps the name th
 superseded on every registration, even when empty. A runner added but never registered is reported as never connected,
 with no capabilities, which is not the same as offline. Until its first registration a runner claims nothing; after it,
 the runner keeps its id and name across a restart even while the hub is unreachable. A runner is its tenant's record,
-not any project's, while each chunk belongs to exactly one project ([../projects.md](../projects.md)).
+not any project's, while each chunk belongs to exactly one project ([../projects.md](../projects.md)); what joins the
+two is the runner's declaration of the projects it serves. The declaration begins when the runner is added, a
+registration that declares nothing keeps the one the hub holds, and an entry naming no project of the tenant serves
+nothing until a project answers to it — [../projects.md](../projects.md) §Runners serve the projects they declare owns
+each. The entry reports the declaration as the hub resolved it, each entry beside the project it names, and the runner
+keeps that answer as its own.
 
 A runner's registry entry derives everything observable, never stored flags: liveness from its most recent contact, each
 brake from the newest fact in its own stream — rule `bzh:facts-not-status`, owned by

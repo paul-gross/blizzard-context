@@ -36,7 +36,11 @@ it; the `initial` budget in `angular.json` is the size backstop for growth the f
 through content projection; `core/auth/no-access.ts` and `core/auth/tenant-picker.ts` import `KitButton` from
 `'fleet/shell'`, and `core/auth/tenant.interceptor.ts` takes `hubClient`, `FetchEventSource`, and `EVENT_SOURCE_FACTORY`
 from it, so the one tenant context names the tenant on the generated client's requests and on the live stream's own
-`fetch`.
+`fetch`. The project lens is the same shape: `core/project-lens.ts` derives the lensed project from the URL's
+`/p/{project}/` segment alone, and `shell/app.config.ts`'s `provideProjectLens()` hands it to `fleet` through the
+`fleet/shell` seams `HUB_PROJECT_FILTER`, which every read the lens narrows injects, and `IN_APP_LINK`, which keeps a
+link under the lens — so no `fleet` module imports the hub's lens, and the runner app, providing neither, keeps every
+read whole.
 
 **Don't.** `import { AppShell } from 'fleet'` in `shell/app.ts` — one line that puts the chunk-detail and transcripts
 barrels back into the initial chunk; an eager import of the hub's `garden/` or `graphs/` folder, which brings the whole

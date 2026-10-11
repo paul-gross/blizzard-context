@@ -128,7 +128,11 @@ durable invariants:
 - no double delivery, with per-repo lands idempotent;
 - every derived status computable with exactly one match;
 - a gapless outbound-buffer sequence;
-- usage attributed exactly once per `(lease, generation, kind)`.
+- usage attributed exactly once per `(lease, generation, kind)`;
+- every source a chunk's work refs name is linked to the chunk's project, the originating ref by the instant the chunk
+  was minted (`hub:chunk-sources-linked`);
+- every per-repository landing that names its repository record names one the chunk's project had linked when the
+  landing was written (`hub:landed-repository-linked`).
 
 **Why.** Because both stores are facts-only (`bzh:facts-not-status`), the checker is essentially a library of SQL
 assertions plus the status-derivation queries themselves — and a failure names the exact violated invariant rather than
