@@ -46,15 +46,16 @@ links or relinks and leaves a standing link as it is, and unlinked by that path'
 on the CLI, by id or slug — or, when it names none, in the tenant's project if it holds exactly one, and is refused
 `422 project_required`, listing the tenant's projects, otherwise; its list, and the change log, take `?project=` to
 narrow to one project and read the whole tenant without it ([../../domain/projects.md](../../domain/projects.md) §A call
-that needs a project). A change row of a project, a project's link, a scope, or a routine names that record's project,
-since its key means something only inside its project; one of a tenant-wide record — a work source, a repository, a
-secret — names none. A graph is an immutable mint, so its definition takes no patch — an edit is a new mint — and only
-its mutable flags take the sparse `PATCH`, beside its retire and enable, each of which appends a fact even when it
-repeats the standing value ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A work item is work,
-not configuration: its patch carries the sparse-merge meaning, and it takes no revision, no change row, and keeps its
-`DELETE`. A secret takes replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on
-the CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision
-and appends its change row.
+that needs a project). A change row of a project, a project's link, or a record of any kind a project owns — a scope, a
+routine, or a kind added beside them — names that record's project, since its key means something only inside its
+project; one of a tenant-wide record — a work source, a repository, a secret — names none. A graph is an immutable mint,
+so its definition takes no patch — an edit is a new mint — and only its mutable flags take the sparse `PATCH`, beside
+its retire and enable, each of which appends a fact even when it repeats the standing value
+([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A work item is work, not configuration: its patch
+carries the sparse-merge meaning, and it takes no revision, no change row, and keeps its `DELETE`. A secret takes
+replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on the CLI,
+`blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision and appends
+its change row.
 
 **Detect.**
 
@@ -64,7 +65,11 @@ and appends its change row.
 - A `DELETE` route on a configured record.
 - A write to a configured record with no `config_changes` row in its transaction, or one that leaves `revision` where it
   was.
-- A change row of a project, a project's link, a scope, or a routine written without that record's project.
+- A change row of a project, a project's link, or a record of any kind a project owns written without that record's
+  project.
+- A create of a kind a project owns that does not take the call's project by id or slug (`--project` on the CLI), does
+  not fall back to the tenant's only project when the call names none, or refuses otherwise with anything but
+  `422 project_required` listing the tenant's projects.
 - A patch handler that cannot tell an omitted field from an explicit `null`.
 
 **Do.** `WorkItemPatchRequest` (`blizzard/src/blizzard/wire/work_source.py`) is the reference for telling an omitted
@@ -127,16 +132,17 @@ creation, one identity unit of work describes, or names the window between its c
 [../crash-correctness.md](../crash-correctness.md) §Recorded exemptions — durable state the sweep does not arm sets for
 an entry on that ground.
 
-A document's `projects` section reconciles first, so a scope or routine entry may name a project the same document
-declares. The apply knows no project: the section is planned by the package that owns projects and handed to it planned
+A document's `projects` section reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind
+added beside them — may name a project the same document declares. The apply itself resolves no project: the package
+that owns projects plans the section and the project each entry acts in, and hands both to it planned
 (`blizzard/src/blizzard/hub/domain/projects/declarations.py`). A project entry's stated `sources` or `repositories` list
 is that project's whole set, so a name the list leaves out is unlinked — the one write an omission drives, retiring a
 link and never a record; a list the entry omits leaves the stored links. A project entry naming a slug some project has
-moved away from is refused, naming the project that left it, rather than taking the slug back. A scope or routine entry
-acts in the project its `project` names, by id or slug, or the tenant's only project when it names none, and is refused
-when the tenant holds several. Export writes each project by its slug, the `projects` section first, so applying an
-export back writes nothing. A legacy import links the sources and repositories it writes to the tenant's only project,
-and is refused when the tenant holds several.
+moved away from is refused, naming the project that left it, rather than taking the slug back. An entry of any kind a
+project owns acts in the project its `project` names, by id or slug, or the tenant's only project when it names none,
+and is refused when the tenant holds several. Export writes each project by its slug, the `projects` section first, so
+applying an export back writes nothing. A legacy import links the sources and repositories it writes to the tenant's
+only project, and is refused when the tenant holds several.
 
 **Detect.**
 
@@ -145,6 +151,8 @@ and is refused when the tenant holds several.
 - A dry run that reads the store and predicts instead of running the writes and rolling them back.
 - A change row from an apply with a door other than `apply`, or without the shared `apply_id`.
 - An `apply` door value read from a request header or body.
+- An apply that plans the `projects` section or resolves an entry's project itself, rather than taking both planned from
+  the package that owns projects.
 
 **Do.** `ConfigAuthoring.apply` (`blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan,
 `blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it) is the reference: the plan is pure, the writer
