@@ -135,6 +135,11 @@ a table that already holds rows adds it nullable, backfills it in batches of bou
   the copy on Postgres too, dropping an autoincrement column's sequence.
 - **Guard each table on re-entry.** Before reshaping a table, the revision inspects it and skips the step already done —
   the column present, the constraint already named, the column already non-null.
+- **Record it as unverified on Postgres.** The revision joins the Postgres-unverified list of the key it adds —
+  [tenancy's](../verification/blizzard/gaps.md#tenancys-migrations-and-locks-under-postgres) for a tenant key,
+  [projects'](../verification/blizzard/gaps.md#projects-migration-and-writes-under-postgres) for a project key — and
+  [../verification/blizzard/gaps.md](../verification/blizzard/gaps.md) owns that list and what a change owes it. A
+  column the revision adds may close a gap listed there.
 
 **Why.** A required column added in one step to a populated table either fails or writes one unbounded statement, and a
 key nothing backfilled cannot be tightened. Each store's migration chain runs in one transaction, so no revision
