@@ -21,7 +21,7 @@ Full detail lives under `./blizzard/`, one file per reader question.
 | [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing                                                                                                                                            |
 | [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                                                                                                                                                        |
 | [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                                                                                                                                                  |
-| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers — what stands in for one, and why                                                                                                                                                |
+| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers, or a change closes, narrows, or extends a listed gap — what stands in for one, why, and how a change keeps the list current                                                     |
 
 ## Commands
 

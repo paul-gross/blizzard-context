@@ -6,6 +6,11 @@ unreachability by any tier is re-tested each time a gap is entered here and neve
 gap, because tooling that lands later can automate part of what was manual and leave a narrower residue than the
 original claim assumed.
 
+A change that closes a gap deletes its entry in the same change, and one that narrows a gap rewrites its entry to the
+residue that remains. A change that adds a mechanism an open gap already covers adds it to that entry rather than
+entering it anew. An entry left behind for a closed gap tells the next reader to keep owing evidence nothing needs any
+longer.
+
 ## `docs/` claims about daemon behavior (`bzh:operator-doc-claims-unverified`)
 
 `docs/` states reachability, precondition, and failure claims about daemon behavior, and nothing mechanical can judge
