@@ -1,8 +1,8 @@
 # The eager shell
 
-What the hub's always-loaded shell may import, and how chrome it needs only on interaction is loaded. A spoke of the
-[frontend structure hub](../frontend-structure.md); the rule follows the slot skeleton owned by
-`winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
+What the hub's always-loaded shell may import, how chrome it needs only on interaction is loaded, and how the project
+lens the shell derives reaches a view. A spoke of the [frontend structure hub](../frontend-structure.md); each rule
+follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
 
 ## Eager shell code imports `fleet/shell` (`bzh:frontend-eager-shell-entry`)
 
@@ -36,11 +36,7 @@ it; the `initial` budget in `angular.json` is the size backstop for growth the f
 through content projection; `core/auth/no-access.ts` and `core/auth/tenant-picker.ts` import `KitButton` from
 `'fleet/shell'`, and `core/auth/tenant.interceptor.ts` takes `hubClient`, `FetchEventSource`, and `EVENT_SOURCE_FACTORY`
 from it, so the one tenant context names the tenant on the generated client's requests and on the live stream's own
-`fetch`. The project lens is the same shape: `core/project-lens.ts` derives the lensed project from the URL's
-`/p/{project}/` segment alone, and `shell/app.config.ts`'s `provideProjectLens()` hands it to `fleet` through the
-`fleet/shell` seams `HUB_PROJECT_FILTER`, which every read the lens narrows injects, and `IN_APP_LINK`, which keeps a
-link under the lens — so no `fleet` module imports the hub's lens, and the runner app, providing neither, keeps every
-read whole.
+`fetch`.
 
 **Don't.** `import { AppShell } from 'fleet'` in `shell/app.ts` — one line that puts the chunk-detail and transcripts
 barrels back into the initial chunk; an eager import of the hub's `garden/` or `graphs/` folder, which brings the whole
@@ -48,4 +44,35 @@ feature and dagre with it; a re-export shim that still names the menu components
 eager even though nothing renders it until a click.
 
 **See also.** `bzh:frontend-disjoint-diffs` — the sub-barrels this rule routes the eager path around still own each
-feature's public surface for every lazy consumer.
+feature's public surface for every lazy consumer. `bzh:frontend-project-lens-seam` below — the project lens reaches
+`fleet` through the same entry point's seams.
+
+## A view follows the project lens through its `fleet/shell` seams (`bzh:frontend-project-lens-seam`)
+
+**Rule.** Make a hub view, a read, or a link follow the project lens by injecting the seams `fleet/shell` exports —
+`HUB_PROJECT_FILTER` (`injectProjectFilter()`) for the project a read narrows to, `IN_APP_LINK` (the `lensLink` pipe)
+for a link that keeps the lens — and never by reading the URL's `/p/{project}/` segment yourself. Only
+`core/project-lens.ts` derives the lens from the URL, and `shell/app.config.ts`'s `provideProjectLens()` provides both
+seams from it; no `fleet` module imports `core/project-lens.ts`.
+
+**Why.** One module parsing the lens segment keeps every view agreeing on which project the page is under, and a `fleet`
+module that took the lens from a seam rather than the hub's own lens stays servable by the runner app, which provides
+neither seam and so keeps every read whole and every link as written.
+
+**Detect.**
+
+- A `fleet` or hub module other than `core/project-lens.ts` reading `/p/`, `paramMap`, or the router URL to find the
+  project.
+- An import of `core/project-lens` from under `projects/fleet/`.
+- A lensed read whose query key omits the project — not built through `lensedKey` — so two lenses share a cache entry.
+- An absolute in-app `routerLink` in a view the lens covers that does not pass through `lensLink` or `IN_APP_LINK`.
+
+**Do.** `admin/changes/changes.query.ts` takes the project from `injectProjectFilter()`, keys its read
+`lensedKey(hubConfigChangesKey, project)`, and sends the project as `?project=`; a template links
+`[routerLink]="'/board' | lensLink"`.
+
+**Don't.** A query that splits `router.url` on `/` to find the project — a second parser that drifts from the lens the
+moment the URL shape changes, and that writes the hub's URL into a `fleet` view the runner app also serves.
+
+**See also.** `bzh:frontend-eager-shell-entry` above — what the shell may import from `fleet`, the seams' entry point
+among it.
