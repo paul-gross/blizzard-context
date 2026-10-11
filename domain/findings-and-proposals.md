@@ -113,8 +113,8 @@ review-sourced ones on its own scope. Its proposals may cite any of them — a r
 another routine's finding is out of reach — while its finding set's `observed` and `gone` ops stay within its own scope.
 An operator's `create` and `attach` follow the same rule where findings are concerned: any non-exited finding,
 `delivered` and `gone` included, from any routine or scope of the proposal's project; only an exited finding, or one of
-another project, is refused. Both origins apply the same test of standing — not exited — and differ only in reach: a
-run's is bounded by its routine, an operator's is not.
+another project, is refused, naming that finding. Both origins apply the same test of standing — not exited — and differ
+only in reach: a run's is bounded by its routine, an operator's is not.
 
 ## A proposal may be edited while it is open
 
