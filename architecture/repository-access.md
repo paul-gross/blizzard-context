@@ -209,8 +209,13 @@ chunk, which is what makes the exclusion sound.
 
 **Rule.** Select only the newest fact per key in the store query when a read answers with the newest fact for each of a
 set of keys: the rows it reads are bounded by the key count and stay flat as each key's fact history deepens. A plural
-form batching a singular newest read keeps that bound — the singular's `ORDER BY id DESC LIMIT 1` becomes a group-by-max
-join, never the same select with the `LIMIT` dropped and the newest row picked in Python.
+form batching a singular newest read keeps that bound — the singular's `ORDER BY id DESC LIMIT 1` becomes a SQL form,
+never the same select with the `LIMIT` dropped and the newest row picked in Python. Pick the form by the order:
+
+- **Group-by-max** when "newest" means the highest `id` within one key column.
+- **The anti-join** — the newest row is the one no newer row of its partition beats — when the order is any other total
+  order, when the partition spans several columns, or when the newest row is picked from a filtered subset.
+- **A plain `EXISTS`** when the consumer only asks whether a newer row exists.
 
 **Why.** Fact tables are append-only and keep every superseded fact (`bzh:facts-not-status`), so a newest read that
 fetches the history charges every past write on a key to every future call, behind a statement count that stays flat. A
@@ -224,13 +229,18 @@ set or every key a filter leaves, the whole table included. A read whose consume
 `blizzard/tests/test_newest_fact_reads.py` does — a row count above the key count, or one that grows with the depth, is
 the finding, and a statement count cannot show it. By reading: a select ordered ascending by `id` with no `limit`, whose
 rows a loop folds into a dict keyed by the key column so that later rows overwrite earlier ones; a comment excusing that
-fold as newest-fact-wins; a `[-1]` or `[0]` taken from a whole-history select fetched for nothing else. The fix is the
-group-by-max join, batched through `id_batches` when the keys are caller-supplied.
+fold as newest-fact-wins; a `[-1]` or `[0]` taken from a whole-history select fetched for nothing else; a whole-history
+select fetched only to test whether any row is newer than a bound. The fix is the form the rule names, batched through
+`id_batches` when the keys are caller-supplied; for the newer-row test, an `EXISTS` in the statement that needs the
+answer.
 
 **Do.** `blizzard/src/blizzard/hub/store/internal/newest_fact.py`'s `newest_fact_select` joins a fact table to a
 `max(id) ... GROUP BY key` subquery over the keys asked for, and the stores' plural newest reads share it.
 `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s `FindingStore.newest_by_scope_for_routine` is the same
 join over every scope one routine has run against — the keys a `where` on the routine name leaves, not a supplied set.
+Beside it, `newer_row_exists` builds the scoped "a newer row exists" `EXISTS` over a competing alias, in the order the
+caller names compared as one row value; negated, it keeps the newest row per partition. The competing row carries the
+same filter as the outer one, and its subquery is scoped like any other (`bzh:tenant-scoped-store`).
 
 **Don't.**
 
@@ -243,8 +253,8 @@ for row in rows:
 
 **See also.** `bzh:bulk-reconstitution` above — the plural form this bound has to survive. `bzh:page-bounded-read` and
 `bzh:live-set-read` above — they bound which keys a read reaches; this rule bounds the rows read per key.
-[`../standards/persistence.md`](../standards/persistence.md) `bzh:sql-portable` — the group-by-max join stays inside the
-portable surface, and its ordering clause governs a read that does index into a history.
+[`../standards/persistence.md`](../standards/persistence.md) `bzh:sql-portable` — both forms stay inside the portable
+surface, and its ordering clause governs a read that does index into a history.
 [`../verification/blizzard.md`](../verification/blizzard.md) `blizzard:component-test` — the tier the two-depth row
 count lives in.
 
