@@ -16,17 +16,20 @@ matched to its own capability snapshot instead has that choice made for it: the 
 policy before ever handing back an entry, spanning both the blocked marking and the runner's own capability eligibility
 together, so there is nothing left to reach past locally. Either way an operator's own runner config sets the policy —
 hold at the first unusable entry and claim nothing that tick, or pass over it — strictness the runner chooses, not a
-fleet-wide rule.
+fleet-wide rule. The matched peek considers only chunks of the projects the runner serves, as the hub holds its
+declaration: a chunk of any other project is skipped under either policy, never held at, and a runner serving nothing is
+offered nothing ([../projects.md](../projects.md)).
 
 A claim is refused first on the runner, before any race: it is not registered at the hub, it is retired, or the hub has
 paused it. Under the claim lock the runner is judged again before anything else: a runner that is no longer registered
 or has since been retired is refused as such, never on the chunk. Then it is refused on the chunk, in this order: the
 chunk has ended (`stopped` or `done`), its route is held, it is not `ready`
 ([../work/statuses.md](../work/statuses.md)), or a prerequisite is unmet — of any project, since a chunk may wait on
-another project's chunk ([../projects.md](../projects.md)); and last when the runner's capabilities do not fit the
-chunk. A runner reporting no capabilities fits no chunk: it is eligible for nothing, so the matched peek hands it no
-entry and a claim by it is refused, the same answer at both places. Rekeying a route token is refused once the chunk has
-ended, as a claim on it is.
+another project's chunk ([../projects.md](../projects.md)); then when the runner does not serve the chunk's project —
+the claim rechecks what the peek offered, and the refusal names the project; and last when the runner's capabilities do
+not fit the chunk. A runner reporting no capabilities fits no chunk: it is eligible for nothing, so the matched peek
+hands it no entry and a claim by it is refused, the same answer at both places. Rekeying a route token is refused once
+the chunk has ended, as a claim on it is.
 
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 

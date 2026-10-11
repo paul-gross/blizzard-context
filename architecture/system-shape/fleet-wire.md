@@ -27,7 +27,13 @@ outside the declared surface, extending `blizzard:wire-compat`'s surface constan
 runner's tenant took the first form: `RunnerRegistrationResponse` and `RunnerIdentityView`
 (`src/blizzard/wire/runner.py`) gained `tenant_id` and `tenant_name`, each optional and `None` by default, so a
 previous-minor runner parses the reply it always did, and the route, the request, and the refusal shapes stayed as they
-were.
+were. Naming the projects a runner serves took it too: `RunnerRegistrationRequest.projects` is optional, and its absence
+(`None`) keeps the declaration the hub holds where `[]` serves none, so a previous-minor runner that sends no `projects`
+key never erases its declaration; `RunnerRegistrationResponse.projects` is `None` from a hub that predates projects. A
+refusal that needs a new cause extends the body it already has rather than adding one: a claim refused because the
+runner does not serve the chunk's project keeps the incompatible-claim `409` (`RouteClaimIncompatibleDenial`,
+`src/blizzard/wire/route.py`), which gained a `reason` (`ClaimDenialReason`, `capability` by default) and a `detail`
+naming the project, so a previous-minor runner reads it as the refusal it already handles.
 
 **Don't.** A response enum gaining a value with no `!` on any commit the step lands — an older runner's closed-enum
 parse (e.g. `ChunkStatus`, `ApplyOutcome`) raises on the unrecognized value instead of round-tripping it.

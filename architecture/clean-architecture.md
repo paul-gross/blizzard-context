@@ -374,11 +374,11 @@ table row allows it. Every hub package may also import `kernel`.
 | L1    | `projects`      | `config`                                             |
 | L1    | `graph`         | `artifact`                                           |
 | L1    | `runners`       | —                                                    |
-| L2    | `chunk`         | `graph`, `runners`, `artifact`                       |
+| L2    | `chunk`         | `graph`, `runners`, `artifact`, `projects`           |
 | L2    | `tenancy`       | `graph`, `config`, `projects`                        |
 | L3    | `execution`     | `chunk`, `graph`, `runners`, `artifact`              |
 | L4    | `operations`    | `execution`, `chunk`, `graph`, `runners`             |
-| L5    | `work_items`    | `operations`, `chunk`, `graph`                       |
+| L5    | `work_items`    | `operations`, `chunk`, `graph`, `projects`           |
 | L6    | `garden`        | `work_items`, `chunk`, `graph`, `config`, `projects` |
 | L7    | `observability` | `chunk`, `graph`, `runners`                          |
 

@@ -55,7 +55,10 @@ facts correctly.
 
 **Setup.** Before seeding, confirm the env's hub holds zero work source records — `blizzard hub source list` shows only
 the built-in `hub` source — and that no forge fixture has been minted for the env: `blizzard-mock-fixture` was never run
-against it, so `tool:mock-fleet`'s forge is up but fronts no origins.
+against it, so `tool:mock-fleet`'s forge is up but fronts no origins. Confirm too that the tenant holds only its
+`default` project — `blizzard hub project list` shows it alone: the seeder stamps every row whose table requires a
+project with the tenant's only project, so every seeded chunk belongs to `default`, and it refuses a tenant holding
+several, listing them, rather than guess among them.
 
 **Steps.**
 
@@ -107,7 +110,9 @@ claim's sole check against reality. And there is no never-restarted variant: `bl
 mode — reconciliation loop and local API are one process — so the daemon reconciles against exactly this seed every
 tick.
 
-**Setup.** Only the provisioned, daemons-up env of the shared preamble.
+**Setup.** Only the provisioned, daemons-up env of the shared preamble. The seed stamps both halves with the tenant's
+only project, as `blizzard-mock:manual-seeded-board`'s Setup describes: every seeded chunk belongs to it, and the seeded
+runner's registration declares it, so the runner serves the chunks the board shows.
 
 **Steps.**
 
