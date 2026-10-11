@@ -43,8 +43,9 @@ A project, once created, stays: there is no retiring one.
 
 A project owns its scopes, routines, findings, and garden proposals, so a scope's slug and a routine's name are unique
 within its project, and two projects never collide on the name of a sweep
-([routines-and-scopes.md](./routines-and-scopes.md)). A routine's scopes are its own project's, and a run's work is
-ingested into the routine's project.
+([routines-and-scopes.md](./routines-and-scopes.md)). A routine's scopes are its own project's, whatever slug it names
+([routines-and-scopes.md](./routines-and-scopes.md#what-refuses)), and a run's work is ingested into the routine's
+project.
 
 Work sources and repositories are the tenant's, not any project's. A project reaches one only through a link, any number
 of projects may link the same record, and a link never makes the record the project's own:

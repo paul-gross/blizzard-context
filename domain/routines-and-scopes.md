@@ -87,7 +87,9 @@ sent to another scope or another graph.
 - **A scope that does not exist** — when a routine's declared set names one, grown or shrunk; the growing verb mints
   nothing of its own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 - **A scope of another project** — as a routine's default or in its declared set, at mint, at an edit, or from a
-  configuration document; a routine's scopes are always its own project's.
+  configuration document; a routine's scopes are always its own project's. A routine naming another project's slug never
+  reaches that project's scope: it finds or mints its own project's distinct scope of that slug
+  ([Mint-on-name](#mint-on-name)).
 - **A scope a configuration document's routine entry names that the document neither declares nor finds stored** — the
   document never mints a scope implicitly.
 - **A graph that does not resolve** — no enabled graph carries the name, resolution being
