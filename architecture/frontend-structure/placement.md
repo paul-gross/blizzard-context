@@ -84,7 +84,7 @@ edge points to a higher layer, but a row may list a unit of its own layer — a 
 | `garden/core`      | L1    | —                                                                                                                                                                    |
 | `garden/proposals` | L1    | `garden/core`                                                                                                                                                        |
 | `garden/runs`      | L1    | `garden/core`                                                                                                                                                        |
-| `garden/scopes`    | L1    | `garden/core`                                                                                                                                                        |
+| `garden/scopes`    | L1    | `garden/core`, `garden/runs`                                                                                                                                         |
 | `garden/findings`  | L1    | `garden/core`, `garden/proposals`                                                                                                                                    |
 | `garden/routines`  | L1    | `garden/core`, `garden/runs`, `graphs`                                                                                                                               |
 | `garden/doorway`   | L1    | `garden/core`, `garden/proposals`, `garden/runs`                                                                                                                     |
