@@ -422,6 +422,23 @@ foreign keys off, so each holds there by construction and stays unverified on Po
 Standing in for a tier: the revisions' migration and carry-over tests, the slug-move and link tests on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
 
+## The runner key revision under Postgres
+
+The runner store runs on SQLite or Postgres by configuration (`bzh:sql-portable`), and every tier runs it on SQLite, so
+the runner key holds there by construction and stays unverified on Postgres:
+
+- **The runner scope revision.** `20261011_1000_runner_scope` (`src/blizzard/runner/store/migrations/versions/`) adds a
+  nullable `runner_id` to every runner-scoped table but `runner_identity`, and backfills it from the store's identity
+  row in bounded batches. It has run on SQLite only, where each addition is a `batch_alter_table` rebuild; on Postgres
+  it becomes native `ALTER`s, and neither the backfill nor its downgrade has run there.
+- **The start-up stamp.** `stamp_unowned_rows` (`src/blizzard/runner/store/internal/host_unowned_row_stamp.py`) walks
+  each table along its primary key in bounded batches. That its batches cover every unowned row under Postgres's READ
+  COMMITTED snapshots, while a previous-release writer is still inserting, is unverified.
+
+Standing in for a tier: the revision's migration test (`tests/test_runner_scope_migration.py`) and the stamp's component
+tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one
+above does.
+
 ## What the project lens and the project columns do not cover
 
 Two project boundaries are drawn by no tier because the system does not draw them:

@@ -58,6 +58,12 @@ refuses a runner that has never registered. After a `reset --store hub`, the hub
 `winter service restart <env>/runner`, whose `runner init --allow-readd` adds the runner again under a new id, and seed
 once its log shows a `tick end`.
 
+Every row seeded into a runner store is stamped with its runner, as the runner's own writes are
+(`bzh:runner-scoped-store`). A row of a table carrying `runner_id`, `runner_identity` aside, takes the id
+`scenario fleet` pins, else the id the store's own identity row names. A runner store whose runner has never registered
+leaves those rows naming no runner, for the runner to stamp when it binds. A hub store's `runner_id` columns are data,
+never stamped.
+
 Do not reach for `fixture list` or `fixture apply`: the named, versioned, cross-store scenario surface is still a stub,
 and `scenario board` and `scenario fleet` are the one-command preset surfaces that exist.
 

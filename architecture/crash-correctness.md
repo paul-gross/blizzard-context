@@ -132,7 +132,9 @@ durable invariants:
 - every source a chunk's work refs name is linked to the chunk's project, the originating ref by the instant the chunk
   was minted (`hub:chunk-sources-linked`);
 - every per-repository landing that names its repository record names one the chunk's project had linked when the
-  landing was written (`hub:landed-repository-linked`).
+  landing was written (`hub:landed-repository-linked`);
+- every runner-scoped row names a runner the runner store's `runner_identity` records — a row naming no runner included,
+  since the start-up stamp runs before any recovery the checker runs after (`runner:rows-name-registered-runner`).
 
 **Why.** Because both stores are facts-only (`bzh:facts-not-status`), the checker is essentially a library of SQL
 assertions plus the status-derivation queries themselves — and a failure names the exact violated invariant rather than
@@ -142,7 +144,9 @@ outcome.
 **Scope.** The hub's query checks audit the store whole — every tenant's rows at once, on a connection marked
 hub-scoped, one of the statement guard's named exemptions (`bzh:tenant-scoped-store`,
 [./system-shape/tenancy.md](./system-shape/tenancy.md)). A chunk, route, or epoch id is hub-minted, so an invariant
-keyed by one holds across tenants exactly as within one.
+keyed by one holds across tenants exactly as within one. The runner's checks reach its store through `HostStores`' audit
+member, one of the runner statement guard's two exempt members (`bzh:host-stores-confined`), and judge every runner's
+rows at once.
 
 **Detect.** A crash test that asserts only "the process restarted" or "the chunk eventually landed" without checking the
 facts-level invariants; a new durable invariant added to the design with no assertion in the checker.

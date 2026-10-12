@@ -45,6 +45,28 @@ through the seam `bzh:hub-scoped-reads-confined` names. Only `tests/test_tenant_
 itself, starts a case without the guard (its `no_hub_guard` fixture). Fixture SQL a test writes raw is outside the
 guard's reach, so it names the tenant itself.
 
+## The runner statement guard is on in every tier
+
+The runner store has a guard of its own, switched on beside the tenant guard in every tier. The same `pytest_configure`
+sets `BLIZZARD_RUNNER_GUARD=1` and installs the guard (`src/blizzard/runner/store/runner_guard.py`) in the test process.
+Every runner a service, e2e, or crash test spawns inherits the variable and installs the guard as it composes its
+process graph (`build_runner_process`, `src/blizzard/runner/composition.py`).
+
+Before a statement executes, the guard refuses one that reaches a runner-scoped table without naming its runner, raising
+`UnscopedRunnerStatement`:
+
+- a select, update, or delete in which no condition scopes that table by a `runner_id` equality;
+- an insert into it with no `runner_id`.
+
+A statement marked runner-unscoped passes unwalked: only `HostStores`' two exempt members and migrations carry the mark
+(`bzh:host-stores-confined`). Raw SQL is never walked, and only the value `1` switches the guard on; production leaves
+it off.
+
+A refusal is the finding, as with the tenant guard. Only `tests/test_runner_statement_guard.py`, whose subject is the
+switch itself, starts a case without the guard (its `no_runner_guard` fixture). `tests/test_runner_store_isolation.py`,
+at `blizzard:component-test`, seeds the same shapes for two runner ids in one store. It proves that one runner's
+adapters neither read nor change the other's rows, holding its coverage of the read and write census by reflection.
+
 ## Two tenants on one hub: the isolation scenario
 
 `tests/test_tenant_isolation.py`, at `blizzard:component-test`, stands two tenants up on one hub, seeds both with the

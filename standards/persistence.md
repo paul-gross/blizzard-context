@@ -137,7 +137,8 @@ a table that already holds rows adds it nullable, backfills it in batches of bou
   the column present, the constraint already named, the column already non-null.
 - **Record it as unverified on Postgres.** The revision joins the Postgres-unverified list of the key it adds —
   [tenancy's](../verification/blizzard/gaps.md#tenancys-migrations-and-locks-under-postgres) for a tenant key,
-  [projects'](../verification/blizzard/gaps.md#projects-migration-and-writes-under-postgres) for a project key — and
+  [projects'](../verification/blizzard/gaps.md#projects-migration-and-writes-under-postgres) for a project key,
+  [the runner key's](../verification/blizzard/gaps.md#the-runner-key-revision-under-postgres) for a runner key — and
   [../verification/blizzard/gaps.md](../verification/blizzard/gaps.md) owns that list and what a change owes it. A
   column the revision adds may close a gap listed there.
 
