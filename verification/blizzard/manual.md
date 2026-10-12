@@ -623,6 +623,39 @@ image carries the `downgrade()` steps the older image's tree never heard of.
 `GET /api/ready` reports `ready: true`, proving the store landed at exactly the older revision rather than merely some
 earlier one.
 
+### `blizzard:manual-store-copy-rehearsal`
+
+**Surface.** A runner store migration — a revision that reshapes or backfills live rows — run against a copy of a real
+runner directory's store before that runner is redeployed onto it. `blizzard:component-test` migrates stores the suite
+seeds itself; only a copy of a live store carries the rows, the history, and the previous releases' leftovers a real
+runner has accumulated. Run it before redeploying a runner onto a release that adds a runner revision, once per runner
+directory the redeploy touches.
+
+**Hazards.** The live store file is only ever read, by SQLite's backup API; nothing in the rehearsal opens it for
+writing, migrates it, or points a daemon at it. Every command after the copy names the scratch directory, never the live
+one.
+
+**Setup.** A scratch virtualenv with the release's wheel installed (`uv venv`, then `uv pip install <wheel>`), so the
+rehearsal runs the migrations the release ships and not the live runner's installed ones. A scratch runtime directory
+holding a copy of the live directory's `blizzard-runner.toml`.
+
+**Steps.**
+
+1. Take a WAL-consistent copy of the live store into the scratch directory with SQLite's backup API —
+   `sqlite3 <live dir>/data/runner.db ".backup '<scratch dir>/data/runner.db'"` — never a file copy, which can miss
+   pages still in the WAL.
+2. Repoint the copy's `db_url` in the scratch `blizzard-runner.toml` at `<scratch dir>/data/runner.db`, or remove the
+   key so it resolves there by default.
+3. Migrate the copy from the scratch install: `blizzard runner migrate --dir <scratch dir>`.
+4. Check its invariants: `blizzard dev check-invariants --runner-dir <scratch dir>`.
+5. Run the downgrade and upgrade round trip:
+   `blizzard runner migrate --dir <scratch dir> --down <the revision's parent>`, then
+   `blizzard runner migrate --dir <scratch dir>` again, then check invariants once more.
+
+**Passes when.** Each migration exits 0, and both invariant checks exit 0, with every write having landed in the scratch
+directory. A revision whose backfill leaves rows for the runner to stamp at its next start, such as rows in a store
+whose runner never registered, is checked once that start has run rather than straight after the migration.
+
 ### `blizzard:manual-fleet-read-latency`
 
 **Surface.** A named hub read path's wall-clock latency at fleet scale, before and after a change to its read path —

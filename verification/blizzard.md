@@ -11,17 +11,17 @@ A `*(more)*` marker on a row flags that a spoke carries the row's fuller detail:
 [`./blizzard/tools.md`](./blizzard/tools.md) for Tools rows — the route when standing up the state a verification needs.
 Full detail lives under `./blizzard/`, one file per reader question.
 
-| Spoke                                                         | Read when…                                                                                                                                                                                                                          |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`tier-rules.md`](./blizzard/tier-rules.md)                   | The tier roster, writing a test at a tier, or changing a template or component style — what each tier answers, and what a change owes as proof; the tenant statement guard every tier runs under, and the tenant isolation scenario |
-| [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md)             | Adding, renaming, or reading a `blizzard:e2e` scenario — what each one proves                                                                                                                                                       |
-| [`markers.md`](./blizzard/markers.md)                         | A row carries a `P3`–`P7` or **Gap** marker, or its method does not exist yet                                                                                                                                                       |
-| [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims, or planning the claims a change falsifies or newly owes                                                                                                     |
-| [`mutation-survivors.md`](./blizzard/mutation-survivors.md)   | A `blizzard:mutation` run reported survivors — sorting each into the class that names its remedy, and when one may be suppressed                                                                                                    |
-| [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing                                                                                                                                            |
-| [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                                                                                                                                                        |
-| [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                                                                                                                                                  |
-| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers, a change adds a store migration or a keyed column, or one closes, narrows, or extends a listed gap — what stands in for one, why, and how a change keeps the list current       |
+| Spoke                                                         | Read when…                                                                                                                                                                                                                                |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`tier-rules.md`](./blizzard/tier-rules.md)                   | The tier roster, writing a test at a tier, or changing a template or component style — what each tier answers, and what a change owes as proof; the tenant and runner statement guards every tier runs under, and the isolation scenarios |
+| [`e2e-scenarios.md`](./blizzard/e2e-scenarios.md)             | Adding, renaming, or reading a `blizzard:e2e` scenario — what each one proves                                                                                                                                                             |
+| [`markers.md`](./blizzard/markers.md)                         | A row carries a `P3`–`P7` or **Gap** marker, or its method does not exist yet                                                                                                                                                             |
+| [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims, or planning the claims a change falsifies or newly owes                                                                                                           |
+| [`mutation-survivors.md`](./blizzard/mutation-survivors.md)   | A `blizzard:mutation` run reported survivors — sorting each into the class that names its remedy, and when one may be suppressed                                                                                                          |
+| [`companion-changes.md`](./blizzard/companion-changes.md)     | A `tests/e2e/` case or a hub↔runner wire surface changed — each owes a companion landing                                                                                                                                                  |
+| [`pre-push.md`](./blizzard/pre-push.md)                       | Before pushing — the sweeps that stand in for what a local gate cannot reach                                                                                                                                                              |
+| [`acceptance-criteria.md`](./blizzard/acceptance-criteria.md) | Which method proves which MVP acceptance criterion                                                                                                                                                                                        |
+| [`gaps.md`](./blizzard/gaps.md)                               | Tempted to add a tier for something no tier covers, a change adds a store migration or a keyed column, or one closes, narrows, or extends a listed gap — what stands in for one, why, and how a change keeps the list current             |
 
 ## Commands
 
@@ -86,8 +86,8 @@ The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scope
 
 Every `blizzard:` row that runs pytest — `blizzard:unit-test`, `blizzard:component-test`, `blizzard:service-test`,
 `blizzard:e2e`, and `blizzard:crash-sweep` among them — runs with the tenant statement guard (`BLIZZARD_TENANT_GUARD`)
-on, in the test process and in every hub it spawns; [`./blizzard/tier-rules.md`](./blizzard/tier-rules.md) owns what the
-guard refuses and the tenant isolation scenario.
+and the runner statement guard (`BLIZZARD_RUNNER_GUARD`) on, in the test process and in every hub and runner it spawns;
+[`./blizzard/tier-rules.md`](./blizzard/tier-rules.md) owns what each guard refuses and the isolation scenarios.
 
 `blizzard:ci-workflows` and `blizzard-mock:ci-workflows` scan `.github/workflows/` by default (run from each repo's own
 root) and are local-only — neither is wired into that repo's own `gate.yml`. `blizzard:collector-config` is local-only
@@ -127,6 +127,7 @@ narrow probe of one named claim, and wins over the general row only where the ch
 | `blizzard:manual-claude-code-bundle`                      | An operator Claude Code bundle composed with the runner's wiring and loaded by a real `claude`: tools, MCP, plugins, agents, hooks, resume, subagent             |
 | `blizzard:manual-claude-code-harness-telemetry`           | A real `claude`'s settings-env precedence for `OTEL_*` names, and its metrics, logs, and traces arriving through a runner's own receivers                        |
 | `blizzard:manual-rollback-drill`                          | The compose deployment's rollback promise, walked for real against two published image tags                                                                      |
+| `blizzard:manual-store-copy-rehearsal`                    | A runner store migration rehearsed on a WAL-consistent copy of a live runner directory's store: migrate, check invariants, downgrade and upgrade                 |
 | `blizzard:manual-fleet-read-latency`                      | A named hub read path's wall-clock latency, before/after a read-path change, at fleet scale                                                                      |
 | `blizzard:manual-trace-backends`                          | One hub's fleet traces fanned out by one operator collector to a self-hosted store and a hosted service, a chunk's slowest step read back in each                |
 | `blizzard:manual-egress-warehouse`                        | A kept egress directory loaded into a warehouse and read in a BI tool: cost by node by day and the slowest station, against DuckDB over the same files           |

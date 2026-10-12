@@ -444,6 +444,35 @@ stays fixed until a restart.
 The write owes the invariant checker nothing: the row is the hub's own answer about the token, never derived from other
 facts.
 
+### Binding at the identity row
+
+The row is also where the store binds to its runner (`bzh:runner-scoped-store`). A store whose row names a runner binds
+to that id when the process graph is composed. A store whose row names none binds when registration first adopts an id,
+inside the same transaction that writes the row, and that transaction also stamps the id on every runner-scoped row
+naming no runner. A `kill -9` therefore leaves either no identity, no binding and the rows unowned, or all three; the
+binding is in-process and reseeded from the row at boot, and never changes once set. Until it is bound, a runner-scoped
+read answers as an empty store and a runner-scoped write raises `RunnerUnbound`, so no write can land before the id it
+must carry exists.
+
+### The start-up stamp
+
+Before `blizzard runner host` serves or ticks, and before `blizzard runner tick` runs its tick, a bound runner stamps
+its id on every runner-scoped row naming no runner (`stamp_unowned_rows`, `blizzard/src/blizzard/runner/composition.py`,
+through the `HostStores` member `blizzard/src/blizzard/runner/store/internal/host_unowned_row_stamp.py`). Those rows
+were written by the previous release's statements, or migrated from a store that held no identity. The stamp walks each
+table along its primary key in bounded batches, and each statement fills only rows still naming no runner. This is a
+**no-window** write: a crash part-way leaves rows that are still unowned, which the next start stamps, and a re-run
+stamps nothing already stamped. No registry point is owed.
+
+### Held-binding completion
+
+`CompleteHeldBindings` (`blizzard/src/blizzard/runner/loop/steps.py`), a step ahead of FILL, gives each held
+`env_bindings` row lacking them its workspace and its chunk's project. One probe finds the incomplete held rows, and
+with none nothing else runs. Every completion is one update over the rows in a single transaction, and each column it
+sets is guarded by `COALESCE`, so it fills only an empty column. This is a **no-window** write: a crash leaves each row
+either completed or still incomplete, and the next tick completes it. A row the hub cannot answer yet, or whose
+`workdir` matches no listed workspace, keeps its gap and its lease, so it still counts against `max_agents`.
+
 ## The store reset
 
 `blizzard runner store reset` (`blizzard/src/blizzard/runner/cli/store.py`) runs while the daemon is down, refused while
