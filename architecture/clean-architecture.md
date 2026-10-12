@@ -163,8 +163,9 @@ the same process graph with explicit lifetimes:
   (`build_tenant_services`) and cached beside them. A hub-level service reaches a tenant's services only through
   `HubServices.tenants` (`TenantServicesOpener`); no service is built from the unscoped core (`bzh:tenant-scoped-store`,
   [./system-shape/tenancy.md](./system-shape/tenancy.md))
-- The runner host graph in `blizzard/src/blizzard/runner/composition.py`, injected into the served app in
-  `blizzard/src/blizzard/runner/app.py` and the periodic loop's wiring in `blizzard/src/blizzard/runner/loop_wiring.py`
+- The runner host graph in `blizzard/src/blizzard/runner/composition.py` — `build_host_process` holding one
+  `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
+  runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`
 
 Every click command body under a `*/cli/` directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is a
 short-lived root: it wires collaborators once, inline, at the top, without joining the hosted process graph. A root
