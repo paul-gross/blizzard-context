@@ -448,3 +448,20 @@ call is its own transaction, so a crash can land between it and either the domai
 fact's domain write just after — a span that exists and can lose a bounded, non-durable amount, not a span with nothing
 left to separate. The write owes the checker nothing beyond what it already carries: `runner_high_water` is a per-runner
 scalar the store already treats as idempotently overwritable, not a derived cross-fact invariant to recompute.
+
+## Hosts: retire, and add with adopt
+
+`HostRetirementService.retire` (`blizzard/src/blizzard/hub/domain/execution/host_retirement.py`) decides the refusal in
+the `Host` model over every live runner's holdings before it writes, then writes in two steps. First,
+`HostRegistryStore.record_retirement` appends the host's retire fact and revokes its token in one transaction, so the
+host can add no runner from that instant. Second, `FleetService.retire` runs once per runner under the host.
+
+The span between the two steps is a real window whose whole loss is accepted and named: a crash inside it leaves a host
+retired with runners under it that are not. The loss is bounded to those runners staying live a while longer, and
+nothing is corrupted — re-running `retire` over the retired host writes no second host fact and runs each runner's
+retire again, which retires any left standing and finishes any interrupted release of their chunks, as a runner's own
+re-run does. A sweep point would arm a span an operator's re-run already closes, so none is registered.
+
+`HostEnrollmentService.add` with `--adopt` has no window. `HostRegistryStore.add` inserts the host and places every
+adopted runner in one scoped write transaction, and a runner that came to stand under a host first rolls the whole write
+back, so a crash or a refusal loses the host and its adoptions together.

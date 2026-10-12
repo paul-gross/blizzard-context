@@ -424,6 +424,26 @@ foreign keys off, so each holds there by construction and stays unverified on Po
 Standing in for a tier: the revisions' migration and carry-over tests, the slug-move and link tests on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
 
+## The hosts revision under Postgres
+
+The hosts mechanisms below have the same exposure as projects': every tier runs on SQLite, with one writer lock and
+foreign keys off, so each holds there by construction and stays unverified on Postgres.
+
+- **The hosts revision.** `20261012_1000_hosts` (`src/blizzard/hub/store/migrations/versions/`) reaches head and returns
+  to base on an empty Postgres store under `blizzard:manual-postgres-migrations`. Its `runner_registrations` change is a
+  `batch_alter_table` rebuild on SQLite and native `ALTER`s on Postgres, and the new `fk_runner_registrations_hosts` key
+  has never run where foreign keys are enforced. Nor has the tenant drain over rows that key binds.
+- **A live host name's uniqueness.** `HostRegistryStore.add` reads the tenant's live host names and inserts under the
+  scoped write's tenant-row lock, so two adds of one name queue on that row. That the lock alone keeps a name unique
+  among live hosts is unverified on Postgres; SQLite's writer lock serializes every add. A report reads the other live
+  names outside any lock and so can record a name an add took in between on either backend.
+- **An adoption racing another.** `HostRegistryStore` places a runner with an `UPDATE … WHERE host_id IS NULL` and rolls
+  the write back on a runner that matched no row. That two adoptions of one runner under READ COMMITTED leave it under
+  exactly one host is unverified; SQLite's writer lock serializes them.
+
+Standing in for a tier: the revision's own test, the adoption and name tests on SQLite, and the portable SQL
+`bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
+
 ## The runner key revision under Postgres
 
 The runner store runs on SQLite or Postgres by configuration (`bzh:sql-portable`), and every tier runs it on SQLite, so
