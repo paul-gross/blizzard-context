@@ -49,8 +49,8 @@ guard's reach, so it names the tenant itself.
 
 The runner store has a guard of its own, switched on beside the tenant guard in every tier. The same `pytest_configure`
 sets `BLIZZARD_RUNNER_GUARD=1` and installs the guard (`src/blizzard/runner/store/runner_guard.py`) in the test process.
-Every runner a service, e2e, or crash test spawns inherits the variable and installs the guard as it composes its
-host graph (`build_host_process`, `src/blizzard/runner/composition.py`).
+Every runner a service, e2e, or crash test spawns inherits the variable and installs the guard as it composes its host
+graph (`build_host_process`, `src/blizzard/runner/composition.py`).
 
 Before a statement executes, the guard refuses one that reaches a runner-scoped table without naming its runner, raising
 `UnscopedRunnerStatement`:
