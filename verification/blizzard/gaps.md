@@ -357,9 +357,9 @@ unverified on Postgres, where each statement of a READ COMMITTED transaction rea
 enforced:
 
 - **The migration chain.** The tenancy revisions, `20261008_1100_tenants` through
-  `20261008_1720_tenant_deletion_closed_at` (`src/blizzard/hub/store/migrations/versions/`), have run on SQLite only.
-  Each is written to `bzh:sql-portable` — named constraints, identifiers within 63 characters, `batch_alter_table` — and
-  nothing has run the chain on Postgres.
+  `20261008_1720_tenant_deletion_closed_at` (`src/blizzard/hub/store/migrations/versions/`), reach head and return to
+  base on an empty Postgres store under `blizzard:manual-postgres-migrations`. Their backfills over populated rows have
+  run on SQLite only.
 - **A scoped write's closed-tenant check.** A scoped write opens with one statement,
   `UPDATE tenants … WHERE tenant_id = :t AND NOT EXISTS (<the tenant's deletion fact>)` (`_lock_open_tenant`,
   `src/blizzard/hub/store/scoped.py`). On Postgres a write that blocks on a close's lock of that row re-checks, once the
@@ -392,10 +392,12 @@ the day some tier gains a Postgres-backed run, which `packaging/docker/compose.y
 The projects mechanisms below have the same exposure as tenancy's: every tier runs on SQLite, with one writer lock and
 foreign keys off, so each holds there by construction and stays unverified on Postgres.
 
-- **The projects revision.** `20261008_1800_projects` (`src/blizzard/hub/store/migrations/versions/`) has run on SQLite
-  only. There its eight-table `project_id` addition is a `batch_alter_table` rebuild; on Postgres it becomes native
-  `ALTER`s. Its correlated `UPDATE` stamping each row with its tenant's project, and the new `fk_<table>_projects` keys,
-  have never run where foreign keys are enforced. Nor has the tenant drain over rows those keys bind.
+- **The projects revision.** `20261008_1800_projects` (`src/blizzard/hub/store/migrations/versions/`) reaches head and
+  returns to base on an empty Postgres store under `blizzard:manual-postgres-migrations`; its backfills over populated
+  rows have run on SQLite only. There its eight-table `project_id` addition is a `batch_alter_table` rebuild; on
+  Postgres it becomes native `ALTER`s. Its correlated `UPDATE` stamping each row with its tenant's project, and the new
+  `fk_<table>_projects` keys, have never run where foreign keys are enforced. Nor has the tenant drain over rows those
+  keys bind.
 - **The slug move.** A project's slug move (`update_project`, `src/blizzard/hub/store/internal/project_store.py`) runs
   in one transaction. It reads for a current holder of the new slug, deletes the new slug's former-slug row, updates the
   project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two

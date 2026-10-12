@@ -962,6 +962,33 @@ fleet PR's own merge commit has two parents.
 `blizzard-infra` is out of scope for this method — its own docs record why it cannot be protected on the current GitHub
 plan.
 
+### `blizzard:manual-postgres-migrations`
+
+**Surface.** The hub store's migration chain, driven by `blizzard hub init` and `blizzard hub migrate` against a
+throwaway local Postgres cluster. SQLite runs every tier; this is the one place the chain runs where DDL is
+transactional, identifiers stop at 63 characters, and foreign keys are enforced.
+
+**Setup.** From the `blizzard` worktree: `initdb -A trust -D <dir>/data`, then `pg_ctl` on a private port with a short
+`-k` socket directory (the socket path is capped near 100 bytes) and `listen_addresses=''`, then `createdb hub`. Point
+the hub at it with `BZ_HUB_DB_URL='postgresql+psycopg://@/hub?host=<socket dir>&port=<port>'` and
+`BZ_HUB_DIR=<empty dir>`, and run every `blizzard` command as
+`uv run --no-sync --with 'psycopg[binary]==3.3.4' blizzard hub …
+--allow-external-db`. Stop the cluster with
+`pg_ctl stop` and remove its directories when done.
+
+**Steps.**
+
+1. `blizzard hub init` — an empty database migrates to head.
+2. `blizzard hub migrate --down base`, then read `alembic_version` and `\dt`.
+3. `blizzard hub migrate` — head again.
+4. When the change touches a backfill revision, `migrate --down <that revision's parent>`, seed the rows it reads (more
+   than one flush batch, with the rows its markers or links name), then `migrate` to head and read the backfilled column
+   and its closing constraint.
+
+**Passes when.** Every step exits zero with no cursor, `executemany`, or dependent-object error; step 2 leaves
+`alembic_version` empty and no other table; step 3 reports the head revision; and a step 4 backfill leaves no row
+unfilled and its column required.
+
 ### `blizzard:manual-live-routine`
 
 **Surface.** A garden routine run end to end by a real-harness runner against an env-local hub — the path no mock

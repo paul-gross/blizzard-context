@@ -40,7 +40,8 @@ and only postgres's unordered contract exposes the gap.
 
 **Detect.** A dialect-specific column type, function, or `text()` SQL; a test asserting behavior only one backend gives;
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit
-total `order_by`.
+total `order_by`; streaming (`yield_per`/`stream_results`) set on a connection rather than on one statement's execution
+— mechanically flagged by `contracts/ast-grep/rules/statement-scoped-streaming.yml`.
 
 **Do.** `ChunkFactsStore.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
 because the fact projection it reconstitutes carries the chunk's pause history and a consumer indexes that list's tail.
