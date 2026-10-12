@@ -40,7 +40,9 @@ like a worker node's judgement ([edges](../graphs/edges.md)).
   against.
 - **The policy is the script's.** Which policy a chunk gets is a fact about the graph it travels, and the policy is
   whatever its script does. A graph adopts a policy by declaring its script in `deliver`, never by an engine switch;
-  [feature delivery](../../workflows/feature-delivery.md) describes the shipped policy.
+  [feature delivery](../../workflows/feature-delivery.md) describes the shipped policy. Each commit pointer is resolved
+  to its own repository record; whether a chunk may mix forges, owners, base branches or credentials is the policy's to
+  decide.
 - **A chunk delivers one project's work.** The chunk belongs to exactly one project, and the repositories it lands in
   are the tenant's records, which a project reaches only through a link ([../projects.md](../projects.md) §What a
   project owns, and what it links). A chunk lands only in repositories its project links, as the links stand when the
