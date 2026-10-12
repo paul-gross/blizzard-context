@@ -413,7 +413,7 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   unlink racing an ingest under READ COMMITTED waits on the key rather than committing between the ingest's link read
   and its mint is unverified; SQLite's writer lock serializes the two whatever the key.
 - **A landed repository row's keys.** `delivery_repo_landed`'s foreign keys to its chunk and its tenant have never been
-  enforced, and its `repository_name` carries neither a unique key nor a foreign key to the repository record: that a
+  enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
   landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
   (`src/blizzard/tools/invariants.py`) alone, and its behavior under enforced keys is unverified.
 - **The `?project=` read plans.** Every read a `?project=` narrows has its `EXPLAIN QUERY PLAN` shape asserted on SQLite
