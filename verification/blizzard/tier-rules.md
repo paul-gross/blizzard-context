@@ -21,7 +21,7 @@ bind are owned by `blizzard-mock`.
 
 Service and e2e tests never spend a real token and never touch the network: the harness seam binds a mock coding
 harness, the work-source seam binds the mock GitHub forge, delivery's land scripts reach the mock forge through the
-`BZ_FORGE_URL` a repository record fills rather than through a seam, and the workspace seam binds mocks or local
+per-entry `forge_url` a repository record fills rather than through a seam, and the workspace seam binds mocks or local
 fixtures.
 
 Tests run against sqlite. Postgres is a configuration concern, held by staying inside SQLAlchemy's portable surface

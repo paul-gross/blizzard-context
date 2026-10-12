@@ -40,7 +40,7 @@ plus one path outside the Rule entirely:
 | Graph land scripts     | Landing, directly through the `run:` env contract's `BZ_FORGE_*` variables                                                                                                         | Outside the Rule's sites (a loop step, domain, or store), because the script is the landing policy                                                                                                                                   |
 
 The hub holds no shared forge endpoint and no owner fallback: each repository is a record naming its forge, owner, base
-branch and secret, and a `deliver` step and the garden commit resolver each resolve the repository they act on to its
+branch and secret, and a `deliver` step and the garden commit resolver each resolve every repository they act on to its
 record on every use; the work-source family and the OAuth provider each declare their own endpoint through their own
 record or config entry likewise. How a `deliver` step resolves the chunk's commit pointers to that record, and when it
 refuses the visit, is owned by `bzh:hub-node-env-contract` in
