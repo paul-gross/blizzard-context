@@ -407,6 +407,9 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   `delivery_repo_landed.repository_name` with native `ADD COLUMN`s, and backfills each runner's `projects` as JSON text
   naming its tenant's one project, paged along `runner_id`. Neither the added columns nor the JSON text backfill has run
   on Postgres.
+- **The work-source identity revision.** The revision giving each work source its `wsrc_<ulid>` id, slug, and name, and
+  rekeying every reference to it, has had its backfill run on SQLite only. A work source's slug move takes the project
+  slug move's shape, so it shares that move's race under READ COMMITTED, equally unverified.
 - **An ingest against a link or unlink.** An ingest takes the `keyed_locks` key of the project it mints into before its
   pointers' keys, and every source link or unlink takes the same project's key (`PROJECT_SOURCE_LINKS_LOCK_NAMESPACE`,
   `src/blizzard/hub/store/internal/project_link_store.py`), so the links an ingest read stand until it commits. That an
