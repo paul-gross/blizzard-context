@@ -449,6 +449,12 @@ fact's domain write just after — a span that exists and can lose a bounded, no
 left to separate. The write owes the checker nothing beyond what it already carries: `runner_high_water` is a per-runner
 scalar the store already treats as idempotently overwritable, not a derived cross-fact invariant to recompute.
 
+The host's fact lane has the same window and the same accepted one-fact loss. `HostFactIngestService.ingest`
+(`blizzard/src/blizzard/hub/domain/execution/host_facts.py`) writes each fact's usage row, then advances
+`host_high_water` through `HostRegistryStore.set_high_water` inside the same loop iteration. A crash between the two
+replays that one fact, and the replay costs nothing: a sample or miss upsert refreshes its `(host_id, slug)` row in
+place, so re-applying it re-writes the row and counts nothing twice. No crash point is registered for it.
+
 ## Hosts: retire, and add with adopt
 
 `HostRetirementService.retire` (`blizzard/src/blizzard/hub/domain/execution/host_retirement.py`) decides the refusal in
