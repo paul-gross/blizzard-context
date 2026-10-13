@@ -118,8 +118,8 @@ membership turns "where can a tenant leak?" into a list a reviewer can read whol
 
 **Scope.** The members are of these kinds and no others:
 
-- resolving a credential to its tenant — a runner's bearer token, a runner id at sign-in, an invitation token, a
-  hub-executed node's marker — each returning the tenant beside its principal;
+- resolving a credential to its tenant — a runner's or a host's bearer token, a runner id at sign-in, an invitation
+  token, a hub-executed node's marker — each returning the tenant beside its principal;
 - a sweep's corpus read (`bzh:sweep-acts-in-row-tenant`), and the status reads of the hub's exports, whose cursors every
   tenant's rows share;
 - tenant administration — whether a tenant is open, and the open tenants with their names.
@@ -140,8 +140,8 @@ or factory, or the `HubCore` field — whether as an import, an annotation, an a
 a read a tenant-scoped repository could serve; a member that writes; an allowlist entry added for a route under a
 tenant's own family.
 
-**Do.** A runner's bearer token resolves through a `HubScopedReads` member to its registration and that registration's
-tenant; the request then opens that tenant's stores and does everything else through them.
+**Do.** A runner's or a host's bearer token resolves through a `HubScopedReads` member to its registration and that
+registration's tenant; the request then opens that tenant's stores and does everything else through them.
 
 **Don't.** Adding a `list_all_chunks` member so a board view can show "everything" — no tenant-member view spans
 tenants, and the member would be a standing cross-tenant read with no reason to exist.
