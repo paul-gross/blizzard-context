@@ -123,10 +123,15 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   inside the panel rather than overflowing it. At 390px and 1280px a runner both locally and hub paused must render its
   LOCALLY PAUSED and HUB PAUSED badges as soft kit pills — the never-connected badge's radius and size — in
   `--label-dim` and `--amber-hi`, with no row overflow.
+- `host-card.shell-sweep.spec.ts` covers the runner registry's host card (`RunnerPanelView`): at 390px and 1280px a card
+  holding two runners — a long workspace id, binding lines with an unreported workspace, named spenders, and an
+  unrostered subscription — must stay inside the panel with its rows stacked, and the host-less heading and its row must
+  sit below the card.
 - `runners-view.shell-sweep.spec.ts` covers the mobile Fleet screen at 390px and 320px: runner cards stack without
   overlap, and long claim ids and subscription names remain inside both their card and the surrounding panel — including
   the same aging/stale colour and long-miss-reason claims `runner-view.shell-sweep.spec.ts` covers, since the mobile
-  view renders the identical shared subscription-pace group component.
+  view renders the identical shared subscription-pace group component. The same two-runner host card and host-less row
+  `host-card.shell-sweep.spec.ts` covers must hold inside the panel at both widths.
 - `session-recovery-view.shell-sweep.spec.ts` covers `SessionRecoveryView`, which the runner app renders in place of the
   whole panel when a federation bounce could not complete silently: at 390px and 320px its headline/detail block and
   retry control must render with no view-wide horizontal overflow; proven able to fail by adding `white-space: nowrap`
