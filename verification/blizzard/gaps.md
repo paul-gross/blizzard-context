@@ -433,6 +433,10 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   to base on an empty Postgres store under `blizzard:manual-postgres-migrations`. Its `runner_registrations` change is a
   `batch_alter_table` rebuild on SQLite and native `ALTER`s on Postgres, and the new `fk_runner_registrations_hosts` key
   has never run where foreign keys are enforced. Nor has the tenant drain over rows that key binds.
+- **The runner-bindings revision.** `20261012_1100_runner_bindings` chains after the hosts revision and adds nullable
+  `runner_registrations.bindings` and `subscription` columns, a `batch_alter_table` rebuild on SQLite and native `ALTER`s
+  on Postgres. It reaches head and returns to base under the same `blizzard:manual-postgres-migrations` run; that
+  rebuild over a table the `fk_runner_registrations_hosts` key binds has never run where foreign keys are enforced.
 - **A live host name's uniqueness.** `HostRegistryStore.add` reads the tenant's live host names and inserts under the
   scoped write's tenant-row lock, so two adds of one name queue on that row. That the lock alone keeps a name unique
   among live hosts is unverified on Postgres; SQLite's writer lock serializes every add. A report reads the other live
