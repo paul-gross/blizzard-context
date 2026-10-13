@@ -66,6 +66,7 @@ edge points to a higher layer, but a row may list a unit of its own layer — a 
 | `sse`         | L2           | `api`, `core`                       |
 | `transcripts` | L2           | `api`, `core`, `kit`                |
 | `chunk`       | L2           | `api`, `core`, `kit`, `transcripts` |
+| `host`        | L2           | `api`, `core`, `kit`                |
 | `shell`       | L3           | `api`, `core`, `kit`                |
 | `testing`     | spec support | `api`                               |
 
