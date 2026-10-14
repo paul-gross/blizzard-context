@@ -515,7 +515,8 @@ checker's `runner:outbox-counter-above-seq` asserts that no retained row sits ab
 with none nothing else runs. Every completion is one update over the rows in a single transaction, and each column it
 sets is guarded by `COALESCE`, so it fills only an empty column. This is a **no-window** write: a crash leaves each row
 either completed or still incomplete, and the next tick completes it. A row the hub cannot answer yet, or whose
-`workdir` matches no listed workspace, keeps its gap and its lease, so it still counts against the runner's `agents`.
+`workdir` matches no listed workspace, keeps its gap and its lease, so it still counts against bindings: an unknown
+project against every binding on its workspace, an unknown workspace against every binding of the runner.
 
 ## The store reset
 
