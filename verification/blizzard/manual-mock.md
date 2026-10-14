@@ -125,15 +125,15 @@ runner's registration declares it, so the runner serves the chunks the board sho
    ```
 
    The reset hub no longer knows the runner's token, so the service's `runner init --allow-readd` adds the runner again
-   under a new id, and the daemon's first registration records that id in the runner store. Wait for one `tick end` in
-   the runner's log — 30 seconds by default — then seed one coherent fleet:
+   under a new id, which `init` writes to the host file's `[[runner]] id`. Wait for one `tick end` in the runner's log —
+   30 seconds by default — then seed one coherent fleet:
 
    ```bash
    uv run blizzard-mock-data scenario fleet --chunks 6 --seed 1 --hub-dir "$BZ_HUB_RUNTIME" --runner-dir "$BZ_RUNNER_RUNTIME"
    ```
 
-   Seed only after that first registration: `--runner-dir` pins the runner's id from its store's identity row, which
-   only a registration with the reset hub writes — [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md)
+   Seed only after that re-join: `--runner-dir` pins the runner's id from the host file's `[[runner]] id`, which only
+   `init`'s join with the reset hub rewrites — [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md)
    §Seeding both stores together owns why.
 
 2. Open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`, confirm the six seeded chunks render with their statuses,
@@ -159,7 +159,7 @@ runner's registration declares it, so the runner serves the chunks the board sho
    store instead, expecting the same two mirrored chunk ids from both:
 
    ```bash
-   sqlite3 "$BZ_RUNNER_RUNTIME/data/runner.db" 'select chunk_id from usage_facts; select chunk_id from transcript_segments;'
+   sqlite3 "$BZ_RUNNER_RUNTIME/data/host.db" 'select chunk_id from usage_facts; select chunk_id from transcript_segments;'
    ```
 
 7. Wait at least one tick after the seed — watching the runner's log for `tick end` — then re-check every panel, now

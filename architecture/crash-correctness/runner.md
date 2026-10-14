@@ -400,19 +400,26 @@ cursor, never a corpus it would rescan to find nothing changed.
 
 ## The identity row
 
-The store's single `runner_identity` row names the runner the store belongs to. Two callers write it, both through
-`RunnerIdentityStore.record_runner_identity` (`blizzard/src/blizzard/runner/store/internal/identity_store.py`):
-`Registration.run` (`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
-(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). Only registration adopts an id, and only into a store
-whose row names no runner: it writes the id its reply names. Past that, registration refreshes the name and tenant under
-the same id, and a reply naming another runner writes nothing and turns the verdict to a mismatch. The check never
-adopts: a store naming no runner judges any token as matched and leaves the id to the first registration, and the check
-writes only to fill in the tenant a matching answer names. Nothing ever overwrites the id. The delete of the previous
-row and the insert of the new one share one transaction, on the `trace_export_latch` precedent above, so a `kill -9`
-leaves the previous row or the new one, never neither and never both. The in-process identity holder is updated only
-after the row commits, and is restart-erased and reseeded from the row at boot. This is a **no-window** write: there is
-no partner write a crash could separate it from, and a lost write is made again by the next registration or matching
-check.
+The store's `runner_identity` row records the runner the host file's `[[runner]] id` names: the name and tenant the hub
+last answered for it. Three callers write it, all through `RunnerIdentityStore.record_runner_identity`
+(`blizzard/src/blizzard/runner/store/internal/identity_store.py`): `runner init`
+(`blizzard/src/blizzard/runner/cli/runtime.py`), `Registration.run`
+(`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
+(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). None adopts an id: the store is bound to the configured id
+before anything runs, and the write refuses an identity naming another runner (`RunnerAlreadyBound`). Registration
+refreshes the name and tenant under the configured id, and a reply naming another runner writes nothing and turns the
+verdict to a mismatch. The check judges the token's runner against the configured id, never against the row, and writes
+only to fill in the tenant a matching answer names. `init` writes the row from the hub's answer whether it added the
+runner or kept it, so a configured runner has its row before it writes anything. Nothing ever overwrites the id: `init`
+writes the host file's `id` only into an entry that has none, or over a stale one under `--allow-readd` with a store
+that is fresh (set aside for the re-add) or names only the joined runner; a held token naming another runner than the
+configured id stops `init` before it writes a token, host-file id or identity row (the store itself may already have
+been adopted or migrated by then), and a start, `host --check` or `tick` over a store whose identity rows name any
+runner other than the configured one refuses that runner untouched. The bound runner's row is updated in place, or
+inserted when none exists, in one transaction, so a `kill -9` leaves the previous row or the new one, never neither and
+never both. The in-process identity holder is updated only after the row commits, and is restart-erased and reseeded
+from the row at boot. This is a **no-window** write: there is no partner write a crash could separate it from, and a
+lost write is made again by the next registration or matching check.
 
 The verdict the row is checked against is held only in the process: `IdentityVerdictHolder`
 (`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
@@ -444,25 +451,62 @@ stays fixed until a restart.
 The write owes the invariant checker nothing: the row is the hub's own answer about the token, never derived from other
 facts.
 
-### Binding at the identity row
+### Binding at the configured id
 
-The row is also where the store binds to its runner (`bzh:runner-scoped-store`). A store whose row names a runner binds
-to that id when the process graph is composed. A store whose row names none binds when registration first adopts an id,
-inside the same transaction that writes the row, and that transaction also stamps the id on every runner-scoped row
-naming no runner. A `kill -9` therefore leaves either no identity, no binding and the rows unowned, or all three; the
-binding is in-process and reseeded from the row at boot, and never changes once set. Until it is bound, a runner-scoped
-read answers as an empty store and a runner-scoped write raises `RunnerUnbound`, so no write can land before the id it
-must carry exists.
+The store binds to its runner (`bzh:runner-scoped-store`) from configuration: every composition binds the stores to the
+entry's `id` before anything runs, the hub reachable or not — the host and tick graphs and the offline read verbs. The
+invariant checker reads across runners through the exempt `runner_audit`, so it takes no binding. The binding is
+in-process, never changes once set, and is never read back from the identity row. A connection never bound reads a
+runner-scoped table as empty and refuses a write with `RunnerUnbound`, so no write lands before the id it must carry
+exists. A `kill -9` leaves nothing to reconcile: the binding is reseeded from the host file at the next boot.
 
-### The start-up stamp
+The tightening revision (`blizzard/src/blizzard/runner/store/migrations/versions/20261013_1000_runner_scope_tighten.py`)
+makes `runner_id` `NOT NULL` on every runner-scoped table, so a row naming no runner cannot exist. It stamps any row a
+previous release left naming none from the identity row, and refuses a store that holds such rows and no identity row.
+The upgrade is one transaction from its first data write — the backfill, the counter seeding, and every batch rebuild —
+so a stopped run rolls all of it back and leaves the store at the parent revision, the outboxes keyed as they were and
+no counter rows written. Only DDL ahead of the first data write commits alone, so at most an empty `outbox_counters`
+survives, and, in a store with no identity row, the first batch's `CREATE TABLE _alembic_tmp_*` as well: with no row to
+backfill from there is no data write ahead of that batch, so its table copy commits alone. Idempotence covers the rerun
+over that surviving DDL: it creates `outbox_counters` only when absent, stamps only rows still naming no runner, and
+skips a table already tight. `_seed_counters` skips an outbox already keyed `(runner_id, seq)` on the ground that its
+counter was seeded before the rebuild; that holds only because the seeding and the rebuild commit together.
+`_clear_stale_copy` drops a table copy a batch left behind. In a store with no identity row it is required, not
+insurance: the committed `_alembic_tmp_*` would otherwise make the rerun's batch fail on a table that exists. It owes no
+registry point.
 
-Before `blizzard runner host` serves or ticks, and before `blizzard runner tick` runs its tick, a bound runner stamps
-its id on every runner-scoped row naming no runner (`stamp_unowned_rows`, `blizzard/src/blizzard/runner/composition.py`,
-through the `HostStores` member `blizzard/src/blizzard/runner/store/internal/host_unowned_row_stamp.py`). Those rows
-were written by the previous release's statements, or migrated from a store that held no identity. The stamp walks each
-table along its primary key in bounded batches, and each statement fills only rows still naming no runner. This is a
-**no-window** write: a crash part-way leaves rows that are still unowned, which the next start stamps, and a re-run
-stamps nothing already stamped. No registry point is owed.
+### The host store adoption
+
+`blizzard runner migrate` adopts a pre-host `data/runner.db` as `data/host.db` (`Runtime._upgrade`,
+`blizzard/src/blizzard/runner/runtime.py`) under the directory's lock: it folds the write-ahead log into the database
+and renames the database and each sibling through `move_sqlite`, then applies the pending revisions. This is a
+**no-window** write. The presence of `host.db` decides the outcome: before the rename the pre-host store is whole under
+its old name, and after it the host store is whole under the new one, so a re-run either adopts again or migrates in
+place. A directory holding a pre-host `blizzard-runner.toml` and no `blizzard-host.toml` is refused untouched.
+
+A crash cannot leave both files. The database moves in one rename after the checkpoint, so `runner.db` is gone the
+moment `host.db` exists; what a crash can leave behind is an empty `-wal` or `-shm` sibling, which a re-run migrates
+past, since adoption needs `runner.db` to exist. A populated `host.db` beside a `runner.db` is therefore never a crash
+state: `_upgrade` refuses it, naming both files, and touches nothing, because only an operator can decide which one is
+the runner's store. `store reset` and `migrate --down` refuse a directory whose `host.db` is absent while `runner.db`
+exists, so neither can create the second file.
+
+### The `init` id write
+
+`runner init` writes the joined runner's id into the host file between the token and the identity row
+(`write_runner_id`, `blizzard/src/blizzard/runner/host_layout.py`). Each file write is atomic: the token's `.env` and
+the host file are each written whole to a temporary file and renamed over the original, so a crash leaves the old file
+or the new one. A crash between any two steps leaves a state running `init` again completes, keeping the runner the
+token names; a stale configured id is rewritten only under `--allow-readd`, with a store that is fresh or names only
+that runner, and any other mismatch is refused with nothing written. This is a **no-window** write.
+
+### The outbox counter advance
+
+Every outbox `seq` is allocated by the one seam, `insert_outbox_row`
+(`blizzard/src/blizzard/runner/store/internal/base.py`), which advances the bound runner's lane in `outbox_counters` in
+the same transaction as the row. This is a **no-window** write: a crash leaves both the row and its advance or neither,
+so a rolled-back `seq` is returned and a counter that never moves backwards never reissues a pruned row's. The invariant
+checker's `runner:outbox-counter-above-seq` asserts that no retained row sits above its counter.
 
 ### Held-binding completion
 
@@ -471,7 +515,7 @@ stamps nothing already stamped. No registry point is owed.
 with none nothing else runs. Every completion is one update over the rows in a single transaction, and each column it
 sets is guarded by `COALESCE`, so it fills only an empty column. This is a **no-window** write: a crash leaves each row
 either completed or still incomplete, and the next tick completes it. A row the hub cannot answer yet, or whose
-`workdir` matches no listed workspace, keeps its gap and its lease, so it still counts against `max_agents`.
+`workdir` matches no listed workspace, keeps its gap and its lease, so it still counts against the runner's `agents`.
 
 ## The store reset
 
@@ -479,9 +523,9 @@ either completed or still incomplete, and the next tick completes it. A row the 
 anything answers on the runtime's socket. It moves the store aside through `set_aside_sqlite`
 (`blizzard/src/blizzard/runner/runtime.py`) and never deletes. It first checkpoints the write-ahead log into the
 database (`PRAGMA wal_checkpoint(TRUNCATE)`), so the database holds the whole store. Then it renames the database
-(`runner.db` by default) and each present `-wal`, `-shm` and `-journal` sibling to the same `<name>.<UTC stamp>` name,
-refusing up front when any target is taken. Last, `Runtime.reset_store` migrates a fresh store to head under the old
-name.
+(`data/host.db` by default) and each present `-wal`, `-shm` and `-journal` sibling to the same `<name>.<UTC stamp>`
+name, refusing up front when any target is taken. Last, `Runtime.reset_store` migrates a fresh store to head under the
+old name.
 
 This is a **no-window** write. Each rename is atomic, and after the checkpoint the database moves whole in its one
 rename, so a crash between renames leaves a sibling behind that holds nothing a fresh store at the old name would

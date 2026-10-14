@@ -23,7 +23,8 @@ and runs from the sibling `blizzard-mock` worktree under its own venv, as `uv ru
 `workspace:/.winter/config.toml`, not plain environment variables.
 
 Every verb except `scenario fleet` names its target store either as `--url <DSN>` (or `$DATABASE_URL`) or as
-`--dir <runtime dir>`, the sugar that reads the runtime config's `db_url`.
+`--dir <runtime dir>`, the sugar that reads the runtime config's `db_url`, defaulting to the directory's `data/hub.db`
+or `data/host.db`.
 
 Run `uv run blizzard-mock-data reset --store hub --dir "$BZ_HUB_RUNTIME"` first whenever the store is not already
 known-clean.
@@ -52,17 +53,18 @@ uv run blizzard-mock-data scenario fleet --chunks 6 --seed 1 --hub-dir "$BZ_HUB_
 
 It names its two stores explicitly and separately, and neither half falls back to `$DATABASE_URL`. A `--dir`-family flag
 resolves only after `winter service up <env>` has brought that daemon up at least once, because the daemon's first start
-is what writes the `blizzard-hub.toml` or `blizzard-runner.toml` the flag reads `db_url` from. `--runner-dir` pins the
-runner's id from the runner store's identity row, which only the runner's first registration with that hub writes, and
-refuses a runner that has never registered. After a `reset --store hub`, the hub no longer knows the runner's token: run
-`winter service restart <env>/runner`, whose `runner init --allow-readd` adds the runner again under a new id, and seed
-once its log shows a `tick end`.
+is what writes the `blizzard-hub.toml` or `blizzard-host.toml` the flag reads `db_url` from. `--runner-dir` pins the
+runner's id from the host file's one `[[runner]] id`, which only `runner init`'s join with that hub writes, and refuses
+a host file with no runner, a runner with no `id`, or several runners. After a `reset --store hub`, the hub no longer
+knows the runner's token: run `winter service restart <env>/runner`, whose `runner init --allow-readd` adds the runner
+again under a new id, and seed once its log shows a `tick end`.
 
 Every row seeded into a runner store is stamped with its runner, as the runner's own writes are
 (`bzh:runner-scoped-store`). A row of a table carrying `runner_id`, `runner_identity` aside, takes the id
-`scenario fleet` pins, else the id the store's own identity row names. A runner store whose runner has never registered
-leaves those rows naming no runner, for the runner to stamp when it binds. A hub store's `runner_id` columns are data,
-never stamped.
+`scenario fleet` pins or a `--dir` host file names, else the id the store's own identity row names. A store whose
+`runner_id` is required refuses a seeded row with none of those; an older store leaves it naming no runner, for the
+tightening revision to stamp. Each outbox row takes its `seq` from the runner's lane in `outbox_counters`, advancing it
+in the same transaction. A hub store's `runner_id` columns are data, never stamped.
 
 Do not reach for `fixture list` or `fixture apply`: the named, versioned, cross-store scenario surface is still a stub,
 and `scenario board` and `scenario fleet` are the one-command preset surfaces that exist.

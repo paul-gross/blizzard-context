@@ -24,8 +24,8 @@ launching a worker, judge, or resume harness process instead of going through th
 plus `LC_*` plus `env_passthrough`, with identity variables (`BLIZZARD_LEASE_ID`, …) added explicitly per spawn; it also
 leads `PATH` with `[worker] path_prepend`'s configured directories, ahead of the daemon's own.
 
-**Don't.** `env=os.environ`, or a bare `env=dict(os.environ)` — either hands the child `BZ_HUB_TOKEN` and every other
-daemon secret.
+**Don't.** `env=os.environ`, or a bare `env=dict(os.environ)` — either hands the child the per-runner token
+(`BZ_HUB_TOKEN_<NAME>`) and every other daemon secret.
 
 ## Only the worker mutates git (`bzh:git-write-in-worker-seam`)
 

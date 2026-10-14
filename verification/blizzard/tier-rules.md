@@ -58,9 +58,9 @@ Before a statement executes, the guard refuses one that reaches a runner-scoped 
 - a select, update, or delete in which no condition scopes that table by a `runner_id` equality;
 - an insert into it with no `runner_id`.
 
-A statement marked runner-unscoped passes unwalked: only `HostStores'` two exempt members, the store's bind-to-stored
-identity read, and migrations carry the mark (`bzh:host-stores-confined`). Raw SQL is never walked, and only the value
-`1` switches the guard on; production leaves it off.
+A statement marked runner-unscoped passes unwalked: only `HostStores'` one exempt member, the runner audit, and
+migrations carry the mark (`bzh:host-stores-confined`). Raw SQL is never walked, and only the value `1` switches the
+guard on; production leaves it off.
 
 A refusal is the finding, as with the tenant guard. Only `tests/test_runner_statement_guard.py`, whose subject is the
 switch itself, starts a case without the guard (its `no_runner_guard` fixture). `tests/test_runner_store_isolation.py`,

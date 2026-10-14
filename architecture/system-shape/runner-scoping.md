@@ -17,18 +17,19 @@ carries no runner. How a table gains the key over rows it already holds is `bzh:
 **Rule.** A `runner/store/internal/` adapter holds `RunnerStoreConnections` and builds every statement on a
 runner-scoped table through its `select`, `exists`, `insert`, `update`, and `delete` builders, which apply the bound
 runner to every runner-scoped table they name. The runner is a property of the connections instance — bound once, from
-the identity row — never an argument an adapter method takes or a value a caller supplies.
+the host file's runner `id` — never an argument an adapter method takes or a value a caller supplies.
 
 **Why.** An adapter that never writes the runner predicate by hand cannot forget it, and a key the seam stamps is the
 binding the store was opened with rather than a value a caller can get wrong. Two runners sharing a store, or a store
 carried from one runner to another, then cannot read or overwrite each other's rows.
 
-**Scope.** The binding is set once and never changes (`RunnerAlreadyBound` refuses another id). A store whose identity
-row names a runner binds when the process graph is composed; one that names none binds when registration first adopts an
-id, in the identity write's own transaction, which also stamps every row naming no runner. Until bound, a runner-scoped
-read answers as an empty store and a runner-scoped write raises `RunnerUnbound`, so a writer that can run before
-registration holds off rather than writing an unowned row. How the binding and the stamps survive a crash is
-[../crash-correctness/runner.md](../crash-correctness/runner.md#binding-at-the-identity-row)'s to record.
+**Scope.** The binding is set once and never changes (`RunnerAlreadyBound` refuses another id). Every composition binds
+the stores to the configured runner's `id` before anything runs, the hub reachable or not: the host and tick graphs and
+the offline read verbs. The invariant checker reads across runners through the exempt `runner_audit`, so it takes no
+binding. The store never learns its runner from its own rows, and registration never adopts an id. A connection never
+bound reads a runner-scoped table as empty and refuses a write with `RunnerUnbound`, so no writer lands an unowned row.
+How the binding survives a crash is
+[../crash-correctness/runner.md](../crash-correctness/runner.md#binding-at-the-configured-id)'s to record.
 
 **Detect.** The runner statement guard — a `before_execute` listener
 (`blizzard/src/blizzard/runner/store/runner_guard.py`) the test suite switches on in every tier and production leaves
@@ -52,12 +53,13 @@ passing the wrong id reads another runner's leases.
 
 **Rule.** A host-scoped table is reached only through `HostStores` (`blizzard/src/blizzard/runner/stores.py`), whose
 members live in the `runner/store/internal/host_*.py` modules; no runner adapter names a host-scoped table, and no host
-adapter names a runner-scoped one. The members exempt from the runner statement guard are a closed list of two, each in
-its own module:
+adapter names a runner-scoped one. The member exempt from the runner statement guard is a closed list of one, in its own
+module:
 
-- `unowned_row_stamp` (`host_unowned_row_stamp.py`) — the start-up stamp, whose update matches rows by the absence of a
-  runner and so cannot carry a runner equality;
-- `runner_audit` (`host_runner_audit.py`) — the invariant checker's audit, which reads every runner's rows at once.
+- `runner_audit` (`host_runner_audit.py`) — the cross-runner reads, which cannot carry a runner equality: the invariant
+  checker's audit of every runner's rows at once, and the foreign-store question of which runners the store's identity
+  rows name, asked by `init` before any id is configured and by every verb that checks it: host start, `--check`, tick
+  and the transcript verbs.
 
 **Why.** A host table is a door around the runner boundary by design; keeping every such door on one named seam, with
 its exemptions a list a reviewer reads whole, turns "where can one runner's rows leak?" into a question with a short
@@ -67,15 +69,14 @@ answer.
 usage sample, a host row, and its outbound report, a runner row, in one transaction. Its host statement is authored in
 that host module and its outbound row is built through the runner builders, so the outbound row is stamped like any
 other. The runner-unscoped mark itself — `RUNNER_SCOPED_OPTION`, or the `blizzard_runner_unscoped` string it stands for
-— appears only in `runner/store/errors.py`, the guard, the two exempt members' modules, and runner migrations.
-`errors.py` declares the mark and uses it once, in `RunnerStoreConnections.bind_to_stored`: the read of
-`runner_identity` through which the store learns its runner. `blizzard/src/blizzard/tools/invariants.py` reaches the
-store through the `runner_audit` member, never by spelling the mark.
+— appears only in `runner/store/errors.py`, the guard, the exempt member's module, and runner migrations. `errors.py`
+declares the mark. `blizzard/src/blizzard/tools/invariants.py` reaches the store through the `runner_audit` member,
+never by spelling the mark.
 
 **Detect.** `test_host_tables_are_reached_only_through_the_host_stores` in `blizzard/tests/test_layering.py` fails the
 unit tier on a runner adapter naming a host-scoped table, a host adapter naming a runner-scoped one outside the admitted
 cross-kind write, and the runner-unscoped mark spelled anywhere outside its admitted modules;
-`test_host_store_check_catches_every_breach` proves it catches each form. By eye: a third exempt member, or a member
+`test_host_store_check_catches_every_breach` proves it catches each form. By eye: a second exempt member, or a member
 added for a read a bound adapter could serve.
 
 **Do.** The invariant checker's `runner:rows-name-registered-runner` reads every runner-scoped row through
