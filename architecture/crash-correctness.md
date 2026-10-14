@@ -127,14 +127,17 @@ durable invariants:
 - one live route per chunk;
 - no double delivery, with per-repo lands idempotent;
 - every derived status computable with exactly one match;
-- a gapless outbound-buffer sequence;
+- a gapless outbound-buffer sequence, per runner;
 - usage attributed exactly once per `(lease, generation, kind)`;
 - every source a chunk's work refs name is linked to the chunk's project, the originating ref by the instant the chunk
   was minted (`hub:chunk-sources-linked`);
 - every per-repository landing that names its repository record names one the chunk's project had linked when the
   landing was written (`hub:landed-repository-linked`);
-- every runner-scoped row names a runner the runner store's `runner_identity` records — a row naming no runner included,
-  since the start-up stamp runs before any recovery the checker runs after (`runner:rows-name-registered-runner`).
+- every runner-scoped row names a runner the runner store's `runner_identity` records
+  (`runner:rows-name-registered-runner`);
+- each runner's retained outbound and pending transcript-outbound seqs are gapless, per runner
+  (`runner:gapless-outbound-seq`, `runner:gapless-transcript-outbound-seq`);
+- no retained outbox row sits above its runner's counter in `outbox_counters` (`runner:outbox-counter-above-seq`).
 
 **Why.** Because both stores are facts-only (`bzh:facts-not-status`), the checker is essentially a library of SQL
 assertions plus the status-derivation queries themselves — and a failure names the exact violated invariant rather than
@@ -145,8 +148,8 @@ outcome.
 hub-scoped, one of the statement guard's named exemptions (`bzh:tenant-scoped-store`,
 [./system-shape/tenancy.md](./system-shape/tenancy.md)). A chunk, route, or epoch id is hub-minted, so an invariant
 keyed by one holds across tenants exactly as within one. The runner's checks reach its store through `HostStores`' audit
-member, one of the runner statement guard's two exempt members (`bzh:host-stores-confined`), and judge every runner's
-rows at once.
+member, the runner statement guard's one exempt member (`bzh:host-stores-confined`), and judge every runner's rows at
+once.
 
 **Detect.** A crash test that asserts only "the process restarted" or "the chunk eventually landed" without checking the
 facts-level invariants; a new durable invariant added to the design with no assertion in the checker.

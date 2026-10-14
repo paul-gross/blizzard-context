@@ -11,13 +11,18 @@ stable `bzh:` id in its heading.
 **Rule.** The hub store and the runner store each run on sqlite or postgres, selected by configuration, and neither
 daemon may depend on backend-specific behavior — in syntax or in result determinism. A select whose consumer depends on
 the result's row order — an index into it, a newest or oldest read — carries an explicit total `order_by` on the query
-itself; an unordered select is not made portable by passing on both backends.
+itself; an unordered select is not made portable by passing on both backends. A runner outbox row's `seq` comes from the
+runner's durable counter in `outbox_counters`, never from the backend's key generation: `insert_outbox_row`
+(`src/blizzard/runner/store/internal/base.py`) is the one place that inserts into `outbound_buffer` or
+`transcript_outbound_buffer`, advancing the counter in the row's transaction.
 
-**Why.** sqlite is the fast local default and what tests run against; postgres support is held by staying inside
-SQLAlchemy's portable surface, not by a second test matrix, so postgres costs a configuration switch and the local and
-CI loops stay cheap. On ordering, sqlite's incidental rowid order coincides with insertion order — a select missing a
-real `order_by` still comes back in write order, indistinguishable from deliberate ordering to any sqlite-backed test,
-and only postgres's unordered contract exposes the gap.
+**Why.** A bare sqlite key reuses a pruned row's rowid and a postgres sequence burns values, so a `seq` that came from
+either could be reissued below one a consumer already treated as final, or leave a gap; a counter that only moves
+forward behaves the same on both. sqlite is the fast local default and what tests run against; postgres support is held
+by staying inside SQLAlchemy's portable surface, not by a second test matrix, so postgres costs a configuration switch
+and the local and CI loops stay cheap. On ordering, sqlite's incidental rowid order coincides with insertion order — a
+select missing a real `order_by` still comes back in write order, indistinguishable from deliberate ordering to any
+sqlite-backed test, and only postgres's unordered contract exposes the gap.
 
 **Exception.**
 
@@ -29,19 +34,23 @@ and only postgres's unordered contract exposes the gap.
   (`hub/store/internal/chunk_rows.py`, `bzh:store-exclusive-write`) already serializes concurrent callers on — a row
   lock on a row already known to exist, portable across both backends, only its sqlite implementation running through
   the factory.
-- **The runner's outbound buffers.** `outbound_buffer` and the transcript lane's own `transcript_outbound_buffer` each
-  set `sqlite_autoincrement=True` on their `seq` primary key: a sqlite-only pragma admitted because the hazard it guards
-  is itself sqlite-only, so no portable equivalent exists. The hazard: both buffers prune acked rows past their own
-  retention window, and a bare sqlite `INTEGER PRIMARY KEY` reuses a pruned row's rowid, so a later insert could be
-  reissued a `seq` a consumer already treated as final. Postgres needs no equivalent: that column's `autoincrement=True`
-  compiles there to a sequence-backed `SERIAL`, which never reuses a deleted value, so the schema stays one portable
-  surface in effect. `tests/test_pin_runner_store.py` pins the sqlite autoincrement behavior for both buffers; no
-  postgres-side test exists because there is no postgres-side hazard to cover.
+- **Two runner tables that keep `sqlite_autoincrement=True`.** `in_flight_elicitations` and `host_outbound_buffer` set
+  it on their integer primary key: a sqlite-only pragma admitted because the hazard it guards is itself sqlite-only, so
+  no portable equivalent exists. The hazard: a bare sqlite `INTEGER PRIMARY KEY` reuses a deleted tail row's rowid.
+  `in_flight_elicitations` rows are deleted on collect and relaunch while `pause_parks.interrupted_elicitation_id` names
+  one by `id`, so a reissued id would point a park at another launch; `host_outbound_buffer` is the host's own fact lane
+  whose `seq` the hub de-duplicates against a mark of its own, so a reissued `seq` would read as already seen. Postgres
+  needs no equivalent: its `autoincrement=True` compiles to a sequence-backed `SERIAL`, which never reuses a value. The
+  runner outboxes (`outbound_buffer`, `transcript_outbound_buffer`) are not in this list — their `seq` comes from
+  `outbox_counters`. `test_dialect_table_options_are_all_admitted` in `tests/test_layering.py` fails a table that sets a
+  dialect-specific option without being named here.
 
 **Detect.** A dialect-specific column type, function, or `text()` SQL; a test asserting behavior only one backend gives;
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit
 total `order_by`; streaming (`yield_per`/`stream_results`) set on a connection rather than on one statement's execution
-— mechanically flagged by `contracts/ast-grep/rules/statement-scoped-streaming.yml`.
+— mechanically flagged by `contracts/ast-grep/rules/statement-scoped-streaming.yml`. An insert into `outbound_buffer` or
+`transcript_outbound_buffer` that goes around `insert_outbox_row` — `test_every_outbox_row_is_inserted_through_the_seam`
+in `tests/test_layering.py` fails it.
 
 **Do.** `ChunkFactsStore.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
 because the fact projection it reconstitutes carries the chunk's pause history and a consumer indexes that list's tail.

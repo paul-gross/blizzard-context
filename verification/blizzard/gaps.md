@@ -458,19 +458,38 @@ Standing in for a tier: the revision's own test, the adoption and name tests on 
 ## The runner key revision under Postgres
 
 The runner store runs on SQLite or Postgres by configuration (`bzh:sql-portable`), and every tier runs it on SQLite, so
-the runner key holds there by construction and stays unverified on Postgres:
+the runner key holds there by construction. The chain's runner-key revisions and the outbox counter have been executed
+by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what that run could not reach stays unverified:
 
 - **The runner scope revision.** `20261011_1000_runner_scope` (`src/blizzard/runner/store/migrations/versions/`) adds a
   nullable `runner_id` to every runner-scoped table but `runner_identity`, and backfills it from the store's identity
-  row in bounded batches. It has run on SQLite only, where each addition is a `batch_alter_table` rebuild; on Postgres
-  it becomes native `ALTER`s, and neither the backfill nor its downgrade has run there.
-- **The start-up stamp.** `stamp_unowned_rows` (`src/blizzard/runner/store/internal/host_unowned_row_stamp.py`) walks
-  each table along its primary key in bounded batches. That its batches cover every unowned row under Postgres's READ
-  COMMITTED snapshots, while a previous-release writer is still inserting, is unverified.
+  row in bounded batches. On SQLite each addition is a `batch_alter_table` rebuild; on Postgres it is native `ALTER`s.
+  The hand run took a populated store with an identity row down below it and back to head, so its backfill ran, and took
+  the chain's downgrades to base.
+- **The tightening revision.** `20261013_1000_runner_scope_tighten` stamps any row still lacking a runner, makes
+  `runner_id` `NOT NULL`, re-keys the tables and adds the unique constraints. The hand run executed it on Postgres over
+  a populated store with more outbound rows than one batch, compared the migrated schema with the one an empty store at
+  the parent shape migrates to, ran the invariant checker, and ran the down-and-up round trip, whose downgrade restores
+  the parent schema exactly, primary-key names included.
+- **The counter allocation.** `insert_outbox_row` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
+  lane under READ COMMITTED. Eight threads racing the first allocation of a new runner's lane were issued `1` through
+  `8`, with the counter at `8` and the invariants holding.
+- **The downgrade's probe check.** A store written past the probe's seq refuses the downgrade, naming the pre-migrate
+  backup, and the refusal leaves the schema and the counters unchanged. A store written only up to the probe downgrades,
+  and the restored autoincrement issues a seq above the counter's.
+- **A sequence gap.** The counter seed probes the outbox's own sequence, and a Postgres sequence burns values, so the
+  seed can sit above the highest seq a pending row holds and leave a gap above it. The seed is conservative, and the
+  hub's ingest tolerates a gap. It is accepted.
+- **The empty-store upgrade.** The runner chain cannot reach head on Postgres from an empty store: the Boolean
+  `server_default` in `20260920_0200_usage_cost_is_share.py` is `0`, which Postgres rejects. The hand run builds the
+  tightening revision's parent shape from `src/blizzard/runner/store/schema.py` as it stood then, so no revision below
+  `20261011_1000_runner_scope` has been upgraded on Postgres; only their downgrades have run. A fix to that revision
+  belongs to a change of its own.
 
-Standing in for a tier: the revision's migration test (`tests/test_runner_scope_migration.py`) and the stamp's component
-tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one
-above does.
+Standing in for a tier: the revisions' migration tests (`tests/test_runner_scope_migration.py`,
+`tests/test_runner_scope_tighten_migration.py`) and the seam's component tests on SQLite, and the portable SQL
+`bzh:sql-portable` holds each statement to. The hand run is not repeatable from a durable script, since the matrix
+carries the method and no driver. The gap closes as the tenancy one above does.
 
 ## What the project lens and the project columns do not cover
 

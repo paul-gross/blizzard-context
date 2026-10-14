@@ -75,9 +75,8 @@ The env's runner spawns the fenced mock harness (`tool:mock-fleet`), never a rea
 `tool:mock-data` only after the daemon's first start, and leave a seeded runner's local pause engaged;
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns why on both counts.
 
-Restart the env's runner — to pick up an edited `blizzard-runner.toml`, say — with
-`winter service restart <env>/runner`; `workspace:/context/project/local-instance.md` §Traps on this machine owns how to
-stop any other runner.
+Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — with `winter service restart <env>/runner`;
+`workspace:/context/project/local-instance.md` §Traps on this machine owns how to stop any other runner.
 
 **Steps.**
 
@@ -246,9 +245,9 @@ these response models is not in surface here — `blizzard-mock:unit-test`'s wir
 **Classifications.** Apply these tests in order and stop at the first that matches, so every occurrence has exactly one
 verdict:
 
-1. **Out of surface** — the `[external_subscription_usage]` key in `blizzard-runner.toml` or the code and prose reading
-   it, and the `external_subscription_usage.sampled` fact-kind string. These name a config table and a fact, not a wire
-   response; a retirement of the response shape never touches them.
+1. **Out of surface** — the `[external_subscription_usage]` key in a pre-host `blizzard-runner.toml` or the code and
+   prose reading it, and the `external_subscription_usage.sampled` fact-kind string. These name a config table and a
+   fact, not a wire response; a retirement of the response shape never touches them.
 2. **Retained** — a frozen migration's restated literal (`bzh:frozen-revisions`), current per-slug storage, or a test or
    scenario name naming the fact rather than the response.
 3. **Deleted** — everything else: a wire response type or field, a legacy projection, a fallback rendering path, or
@@ -625,36 +624,65 @@ earlier one.
 
 ### `blizzard:manual-store-copy-rehearsal`
 
-**Surface.** A runner store migration — a revision that reshapes or backfills live rows — run against a copy of a real
-runner directory's store before that runner is redeployed onto it. `blizzard:component-test` migrates stores the suite
-seeds itself; only a copy of a live store carries the rows, the history, and the previous releases' leftovers a real
-runner has accumulated. Run it before redeploying a runner onto a release that adds a runner revision, once per runner
-directory the redeploy touches.
+**Surface.** A runner store migration — a revision that reshapes or backfills live rows — and the host graduation
+conversion, run against a copy of a real runner directory before that runner is redeployed onto the release.
+`blizzard:component-test` migrates stores the suite seeds itself; only a copy of a live store carries the rows, the
+history, and the previous releases' leftovers a real runner has accumulated. Run it before redeploying a runner onto a
+release that adds a runner revision or graduates the directory, once per runner directory the redeploy touches.
 
 **Hazards.** The live store file is only ever read, by SQLite's backup API; nothing in the rehearsal opens it for
 writing, migrates it, or points a daemon at it. Every command after the copy names the scratch directory, never the live
-one.
+one. The scratch directory carries no `.env`, so no hub token leaves the live directory and nothing can reach a hub.
 
 **Setup.** A scratch virtualenv with the release's wheel installed (`uv venv`, then `uv pip install <wheel>`), so the
-rehearsal runs the migrations the release ships and not the live runner's installed ones. A scratch runtime directory
-holding a copy of the live directory's `blizzard-runner.toml`.
+rehearsal runs the migrations the release ships and not the live runner's installed ones. A scratch directory holding a
+copy of the live directory's `blizzard-runner.toml` and an empty `data/`.
 
 **Steps.**
 
 1. Take a WAL-consistent copy of the live store into the scratch directory with SQLite's backup API —
-   `sqlite3 <live dir>/data/runner.db ".backup '<scratch dir>/data/runner.db'"` — never a file copy, which can miss
-   pages still in the WAL.
-2. Repoint the copy's `db_url` in the scratch `blizzard-runner.toml` at `<scratch dir>/data/runner.db`, or remove the
-   key so it resolves there by default.
-3. Migrate the copy from the scratch install: `blizzard runner migrate --dir <scratch dir>`.
-4. Check its invariants: `blizzard dev check-invariants --runner-dir <scratch dir>`.
-5. Run the downgrade and upgrade round trip:
+   `sqlite3 -readonly <live dir>/data/runner.db ".backup '<scratch dir>/data/runner.db'"` — never a file copy, which can
+   miss pages still in the WAL. `-readonly` keeps the shell from checkpointing the live WAL when it closes.
+2. Convert the scratch directory as the release's `docs/upgrade.md` §Host graduation boundary does at its
+   file-conversion step: write `blizzard-host.toml` from the copied `blizzard-runner.toml`, with the one `[[runner]]`
+   carrying the `id` the page's step 6 names, a `db_url` naming the live directory's store dropped so the default
+   `data/host.db` applies, and no `token_env`; then rename the copied file to `blizzard-runner.toml.graduated`. The
+   conversion is the procedure under rehearsal, so a step that does not work as the page words it is a finding against
+   the page. This method departs from the page in one place, deliberately: it is a matrix check on scratch copies with
+   no hub, so it does not run `blizzard runner host --check`, which resolves each token at a hub. The page is the
+   operator's deploy rehearsal and runs it.
+3. Check the copy for duplicate identities, which the tightening revision's unique constraints refuse. The revision
+   stamps a `hub_control` row naming no runner with the newest identity before the constraint applies, so the second
+   query counts such a row as that runner's:
+
+   ```bash
+   sqlite3 <scratch dir>/data/runner.db \
+     'select runner_id, count(*) from runner_identity group by runner_id having count(*) > 1'
+   sqlite3 <scratch dir>/data/runner.db \
+     'select coalesce(runner_id, (select runner_id from runner_identity order by id desc limit 1)) as owner, count(*)
+      from hub_control group by owner having count(*) > 1'
+   ```
+
+   A store below `20261011_1000_runner_scope` has no `hub_control.runner_id`; count its `hub_control` rows instead, more
+   than one being the same finding. Neither may return a row; a row returned is a finding against the live store, and
+   the migration is not attempted until it is understood. Also record the copy's AUTOINCREMENT counters, which a table
+   rebuild can reset: `sqlite3 <scratch dir>/data/runner.db 'select name, seq from sqlite_sequence order by name'`.
+4. Migrate the copy from the scratch install: `blizzard runner migrate --dir <scratch dir>`. It adopts `data/runner.db`
+   as `data/host.db` and applies the pending revisions.
+5. Check its invariants: `blizzard dev check-invariants --runner-dir <scratch dir>`.
+6. Run the downgrade and upgrade round trip:
    `blizzard runner migrate --dir <scratch dir> --down <the revision's parent>`, then
    `blizzard runner migrate --dir <scratch dir>` again, then check invariants once more.
+7. Read `sqlite_sequence` again, from `data/host.db`, after the upgrade and after the round trip. After the upgrade, the
+   one table that stays AUTOINCREMENT, `in_flight_elicitations`, is not below its recorded value; the outboxes keep
+   their counters in `outbox_counters` instead and have no row. After the round trip, every table recorded is back and
+   none is below its recorded value.
 
-**Passes when.** Each migration exits 0, and both invariant checks exit 0, with every write having landed in the scratch
-directory. A revision whose backfill leaves rows for the runner to stamp at its next start, such as rows in a store
-whose runner never registered, is checked once that start has run rather than straight after the migration.
+**Passes when.** Each migration exits 0, the duplicate check returns no row, both invariant checks exit 0, and no
+`sqlite_sequence` value is below its pre-migrate value, with every write having landed in the scratch directory. A
+refusal naming the missing identity row is a store whose runner never registered, and is reported rather than worked
+around. `blizzard runner host --check` resolves each token at a real hub, which the scratch directory has none of, so it
+stays the deploy's own rehearsal.
 
 ### `blizzard:manual-fleet-read-latency`
 
@@ -1022,6 +1050,47 @@ the hub at it with `BZ_HUB_DB_URL='postgresql+psycopg://@/hub?host=<socket dir>&
 `alembic_version` empty and no other table; step 3 reports the head revision; and a step 4 backfill leaves no row
 unfilled and its column required.
 
+### `blizzard:manual-postgres-runner-migrations`
+
+**Surface.** The runner store's migration chain, driven by `blizzard runner migrate --dir` against a throwaway local
+Postgres cluster. Every tier runs the runner store on SQLite; this is the one place its tightening revision, its outbox
+counters, and the downgrade's probe check run where DDL is transactional and a sequence never reuses a value.
+
+**Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on loopback (`initdb -A trust`, `pg_ctl` on a
+private port, `createdb`), and every `blizzard` command run under `uv run --no-sync --with 'psycopg[binary]==3.3.4'`. A
+scratch host directory scaffolded by `Runtime.init`, its `blizzard-host.toml` `db_url` set to the cluster. The chain
+cannot reach head on Postgres from an empty store, because `20260920_0200_usage_cost_is_share.py` sets a Boolean
+`server_default` of `0`, which Postgres rejects. Seed the parent revision's shape instead: create the tables of
+`src/blizzard/runner/store/schema.py` as it stood before the tightening revision was added
+(`git show <commit before it>:src/blizzard/runner/store/schema.py`, its `metadata.create_all` against the cluster), then
+create `alembic_version` with a `VARCHAR(255)` `version_num`, since the revision ids outrun Alembic's default width, and
+stamp it `20261011_1000_runner_scope`.
+
+**Steps.**
+
+1. From the seeded parent shape, `blizzard runner migrate --dir <dir>` to head, `--down` to the parent, and `migrate`
+   again. Compare the schema the downgrade leaves with the seeded one, primary-key names included, and the schema after
+   the second `migrate` with the first.
+2. `--down` to the parent, seed a populated store — an identity row, a row naming no runner in every keyed table, and
+   more outbox rows than one batch with the newest pruned — and `migrate`. Read each lane's counter in
+   `outbox_counters`, count rows still naming no runner, compare the schema with step 1's head, and run
+   `blizzard dev check-invariants`.
+3. Through the store's own seam, write the next outbox row and expect the seq above the counter. Then race eight threads
+   on the first allocation of a second runner's lane and expect `1` through `8`, the counter at `8`, and the invariants
+   holding.
+4. Write once more, then `--down` to the parent and expect the refusal naming the pre-migrate backup, with the revision,
+   schema and counters unchanged.
+5. Prune back to the probe's seq, reset the counter to it, and `--down`: it succeeds, and a row inserted through the
+   restored autoincrement gets a seq above the counter. `migrate` again and check the invariants.
+6. `--down` to `20261009_1000_runner_lease_closures_lease_id_index`, below the runner scope revision, and `migrate`: the
+   populated store with its identity row reaches head again, every runner-scoped row naming that runner. Then
+   `--down base`, which leaves no revision.
+
+**Passes when.** Every step behaves as stated, with no cursor, `executemany`, or dependent-object error, and the
+invariant checks return no violation. The method needs a driver that seeds rows through `tests/runner_scope_seeding.py`
+and reads the schema by reflection; the matrix does not carry one, so each run writes its driver from this description,
+and `gaps.md` records what has been covered.
+
 ### `blizzard:manual-live-routine`
 
 **Surface.** A garden routine run end to end by a real-harness runner against an env-local hub — the path no mock
@@ -1042,13 +1111,13 @@ with a routine's charge.
   against fixture origins that hold no real commit, and rejects every delta.
 - The verification runner has its own runtime directory, joined to the env-local hub with
   `blizzard runner init <dir> --hub <env-local hub url>`, which adds it there and writes its token to `<dir>/.env`. Then
-  set `name`, `workspace_envs` to the dedicated env, `max_agents = 1`, `[worker] path_prepend` to the mise shims, and
-  `[opencode] enabled = false`, with `BZ_HARNESS_BINARY` set to the real harness and `base_branch` set to the branch
-  under test. It starts from a clean environment, never the env band, so no mock fence reaches the real harness. The
-  runner resets the dedicated env to `base_branch` on every acquire; a branch already checked out in another env's
-  worktree cannot be that base, so name a remote-tracking ref that only the verification needs
-  (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its own main, so the ref
-  is set only in the repo under test.
+  set the `[[runner]]`'s `name`, the `[[workspace]]`'s `envs` to the dedicated env, the runner's binding to
+  `agents = 1`, `[worker] path_prepend` to the mise shims, and `[opencode] enabled = false`, with `BZ_HARNESS_BINARY`
+  set to the real harness and `base_branch` set to the branch under test. It starts from a clean environment, never the
+  env band, so no mock fence reaches the real harness. The runner resets the dedicated env to `base_branch` on every
+  acquire; a branch already checked out in another env's worktree cannot be that base, so name a remote-tracking ref
+  that only the verification needs (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls
+  back to its own main, so the ref is set only in the repo under test.
 - The delta run needs a baseline that both carries the command under test and leaves changed functions with mutants. An
   older commit alone cannot: it may predate the command, or the range may change only functions the method cannot see.
   Build the base as an older commit with the command's own commit cherry-picked onto it, and confirm with a direct run
