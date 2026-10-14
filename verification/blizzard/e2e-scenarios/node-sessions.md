@@ -46,9 +46,9 @@ saving and none is asserted. Both functions fail under mutation — disabling th
 digest fails only the announcement one — so neither passes vacuously.
 
 - `test_resumed_node_entry_announces_a_replaced_workspace_prompt` — the correctness half: an operator replaces the
-  workspace prompt through the live `PUT /api/workspace-prompt` door between the two entries, and the second spawn leads
-  with the updated-since-your-previous-turn announcement, carries the new prose, drops the superseded prose, and keeps
-  layer 1 collapsed.
+  workspace prompt through the live `PUT /api/host/workspaces/{workspace_id}/prompt` door between the two entries, and
+  the second spawn leads with the updated-since-your-previous-turn announcement, carries the new prose, drops the
+  superseded prose, and keeps layer 1 collapsed.
 - `test_resumed_node_entry_elides_unchanged_standing_layers` — the efficiency half: with both standing layers unchanged
   between the two entries, the resumed spawn collapses them to a single line, re-sends neither, announces nothing, and
   still carries its own freshly minted lease id with the previous attempt's absent.

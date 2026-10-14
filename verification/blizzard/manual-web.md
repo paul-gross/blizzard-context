@@ -41,7 +41,7 @@ ingest path.
    this gesture yields this rendered result and this change in the hub's state.
 2. Seed or drive the hub into that state.
 3. Open the view that carries the change and confirm it renders the stated result, with no error in the browser console
-   and no failed `/api` request in the network log.
+   and no failed `/api` or `/runners` request in the network log.
 4. Perform each changed gesture, confirm the rendered result, then read the effect back from the hub itself —
    `GET /api/chunks/<chunk-id>` or `uv run blizzard hub status` from `<env>/blizzard` — so a control that only repaints
    the page does not pass.
@@ -60,8 +60,9 @@ BOARD and EVENTS tabs render from the runner's machine-local state, and what a g
 a fleet seed itself renders coherently beside the board is
 [`blizzard-mock:manual-seeded-fleet`](./manual-mock.md#blizzard-mockmanual-seeded-fleet)'s.
 
-**Setup.** The shared preamble above; the panel is at `http://localhost:${BZ_RUNNER_WEB_PORT}/`. Seed the runner store
-with `tool:mock-data`'s `scenario fleet`, after the daemons are up —
+**Setup.** The shared preamble above; the panel is at `http://localhost:${BZ_RUNNER_WEB_PORT}/`, the host page, and each
+runner's pages — `board`, `board/chunk/<chunk-id>`, `events`, and `machine` — are under `/runners/<id>/`. Seed the
+runner store with `tool:mock-data`'s `scenario fleet`, after the daemons are up —
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) §Seeding both stores together owns the command and
 why the order matters.
 
@@ -76,9 +77,10 @@ why the order matters.
 4. Wait one tick — 30 seconds by default, `tick end` in the runner's log — and confirm the view still renders the stated
    result: the daemon reconciles its store every tick, and a panel correct only until then does not pass.
 5. Perform each changed gesture, confirm the rendered result, then read the effect back from the runner itself with
-   `curl -fs "http://127.0.0.1:$BZ_RUNNER_PORT/api/dashboard"`. Do not clear a seeded runner's local pause as a gesture
-   unless the pause control is what changed — [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md)
-   §Seeding an env whose daemons are up owns what that one click sets off.
+   `curl -fs "http://127.0.0.1:$BZ_RUNNER_PORT/runners/<id>/api/dashboard"`. Do not clear a seeded runner's local pause
+   as a gesture unless the pause control is what changed —
+   [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) §Seeding an env whose daemons are up owns what
+   that one click sets off.
 6. For a visual change, take the screenshot [`./tier-rules.md`](./tier-rules.md) (`bzh:visual-change-needs-a-render`)
    admits as evidence, at each width the claim names.
 7. Keep the observations — the view's URL, the seed command, screenshots, the read-back output — with the change under

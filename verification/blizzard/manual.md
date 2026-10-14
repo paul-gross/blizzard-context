@@ -71,6 +71,10 @@ the runner answers on:
 curl -fs "http://127.0.0.1:$BZ_RUNNER_PORT/api/health"
 ```
 
+The port serves a runner host. Its root carries only the host's routes — `/api/health`, `/api/ready`, `/api/auth/*`,
+`GET /api/events/stream`, and `/api/host/*` — and each runner's own routes answer under `/runners/<id>/`. Take the env's
+runner id from `GET /api/host/runners`; the steps below write it `<id>`.
+
 The env's runner spawns the fenced mock harness (`tool:mock-fleet`), never a real one. Seed its store with
 `tool:mock-data` only after the daemon's first start, and leave a seeded runner's local pause engaged;
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns why on both counts.
@@ -83,14 +87,18 @@ Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — 
 1. State the changed behavior as an observable: this request, against this runner state, yields this response.
 2. Seed or drive the runner into that state — a seed for a read, a chunk walked through the env's hub
    (`blizzard:manual-hub`'s loop walk) for behavior only a live lease shows.
-3. Drive the behavior with `curl` against `http://127.0.0.1:$BZ_RUNNER_PORT/api/…`. The app repo's
-   `openapi/runner.openapi.json` carries every route and its shapes.
+3. Drive the behavior with `curl` against `http://127.0.0.1:$BZ_RUNNER_PORT/runners/<id>/api/…`, or the root's
+   `/api/host/…` for a host read. The app repo's `openapi/runner.openapi.json` carries every route and its shapes.
 4. Account for the tick: the daemon reconciles its store on every tick — 30 seconds by default, `tick end` in the
    runner's log — so re-read after one, and treat a row that changes across it as the daemon's doing rather than the
    request's.
 5. Confirm it through a second surface — `uv run blizzard runner status --runner-url "http://127.0.0.1:$BZ_RUNNER_PORT"`
-   from `<env>/blizzard`, `GET /api/dashboard`, or, for a read, the seed or the drive that put the state there — and
-   keep the commands run and their output with the change under verification.
+   from `<env>/blizzard`, `GET /runners/<id>/api/dashboard`, or, for a read, the seed or the drive that put the state
+   there — and keep the commands run and their output with the change under verification.
+
+`--runner-url` and `--dir` name the host. The verbs that reach a runner — `pause`, `start`, `status`, `takeover`,
+`requeue`, `selftest`, and `traces status`/`traces replay` — take `--runner <name|id>` to pick one; on a host of one
+they pick its runner when it is omitted.
 
 The CLI verbs whose help is labeled **Worker:** resolve their lease from a spawned worker's environment, so they are
 exercised by a worker the runner spawns, not typed by hand.
@@ -113,9 +121,9 @@ blizzard hub init <dir> && blizzard hub host --dir <dir> --port <p>
 blizzard runner init <dir> --hub <hub-url> && blizzard runner host --dir <dir> --port <p>
 ```
 
-The probe is not hub-only — the runner serves the identical stream shape at its own `GET /api/events/stream` — so a run
-probes one daemon at a time. The runner's `init` adds it at a hub, though, so probing the runner needs a hub answering
-at `<hub-url>`; one on `auth.mode = "none"` needs no sign-in.
+The probe is not hub-only — the runner host serves the identical stream shape at its root `GET /api/events/stream` — so
+a run probes one daemon at a time. The runner's `init` adds it at a hub, though, so probing the runner needs a hub
+answering at `<hub-url>`; one on `auth.mode = "none"` needs no sign-in.
 
 **Steps.**
 
@@ -323,8 +331,9 @@ real CLI command; the env-local runner API check below proves that command's end
    `OPENCODE_CONFIG_CONTENT` use absolute snapshot paths, since OpenCode resolves them against the worker cwd. Each
    independent setting survives and the runner's `permission.question` remains `deny`.
 2. Launch a fresh real worker turn that uses a permitted tool and attempts both an operator-denied tool and `question`.
-   Read the tool/permission events and plugin instrumentation, including the runner heartbeat endpoint: denied calls are
-   refused without waiting, each plugin loads once, and exactly one heartbeat arrives for each completed tool call.
+   Read the tool/permission events and plugin instrumentation, including the runner heartbeat endpoint under
+   `/runners/<id>/api/`: denied calls are refused without waiting, each plugin loads once, and exactly one heartbeat
+   arrives for each completed tool call.
 3. Resume the same session, send a nudge, run a judgement and invoke a child `task` session. For each invocation compare
    the adapter's effective environment, resolved config, plugin execution count and heartbeat count to the tool events.
 4. Introduce a collision with `question` and separately with the runner plugin in the operator bundle; attempt startup
@@ -538,7 +547,7 @@ Part (b), through a real runner, with `blizzard:manual-live-node`'s setup and `[
 6. Run a node. The lease's heartbeat advances, the node's judgement runs, and the transcript shows the operator-denied
    tool refused.
 7. Point the runner at a managed-settings fixture holding a conflicting key through its injected search path, and read
-   `GET /api/harness-health`: Claude Code is unavailable with `config_conflict`.
+   `GET /runners/<id>/api/harness-health`: Claude Code is unavailable with `config_conflict`.
 
 **Passes when.** Every step's observation holds in every mapped permission mode, and step 2's measurement is recorded
 with the outcome that fixes the ambient rule table's user and project rows.
@@ -1127,8 +1136,8 @@ with a routine's charge.
 
 1. Start a run with `blizzard hub routine run --mode full` with the runner's `base_branch` at an older commit, and, once
    it ends, `--mode delta` with `base_branch` moved to the branch under test, so the delta has a real diff to narrow to.
-2. While a run is live, read the verification runner's lease activity on its API on a cadence shorter than the staleness
-   threshold; note the largest gap between heartbeats.
+2. While a run is live, read the verification runner's lease activity on its API, `GET /runners/<id>/api/leases`, on a
+   cadence shorter than the staleness threshold; note the largest gap between heartbeats.
 3. Read the terminal state, findings, proposals, and measurement back through the operator CLI (`routine sweeps`, the
    findings and proposals verbs), never the store.
 4. Capture the run's transcript: the longest single tool call, and the exact arguments the survey passed to any command
@@ -1163,8 +1172,8 @@ harness and a `base_branch` — without its delta-baseline precondition. Add:
 
 1. Ingest the work item and let the chunk reach the node's predecessor with a real declared commit.
 2. Restart it onto the node: `blizzard hub chunk restart --to-graph <graph> --node <node>`.
-3. While the node runs, read the runner's lease activity on its API on a cadence shorter than the staleness threshold;
-   note the largest gap between heartbeats.
+3. While the node runs, read the runner's lease activity on its API, `GET /runners/<id>/api/leases`, on a cadence
+   shorter than the staleness threshold; note the largest gap between heartbeats.
 4. Read the node's published asset back through the operator CLI, never the store, and check it against what the node's
    prompt owes.
 5. Let the chunk take its edge, read the next node's own output for what it did with the asset, then stop the chunk.
