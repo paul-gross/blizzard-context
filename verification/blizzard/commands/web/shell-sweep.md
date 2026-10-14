@@ -45,6 +45,14 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `app-nav.shell-sweep.spec.ts` covers the runner's top tab strip (`AppNav`). Its `KitTabStrip`/`KitTab` chrome carries
   no `@container` rule, so the claim is narrower: from 1400px to 320px both static labels render and the strip never
   overflows its own width.
+- `host-page.shell-sweep.spec.ts` covers the runner panel's host page (`/`): a host of two runners — one halted with a
+  long reason — and two workspaces whose held environments name their runner and project, with subscriptions naming
+  their spenders. The three panels sit side by side at desktop width and stack at phone widths (the
+  `@media (max-width: 900px)` grid collapse jsdom cannot evaluate), with no horizontal overflow and every runner link
+  on-screen.
+- `runner-switcher.shell-sweep.spec.ts` covers the runner switcher in the mobile chrome: a host's worth of long-named,
+  braked runners scroll inside the row rather than widen it, and the active runner's chip stays hit-testable, at phone
+  widths and up to a desktop width.
 - `glance-view.shell-sweep.spec.ts` covers the mobile glance board at 390px and 320px: its attention, motion, queue, and
   completed-work sections remain ordered vertically, and the board has no horizontal overflow or page error.
 - `events-scroll.shell-sweep.spec.ts` checks that a long events feed scrolls within its bounded rows at desktop and
