@@ -25,8 +25,8 @@ operator-plane transcript endpoint instead of its own store or the runner-scoped
 **Do.** Serve a runner-context transcript read from the runner's own store, keyed
 `(chunk_id, node_id, epoch,
 generation)` (`blizzard/src/blizzard/runner/store/schema.py:486`). The node-grouped read is
-served by the runner-plane `GET /api/chunks/{chunk_id}/transcripts` segment index and
-`GET /api/chunks/{chunk_id}/transcripts/{segment_id}` content route
+served by the runner-plane `GET /runners/{runner_id}/api/chunks/{chunk_id}/transcripts` segment index and
+`GET /runners/{runner_id}/api/chunks/{chunk_id}/transcripts/{segment_id}` content route
 (`blizzard/src/blizzard/runner/api/transcript_segments.py`), resolved through
 `TranscriptService.segments_for_chunk`/`segment_content` (`blizzard/src/blizzard/runner/transcripts/service.py:104,111`)
 — the same seam `for_lease` resolves behind, never a second resolution path. A cross-lease read instead goes through the

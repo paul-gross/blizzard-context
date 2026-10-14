@@ -94,7 +94,7 @@ un-instructed node is rejected at the fence, with no fallback left to land on.
 threads:
 
 - `BLIZZARD_LEASE_ID` — the lease the declaration is recorded against.
-- `BLIZZARD_RUNNER_URL` — the runner API it posts to.
+- `BLIZZARD_RUNNER_URL` — the runner API it posts to, `http://<host>:<port>/runners/<runner_id>`.
 - `BLIZZARD_LEASE_TOKEN` — the lease's capability token, sent as `X-Blizzard-Lease-Token` when present.
 
 A prompt names only the declaration's own content flags (`--name`, or `--repo`/`--branch`/`--commit`).

@@ -93,14 +93,15 @@ runner's own emission and buffering is proven at the unit and component tiers.
 real `blizzard-runner host` subprocess observed through a real browser on the served panel, nothing stubbed.
 
 **Transcripts.** `test_transcript_is_read_back_through_the_runner_http_api` drives a chunk through the real fleet, then
-reads `GET /api/leases` and `GET /api/leases/{lease_id}/transcript` off the runner's own local HTTP API — real turn
-kinds with `tool_output` populated, the `Bash` turn's output cross-checked against the real commit sha off the bare
-origin, unsatisfiable by a fixture. `test_a_closed_leases_transcript_resolves_to_the_hub_through_the_runner_api` walks
-the route's three provenance homes against a real `build_hosted_app` daemon: `"local"` while the lease is open,
-`"archived"` once the mock hub holds its segments — still `"archived"` after the local file is deleted mid-run — and
-`hub_unreachable: true` once the mock-hub subprocess is gone. That closed-lease walk is the only real-counterpart drive
-of the runner's outbound fleet-plane read; the unit tier binds a stubbed transport, and
-`test_transcript_segments_service.py` drives the hub-side route with raw httpx.
+reads `GET /runners/{runner_id}/api/leases` and `GET /runners/{runner_id}/api/leases/{lease_id}/transcript` off the
+runner's own local HTTP API — real turn kinds with `tool_output` populated, the `Bash` turn's output cross-checked
+against the real commit sha off the bare origin, unsatisfiable by a fixture.
+`test_a_closed_leases_transcript_resolves_to_the_hub_through_the_runner_api` walks the route's three provenance homes
+against a real `build_hosted_app` daemon: `"local"` while the lease is open, `"archived"` once the mock hub holds its
+segments — still `"archived"` after the local file is deleted mid-run — and `hub_unreachable: true` once the mock-hub
+subprocess is gone. That closed-lease walk is the only real-counterpart drive of the runner's outbound fleet-plane read;
+the unit tier binds a stubbed transport, and `test_transcript_segments_service.py` drives the hub-side route with raw
+httpx.
 
 **The OAuth login dance** (`test_auth_login_service.py`) is proven only at this tier: a running hub under
 `auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` stub IdP (`tool:mock-fleet`, `blizzard-mock-idp` —

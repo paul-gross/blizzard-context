@@ -65,11 +65,11 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   and unit-tier coverage is `tests/test_intended_migration_apply.py`, `tests/test_chunk_edit_api.py`, and
   `tests/test_hub_cli_chunk.py`, since e2e's `test_migration_e2e.py` exercises only the authored-choice migration.
 - `attach.`, the worker artifact-attach durability window armed on the runner, is swept by
-  `test_kill9_at_attach_crash_point`: the runner's local `POST /api/leases/{id}/attachments` records the attachment in
-  one committed txn, the kill lands in the after-record-before-response window, and the durable row with full provenance
-  is still readable via `attachments_for_lease` after an unarmed restart. `attach.` is an out-of-band HTTP write no loop
-  step drives, so its scenario stands up a real runner daemon alone — no hub, no forge — seeding a parked lease and its
-  capability token, the invariant checker running over the runner store only.
+  `test_kill9_at_attach_crash_point`: the runner's local `POST /runners/{runner_id}/api/leases/{id}/attachments` records
+  the attachment in one committed txn, the kill lands in the after-record-before-response window, and the durable row
+  with full provenance is still readable via `attachments_for_lease` after an unarmed restart. `attach.` is an
+  out-of-band HTTP write no loop step drives, so its scenario stands up a real runner daemon alone — no hub, no forge —
+  seeding a parked lease and its capability token, the invariant checker running over the runner store only.
 - `declare-commit.`, the worker git-commit declaration's record-before-response window armed on the runner, is swept by
   `test_kill9_at_declare_commit_crash_point`: `attach.`'s sibling on the runner's out-of-band declare endpoint, standing
   up a real runner daemon alone the same way, the kill landing right after the declaration is recorded, the declaration

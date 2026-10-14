@@ -35,9 +35,9 @@ fleet-tier worker fires its own hooks; semantics owned at `src/blizzard_mock/har
 also mints a real Claude-Code-shaped JSONL transcript per run; the mechanism, and why codex/opencode mint nothing, is
 owned at `src/blizzard_mock/harness/README.md` §"Conversation transcripts". It also answers the runner selftest's prose
 prompts, keyed on the selftest's lease identity; the contract is owned at `src/blizzard_mock/harness/README.md` §"Runner
-selftest". A scenario can therefore assert `GET /api/leases/{lease_id}/transcript` serves turns from a mock-produced
-file — at `blizzard:service-test`, which reaches the runner's local HTTP API without `blizzard:e2e`'s delivery/browser
-machinery.
+selftest". A scenario can therefore assert `GET /runners/{runner_id}/api/leases/{lease_id}/transcript` serves turns from
+a mock-produced file — at `blizzard:service-test`, which reaches the runner's local HTTP API without `blizzard:e2e`'s
+delivery/browser machinery.
 
 The stub OAuth IdP (blizzard-mock-idp) login-dances the hub's `hub/auth/oauth/` seam over a real wire with no tokens or
 network: both provider shapes (OIDC and github-style) at one origin, no login UI (authorize redirects straight back with
