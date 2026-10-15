@@ -486,6 +486,9 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
 - **A sequence gap.** The counter seed probes the outbox's own sequence, and a Postgres sequence burns values, so the
   seed can sit above the highest seq a pending row holds and leave a gap above it. The seed is conservative, and the
   hub's ingest tolerates a gap. It is accepted.
+- **The host-ingests revision.** `20261015_1000_host_ingests` creates the empty host-scoped `host_ingests` table and its
+  downgrade drops it. It has not been executed on Postgres; it creates one table of portable column types and writes no
+  data.
 - **The empty-store upgrade.** The runner chain cannot reach head on Postgres from an empty store: the Boolean
   `server_default` in `20260920_0200_usage_cost_is_share.py` is `0`, which Postgres rejects. The hand run builds the
   tightening revision's parent shape from `src/blizzard/runner/store/schema.py` as it stood then, so no revision below
@@ -493,9 +496,9 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
   belongs to a change of its own.
 
 Standing in for a tier: the revisions' migration tests (`tests/test_runner_scope_migration.py`,
-`tests/test_runner_scope_tighten_migration.py`) and the seam's component tests on SQLite, and the portable SQL
-`bzh:sql-portable` holds each statement to. The hand run is not repeatable from a durable script, since the matrix
-carries the method and no driver. The gap closes as the tenancy one above does.
+`tests/test_runner_scope_tighten_migration.py`, `tests/test_runner_host_ingests_migration.py`) and the seam's component
+tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand run is not repeatable from a
+durable script, since the matrix carries the method and no driver. The gap closes as the tenancy one above does.
 
 ## What the project lens and the project columns do not cover
 

@@ -9,9 +9,12 @@ A runner store holds two kinds of table. A **runner-scoped** table, declared `in
 `blizzard/src/blizzard/runner/store/schema.py`, holds one runner's rows and carries `runner_id`, the hub-minted id its
 `runner_identity` row names. A **host-scoped** table holds facts about the machine and its runtime directory — the
 workspace prompt, the graph-artifact mirror, the token replay cache, daemon liveness, external usage samples, and a
-registered host's own identity at its hub (`host_identity`), its own fact lane (`host_outbound_buffer`) and the mark its
-hub last answered on that lane (`host_high_water_seen`) — and carries no runner. How a table gains the key over rows it
-already holds is `bzh:keyed-table-migration`'s, in [../../standards/persistence.md](../../standards/persistence.md).
+registered host's own identity at its hub (`host_identity`), its own fact lane (`host_outbound_buffer`), the mark its
+hub last answered on that lane (`host_high_water_seen`), and the runners it took in from other stores (`host_ingests`) —
+and carries no runner key. Each host table also declares how a runner transfer treats its rows
+(`info={"transfer": ...}`), which `blizzard/tests/test_runner_store_schema_declarations.py` holds every host table to.
+How a table gains the key over rows it already holds is `bzh:keyed-table-migration`'s, in
+[../../standards/persistence.md](../../standards/persistence.md).
 
 ## Adapters hold the bound seam (`bzh:runner-scoped-store`)
 
@@ -31,7 +34,11 @@ binding. The store never learns its runner from its own rows, and registration n
 bound reads a runner-scoped table as empty and refuses a write with `RunnerUnbound`, so no writer lands an unowned row.
 A locked write that spans several runners' bound adapters through a domain-held handle — the usage-limit brake reaching
 every spender of a subscription — is admitted: the handle carries no `Connection`, and each statement is still built by
-its own adapter's binding, so it stamps that adapter's runner. How the binding survives a crash is
+its own adapter's binding, so it stamps that adapter's runner. So is a runner transfer, which copies one runner's rows
+from one store into another and deletes them from one store: its adapter
+(`blizzard/src/blizzard/runner/store/internal/runner_transfer_store.py`) binds both stores' connections to the moving
+runner and builds every statement through them, iterating the schema's runner-scoped tables rather than a list of its
+own. How the binding survives a crash is
 [../crash-correctness/runner.md](../crash-correctness/runner.md#binding-at-the-configured-id)'s to record.
 
 **Detect.** The runner statement guard — a `before_execute` listener
@@ -69,13 +76,17 @@ module:
 its exemptions a list a reviewer reads whole, turns "where can one runner's rows leak?" into a question with a short
 answer.
 
-**Scope.** One cross-kind write is admitted: `record_external_usage_attempt` (`host_external_usage_store.py`) writes a
+**Scope.** Two cross-kind writes are admitted. `record_external_usage_attempt` (`host_external_usage_store.py`) writes a
 usage sample, a host row, and its outbound report, a runner row, in one transaction. Its host statement is authored in
 that host module and its outbound row is built through the runner builders, so the outbound row is stamped like any
-other. The runner-unscoped mark itself — `RUNNER_SCOPED_OPTION`, or the `blizzard_runner_unscoped` string it stands for
-— appears only in `runner/store/errors.py`, the guard, the exempt member's module, and runner migrations. `errors.py`
-declares the mark. `blizzard/src/blizzard/tools/invariants.py` reaches the store through the `runner_audit` member,
-never by spelling the mark.
+other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
+transaction, through one handle that carries no `Connection` to the domain: the runner half is built by the transfer
+adapter's binding, and the host half by the `host_ingests` member (`host_ingest_store.py`), which merges the host rows
+by each table's declared treatment and records an ingest; neither module names the other kind's tables. The
+runner-unscoped mark itself — `RUNNER_SCOPED_OPTION`, or the `blizzard_runner_unscoped` string it stands for — appears
+only in `runner/store/errors.py`, the guard, the exempt member's module, and runner migrations. `errors.py` declares the
+mark. `blizzard/src/blizzard/tools/invariants.py` reaches the store through the `runner_audit` member, never by spelling
+the mark.
 
 **Detect.** `test_host_tables_are_reached_only_through_the_host_stores` in `blizzard/tests/test_layering.py` fails the
 unit tier on a runner adapter naming a host-scoped table, a host adapter naming a runner-scoped one outside the admitted

@@ -134,7 +134,8 @@ durable invariants:
 - every per-repository landing that names its repository record names one the chunk's project had linked when the
   landing was written (`hub:landed-repository-linked`);
 - every runner-scoped row names a runner the runner store's `runner_identity` records
-  (`runner:rows-name-registered-runner`);
+  (`runner:rows-name-registered-runner`), bar `outbox_counters`, whose rows outlive a runner reset out of the store so
+  that it never issues a `seq` at or below its hub's mark again;
 - each runner's retained outbound and pending transcript-outbound seqs are gapless, per runner
   (`runner:gapless-outbound-seq`, `runner:gapless-transcript-outbound-seq`);
 - no retained outbox row sits above its runner's counter in `outbox_counters` (`runner:outbox-counter-above-seq`).
