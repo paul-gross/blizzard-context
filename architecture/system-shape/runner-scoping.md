@@ -28,7 +28,9 @@ the stores to the configured runner's `id` before anything runs, the hub reachab
 the offline read verbs. The invariant checker reads across runners through the exempt `runner_audit`, so it takes no
 binding. The store never learns its runner from its own rows, and registration never adopts an id. A connection never
 bound reads a runner-scoped table as empty and refuses a write with `RunnerUnbound`, so no writer lands an unowned row.
-How the binding survives a crash is
+A locked write that spans several runners' bound adapters through a domain-held handle — the usage-limit brake reaching
+every spender of a subscription — is admitted: the handle carries no `Connection`, and each statement is still built by
+its own adapter's binding, so it stamps that adapter's runner. How the binding survives a crash is
 [../crash-correctness/runner.md](../crash-correctness/runner.md#binding-at-the-configured-id)'s to record.
 
 **Detect.** The runner statement guard — a `before_execute` listener

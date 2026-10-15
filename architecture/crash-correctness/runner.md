@@ -216,6 +216,17 @@ record, which the park names, and which the teardown books and clears; or a usag
 standing record, which no park names, and which `on_unpause` answers with a fresh elicitation once the brake lifts. A
 named record that has since vanished, or a park naming none, leaves the teardown nothing to do.
 
+## The usage-limit brake fan-out
+
+`UsageLimitBrakes.engage` (`blizzard/src/blizzard/runner/throttle/pause.py`) engages the reporting runner's brake and
+that of every other runner of the host spending the same subscription in one write transaction: each runner's
+`local_pause_facts` row and its `outbound_buffer` report, stamped by that runner's own bound adapter on the transaction
+the reporter's store opened. A `kill -9` commits every member's fact and report or none of them, so the fan-out is a
+**no-window** write and owes no registry point. The park stays after it, and the existing points
+`usagelimit.worker-after-brake.before-park` and `usagelimit.judge-after-brake.before-park` still cover the gap between
+brake and park, their meaning unchanged: a crash there leaves every member braked and the lease unparked, and the next
+pass classifies the exit again, finds each brake already engaged, and completes the park.
+
 ## The identity-failure-mark-before-close gap
 
 `Reap.run`'s provisional-generation branch and `Spawner.spawn`'s `WorkerIdentityError` handler
@@ -325,6 +336,16 @@ row regardless, so no operator-visible state is ever lost, only delayed to the n
 The write owes the invariant checker nothing: `backing_off_facts`'s own closure is an identity comparison over
 append-only rows and existing repository reads (`lease_generations`, `in_flight_elicitations`), never a derived
 cross-fact invariant a second writer could disagree with.
+
+## The external-usage sampling pass
+
+`ExternalUsageSamplePass` (`blizzard/src/blizzard/runner/usage/external_usage_sample.py`) runs on the host tick in
+`runner host`, never in a runner's tick, over every `[[subscription]]` the host declares. Per slug it gates on the
+newest attempt's cadence, samples, and records the attempt with its report in one transaction. An unregistered host
+records through its first runner's bound `ExternalUsageStore.record_external_usage_attempt`, whose report lands in that
+runner's `outbound_buffer`; a registered host records through `HostLaneStore.record_host_external_usage_attempt`, whose
+report lands in `host_outbound_buffer`. Both are **no-window** writes: a `kill -9` commits the attempt and its report or
+neither, and the next pass re-samples a slug whose attempt did not commit.
 
 ## The credential-renewal window
 

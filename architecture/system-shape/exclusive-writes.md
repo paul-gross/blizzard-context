@@ -71,6 +71,14 @@ injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.lock
 `IWriteGraphRepository.locked_name`, each yielding a handle of its own — never an `ILockedChunkRead`, so a handle that
 holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
+The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
+lock-a-row-known-to-exist form by analogy. The usage-limit brake fan-out locks, first and in sorted runner-id order, a
+no-op `UPDATE` on each spending runner's own `runner_identity` row, then reads which of them are already braked on that
+same transaction; the operator's lift takes its own runner's row before it reads the brake
+(`runner/store/internal/pause_store.py`). A runner whose identity row does not exist holds no lease and has written no
+runner-scoped row, so the fan-out skips it. This needs no migration, which keeps a rollback to the previous wheel free
+of any store step.
+
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
 write calls on its own connection after the lock and its replay probe and before its first insert. It reads the terminal
 facts and the newest epoch there, so a stop or restart cannot land between the guard and the write.
