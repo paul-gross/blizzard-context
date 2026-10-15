@@ -96,6 +96,10 @@ def check_current(self) -> None:
 
 **Don't.** The same slot calling `self.runner.upgrade()` instead — the daemon migrating the store for itself.
 
+**See also.** `blizzard/exemplars/python/exemplar/hub/store/migrations/versions/20261015_0900_permits.py`
+([../exemplars/index.md](../exemplars/index.md)) — a revision adding two tables, as reference code; its test is
+`blizzard/exemplars/python/tests/test_permit_migration.py`.
+
 ## Frozen revisions (`bzh:frozen-revisions`)
 
 **Rule.** A revision whose table is reshaped by a later revision must not import that table from `schema.py`; it

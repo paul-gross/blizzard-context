@@ -50,6 +50,8 @@ pass criteria; what belongs here is only *which* a change owes:
   `blizzard-context:lint-script-tests` covers the contribution itself.
 - `blizzard-context:reference-lint` and `blizzard-context:reference-lint-tests` — every change. The lint also runs
   through `winter lint`.
+- A change to a standard an exemplar instantiates owes its companion change to `blizzard/exemplars/`
+  (`bzh:exemplar-conformance`), proven there by blizzard's own gates.
 - `blizzard-context:manual-reference-check` — every change: the by-hand pass covering what no tool here runs.
 - `blizzard-context:manual-cold-eval` — a rule addition, a trigger broadening, or a routing change (`canon:cold-eval`).
 

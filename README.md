@@ -35,16 +35,16 @@ also the file installed into every blizzard agent context, so an agent working o
 
 ## Layout
 
-| Directory                                          | What it holds                                                                                  |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [`domain/`](./domain/index.md)                     | The domain model — what blizzard's concepts are and how they behave, with no technical detail. |
-| [`architecture/`](./architecture/index.md)         | Structural invariants and design positions a change must honor.                                |
-| [`standards/`](./standards/index.md)               | The toolchains and code-quality conventions finished code is held to.                          |
-| [`verification/`](./verification/index.md)         | Blizzard's verifiability matrix — how a change to the application is proven.                   |
-| [`workflows/`](./workflows/index.md)               | How work reaches `master`, and the release cut an agent still drives by hand.                  |
-| [`tooling/`](./tooling/index.md)                   | Driving an external tool beyond the winter CLI.                                                |
-| [`garden/`](./garden/index.md)                     | The named axes blizzard is recurringly evaluated along, and what each judges by.               |
-| [`exemplars/`](./exemplars/python/repo_pattern.py) | Reference implementations to pattern new work off.                                             |
+| Directory                                  | What it holds                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| [`domain/`](./domain/index.md)             | The domain model — what blizzard's concepts are and how they behave, with no technical detail.   |
+| [`architecture/`](./architecture/index.md) | Structural invariants and design positions a change must honor.                                  |
+| [`standards/`](./standards/index.md)       | The toolchains and code-quality conventions finished code is held to.                            |
+| [`verification/`](./verification/index.md) | Blizzard's verifiability matrix — how a change to the application is proven.                     |
+| [`workflows/`](./workflows/index.md)       | How work reaches `master`, and the release cut an agent still drives by hand.                    |
+| [`tooling/`](./tooling/index.md)           | Driving an external tool beyond the winter CLI.                                                  |
+| [`garden/`](./garden/index.md)             | The named axes blizzard is recurringly evaluated along, and what each judges by.                 |
+| [`exemplars/`](./exemplars/index.md)       | The router to the reference implementations in `blizzard/exemplars/`, and what they are held to. |
 
 Alongside them sit this repo's own: [`CONTRIBUTING.md`](./CONTRIBUTING.md) for commit format, authoring conventions, and
 delivery, and [`verifiability.md`](./verifiability.md) for how a change *here* is verified.

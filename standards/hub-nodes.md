@@ -8,9 +8,10 @@ script or a new hub node is held to. Each rule in this tree follows the slot ske
 
 Parent: [./index.md](./index.md).
 
-| Spoke                                                  | When to read                                                                     |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| [run-steps.md](./hub-nodes/run-steps.md)               | The node declares its work as `run:` steps                                       |
-| [env-contract.md](./hub-nodes/env-contract.md)         | A step's command needs the chunk's identity, prior work, or the forge credential |
-| [outcome-protocol.md](./hub-nodes/outcome-protocol.md) | A step must select a routed choice, poll, or bounce the chunk                    |
-| [step-idempotence.md](./hub-nodes/step-idempotence.md) | A step's command must be safe to re-run after a crash                            |
+| Spoke                                                  | When to read                                                                      |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| [run-steps.md](./hub-nodes/run-steps.md)               | The node declares its work as `run:` steps                                        |
+| [env-contract.md](./hub-nodes/env-contract.md)         | A step's command needs the chunk's identity, prior work, or the forge credential  |
+| [outcome-protocol.md](./hub-nodes/outcome-protocol.md) | A step must select a routed choice, poll, or bounce the chunk                     |
+| [step-idempotence.md](./hub-nodes/step-idempotence.md) | A step's command must be safe to re-run after a crash                             |
+| [../exemplars/index.md](../exemplars/index.md) §Hub    | You are writing a `run:` step script and want the reference one to pattern it off |

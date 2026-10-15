@@ -32,8 +32,9 @@ only where mutation is required.
 **Don't.** One combined repository injected everywhere, handing a controller that only lists chunks the power to delete
 them.
 
-**See also.** [`../exemplars/python/repo_pattern.py`](../exemplars/python/repo_pattern.py) — the read/write Protocol
-pair and its binding in runnable form. [`./system-shape/exclusive-writes.md`](./system-shape/exclusive-writes.md)
+**See also.** `blizzard/exemplars/python/exemplar/hub/domain/permits/model.py`
+([../exemplars/index.md](../exemplars/index.md)) — a read/write Protocol pair, implemented by the exemplar `PermitStore`
+and bound in the exemplar `composition.py`. [`./system-shape/exclusive-writes.md`](./system-shape/exclusive-writes.md)
 `bzh:store-exclusive-write` — the one seam where a write Protocol splits further than read and write; read it before
 adding or calling a `*_locked` method.
 
