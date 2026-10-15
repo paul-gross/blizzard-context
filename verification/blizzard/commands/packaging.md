@@ -116,6 +116,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / OpenAPI spec drift"},
       {"context": "gate / hub↔runner wire compatibility"},
       {"context": "gate / eslint + vitest + client drift"},
+      {"context": "gate / exemplar check (web)"},
       {"context": "gate / process-reference and change-history lint"},
       {"context": "upper-tiers / service tier (blizzard:service-test)"},
       {"context": "upper-tiers / kill-9 crash sweep — CI profile (blizzard:crash-sweep)"}

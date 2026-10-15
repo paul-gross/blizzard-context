@@ -8,8 +8,9 @@ by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 Parent: [./index.md](./index.md).
 
-| Spoke                                                                   | When to read                                                               |
-| ----------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [declarations.md](./worker-nodes/declarations.md)                       | The node declares a `produces:` entry, or a completion arrived without one |
-| [checks-gate.md](./worker-nodes/checks-gate.md)                         | A choice must not be selectable while the node's `checks:` are red         |
-| [graph-artifact-pointers.md](./worker-nodes/graph-artifact-pointers.md) | The prompt points the worker at a graph-scoped or system-scoped read       |
+| Spoke                                                                   | When to read                                                                                               |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [declarations.md](./worker-nodes/declarations.md)                       | The node declares a `produces:` entry, or a completion arrived without one                                 |
+| [checks-gate.md](./worker-nodes/checks-gate.md)                         | A choice must not be selectable while the node's `checks:` are red                                         |
+| [graph-artifact-pointers.md](./worker-nodes/graph-artifact-pointers.md) | The prompt points the worker at a graph-scoped or system-scoped read                                       |
+| [../exemplars/index.md](../exemplars/index.md) §Hub                     | You are writing a node's prompt, judgement, or edge addendum and want the reference trio to pattern it off |

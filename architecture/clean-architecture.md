@@ -104,6 +104,8 @@ class ProposalClosureService:
 
 **See also.** `bzh:domain-core` — what the model may not depend on. `bzh:domain-takes-objects`
 ([./repository-access.md](./repository-access.md)) — an id a rule needs arrives as its loaded object.
+`blizzard/exemplars/python/exemplar/hub/domain/permits/` ([../exemplars/index.md](../exemplars/index.md)) — the split as
+reference code: the model deciding, the service orchestrating, and a route mapping each refusal.
 
 ## Dependency inversion (`bzh:dependency-inversion`)
 
@@ -123,9 +125,10 @@ structurally, one adapter per seam, and the domain never imports any of them.
 
 **Don't.** A domain module that imports `ChunkRecordStore` directly.
 
-**See also.** [`../exemplars/python/repo_pattern.py`](../exemplars/python/repo_pattern.py) — the runnable reference for
-this seam, its `internal/` adapter placement, and its factory-injected error wrapping; read it when building a
-repository.
+**See also.** `blizzard/exemplars/python/exemplar/hub/store/internal/permit_store.py`
+([../exemplars/index.md](../exemplars/index.md)) — the reference for this seam: the domain-owned ports in the exemplar
+`permits/model.py`, the `internal/` adapter implementing them, and the exemplar `composition.py` binding the two; read
+it when building a repository.
 
 ## Dependency injection (`bzh:dependency-injection`)
 
@@ -281,6 +284,8 @@ no step Protocol declares.
 
 **See also.** `bzh:seam-size-ceiling` ([./system-shape/seam-size.md](./system-shape/seam-size.md)) caps how wide one
 Protocol grows; this rule governs which Protocols a collaborator depends on.
+`blizzard/exemplars/python/exemplar/runner/disk/floor.py` ([../exemplars/index.md](../exemplars/index.md)) — a loop step
+and its own context Protocol as reference code, with its sentinel in the exemplar `runner/loop/context.py`.
 
 ## Internal visibility (`bzh:internal-visibility`)
 

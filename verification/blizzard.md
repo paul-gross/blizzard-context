@@ -48,6 +48,7 @@ A command method passes when its command exits 0.
 | `blizzard:restatement-sweep`     | `mise run restatement-check` — the one-home census *(more)*                                                                                                       |
 | `blizzard:mutation`              | `mise run mutation <scope>` — scoped, resumable mutation testing over `src/blizzard` *(more)*                                                                     |
 | `blizzard:prose-ratchet`         | `mise run prose-check` — the per-root prose ratchet                                                                                                               |
+| `blizzard:exemplar-check`        | `mise run exemplar-check` — the web exemplars under `exemplars/web/` held to the hub app's gates                                                                  |
 | `blizzard:gate`                  | `mise run gate` — the local reproduction of CI's shared `gate` job *(more)*                                                                                       |
 | `blizzard:process-ref-lint`      | `mise run process-ref-lint` — Vale's process-reference and change-history prose gate over the surface `.vale.ini` configures *(more)*                             |
 | `blizzard:wire-compat`           | `mise run wire-compat` — fails on a breaking change to the hub↔runner wire surface (`bzh:fleet-wire-additive`) *(more)*                                           |
@@ -79,8 +80,9 @@ A command method passes when its command exits 0.
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by
 [`../standards/frontend.md`](../standards/frontend.md); the one-home census is governed by
-[`../standards/one-prose-home.md`](../standards/one-prose-home.md), and the prose ratchet by
-[`../standards/prose-budget.md`](../standards/prose-budget.md).
+[`../standards/one-prose-home.md`](../standards/one-prose-home.md), the prose ratchet by
+[`../standards/prose-budget.md`](../standards/prose-budget.md), and the exemplar check by
+[`../exemplars/conformance.md`](../exemplars/conformance.md).
 [`../architecture/crash-correctness.md`](../architecture/crash-correctness.md) owns the daemon requirements
 `blizzard:crash-sweep` exercises, and `blizzard:e2e`'s scenario registry is
 [`./blizzard/e2e-scenarios.md`](./blizzard/e2e-scenarios.md).
@@ -92,7 +94,9 @@ and the runner statement guard (`BLIZZARD_RUNNER_GUARD`) on, in the test process
 
 `blizzard:ci-workflows` and `blizzard-mock:ci-workflows` scan `.github/workflows/` by default (run from each repo's own
 root) and are local-only — neither is wired into that repo's own `gate.yml`. `blizzard:collector-config` is local-only
-the same way.
+the same way. The Python exemplars under `exemplars/python/` ride `blizzard:lint`, `blizzard:format`,
+`blizzard:typecheck`, and the pytest tiers like any other tree, and `blizzard:exemplar-check` runs in `gate.yml` as its
+own job.
 
 ## Manual testing
 
