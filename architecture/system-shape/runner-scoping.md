@@ -8,9 +8,10 @@ the one door to the tables that belong to the host rather than to a runner; the 
 A runner store holds two kinds of table. A **runner-scoped** table, declared `info={"scope": "runner"}` in
 `blizzard/src/blizzard/runner/store/schema.py`, holds one runner's rows and carries `runner_id`, the hub-minted id its
 `runner_identity` row names. A **host-scoped** table holds facts about the machine and its runtime directory — the
-workspace prompt, the graph-artifact mirror, the token replay cache, daemon liveness, external usage samples — and
-carries no runner. How a table gains the key over rows it already holds is `bzh:keyed-table-migration`'s, in
-[../../standards/persistence.md](../../standards/persistence.md).
+workspace prompt, the graph-artifact mirror, the token replay cache, daemon liveness, external usage samples, and a
+registered host's own identity at its hub (`host_identity`), its own fact lane (`host_outbound_buffer`) and the mark its
+hub last answered on that lane (`host_high_water_seen`) — and carries no runner. How a table gains the key over rows it
+already holds is `bzh:keyed-table-migration`'s, in [../../standards/persistence.md](../../standards/persistence.md).
 
 ## Adapters hold the bound seam (`bzh:runner-scoped-store`)
 
