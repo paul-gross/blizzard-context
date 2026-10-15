@@ -590,6 +590,39 @@ replay. A crash before the fresh store is migrated leaves a store the daemon's s
 the migrate command. Either way the old store is already whole under its stamped name, and re-running the reset, or the
 migrate it names, completes the job.
 
+`store reset --runner <name|id>` resets one runner alone through `Runtime.reset_runner`
+(`blizzard/src/blizzard/runner/runtime.py`). It migrates a new archive store under a temporary name beside the host's,
+copies the runner's rows into it in one transaction, folds the archive into one file, and renames it to
+`<store>.<runner>.<UTC stamp>`. Only then does it delete the runner's rows from the host store, in one transaction that
+keeps its outbox counters. This is a **no-window** write. Before the rename no archive name exists, and a re-run removes
+the temporary file and starts again. After the rename and before the delete, the archive is complete and the rows are
+still in place, so a re-run writes another archive and deletes them, losing nothing.
+
+## The ingest
+
+`blizzard runner ingest` (`blizzard/src/blizzard/runner/ingest.py`) moves one runner between stores and host files that
+share no transaction, holding this host's lock for the whole run, and the source's when the source is a host directory.
+It reads the source only through a backup copy, so the source is written by the last step alone. The steps run in this
+order:
+
+1. Copy the runner's rows into this host's store in one transaction that also appends its `host_ingests` row: the
+   runner, the source, and the source's last `daemon_liveness` stamp.
+2. Append the runner's `[[workspace]]`.
+3. Append its `[[subscription]]`.
+4. Copy the path files under `runners/<name>/` and append its `[[runner]]`.
+5. Write its token into this host's `.env`.
+6. Remove its token from the source's `.env`.
+7. Delete its rows from the source, and move a source left with no runner aside whole.
+
+Each edit from 2 to 6 is skipped when the file already holds it, so a re-run completes whatever an interrupted run left.
+The re-run is keyed on the record, not on the files: a runner whose identity row this host holds, with a newest
+`host_ingests` row from the same source and an unchanged source stamp, skips step 1. A source that no longer holds the
+runner gets only its move-aside. A moved stamp refuses, naming both stores, since the source ran after the copy. Two
+windows are **real windows**, each an armed crash point. `ingest.after-copy.before-config` falls after step 1, with the
+rows in both stores and no configuration here yet. `ingest.after-config.before-removal` falls after step 6, with the
+token here and the rows still in the source. Without its token the source cannot run the runner, so its stamp stays put
+and the re-run resumes.
+
 ## The add-then-write-token window
 
 `runner init` joins a runner that holds no token, or one holding a token its hub does not know under `--allow-readd`.
