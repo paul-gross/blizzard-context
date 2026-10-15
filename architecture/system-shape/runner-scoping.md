@@ -59,7 +59,8 @@ module:
 - `runner_audit` (`host_runner_audit.py`) — the cross-runner reads, which cannot carry a runner equality: the invariant
   checker's audit of every runner's rows at once, and the foreign-store question of which runners the store's identity
   rows name, asked by `init` before any id is configured and by every verb that checks it: host start, `--check`, tick
-  and the transcript verbs.
+  and the transcript verbs; and the shared pool's held read, `held_workspace_bindings`, every runner's held bindings in
+  one workspace's pool.
 
 **Why.** A host table is a door around the runner boundary by design; keeping every such door on one named seam, with
 its exemptions a list a reviewer reads whole, turns "where can one runner's rows leak?" into a question with a short

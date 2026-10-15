@@ -4,9 +4,9 @@ Which party owns each piece of execution, and what a runner's registry entry rep
 [execution hub](../execution.md).
 
 The hub orchestrates the fleet's work: it owns chunks, graphs, artifacts, and the registry, and it grants work. A runner
-executes work on its own machine, bound to one prepared workspace: it claims chunks, acquires environments, drives
-workers through node-steps, and reports the facts. All contact is runner-initiated; the hub never reaches into a
-runner's machine.
+executes work on its own machine, with each project it serves bound to one of its prepared workspaces: it claims chunks,
+acquires environments, drives workers through node-steps, and reports the facts. All contact is runner-initiated; the
+hub never reaches into a runner's machine.
 
 The hub is designed to hold references to code, never code, and holds conversation only as the transcript lane's capped
 segments — rule `bzh:never-code`, owned by [../artifacts/never-code.md](../artifacts/never-code.md).

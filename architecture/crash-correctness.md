@@ -122,7 +122,7 @@ The transcript lane is split out of both daemon files: a runner-side or hub-side
 **Rule.** A checker of assertions evaluated over both stores' facts after any crash → restart → recover cycle holds the
 durable invariants:
 
-- no duplicate env binding;
+- no duplicate env binding: an environment of a workspace is held by at most one binding across the host;
 - at most one accepted transition per node-step epoch;
 - one live route per chunk;
 - no double delivery, with per-repo lands idempotent;

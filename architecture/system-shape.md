@@ -105,15 +105,15 @@ anywhere a seam is already injected.
 **Do.** Ask the seam. The workspace provider reports where a worker is spawned (`IWorkspaceProvider.spawn_root`), how
 many environments it may hold (`capacity`), and its environment pool (`pool`), in
 `blizzard/src/blizzard/runner/environments/provider.py`; the selection point is the factory registry in
-`runner/environments/factory.py`, whose builders take a `WorkspaceSettings` (built by
-`RunnerConfig.workspace_settings`), not `RunnerConfig`. Harnesses are iterated, never named:
-`blizzard/src/blizzard/runner/harness/wiring.py` holds the cached `harness_catalog()` of `IHarnessDeclaration`s and its
-walks (`declared`, `enabled`, `declared_normalizer_versions`, `declared_telemetry_names`, `combined_telemetry_plan`),
-`declared` and `enabled` pairing each declaration with its `HarnessSection` (both in `harness/declaration.py`). A
-binding's own telemetry — the names it arrives under and what the runner does with each exporter — is answered by its
-declaration (`telemetry_names`, `telemetry_plan`), never named by the composition root or the tracing receiver.
-Importing `wiring.py` loads only each adapter's section module; an adapter's declaration loads on the catalog's first
-call. A third harness is a new declaration and section kind added to the catalog, not a new branch in its consumers.
+`runner/environments/factory.py`, whose builders take a `WorkspaceSettings` (built by `HostWorkspace.settings`), not
+`RunnerConfig`. Harnesses are iterated, never named: `blizzard/src/blizzard/runner/harness/wiring.py` holds the cached
+`harness_catalog()` of `IHarnessDeclaration`s and its walks (`declared`, `enabled`, `declared_normalizer_versions`,
+`declared_telemetry_names`, `combined_telemetry_plan`), `declared` and `enabled` pairing each declaration with its
+`HarnessSection` (both in `harness/declaration.py`). A binding's own telemetry — the names it arrives under and what the
+runner does with each exporter — is answered by its declaration (`telemetry_names`, `telemetry_plan`), never named by
+the composition root or the tracing receiver. Importing `wiring.py` loads only each adapter's section module; an
+adapter's declaration loads on the catalog's first call. A third harness is a new declaration and section kind added to
+the catalog, not a new branch in its consumers.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.
