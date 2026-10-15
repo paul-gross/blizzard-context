@@ -68,14 +68,23 @@ switch itself, starts a case without the guard (its `no_runner_guard` fixture). 
 at `blizzard:component-test`, seeds the same shapes for two runner ids in one store. It proves that one runner's
 adapters neither read nor change the other's rows, holding its coverage of the read and write census by reflection.
 
-## Head-migrated test stores come from prototypes
+## Head-migrated test stores come from prototypes (`bzh:head-store-prototypes`)
 
-A test needing an empty store at head uses `tests/support.py::migrate_to(tmp_path, "head")` or
+**Rule.** Copy a per-process migrated prototype when a test needs an empty store at head; reserve from-empty migration
+chain replay for tests whose subject is the chain. Use `tests/support.py::migrate_to(tmp_path, "head")` or
 `tests/support.py::migrated_hub_at(db_url)` for the hub, and `tests/runner_fakes.py::migrated_store_at(db_url)` for the
-runner. Each copies a per-process migrated prototype instead of replaying the migration chain. Only migration tests,
-whose subject is the chain, replay it from empty. The head-replay guard installed by `tests/conftest.py` refuses a
-direct `upgrade("head")` from an unmigrated store in a non-migration `test_*.py` module, naming the module and helper;
-upgrades from a pinned older revision and production initialization remain valid.
+runner.
+
+**Why.** A store test exercises its store behavior, while replaying the chain in every case consumes time without
+testing that behavior. Migration tests still need the replay to prove the revisions themselves.
+
+**Detect.** The head-replay guard installed by `tests/conftest.py` refuses a direct `upgrade("head")` from an unmigrated
+store in a non-migration `test_*.py` module, naming that module and the helper to use. Upgrades from a pinned older
+revision and production initialization pass.
+
+**Do.** `migrated_hub_at(db_url)` before opening a hub store for an adapter test.
+
+**Don't.** Call `migration_runner(config).upgrade("head")` from an ordinary store test on a fresh file.
 
 ## Two tenants on one hub: the isolation scenario
 
