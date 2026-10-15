@@ -68,6 +68,15 @@ switch itself, starts a case without the guard (its `no_runner_guard` fixture). 
 at `blizzard:component-test`, seeds the same shapes for two runner ids in one store. It proves that one runner's
 adapters neither read nor change the other's rows, holding its coverage of the read and write census by reflection.
 
+## Head-migrated test stores come from prototypes
+
+A test needing an empty store at head uses `tests/support.py::migrate_to(tmp_path, "head")` or
+`tests/support.py::migrated_hub_at(db_url)` for the hub, and `tests/runner_fakes.py::migrated_store_at(db_url)` for the
+runner. Each copies a per-process migrated prototype instead of replaying the migration chain. Only migration tests,
+whose subject is the chain, replay it from empty. The head-replay guard installed by `tests/conftest.py` refuses a
+direct `upgrade("head")` from an unmigrated store in a non-migration `test_*.py` module, naming the module and helper;
+upgrades from a pinned older revision and production initialization remain valid.
+
 ## Two tenants on one hub: the isolation scenario
 
 `tests/test_tenant_isolation.py`, at `blizzard:component-test`, stands two tenants up on one hub, seeds both with the
