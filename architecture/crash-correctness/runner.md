@@ -347,6 +347,41 @@ runner's `outbound_buffer`; a registered host records through `HostLaneStore.rec
 report lands in `host_outbound_buffer`. Both are **no-window** writes: a `kill -9` commits the attempt and its report or
 neither, and the next pass re-samples a slug whose attempt did not commit.
 
+## The host's lane
+
+`HostLaneDrain` (`blizzard/src/blizzard/runner/lifecycle/host_lane_drain.py`) is a host-tick step on a registered host —
+one holding a host token — and a lane (`bzh:lane-contract`) whose only sink is the hub. It pushes at most a fixed number
+of the oldest `host_outbound_buffer` rows to `POST /api/fleet/host/events`, then records the mark the hub answers
+through `HostLaneStore.record_host_high_water` (`blizzard/src/blizzard/runner/store/internal/host_lane_store.py`), which
+writes `host_high_water_seen` and deletes every buffered row at or below the mark in one transaction. It drains only
+while the host's latest report was answered with the host's own identity, so against a hub that refuses the host,
+predates hosts, or answers as another host, the facts wait in the buffer and never ride a runner's lane.
+
+The window between the hub applying a push and the mark landing is a **real window**, registered as
+`hostlane.after-push.before-mark` and swept by `tests/crash/test_kill9_sweep.py::test_kill9_at_host_lane_crash_point`. A
+crash there leaves the pushed rows buffered and no mark recorded; the next pass re-pushes them, the hub answers them
+already applied against its own per-host mark, and the host clears them then. The mark write itself is a **no-window**
+write: the mark and the clearing commit together, and a mark below the recorded one moves nothing back. A failed push
+leaves everything buffered for the next pass, with no backoff and no latch, the shape the hub-as-sink class names.
+
+The lane owes the invariant checker nothing: its rows carry the host's own `seq`, never a runner's, and the hub's mark
+is what de-duplicates a replay.
+
+## The host identity row
+
+`HostRegistration` (`blizzard/src/blizzard/runner/hub/host_registration.py`), the host tick's first step on a registered
+host, records the store's single `host_identity` row from the hub's first answered report, through
+`HostIdentityStore.record_host_identity` (`blizzard/src/blizzard/runner/store/internal/host_identity_store.py`): the row
+first, then the in-process holder, so a crash between them leaves the holder to be rebuilt from the row at the next
+boot. The write is one transaction that inserts the row only when none exists, so a `kill -9` leaves no row or the whole
+one. The row is never edited: offering the identity it holds writes nothing, and a later answer naming another host or
+tenant is refused, held as a refusal of the host's credential, not an update. This is a **no-window** write.
+
+The step's other outputs are held only in the process — its latest outcome and each runner's standing under the host,
+folded into that runner's identity verdict — and are re-derived by the next report after a restart. The host reports
+once before any runner ticks, so a runner its hub no longer holds is halted before it can claim across a restart. The
+row owes the invariant checker nothing: it is the hub's own answer about the token.
+
 ## The credential-renewal window
 
 `CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on its own driver in

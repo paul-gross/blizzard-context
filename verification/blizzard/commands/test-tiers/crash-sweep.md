@@ -44,6 +44,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `teardown.` — a tenant deletion's after-close, between-batch, and after-drain windows.
 - `trace.` — the trace export sweep's after-export, before-cursor window.
 - `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
+- `hostlane.` — a registered host's own fact lane's after-push, before-mark window.
 - `usagelimit.` — the runner's own usage-limit brake-then-park window, on a worker generation's exit and a judge
   elicitation's exit alike.
 
@@ -108,6 +109,13 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   and an unarmed restart the sink holds the killed batch's span ids twice, one runner cursor row covers the re-sent
   batch, and the invariants come back green. `blizzard-context/architecture/crash-correctness/runner.md` owns the
   window's ground.
+- `hostlane.`, a registered host's own fact lane's after-push, before-mark window armed on the runner host, is swept by
+  `test_kill9_at_host_lane_crash_point` over its lone member, `hostlane.after-push.before-mark`: the joined runner is
+  adopted by a host added at the hub, the host directory's `.env` takes its `BZ_HOST_TOKEN`, and the host's sampling
+  pass buffers a miss for the scaffolded subscription. After the kill the facts stay buffered with no mark recorded
+  while the hub's own per-host mark already covers them; after an unarmed restart the host records a mark at or past
+  them, clears them, and the invariants come back green. `blizzard-context/architecture/crash-correctness/runner.md`
+  owns the window's ground.
 - `preempt.`, the operator-restart teardown window armed on the runner, is swept by `test_kill9_at_preempt_crash_point`:
   an operator restarts a running chunk and the runner dies between killing the displaced worker and recording the
   `preempted` closure; recovery re-derives the same preempt off the hub's still-standing fence — the lease closes
