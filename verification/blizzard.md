@@ -38,6 +38,7 @@ A command method passes when its command exits 0.
 | `blizzard:component-test`        | `uv run pytest -m component` — a domain slice, doubles only at the seams *(more)*                                                                                 |
 | `blizzard:service-test`          | `mise run service-test` — a running daemon's HTTP API driven from outside, or an out-of-process external-tool binding driven against a mock-fleet binary *(more)* |
 | `blizzard:e2e`                   | `mise run e2e` — the standing full-stack smoke suite                                                                                                              |
+| `blizzard:winter-binding`        | `mise run winter-binding` — the winter workspace provider against the real winter CLI; local-only *(more)*                                                        |
 | `blizzard:journey`               | `mise run journey` — the capstone acceptance-journey rehearsal over real host daemons *(more)*                                                                    |
 | `blizzard:crash-sweep`           | `mise run crash-sweep` — the full kill-9 sweep over the crash-point registry *(more)*                                                                             |
 | `blizzard:sse-contract`          | `mise run sse-contract` — the SSE frame shape against the golden corpus `contracts/sse/` *(more)*                                                                 |
@@ -147,9 +148,9 @@ narrow probe of one named claim, and wins over the general row only where the ch
 
 Tools are setup an agent uses to stand up the scenario a verification needs, not assertions of correctness themselves.
 
-| Tool                     | What it stands up                                                                                                    |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `tool:service-up`        | `winter service up <env> --wait` — the verification stack for a feature env, port-band isolated *(more)*             |
-| `tool:mock-fleet`        | The `blizzard-mock` fleet: forge, fixture workspace, mock harness, mock hub/runner, stub IdP *(more)*                |
-| `tool:fixture-workspace` | The fixture-workspace scaffold (`blizzard-mock-fixture`): bare `file://` origins plus a throwaway workspace *(more)* |
-| `tool:mock-data`         | The mock-data CLI (`blizzard-mock-data`), seeding a hub or runner store into a known world *(more)*                  |
+| Tool                     | What it stands up                                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tool:service-up`        | `winter service up <env> --wait` — the verification stack for a feature env, port-band isolated *(more)*                                         |
+| `tool:mock-fleet`        | The `blizzard-mock` fleet: forge, fixture workspace, mock harness, mock hub/runner, stub IdP *(more)*                                            |
+| `tool:fixture-workspace` | The fixture-workspace scaffold (`blizzard-mock-fixture`): bare `file://` origins, winter-free by default, a winter workspace on request *(more)* |
+| `tool:mock-data`         | The mock-data CLI (`blizzard-mock-data`), seeding a hub or runner store into a known world *(more)*                                              |

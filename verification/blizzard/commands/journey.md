@@ -11,8 +11,8 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 `BLIZZARD_JOURNEY=1 uv run pytest -m journey tests/journey/` (`mise run journey`) — the capstone: the MVP acceptance
 journey as one committed, repeatable test over real host daemons, `blizzard hub host` plus `blizzard runner host`. It
-runs locally and nowhere else: it needs the sibling provisioned `blizzard-mock` worktree and a local winter source, and
-is skipped without `BLIZZARD_JOURNEY=1`.
+runs locally and nowhere else: it needs the sibling provisioned `blizzard-mock` worktree and a local winter source,
+passed to the fixture mint explicitly, and is skipped without `BLIZZARD_JOURNEY=1`.
 
 One shared `build → review → deliver` graph drives the journeys by reading each chunk's work item through the hub
 pass-through (`blizzard runner work-items`) and branching on a directive in the issue body. Five issues are filed across

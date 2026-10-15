@@ -45,7 +45,9 @@ change needs with `tool:mock-data`, or through the real ingest path when ingest 
 When the behavior under exercise rides the acceptance loop — ingest, acquire, commit, deliver, landed — walk the loop
 against the live stack rather than seeding past it:
 
-1. `uv run blizzard-mock-fixture reset --env <env>`, from `<env>/blizzard-mock`.
+1. `BLIZZARD_MOCK_WINTER_SOURCE=<workspace root> uv run blizzard-mock-fixture reset --env <env>`, from
+   `<env>/blizzard-mock` — the env's runner is winter-bound, so the fixture names its winter source explicitly; none is
+   discovered.
 2. Drop the harness fence marker in the fixture's `workspace/`.
 3. File a forge issue.
 4. `POST /api/chunks`, so the env's runner ticks the chunk to `done`.

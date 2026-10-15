@@ -21,21 +21,22 @@ A plain shell needs that `source <(winter env <env>)` before `$BZ_HUB_RUNTIME` a
 
 ### `blizzard-mock:manual`
 
-**Surface.** The winter-wired mock forge (`tool:service-up`) fronting a real fixture workspace's per-env bare origins —
-the daemons' own git truth, exercised out of process.
+**Surface.** The winter-wired mock forge (`tool:service-up`) fronting a fixture workspace's per-env bare origins — the
+daemons' own git truth, exercised out of process.
 
 **Setup.** Mint a fixture at the path the forge reads,
 `$BZ_FORGE_REPOS_DIR = ${BLIZZARD_MOCK_SCRATCH_ROOT}/${WINTER_ENV}/origins`, then bring the stack up, running from the
 workspace root:
 
 ```bash
-BLIZZARD_MOCK_SCRATCH_ROOT=/tmp/blizzard-mock/fixtures WINTER_ENV=alpha sh -c 'cd alpha/blizzard-mock && uv run blizzard-mock-fixture mint --env alpha'
+BLIZZARD_MOCK_SCRATCH_ROOT=/tmp/blizzard-mock/fixtures WINTER_ENV=alpha BLIZZARD_MOCK_WINTER_SOURCE="$PWD" sh -c 'cd alpha/blizzard-mock && uv run blizzard-mock-fixture mint --env alpha'
 winter service up alpha --wait
 ```
 
-Do not pass `--winter-source $PWD` when minting: inside a `cd … && …` subshell `$PWD` expands after the `cd` and names
-the `blizzard-mock` checkout — which has no `tools/winter-cli` — and minting fails; let the walk-up from the worktree to
-the workspace root resolve it, or set `$BLIZZARD_MOCK_WINTER_SOURCE` to the workspace root explicitly.
+The mint names its winter source explicitly — `$BLIZZARD_MOCK_WINTER_SOURCE`, set to the workspace root — because the
+fixture never discovers one: without it the mint is winter-free (origins and an empty `workspace/`). Set it in the
+environment, as above, rather than passing `--winter-source $PWD` inside the `cd … && …` subshell, where `$PWD` expands
+after the `cd` and names the `blizzard-mock` checkout, which has no `tools/winter-cli`.
 
 **Passes when.** `curl -fs localhost:${BZ_FORGE_PORT:-4421}/healthz` returns `ok` and
 `curl -fs localhost:${BZ_FORGE_PORT:-4421}/repos/blizzard/toy-api` returns `200` with `"default_branch": "main"`.
