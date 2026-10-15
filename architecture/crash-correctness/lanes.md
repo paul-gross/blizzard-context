@@ -23,9 +23,11 @@ them. Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md`
 4. **Isolation.** A lane's failure never escapes into its host's other work. The hub runs each `Sweep` as its own task
    with its own catch. A runner tick-step lane catches its own failures inside `run()`, so later tick steps still run. A
    runner driver catches per pass.
-5. **Hosting.** On the runner, a lane whose only sink is the hub is a tick step: the hub client bounds each call, and
-   the tick's next phases consume its result. A lane whose sink is operator-configured, such as an exporter, runs on a
-   dedicated driver, so a stalled sink never holds the tick. On the hub, every lane is a `Sweep`.
+5. **Hosting.** On the runner, a lane whose only sink is the hub is a step of the pass that owns its rows: a runner's
+   lane is a step of that runner's tick, and the host's own lane, `HostLaneDrain`, is a step of the host tick, which
+   runs on its own driver beside the runners' ticks. Either way the hub client bounds each call, and the pass's later
+   steps consume its result. A lane whose sink is operator-configured, such as an exporter, runs on a dedicated driver,
+   so a stalled sink never holds a tick. On the hub, every lane is a `Sweep`.
 
 The failure shapes, by sink class:
 
