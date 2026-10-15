@@ -387,31 +387,31 @@ The runner's table. `harness/claude_code`, `harness/opencode`, and `harness/wiri
 `runner/<first segment>` is that segment, so `config_table.py` and `stores.py` are the two top-level modules in the
 graph.
 
-| Layer | Node                  | May import                                                                                                                                             |
-| ----- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| L0    | `config_table`        | —                                                                                                                                                      |
-| L0    | `node_steps`          | —                                                                                                                                                      |
-| L0    | `process`             | —                                                                                                                                                      |
-| L0    | `events`              | —                                                                                                                                                      |
-| L0    | `environments`        | —                                                                                                                                                      |
-| L0    | `subscriptions`       | —                                                                                                                                                      |
-| L0    | `auth`                | —                                                                                                                                                      |
-| L1    | `harness`             | `config_table`, `environments`, `node_steps`, `process`                                                                                                |
-| L2    | `harness/claude_code` | `config_table`, `harness`, `node_steps`, `process`, `subscriptions`                                                                                    |
-| L2    | `harness/opencode`    | `config_table`, `harness`, `node_steps`, `process`                                                                                                     |
-| L2    | `leases`              | `environments`, `events`, `harness`, `node_steps`                                                                                                      |
-| L3    | `harness/wiring`      | `config_table`, `harness`, `process`, `harness/claude_code`, `harness/opencode`                                                                        |
-| L3    | `hub`                 | `auth`, `events`, `harness`, `leases`, `node_steps`                                                                                                    |
-| L4    | `transcripts`         | `environments`, `harness`, `hub`, `leases`                                                                                                             |
-| L4    | `throttle`            | `events`, `harness`, `leases`                                                                                                                          |
-| L5    | `usage`               | `environments`, `events`, `harness`, `leases`, `subscriptions`, `transcripts`                                                                          |
-| L6    | `lifecycle`           | `auth`, `environments`, `events`, `harness`, `hub`, `leases`, `node_steps`, `process`, `throttle`, `transcripts`, `usage`                              |
-| L7    | `operator`            | `leases`, `lifecycle`                                                                                                                                  |
-| L7    | `tracing`             | `harness`, `hub`, `leases`, `transcripts`                                                                                                              |
-| L7    | `selftest`            | `environments`, `harness`, `lifecycle`, `node_steps`, `process`                                                                                        |
-| L7    | `status`              | `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`                                                                                    |
-| L8    | `stores`              | `auth`, `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`, `tracing`, `transcripts`, `usage`                                         |
-| L9    | `loop`                | `process`, `events`, `environments`, `harness`, `subscriptions`, `leases`, `hub`, `transcripts`, `throttle`, `usage`, `lifecycle`, `tracing`, `stores` |
+| Layer | Node                  | May import                                                                                                                            |
+| ----- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| L0    | `config_table`        | —                                                                                                                                     |
+| L0    | `node_steps`          | —                                                                                                                                     |
+| L0    | `process`             | —                                                                                                                                     |
+| L0    | `events`              | —                                                                                                                                     |
+| L0    | `environments`        | —                                                                                                                                     |
+| L0    | `subscriptions`       | —                                                                                                                                     |
+| L0    | `auth`                | —                                                                                                                                     |
+| L1    | `harness`             | `config_table`, `environments`, `node_steps`, `process`                                                                               |
+| L2    | `harness/claude_code` | `config_table`, `harness`, `node_steps`, `process`, `subscriptions`                                                                   |
+| L2    | `harness/opencode`    | `config_table`, `harness`, `node_steps`, `process`                                                                                    |
+| L2    | `leases`              | `environments`, `events`, `harness`, `node_steps`                                                                                     |
+| L3    | `harness/wiring`      | `config_table`, `harness`, `process`, `harness/claude_code`, `harness/opencode`                                                       |
+| L3    | `hub`                 | `auth`, `events`, `harness`, `leases`, `node_steps`                                                                                   |
+| L4    | `transcripts`         | `environments`, `harness`, `hub`, `leases`                                                                                            |
+| L4    | `throttle`            | `events`, `harness`, `leases`                                                                                                         |
+| L5    | `usage`               | `environments`, `events`, `harness`, `leases`, `subscriptions`, `transcripts`                                                         |
+| L6    | `lifecycle`           | `auth`, `environments`, `events`, `harness`, `hub`, `leases`, `node_steps`, `process`, `throttle`, `transcripts`, `usage`             |
+| L7    | `operator`            | `leases`, `lifecycle`                                                                                                                 |
+| L7    | `tracing`             | `harness`, `hub`, `leases`, `transcripts`                                                                                             |
+| L7    | `selftest`            | `environments`, `harness`, `lifecycle`, `node_steps`, `process`                                                                       |
+| L7    | `status`              | `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`                                                                   |
+| L8    | `stores`              | `auth`, `environments`, `harness`, `hub`, `leases`, `lifecycle`, `throttle`, `tracing`, `transcripts`, `usage`                        |
+| L9    | `loop`                | `process`, `events`, `environments`, `harness`, `leases`, `hub`, `transcripts`, `throttle`, `usage`, `lifecycle`, `tracing`, `stores` |
 
 A row's layer orders its table: every package or node a row may import sits on a strictly lower layer, `kernel` aside,
 so no declared edge runs between two rows of one layer.

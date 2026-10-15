@@ -167,9 +167,9 @@ runner's registration declares it, so the runner serves the chunks the board sho
    including the HUB panel: `link` `CONNECTED` and `loop` `PAUSED`, the seeded local brake.
 
 8. Expect the LOCAL FACT LOG to hold more than the two seeded facts: the reset emptied `external_usage_samples`, so on
-   the restarted runner's first tick the cadence anchor `max(sampled_at)` was `None` and the interval gate did not apply
-   — the usage sampler ran unconditionally, landing an `external_subscription_usage.sampled` fact only if a readable
-   access token let it return a snapshot. The two seeded facts must still be there and still ticked.
+   the restarted host's first tick the cadence anchor `max(sampled_at)` was `None` and the interval gate did not apply —
+   the host's usage sampling pass ran unconditionally, landing an `external_subscription_usage.sampled` fact only if a
+   readable access token let it return a snapshot. The two seeded facts must still be there and still ticked.
 
 9. Re-open the board and confirm every chunk's status and the overall census are unchanged.
 
