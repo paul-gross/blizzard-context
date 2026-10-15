@@ -132,6 +132,13 @@ init refuses without `--allow-readd`, naming the hub URL it asked, adding nothin
 with the flag it adds a fresh runner and replaces the token. Every in-process `runner init` at the unit and component
 tiers joins the suite-wide fake hub in `tests/runner_init_fakes.py` instead.
 
+**Ingesting a colliding runner into a host** (`test_host_ingest_service.py`) is proven over the real wire only at this
+tier: two host directories hold one runner each under one host the mock hub knows, their stores colliding on the
+outbound and transcript `seq`s, a `route_tokens` chunk id, a `graph_artifacts` key, and the workspace id. A real
+`blizzard-runner ingest --workspace-id` moves one runner into the other's host, which then starts: both runners resume
+every lease, and the hub applies every backlog fact above each runner's mark. Its refusals, resume, and collisions are
+pinned at the component tier by `test_runner_ingest.py`.
+
 **Runner SSO federation's JWT/JWKS wire leg** (`test_idp_federation_service.py`) is the browserless companion to e2e's
 `test_runner_federation_e2e.py`: a real hub delivers a hub-signed, audience-bound JWT via `response_mode=form_post` to a
 real `blizzard runner host`'s `POST /api/auth/callback` — the whole chain real over localhost — ending in a

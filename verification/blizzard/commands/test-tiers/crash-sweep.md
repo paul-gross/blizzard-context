@@ -45,6 +45,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `trace.` — the trace export sweep's after-export, before-cursor window.
 - `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
 - `hostlane.` — a registered host's own fact lane's after-push, before-mark window.
+- `ingest.` — `blizzard runner ingest`'s after-copy and after-config windows.
 - `usagelimit.` — the runner's own usage-limit brake-then-park window, on a worker generation's exit and a judge
   elicitation's exit alike.
 
@@ -116,6 +117,14 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   while the hub's own per-host mark already covers them; after an unarmed restart the host records a mark at or past
   them, clears them, and the invariants come back green. `blizzard-context/architecture/crash-correctness/runner.md`
   owns the window's ground.
+- `ingest.`, `blizzard runner ingest`'s two cross-file windows, is swept by `test_kill9_at_ingest_crash_point` over both
+  of its members — `ingest.after-copy.before-config` and `ingest.after-config.before-removal`. It is the first family
+  armed in a CLI verb rather than a daemon, so the armed process is the ingest itself, run against a real hub holding
+  two registered hosts, the moving runner adopted under the destination. After the kill the copy is whole and the source
+  keeps every row; an unarmed re-run completes the ingest to the end state an uninterrupted one leaves, and the
+  invariants are green on both stores. The bounded-CI representative is `ingest.after-config.before-removal`. The
+  refusal of a re-run after the source ran in between is pinned at the component tier by `test_runner_ingest.py`.
+  `blizzard-context/architecture/crash-correctness/runner.md` owns the windows' ground.
 - `preempt.`, the operator-restart teardown window armed on the runner, is swept by `test_kill9_at_preempt_crash_point`:
   an operator restarts a running chunk and the runner dies between killing the displaced worker and recording the
   `preempted` closure; recovery re-derives the same preempt off the hub's still-standing fence — the lease closes
