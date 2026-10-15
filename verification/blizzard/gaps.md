@@ -419,6 +419,12 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
   landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
   (`src/blizzard/tools/invariants.py`) alone, and its behavior under enforced keys is unverified.
+- **The question and decision project revision.** `20261014_0900_question_decision_project` adds `project_id` to
+  `questions` and `decisions`, filling each from the row's chunk in bounded keyset pages. It reaches head and returns to
+  base under `blizzard:manual-postgres-migrations`; its backfill over populated rows has run on SQLite only. The
+  correlated `UPDATE` and the new `fk_questions_projects` and `fk_decisions_projects` keys have never run where foreign
+  keys are enforced, and a question or decision written while a chunk's row lock is contended is unverified under
+  concurrent writes there.
 - **The `?project=` read plans.** Every read a `?project=` narrows has its `EXPLAIN QUERY PLAN` shape asserted on SQLite
   only, so whether Postgres's planner uses the project read indexes for it stays unproven, as
   [§The query-plan assertions never run under postgres](#the-query-plan-assertions-never-run-under-postgres) states for
@@ -498,6 +504,3 @@ Two project boundaries are drawn by no tier because the system does not draw the
 - **The lens is not an access boundary.** The board's project lens narrows what a view reads, and a call naming no
   project reads the whole tenant; access is decided by the tenant alone. Nothing proves a person sees only a project's
   records, because nothing restricts them to one — a stated non-goal, not a missing check.
-- **Questions and decisions carry no project column.** A question or a decision reads its project only as labels from
-  its chunk; neither table carries a `project_id`, so no invariant or narrowed read binds one to a project the way the
-  chunk-owned tables are bound. Giving them a column is follow-up work.
