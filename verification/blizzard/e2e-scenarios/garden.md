@@ -10,8 +10,7 @@ delivery that ends in findings and proposals rather than commits, and `ideation`
 → deliver, which judges a target against its own charter rather than a standard and proposes ideas in three graph-owned
 classes (`direction`/`tweak`/`retire`) rather than findings-driven fixes.
 
-The module needs the sibling provisioned `blizzard-mock` worktree plus a local winter source, and skips without
-`BLIZZARD_E2E=1`.
+The module needs the sibling provisioned `blizzard-mock` worktree and skips without `BLIZZARD_E2E=1`.
 
 ## test_garden_routine_e2e
 

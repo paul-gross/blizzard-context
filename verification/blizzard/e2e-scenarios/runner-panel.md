@@ -13,8 +13,8 @@ The runner panel's own live SSE stream, driving — unlike the in-process scenar
 subprocess ticking its reconciliation loop fast (`BZ_RUNNER_TICK_SECONDS=1`) rather than a synchronous
 `LoopWiring.tick_once()`: the one composer threading a single `EventBroker` into both the served app and the ticked loop
 for real. The module needs the built bundle the runner itself serves (`mise run e2e` declares
-`depends = ["web-build"]`), the sibling provisioned `blizzard-mock` worktree, a local winter source, and an installed
-Chromium, skipping cleanly without `BLIZZARD_E2E=1` or without any of those.
+`depends = ["web-build"]`), the sibling provisioned `blizzard-mock` worktree, and an installed Chromium, skipping
+cleanly without `BLIZZARD_E2E=1` or without any of those.
 
 - `test_runner_panel_updates_live_over_sse_with_no_reload` — loads the runner's board at `/runners/<id>/board` once in
   Chromium, never reloading; the live loop's FILL claims the promoted chunk and mints a lease — a real `lease-changed`

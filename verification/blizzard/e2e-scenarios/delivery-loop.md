@@ -8,9 +8,8 @@
 The scenarios for the canonical `build → review → deliver` shape, the chunk shapes that ride it, the graph edges that
 carry a chunk past its own graph or past the land, and the first offer that brings a freshly set-up runner into it.
 
-The spike, post-merge, and migration modules each need the sibling provisioned `blizzard-mock` worktree plus a local
-winter source, skip without `BLIZZARD_E2E=1`, and run in the tag `release` workflow's full e2e tier, not the `gate`/`pr`
-single-repo checkout.
+The spike, post-merge, and migration modules each need the sibling provisioned `blizzard-mock` worktree and skip without
+`BLIZZARD_E2E=1`, and run in the tag `release` workflow's full e2e tier, not the `gate`/`pr` single-repo checkout.
 
 ## test_acceptance_loop
 

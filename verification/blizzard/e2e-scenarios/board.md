@@ -16,8 +16,7 @@ Every browser scenario here needs the built bundle `blizzard hub host` serves an
 without either or without `BLIZZARD_E2E=1`; for the board-browser and cost modules an unbuilt bundle fails loudly
 instead of skipping. Except for the graphs-diagram, gardening-run-dialog, and project-lens modules, every scenario also
 needs the sibling provisioned `blizzard-mock` worktree (the transcript module needing only its forge-registered repo,
-never spawning a runner) and a local winter source. The in-process event-log function needs only the worktree and winter
-source, no built bundle or Chromium.
+never spawning a runner). The in-process event-log function needs only the worktree, no built bundle or Chromium.
 
 ## test_board_browser_e2e
 

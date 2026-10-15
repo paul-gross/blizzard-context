@@ -16,8 +16,8 @@ The tier command is `BLIZZARD_CRASH_SWEEP=1 uv run pytest -n auto -m crash_sweep
 the crash-point registry (`tests.crash_points.discover_crash_points`) and, per point, runs the hub and runner as real
 subprocesses over the mock fleet, arms the point so its owning daemon `SIGKILL`s itself there, then asserts the
 invariant checker (`blizzard dev check-invariants`) is green over both stores and the chunk still lands exactly once
-after an unarmed restart — startup is REAP. It needs the sibling `blizzard-mock` worktree; the winter-bound scenarios
-also need a winter source. It is skipped without `BLIZZARD_CRASH_SWEEP=1`.
+after an unarmed restart — startup is REAP. It needs the sibling `blizzard-mock` worktree and no winter source — its
+runners use the built-in `basic` provider. It is skipped without `BLIZZARD_CRASH_SWEEP=1`.
 
 In CI the `pr` and `push` workflows run the bounded CI profile —
 `BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -n auto -m crash_sweep tests/crash/`
@@ -26,8 +26,7 @@ recovery-critical windows, about five minutes of wall time on a GitHub runner, u
 `timeout-minutes` declares. Bounded, but not a fast check. The bounded subset is intersected with the live registry and
 asserts each named point still exists (`bzh:crash-point-registry`), so a rename fails loudly; the FULL sweep stays the
 documented local command above and runs in the tag `release` workflow. Both CI workflows run it as a real gate over a
-multi-repo checkout — `blizzard`, `blizzard-mock`, and the public `blizzard-workspace` (the winter source) as siblings,
-`BLIZZARD_MOCK_WINTER_SOURCE` pointed at the last.
+two-repo checkout — `blizzard` and `blizzard-mock` as siblings.
 
 The registry's boundary families (`bzh:crash-point-registry`):
 

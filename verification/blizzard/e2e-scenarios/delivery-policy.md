@@ -8,8 +8,8 @@
 What `deliver` does when the forge answers with a red check, a conflict, or a pending CI run, plus the label projection
 reporting a chunk's state back to the forge.
 
-Every module in this file needs the sibling provisioned `blizzard-mock` worktree plus a local winter source, skips
-without `BLIZZARD_E2E=1`, and uses no browser.
+Every module in this file needs the sibling provisioned `blizzard-mock` worktree, skips without `BLIZZARD_E2E=1`, and
+uses no browser.
 
 ## test_delivery_conflict_e2e
 

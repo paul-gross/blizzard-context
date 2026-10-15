@@ -10,8 +10,8 @@ What a node's session carries across an entry: which session a node resumes, and
 `test_session_modes_e2e` and `test_resume_preamble_e2e` run in-process, one tick at a time, with no browser;
 `test_mixed_harness_e2e` drives a real `blizzard-hub`/`blizzard-runner` subprocess pair instead, the daemon itself
 restarted mid-scenario (`tests/crash/`'s own subprocess harness, reused rather than re-derived). Every module needs the
-sibling provisioned `blizzard-mock` worktree plus a local winter source, skips without `BLIZZARD_E2E=1`, and runs in the
-tag `release` workflow's full e2e tier.
+sibling provisioned `blizzard-mock` worktree and skips without `BLIZZARD_E2E=1`, and runs in the tag `release`
+workflow's full e2e tier.
 
 The mock records each turn's user text into a Claude-Code-shaped transcript at `<root>/mock-claude-code/<sid>.jsonl` —
 an untagged prompt's text being the runner's preamble verbatim — so a session's transcript is the ordered record of what

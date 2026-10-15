@@ -46,8 +46,10 @@ a code for the levered profile), and a `/_levers` identity-scripting plane; cont
 
 ### tool:fixture-workspace
 
-The blizzard-mock-fixture scaffold: mints bare `file://` origins plus a generated disposable winter workspace — the
-environment the service tier, e2e tier, and sweep run against.
+The blizzard-mock-fixture scaffold: mints bare `file://` origins and an empty `workspace/` — winter-free by default, the
+environment the service tier, e2e tier, and sweep run against on the basic provider. With `--winter-source` (or
+`$BLIZZARD_MOCK_WINTER_SOURCE`) it also clones a winter framework and initializes a real disposable winter workspace
+over the origins, for `blizzard:winter-binding` and `blizzard:journey`; no winter source is ever discovered implicitly.
 
 ### tool:mock-data
 
