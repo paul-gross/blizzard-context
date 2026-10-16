@@ -33,6 +33,13 @@ inline `vale@` pin in `.github/workflows/gate.yml`, since this repo carries no `
 (`blizzard-context:ci-workflows`). A sibling checkout that is absent is a skip for G, the
 same shape check A's missing-checkout case uses.
 
+Check H compares each layer table in the docs (`architecture/clean-architecture.md`,
+`architecture/frontend-structure/placement.md`) against the data its gate holds
+(`tests/test_layering.py`, `web/scripts/structural-gate.js`): the same units and the same
+edges per unit. A missing table or gate name is a fail, since the comparison cannot be made
+without it. An absent blizzard checkout is a skip for H, the caller's, the same shape as A
+and G.
+
 Emits NDJSON findings on stdout, one object per line, following the
 `winter lint` finding contract (`check`, `status` in {pass, warn, fail},
 optional `message`/`file`/`line`/`remediation`). Exits 0 by default; with
@@ -1763,7 +1770,7 @@ LAYER_TABLES_DOC_FRONTEND = "architecture/frontend-structure/placement.md"
 LAYER_GATE_PYTHON = "tests/test_layering.py"
 LAYER_GATE_JS = "web/scripts/structural-gate.js"
 
-# (doc file, section marker, how the table is picked out, gate file, gate name, label)
+# (doc file, section marker, how the table is picked out, gate file, gate name)
 # The Python tables are told apart by their unit-column header; the frontend tables all
 # share one header and are told apart by the project name opening the paragraph above.
 LAYER_TABLES = (
