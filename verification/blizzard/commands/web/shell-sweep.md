@@ -131,6 +131,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   inside the panel rather than overflowing it. At 390px and 1280px a runner both locally and hub paused must render its
   LOCALLY PAUSED and HUB PAUSED badges as soft kit pills — the never-connected badge's radius and size — in
   `--label-dim` and `--amber-hi`, with no row overflow.
+- `fleet-page.shell-sweep.spec.ts` covers the desktop Fleet tab (`FleetView`): at 1280px the host list and the selected
+  host's detail sit side by side, the title-bar host actions are on screen and hit-testable, and the detail pane has no
+  horizontal overflow; at 1024px nothing overflows horizontally.
 - `host-card.shell-sweep.spec.ts` covers the runner registry's host card (`RunnerPanelView`): at 390px and 1280px a card
   holding two runners — a long workspace id, binding lines with an unreported workspace, named spenders, and an
   unrostered subscription — must stay inside the panel with its rows stacked, and the host-less heading and its row must
