@@ -111,8 +111,8 @@ board says so.
   holds; declaring an empty set serves nothing.
 - **An entry that names nothing waits.** A declared slug that resolves to no project of the tenant serves nothing, is
   shown on the board as unresolved, and starts serving once a project answers to it.
-- **Each project has its own agents.** A runner caps each project it serves separately, and asks for a project's work
-  only while that project has a free agent, so a full project never stands in front of another.
+- **Each project has its own agents.** A runner binds each project it serves to a workspace with its own count of
+  agents, so a full project never stands in front of another ([execution/hosts.md](./execution/hosts.md) §Bindings).
 
 ## The lens
 

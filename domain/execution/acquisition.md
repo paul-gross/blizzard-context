@@ -18,7 +18,8 @@ together, so there is nothing left to reach past locally. Either way an operator
 hold at the first unusable entry and claim nothing that tick, or pass over it — strictness the runner chooses, not a
 fleet-wide rule. The matched peek considers only chunks of the projects the runner serves, as the hub holds its
 declaration: a chunk of any other project is skipped under either policy, never held at, and a runner serving nothing is
-offered nothing ([../projects.md](../projects.md)).
+offered nothing ([../projects.md](../projects.md)) — nor through a binding the hub flags against its host
+([./hosts.md](./hosts.md) §Bindings).
 
 A claim is refused first on the runner, before any race: it is not registered at the hub, it is retired, or the hub has
 paused it. Under the claim lock the runner is judged again before anything else: a runner that is no longer registered
@@ -35,8 +36,9 @@ Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, n
 
 ## The route
 
-The route is the locator fact making every held chunk findable: chunk to runner to workspace to environment. Route
-liveness is not a proxy for being worked: a consumer folding routes into live occupancy must key on status.
+The route is the locator fact making every held chunk findable: chunk to runner to workspace to environment, the
+workspace being the one the runner binds the chunk's project to ([./hosts.md](./hosts.md) §Bindings). Route liveness is
+not a proxy for being worked: a consumer folding routes into live occupancy must key on status.
 
 ## Giving tenure back
 

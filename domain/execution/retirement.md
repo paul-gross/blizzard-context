@@ -5,7 +5,7 @@ What an operator's retirement of a runner stops, what it keeps, and how it is re
 
 Retirement is a recorded, reversible fact about a runner, never a deletion: the registration and every fact attributed
 to the runner survive, so historical views keep naming it. It is independent of the runner brakes in
-[pause.md](./pause.md).
+[pause.md](./pause.md). Retiring a host retires every runner under it this way ([hosts.md](./hosts.md)).
 
 ## What retirement stops
 
