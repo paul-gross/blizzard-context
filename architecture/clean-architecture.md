@@ -432,9 +432,9 @@ moved type leaves no second spelling behind.
 package are free. Adapters — `hub/api/`, `hub/store/`, the composition roots, tests — depend inward on any package
 (`bzh:domain-core`), but they too take each name from the module that defines it. The runner table governs imports of
 `blizzard.runner.*` made by modules of its nodes; imports inside one node are free. `runner/api/`, `runner/cli/`,
-`runner/store/`, `config`, `host_config`, `host_layout`, `composition`, `app`, `runtime`, `listeners`, `loop_wiring`,
-and tests are edges: they depend inward on any node, and no node imports them — a concept package takes config values by
-injection (a settings object or a structural Protocol), never `RunnerConfig`.
+`runner/store/`, `config`, `host_config`, `host_layout`, `ingest`, `composition`, `app`, `runtime`, `listeners`,
+`loop_wiring`, and tests are edges: they depend inward on any node, and no node imports them — a concept package takes
+config values by injection (a settings object or a structural Protocol), never `RunnerConfig`.
 
 **Detect.** A domain module importing a package its row does not list — at module level, inside a function, under
 `TYPE_CHECKING`, or by relative import — or importing the bare `blizzard.hub.domain` umbrella; a `.py` directly under
