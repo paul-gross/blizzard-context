@@ -612,8 +612,9 @@ source only through a backup copy, so the source is written by the last step alo
 4. Copy the path files under `runners/<name>/` and append its `[[runner]]`.
 5. Write its token into this host's `.env`.
 6. Remove its token from the source's `.env`.
-7. Delete its rows from the source, and move a source left with no runner aside whole. A runner directory that has not
-   graduated holds that one runner in a store at the schema it ran, so its store is moved aside whole, unedited.
+7. Delete its rows from the source, only from the runner tables the source's schema has, and move a source left with no
+   runner aside whole. A runner directory that has not graduated holds that one runner in a store at the schema it ran,
+   so its store is moved aside whole, unedited.
 
 Each edit from 2 to 6 is skipped when the file already holds it, so a re-run completes whatever an interrupted run left.
 The re-run is keyed on the record, not on the files: a runner whose identity row this host holds, with a newest
