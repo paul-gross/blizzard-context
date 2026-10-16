@@ -495,10 +495,11 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
   `20261011_1000_runner_scope` has been upgraded on Postgres; only their downgrades have run. A fix to that revision
   belongs to a change of its own.
 
-Standing in for a tier: the revisions' migration tests (`tests/test_runner_scope_migration.py`,
-`tests/test_runner_scope_tighten_migration.py`, `tests/test_runner_host_ingests_migration.py`) and the seam's component
-tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand run is not repeatable from a
-durable script, since the matrix carries the method and no driver. The gap closes as the tenancy one above does.
+Standing in for a tier: the revisions' migration tests
+(`src/blizzard/runner/store/migrations/tests/20261011_1000_runner_scope_test.py`,
+`20261013_1000_runner_scope_tighten_test.py`, `20261015_1000_host_ingests_test.py`) and the seam's component tests on
+SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand run is not repeatable from a durable
+script, since the matrix carries the method and no driver. The gap closes as the tenancy one above does.
 
 ## What the project lens and the project columns do not cover
 

@@ -13,9 +13,10 @@ standard disagree, the same change fixes whichever one is wrong.
 Exemplars live in the `blizzard` repo, outside the shipped package, so a change to the code they build on changes them
 in the same commit. An exemplar sits where its production counterpart would: Python under
 `blizzard/exemplars/python/exemplar/` mirrors `blizzard/src/blizzard/` with `exemplar` in place of `blizzard`, its tests
-sit flat in `blizzard/exemplars/python/tests/` as `blizzard/tests/` does, and Angular files under
-`blizzard/exemplars/web/` mirror `blizzard/web/projects/`. It imports the real blizzard infrastructure its counterpart
-would, never a placeholder library. This file and [./index.md](./index.md), the router to them, stay in the harness.
+sit flat in `blizzard/exemplars/python/tests/` as `blizzard/tests/` does (a migration's test beside its revision, as
+`bzh:colocated-migration-tests` places it), and Angular files under `blizzard/exemplars/web/` mirror
+`blizzard/web/projects/`. It imports the real blizzard infrastructure its counterpart would, never a placeholder
+library. This file and [./index.md](./index.md), the router to them, stay in the harness.
 
 ## The `# exemplar:` device
 

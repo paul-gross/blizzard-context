@@ -32,14 +32,15 @@ Stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`)
 
 ## The tenant statement guard is on in every tier
 
-Every test the suite runs, at every tier, runs with the tenant statement guard on. The root `tests/conftest.py`'s
-`pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs the guard (`src/blizzard/hub/store/tenant_guard.py`) in
-the test process, and every hub a service, e2e, or crash test spawns inherits the variable and installs the guard as it
-opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`). Before a statement executes, the guard refuses one that
-reaches a tenant-owned table without naming its tenant — a select, update, or delete in which no condition scopes that
-table to a tenant, or an insert into it with no `tenant_id` — raising `UnscopedTenantStatement`. A statement marked
-hub-scoped passes unwalked, and raw SQL is never walked. Only the value `1` switches the guard on; a hub started outside
-the suite runs without it unless its environment sets that, and production leaves it off.
+Every test the suite runs, at every tier, runs with the tenant statement guard on. The suite plugin's
+(`tests/suite_plugin.py`) `pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs the guard
+(`src/blizzard/hub/store/tenant_guard.py`) in the test process, and every hub a service, e2e, or crash test spawns
+inherits the variable and installs the guard as it opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`).
+Before a statement executes, the guard refuses one that reaches a tenant-owned table without naming its tenant — a
+select, update, or delete in which no condition scopes that table to a tenant, or an insert into it with no `tenant_id`
+— raising `UnscopedTenantStatement`. A statement marked hub-scoped passes unwalked, and raw SQL is never walked. Only
+the value `1` switches the guard on; a hub started outside the suite runs without it unless its environment sets that,
+and production leaves it off.
 
 A refusal is the finding, never something to switch off: scope the statement, or route a read that must span tenants
 through the seam `bzh:hub-scoped-reads-confined` names. Only `tests/test_tenant_guard.py`, whose subject is the switch
@@ -78,33 +79,51 @@ runner.
 **Why.** A store test exercises its store behavior, while replaying the chain in every case consumes time without
 testing that behavior. Migration tests still need the replay to prove the revisions themselves.
 
-**Detect.** The head-replay guard installed by `tests/conftest.py` refuses a direct `upgrade("head")` from an unmigrated
-store in a non-migration `test_*.py` module, naming that module and the helper to use. Upgrades from a pinned older
-revision and production initialization pass.
+**Detect.** The head-replay guard installed by `tests/suite_plugin.py` refuses a direct `upgrade("head")` from an
+unmigrated store in a non-migration `test_*.py` module, naming that module and the helper to use. Upgrades from a pinned
+older revision and production initialization pass.
 
 **Do.** `migrated_hub_at(db_url)` before opening a hub store for an adapter test.
 
 **Don't.** Call `migration_runner(config).upgrade("head")` from an ordinary store test on a fresh file.
 
-## A test pinning an older store revision names it (`bzh:migration-revision-marker`)
+## A migration test sits beside its revision (`bzh:colocated-migration-tests`)
 
-**Rule.** A test that pins an older store revision to prove that revision carries
-`@pytest.mark.migration_revision("<stem>")`, naming the filename stem of the revision it proves: the revision the test
-upgrades into, not the parent it pins. Such a test skips automatically once that revision is more than 30 days old.
-`BLIZZARD_RUN_RETIRED_MIGRATION_TESTS=1` runs them all, for example to vet an Alembic or SQLAlchemy upgrade. A test that
-only puts a store behind head, so that current behavior is its subject, carries no marker.
+**Rule.** A test that pins an older store revision to prove that revision lives beside it, as
+`src/blizzard/{hub,runner}/store/migrations/tests/<revision-stem>_test.py`, one file per revision: the filename names
+the revision the test upgrades into, not the parent it pins, and is the only thing tying test to revision. A revision
+that reshapes or backfills rows ships with its colocated test in the same change. A test covering several revisions
+takes the newest stem it pins. A test that only puts a store behind head, so that current behavior is its subject, stays
+in `tests/` and is never retired.
+
+- A colocated test skips automatically once its revision is more than 30 days old, by the date in the stem.
+  `BLIZZARD_RUN_RETIRED_MIGRATION_TESTS=1` runs them all, for example to vet an Alembic or SQLAlchemy upgrade.
+- Only the two shipped stores retire by age. The exemplar's colocated test (`bzh:exemplar-conformance`) sits beside its
+  exemplar revision under the same naming rule and always runs.
+- A file in any `migrations/tests/` directory beside a `versions/` directory must be named
+  `YYYYMMDD_HHMM_<rest>_test.py` with that stem naming a revision in the sibling `versions/`; collection refuses it
+  otherwise.
+- Each directory is a package, because the stems the hub and runner trees share would collide as test basenames.
+  Colocated tests are test code: they are held to the standards of `tests/`, not of production, and never ship in the
+  wheel. Helpers a colocated test shares with others live in a `tests/` support module; no colocated file imports
+  another.
 
 **Why.** A revision's tests prove it once, while it is new; replaying them for every later run costs time and proves
-nothing the chain's head-equivalence checks do not.
+nothing the chain's head-equivalence checks do not. Beside the revision, the test is found with the file it proves, and
+the filename alone says when it expires.
 
-**Detect.** The collection hook in `tests/conftest.py` refuses a marker naming no revision in either `versions/`
-directory, with a usage error naming the test and the value (`tests/revision_age.py`, proven by
-`tests/test_revision_age.py`). No check enforces that the marker is present.
+**Detect.** The collection hook in `tests/suite_plugin.py`, registered by the repo-root `conftest.py` so it reaches
+every colocated directory, refuses a misnamed file or a stem with no sibling revision with a usage error naming the file
+(`tests/revision_age.py`, proven by `tests/test_revision_age.py`). No check enforces that a reshaping revision has its
+test.
 
-**Do.** Mark module-wide when every test in the file proves one revision; mark per test or per parametrized case
-otherwise.
+**Do.** `src/blizzard/hub/store/migrations/tests/20261008_1400_tenant_tighten_test.py` beside
+`versions/20261008_1400_tenant_tighten.py`.
 
-**Don't.** Name the parent a test pins, or a revision's Alembic id when it differs from its filename stem.
+**Don't.** Name a file for the parent revision it pins, mark a test by hand to retire it, or leave a revision's test in
+`tests/`.
+
+**See also.** `./gaps.md`; `../../exemplars/index.md` for the exemplar's migration test.
 
 ## Two tenants on one hub: the isolation scenario
 
