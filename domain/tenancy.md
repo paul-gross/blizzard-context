@@ -1,10 +1,10 @@
 # Tenancy
 
 A **tenant** is a wall around one fleet's world on a hub: its graphs, projects, work sources, repositories, secrets,
-chunks, findings, proposals, runners, and the record of everything that happened to them. Everything a hub holds for a
-fleet belongs to exactly one tenant, and nothing crosses from one tenant into another. People enter a tenant through a
-**membership**, and arrive only by **invitation**; **hub administrators** stand above every tenant. Part of the
-[domain model](./index.md).
+chunks, findings, proposals, hosts, runners, and the record of everything that happened to them. Everything a hub holds
+for a fleet belongs to exactly one tenant, and nothing crosses from one tenant into another. People enter a tenant
+through a **membership**, and arrive only by **invitation**; **hub administrators** stand above every tenant. Part of
+the [domain model](./index.md).
 
 ## The wall
 
@@ -37,8 +37,8 @@ the same person can administer one tenant and only watch another.
   tenant named. A person who holds several and names none is refused, and told which tenants they may name.
 - **No membership, no access.** A person whose last membership is revoked is still recognized at sign-in, sees nothing
   of any tenant, and is told to reach out to their administrator.
-- **Machines never choose.** A runner belongs to exactly one tenant, the one it was added in, for its whole life; its
-  credential settles the tenant of everything it does.
+- **Machines never choose.** A host or a runner belongs to exactly one tenant, the one it was added in, for its whole
+  life; its credential settles the tenant of everything it does, and every runner a host adds is born in the host's.
 
 A tenant's `admin` members manage who belongs to it: they invite people, change members' roles, revoke memberships, and
 may make other members admins. They reach nothing beyond their tenant.
