@@ -621,8 +621,9 @@ The re-run is keyed on the record, not on the files: a runner whose identity row
 runner gets only its move-aside. A moved stamp refuses, naming both stores, since the source ran after the copy. Two
 windows are **real windows**, each an armed crash point. `ingest.after-copy.before-config` falls after step 1, with the
 rows in both stores and no configuration here yet. `ingest.after-config.before-removal` falls after step 6, with the
-token here and the rows still in the source. Without its token the source cannot run the runner, so its stamp stays put
-and the re-run resumes.
+token here and the rows still in the source. Without its token the source cannot run this runner, but a source host
+serving other runners still moves its host-wide stamp, and the re-run then refuses; the recovery is
+`store reset --runner` here, then a fresh ingest.
 
 ## The add-then-write-token window
 
