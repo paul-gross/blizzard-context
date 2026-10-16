@@ -86,6 +86,26 @@ revision and production initialization pass.
 
 **Don't.** Call `migration_runner(config).upgrade("head")` from an ordinary store test on a fresh file.
 
+## A test pinning an older store revision names it (`bzh:migration-revision-marker`)
+
+**Rule.** A test that pins an older store revision to prove that revision carries
+`@pytest.mark.migration_revision("<stem>")`, naming the filename stem of the revision it proves: the revision the test
+upgrades into, not the parent it pins. Such a test skips automatically once that revision is more than 30 days old.
+`BLIZZARD_RUN_RETIRED_MIGRATION_TESTS=1` runs them all, for example to vet an Alembic or SQLAlchemy upgrade. A test that
+only puts a store behind head, so that current behavior is its subject, carries no marker.
+
+**Why.** A revision's tests prove it once, while it is new; replaying them for every later run costs time and proves
+nothing the chain's head-equivalence checks do not.
+
+**Detect.** The collection hook in `tests/conftest.py` refuses a marker naming no revision in either `versions/`
+directory, with a usage error naming the test and the value (`tests/revision_age.py`, proven by
+`tests/test_revision_age.py`). No check enforces that the marker is present.
+
+**Do.** Mark module-wide when every test in the file proves one revision; mark per test or per parametrized case
+otherwise.
+
+**Don't.** Name the parent a test pins, or a revision's Alembic id when it differs from its filename stem.
+
 ## Two tenants on one hub: the isolation scenario
 
 `tests/test_tenant_isolation.py`, at `blizzard:component-test`, stands two tenants up on one hub, seeds both with the
