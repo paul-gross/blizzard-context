@@ -41,7 +41,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`flex: 0 1 auto; min-width: 0`, `board-header.css`), which reproduces the off-screen-menu symptom.
   `app-header.shell-sweep.spec.ts` additionally sweeps the connection cell's `degraded` state — the longest string that
   cell ever renders — over the same width range with a fixed username, asserting the cell reads `degraded`, the profile
-  menu stays on-viewport, and the header itself carries no horizontal overflow.
+  menu stays on-viewport, and the header itself carries no horizontal overflow. It also sweeps a failed logout — the
+  header's own alert beside the profile menu — over the same widths, asserting the alert renders, the menu stays
+  on-viewport, and the header carries no horizontal overflow.
 - `app-nav.shell-sweep.spec.ts` covers the runner's top tab strip (`AppNav`). Its `KitTabStrip`/`KitTab` chrome carries
   no `@container` rule, so the claim is narrower: from 1400px to 320px both static labels render and the strip never
   overflows its own width.
@@ -325,7 +327,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `--master-list-col`; at 390px and 320px the two panes must genuinely stack — a common `left` with distinct `top`s —
   with no horizontal overflow. Proven able to fail by forcing the base `:host` `flex-direction` to `row`. Under
   drill-down at 740px — inside the 720–767px band the media query reads as row — a lone list or detail pane fills the
-  host's width, the list case proven able to fail by deleting the `.kmd-list--only` rule inside the media query; and a
+  host's width, the list case proven able to fail by deleting the `.kmd-list--only` rule inside the media query, and the
+  detail case by deleting the `.kmd-pane--hidden` rule, which leaves the inactive list pane mounted but not
+  `display: none`; and a
   projected slot element bounded with `flex: 1; min-height: 0; overflow-y: auto` stays within its pane's height and
   scrolls itself, proven able to fail by making `.kmd-detail` `display: block`.
 - `graph-session-table.shell-sweep.spec.ts` covers `GraphSessionTable`'s columns, mounted alone at 800px — the widest
