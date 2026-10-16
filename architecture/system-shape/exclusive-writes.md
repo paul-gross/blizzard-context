@@ -87,6 +87,33 @@ facts and the newest epoch there, so a stop or restart cannot land between the g
 process — correct until a second hub process starts against the same store, at which point the two locks stop
 serializing each other and the race reopens with nothing left to catch it.
 
+## A pool draw runs under its workspace's host-wide lock (`bzh:pool-acquisition-exclusive`)
+
+**Rule.** The draw from a workspace's environment pool — from the read of the host's held environments to the recorded
+binding — runs under that workspace's one in-process acquisition lock, shared by every runner the host serves. A runner
+that cannot take the lock without waiting skips its claim for that tick and does not wait for it.
+
+**Why.** `bzh:environment-held-once` needs one arbiter of the pool, and the runner store has no row both runners' draws
+could lock, so the host's in-process lock is the arbiter. It is sound only on `HostLock`'s premise of one process per
+data directory: a second process would hold its own lock, and the two would stop serializing each other. A runner that
+waited on the lock inside its claim would hold the tick before its Advance and transcript steps ran, stalling the leases
+it already serves for as long as another runner's draw takes.
+
+**Scope.** Governs `ReadyQueue.claim_one` (`runner/lifecycle/claim.py`) and any later path that draws an environment
+from a pool. The hub claim that follows the draw runs outside the lock. Exactly-once still rests on `require_unheld`,
+which the draw runs under the lock.
+
+**Detect.**
+
+- A pool draw outside the workspace's acquisition lock. Not mechanically checkable; judged at review.
+- A blocking acquisition of the lock from a loop step. Not mechanically checkable; judged at review.
+- A second process serving one data directory, which voids the premise.
+
+**Do.** `IWorkspaces.try_acquisition_lock` yields whether the lock was taken; `claim_one` returns `False`, "nothing more
+this tick", when it was not, and the next tick tries again.
+
+**Don't.** Block on the lock inside the claim, or draw from the pool without it because the pool looks free.
+
 ## Known debt
 
 Stated so a reviewer need not re-derive them:
