@@ -6,14 +6,18 @@ accepted and named — exempts it from `bzh:crash-point-registry`, and what stan
 owns the registry, the invariant checker, and the obligation to record a decision here; a hub write inside the
 transcript lane is recorded in [`./transcripts.md`](./transcripts.md) instead.
 
-## Promote, then tail-stamp
+## Promote or demote, then stamp the position
 
 `PromoteService.promote` (`blizzard/src/blizzard/hub/domain/operations/promote.py`) calls
-`ChunkQueueStore.record_promote_with_tail_position` (`blizzard/src/blizzard/hub/store/internal/chunk_queue_store.py`),
-which inserts the `chunk_promoted.promoted_at` fact and an explicit `queue_positions` tail-position fact — stamping the
-newly-ready chunk past every currently-ready chunk — in one write transaction (`insert_promote_rows`,
-`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). No window: a crash ahead of that transaction's commit loses
-both facts together, and a retry re-derives the same tail position from a fresh read.
+`ChunkQueueStore.record_promote_with_position_locked` (`blizzard/src/blizzard/hub/store/internal/chunk_queue_store.py`),
+which inserts the `chunk_promoted.promoted_at` fact and an explicit `queue_positions` fact — the queue tail, or the slot
+after a named anchor — in one write transaction (`insert_promote_rows`,
+`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). `DemoteService.demote`
+(`blizzard/src/blizzard/hub/domain/operations/demote.py`) is the same shape through `record_demote_with_position_locked`
+and `insert_demote_rows`: the `chunk_demoted.demoted_at` fact and an explicit backlog position. No window: a crash ahead
+of either transaction's commit loses both facts together, and a retry re-derives the same landing from a fresh read.
+`queue_positions` is shared by both lists and newest-wins, so a demote that landed its fact without its position would
+leave the chunk ranked by its stale ready-queue position.
 
 `QueueRanking.effective_position`'s (`blizzard/src/blizzard/hub/domain/operations/queue.py`) fallback — an un-positioned
 chunk sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small

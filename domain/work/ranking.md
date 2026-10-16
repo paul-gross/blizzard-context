@@ -35,11 +35,14 @@ chunks from both.
 **Don't.** Merge the two lists' explicit positions into one shared order, or let a reorder for one list silently
 reposition a chunk that belongs to the other.
 
-## Promotion after rank
+## Promotion and demotion after rank
 
-Promotion always lands a chunk at the tail of the `ready` queue — after every chunk the queue already ranks, however the
-queue was last ordered — never mid-queue and never ahead of an explicit position an operator set before the promotion. A
-queue reorder that ran before a promotion is never undone by it.
+Promotion lands a chunk at the tail of the `ready` queue — after every chunk the queue already ranks, however the queue
+was last ordered — unless the operator names an anchor, when it lands in that anchor's slot. A queue reorder that ran
+before a promotion is never undone by it.
+
+Demotion always stamps an explicit position in the backlog — the tail, or the named anchor's slot — so the mint-instant
+fallback never ranks a demoted chunk.
 
 ## See also
 
