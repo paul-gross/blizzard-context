@@ -38,13 +38,20 @@ Landing is not itself terminal: a graph may route further runner work after it b
 Deleting or grouping an unacquired chunk is not a status: the chunk simply vanishes from every listing, the work item
 remaining the durable referent.
 
-## Promotion
+## Promotion and demotion
 
-Promote moves a never-promoted chunk from `not_ready` to `ready`, and is refused on a never-promoted `stopped` or `done`
-chunk. On a chunk already promoted, promote is a replay that writes nothing, at any status. Promotion and the per-chunk
-brake are orthogonal: a never-promoted `paused` chunk may be promoted, and joins the `ready` queue on resume. A restart
-of a never-promoted chunk re-aims it without promoting it, so it keeps deriving `not_ready` — even re-aimed onto a
-hub-executed node.
+Promote moves a not-currently-promoted chunk from `not_ready` to `ready`, and is refused on a not-currently-promoted
+`stopped` or `done` chunk. On a currently promoted chunk, promote is a replay that writes nothing, at any status.
+Promotion and the per-chunk brake are orthogonal: a not-currently-promoted `paused` chunk may be promoted, and joins the
+`ready` queue on resume. A restart of a not-currently-promoted chunk re-aims it without promoting it, so it keeps
+deriving `not_ready` — even re-aimed onto a hub-executed node.
+
+Demote is promote's inverse: it moves a currently promoted, unacquired chunk from `ready` back to `not_ready`. A chunk
+is currently promoted while its newest promotion is later than its newest demotion, so promote and demote alternate
+freely and the chunk keeps its id, history, edges, pin, and defaults. Demote's window is `ready`, plus a `paused` chunk
+only the brake withholds from `ready`; on a chunk not currently promoted it is a replay that writes nothing, at any
+status. Every other status refuses it: a claimed or delivering chunk, one gated on a human, and a stopped or done one. A
+held chunk is detached first, then demoted.
 
 ## The blocked marking
 
