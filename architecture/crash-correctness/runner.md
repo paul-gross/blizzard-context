@@ -385,14 +385,15 @@ row owes the invariant checker nothing: it is the hub's own answer about the tok
 ## The credential-renewal window
 
 `CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on the host tick in
-`runner host` (`HostTick`, `blizzard/src/blizzard/runner/lifecycle/host_tick.py`), first after the host's report and ahead
-of the usage sampling, so a slow vendor endpoint never delays it. It never runs in a runner's tick. Per slug it gates on the newest claim's cadence, asks the renewer binding whether a
-renewal is due, then writes three steps in order: it commits a claim through `UsageStore.claim_credential_renewal`,
-fires the renewal, and commits the outcome through `UsageStore.record_credential_renewal_outcome`
-(`blizzard/src/blizzard/runner/store/internal/usage_store.py`). The claim and the outcome are separate append-only
-facts, and the claim is never updated. The renewal itself is the vendor CLI's own rewrite of its credential file, driven
-as a bounded one-shot subprocess (`blizzard/src/blizzard/runner/subscriptions/internal/openai_credential_renewer.py`):
-blizzard never opens that file for writing (`bzh:subscriptions-no-write`).
+`runner host` (`HostTick`, `blizzard/src/blizzard/runner/lifecycle/host_tick.py`), first after the host's report and
+ahead of the usage sampling, so a slow vendor endpoint never delays it. It never runs in a runner's tick. Per slug it
+gates on the newest claim's cadence, asks the renewer binding whether a renewal is due, then writes three steps in
+order: it commits a claim through `UsageStore.claim_credential_renewal`, fires the renewal, and commits the outcome
+through `UsageStore.record_credential_renewal_outcome` (`blizzard/src/blizzard/runner/store/internal/usage_store.py`).
+The claim and the outcome are separate append-only facts, and the claim is never updated. The renewal itself is the
+vendor CLI's own rewrite of its credential file, driven as a bounded one-shot subprocess
+(`blizzard/src/blizzard/runner/subscriptions/internal/openai_credential_renewer.py`): blizzard never opens that file for
+writing (`bzh:subscriptions-no-write`).
 
 The window runs from the claim, through the vendor's rewrite, to the outcome. It is a **real window**, and its loss is
 **accepted**, an exemption rather than a crash point. A `kill -9` inside it loses only the outcome row. The claim is
