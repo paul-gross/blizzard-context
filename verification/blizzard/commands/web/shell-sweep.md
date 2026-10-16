@@ -329,9 +329,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   drill-down at 740px — inside the 720–767px band the media query reads as row — a lone list or detail pane fills the
   host's width, the list case proven able to fail by deleting the `.kmd-list--only` rule inside the media query, and the
   detail case by deleting the `.kmd-pane--hidden` rule, which leaves the inactive list pane mounted but not
-  `display: none`; and a
-  projected slot element bounded with `flex: 1; min-height: 0; overflow-y: auto` stays within its pane's height and
-  scrolls itself, proven able to fail by making `.kmd-detail` `display: block`.
+  `display: none`; and a projected slot element bounded with `flex: 1; min-height: 0; overflow-y: auto` stays within its
+  pane's height and scrolls itself, proven able to fail by making `.kmd-detail` `display: block`.
 - `graph-session-table.shell-sweep.spec.ts` covers `GraphSessionTable`'s columns, mounted alone at 800px — the widest
   `graph-detail.shell-sweep.spec.ts`'s own page ever frames it at, and a page the hub's mobile bottom tab bar cannot
   reach, so the narrow-viewport tier rule does not bind here. Every header and data cell of a session row with a
