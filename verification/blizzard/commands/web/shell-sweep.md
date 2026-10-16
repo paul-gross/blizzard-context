@@ -249,6 +249,16 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   card carrying its completion stamp and its one combined cost figure, billed, estimated, and partial at once. At 800px
   and at 390px/320px (`bzh:narrow-viewport-tier-rule`) the two must sit side by side on one line, neither overlapping
   the other and neither overflowing the card — a real CSS layout claim jsdom cannot make.
+- `board-card-selected.shell-sweep.spec.ts` covers `BoardCardComponent`'s selected state through the kit select row's
+  `bare` mode. At 800px and at 390px/320px (`bzh:narrow-viewport-tier-rule`) a selected card's inner button must carry a
+  transparent background and no border while the outer card holds the cyan left edge, the PR links must sit inside the
+  card's rect, and the content's inset from the card edge must be the card's own border and padding alone — a real CSS
+  cascade claim jsdom cannot make.
+- `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out at 800px and at
+  390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding, bottom hairline, left edge and
+  `--surface-selected` background, while `bare` draws no padding, border or background selected or hovered, and a flex
+  rule on the host lays the projected children on one line with the host's gap. Proven able to fail by deleting the bare
+  rule's layout inheritance.
 - `board-column.shell-sweep.spec.ts` covers `BoardColumn`'s decorative reorder grip: READY and BACKLOG each render a
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
@@ -339,7 +349,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-transcripts-provenance.shell-sweep.spec.ts` covers the transcripts tab's per-segment harness-provenance badges:
   two segments recording distinct harnesses render two genuinely distinct badges, at the board's own narrow,
   mobile-reachable width, with no page error and no horizontal overflow. An open, truncated segment's `open` and
-  `truncated` tags render as kit pills in `--label-dim` and `--amber`, each bordered in its own colour.
+  `truncated` tags render as kit pills in `--label-dim` and `--amber`, each bordered in its own colour. A segment row
+  lays its label and pills on one vertically centred line, the label left of the pills with a positive gap and no
+  overlap, and no badge's untrimmed text carries leading or trailing whitespace.
 - `mobile-tab-bar.shell-sweep.spec.ts` covers the shared mobile bottom tab bar (`MobileTabBar`) carrying the four-tab
   runner strip with a two-digit Asks count: at 390px and 320px the count renders as the kit's `--amber` count chip,
   inside its own tab and the bar, with no horizontal overflow of the bar.
