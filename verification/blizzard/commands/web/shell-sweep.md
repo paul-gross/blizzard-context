@@ -313,8 +313,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   proves nothing) must wrap inside its row with no horizontal overflow — gardening sits in the hub's mobile bottom tab
   bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `gardening-findings-filters.shell-sweep.spec.ts` covers the findings tab, which spans every routine and every scope:
-  at 390px and 320px the four filter dropdowns (routine, scope, class, state) must render with no visible
-  `.gf-filter-label` column and no horizontal overflow of `.gf-filters`, the finding list's first row must start within
+  at 390px and 320px the four filter dropdowns (routine, scope, class, state) must render with no
+  filter-label column and no horizontal overflow of `.gf-filters`, the finding list's first row must start within
   the first screen, and an opened class popup over 50+ distinct classes must sit inside the viewport and scroll
   vertically; a row from a bucket mixing two routines and two scopes must render its own routine and scope with no
   horizontal overflow of the row itself. Also proves a long, unbroken class name still shrinks-and-ellipsizes on
