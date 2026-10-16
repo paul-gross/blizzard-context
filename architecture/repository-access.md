@@ -120,7 +120,7 @@ form made from a singular newest-fact read by dropping its `LIMIT 1`, which `bzh
 the *wide* plural `load_facts_for`, which returns exactly what calling `load_facts` per id would; `status_facts_for` is
 the *narrowed* sibling, reading only the fact families a `ChunkStatusView` reaches and naming that set in its own
 docstring rather than every family `load_facts_for` loads. `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s
-`FindingStore.get_many` batches both its row read and its `_facts_for_many` facts read through
+`FindingStore.get_many` batches both its row read and its bounded `fact_summaries` read through
 `blizzard/src/blizzard/foundation/store/batching.py`'s shared `id_batches`.
 
 **Don't.** `{chunk_id: self._facts.load_facts(chunk_id) for chunk_id in chunk_ids}` — and its seam-level cause, a
