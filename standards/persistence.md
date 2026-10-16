@@ -98,7 +98,9 @@ def check_current(self) -> None:
 
 **See also.** `blizzard/exemplars/python/exemplar/hub/store/migrations/versions/20261015_0900_permits.py`
 ([../exemplars/index.md](../exemplars/index.md)) — a revision adding two tables, as reference code; its test is
-`blizzard/exemplars/python/tests/test_permit_migration.py`.
+`blizzard/exemplars/python/exemplar/hub/store/migrations/tests/20261015_0900_permits_test.py`. Where a revision's test
+lives, and when it retires, is `bzh:colocated-migration-tests` in
+[../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
 
 ## Frozen revisions (`bzh:frozen-revisions`)
 
