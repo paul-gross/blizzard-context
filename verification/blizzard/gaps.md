@@ -429,6 +429,11 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   only, so whether Postgres's planner uses the project read indexes for it stays unproven, as
   [§The query-plan assertions never run under postgres](#the-query-plan-assertions-never-run-under-postgres) states for
   every index.
+- **The secret-row lock.** Secret retire and every work-source or repository write naming a secret lock that secret's
+  row (`lock_secret_row`, `src/blizzard/hub/store/internal/secret_store.py`) before their guard reads. That the lock,
+  not the tenant-row lock ahead of it, makes a retire and a referrer's enable exclude each other under READ COMMITTED is
+  asserted statically, by the lock statement compiled under the Postgres dialect (`tests/test_secret_row_lock.py`), and
+  run on SQLite only, where the writer lock serializes the two whatever the row lock.
 
 Standing in for a tier: the revisions' migration and carry-over tests, the slug-move and link tests on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
