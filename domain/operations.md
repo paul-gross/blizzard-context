@@ -51,6 +51,10 @@ the newest rows, whatever their severity.
 | `egress-write-recovered`       | `info`     | The first fact-egress pass after a failure that placed something; a pass that wrote nothing announces no recovery                                                                                                                                                                                   |
 | `egress-cursor-reset`          | `info`     | An operator moved a fact-egress dataset's cursor, carrying the dataset, the position it left, the one it moved to, and whether the window between was skipped or repeated — a reset to the position it already stands at reads as repeated                                                          |
 
+A deliver hub node also refuses a visit before running a command when a resolved repository's secret is missing or
+retired (`repository-secret-unavailable`). It routes the failure choice and records a node-step failure log, but no
+event-log row: this refusal is not an event kind in the closed vocabulary above.
+
 An escalation ([./humans/escalation.md](./humans/escalation.md)) remains its own fact under its own supersession rule;
 the log does not re-model it — every currently-open escalation projects as a `needs-human` critical event, one row in
 one surface. The per-attempt `worker-lost` event and the standing `needs-human` projection are distinct, complementary

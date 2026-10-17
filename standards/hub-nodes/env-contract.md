@@ -67,8 +67,8 @@ departs from the shapes above.
   repository's forge directly — the forge row for land scripts in
   [../../architecture/system-shape/seam-positions.md](../../architecture/system-shape/seam-positions.md) is why this is
   not a seam. It refuses two entries that share a `repo`, since they share a `merged/<repo>` marker, printing `failure`
-  and naming both. The executor resolves the commit pointers before any step runs; for visit refusals and their
-  operational events, see [../../domain/operations.md](../../domain/operations.md).
+  and naming both. The executor resolves the commit pointers before any step runs; for visit refusals and how they
+  surface, see [../../domain/operations.md](../../domain/operations.md).
 - A script that needs one target for the whole chunk reads the single-valued `BZ_FORGE_*` and `BZ_HUB_BASE_BRANCH`
   variables, which are set only when every record agrees, and refuses with a named reason when they are absent.
 - `land_common.MarkerWriter` — the one marker channel every land script holds, as `LandRun.markers` — treats any non-2xx
