@@ -61,6 +61,24 @@ The guard is a pure equality check with no forward-compatibility carve-out — u
 policy, an unknown field or a reordered parameter is exactly the drift this method exists to catch, ahead of the CLI's
 decomposition into by-concept packages: the surface must render identically at every step of that move.
 
+### blizzard:store-contract
+
+`uv run pytest tests/test_store_contract.py` (`blizzard:component-test`, so inside `blizzard:gate`) gates each store's
+schema document, `contracts/store/hub.json` and `runner.json`, against a head-migrated store. The document is built from
+`schema.py` and the tree's head revision by `blizzard-export-contracts`, whose output `blizzard:gate`'s drift step holds
+to the committed files; the test reflects a store taken from `tests/support.py::migrated_hub_at` or
+`tests/runner_fakes.py::migrated_store_at` through `blizzard.tools.store_contract.document_from_engine` and requires
+equality, `deprecated` marks excepted since reflection cannot see them, with the applied revision standing for
+`head_revision`. The two checks close a pair: a `schema.py` change without regenerating reddens the drift step, and
+regenerating without a revision reddens this test.
+
+Its reach is SQLite only. Server defaults compare by presence, constraints by columns and referents, check constraints
+by name, and indexes and column order not at all. The Postgres comparison is a declared gap
+([`../gaps.md`](../gaps.md)).
+
+Falsify it with a scratch revision that adds a column `schema.py` lacks, then regenerate nothing: the test reddens on
+the reflected-only column. Delete the revision afterwards.
+
 ### blizzard:trace-contract
 
 `uv run pytest tests/test_trace_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the span shape the

@@ -11,11 +11,12 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 `mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
-(`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, hub↔runner wire compatibility
+(`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, the contract-document drift check
+(`blizzard-export-contracts` and a `git diff` over `contracts/`), hub↔runner wire compatibility
 (`blizzard:wire-compat`), then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`), the
 bundle-composition check (`web:bundle-composition`), and generated-client drift over `web/`. Stage regenerated
-`openapi/` or `web/` client output before running it: the drift checks are a working-tree-vs-index `git diff`, so a
-staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
+`openapi/`, `contracts/` or `web/` client output before running it: the drift checks are a working-tree-vs-index
+`git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
 
 `mise run gate` is not the full master merge gate — it omits `blizzard:service-test` and the bounded crash-sweep CI
 profile (`mise run crash-sweep-ci`); the `pr` and `push` workflows run both as separate real gate jobs, so a PR breaking
@@ -114,6 +115,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / ruff + pyright + structural gate"},
       {"context": "gate / pytest (unit + component)"},
       {"context": "gate / OpenAPI spec drift"},
+      {"context": "gate / contract drift"},
       {"context": "gate / hub↔runner wire compatibility"},
       {"context": "gate / eslint + vitest + client drift"},
       {"context": "gate / exemplar check (web)"},
