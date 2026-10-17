@@ -69,14 +69,12 @@ classes (`KitPanel`'s `.panel`/`.p-hdr`/`.p-body`/`.lbl`, `KitAsyncState`'s `.st
 
 The same script also runs the placement sweep (`web/scripts/placement-sweep.js`, over the TypeScript compiler API;
 [`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
-`bzh:frontend-placement`): each direct child of `fleet/src/lib/` — or, under the grouping folders `core/`, `chunk/`, and
-`shell/`, each child of that folder — must be reached by the non-spec code of both `hub` and `runner`, with reach
-resolved to the symbol through the `fleet` and `fleet/shell` barrels and through `fleet`-internal imports, and no
-`fleet` file may import from `projects/hub` or `projects/runner`. A violation names the unit and the single app that
-reaches it, or no app when the unit is dead. `testing/` and the declaration-free `core/format/` barrel are exempt in
-`PLACEMENT_EXEMPT_UNITS`, each with its reason; mixed folders reached by both apps pass at the folder level. Its
-self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a both-app
-unit — runs first.
+`bzh:frontend-placement`, whose Rule and Scope own which units of `fleet/src/lib/` it binds and which are exempt), with
+reach resolved to the symbol through the `fleet` and `fleet/shell` barrels and through `fleet`-internal imports. A
+violation names the unit and the single app that reaches it, or no app when the unit is dead, or the `fleet` file that
+imports an app. An exempt unit is named with its reason in `PLACEMENT_EXEMPT_UNITS`, the `REAL_TIMER_EXEMPT_FILES`
+idiom. Its self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass
+a both-app unit — runs first.
 
 The same script also runs the disjoint-diffs sweep (`web/scripts/disjoint-diffs-sweep.js`, reusing the placement sweep's
 compiler-API program;
@@ -108,26 +106,22 @@ and the generated `fleet/src/lib/api/`:
 
 The same script also runs the package-layers sweep
 ([`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
-`bzh:frontend-package-layers`), which owns the three layer tables the sweep declares as data, with no exemption list.
-Over every git-tracked `.ts`, `.css`, and `.html` file below `fleet/src/lib/`, `hub/src/app/`, and `runner/src/app/`, it
-resolves each relative edge — a static, type-only, or dynamic import, a component's `styleUrl`, `styleUrls`, or
-`templateUrl`, and a CSS `@import` — to a file and its unit, and fails on an import its table does not allow, a file in
-no unit, a table unit with no folder or an edge naming an undeclared one, a cycle in a table counting the implicit
-kernel edges, a relative import that leaves its project, and a file below a source root importing its own project's
-package entry, save a spec taking the spec-support entry. Its self-test, `assertPackageLayersDetectorWorks` — must-catch
-an undeclared feature-to-feature import, an undeclared stylesheet or template edge, a stray app-root file, a file
-reaching its own package entry, and a planted table cycle; must-pass a declared edge, a kernel import, and a spec
-importing `testing` — runs before the sweep is trusted.
+`bzh:frontend-package-layers`, which owns the three layer tables the sweep declares as data and the files and edge kinds
+it binds), with no exemption list. It resolves each edge to a file and its unit, and fails on an import its table does
+not allow, a file in no unit, a table unit with no folder or an edge naming an undeclared one, a cycle in a table
+counting the implicit kernel edges, a relative import that leaves its project, and a file below a source root importing
+its own project's package entry, save a spec taking the spec-support entry. Its self-test,
+`assertPackageLayersDetectorWorks` — must-catch an undeclared feature-to-feature import, an undeclared stylesheet or
+template edge, a stray app-root file, a file reaching its own package entry, and a planted table cycle; must-pass a
+declared edge, a kernel import, and a spec importing `testing` — runs before the sweep is trusted.
 
 The same script also runs the containers-compose sweep (`web/scripts/containers-compose-sweep.js`, over the TypeScript
 compiler API;
 [`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
-`bzh:frontend-containers-compose`), with no exemption list. It grows the query-bearing `inject*` helpers to a fixed
-point from the TanStack inject functions, treats every `@Component` class calling one as a container, and walks each
-`computed()` imported from `@angular/core` in it — nested arrows and same-class `this.<member>()` calls followed — for
-an `if`, `switch`, `?:`, loop, or collection-transform call. Each site prints one line — file, line, the `computed()`
-field, and the deriving kinds — under `deriving computed() callbacks in containers (bzh:frontend-containers-compose)`.
-Its self-test, `assertContainersComposeDetectorWorks` — must-catch each deriving node kind, a ternary reached through a
+`bzh:frontend-containers-compose`, whose Scope and Detect own what the sweep treats as a container and what it flags
+inside a `computed()` callback), with no exemption list. Each site prints one line — file, line, the `computed()` field,
+and the deriving kinds — under `deriving computed() callbacks in containers (bzh:frontend-containers-compose)`. Its
+self-test, `assertContainersComposeDetectorWorks` — must-catch each deriving node kind, a ternary reached through a
 same-class helper, and a component injecting only through a project-local wrapper; must-pass `??` and comparison
 composition, an event-handler ternary, a presentational component, a non-component helper, and a local `computed` not
 imported from Angular — runs before the sweep is trusted.

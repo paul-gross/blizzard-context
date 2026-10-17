@@ -55,9 +55,9 @@ It names its two stores explicitly and separately, and neither half falls back t
 resolves only after `winter service up <env>` has brought that daemon up at least once, because the daemon's first start
 is what writes the `blizzard-hub.toml` or `blizzard-host.toml` the flag reads `db_url` from. `--runner-dir` pins the
 runner's id from the host file's one `[[runner]] id`, which only `runner init`'s join with that hub writes, and refuses
-a host file with no runner, a runner with no `id`, or several runners. After a `reset --store hub`, the hub no longer
-knows the runner's token: run `winter service restart <env>/runner`, whose `runner init --allow-readd` adds the runner
-again under a new id, and seed once its log shows a `tick end`.
+a host file with no runner, a runner with no `id`, or several runners. A `reset --store hub` strands the runner, and
+`winter service restart <env>/runner` re-joins it under a new id — `workspace:/context/project/hub-data-modes.md` owns
+why — so seed once the restarted runner's log shows a `tick end`.
 
 Every row seeded into a runner store is stamped with its runner, as the runner's own writes are
 (`bzh:runner-scoped-store`). A row of a table carrying `runner_id`, `runner_identity` aside, takes the id

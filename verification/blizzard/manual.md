@@ -493,9 +493,9 @@ mapped permission mode, and `TaskOutput`, `TaskStop`, and backgrounded `Bash` re
 
 ### `blizzard:manual-headless-permission-refusal`
 
-**Surface.** What a live headless CLI does with a permission request under each `[harness] autonomy` value. OpenCode
-auto-rejects an unanswered ask and the rejection ends the agent loop, so `normal` composes every ask to `deny`; no
-mock-driven tier observes either CLI's handling ([`./gaps.md`](./gaps.md#headless-permission-handling)).
+**Surface.** What a live headless CLI does with a permission request under each `[harness] autonomy` value. The
+composition the runner emits per value, and why no mock-driven tier observes either CLI's handling, are
+[`./gaps.md`](./gaps.md#headless-permission-handling)'s.
 
 **Setup.** Real `opencode` in the runner's admitted range and a real `claude` with a login, from `<env>/blizzard` with
 `BLIZZARD_TMPDIR` set. OpenCode runs against a deterministic loopback OpenAI-compatible stub, so its tool call is
@@ -928,7 +928,9 @@ these two reads is not measured.
 2. `rclone copy` the Parquet directory into a MinIO bucket as `docs/deployment/egress.md`
    `### Object storage with rclone` gives it, the manifests last.
 3. In ClickHouse, create one `MergeTree` table per dataset from the `s3` table function over the file list the manifests
-   name, then the dictionary's newest-copy view over each as `<dataset>_newest`.
+   name, typing each column the dictionary calls `timestamp` as `DateTime64(6, 'UTC')` — the Parquet export's
+   microsecond UTC timestamps, so the panels' day buckets and seven-day window compute on time rather than text — and
+   the rest as `### A warehouse loader` says; then the dictionary's newest-copy view over each as `<dataset>_newest`.
 4. In Grafana, add the ClickHouse data source and build two table panels over `steps_newest` from the dictionary alone:
    cost by node by day, and the station with the highest mean `duration_ms` over the last seven days.
 5. Run the docs' two DuckDB recipes over the same directory and record each answer beside Grafana's. Change nothing in
@@ -1161,9 +1163,8 @@ only the fenced mock and `blizzard:manual-live-routine` walks a garden routine; 
 a graph node's live behavior, entered by `hub chunk restart --to-graph <graph> --node <node>` so the steps before it
 need not be re-walked.
 
-**Setup.** As `blizzard:manual-live-routine`'s Setup — the store at head, the graph minted with
-`blizzard hub graph sync`, no forge configured, and the verification runner's own runtime directory with the real
-harness and a `base_branch` — without its delta-baseline precondition. Add:
+**Setup.** As [`blizzard:manual-live-routine`](#blizzardmanual-live-routine)'s Setup, without its delta-baseline
+precondition. Add:
 
 - A hub work item for a small change, whose changed functions sit in one scope of the surface the node acts on, and a
   disposable branch pushed for it.

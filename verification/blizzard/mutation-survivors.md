@@ -1,10 +1,8 @@
 # Sorting a surviving mutant (`bzh:mutation-survivor-classification`)
 
 `blizzard:mutation` reports a survivor as a candidate; this file owns what a candidate is sorted into and what each
-class obliges. A change's own survivors reach a delivery as the advisory `mutation-report` from `blizzard:mutation`'s
-delta mode; review sorts them here and raises each real gap as `should-fix`, never `blocking`. Written at file-per-rule
-granularity in the slot skeleton `winter-canon:/rule-shape.md` owns (`canon:rule-shape`): the classes table is the
-contract the Rule slot requires, not skeleton drift.
+class obliges. Written at file-per-rule granularity in the slot skeleton `winter-canon:/rule-shape.md` owns
+(`canon:rule-shape`): the classes table is the contract the Rule slot requires, not skeleton drift.
 
 ## Rule
 
@@ -13,7 +11,8 @@ survivor is closed by its remedy, never by being read and set aside — an Equiv
 its class and reason, which is its remedy. Ask first whether the mutant changes anything a caller could observe. If it
 does, ask whether a selected test executes the mutated line: yes is Weak assertion, no is Unreached. If it does not, ask
 whether the code is still needed — whether deleting it would change anything a caller could observe: yes is Equivalent,
-no is Superfluous code.
+no is Superfluous code. A change's own survivors reach a delivery as the advisory `mutation-report` from
+`blizzard:mutation`'s delta mode; review sorts them here and raises each real gap as `should-fix`, never `blocking`.
 
 | Class                | Signature                                                                                                                                                                                                                                                                   | Remedy                                                                                                                                                                                                                                                                                                                                    |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
