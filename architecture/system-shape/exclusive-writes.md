@@ -29,15 +29,15 @@ against stop and restart. It also governs three decisions whose guard reads fact
 ingest's pointer-held refusal, the default graph's first mint, and promote's promotability judgment. It governs the
 secret-retire / referrer-write pair too: a secret's retire reads that no active work source or repository references it,
 and each such record's create, edit, or enable reads that its secret is not retired, so both lock the secret's own row
-first (`lock_secret_row`, `hub/store/internal/secret_store.py`). A macro-shape
-constraint on deployment topology, on what holds once more than one hub process may share a store — not a `kill -9`
-crash-correctness requirement; one hub process already serializes every one of these correctly today. Dependency
-**release** is exempt rather than uncovered: it can only shrink the standing set and can never close a cycle, so nothing
-it writes needs a row lock. A create whose only race is a duplicate of a tenant-chosen name is no decision under this
-rule: the table's tenant-led primary key or unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one
-insert, and the store maps the losing insert's `IntegrityError` to the named conflict — `SecretStore.create`
-(`hub/store/internal/secret_store.py`) is the pattern. A create that reads state before its insert — a cap, a parent's
-state, a default it mints — stays a decision under this rule, in the keyed-lock form under **Do**.
+first (`lock_secret_row`, `hub/store/internal/secret_store.py`). A macro-shape constraint on deployment topology, on
+what holds once more than one hub process may share a store — not a `kill -9` crash-correctness requirement; one hub
+process already serializes every one of these correctly today. Dependency **release** is exempt rather than uncovered:
+it can only shrink the standing set and can never close a cycle, so nothing it writes needs a row lock. A create whose
+only race is a duplicate of a tenant-chosen name is no decision under this rule: the table's tenant-led primary key or
+unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's
+`IntegrityError` to the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A
+create that reads state before its insert — a cap, a parent's state, a default it mints — stays a decision under this
+rule, in the keyed-lock form under **Do**.
 
 **Detect.**
 
