@@ -134,14 +134,13 @@ structural.
 The pin guarantee reaches exactly as far as the mint, and the window past it is accepted rather than repaired. A lease
 already in flight resumes through `Spawner.preamble`, which re-mints only the capability token and never re-enters
 `_mint`, so a lease whose mint predates any recorded rows resumes on an empty pin — the emptiness
-`IReadGraphArtifactRepository.graph_artifacts_for_graph`
-(`blizzard/src/blizzard/runner/lifecycle/judgement/artifacts.py`) reports from the read side. No engine code path reads
-a graph declaration at all — the runner's only reader is that worker-facing route — so no admission, routing, epoch, or
-completion decision can observe the window. An empty pin fails by name rather than answering emptily:
-`artifact get <name> --scope graph` is a `404` naming the pinned mint, which the worker CLI raises as a non-zero
-`ClickException` (`blizzard/src/blizzard/runner/api/artifacts.py`, `blizzard/src/blizzard/runner/cli/artifact.py`). What
-carries a worker through an empty pin is the fallback every prompt pointing at a graph declaration owes
-(`bzh:graph-artifact-pointer-fallback`,
+`IReadGraphArtifactRepository.graph_artifacts_for_graph` (`blizzard/src/blizzard/runner/lifecycle/artifacts.py`) reports
+from the read side. No engine code path reads a graph declaration at all — the runner's only reader is that
+worker-facing route — so no admission, routing, epoch, or completion decision can observe the window. An empty pin fails
+by name rather than answering emptily: `artifact get <name> --scope graph` is a `404` naming the pinned mint, which the
+worker CLI raises as a non-zero `ClickException` (`blizzard/src/blizzard/runner/api/artifacts.py`,
+`blizzard/src/blizzard/runner/cli/artifact.py`). What carries a worker through an empty pin is the fallback every prompt
+pointing at a graph declaration owes (`bzh:graph-artifact-pointer-fallback`,
 [`../../standards/worker-nodes/graph-artifact-pointers.md`](../../standards/worker-nodes/graph-artifact-pointers.md)),
 which is written against a failed read and not only an empty one.
 

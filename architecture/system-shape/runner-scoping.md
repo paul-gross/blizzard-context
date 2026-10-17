@@ -83,8 +83,8 @@ other. A runner transfer's copy writes the moving runner's rows and the source's
 transaction, through one handle that carries no `Connection` to the domain: the runner half is built by the transfer
 adapter's binding, and the host half by the `host_ingests` member (`host_ingest_store.py`), which merges the host rows
 by each table's declared treatment and records an ingest; neither module names the other kind's tables. The
-runner-unscoped mark itself — `RUNNER_SCOPED_OPTION`, or the `blizzard_runner_unscoped` string it stands for — appears
-only in `runner/store/errors.py`, the guard, the exempt member's module, and runner migrations. `errors.py` declares the
+runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it stands for — appears
+only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations. `scoped.py` declares the
 mark. `blizzard/src/blizzard/tools/invariants.py` reaches the store through the `runner_audit` member, never by spelling
 the mark.
 
