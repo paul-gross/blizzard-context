@@ -43,6 +43,7 @@ A command method passes when its command exits 0.
 | `blizzard:crash-sweep`           | `mise run crash-sweep` — the full kill-9 sweep over the crash-point registry *(more)*                                                                             |
 | `blizzard:sse-contract`          | `mise run sse-contract` — the SSE frame shape against the golden corpus `contracts/sse/` *(more)*                                                                 |
 | `blizzard:cli-contract`          | `uv run pytest tests/test_cli_surface_contract.py` — the CLI command tree against `contracts/cli/` *(more)*                                                       |
+| `blizzard:store-contract`        | `uv run pytest tests/test_store_contract.py` — a head-migrated store, reflected, against `contracts/store/` *(more)*                                              |
 | `blizzard:trace-contract`        | `uv run pytest tests/test_trace_contract.py` — the assembled span shape against `contracts/traces/` *(more)*                                                      |
 | `blizzard:egress-contract`       | `uv run pytest tests/test_egress_contract.py` — the exported `steps`, `invocations` and `events` datasets and their views against `contracts/egress/` *(more)*    |
 | `blizzard:restatement-sweep`     | `mise run restatement-check` — the one-home census *(more)*                                                                                                       |
