@@ -41,7 +41,7 @@ The browser half of the e2e tier: a real Chromium driven by Playwright over the 
   While the dock is open on that chunk it also asserts none of the three retired dependency-UI testids (the prerequisite
   field, Declare, Release) render. And it proves the runner's pause/resume brake, driven from the Fleet tab in a second
   page of the same browser context while the board page, never reloaded, shows the rail flip live (`data-hub-paused`,
-  HUB PAUSED), stops and then restarts new claims (MVP criterion 11), engaged before the survivor lands because the
+  the stop glyph), stops and then restarts new claims (MVP criterion 11), engaged before the survivor lands because the
   landing frees the runner's only agent slot in the same tick — FILL's reconcile releases the survivor's binding — so
   from that instant the brake alone holds the remaining ready chunk in the lane.
 

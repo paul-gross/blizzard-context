@@ -126,10 +126,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   the string the operator must paste whole. Proven able to fail per half by dropping `overflow-x: auto` from
   `.takeover .cmd` and `.raw-fallback .cmd`.
 - `runner-view.shell-sweep.spec.ts` covers the board rail's compact runner panel (`RunnerPanelView`): at 390px and
-  1280px each runner's three lines — light, name and last contact; agents in use; pause badges — stack inside the panel
-  with no overflow, an unpaused runner draws no third line and a runner declaring no bindings no second. A runner both
-  locally and hub paused must render its LOCALLY PAUSED and HUB PAUSED badges as soft kit pills in `--label-dim` and
-  `--amber-hi`.
+  1280px each runner's name line — light, name, pause glyphs and last contact — sits above its agents bars, one per
+  binding with its name and cells on one line, inside the panel with no overflow, and a runner declaring no bindings
+  draws none. A runner both locally and hub paused must render its pause glyph in `--amber` and its stop glyph in
+  `--red`, both on the name line, and every runner's light must sit in one fixed-width column.
 - `fleet-page.shell-sweep.spec.ts` covers the desktop Fleet tab (`FleetView`): at 1280px the host list and the selected
   host's detail sit side by side, the title-bar host actions are on screen and hit-testable, and the detail pane has no
   horizontal overflow; at 1024px nothing overflows horizontally. A selected host-less runner's env slot bar and
