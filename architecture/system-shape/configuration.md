@@ -141,15 +141,14 @@ out one entry could retire it. An apply that committed per record would leave a 
 refusal. A dry run assembled from reads cannot know what a write's own checks — secret availability, uniqueness, the
 compare-and-set — will refuse, so only the real transaction rolled back reports truthfully.
 
-**Scope.** Binds every kind a document carries, now and as scopes and routines join it. A kind added to the document
-adds its writes to the one transaction and its entries to the outcome rows; it takes no transaction of its own. An apply
-reconciles the records of the tenant its request resolved, in that tenant's one transaction; a document never reaches a
-second tenant. An apply composed with another write — seeding a tenant at its creation — either joins
-`TenantAdministration.create`'s unit of work through `ScopedConnections.founding`
-(`blizzard/src/blizzard/hub/store/scoped.py`), as [../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant
-creation, one identity unit of work describes, or names the window between its commits in that file, owing what
-[../crash-correctness.md](../crash-correctness.md) §Recorded exemptions — durable state the sweep does not arm sets for
-an entry on that ground.
+**Scope.** Binds every kind a document carries. A kind added to the document adds its writes to the one transaction and
+its entries to the outcome rows; it takes no transaction of its own. An apply reconciles the records of the tenant its
+request resolved, in that tenant's one transaction; a document never reaches a second tenant. An apply composed with
+another write — seeding a tenant at its creation — either joins `TenantAdministration.create`'s unit of work through
+`ScopedConnections.founding` (`blizzard/src/blizzard/hub/store/scoped.py`), as
+[../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant creation, one identity unit of work describes, or
+names the window between its commits in that file, owing what [../crash-correctness.md](../crash-correctness.md)
+§Recorded exemptions — durable state the sweep does not arm sets for an entry on that ground.
 
 A document's `projects` section reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind
 added beside them — may name a project the same document declares. The apply itself resolves no project: the package
@@ -242,7 +241,7 @@ tracing settings, and the hub secret key — are read at start and changed by a 
 `(kind, key, revision, secret_name, secret_revision)`, `key` being the record's own key; before handing one out, the
 cache reads the current revisions in one indexed read, reuses the entry on a match, and otherwise builds a new object
 and closes the one it replaces. Each read is an indexed single-row read or a read of the active set
-(`bzh:live-set-read`, [../repository-access.md](../repository-access.md)).
+(`bzh:live-set-read`, [../read-cost.md](../read-cost.md)).
 
 **Don't.** A work-source registry built as a dict in the composition root — an edit to a source reaches nothing until
 the hub restarts, and a second hub process answers from a different dict.

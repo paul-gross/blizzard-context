@@ -125,13 +125,8 @@ What that loses is bounded and recoverable — recovery reads it exactly like a 
 that answers "unmeasured" rather than a wrong answer — so it is accepted and named here (the second ground above) rather
 than separately instrumented.
 
-The marker is the invocation's true start: its `start_position`, `start_unreadable`, and `opened_at` are written once
-and never updated. A judge park or overload-backoff resume reuses the standing judge marker for its fresh elicitation,
-so each such move is its own append-only fact in `invocation_boundary_advances`
-(`InvocationBoundaryStore.record_boundary_advance`) rather than a rewrite. Readers pick their start explicitly: the
-judge's own range reads `current_start` (the newest advance, or the marker when there is none), while the worker range's
-end cap reads the marker. Each advance is keyed by the superseded elicitation's identity, `iso_utc(first_launched_at)`,
-and is a check-then-insert over `(lease_id, generation, kind, superseded_invocation)`.
+The marker and advance range semantics belong to [`../transcript-ranges.md`](../transcript-ranges.md); the advance's
+crash ground follows here.
 
 The advance write opens no window of its own. A crash after it and before the fresh elicitation launches leaves the
 stale elicitation standing, so the replay carries the same key and writes nothing; the park or backoff fact that drives

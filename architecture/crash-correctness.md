@@ -7,10 +7,6 @@ expensive to retrofit. Crash correctness is an orthogonal dimension, not a fifth
 sweep that exercises them is a verification method (`blizzard:crash-sweep`) in the matrix. Each rule follows the slot
 skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
-| Spoke                                                        | Read when…                                                                                                                                                 |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [./crash-correctness/lanes.md](./crash-correctness/lanes.md) | Adding or changing a periodic pass or a store-and-forward pass, on the hub or the runner — what it owes around its body beyond the four requirements below |
-
 ## A steppable loop (`bzh:steppable-loop`)
 
 **Rule.** The daemon loop's phases — the runner's REAP, PULL, FILL, ADVANCE, and the hub's coordinator loop — are
@@ -30,10 +26,9 @@ from a module global rather than its parameters.
 **Don't.** A single `tick()` that inlines all four phases with no separately callable boundary — no test can stop
 between FILL and ADVANCE.
 
-**See also.** [`./repository-access.md`](./repository-access.md) `bzh:probe-gated-pass` — what a converging pass or a
-pruning tick step checks before it rescans; a phase that reacts within a tick, as each of REAP, PULL, FILL, and ADVANCE
-does, is outside it. [`./clean-architecture.md`](./clean-architecture.md) `bzh:narrow-seams` — what a runner step's
-context is typed by.
+**See also.** [`./lanes.md`](./lanes.md) `bzh:probe-gated-pass` — what a converging pass or a pruning tick step checks
+before it rescans; a phase that reacts within a tick, as each of REAP, PULL, FILL, and ADVANCE does, is outside it.
+[`./clean-architecture.md`](./clean-architecture.md) `bzh:narrow-seams` — what a runner step's context is typed by.
 
 ## An injected clock (`bzh:injected-clock`)
 
@@ -168,3 +163,4 @@ chunk looking landed while an invariant is silently violated.
   on.
 - [../verification/blizzard.md](../verification/blizzard.md) — `blizzard:crash-sweep`, the method that composes the four
   requirements into the criterion-4 proof, and the division of labor with the unit and component tiers.
+- [./lanes.md](./lanes.md) — the contract around periodic passes and store-and-forward lanes.

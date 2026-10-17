@@ -27,8 +27,8 @@ Spec-support (`testing/`, which has its own `fleet/testing` entry) and declarati
 **Detect.** The placement sweep inside `web:structural-gate`
 ([`../../verification/blizzard.md`](../../verification/blizzard.md)): it resolves reach to the symbol through the
 `fleet` barrels, fails naming a unit and the single app that reaches it (or no app when it is dead), and fails any
-`fleet` file importing an app project. Its self-test must-catches a single-app unit and a `fleet`→app import and
-must-passes a both-app unit.
+`fleet` file importing an app project. The sweep's self-test coverage is owned by
+[`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md).
 
 **Do.** `ChunkTranscriptsContainer` and the chunk page in `fleet/src/lib/chunk/chunk-page/` take their client and plane
 from the daemon the route provides; the hub supplies an actions port and the runner supplies none, so one page renders
@@ -39,8 +39,7 @@ written there first.
 
 **See also.**
 
-- `bzh:frontend-eager-shell-entry` — the hub modules that moved out of `fleet` still reach `fleet` on the eager path
-  only through `fleet/shell`.
+- `bzh:frontend-eager-shell-entry` ([`./eager-shell.md`](./eager-shell.md)) — what the hub may reach on the eager path.
 - `bzh:frontend-package-layers` below — which folder of its project a unit lands in, and what that folder may import.
 
 ## Folders import only what their project's layer table allows (`bzh:frontend-package-layers`)

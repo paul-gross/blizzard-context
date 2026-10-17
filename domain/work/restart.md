@@ -55,16 +55,11 @@ other. Naming no other graph, it is the restart fact alone; a refused restart wr
 ## What it defers
 
 A pause suppresses rather than refuses it: the chunk stays parked and the move is honored on the tick after the pause
-lifts. An open takeover suppresses it only while the runner still holds the displaced session's lease — the person is
-inside that session, and killing it under them is worse than a pending move. The hub holds no takeover state to refuse
-with, so deferral at the runner is the whole mechanism, and the chunk reads as moved while the human works at the stale
-epoch. Against a chunk parked `needs_human`, whose lease the escalation already closed, nothing defers the re-entry: it
-may land in a workdir a person has taken over, and that is left to the operator
-([../humans/takeover.md](../humans/takeover.md)).
+lifts. A takeover's effect on re-entry depends on the held lease; [../humans/takeover.md](../humans/takeover.md) owns
+the distinction between a still-open lease and a parked session whose lease has closed.
 
-The runner's own brake ([../execution/pause.md](../execution/pause.md)) defers only the re-entry: the displaced worker
-is killed and its attempt closed at once, and the moved node is entered once the brake lifts. A runner restarting after
-downtime treats a session the move fenced out the same way — it preempts the session rather than waking it.
+The runner's own brake defers re-entry; [../execution/pause.md](../execution/pause.md) owns how the displaced worker and
+fenced-out sessions are handled under that brake.
 
 ## What it refuses
 

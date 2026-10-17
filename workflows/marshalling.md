@@ -22,7 +22,14 @@ conflict.
    introduces: `hub chunk depend <dependent> <prerequisite>`. The foundation goes first, or else the smaller. A resting
    chunk that would collide with in-flight work depends on that in-flight chunk.
 4. **Promote in priority order** with `hub chunk promote <chunk-id>`, most urgent first. Defects that operators or the
-   fleet hit come before latent ones, and both come before prose. Promotion lands each chunk at the tail of the `ready`
-   queue, so promoting in order is the ordering. A dependent rests there, blocked, until its prerequisites finish.
+   fleet hit come before latent ones, and both come before prose. [../domain/work/ranking.md](../domain/work/ranking.md)
+   owns how promotion places a chunk in `ready`; promote in the intended order. A dependent rests there, blocked, until
+   its prerequisites finish.
 5. **Reorder** only where the new work must jump chunks already `ready`: `hub queue move <chunk-id> <position>`.
 6. **Report** each group, edge, and reorder with its reason — the file or seam the chunks share.
+
+## Don't
+
+- Promote colliding chunks before grouping or linking them; two lanes would edit the same files at once.
+- Group work that needs separate lanes into a PR too large for one lane to carry.
+- Move a `ready` chunk merely to re-express the order already established by promotion.

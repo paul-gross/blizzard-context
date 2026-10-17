@@ -20,12 +20,17 @@ verb reaching those services. A domain question the pass raises goes to the user
    the code decides today in each cell. A cell the code decides moves to the model in step 4. A cell the code leaves
    open goes in the report: as a conformance defect where [../domain/](../domain/index.md) decides it, or as a question
    for the user where it does not.
-4. **Move each rule onto the model**, returning the fact, record, or refusal, with the instant passed in. An id a rule
-   needs becomes its loaded object, resolved at the edge.
-5. **Thin the edges.** Each service keeps only clock → model → port → race handling. Each controller keeps only
-   load-or-404 → service → domain error mapped to its status. The rule's prose moves with the rule: the model function's
-   docstring states it once, and the service, step, or controller that delegates to it keeps at most a pointer
+4. **Move each rule onto the model**, following `bzh:domain-orchestration-split` in
+   [../architecture/clean-architecture.md](../architecture/clean-architecture.md) for its inputs and returned decision.
+5. **Thin the edges** to the orchestration and controller roles that same rule owns. Move the rule's prose with it: the
+   model function's docstring states it once, and the delegating service, step, or controller keeps at most a pointer
    (`bzh:one-prose-home`).
 6. **Pin by value.** Each moved rule gets a unit test that needs no fake. The existing service and API tests pass with
    their assertions unchanged; a changed assertion is a changed behavior, which this pass forbids.
 7. **Report** each rule moved, from and to, and each open cell from step 3.
+
+## Don't
+
+- Move an undecided state-table cell into the model as if it were settled; report the question instead.
+- Change an existing service or API assertion to make a moved rule pass.
+- Leave a state-based refusal at an edge after moving its rule onto the model.

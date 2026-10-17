@@ -98,3 +98,9 @@ Report these to the user:
 - every finding left live, and why
 
 Closing the loop after delivery belongs to the hub (`blizzard-product:/delivered/garden/machinery.md`).
+
+## Don't
+
+- Treat a failed inventory call as an empty scope or draft a second proposal over findings in an open one.
+- Close the findings cited by a passed proposal without putting their verdicts to the user.
+- Write withdrawals or proposals to the hub before the user approves the draft.
