@@ -869,7 +869,7 @@ not measured.
   `--set service.telemetry.metrics.level=none` — rather than editing the file.
 - A hub traced through it: an env-local hub from a feature env, never the hosted hub, started with
   `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:<port>` and `[tracing] sweep_seconds = 1` / `settle_seconds = 0` so
-  steps export as they close. `blizzard`'s e2e harness (`tests/e2e/test_acceptance_loop.py`'s `_hub`) is such a hub.
+  steps export as they close. `blizzard`'s e2e harness (`tests/fleet_launchers.py`'s `run_hub`) is such a hub.
 
 **Steps.**
 

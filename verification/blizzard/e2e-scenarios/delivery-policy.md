@@ -55,8 +55,8 @@ Checks-gate enforcement: a graph whose `build` choice carries `requires_checks: 
 judged choice — decides whether a red check bounces the attempt back to `build`, landing once green; a companion graph
 routes its failing check through a non-gated `fail` choice, an ordinary judged transition where the gate never fires.
 The component-tier companion `test_checks_gate_agreement.py` proves the runner's local gate and the hub's completion
-backstop agree over a decision matrix; this module, reusing `test_acceptance_loop`'s live-stack scaffolding, proves the
-resulting predicate against the real forge, hub, and runner.
+backstop agree over a decision matrix; this module, reusing the shared live-stack scaffolding in
+`tests/fleet_launchers.py`, proves the resulting predicate against the real forge, hub, and runner.
 
 - `test_checks_gate_bounces_a_red_pass_then_lands_when_green` — proves the gated `pass` choice is bounced while its
   check is red, build runs again, and the chunk lands once the check is green.
