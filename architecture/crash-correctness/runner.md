@@ -443,8 +443,8 @@ Its other writes earn **no window at all**:
 
 - **The failure latch.** A `trace-export-failed` or `trace-export-recovered` announcement appends its
   `trace_export_latch` row and enqueues its `event.recorded` fact in one transaction, on the `record_local_pause`
-  precedent, so a crash leaves both or neither. Losing both re-announces on the next state change, and the next start
-  seeds its latch from the newest row, so a restart mid-outage does not announce again.
+  precedent, so a crash leaves both or neither. Losing both re-announces on the next state change. The restart behavior
+  belongs to `bzh:lane-contract` ([../lanes.md](../lanes.md)).
 - **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append. A crash before it
   commits leaves the cursor where it was, and the next pass re-derives the same jump from a fresh read.
 - **The window-skipped event.** It is enqueued before its jump row, so a crash between the two re-derives the jump and

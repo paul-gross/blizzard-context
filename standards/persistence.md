@@ -55,8 +55,8 @@ in `tests/test_layering.py` fails it.
 **Do.** `ChunkFactsStore.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
 because the fact projection it reconstitutes carries the chunk's pause history and a consumer indexes that list's tail.
 The example shows the ordering a history read owes, not how to read a newest fact: a read that answers with only the
-newest fact per key never fetches the history —
-[../architecture/repository-access.md](../architecture/repository-access.md) `bzh:newest-per-key-read`.
+newest fact per key never fetches the history — [../architecture/read-cost.md](../architecture/read-cost.md)
+`bzh:newest-per-key-read`.
 
 **Don't.** The same `select(s.chunk_pause_facts).where(...)` with the `order_by` dropped — sqlite's rowid order hides
 the omission; postgres does not.

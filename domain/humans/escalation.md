@@ -25,9 +25,8 @@ Every escalation records its cause, from a closed vocabulary, and a one-line det
 | a node's bounce cap is crossed (hub-authored)                          | `bounce-cap`                    |
 | a migrating choice's target graph fails to resolve (hub-authored)      | `migration-target-unresolvable` |
 
-A missing cause means the cause was not recorded — the escalation predates causes, or an older runner wrote it — never
-that it had none. A worker's ask is never an escalation: it parks the chunk waiting on a human through a question, so no
-cause names it.
+A missing cause means the cause was not recorded, never that the escalation had none. A worker's ask is never an
+escalation: it parks the chunk waiting on a human through a question, so no cause names it.
 
 ## The commands an escalation carries
 
@@ -38,10 +37,8 @@ hub-authored escalation always lacks the wrapped verb: the hub has no runner run
 wrapped verb also needs the runner's own location, but any runner new enough to compose it always knows that, so
 location is never a distinct reason the verb is missing.
 
-A stored-history escalation predates the wrapped verb — written by an older runner, or already open when the verb
-arrived; the hub deploys continuously while runners redeploy by hand, so this skew is real and an open escalation
-persists until superseded. Such a row reads the wrapped verb back empty while its raw command is a genuinely runnable
-resume string; the board then renders the raw command as the primary copyable command.
+When the wrapped verb is absent but the raw command is present, the board renders the raw command as the primary
+copyable command.
 
 ## The parked session's identity
 

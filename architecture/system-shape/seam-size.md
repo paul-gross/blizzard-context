@@ -16,6 +16,9 @@ exactly the capability it calls and a test binds exactly that; a Protocol left t
 this — every consumer ends up typed against the same wide seam regardless of which sliver it actually uses, and a mock
 for one caller must still stand in for methods it never touches.
 
+**Exception.** `SpawnContext` (`runner/lifecycle/spawn.py`) is registered as genuinely wide: `Spawner` and `Attempt`
+hand each other their context, so it is the union of what either reads.
+
 **Scope.** Every Protocol under `src/blizzard/`, not only a repository's read/write seam (`bzh:repository-split`
 generalizes here to the whole population) — a coding-harness adapter or a hub client is gated exactly as a repository
 seam is.
@@ -24,8 +27,7 @@ seam is.
 own (non-underscore) methods, unless its name is in that test's `_ACCEPTED_VIOLATIONS` set — a name-only membership
 test; a reason for the entry is a review obligation, not something the gate itself checks. A Protocol base nothing else
 names counts toward each Protocol composing it, so a split made only to clear the ceiling still fails; a stale entry
-fails too. The one registered exception is `SpawnContext` (`runner/lifecycle/spawn.py`): `Spawner` and `Attempt` hand
-each other their context, so it is the union of what either reads.
+fails too.
 
 **Do.** The runner's harness seam splits `IHarnessAdapter`'s methods into narrower Protocols along its consumers' own
 lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, usage accounting, usage-limit

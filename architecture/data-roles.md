@@ -140,8 +140,7 @@ orchestration instead and carries no marker.
 | orchestration | A data class with a field annotated directly as a collaborator, under the guard below                                          |
 
 - **Collaborator**: a port — an `I[A-Z]…` name that some Protocol under `blizzard/src/blizzard/` declares, so
-  `IPv4Network` is not one — or a clock, any name ending `Clock`; a driver handle, any type imported from `fastapi`,
-  `starlette`, `sqlalchemy`, `click`, `httpx`, `os`, `shutil`, `subprocess`, or `tempfile`, the packages
+  `IPv4Network` is not one — or a clock, any name ending `Clock`; a driver handle imported from a package
   `bzh:domain-core` keeps out of a domain core; a class marked `@collaborator` or that itself infers orchestration; or a
   Protocol that exposes a collaborator through an attribute or property of its own or of a Protocol base — a runner
   step's context Protocol is one, so a step holding it is orchestration.

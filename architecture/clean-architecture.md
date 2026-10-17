@@ -313,24 +313,25 @@ taking the seam or a public module.
 **Rule.** `blizzard/src/blizzard/wire/`, `foundation/`, and `auth_core/` are the shared kernel both daemons import, and
 none of them imports a blizzard package outside it — `hub`, `runner`, `cli`, or `tools` — directly or transitively.
 Every vocabulary type a wire model carries has exactly one definition, in the kernel (`foundation/`, one module per
-vocabulary); the daemons import it from there, with no re-export at an old home, no mirror, and no mapping layer. The
-business rules over that vocabulary stay in each daemon's domain (`bzh:domain-core`), with one carve-out: a rule both
-daemons must evaluate identically, so that neither accepts what the other refuses, lives once in `foundation/` as pure
-functions or methods of frozen kernel types, with no I/O and no collaborators; a rule only one daemon applies stays in
-that daemon's domain. Within a daemon, a `wire/` model is named only at its app boundary, which maps it to domain models
-(`bzh:data-roles`, [./data-roles.md](./data-roles.md)).
+vocabulary); the daemons import it from there, with no re-export, mirror, or mapping layer. The business rules over that
+vocabulary stay in each daemon's domain (`bzh:domain-core`), with one carve-out: a rule both daemons must evaluate
+identically, so that neither accepts what the other refuses, lives once in `foundation/` as pure functions or methods of
+frozen kernel types, with no I/O and no collaborators; a rule only one daemon applies stays in that daemon's domain.
+Within a daemon, a `wire/` model is named only at its app boundary, which maps it to domain models (`bzh:data-roles`,
+[./data-roles.md](./data-roles.md)).
 
 **Why.** A wire model importing a daemon's domain type makes importing the wire load that daemon, so the hub loads
 runner modules and the runner loads hub modules through it. The wire stops being the one place a vocabulary changes, and
 a second copy of an enum — or of a predicate both daemons apply — drifts unseen until the runner accepts what the hub
 refuses.
 
-**Detect.** `tests/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard package
-(check A), on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and
-on a hub or runner composition root loading the other daemon. Its moved-vocabulary check (D) fails an import of a moved
-name through any home but its `foundation/` one. A business rule in `foundation/` that only one daemon applies is that
-daemon's rule placed in the kernel; the fix moves it into that daemon's domain. One both daemons apply that takes a
-repository, clock, or client, or performs I/O, is made pure, with the facts and the instant passed in as values.
+**Detect.** `tests/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard package, on
+any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and on a hub or
+runner composition root loading the other daemon. `test_moved_vocabulary_has_exactly_one_importable_home` fails an
+import of a kernel vocabulary name through any module but its defining `foundation/` module. A business rule in
+`foundation/` that only one daemon applies is that daemon's rule placed in the kernel; the fix moves it into that
+daemon's domain. One both daemons apply that takes a repository, clock, or client, or performs I/O, is made pure, with
+the facts and the instant passed in as values.
 
 **Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
 `wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.

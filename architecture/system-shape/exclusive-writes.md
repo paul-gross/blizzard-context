@@ -31,13 +31,14 @@ secret-retire / referrer-write pair too: a secret's retire reads that no active 
 and each such record's create, edit, or enable reads that its secret is not retired, so both lock the secret's own row
 first (`lock_secret_row`, `hub/store/internal/secret_store.py`). A macro-shape constraint on deployment topology, on
 what holds once more than one hub process may share a store — not a `kill -9` crash-correctness requirement; one hub
-process already serializes every one of these correctly today. Dependency **release** is exempt rather than uncovered:
-it can only shrink the standing set and can never close a cycle, so nothing it writes needs a row lock. A create whose
-only race is a duplicate of a tenant-chosen name is no decision under this rule: the table's tenant-led primary key or
-unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's
-`IntegrityError` to the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A
-create that reads state before its insert — a cap, a parent's state, a default it mints — stays a decision under this
-rule, in the keyed-lock form under **Do**.
+process already serializes every one of these correctly today. Dependency **release** needs no row lock for cycle
+safety: it can only shrink the standing set and can never close a cycle. Its ordering against a fold's edge rewrite
+still depends on the residual per-tenant lock in [Known debt](#known-debt). A create whose only race is a duplicate of a
+tenant-chosen name is no decision under this rule: the table's tenant-led primary key or unique constraint
+(`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's `IntegrityError` to
+the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A create that reads
+state before its insert — a cap, a parent's state, a default it mints — stays a decision under this rule, in the
+keyed-lock form under **Do**.
 
 **Detect.**
 
@@ -131,9 +132,9 @@ Stated so a reviewer need not re-derive them:
   - `DeleteService.delete`, for its whole transaction — the deleted chunk's row lock does not reach the other end of an
     outgoing edge the delete releases, so a concurrent fold of that other chunk, locking only its own survivor and merge
     ids, could otherwise remint the edge with the deleted chunk as its dependent.
-  - `DependencyService.release` — as its only lock. Exempt from the row lock (Scope above), release is ordered against
-    `group`'s edge rewrite by this lock alone, which keeps a fold from reminting an edge released between the fold's
-    read of the standing set and its write.
+  - `DependencyService.release` — as its only lock. Without a row lock for cycle safety (Scope above), release is
+    ordered against `group`'s edge rewrite by this lock alone, which keeps a fold from reminting an edge released
+    between the fold's read of the standing set and its write.
 - **The export's pass lock.** `EgressSweep.sweep` and `EgressReset.reset` share one hub-wide in-process lock, built in
   `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
   flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
