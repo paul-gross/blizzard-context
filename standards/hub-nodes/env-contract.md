@@ -40,8 +40,8 @@ A delivery marker's `content` takes the one shape its name fixes: a PR reference
 bare `delivery-pr/<repo>`, carries the JSON object
 `{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }` whose `repo`, and `number` where the name
 carries one, match the name; `merged/<repo>` carries the landed revision, and blank content records no landing;
-`awaiting-external-merge`'s content is never read. `delivery_read.DeliveryRead`, the hub's projection of these markers,
-skips a PR reference of any other shape without error. What each marker means is
+`awaiting-external-merge`'s content is never read. The chunk-artifacts store's delivery read, which feeds the hub's
+projection of these markers, skips a PR reference of any other shape without error. What each marker means is
 [delivery](../../domain/artifacts/delivery.md)'s.
 
 A non-2xx response to the marker-write POST is fatal — the script must raise rather than swallow it and proceed. Beyond
