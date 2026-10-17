@@ -93,10 +93,9 @@ and the runner statement guard (`BLIZZARD_RUNNER_GUARD`) on, in the test process
 [`./blizzard/tier-rules.md`](./blizzard/tier-rules.md) owns what each guard refuses and the isolation scenarios.
 
 `blizzard:ci-workflows` and `blizzard-mock:ci-workflows` scan `.github/workflows/` by default (run from each repo's own
-root) and are local-only — neither is wired into that repo's own `gate.yml`. `blizzard:collector-config` is local-only
-the same way. The Python exemplars under `exemplars/python/` ride `blizzard:lint`, `blizzard:format`,
-`blizzard:typecheck`, and the pytest tiers like any other tree, and `blizzard:exemplar-check` runs in `gate.yml` as its
-own job.
+root) and are local-only — neither is wired into that repo's own `gate.yml`. The Python exemplars under
+`exemplars/python/` ride `blizzard:lint`, `blizzard:format`, `blizzard:typecheck`, and the pytest tiers like any other
+tree, and `blizzard:exemplar-check` runs in `gate.yml` as its own job.
 
 ## Manual testing
 

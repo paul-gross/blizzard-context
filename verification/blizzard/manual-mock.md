@@ -125,17 +125,14 @@ runner's registration declares it, so the runner serves the chunks the board sho
    winter service restart alpha/runner
    ```
 
-   The reset hub no longer knows the runner's token, so the service's `runner init --allow-readd` adds the runner again
-   under a new id, which `init` writes to the host file's `[[runner]] id`. Wait for one `tick end` in the runner's log —
-   30 seconds by default — then seed one coherent fleet:
+   Wait for one `tick end` in the runner's log — 30 seconds by default — then seed one coherent fleet:
 
    ```bash
    uv run blizzard-mock-data scenario fleet --chunks 6 --seed 1 --hub-dir "$BZ_HUB_RUNTIME" --runner-dir "$BZ_RUNNER_RUNTIME"
    ```
 
-   Seed only after that re-join: `--runner-dir` pins the runner's id from the host file's `[[runner]] id`, which only
-   `init`'s join with the reset hub rewrites — [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md)
-   §Seeding both stores together owns why.
+   Seed only after the restarted runner has re-joined the reset hub —
+   [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) §Seeding both stores together owns why.
 
 2. Open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`, confirm the six seeded chunks render with their statuses,
    and note the census.

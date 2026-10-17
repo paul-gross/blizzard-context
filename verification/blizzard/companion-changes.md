@@ -61,9 +61,9 @@ rosters.
 **Detect.** None — this rule is the standing check; `_fake_binary`'s count pin only catches a size mismatch, never a
 same-count rename.
 
-**Do.** One change adds the `blizzard-mock` member `Lever.DROP_CONFIG_SHELL` and, in `blizzard`, the `_fake_binary`
-kwarg `drop_config_shell`, its `"DROP_CONFIG_SHELL": drop_config_shell` entry in `lever_flags`, and the bumped
-`len(lever_flags)` pin.
+**Do.** One change adds the `blizzard-mock` member `Lever.NEW_MISBEHAVIOUR` and, in `blizzard`, the `_fake_binary` kwarg
+`new_misbehaviour`, its `"NEW_MISBEHAVIOUR": new_misbehaviour` entry in `lever_flags`, and the bumped `len(lever_flags)`
+pin.
 
 **Don't.** A `blizzard-mock` commit adding `Lever.NEW_MISBEHAVIOUR` to the roster with no companion `blizzard` change —
 the new lever emits correctly but no service-tier case ever arms it.
