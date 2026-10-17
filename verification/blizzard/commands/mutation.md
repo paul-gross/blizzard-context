@@ -9,12 +9,12 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 ### blizzard:mutation
 
-`mise run mutation <scope> [--budget SECONDS] [--since REV] [--fresh]` runs mutation testing (mutmut) over one
-[garden scope](../../../garden/architecture.md) of `src/blizzard`: `hub-daemon`, `runner-daemon`, `shared-spine`, or
-`cli-surface`. `scripts/mutation.py`'s scope table is the one home for each slug's mutate globs and test selection —
-paths are not restated here. An unknown slug exits non-zero and lists the valid ones before any mutant tree is touched.
-The task runs in its own project environment (`.mutation-env`, `UV_PROJECT_ENVIRONMENT`), never `.venv`, so `rich` and
-`mutmut` never reach the environment `mise run test` uses.
+`mise run mutation <scope> [--budget SECONDS] [--since REV] [--function PATH::[CLASS.]NAME]... [--fresh]` runs mutation
+testing (mutmut) over one [garden scope](../../../garden/architecture.md) of `src/blizzard`: `hub-daemon`,
+`runner-daemon`, `shared-spine`, or `cli-surface`. `scripts/mutation.py`'s scope table is the one home for each slug's
+mutate globs and test selection — paths are not restated here. An unknown slug exits non-zero and lists the valid ones
+before any mutant tree is touched. The task runs in its own project environment (`.mutation-env`,
+`UV_PROJECT_ENVIRONMENT`), never `.venv`, so `rich` and `mutmut` never reach the environment `mise run test` uses.
 
 A run mutates only the scope's source, runs only the `unit`-tier tests import analysis selects for it — a test file with
 no `unit`-marked test is left out — and writes `mutants/report.json`: per-status mutant counts (killed, survived,
@@ -40,6 +40,12 @@ and `HEAD` are executed and reported, and the report records the `since` revisio
 cover the whole scope. A `REV` that names no commit exits 2 and runs nothing — it never widens to a full run. A scope
 with no changed function writes a complete, empty `mutants/report.json` and exits 0, with no mutant generated or run. A
 changed function that carries no mutant (a decorated body mutmut skips) is left out, not an error.
+
+`--function PATH::[Class.]name` (repeatable) narrows a named-scope run to exactly the functions it names, through the
+same mutant-name globs `--since` uses, and the report is limited to their mutants. It is the form for proving that a
+test-only change kills named survivors, where `--since` finds no changed function in `src/blizzard`. A function outside
+the scope's ground, or one mutmut does not mutate, exits 1 and runs nothing, never widening to a full run. `--function`
+with `--since` is refused, as is `--function` with no scope.
 
 `--fresh` discards any existing mutant tree before the run, so no verdict or test selection from an earlier run
 survives. A leased worker passes it: a pooled environment keeps its ignored `mutants/` between leases, and its frozen
