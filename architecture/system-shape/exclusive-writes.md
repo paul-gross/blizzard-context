@@ -26,7 +26,10 @@ takes the tenant row first and its chunk or keyed rows after, so the order two w
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
 stop, complete, detach, and requeue — and the epoch-fenced writes (`bzh:epoch-fencing`), which the row lock serialises
 against stop and restart. It also governs three decisions whose guard reads facts the write itself creates: chunk
-ingest's pointer-held refusal, the default graph's first mint, and promote's promotability judgment. A macro-shape
+ingest's pointer-held refusal, the default graph's first mint, and promote's promotability judgment. It governs the
+secret-retire / referrer-write pair too: a secret's retire reads that no active work source or repository references it,
+and each such record's create, edit, or enable reads that its secret is not retired, so both lock the secret's own row
+first (`lock_secret_row`, `hub/store/internal/secret_store.py`). A macro-shape
 constraint on deployment topology, on what holds once more than one hub process may share a store — not a `kill -9`
 crash-correctness requirement; one hub process already serializes every one of these correctly today. Dependency
 **release** is exempt rather than uncovered: it can only shrink the standing set and can never close a cycle, so nothing
