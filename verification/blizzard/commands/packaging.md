@@ -13,8 +13,9 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
 (`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, the contract-document drift check
 (`blizzard-export-contracts` and a `git diff` over `contracts/`), hub↔runner wire compatibility
-(`blizzard:wire-compat`), then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`), the
-bundle-composition check (`web:bundle-composition`), and generated-client drift over `web/`. Stage regenerated
+(`blizzard:wire-compat`), the change-note check (`mise run change-notes`, which runs
+`uv run blizzard-change-notes check`), then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`),
+the bundle-composition check (`web:bundle-composition`), and generated-client drift over `web/`. Stage regenerated
 `openapi/`, `contracts/` or `web/` client output before running it: the drift checks are a working-tree-vs-index
 `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
 
@@ -117,6 +118,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / OpenAPI spec drift"},
       {"context": "gate / contract drift"},
       {"context": "gate / hub↔runner wire compatibility"},
+      {"context": "gate / change notes"},
       {"context": "gate / eslint + vitest + client drift"},
       {"context": "gate / exemplar check (web)"},
       {"context": "gate / process-reference and change-history lint"},
