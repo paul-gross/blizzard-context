@@ -45,8 +45,8 @@ git push origin v0.2.0-rc.1
 ```
 
 The `v*` tag triggers the `release` workflow: the full verification suite, the wheel built with the embedded frontend, a
-multi-arch hub image pushed to GHCR and signed, and a GitHub Release with the inventory attached; `docs/ci.md` owns
-the release workflow's jobs.
+multi-arch hub image pushed to GHCR and signed, and a GitHub Release with the inventory attached; `docs/ci.md` owns the
+release workflow's jobs.
 
 ## Promoting a candidate
 
