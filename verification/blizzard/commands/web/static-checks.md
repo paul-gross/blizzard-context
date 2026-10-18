@@ -73,8 +73,9 @@ The same script also runs the placement sweep (`web/scripts/placement-sweep.js`,
 reach resolved to the symbol through the `fleet` and `fleet/shell` barrels and through `fleet`-internal imports. A
 violation names the unit and the single app that reaches it, or no app when the unit is dead, or the `fleet` file that
 imports an app. An exempt unit is named with its reason in `PLACEMENT_EXEMPT_UNITS`, the `REAL_TIMER_EXEMPT_FILES`
-idiom. Its self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass
-a both-app unit — runs first.
+idiom. A story, like a spec, ships in no bundle, so its imports are not reach. Its self-test,
+`assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a both-app unit and a
+hub story whose `fleet` import adds no hub reach — runs first.
 
 The same script also runs the disjoint-diffs sweep (`web/scripts/disjoint-diffs-sweep.js`, reusing the placement sweep's
 compiler-API program;
@@ -89,8 +90,8 @@ or source. Its self-test, `assertDisjointDiffsDetectorWorks`, runs first.
 
 The same script also runs the two wire-conformist sweeps (`web/scripts/wire-conformist-sweep.js`;
 [`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
-`bzh:frontend-wire-conformist`), neither with an exemption list, both over every `.ts` below `web/projects` except specs
-and the generated `fleet/src/lib/api/`:
+`bzh:frontend-wire-conformist`), neither with an exemption list, both over every `.ts` below `web/projects` except
+specs, stories, and the generated `fleet/src/lib/api/`:
 
 - The backend-citation sweep fails a backend Python module cited in a comment or string, by `.py` path or by dotted
   `blizzard.<package>` module path, printing each site under `backend .py citations in hand-written TS`. Its self-test,
@@ -110,21 +111,22 @@ The same script also runs the package-layers sweep
 it binds), with no exemption list. It resolves each edge to a file and its unit, and fails on an import its table does
 not allow, a file in no unit, a table unit with no folder or an edge naming an undeclared one, a cycle in a table
 counting the implicit kernel edges, a relative import that leaves its project, and a file below a source root importing
-its own project's package entry, save a spec taking the spec-support entry. Its self-test,
+its own project's package entry, save a spec or a story taking the spec-support entry. Its self-test,
 `assertPackageLayersDetectorWorks` — must-catch an undeclared feature-to-feature import, an undeclared stylesheet or
 template edge, a stray app-root file, a file reaching its own package entry, and a planted table cycle; must-pass a
-declared edge, a kernel import, and a spec importing `testing` — runs before the sweep is trusted.
+declared edge, a kernel import, and a spec or a story importing `testing` — runs before the sweep is trusted.
 
 The same script also runs the containers-compose sweep (`web/scripts/containers-compose-sweep.js`, over the TypeScript
 compiler API;
 [`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
 `bzh:frontend-containers-compose`, whose Scope and Detect own what the sweep treats as a container and what it flags
-inside a `computed()` callback), with no exemption list. Each site prints one line — file, line, the `computed()` field,
-and the deriving kinds — under `deriving computed() callbacks in containers (bzh:frontend-containers-compose)`. Its
-self-test, `assertContainersComposeDetectorWorks` — must-catch each deriving node kind, a ternary reached through a
-same-class helper, and a component injecting only through a project-local wrapper; must-pass `??` and comparison
-composition, an event-handler ternary, a presentational component, a non-component helper, and a local `computed` not
-imported from Angular — runs before the sweep is trusted.
+inside a `computed()` callback; a story is out of scope, as a spec is), with no exemption list. Each site prints one
+line — file, line, the `computed()` field, and the deriving kinds — under
+`deriving computed() callbacks in containers (bzh:frontend-containers-compose)`. Its self-test,
+`assertContainersComposeDetectorWorks` — must-catch each deriving node kind, a ternary reached through a same-class
+helper, and a component injecting only through a project-local wrapper; must-pass `??` and comparison composition, an
+event-handler ternary, a presentational component, a non-component helper, a story, and a local `computed` not imported
+from Angular — runs before the sweep is trusted.
 
 The script also censuses every TypeScript, template, and stylesheet below `web/projects` for the retired board Top/group
 contract: its type, inputs, handlers, grouping mutation facade, and test handles. Generated grouping-client symbols are
