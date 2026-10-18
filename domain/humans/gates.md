@@ -4,7 +4,9 @@ A gate's decision is a durable multiple-choice ask written where a worker-judged
 carrying the step's artifacts for the deciding human; it is the gate's parking row — the chunk parks `waiting_on_human`
 until a person resolves it. Spoke of the human-entry hub, [../humans.md](../humans.md).
 
-A decision's choices are exactly the node's judgement choices, owned by [../graphs/edges.md](../graphs/edges.md).
+A decision's choices are exactly the node's judgement choices, owned by [../graphs/edges.md](../graphs/edges.md). A
+runner-configured gate on a node declaring `checks:` runs them at the step's exit, so the decision carries the step's
+check results beside its artifacts and the person decides with them in view.
 
 ## How a gate arises
 
@@ -23,7 +25,9 @@ an answer ([./asks.md](./asks.md)) — and the holding runner then writes the or
 ([../work/transitions.md](../work/transitions.md)) referencing the decision: the runner still advances the chunk. Until
 a closing fact references a runner-configured gate, the runner's plain completion out of that node-step — one naming no
 decision — is refused, whether the gate is still waiting or already resolved: only the transition naming the decision
-moves on, and only to the resolved choice. A decision closes by one of:
+moves on, and only to the resolved choice. A resolution to a `requires_checks` choice over a red check is accepted — a
+human's judgement is not bound by the gate that binds an agent — and is recorded as an override with the resolution. A
+decision closes by one of:
 
 - the holding runner's transition — the ordinary case;
 - a migration record, when the chosen choice migrates cross-graph — a migration writes no transition
