@@ -24,8 +24,8 @@ only on a stable one.
 A candidate is tagged at a **cut commit**, as `blizzard-product:/plans/release-engineering/release-lines/spec/train.md`
 §The cut commit defines it: the commit that sets `pyproject.toml`'s `[project] version` to the version being cut,
 carries the `Release-Cut: <X.Y.Z>` trailer, and runs the steps that section names, each as far as it has landed. The
-release job asserts that the tag and that value agree (`scripts/check-version-tag.sh`, which reads the tag with any
-`-rc.K` suffix removed), failing before anything is built.
+release workflow's `build` job asserts that the tag and that value agree (`scripts/check-version-tag.sh`, which reads
+the tag with any `-rc.K` suffix removed), failing before anything is built.
 
 - Open the cut commit as a pull request against the branch the cut lands on — that section's table names it, `master`
   for a minor's first candidate — and rebase-merge it once its checks pass, so the commit carrying the trailer itself
@@ -45,7 +45,8 @@ git push origin v0.2.0-rc.1
 ```
 
 The `v*` tag triggers the `release` workflow: the full verification suite, the wheel built with the embedded frontend, a
-multi-arch hub image pushed to GHCR, and a GitHub Release with the wheel attached.
+multi-arch hub image pushed to GHCR and signed, and a GitHub Release with the inventory attached; `docs/ci.md` owns the
+release workflow's jobs.
 
 ## Promoting a candidate
 
