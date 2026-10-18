@@ -69,7 +69,8 @@ inside this rule while making instants UTC-aware.
 **Rule.** Schema change is Alembic, applied manually through the CLI, never automatically at daemon startup.
 
 - Daemons never migrate: at startup each daemon compares the store's revision to the one it expects and refuses to run
-  on mismatch, naming the exact migrate command.
+  on mismatch, naming the exact migrate command. A revision absorbed by a baseline instead requires the floor release
+  first; the baseline contract lives at `blizzard-product:/plans/release-engineering/release-lines/spec/fold.md`.
 - There are two migration trees, one per store (hub, runner), with independent schemas and lifecycles, keeping the two
   stores' release cadences uncoupled.
 - Every revision has explicit `upgrade()` and `downgrade()`; applying is idempotent at the revision level, and migration
