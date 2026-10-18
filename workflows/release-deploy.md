@@ -1,8 +1,8 @@
 # Moving a deployment onto a release, or back (`bzh:release-deploy`)
 
 **Rule.** Move a blizzard deployment — a compose hub and the runner hosts working against it — between releases one half
-at a time, in the order below, proving each half by its reported version before touching the next; a proof that fails
-stops the procedure where it stands.
+at a time, in the order below, proving each half by its reported version before touching the next — except where a
+boundary sequences the move otherwise (step 1); a proof that fails stops the procedure where it stands.
 
 **Why.** A hub accepts runners of its own line and older ones inside the window, never newer, so the order is what keeps
 every runner working at every moment of the move; the proof is what tells a moved half from one that only restarted.
@@ -24,8 +24,10 @@ runbook — its binding of this procedure. The sequence lives here alone.
 
 Every release between the one deployed and the target is crossed, in either direction. For each, read its **Upgrade
 notes** (`gh release view vX.Y.Z --repo paul-gross/blizzard`) and the section of `docs/upgrade.md` they point to, and
-act on what they ask before moving anything. A boundary that orders the halves differently from step 2 overrides it for
-that crossing, as `docs/upgrade.md`'s sections say when they do.
+act on what they ask before moving anything. A boundary that sequences the move differently from steps 2–4 — reordering
+the halves, or splitting one around the other, as installing every runner host's release and leaving it stopped until
+the hub has moved does — overrides them for that crossing, as `docs/upgrade.md`'s sections say when they do; each half
+is still proven once it runs.
 
 ## 2. Order the halves
 
@@ -90,8 +92,8 @@ Then, in this order:
 4. **Restart** the host.
 
 **Proof.** The host's `GET /api/health` reports `version` equal to the target in PEP 440 normal form, exactly — a `+`
-local segment means the virtualenv runs a build, not the release — and each of its runners ticks against the hub:
-`blizzard runner status --dir <host-dir>` names each runner and its hub id.
+local segment means the virtualenv runs a build, not the release — and its `GET /api/ready` reports ready, listing every
+runner the host holds as `serving` with its hub id (`runner_id`); a `halted` runner is a failed proof.
 
 ## 5. Record the pins
 

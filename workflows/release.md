@@ -28,9 +28,10 @@ release job asserts that the tag and that value agree (`scripts/check-version-ta
 `-rc.K` suffix removed), failing before anything is built.
 
 - Open the cut commit as a pull request against the branch the cut lands on — that section's table names it, `master`
-  for a minor's first candidate — and merge it once its checks pass. Opening one is an attended step, never a fleet
-  chunk's work.
-- Tag only a state the remote gate already proved: the cut commit's `push`-workflow run is green (`blizzard:ci`,
+  for a minor's first candidate — and rebase-merge it once its checks pass, so the commit carrying the trailer itself
+  lands on the branch and gets its own `push` run; a merge commit would leave the cut commit with none. Opening one is
+  an attended step, never a fleet chunk's work.
+- Tag only a state the remote gate already proved: the landed cut commit's `push`-workflow run is green (`blizzard:ci`,
   [../verification/blizzard.md](../verification/blizzard.md)) and the worktree sits at exactly that commit — nothing
   local or unpushed. A landing after the cut commit belongs to the next release and is not carried.
 
