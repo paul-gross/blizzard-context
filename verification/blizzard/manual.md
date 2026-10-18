@@ -1189,3 +1189,24 @@ minting (`blizzard hub graph sync` alone mints the graph) or its delta-baseline 
 node consumed the asset as its addendum directs, and the runner's lease never read `stale`.
 
 **Hazards.** As `blizzard:manual-live-routine`'s: never the systemd runners' stores, and never the hosted hub.
+
+### `blizzard:manual-change-notes`
+
+**Surface.** `blizzard-change-notes cut` and `render`, and `mise run release-notes`, driven by hand — the commands a
+release engineer runs and the Markdown a person reads on a release page. No test fixture shows how the rendered notes
+read, or that the task resolves the tag's tree rather than the working tree's.
+
+**Setup.** A throwaway `git clone` of the `blizzard` worktree under a temp dir, run from its root. Tags created there
+are never pushed.
+
+**Steps.**
+
+1. Add two unreleased notes: a `changed` note with `breaking: true`, an `## Upgrade` section and an `upgrade-guide`, and
+   a `fixed` note. Add the guide's boundary under a `## Upgrading to the next release` heading in `docs/upgrade.md`.
+2. `blizzard-change-notes cut <X.Y.Z>`, then `blizzard-change-notes check`.
+3. Commit, tag `v<X.Y.Z>`, and run `mise run release-notes v<X.Y.Z>` twice.
+4. In the real worktree, run `mise run release-notes v0.1.0-rc.1`.
+
+**Passes when.** `git status` shows the notes under `changes/<X.Y.Z>/` and the boundary under `## Upgrading to <X.Y.Z>`
+with its heading unchanged; `check` passes; the two renders are identical, read in section order, link the upgrade note
+to the tag's anchor, and end in the collapsed commit block; `v0.1.0-rc.1` renders the commit block alone.
