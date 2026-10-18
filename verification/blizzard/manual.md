@@ -1192,21 +1192,30 @@ node consumed the asset as its addendum directs, and the runner's lease never re
 
 ### `blizzard:manual-change-notes`
 
-**Surface.** `blizzard-change-notes cut` and `render`, and `mise run release-notes`, driven by hand — the commands a
-release engineer runs and the Markdown a person reads on a release page. No test fixture shows how the rendered notes
-read, or that the task resolves the tag's tree rather than the working tree's.
+**Surface.** `blizzard-change-notes guide`, `cut` and `render`, and `mise run release-notes`, driven by hand — the
+commands a release engineer runs and the Markdown a person reads on a release page. No test fixture shows how the
+rendered notes read, or that the task resolves the tag's tree rather than the working tree's.
 
-**Setup.** A throwaway `git clone` of the `blizzard` worktree under a temp dir, run from its root. Tags created there
-are never pushed.
+**Setup.** A throwaway `git clone` of the `blizzard` worktree under `$BLIZZARD_TMPDIR`, run from its root. Tags created
+there are never pushed. Exercise both a pre-1.0 minor (`0.Y`) and a major (`X`) with synthetic released directories; the
+clone's CLI must load the implementation under exercise.
 
 **Steps.**
 
-1. Add two unreleased notes: a `changed` note with `breaking: true`, an `## Upgrade` section and an `upgrade-guide`, and
-   a `fixed` note. Add the guide's boundary under a `## Upgrading to the next release` heading in `docs/upgrade.md`.
-2. `blizzard-change-notes cut <X.Y.Z>`, then `blizzard-change-notes check`.
-3. Commit, tag `v<X.Y.Z>`, and run `mise run release-notes v<X.Y.Z>` twice.
-4. In the real worktree, run `mise run release-notes v0.1.0-rc.1`.
+1. Add a released deprecation promising the next line and an earlier released postponement that advances a second
+   deprecation's line. Stage a retiring `removed` note with its `## Upgrade` section and `upgrade-guide`, plus an
+   unrelated breaking note. Put the boundary under `## Upgrading to the next release` in `docs/upgrade.md`.
+2. Run `blizzard-change-notes guide <line>` and inspect the order, removal prose, upgrade instructions and boundary
+   link. Stage a due deprecation without a removal; confirm `guide` and an opening `cut <X.Y.0>` refuse it by name and
+   leave all files byte-for-byte unchanged. Also stage an invalid postponement and a new deprecation due at the cut;
+   confirm each refusal by name for both a pre-1.0 minor and a major. Advance the promised lines and provide removals.
+3. Run `blizzard-change-notes cut <X.Y.0>`, then `blizzard-change-notes check`. Commit, tag `v<X.Y.0>`, and run
+   `mise run release-notes v<X.Y.0>` twice. Add an unrelated working-tree note after tagging and compare the output.
+   Repeat a candidate cut into the same version directory and confirm the guide and rendered tag remain deterministic.
+4. In the real worktree, run `mise run release-notes v0.1.0-rc.1` for the legacy no-notes-directory fallback.
 
-**Passes when.** `git status` shows the notes under `changes/<X.Y.Z>/` and the boundary under `## Upgrading to <X.Y.Z>`
-with its heading unchanged; `check` passes; the two renders are identical, read in section order, link the upgrade note
-to the tag's anchor, and end in the collapsed commit block; `v0.1.0-rc.1` renders the commit block alone.
+**Passes when.** Refusals name every unkept promise and write nothing; released postponements change the displayed
+current line. The successful cut moves notes and the boundary under `## Upgrading to <X.Y.0>` with its heading intact;
+`check` passes. The guide orders deprecations by carrying release, pairs their retiring removals and upgrade prose, then
+lists unrelated breaking notes. Both tag renders agree despite working-tree changes, open with **Upgrading to <line>**,
+link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone.
