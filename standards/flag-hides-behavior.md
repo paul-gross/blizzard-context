@@ -16,10 +16,10 @@ broken the morning the flag turned on. A flag buys time for behavior, never for 
 
 ## Detect
 
-A route, field, CLI verb or option, or configuration key a flag guards by being unregistered, undeclared, or absent from
-`--help` or the OpenAPI document while the flag is off; a migration conditional on a flag; a flag read hand-rolled
-inside a controller instead of through a seam below. `tests/test_flag_registry.py` ties every guard in source to the
-registry file.
+A flag-guarded surface that is missing while its flag is off: a route that is unregistered or absent from the OpenAPI
+document, a field or key that is undeclared, a CLI verb or option that is absent from `--help`. Also a migration
+conditional on a flag, and a flag read hand-rolled inside a controller instead of through a seam below.
+`tests/test_flag_registry.py` ties every guard in source to the registry file.
 
 ## Do
 
