@@ -199,6 +199,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `kit-select.shell-sweep.spec.ts` covers `KitSelect`'s popup at 390px: a long list stays height-capped and scrollable
   without squeezing its options, keyboard focus scrolls the last option into view, and a short list keeps its natural
   height without scrolling.
+- `kit-swatch.shell-sweep.spec.ts` covers `KitSwatch` across the whole project-color palette, read from the generated
+  `ProjectColor` const: every name's swatch resolves a non-empty computed background, no two names resolve the same one,
+  and each holds at least 3:1 contrast against `--surface-resting` and `--surface-selected`. It is the guard against
+  drift between the generated palette and `tokens.css`'s `--project-<name>` tokens, a computed-style claim jsdom cannot
+  make.
 - `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields, mounted directly with
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
   stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and
@@ -256,6 +261,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   transparent background and no border while the outer card holds the cyan left edge, the PR links must sit inside the
   card's rect, and the content's inset from the card edge must be the card's own border and padding alone — a real CSS
   cascade claim jsdom cannot make.
+- `board-card-rows.shell-sweep.spec.ts` covers `BoardCardComponent`'s row order at 800px and at 390px/320px
+  (`bzh:narrow-viewport-tier-rule`): title, blocked marking, PR links, step row, and cost row stack inside the card; the
+  project's swatch leads the step row, the step stays left-aligned with the title, and the id stays in the step row,
+  clear of the step and flush right with the cost; a multi-prerequisite count stays unclipped at 320px; and a real
+  pointer reaches the PR link, the fold, and Promote.
 - `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out at 800px and at
   390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding, bottom hairline, left edge and
   `--surface-selected` background, while `bare` draws no padding, border or background selected or hovered, and a flex
@@ -384,7 +394,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   name's, not each its own — with every option's right edge inside the viewport and no horizontal overflow of the page.
 - `projects-table.shell-sweep.spec.ts` covers the admin projects table, mounted with a project whose name, slug, and
   description have no break opportunity and whose "no runner" badge shows: at 360px, 768px, and 1280px the page never
-  scrolls sideways, the table stays inside the viewport, and the badge keeps a width and stays on screen.
+  scrolls sideways, the table stays inside the viewport, the badge keeps a width and stays on screen, and each row's
+  project swatch sits beside its light.
+- `project-detail.shell-sweep.spec.ts` covers the admin project detail page at 1280px and 390px: the empty pick prompt,
+  no queue or empty revisions while their reads are in flight, the empty-revisions state once read, and no sideways
+  scroll. It also shows the Color fact with its swatch, and the color picker dialog's palette chips wrapping inside the
+  dialog.
 - `gardening-doorway.shell-sweep.spec.ts` covers the gardening doorway's project cards: at 1280px, 390px, and 320px the
   cards reflow with no horizontal overflow, a long project name or routine list wraps inside its card rather than
   widening it, and every card's way in stays inside the viewport.
@@ -393,4 +408,5 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   1400px down to 700px — the chips scroll inside the control — with every route tab and the lens's marked choice on
   screen and hit-testable. In the mobile titlebar under a lens, at every phone width from 430px down to 320px, a long
   tenant name and a long project name both truncate inside the bar, the project's name keeping a visible share, with the
-  live dot and the menu on screen and hit-testable.
+  live dot and the menu on screen and hit-testable. At 390px each project chip carries its project's swatch, and the All
+  chip carries none.

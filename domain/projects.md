@@ -29,6 +29,19 @@ A configuration document is the exception. A document that declares a project by
 is refused, naming the project that left it: applying it to that project would rename it back or leave the document and
 the hub disagreeing, and the fix is to edit the document.
 
+### A project's color
+
+Every project carries a color, so people can tell its work apart at a glance. The color is a name from a fixed palette,
+never a shade: what a name looks like is the board's to decide. A name outside the palette is refused, and the refusal
+lists the palette.
+
+A project created without a color gets the one fewest of its tenant's projects hold, with a tie broken at random. The
+color is stored once and never recomputed, so it changes only when someone sets it. Every door that creates or edits a
+project can set it.
+
+A color never stands for a project on its own: wherever one shows, the project's name is shown with it or carried as its
+label.
+
 ### Every tenant starts with one
 
 A tenant holds a project with the slug `default` from the moment it exists, so it can ingest, hold a routine, and give a
