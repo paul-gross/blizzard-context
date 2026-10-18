@@ -1,13 +1,14 @@
 # Cutting a release (`bzh:release`)
 
-**Rule.** A blizzard release is cut by pushing a `v*` tag at a proven-green `master` tip — the tag is itself the
-release, and no other path publishes a release build.
+**Rule.** A blizzard release is cut by pushing a `v*` tag at a proven-green cut commit — the tag is itself the release,
+and no other path publishes a release build. A candidate is tagged at its cut commit, and the stable tag is pushed only
+at the commit its newest candidate was tagged at.
 
-**Why.** Development is trunk-based with milestones as tags: a `master` push publishes only dogfood artifacts — the dev
+**Why.** Development is trunk-based with releases as tags: a `master` push publishes only dogfood artifacts — the dev
 wheel and the `edge` / `sha-<full-git-sha>` image channel — while version tags move only on a release tag and `latest`
 only on a stable one.
 
-## Before tagging
+## Before cutting
 
 - Pick the version from the `blizzard` repo's `docs/versioning.md` — it solely owns the version scheme, what counts as
   breaking, and the supported hub↔runner skew; pick there, never restate it.
@@ -17,42 +18,68 @@ only on a stable one.
   execution.
 - Run the local-only `blizzard:image-smoke` and `blizzard:compose-smoke` — nothing in CI ever boots the image it
   publishes, so they are its only pre-publish runtime proof.
-- Bump `pyproject.toml`'s `[project] version` in a release-prep commit pushed to `master` — the release job asserts that
-  tag and value agree (`scripts/check-version-tag.sh`), failing before anything is built.
-- Tag only a state the remote gate already proved: the tip's `push`-workflow run is green (`blizzard:ci`,
+
+## The cut commit
+
+A candidate is tagged at a **cut commit**, as `blizzard-product:/plans/release-engineering/release-lines/spec/train.md`
+§The cut commit defines it: the commit that sets `pyproject.toml`'s `[project] version` to the version being cut,
+carries the `Release-Cut: <X.Y.Z>` trailer, and runs the steps that section names, each as far as it has landed. The
+release job asserts that the tag and that value agree (`scripts/check-version-tag.sh`, which reads the tag with any
+`-rc.K` suffix removed), failing before anything is built.
+
+- Open the cut commit as a pull request against the branch the cut lands on — that section's table names it, `master`
+  for a minor's first candidate — and merge it once its checks pass. Opening one is an attended step, never a fleet
+  chunk's work.
+- Tag only a state the remote gate already proved: the cut commit's `push`-workflow run is green (`blizzard:ci`,
   [../verification/blizzard.md](../verification/blizzard.md)) and the worktree sits at exactly that commit — nothing
-  local or unpushed.
+  local or unpushed. A landing after the cut commit belongs to the next release and is not carried.
 
 ## Tag and watch
 
-The tag names exactly the bumped version:
+The candidate tag names the cut commit's version with its candidate suffix, and sits on that commit:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0-rc.1
+git push origin v0.2.0-rc.1
 ```
 
 The `v*` tag triggers the `release` workflow: the full verification suite, the wheel built with the embedded frontend, a
 multi-arch hub image pushed to GHCR, and a GitHub Release with the wheel attached.
 
+## Promoting a candidate
+
+When a candidate is promoted, and what must hold before it is, is release-lines'
+(`blizzard-product:/plans/release-engineering/release-lines/spec/train.md` §Promotion). What this procedure holds is the
+commit: the stable tag is pushed only at the commit its newest candidate was tagged at, confirmed before the push, never
+by assumption:
+
+```bash
+test "$(git rev-list -n1 v0.2.0-rc.1)" = "$(git rev-parse HEAD)" && git tag v0.2.0 && git push origin v0.2.0
+```
+
+A promotion writes no cut commit: `pyproject.toml` already names the stable version, and the notes were final at the
+candidate.
+
 ## Confirm the cut
 
 - Watch the `release.yml` run to green (`blizzard:ci`), then confirm the Release and its attached wheel:
-  `gh release view v0.1.0 --repo paul-gross/blizzard`.
-- Confirm the image with an anonymous `docker pull ghcr.io/paul-gross/blizzard-hub:0.1.0` — the GHCR push has no local
-  proof, and package visibility is a one-time repo setting no workflow can assert — see `docs/ci.md` §The image publish
-  (tag `release` only): a documented gap proven by each real cut, never invented around.
+  `gh release view v0.2.0-rc.1 --repo paul-gross/blizzard`.
+- Confirm the image with an anonymous `docker pull ghcr.io/paul-gross/blizzard-hub:0.2.0-rc.1` — the GHCR push has no
+  local proof, and package visibility is a one-time repo setting no workflow can assert — see `docs/ci.md` §Trigger
+  workflows: a documented gap proven by each real cut, never invented around.
 - The generated notes (`scripts/release-notes.sh`) always hold a placeholder **Upgrade notes** heading after any
   **Breaking changes**; when the release asks something of the operator (`docs/versioning.md` names what counts),
-  replace it with real prose — `gh release edit v0.1.0 --repo paul-gross/blizzard --notes-file <edited-notes.md>`, or
-  the web UI.
+  replace it with real prose — `gh release edit v0.2.0-rc.1 --repo paul-gross/blizzard --notes-file <edited-notes.md>`,
+  or the web UI. For a release that crosses a boundary, that prose points to the release's section of `docs/upgrade.md`
+  — `## Upgrading to 0.2.0` for a `0.2.0` candidate — rather than restating the boundary.
 
 ## A red run
 
-Repair forward: fix on `master` and cut the next tag (`-rc.N+1`, or the next patch). A pushed tag is immutable — never
-re-pointed, deleted, or reused.
+Repair forward: a further candidate (`-rc.K+1`), or the next patch, each at a cut commit of its own on the branch the
+train document names for it. A pushed tag is immutable — never re-pointed, deleted, or reused.
 
 **Don't.** Publish a wheel or image by hand — a build no tag produced is a build no gate proved.
 
 **See also.** The `blizzard` repo's `docs/ci.md` — the operator reference for the triggered workflows and the `gh run`
-watch commands.
+watch commands. [release-deploy.md](./release-deploy.md) (`bzh:release-deploy`) — moving a deployment onto the release
+once it is cut.
