@@ -265,6 +265,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
   target; the grip introduces no drag handle.
+- `board-list.shell-sweep.spec.ts` covers `BoardList`'s full-width rows with reordering armed: one live, two READY, one
+  BACKLOG and one DONE row, at a wide centre column and at the narrowest the desktop board renders (a 768px viewport
+  less the rail and gutters; below it the hub serves the mobile glance board). Every row and each of its cells stays
+  inside the list, each armed row's reorder grip clears its lane icon, and the READY/BACKLOG line sits between the two
+  ranked runs — layout claims jsdom cannot make.
 - `board-shell.shell-sweep.spec.ts` covers `BoardShell`'s lane grid under a long current-node name: one running chunk
   whose node name runs to 120 characters, mounted at 1440px, must leave every lane equal-width and inside the viewport,
   with the name clipped inside its card and readable whole from the card's `title` — a layout claim jsdom cannot make,
