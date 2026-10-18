@@ -249,6 +249,31 @@ the hub restarts, and a second hub process answers from a different dict.
 **See also.** `bzh:dependency-injection` ([../clean-architecture.md](../clean-architecture.md)): the composition root
 wires the store-backed reader, not the records it reads.
 
+## A process setting is read only through its daemon's registry (`bzh:config-key-declared`)
+
+**Rule.** Read a key of `blizzard-hub.toml` or `blizzard-host.toml` only through the strict accessor over its daemon's
+registry (`blizzard/src/blizzard/hub/config_keys.py`, `blizzard/src/blizzard/runner/config_keys.py`), and declare in
+that registry every key read and every durable path under the daemon's runtime root. Adding, retiring or retyping a key
+changes `contracts/config/`. A retired key stays declared `deprecated`, with `replaced_by` naming its home.
+
+**Why.** A key the code reads and no document lists is a setting an operator cannot discover and a release cannot diff.
+Refusing a retired key is itself a read of it, so the registry stays complete only while those keys stay declared.
+
+**Scope.** Binds the daemons' process settings in their toml files. A key the loader reads and ignores at runtime stays
+ignored: an undeclared key in a file loads, and an undeclared read in the test suite raises.
+
+**Detect.**
+
+- A `tomllib` read of the daemon's file outside its loader, or a section parser given a bare `dict` rather than a view.
+- A key read through the view and absent from the registry, or declared and never read.
+- A registry edit with no regenerated `contracts/config/` document.
+
+**Do.** Pass the registry to the loader's root view, and hand each section parser the view at its table; declare a
+section's keys beside its parser.
+
+**Don't.** Import a daemon's registry from a section parser: the registry composes the sections, so the import closes a
+cycle.
+
 ## Known debt
 
 Stated so a reviewer need not re-derive them — each is a site the rules above name as a violation and that stands until

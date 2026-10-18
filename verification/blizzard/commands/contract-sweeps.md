@@ -61,6 +61,19 @@ The guard is a pure equality check with no forward-compatibility carve-out — u
 policy, an unknown field or a reordered parameter is exactly the drift this method exists to catch, ahead of the CLI's
 decomposition into by-concept packages: the surface must render identically at every step of that move.
 
+### blizzard:config-contract
+
+`uv run pytest tests/test_config_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) holds each daemon's
+config document, `contracts/config/hub.json` and `host.json`, to the registry that renders it
+(`blizzard.hub.config_keys`, `blizzard.runner.config_keys`) through `blizzard.tools.config_contract`. It fails when a
+document is missing, when a registry changed without a regenerated document, when `flags` is anything but one open
+table, and when a `replaced_by` names an undeclared key. `blizzard:gate`'s drift step holds the exporter's output to the
+committed files and to the tree: an exported document nobody committed reddens it. The registries are held to the code
+from the other side by the suite itself, which runs with strict config reads on, and by the per-daemon tests that load a
+file carrying every declared key.
+
+Falsify it by adding a `ConfigKey` to a registry and regenerating nothing: the test reddens on the stale document.
+
 ### blizzard:store-contract
 
 `uv run pytest tests/test_store_contract.py` (`blizzard:component-test`, so inside `blizzard:gate`) gates each store's
