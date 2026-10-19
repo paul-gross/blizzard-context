@@ -1,7 +1,7 @@
 # The kit floor
 
-What a component builds its chrome from. A spoke of the [frontend structure hub](../frontend-structure.md); the rule
-follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
+What a component builds its chrome from. A spoke of the [frontend structure hub](../frontend-structure.md); the rules
+follow the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
 
 ## Chrome comes from the kit (`bzh:frontend-kit-floor`)
 
@@ -32,3 +32,28 @@ renders through `KitAsyncState`'s `loading`/`error`/`empty` states rather than a
 
 **Don't.** A new panel pasting another `.panel { background: linear-gradient(...); border: 1px solid var(--bezel); }`
 block.
+
+## A kit part arrives with its stories (`bzh:frontend-kit-stories`)
+
+**Rule.** Every component or directive the kit exports has stories beside it, showing each meaningful state at the
+widths it answers to. A presentational piece in `fleet`'s shared areas, `shell/` and `core/`, has them too.
+
+**Why.** The workshop is only a whole picture of the kit while every part is in it, and a part nobody can see alone is
+judged through whichever page shows it.
+
+**Scope.** The kit is held by the build. A presentational piece in `fleet`'s `shell/` or `core/` is held by review. The
+expectation reaches no further: a piece in one of `fleet`'s feature folders, such as `chunk/`, `transcripts/`, or
+`host/`, or in an app of its own, may have stories, but nothing asks for them.
+
+**Detect.** `web:structural-gate`'s kit-stories sweep, with its reasoned exemption list, and `web:story-render` for a
+story that has stopped compiling or rendering.
+
+**Do.** A new kit part lands with a `*.stories.ts` file beside it, named for the part in kebab case, whose
+default-exported meta names the part as `component` and is titled `Kit/<name a person calls it>`. The file is Component
+Story Format 3: one named `StoryObj` export per state the part's inputs and template select — its ordinary rendering,
+each variant, disabled, empty and loading, overflowing, and narrow at `phone` and `phone-sm` where its layout answers to
+width. Every input a reader could sensibly change is an `arg`, every output is wired to `fn()`, and a part that takes
+projected content renders through a `render` template. A story builds its data from literals, holds no state between
+renders, reaches no network, and asserts nothing: no `play`, no `expect`.
+
+**Don't.** Wrap a container in fake providers so that it will render.
