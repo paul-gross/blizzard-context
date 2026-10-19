@@ -27,7 +27,9 @@ Every rule here follows the canon slot skeleton and stable-id scheme:
 
 - Write rules in the `Rule` / `Why` / `Detect` / `Do` / `Don't` / `See also` skeleton owned by
   `winter-canon:/rule-shape.md`; keep hubs pure routers and let spokes own content
-  (`winter-canon:/progressive-disclosure.md`).
+  (`winter-canon:/progressive-disclosure.md`). A `Detect` paragraph under `architecture/` cites the gate by its test
+  module or method id, never by a test function name; the function names live in the code, and the reference lint fails
+  one that appears there.
 - Give every rule its stable id, per the scheme `winter-canon:/rule-shape.md` owns — with two differences here: the
   prefix is `bzh:`, held stable because blizzard's and blizzard-mock's code cite it; and the rule's heading is the id's
   only home — this harness keeps no id registry to re-sync, so an id resolves by grepping the tree for its slug, a

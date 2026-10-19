@@ -33,10 +33,10 @@ inline `vale@` pin in `.github/workflows/gate.yml`, since this repo carries no `
 (`blizzard-context:ci-workflows`). A sibling checkout that is absent is a skip for G, the
 same shape check A's missing-checkout case uses.
 
-Check H compares each layer table in the docs (`architecture/clean-architecture.md`,
-`architecture/frontend-structure/placement.md`) against the data its gate holds
-(`tests/test_layering.py`, `web/scripts/structural-gate.js`): the same units and the same
-edges per unit. A missing table or gate name is a fail, since the comparison cannot be made
+Check H compares each frontend layer table in the docs
+(`architecture/frontend-structure/placement.md`) against the data its gate holds
+(`web/scripts/structural-gate.js`): the same units and the same edges per unit. The Python
+layer data has one home, `tests/test_layering.py`, which the docs point at. A missing table or gate name is a fail, since the comparison cannot be made
 without it. An absent blizzard checkout is a skip for H, the caller's, the same shape as A
 and G.
 
@@ -1765,17 +1765,13 @@ def check_G(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
 # Each layer table in the docs mirrors data a gate holds: where the table lives, which
 # section it sits under, how it is picked out, and the
 # gate file and name holding its edges.
-LAYER_TABLES_DOC_PYTHON = "architecture/clean-architecture.md"
 LAYER_TABLES_DOC_FRONTEND = "architecture/frontend-structure/placement.md"
-LAYER_GATE_PYTHON = "tests/test_layering.py"
 LAYER_GATE_JS = "web/scripts/structural-gate.js"
 
 # (doc file, section marker, how the table is picked out, gate file, gate name)
-# The Python tables are told apart by their unit-column header; the frontend tables all
-# share one header and are told apart by the project name opening the paragraph above.
+# The frontend tables all share one header and are told apart by the project name opening
+# the paragraph above.
 LAYER_TABLES = (
-    (LAYER_TABLES_DOC_PYTHON, "bzh:domain-package-layers", ("header", "Package"), LAYER_GATE_PYTHON, "_DOMAIN_PACKAGE_LAYERS"),
-    (LAYER_TABLES_DOC_PYTHON, "bzh:domain-package-layers", ("header", "Node"), LAYER_GATE_PYTHON, "_RUNNER_PACKAGE_LAYERS"),
     (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "fleet"), LAYER_GATE_JS, "FLEET_LAYERS"),
     (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "hub"), LAYER_GATE_JS, "HUB_LAYERS"),
     (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "runner"), LAYER_GATE_JS, "RUNNER_LAYERS"),
@@ -1825,22 +1821,6 @@ def _doc_layer_edges(header: list[str], rows: list[tuple[int, list[str]]]) -> di
     return edges
 
 
-def _py_layer_edges(path: Path, name: str) -> dict[str, frozenset[str]] | None:
-    """The dict assigned to module-level ``name``, its values ``frozenset({...})`` calls."""
-    import ast
-
-    tree = ast.parse(path.read_text())
-    for node in tree.body:
-        targets = [node.target] if isinstance(node, ast.AnnAssign) else getattr(node, "targets", [])
-        if any(isinstance(t, ast.Name) and t.id == name for t in targets) and isinstance(node.value, ast.Dict):
-            edges: dict[str, frozenset[str]] = {}
-            for key, value in zip(node.value.keys, node.value.values):
-                members = value.args[0].elts if isinstance(value, ast.Call) and value.args else []
-                edges[ast.literal_eval(key)] = frozenset(ast.literal_eval(m) for m in members)
-            return edges
-    return None
-
-
 def _js_layer_edges(path: Path, name: str) -> dict[str, frozenset[str]] | None:
     """The object literal assigned to ``const name``, its values arrays of string literals."""
     match = re.search(r"^const " + re.escape(name) + r" = \{(.*?)^\};", path.read_text(), re.MULTILINE | re.DOTALL)
@@ -1888,8 +1868,7 @@ def check_H(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
         gate_path = blizzard / gate_rel
         gate = None
         if gate_path.is_file():
-            reader = _py_layer_edges if gate_rel.endswith(".py") else _js_layer_edges
-            gate = reader(gate_path, gate_name)
+            gate = _js_layer_edges(gate_path, gate_name)
         if gate is None:
             findings.append(
                 Finding(

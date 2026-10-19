@@ -30,8 +30,7 @@ not a crash inside this one transaction.
 rows a landing or completion transaction enqueued. Its two windows are both registered:
 `close.after-enqueue.before-drain` (a landing marker and its intents are durable; no drain has run yet) and
 `close.after-close.before-record` (a close attempt returned; the outcome-and-retirement write has not landed yet), swept
-by one dedicated scenario driving the built-in `hub` work source with no forge
-(`tests/crash/test_kill9_sweep.py::test_kill9_at_close_crash_point`).
+by one dedicated scenario driving the built-in `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
 
 Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) rides its own
 caller's transaction, so none has a window of its own — each leaves its intents durable together with the fact that
@@ -79,10 +78,10 @@ point the folded transaction ever leaves one standing alone.
 `TraceExportSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/tracing/sweep.py`) tells closed node steps to
 the configured exporter, then appends a `trace_cursor` row recording how far it told. Its one dangerous window is
 registered: `trace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not
-yet appended), swept by one dedicated scenario against an in-test OTLP sink
-(`tests/crash/test_kill9_sweep.py::test_kill9_at_trace_crash_point`). A crash there leaves the cursor unmoved, so the
-next pass re-reads and re-sends the same steps under the same span ids — delivery is at-least-once, and a backend
-deduplicates on span id. A crash before the exporter accepts loses nothing durable.
+yet appended), swept by one dedicated scenario against an in-test OTLP sink (`tests/crash/test_kill9_sweep.py`). A crash
+there leaves the cursor unmoved, so the next pass re-reads and re-sends the same steps under the same span ids —
+delivery is at-least-once, and a backend deduplicates on span id. A crash before the exporter accepts loses nothing
+durable.
 
 Its other writes are exempt:
 
@@ -122,7 +121,7 @@ The probe and last-pass instant live in memory only. A restart runs a full pass,
 `EgressSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) writes closed steps, usage, and
 the events dataset's derivations and drops as immutable files, commits a manifest naming them, then appends an
 `egress_cursor` row recording how far it wrote. Its two dangerous windows are registered, both swept by one dedicated
-scenario against a real temporary directory (`tests/crash/test_kill9_sweep.py::test_kill9_at_egress_crash_point`):
+scenario against a real temporary directory (`tests/crash/test_kill9_sweep.py`):
 
 - `egress.after-write.before-commit`: the pass's files are placed; the manifest that lists them is not.
 - `egress.after-commit.before-cursor`: the files and the manifest are placed; the cursor row that records them is not.

@@ -45,14 +45,15 @@ and needs no blizzard checkout, so it runs in CI even though `registry-drift` it
 the three tools need be installed.
 
 `blizzard-context:reference-lint` is the reference-integrity lint (`scripts/lint-references.py`, wired through
-`winter-ext.toml`'s `lint` field beside the style gate). It checks four things over every Markdown file outside fenced
+`winter-ext.toml`'s `lint` field beside the style gate). It checks five things over every Markdown file outside fenced
 code: each `bzh:` citation resolves to exactly one defining heading (`bzh-id-integrity`); each relative link,
 `#fragment`, and `§Heading` after a link or path-notation path reaches an existing path and a whole heading
 (`reference-links`); each leaf is linked from its nearest hub (`hub-routing`); each `<module>:/path` notation reaches an
-existing file (`path-notation-targets`). `--gate` exits 1 on any `fail`; without it the script always exits 0, per the
-lint contract. Run it with `WINTER_WORKSPACE_DIR` set to the workspace root to resolve `workspace:` and
-installed-extension paths; without it each such module is one `warn`, never a `fail`, which is the mode the CI runner is
-in. `blizzard-context:reference-lint-tests` exercises each check against fixture repos through the `winter lint` env
+existing file (`path-notation-targets`); no `Detect` paragraph under `architecture/` names a test function
+(`detect-cites-modules`). `--gate` exits 1 on any `fail`; without it the script always exits 0, per the lint contract.
+Run it with `WINTER_WORKSPACE_DIR` set to the workspace root to resolve `workspace:` and installed-extension paths;
+without it each such module is one `warn`, never a `fail`, which is the mode the CI runner is in.
+`blizzard-context:reference-lint-tests` exercises each check against fixture repos through the `winter lint` env
 contract, one seeded violation per check, and needs nothing installed.
 
 `blizzard-context:ci-workflows` is this repo's own workflow-lint method: `actionlint`, run from the repo root, scans

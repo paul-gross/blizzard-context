@@ -357,11 +357,11 @@ while the host's latest report was answered with the host's own identity, so aga
 predates hosts, or answers as another host, the facts wait in the buffer and never ride a runner's lane.
 
 The window between the hub applying a push and the mark landing is a **real window**, registered as
-`hostlane.after-push.before-mark` and swept by `tests/crash/test_kill9_sweep.py::test_kill9_at_host_lane_crash_point`. A
-crash there leaves the pushed rows buffered and no mark recorded; the next pass re-pushes them, the hub answers them
-already applied against its own per-host mark, and the host clears them then. The mark write itself is a **no-window**
-write: the mark and the clearing commit together, and a mark below the recorded one moves nothing back. A failed push
-leaves everything buffered for the next pass, with no backoff and no latch, the shape the hub-as-sink class names.
+`hostlane.after-push.before-mark` and swept by `tests/crash/test_kill9_sweep.py`. A crash there leaves the pushed rows
+buffered and no mark recorded; the next pass re-pushes them, the hub answers them already applied against its own
+per-host mark, and the host clears them then. The mark write itself is a **no-window** write: the mark and the clearing
+commit together, and a mark below the recorded one moves nothing back. A failed push leaves everything buffered for the
+next pass, with no backoff and no latch, the shape the hub-as-sink class names.
 
 The lane owes the invariant checker nothing: its rows carry the host's own `seq`, never a runner's, and the hub's mark
 is what de-duplicates a replay.
@@ -435,10 +435,10 @@ ordering leaves a crash to interrupt is one orphan directory, collected at the n
 `LeaseTraceSweep.sweep` (`blizzard/src/blizzard/runner/tracing/sweep.py`) tells closed leases to the configured
 exporter, then appends a runner `trace_cursor` row recording how far it told. Its one dangerous window is registered:
 `leasetrace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not yet
-appended), swept by one dedicated scenario against an in-test OTLP sink
-(`tests/crash/test_kill9_sweep.py::test_kill9_at_lease_trace_crash_point`). A crash there leaves the cursor unmoved, so
-the next pass re-reads and re-sends the same leases under the same span ids — delivery is at-least-once, and a backend
-deduplicates on span id. A crash before the exporter accepts loses nothing durable.
+appended), swept by one dedicated scenario against an in-test OTLP sink (`tests/crash/test_kill9_sweep.py`). A crash
+there leaves the cursor unmoved, so the next pass re-reads and re-sends the same leases under the same span ids —
+delivery is at-least-once, and a backend deduplicates on span id. A crash before the exporter accepts loses nothing
+durable.
 
 Its other writes earn **no window at all**:
 

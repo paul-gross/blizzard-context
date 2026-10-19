@@ -13,6 +13,9 @@ check names:
   hub-routing            every leaf is linked from its nearest hub (`<dir>/index.md`,
                          else the spoke-dir sibling `<dir>.md`)
   path-notation-targets  every `<module>:/path[#fragment]` token reaches an existing file
+  detect-cites-modules   no `architecture/**` **Detect.** paragraph names a test function
+                         (`test_<name>`, `<file>::test_<name>`); it cites the module or the
+                         method id, so a rename of a test leaves the prose true
 
 Only Markdown is scanned, never inside fenced code blocks. A scoped file belongs to a
 blizzard-context repo when its nearest ancestor `winter-ext.toml` declares
@@ -346,6 +349,33 @@ def check_doc(run: Run, doc: Doc, repo: Path, prefix: str, defs: dict[str, list[
             check_fragment(run, doc, m.start(), target, fragment, shown)
 
     check_routing(run, doc, repo, routed)
+    check_detect_cites_modules(run, doc, repo)
+
+
+TEST_FUNCTION_RE = re.compile(r"(?:^|::)test_[\w*]+$")
+DETECT_LABEL = "**Detect.**"
+
+
+def check_detect_cites_modules(run: Run, doc: Doc, repo: Path) -> None:
+    """Fail each code span naming a test function inside a Detect paragraph of an `architecture/` file: the
+    section runs from its `**Detect.**` paragraph, or a `Detect` heading, to the next bold label or heading."""
+    if "architecture" not in doc.path.relative_to(repo).parts[:1]:
+        return
+    in_detect = False
+    for para in PARAGRAPH_RE.finditer(doc.text):
+        text = para.group()
+        if text.startswith(DETECT_LABEL):
+            in_detect = True
+        elif heading := HEADING_RE.match(text.split("\n", 1)[0]):
+            in_detect = heading.group(1).strip() == "Detect"
+        elif text.startswith("**"):
+            in_detect = False
+        if not in_detect:
+            continue
+        for start, end, content in doc.spans:
+            if para.start() <= start < para.end() and TEST_FUNCTION_RE.search(content):
+                run.fail("detect-cites-modules", doc, start, f"`{content}`: a Detect paragraph names a test function",
+                         "Cite the test module (`tests/test_<module>.py`) or the method id (`blizzard:unit-test`) instead.")
 
 
 def nearest_hub(path: Path, repo: Path) -> Path | None:

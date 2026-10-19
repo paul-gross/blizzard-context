@@ -88,11 +88,10 @@ only in `runner/store/scoped.py`, the guard, the exempt member's module, and run
 mark. `blizzard/src/blizzard/tools/invariants.py` reaches the store through the `runner_audit` member, never by spelling
 the mark.
 
-**Detect.** `test_host_tables_are_reached_only_through_the_host_stores` in `blizzard/tests/test_layering.py` fails the
-unit tier on a runner adapter naming a host-scoped table, a host adapter naming a runner-scoped one outside the admitted
-cross-kind write, and the runner-unscoped mark spelled anywhere outside its admitted modules;
-`test_host_store_check_catches_every_breach` proves it catches each form. By eye: a second exempt member, or a member
-added for a read a bound adapter could serve.
+**Detect.** The host-store check in `blizzard/tests/test_layering.py` fails the unit tier on a runner adapter naming a
+host-scoped table, a host adapter naming a runner-scoped one outside the admitted cross-kind write, and the
+runner-unscoped mark spelled anywhere outside its admitted modules; the same module's planted-tree cases prove it
+catches each form. By eye: a second exempt member, or a member added for a read a bound adapter could serve.
 
 **Do.** The invariant checker's `runner:rows-name-registered-runner` reads every runner-scoped row through
 `HostStores.runner_audit`.

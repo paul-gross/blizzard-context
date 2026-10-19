@@ -28,8 +28,17 @@ many environments it may hold (`capacity`), and its environment pool (`pool`), i
 `HarnessSection` (both in `harness/declaration.py`). A binding's own telemetry — the names it arrives under and what the
 runner does with each exporter — is answered by its declaration (`telemetry_names`, `telemetry_plan`), never named by
 the composition root or the tracing receiver. Importing `wiring.py` loads only each adapter's section module; an
-adapter's declaration loads on the catalog's first call. A third harness is a new declaration and section kind added to
-the catalog, not a new branch in its consumers.
+adapter's declaration loads on the catalog's first call. A third harness costs three things, and nothing else outside
+its own package:
+
+- its declaration and section kind in the catalog (`harness/wiring.py`);
+- its own row in `_RUNNER_PACKAGE_LAYERS` in `blizzard/tests/test_layering.py`, whose edges the unused-edge check holds
+  to what the binding's imports walk — a binding package without a row fails the undeclared-node check;
+- its id in the ast-grep rule's id lists and binding-module `ignores`, held to the catalog by a unit test in the same
+  module.
+
+Every other roster derives from the catalog (`HARNESS_SECTION_KINDS`): the layer gate's binding nodes, the adapter
+packages, and the runner-home keys a host file refuses at the top level. Not a new branch in a consumer.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.
