@@ -32,12 +32,13 @@ the hub disagreeing, and the fix is to edit the document.
 ### A project's color
 
 Every project carries a color, so people can tell its work apart at a glance. The color is a name from a fixed palette,
-never a shade: what a name looks like is the board's to decide. A name outside the palette is refused, and the refusal
-lists the palette.
+whose look is the board's to decide, or a custom shade, a `#rrggbb` the hub keeps lowercase and the board may adjust so
+it stays legible. Anything else is refused, and the refusal names both forms.
 
-A project created without a color gets the one fewest of its tenant's projects hold, with a tie broken at random. The
-color is stored once and never recomputed, so it changes only when someone sets it. Every door that creates or edits a
-project can set it.
+A project created without a color gets the palette color fewest of its tenant's projects hold, with a tie broken at
+random; a custom shade counts toward no palette color, and a color is never auto-assigned as a custom shade. The color
+is stored once and never recomputed, so it changes only when someone sets it. Every door that creates or edits a project
+can set it.
 
 A color never stands for a project on its own: wherever one shows, the project's name is shown with it or carried as its
 label.
