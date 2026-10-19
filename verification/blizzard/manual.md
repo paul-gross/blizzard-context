@@ -707,8 +707,8 @@ not its duration — so a read-path change reports this by hand.
 EBS-backed volume's I/O characteristics or its EC2 host's hardware, so an absolute reading here still says nothing about
 the hosted hub's own latency. What it measures instead is the **ratio** between two readings of the *same* store, before
 and after the code change — a ratio those hardware differences still track proportionally. The hosted reading is
-separate: operator inspection against `https://blizzard.grosscode.net` after the change has redeployed there, never a
-dev surface pointed at it (`workspace:/context/project/hub-data-modes.md` owns why).
+separate: operator inspection against `https://blizzard.grosscode.net` once a release carrying the change is deployed
+there, never a dev surface pointed at it (`workspace:/context/project/hub-data-modes.md` owns why).
 
 **Setup.** A fleet-scale hub store that is not the live fleet — `workspace:/context/project/hub-data-modes.md`'s mode 2
 (a migrated snapshot copy) or mode 3 (seeded synthetic) — or, for a reading taken mid-change before a fresh store
@@ -736,7 +736,7 @@ recorded reading below used.
 | After (`load_all_facts`/`load_all_routes` list read, fact-table indexes) | 40      | 10.4ms       |
 
 A ~125x query-count reduction and ~33x latency reduction on the same local sqlite store. The hosted reading is owed
-separately, by an operator, once this change has redeployed there.
+separately, by an operator, once a release carrying this change is deployed there.
 
 **Queue-peek reading** (same method, `GET /api/queue`; scratch `build_hub` store, N=173 promoted chunks, 5 warmed reps):
 
@@ -842,7 +842,7 @@ A 2x query-count reduction on both routes, tracked by a roughly proportional lat
 `load_all_facts` bulk read once `ChunkRecordStore`/`QueueService` take an already-derived `statuses` map instead of
 deriving it from facts internally removes that read's own statement cost entirely, not just its per-chunk shape — the
 count was already flat in fleet size before this change, per the queue-peek reading above. The hosted reading is owed
-separately, by an operator, once this change has redeployed there.
+separately, by an operator, once a release carrying this change is deployed there.
 
 ### `blizzard:manual-trace-backends`
 
@@ -977,8 +977,8 @@ tier measures wall-clock time or decompression volume; `blizzard:component-test`
 EBS-backed volume's I/O characteristics or its EC2 host's CPU throttle ceiling, so an absolute reading here says nothing
 about the hosted hub's own latency. What it measures instead is the **ratio** between two readings of the *same* store
 and corpus shape, before and after the code change. The hosted reading is separate: the sweep's own elapsed-time log
-line, read by an operator after the change has redeployed there, never a dev surface pointed at the hosted hub
-(`workspace:/context/project/hub-data-modes.md` owns why).
+line, read by an operator once a release carrying the change is deployed there, never a dev surface pointed at the
+hosted hub (`workspace:/context/project/hub-data-modes.md` owns why).
 
 **Setup.** A scratch `tests.support.build_hub` store seeded to the production shape — ≈2,500 visible segments, ≈27,500
 records, content sized to ≈175 MB compressed — through a throwaway script, then swept once (untimed) so the store
@@ -1009,7 +1009,7 @@ the digest-based candidacy read and the derivation change probe, a repeated pass
 statement — the probe's own aggregate read — and decodes nothing. A fresh reconciler's first pass, which never consults
 the in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
 statements, no content decoded, well under the 60s interval either way. The hosted reading is owed separately, by an
-operator, once this change has redeployed there.
+operator, once a release carrying this change is deployed there.
 
 ### `blizzard:manual-branch-protection`
 

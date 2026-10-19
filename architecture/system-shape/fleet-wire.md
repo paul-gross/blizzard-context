@@ -12,7 +12,7 @@ marker in its subject, acknowledging the break — the commit itself for a direc
 merges. A removed route or field keeps its old form beside the replacement, the way `GET /api/fleet/queue/peek`
 (`src/blizzard/hub/api/fleet.py`) stays beside its matched `POST` counterpart.
 
-**Why.** The hosted hub redeploys itself on every `master` commit while its runners are redeployed by hand
+**Why.** A deployment moves its hub onto a release before its runners, which follow at their own pace
 (`docs/versioning.md`'s skew window), so an unacknowledged break reaches a live runner with nothing to catch it before
 the fleet wedges.
 
