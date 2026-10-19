@@ -203,7 +203,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `ProjectColor` const: every name's swatch resolves a non-empty computed background, no two names resolve the same one,
   and each holds at least 3:1 contrast against `--surface-resting` and `--surface-selected`. It is the guard against
   drift between the generated palette and `tokens.css`'s `--project-<name>` tokens, a computed-style claim jsdom cannot
-  make.
+  make. It also mounts custom `#rrggbb` values — black, a dark blue, a spread of dark hues and one light color — and
+  holds each one's resolved `rgb()` background to the same 3:1 after the kit's legibility adjustment.
 - `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields, mounted directly with
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
   stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and
