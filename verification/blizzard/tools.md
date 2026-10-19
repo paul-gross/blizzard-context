@@ -18,7 +18,9 @@ runner run on their embedded sqlite stores; the per-env postgres runs but the da
 the per-env blizzard-mock fixture workspace and spawns the fenced mock-claude-code façade. Behind the daemons come the
 two `ng serve` dev servers — the hub board at band +4 (`$BZ_HUB_WEB_PORT`) and the runner panel at band +5
 (`$BZ_RUNNER_WEB_PORT`) — each compiling the worktree's current web source and proxying `/api` to its own daemon, where
-the daemon's own port serves only the last built bundle.
+the daemon's own port serves only the last built bundle. Beside them, the workshop — Storybook over the fleet kit — at
+band +6 (`$BZ_STORYBOOK_PORT`) compiles the worktree's current kit and depends on no daemon, so it is up even when the
+stack is not.
 
 ### tool:mock-fleet
 

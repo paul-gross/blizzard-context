@@ -8,12 +8,13 @@ section per row, in that table's order. The `blizzard:` methods live in [`./manu
 `blizzard-mock:` methods in [`./manual-mock.md`](./manual-mock.md).
 
 The methods are driven by a human, or a `frontend-verifier` agent, in a real browser — the pass condition is a rendered
-view and a gesture's effect. Every method starts, from the workspace root, from the same provisioned env with its shell
-vars sourced; the board and panel methods also need the env's daemons up, and the workshop needs no daemon:
+view and a gesture's effect. Every method starts, from the workspace root, from the same provisioned env with its
+services up and its shell vars sourced; the board and panel methods drive the env's daemons, and the workshop needs no
+daemon:
 
 ```bash
 winter provision <env>
-winter service up <env> --wait   # board and panel only
+winter service up <env> --wait   # the daemons, the dev servers, and the workshop
 source <(winter env <env>)
 ```
 
@@ -96,9 +97,10 @@ log stay clean throughout.
 its stories carry, and how it answers when a reader changes its inputs through the controls. How a page composes the
 part is `web:manual-board`'s or `web:manual-panel`'s. Whether every story still renders is `web:story-render`'s.
 
-**Setup.** The shared preamble, without the daemons. Serve the workshop with `npm run storybook` in the env's
-`blizzard/web`, at `http://localhost:${BZ_STORYBOOK_PORT}/` — port 6006 when that variable is unset. No seed is needed,
-since a story carries its own data.
+**Setup.** The shared preamble. The workshop is at `http://localhost:${BZ_STORYBOOK_PORT}/`, served by `service up`
+([`./tools.md`](./tools.md#toolservice-up)) — never start a second one by hand in a feature env, since it moves to the
+next free port without a word. No seed is needed, since a story carries its own data. Outside a feature environment,
+`npm run storybook` in `web/` serves the checkout's workshop at `http://localhost:6006/`.
 
 **Steps.**
 

@@ -205,9 +205,12 @@ on — the guard fails the unit tier, and past it the daemon wedges once its log
 **Rule.** Verify a change whose observable effect is visual — layout, styling, what a component renders — by at least
 one artifact from a real render **that covers the changed surface**: a `web:shell-sweep` spec that mounts the changed
 component (add one to the roster when none does), a browser e2e assertion against that surface in the served bundle (the
-`wide_viewport`/`narrow_viewport` fixtures in `tests/e2e/conftest.py` give it a real page), or a screenshot of it from a
-live environment (`blizzard-mock:manual-seeded-board` stands a realistic board up to render). A jsdom-tier green is
-inadmissible as visual evidence — and so is a render green whose specs never mount the changed component.
+`wide_viewport`/`narrow_viewport` fixtures in `tests/e2e/conftest.py` give it a real page), a screenshot of it from a
+live environment (`blizzard-mock:manual-seeded-board` stands a realistic board up to render), or a screenshot of the
+changed part's stories taken by `web:manual-workshop`, a real Chromium render of the part. A workshop render covers a
+change to the part itself; a change to how a page lays a part out still needs a render of that page, since the workshop
+shows the part without its page. A jsdom-tier green is inadmissible as visual evidence — and so is a render green whose
+specs never mount the changed component.
 
 **Why.** jsdom parses `@container` and media-query rules without ever evaluating layout, so
 `bzh:mutation-review-selection`'s litmus applies to the whole unit tier at once: a suite that stays green when the
@@ -218,8 +221,8 @@ layout breaks is not evidence.
 it lays out? If yes, the same claim standard applies.
 
 **Do.** An admissible claim names the artifact *and* the changed surface it rendered:
-*"`<component>.shell-sweep.spec.ts` asserts the changed grid stacks at 390px"*, or *"screenshot: seeded board, the
-changed cost column, 1280px"*.
+*"`<component>.shell-sweep.spec.ts` asserts the changed grid stacks at 390px"*, *"screenshot: seeded board, the changed
+cost column, 1280px"*, or *"workshop screenshot: the changed badge's error story, `phone`"*.
 
 **Don't.** Ship a template or CSS change on a full-suite unit green alone — every one of those specs rendered into a DOM
 that never evaluated the rules the change touched.
