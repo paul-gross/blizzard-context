@@ -7,13 +7,13 @@ Full detail for the `web:` manual methods named in [`../blizzard.md`](../blizzar
 section per row, in that table's order. The `blizzard:` methods live in [`./manual.md`](./manual.md) and the
 `blizzard-mock:` methods in [`./manual-mock.md`](./manual-mock.md).
 
-Both methods are driven by a human, or a `frontend-verifier` agent, in a real browser — the pass condition is a rendered
-view and a gesture's effect — and both start, from the workspace root, with a provisioned env, its daemons up, and its
-shell vars sourced:
+The methods are driven by a human, or a `frontend-verifier` agent, in a real browser — the pass condition is a rendered
+view and a gesture's effect. Every method starts, from the workspace root, from the same provisioned env with its shell
+vars sourced; the board and panel methods also need the env's daemons up, and the workshop needs no daemon:
 
 ```bash
 winter provision <env>
-winter service up <env> --wait
+winter service up <env> --wait   # board and panel only
 source <(winter env <env>)
 ```
 
@@ -89,3 +89,35 @@ why the order matters.
 **Passes when.** Every stated observable renders in the browser from the worktree's current source and still renders
 after the next tick, every driven gesture's effect is confirmed in the runner's own state, and the console and network
 log stay clean throughout.
+
+### `web:manual-workshop`
+
+**Surface.** A storied part, from the kit or a shared piece, rendered alone in the workshop: what it shows in each state
+its stories carry, and how it answers when a reader changes its inputs through the controls. How a page composes the
+part is `web:manual-board`'s or `web:manual-panel`'s. Whether every story still renders is `web:story-render`'s.
+
+**Setup.** The shared preamble, without the daemons. Serve the workshop with `npm run storybook` in the env's
+`blizzard/web`, at `http://localhost:${BZ_STORYBOOK_PORT}/` — port 6006 when that variable is unset. No seed is needed,
+since a story carries its own data.
+
+**Steps.**
+
+1. Name every part the change touches, and every part that composes one of them and has stories of its own.
+2. For each, open its stories and work through every state, confirming the change shows as intended and nothing else
+   moved.
+3. Push on each changed input through the controls, including values the stories do not hold: an empty string, a long
+   one, a list of one, a list of many.
+4. Switch the viewport to `phone` and `phone-sm` for any part whose layout answers to width, and to `desktop`.
+5. Keep the browser console open throughout; a part that logs an error does not pass.
+6. For a visual change, take a screenshot of each changed state at each width the claim names, and keep the screenshots,
+   the story ids, and the commit with the change under verification.
+
+**Passes when.** Every changed state renders as intended at every width it is claimed at, every control drives the part
+without breaking it, and the console stays clean.
+
+**The workshop while building.** The method is also how frontend work is done. An agent build that changes anything a
+person sees on the board or the panel opens the workshop before it writes a part. It looks first for a part that already
+does what it needs, and reuses it before inventing another. It shapes its change against the part's stories as it
+builds, and before it calls the work done, it performs this method over every part it touched. A change that adds or
+reshapes a part brings that part's stories in the same change (`bzh:frontend-kit-stories`), so the next build finds
+them.
