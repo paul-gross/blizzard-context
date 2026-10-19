@@ -111,9 +111,10 @@ live in the spoke for its scope:
   and fleet.
 
 `blizzard:manual-hub`, `blizzard:manual-runner`, `web:manual-board`, and `web:manual-panel` are the general exercises —
-one per surface a person can drive, for a change whose behavior shows on that running surface. Every other row is a
-narrow probe of one named claim, and wins over the general row only where the change under verification is to that claim
-— a probe whose steps merely pass through the changed surface does not.
+one per surface a person can drive, for a change whose behavior shows on that running surface. A change to a storied
+part names `web:manual-workshop` beside the general row for its surface, since one judges the part and the other judges
+the page. Every other row is a narrow probe of one named claim, and wins over the general row only where the change
+under verification is to that claim — a probe whose steps merely pass through the changed surface does not.
 
 | Method                                                    | Surface                                                                                                                                                                  |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -147,6 +148,7 @@ narrow probe of one named claim, and wins over the general row only where the ch
 | `blizzard:manual-change-notes`                            | `blizzard-change-notes guide`, `cut`, `render` and `mise run release-notes`, driven over a throwaway clone and tag                                                       |
 | `web:manual-board`                                        | The hub board driven in a real browser against a running hub                                                                                                             |
 | `web:manual-panel`                                        | The runner panel driven in a real browser against a running runner                                                                                                       |
+| `web:manual-workshop`                                     | A part of the board or the panel judged on its own in the workshop, in each of its states and widths                                                                     |
 | `blizzard-mock:manual`                                    | The winter-wired mock forge fronting a real fixture workspace's bare origins                                                                                             |
 | `blizzard-mock:manual-seeded-board`                       | A realistic board rendered from a direct store seed: no work source configured, no hub restart                                                                           |
 | `blizzard-mock:manual-seeded-fleet`                       | A seeded runner panel beside a seeded board, coherent after the daemon's first reconciling tick                                                                          |
