@@ -15,9 +15,10 @@ workflows both call: ruff format --check, ruff check, pyright, the ast-grep stru
 (`blizzard-export-contracts` and a `git diff` over `contracts/`), hub↔runner wire compatibility
 (`blizzard:wire-compat`), the change-note check (`mise run change-notes`, which runs
 `uv run blizzard-change-notes check`), then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`),
-the bundle-composition check (`web:bundle-composition`), and generated-client drift over `web/`. Stage regenerated
-`openapi/`, `contracts/` or `web/` client output before running it: the drift checks are a working-tree-vs-index
-`git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
+the bundle-composition check (`web:bundle-composition`), the story render check (`web:story-render`), and
+generated-client drift over `web/`. Stage regenerated `openapi/`, `contracts/` or `web/` client output before running
+it: the drift checks are a working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an
+unstaged one fails (`web:client-drift`).
 
 `mise run gate` is not the full master merge gate — it omits `blizzard:service-test` and the bounded crash-sweep CI
 profile (`mise run crash-sweep-ci`); the `pr` and `push` workflows run both as separate real gate jobs, so a PR breaking

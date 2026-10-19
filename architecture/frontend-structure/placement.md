@@ -9,10 +9,10 @@ import, and how a view both daemons serve is written once. A spoke of the
 
 **Rule.** `fleet` holds only what both apps reach: each direct child of `fleet/src/lib/` — a feature folder or a
 top-level module — or, under the grouping folders `core/`, `chunk/`, and `shell/`, each child of that folder, is reached
-by the non-spec code of both `hub` and `runner`, and no `fleet` file imports from `hub` or `runner`. App-local code
-lives in its app, pages, queries, and components together. A view both daemons serve is written once in `fleet` and
-takes the daemon as an injected seam — the generated client, the cache-key plane, and an optional actions port — rather
-than being copied per app.
+by the code of both `hub` and `runner` other than specs and stories, and no `fleet` file imports from `hub` or `runner`.
+App-local code lives in its app, pages, queries, and components together. A view both daemons serve is written once in
+`fleet` and takes the daemon as an injected seam — the generated client, the cache-key plane, and an optional actions
+port — rather than being copied per app.
 
 **Why.** A feature folder in `fleet` that one app reaches is that app's code in the wrong place: it widens the shared
 surface, hides the app's real boundary from the eager-shell and bundle checks, and invites a per-app mirror when the
@@ -54,8 +54,8 @@ may also import its project's kernel, and the kernel imports no other unit. An a
 edge points to a higher layer, but a row may list a unit of its own layer — a declared feature-to-feature edge such as
 `board` → `runners` — unlike `bzh:domain-package-layers`, whose edges all point strictly down.
 
-`fleet`, rooted at `fleet/src/lib/`, has no kernel, so every edge is listed; a `*.spec.ts` in any unit may also import
-`testing`:
+`fleet`, rooted at `fleet/src/lib/`, has no kernel, so every edge is listed; a `*.spec.ts` or `*.stories.ts` in any unit
+may also import `testing`:
 
 | Unit          | Layer        | May import                          |
 | ------------- | ------------ | ----------------------------------- |
