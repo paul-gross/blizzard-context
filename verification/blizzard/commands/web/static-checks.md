@@ -67,6 +67,16 @@ classes (`KitPanel`'s `.panel`/`.p-hdr`/`.p-body`/`.lbl`, `KitAsyncState`'s `.st
 `REAL_TIMER_EXEMPT_FILES` idiom. Its own fixture self-test, `assertKitFloorDetectorWorks`, runs alongside
 `assertRealTimerDetectorWorks` before either sweep does.
 
+The same script also sweeps the kit's stories
+([`../../../../architecture/frontend-structure/kit.md`](../../../../architecture/frontend-structure/kit.md)
+`bzh:frontend-kit-stories`): every class `fleet/src/lib/kit/index.ts` exports as a `@Component` or `@Directive`,
+resolved with the TypeScript compiler to its declaration, needs a `*.stories.ts` in the kit whose default-exported meta
+names that class as `component`, resolved the same way rather than matched by name. A part no meta names is reported as
+its class and file. A part that genuinely cannot be shown alone is named with its reason in `KIT_STORIES_EXEMPT`, the
+`KIT_FLOOR_EXEMPT_SITES` idiom, empty today; an entry naming a class the kit no longer exports, or one a meta now names,
+fails as stale. Its fixture self-test, `assertKitStoriesDetectorWorks`, plants a kit with a storied component, a storied
+directive, an unstoried component, and a stale exemption, and runs alongside `assertKitFloorDetectorWorks`.
+
 The same script also runs the placement sweep (`web/scripts/placement-sweep.js`, over the TypeScript compiler API;
 [`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
 `bzh:frontend-placement`, whose Rule and Scope own which units of `fleet/src/lib/` it binds and which are exempt), with
