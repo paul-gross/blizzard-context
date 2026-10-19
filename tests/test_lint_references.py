@@ -164,6 +164,26 @@ class LintReferencesTest(unittest.TestCase):
         findings, _ = run_lint([self.repo / "spoke.md"], self.workspace)
         self.assertEqual({f["file"] for f in findings}, {"ctx/spoke.md"})
 
+    def arch(self, body: str, name: str = "architecture/one.md") -> None:
+        self.write({"index.md": CLEAN["index.md"] + "- [arch](./architecture/index.md)\n",
+                    "architecture/index.md": "# Arch\n\n- [one](./one.md)\n", name: "# One\n\n" + body})
+
+    def test_detect_paragraph_naming_a_test_function_fails(self) -> None:
+        for token in ("`test_a_thing_holds`", "`test_role_marker_check_*`", "`tests/crash/test_sweep.py::test_kill9_at_x`"):
+            self.arch(f"**Detect.** The gate {token} fails the unit tier.\n")
+            found = self.fails("detect-cites-modules")
+            self.assertEqual(len(found), 1, found)
+
+    def test_detect_section_continues_past_its_first_paragraph(self) -> None:
+        self.arch("**Detect.** The gate holds:\n\n- `test_a_thing_holds` — a thing.\n")
+        self.fails("detect-cites-modules")
+
+    def test_test_names_outside_detect_or_architecture_pass(self) -> None:
+        self.arch("**Detect.** `blizzard/tests/test_layering.py` fails the unit tier.\n\n**Do.** See `test_a_thing_holds`.\n")
+        self.assertEqual(self.lint(), [])
+        self.write({"rules/one.md": CLEAN["rules/one.md"] + "\n**Detect.** `test_a_thing_holds`\n"})
+        self.assertEqual(self.lint(), [])
+
     def test_gate_exits_nonzero_only_on_fail(self) -> None:
         self.assertEqual(run_lint([self.repo], self.workspace, gate=True)[1], 0)
         self.write({"rules/one.md": CLEAN["rules/one.md"] + "\n`bzh:nope`\n"})

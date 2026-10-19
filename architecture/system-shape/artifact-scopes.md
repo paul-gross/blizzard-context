@@ -25,9 +25,8 @@ read route.
 design leaving the declarations off the envelope; or a graph-scope read that fails when the hub is unreachable.
 
 **Do.** `_graph_rows` in `src/blizzard/runner/api/artifacts.py` resolves the rows through
-`IReadGraphArtifactRepository.graph_artifacts_for_graph(lease.graph_id)` with no `HubProxy`; the service test
-`test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable` holds that read with the hub
-unreachable.
+`IReadGraphArtifactRepository.graph_artifacts_for_graph(lease.graph_id)` with no `HubProxy`; the runner's artifact
+service tests hold that read with the hub unreachable.
 
 **Don't.** Answering graph scope through the same hub-proxy forward node scope uses, on the grounds that one read path
 is simpler than two — every declaration read then fails with the hub, which is the property the rule exists to buy.
@@ -61,10 +60,8 @@ that staleness cannot creep in through a future optimization.
 failing the read.
 
 **Do.** `_system_rows` and `_system_hit` in `src/blizzard/runner/api/artifacts.py` call through `HubProxy` on every
-invocation, with no local store consulted; the service test
-`test_system_scope_read_fails_rather_than_resolving_locally_when_the_hub_is_unreachable` in
-`tests/service/test_system_artifacts_service.py` holds the read failing outright with the hub unreachable, never
-answering from nothing.
+invocation, with no local store consulted; the service tests in `tests/service/test_system_artifacts_service.py` hold
+the read failing outright with the hub unreachable, never answering from nothing.
 
 **Don't.** Answering system scope from a local cache or pin "because it's simpler" or "to save a round-trip" — that is
 exactly the staleness the scope exists to prevent: the worker would validate against a version of the document that may

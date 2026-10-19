@@ -62,8 +62,7 @@ beside `basic_provider.py` and the shared `git.py` in `runner/environments/inter
 
 **Detect.** A vendor SDK, the GitHub API, or a claude/harness binary invoked directly from a loop step, the domain, or a
 store rather than through an injected seam Protocol; or a test that cannot run without a real external system because no
-seam exists to bind a mock to. For the harness seam,
-`test_adapters_are_named_only_by_the_harness_wiring_and_the_composition_roots` in `blizzard/tests/test_layering.py`
+seam exists to bind a mock to. For the harness seam, the adapter-isolation check in `blizzard/tests/test_layering.py`
 fails the unit tier, resolving relative imports, on each breach:
 
 - a harness-core module importing `harness/claude_code/` or `harness/opencode/`;
@@ -72,8 +71,8 @@ fails the unit tier, resolving relative imports, on each breach:
 - a harness module other than `harness/wiring.py` importing `wiring.py`, which reaches every adapter through it;
 - a module under `harness/` importing `runner/loop/` or the loop's composition root, `runner/loop_wiring.py`.
 
-`test_adapter_isolation_catches_every_breach` proves the check catches each form. On every other seam a reviewer asks
-whether an adapter imports a sibling, or has grown a second module of its own while still flat in `internal/`.
+The same module's planted-tree cases prove the check catches each form. On every other seam a reviewer asks whether an
+adapter imports a sibling, or has grown a second module of its own while still flat in `internal/`.
 
 **Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
 basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while

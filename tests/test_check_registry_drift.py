@@ -1228,21 +1228,6 @@ class CheckFTests(unittest.TestCase):
         self.assertEqual(drift._stated_counts("the one check that remains", "checks?"), [])
 
 
-DOMAIN_DOC = """## Domain package layers (`bzh:domain-package-layers`)
-
-| Layer | Package | May import (besides `kernel`) |
-| ----- | ------- | ----------------------------- |
-| L0    | `kernel` | —                            |
-| L1    | `chunk`  | `graph`, `runners`           |
-
-The runner's table.
-
-| Layer | Node  | May import |
-| ----- | ----- | ---------- |
-| L0    | `auth` | —         |
-| L1    | `hub`  | `auth`    |
-"""
-
 FRONTEND_DOC = """## Folders import only what their project's layer table allows (`bzh:frontend-package-layers`)
 
 `fleet`, rooted at `fleet/src/lib/`:
@@ -1270,16 +1255,6 @@ FRONTEND_DOC = """## Folders import only what their project's layer table allows
 ## Next
 """
 
-PY_GATE = """_DOMAIN_PACKAGE_LAYERS: dict[str, frozenset[str]] = {
-    "kernel": frozenset(),
-    "chunk": frozenset({"graph", "runners"}),
-}
-_RUNNER_PACKAGE_LAYERS: dict[str, frozenset[str]] = {
-    "auth": frozenset(),
-    "hub": frozenset({"auth"}),
-}
-"""
-
 JS_GATE = """const FLEET_LAYERS = {
   api: [],
   core: ['api'],
@@ -1301,9 +1276,7 @@ const RUNNER_LAYERS = {
 
 
 def _write_layer_fixture(context: Path, blizzard: Path) -> None:
-    _write(context / "architecture" / "clean-architecture.md", DOMAIN_DOC)
     _write(context / "architecture" / "frontend-structure" / "placement.md", FRONTEND_DOC)
-    _write(blizzard / "tests" / "test_layering.py", PY_GATE)
     _write(blizzard / "web" / "scripts" / "structural-gate.js", JS_GATE)
 
 
@@ -1321,14 +1294,12 @@ class CheckHTests(unittest.TestCase):
     def test_matching_tables_and_gate_data_pass(self):
         findings = self._run()
         self.assertEqual([f for f in findings if f.status == "fail"], [])
-        self.assertEqual(len([f for f in findings if f.status == "pass"]), 5)
+        self.assertEqual(len([f for f in findings if f.status == "pass"]), 3)
 
-    def test_a_planted_python_edge_mismatch_fails(self):
-        _write(self.blizzard / "tests" / "test_layering.py", PY_GATE.replace('"hub": frozenset({"auth"})', '"hub": frozenset()'))
-        fails = [f for f in self._run() if f.status == "fail"]
-        self.assertEqual(len(fails), 1)
-        self.assertIn("_RUNNER_PACKAGE_LAYERS", fails[0].message)
-        self.assertIn("`hub` edges differ", fails[0].message)
+    def test_the_python_layer_data_is_not_compared(self):
+        self.assertFalse((self.blizzard / "tests" / "test_layering.py").exists())
+        self.assertFalse((self.context / "architecture" / "clean-architecture.md").exists())
+        self.assertEqual([f for f in self._run() if f.status == "fail"], [])
 
     def test_a_planted_js_edge_mismatch_fails(self):
         _write(self.blizzard / "web" / "scripts" / "structural-gate.js", JS_GATE.replace("'garden/core',\n  ]", "'garden/core', 'core',\n  ]"))
@@ -1344,15 +1315,15 @@ class CheckHTests(unittest.TestCase):
         self.assertIn("unit `extra` is only in RUNNER_LAYERS", fails[0].message)
 
     def test_a_missing_gate_name_fails(self):
-        _write(self.blizzard / "tests" / "test_layering.py", "X = 1\n")
+        _write(self.blizzard / "web" / "scripts" / "structural-gate.js", "const X = {};\n")
         fails = [f for f in self._run() if f.status == "fail"]
-        self.assertEqual(len(fails), 2)
+        self.assertEqual(len(fails), 3)
         self.assertTrue(all("not found" in f.message for f in fails))
 
     def test_a_missing_doc_table_fails(self):
-        (self.context / "architecture" / "clean-architecture.md").unlink()
+        (self.context / "architecture" / "frontend-structure" / "placement.md").unlink()
         fails = [f for f in self._run() if f.status == "fail"]
-        self.assertEqual(len(fails), 2)
+        self.assertEqual(len(fails), 3)
         self.assertTrue(all("no layer table" in f.message for f in fails))
 
 

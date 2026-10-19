@@ -157,26 +157,22 @@ orchestration instead and carries no marker.
 
 ## Detect
 
-`tests/test_layering.py` fails the unit tier on each constraint, one check per test:
+`tests/test_layering.py` fails the unit tier on each constraint, one check per constraint:
 
-- `test_every_data_class_declares_exactly_one_role` — a data class with no marker or two, a marker on an inferred-role
-  class or a non-data class, or a data class built by a call.
-- `test_a_dto_lives_at_the_app_boundary` — a `@dto` or a pydantic model outside the [app boundary](#app-boundary), or a
-  `@domain_model` or `@adapter_model` inside it.
-- `test_only_the_boundary_names_a_wire_model` — a module outside the boundary, the wire adapters, and the composition
-  roots importing from `blizzard.wire`.
-- `test_an_adapter_model_crosses_no_protocol` — a Protocol member naming an `@adapter_model`.
-- `test_a_domain_model_holds_no_collaborator` — a `@domain_model` field mentioning a collaborator: a port, a clock, a
-  driver handle, or a `@collaborator`, at any depth.
-- `test_a_dto_has_only_constructors_projections_and_properties` — a `@dto` method that is none of the three kinds, or
-  one bound by assignment.
-- `test_a_collaborator_does_work_and_every_clock_is_one` — a `@collaborator` with no method or property beyond its
-  constructors, or a clock-named data class carrying another marker.
+- A data class with no marker or two, a marker on an inferred-role class or a non-data class, or a data class built by a
+  call.
+- A `@dto` or a pydantic model outside the [app boundary](#app-boundary), or a `@domain_model` or `@adapter_model`
+  inside it.
+- A module outside the boundary, the wire adapters, and the composition roots importing from `blizzard.wire`.
+- A Protocol member naming an `@adapter_model`.
+- A `@domain_model` field mentioning a collaborator: a port, a clock, a driver handle, or a `@collaborator`, at any
+  depth.
+- A `@dto` method that is none of the three kinds (constructor, projection, property), or one bound by assignment.
+- A `@collaborator` with no method or property beyond its constructors, or a clock-named data class carrying another
+  marker.
 
-The same file's `test_role_marker_check_*`, `test_boundary_check_*`, `test_wire_import_check_*`,
-`test_adapter_model_check_*`, `test_domain_model_check_*`, `test_dto_check_*`, and `test_collaborator_check_*` cases
-prove each check catches its violation and admits its conforming shape; `tests/test_foundation_roles.py` covers the
-markers themselves.
+The same module's planted-tree cases prove each check catches its violation and admits its conforming shape;
+`tests/test_foundation_roles.py` covers the markers themselves.
 
 The gate reads only `@dataclass` and `NamedTuple` classes, so a reviewer asks of a hand-written class that stores fields
 in its `__init__`: is this a data class that left the gate? The fix is to make it a data class with its role. Of an
