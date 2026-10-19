@@ -413,6 +413,10 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   `delivery_repo_landed.repository_name` with native `ADD COLUMN`s, and backfills each runner's `projects` as JSON text
   naming its tenant's one project, paged along `runner_id`. Neither the added columns nor the JSON text backfill has run
   on Postgres.
+- **The project color revision.** `20261018_1200_project_color` adds `projects.color` as nullable, fills it per tenant
+  in keyset pages along `project_id`, then tightens it to `NOT NULL` in a `batch_alter_table`. A hand run on Postgres
+  reached head, returned to base, and ran the backfill over populated rows. No tier repeats that run, so a later change
+  to the revision is unverified on Postgres until someone runs it again.
 - **The work-source identity revision.** The revision giving each work source its `wsrc_<ulid>` id, slug, and name, and
   rekeying every reference to it, has had its backfill run on SQLite only. A work source's slug move takes the project
   slug move's shape, so it shares that move's race under READ COMMITTED, equally unverified.
