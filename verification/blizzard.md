@@ -40,6 +40,7 @@ A command method passes when its command exits 0.
 | `blizzard:e2e`                   | `mise run e2e` — the standing full-stack smoke suite                                                                                                              |
 | `blizzard:winter-binding`        | `mise run winter-binding` — the winter workspace provider against the real winter CLI; local-only *(more)*                                                        |
 | `blizzard:journey`               | `mise run journey` — the capstone acceptance-journey rehearsal over real host daemons *(more)*                                                                    |
+| `blizzard:rehearsal`             | `mise run rehearsal` — each supported release's real hub and runner host upgraded to the candidate, then walked back *(more)*                                     |
 | `blizzard:crash-sweep`           | `mise run crash-sweep` — the full kill-9 sweep over the crash-point registry *(more)*                                                                             |
 | `blizzard:sse-contract`          | `mise run sse-contract` — the SSE frame shape against the golden corpus `contracts/sse/` *(more)*                                                                 |
 | `blizzard:cli-contract`          | `uv run pytest tests/test_cli_surface_contract.py` — the CLI command tree against `contracts/cli/` *(more)*                                                       |

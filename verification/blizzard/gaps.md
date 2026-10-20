@@ -23,12 +23,6 @@ precondition to its guard, each reachability claim to its dispatch site, and eac
 claim a fix commit writes owes the same walk as one it edits. Do not answer this with a doc-linting tier that would
 score prose without reading the code.
 
-## The store contract on Postgres
-
-`blizzard:store-contract` reflects a SQLite store only, so a revision that diverges from `schema.py` on Postgres alone
-passes it. Standing in: `bzh:sql-portable` and `blizzard:manual-postgres-migrations`. It closes when the rehearsal's
-Postgres leg reflects a migrated store through the same producer.
-
 ## Per-block prose caps
 
 `bzh:prose-budget`'s `mise run prose-check` fails each root's prose total against the committed baseline, and the
