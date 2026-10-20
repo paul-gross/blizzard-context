@@ -141,8 +141,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   the aging/stale colour and long-miss-reason claims of the shared subscription-pace group component. At 390px and
   1280px a host card holding two runners — a long workspace id, binding lines with an unreported workspace, named
   spenders, and an unrostered subscription — must stay inside the panel with its rows stacked, and the host-less heading
-  and its row must sit below the card. An online runner's light animates with the beacon fade and an offline one's with
-  the 1.2s red step blink, at 390px.
+  and its row must sit below the card. At 390px an online runner's light holds steady green, a paused one's steady
+  amber, an offline one's blinks red in the 1.2s step, and a never-connected one's is a hollow mark.
 - `session-recovery-view.shell-sweep.spec.ts` covers `SessionRecoveryView`, which the runner app renders in place of the
   whole panel when a federation bounce could not complete silently: at 390px and 320px its headline/detail block and
   retry control must render with no view-wide horizontal overflow; proven able to fail by adding `white-space: nowrap`
