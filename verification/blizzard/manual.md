@@ -1252,6 +1252,40 @@ and `passes`.
 **Hazards.** Read-only against the clone's git history; nothing is pushed, and `compat-breaks.json` is written in the
 clone only.
 
+### `blizzard:manual-store-fold`
+
+**Surface.** `scripts/fold_store.py <floor-tag>` driven by hand against a published release: the baseline it writes for
+each tree, the revisions and colocated tests it deletes, what it leaves above the floor, the refusal of a store at an
+absorbed revision, and a second run. The unit tests fold synthetic trees with a fake renderer; this method reads the
+real release's wheel, history and files as an operator running a fold would.
+
+**Setup.** A throwaway `git clone` of the `blizzard` worktree on the branch under verification, under
+`$BLIZZARD_TMPDIR`, run from its root, with `GH_TOKEN` set and `GH_REPO` naming the repository (the clone's origin is
+not on GitHub). The floor is the `oldest` entry of `uv run blizzard-compat releases --json`. The clone's CLI must load
+the implementation under exercise.
+
+**Steps.**
+
+1. `uv run python scripts/fold_store.py <floor-tag>`.
+2. `git status` and `git diff --stat`: each tree's floor-revision file is rewritten, and every other change is a deleted
+   file.
+3. Read each tree through Alembic's `ScriptDirectory`: one base, the baseline, and the first kept revision's
+   `down_revision` resolves to it.
+4. `uv run pytest tests/test_store_migrations.py::test_migrate_up_and_down tests/test_baseline_floor.py`.
+5. Stamp a scratch hub store (`blizzard hub init`) at an absorbed revision id, then `blizzard hub migrate --dir` on it.
+6. `blizzard:typecheck` and `blizzard:structural-gate` on the clone.
+7. Run the tool a second time.
+
+**Passes when.** Step 2: each floor-revision file declares `BASELINE_FLOOR = "<floor-tag>"`, the deleted files are
+exactly the absorbed revisions below the floor revision and their colocated tests, and no revision above it changed.
+Step 3 holds for both trees. Step 4 passes. Step 5 exits with the refusal naming `<floor-tag>` and leaves the store byte
+for byte as it was. Step 6 is green. Step 7 folds nothing and says so for each tree. The default suite's failures on the
+folded clone are tests pinning absorbed revisions: record them as the input `workflows/store-fold.md`'s retirement step
+names, not as a result.
+
+**Hazards.** Everything runs in the clone; nothing is pushed. The floor's wheel is downloaded into a temporary
+directory.
+
 ### `blizzard:manual-release-verify`
 
 **Surface.** `scripts/verify-release.sh <tag>` in the `blizzard` repo, run by hand from a machine outside GitHub's

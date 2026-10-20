@@ -1,4 +1,4 @@
-# The upgrade rehearsal command detail (`bzh:matrix-command-rehearsal`)
+# The published-release command detail (`bzh:matrix-command-rehearsal`)
 
 <!-- the `###` sections below are machine-parsed by `blizzard-context:/scripts/check-registry-drift.py`'s `_sections(text, "###")` — at `##` it reads no sections at all. -->
 <!-- rumdl-disable MD001 -->
@@ -41,3 +41,37 @@ release succeeded — and by `release.yml` on every `-rc.` tag before the image 
 commit and relies on its candidate's run. A pull request does not run it: it takes minutes, and `blizzard:compat`
 already holds every pull request to the same releases statically, so the rehearsal is the post-merge proof that the
 static check's verdict holds for a real upgrade, not an ungated check.
+
+### blizzard:store-baseline
+
+`BLIZZARD_STORE_BASELINE=1 uv run --extra postgres pytest -m store_baseline tests/test_store_baseline.py`
+(`mise run store-baseline`) — the proof that a fold replaced a store's migration history without changing the store it
+builds. For each tree, the baseline alone is applied to an empty store, the floor release's own published wheel builds
+its history's store from empty with its own `migrate` verbs, and the two are compared on the same backend: every table's
+columns (type, nullability, default), primary key, foreign keys, unique constraints and indexes, by name; every row; and
+on SQLite each table's `AUTOINCREMENT`, read from its DDL. The contract is
+`blizzard-product:/plans/release-engineering/release-lines/spec/fold.md` §The two proofs.
+
+It is skipped without `BLIZZARD_STORE_BASELINE=1`, and skips and says so while no tree's base revision declares a
+`BASELINE_FLOOR`, which is every run before the first fold. `BLIZZARD_STORE_BASELINE_PG_URL` names the Postgres server
+the Postgres legs create a throwaway database on; unset, those legs skip and say why, and under `CI` unset fails. It
+downloads the floor's wheel, so it needs `gh` access (`GH_TOKEN`).
+
+**Seeded values.** A history seeds rows whose ids are minted from the clock and `os.urandom` and whose instants are
+stamped when they run, so no two runs agree. The baseline mints and stamps those afresh, and the comparison reads them
+as `blizzard.tools.store_fold.seeds.normalize` does: ids up to a consistent renaming, instants by presence.
+
+**The runner on Postgres.** The runner's history cannot reach head on Postgres from an empty store
+(`20260920_0200_usage_cost_is_share` sets a Boolean `server_default` of `0`, which Postgres rejects), so that one leg
+holds the baseline's Postgres store to the floor's committed `contracts/store/runner.json` through the producer
+`blizzard:store-contract` uses, and its rows to the runner history's SQLite rows. This is the one place the proof
+departs from comparing a history's store with the baseline's on the same backend.
+
+**One named normalization.** A table the history renamed keeps its old name on its Postgres-generated primary key,
+foreign key and serial sequence, which a baseline creating the table under the new name cannot reproduce. The test names
+each such table beside the name it was renamed from; nothing else is read away, so a difference not of that class fails.
+
+**Where it runs.** `.github/workflows/store-baseline.yml` is reusable, called by `pr.yml` when a pull request changes
+either tree's `versions/` directory and by `release.yml` on candidate and patch tags, never a stable promotion. It is
+not a required check on `master`, and not in `blizzard:gate`: the gate is token-free and reaches no network beyond
+package installs.
