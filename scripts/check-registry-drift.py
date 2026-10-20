@@ -179,7 +179,7 @@ KNOWN_UNMARKED: dict[str, str] = {}
 
 # The blizzard tier markers check B1/B2/C draw from, in the order the matrix
 # lists them.
-MARKERS = ("unit", "component", "service", "crash_sweep", "journey", "e2e", "winter_binding")
+MARKERS = ("unit", "component", "service", "crash_sweep", "journey", "rehearsal", "e2e", "winter_binding")
 
 # ### <method-id> sections in commands.md that are themselves a test tier —
 # check B2's own-tier agreement is scoped to exactly these.
@@ -189,6 +189,7 @@ TIER_METHODS = {
     "blizzard:service-test": "service",
     "blizzard:crash-sweep": "crash_sweep",
     "blizzard:journey": "journey",
+    "blizzard:rehearsal": "rehearsal",
     "blizzard:winter-binding": "winter_binding",
 }
 
@@ -234,9 +235,9 @@ _NUMERAL_RE = re.compile(r"\b(" + "|".join(NUMERAL_WORDS) + r")\b", re.IGNORECAS
 _SCENARIO_SPEC_WORD_RE = re.compile(r"\b(?:scenarios?|specs?)\b", re.IGNORECASE)
 _PAREN_INT_RE = re.compile(r"\((\d+)\)")
 
-_TIER_WORD_RE = re.compile(r"\b(unit|component|service|crash[ _-]?sweep|journey|winter[ _-]?binding)\b", re.IGNORECASE)
+_TIER_WORD_RE = re.compile(r"\b(unit|component|service|crash[ _-]?sweep|journey|rehearsal|winter[ _-]?binding)\b", re.IGNORECASE)
 _TIER_MENTION_RE = re.compile(r"\btiers?\b", re.IGNORECASE)
-_METHOD_ID_RE = re.compile(r"blizzard:(unit-test|component-test|service-test|crash-sweep|journey|e2e|winter-binding)")
+_METHOD_ID_RE = re.compile(r"blizzard:(unit-test|component-test|service-test|crash-sweep|journey|rehearsal|e2e|winter-binding)")
 
 
 def _normalize_tier_word(word: str) -> str:
@@ -549,7 +550,7 @@ def _named_tiers(window: str) -> set[str]:
             tiers.add("crash_sweep")
         elif method == "winter-binding":
             tiers.add("winter_binding")
-        elif method in ("journey", "e2e"):
+        elif method in ("journey", "rehearsal", "e2e"):
             tiers.add(method)
         else:
             tiers.add(method.split("-")[0])

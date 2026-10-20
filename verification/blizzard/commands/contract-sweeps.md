@@ -86,8 +86,8 @@ equality, `deprecated` marks excepted since reflection cannot see them, with the
 regenerating without a revision reddens this test.
 
 Its reach is SQLite only. Server defaults compare by presence, constraints by columns and referents, check constraints
-by name, and indexes and column order not at all. The Postgres comparison is a declared gap
-([`../gaps.md`](../gaps.md)).
+by name, and indexes and column order not at all. The Postgres comparison, an empty hub store migrated to head and
+reflected through the same producer, is `blizzard:rehearsal`'s Postgres leg ([`./rehearsal.md`](./rehearsal.md)).
 
 Falsify it with a scratch revision that adds a column `schema.py` lacks, then regenerate nothing: the test reddens on
 the reflected-only column. Delete the revision afterwards.

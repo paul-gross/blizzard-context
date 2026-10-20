@@ -233,6 +233,19 @@ class CheckB2Tests(unittest.TestCase):
         findings = drift.check_B2("verification/commands.md", text, self.blizzard, collect_cache)
         self.assertEqual(_shape(findings), [("B2", "pass")])
 
+    def test_rehearsal_section_holds_its_cited_file_to_the_rehearsal_marker(self):
+        _write(self.blizzard / "tests" / "test_upgrade.py", "def test_x(): pass\n")
+        text = "### blizzard:rehearsal\n\nThe upgrade journey (`tests/test_upgrade.py`) drives both daemons.\n"
+        in_tier = {"rehearsal": ["tests/test_upgrade.py::test_x"], "journey": []}
+        out_of_tier = {"rehearsal": [], "journey": ["tests/test_upgrade.py::test_x"]}
+        self.assertEqual(drift.check_B2("verification/commands.md", text, self.blizzard, in_tier), [])
+        findings = drift.check_B2("verification/commands.md", text, self.blizzard, out_of_tier)
+        self.assertEqual(_shape(findings), [("B2", "fail")])
+
+    def test_rehearsal_method_id_names_its_tier(self):
+        self.assertEqual(drift._named_tiers("run under blizzard:rehearsal"), {"rehearsal"})
+        self.assertEqual(drift._named_tiers("the rehearsal tier"), {"rehearsal"})
+
 
 # --------------------------------------------------------------------------
 # Check C — e2e roster completeness
