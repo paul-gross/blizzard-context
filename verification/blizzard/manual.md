@@ -1220,6 +1220,38 @@ current line. The successful cut moves notes and the boundary under `## Upgradin
 lists unrelated breaking notes. Both tag renders agree despite working-tree changes, open with **Upgrading to <line>**,
 link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone.
 
+### `blizzard:manual-compat`
+
+**Surface.** `uv run blizzard-compat` driven by hand: its verdicts against the supported releases, the inherited-finding
+rule, the declared-break admission, tag mode, and the two outputs (`--json` and `compat-breaks.json`). The unit tests
+build their repositories from hand-made documents; this method reads the verdicts and files as a person running the
+check would.
+
+**Setup.** A throwaway `git clone` of the `blizzard` worktree under `$BLIZZARD_TMPDIR`, run from its root. Tags created
+there are never pushed. Tag two synthetic releases (a stable `v0.2.0` and a candidate) on commits whose committed
+documents carry a deprecated route and an undeprecated one, and set `src/blizzard/wire/window.toml` to the matching
+`floor`. The clone's CLI must load the implementation under exercise.
+
+**Steps.**
+
+1. An additive change (a new route, a new optional field): run `blizzard-compat --commits <base>..HEAD`.
+2. Remove an undeprecated route, then a deprecated one without a `!` commit, then with a `!` commit.
+3. Commit a document that already carries a finding, take that commit as the range base, and make an unrelated change.
+4. Add `opening = "1"` to the window. Remove a route with a `!` commit and a `changes/unreleased/` note
+   (`breaking: true`, the surface, the route under `breaks`); then delete the note.
+5. Run `blizzard-compat --tag <version>` for a candidate and for a patch (`X.Y.1`), and read `compat-breaks.json`; run
+   again with `--json`.
+
+**Passes when.** Step 1 exits 0 and reports the documents additive. Step 2: the undeprecated removal exits 1 as a
+`BREAK`; the deprecated removal exits 1 without the `!` and 0 with it. Step 3 reports the finding as inherited and
+exits 0. Step 4 exits 0 with the note and the `!`, and 1 once the note is gone. Step 5: the candidate exits 0 and
+`compat-breaks.json` holds `tag` and a sorted `breaks` list naming each break let through (an empty list when none); the
+patch exits 1 on any break; `--json` entries carry `release`, `surface`, `where`, `reason`, `deprecated`, `inherited`
+and `passes`.
+
+**Hazards.** Read-only against the clone's git history; nothing is pushed, and `compat-breaks.json` is written in the
+clone only.
+
 ### `blizzard:manual-release-verify`
 
 **Surface.** `scripts/verify-release.sh <tag>` in the `blizzard` repo, run by hand from a machine outside GitHub's

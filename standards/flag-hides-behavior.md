@@ -26,17 +26,17 @@ conditional on a flag, and a flag read hand-rolled inside a controller instead o
 Each surface while its flag is off. The design record is
 `blizzard-product:/plans/release-engineering/dark-launch/spec/contract.md`.
 
-| Surface                       | While the flag is off                                                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| HTTP route, hub or runner     | Registered and in the OpenAPI document; answers `404` with a typed `FlagOff` body naming the flag, listed in the route's `responses`    |
-| Request or response field     | Declared with a default; a request carrying it is accepted and the field ignored, and a response carries its default                    |
-| Hub↔runner wire               | As a route or field, held additive by `bzh:fleet-wire-additive`; a runner never sends a field or calls a route its `fleet` flag has off |
-| CLI verb or option            | Present in `--help`, marked not yet on; running it, or giving the option, exits 1 with the `FlagOff` message                            |
-| Configuration key             | Accepted and validated like any key; read as absent, with a warning naming the key and the flag                                         |
-| Store schema                  | Migrated by every release that carries the revision; a migration is never conditional on a flag                                         |
-| Trace and egress dictionaries | Declared when the change that emits them lands; emitted, or non-null, only while on                                                     |
-| Fact kind, event type         | Declared when it lands; written only while on, and read by any reader whatever its own flag                                             |
-| Board screen or control       | Absent; the board is behavior, not surface                                                                                              |
+| Surface                       | While the flag is off                                                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP route, hub or runner     | Registered and in the OpenAPI document; answers `404` with a typed `FlagOff` body naming the flag, listed in the route's `responses`              |
+| Request or response field     | Declared with a default; a request carrying it is accepted and the field ignored, and a response carries its default                              |
+| Hub↔runner wire               | As a route or field, held additive by `bzh:fleet-wire-additive`; a runner never sends a field or calls a route its `fleet` flag has off           |
+| CLI verb or option            | Present in `--help`, marked not yet on; running it, or giving the option, exits 1 with the `FlagOff` message                                      |
+| Configuration key             | Accepted and validated like any key; read as absent, with a warning naming the key and the flag; held additive by `bzh:released-surface-additive` |
+| Store schema                  | Migrated by every release that carries the revision; a migration is never conditional on a flag                                                   |
+| Trace and egress dictionaries | Declared when the change that emits them lands; emitted, or non-null, only while on; held additive by `bzh:released-surface-additive`             |
+| Fact kind, event type         | Declared when it lands; written only while on, and read by any reader whatever its own flag                                                       |
+| Board screen or control       | Absent; the board is behavior, not surface                                                                                                        |
 
 The seams that do it, so a change declares a guard and never writes one:
 
@@ -63,6 +63,9 @@ Nor leave the route unregistered while the flag is off, or write a migration tha
 
 ## See also
 
+- `bzh:released-surface-additive` in
+  [../architecture/system-shape/released-surfaces.md](../architecture/system-shape/released-surfaces.md) — what a
+  configuration key, store schema, trace, or egress change stays on once released.
 - `bzh:fleet-wire-additive` in [../architecture/system-shape/fleet-wire.md](../architecture/system-shape/fleet-wire.md)
   — the hub↔runner wire a flagged route or field stays additive on.
 - `bzh:help-states-effect` in [./help-text.md](./help-text.md) — the wording of a marker in `--help`.
