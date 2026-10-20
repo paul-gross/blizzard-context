@@ -87,7 +87,7 @@ ladder.
   a violation.
 - **Status to color** — the shared Tone vocabulary (`fleet/lib/kit/tone.ts`), reached through
   `fleet/lib/core/chunk-lanes.ts`'s `STATUS_TONE` map, `runner/src/app/core/lease-status.ts`'s `deriveLeaseStatus` (a
-  map over the wire's lease `state` and `closure_healthy`), `runner/src/app/board/chunk-list/chunk-status.ts`'s
+  map over the wire's lease `state` and `closure_healthy`), `runner/src/app/core/chunk-status.ts`'s
   `deriveMachineChunkStatus` (a map over the wire's `display_status`, falling through to the lease map), and
   `hub/src/app/core/lifecycle-tone.ts`'s `lifecycleTone` (a hub record's enabled/retired lifecycle). A label renders
   through `KitBadge`; a surface needing the bare colour instead binds `toneColor(tone)` (`fleet/lib/kit/kit-badge.ts`)

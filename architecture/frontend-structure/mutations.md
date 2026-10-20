@@ -25,7 +25,7 @@ path to `errorMessage` — these two halves are review questions, not tooled.
 **Do.**
 
 - `runner/src/app/core/status.query.ts`'s `injectLocalPauseMutation` returns `queryClient.invalidateQueries(...)` from
-  `onSettled` rather than voiding it; `machine/app-pause-control.ts` binds `[disabled]="pending()"` off that same
+  `onSettled` rather than voiding it; `runners/app-pause-control.ts` binds `[disabled]="pending()"` off that same
   mutation's `isPending()`, scoped to its own control.
 
 **Don't.** `onSuccess: () => { void queryClient.invalidateQueries({ queryKey: someKey }); }` — the mutation reports

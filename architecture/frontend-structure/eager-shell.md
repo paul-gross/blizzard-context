@@ -9,11 +9,13 @@ follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sh
 **Rule.** A module statically reachable from the hub's `main.ts` — the hub's `shell/` folder (the app root, its config
 and route table, and the nav chrome the root mounts outside a `@defer` block) and the hub modules they reach
 (`core/auth/` — among them the no-access screen and the tenant picker the root renders in place of the shell, and the
-tenant context and interceptor every hub call and the live stream read — and the board, spend, health, and questions
-reads) — imports the `fleet` library only through the `fleet/shell` entry point (`projects/fleet/src/shell-api.ts`, a
-file-by-file list of named re-exports); a `fleet` module on that eager path imports a sibling by file
-(`../../kit/kit-button`), never through a sub-barrel (`../../kit`); and chrome the shell needs only on interaction — the
-profile menu and the mobile titlebar, with the CDK menu stack behind them — is `@defer`-loaded.
+tenant context and interceptor every hub call and the live stream read — the board, spend, health, and questions reads,
+and `runners/runner-host-names.ts` with the `runners/hosts.query.ts` read it provides from `shell/app.config.ts`, so
+every runner reference names its host) — imports the `fleet` library only through the `fleet/shell` entry point
+(`projects/fleet/src/shell-api.ts`, a file-by-file list of named re-exports); a `fleet` module on that eager path
+imports a sibling by file (`../../kit/kit-button`), never through a sub-barrel (`../../kit`); and chrome the shell needs
+only on interaction — the profile menu and the mobile titlebar, with the CDK menu stack behind them — is
+`@defer`-loaded.
 
 **Why.** esbuild keeps every decorated module a barrel on the eager path names, whether or not the shell reads its
 export, so one `from 'fleet'` in the app root ships every feature area before the board renders. A lazy route page keeps
