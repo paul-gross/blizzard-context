@@ -384,11 +384,11 @@ row owes the invariant checker nothing: it is the hub's own answer about the tok
 ## The credential-renewal window
 
 `CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on the host tick in
-`runner host` (`HostTick`, `blizzard/src/blizzard/runner/lifecycle/host_tick.py`), first after the host's report and
-ahead of the usage sampling, so a slow vendor endpoint never delays it. It never runs in a runner's tick. Per slug it
-gates on the newest claim's cadence, asks the renewer binding whether a renewal is due, then writes three steps in
-order: it commits a claim through `ExternalUsageStore.claim_credential_renewal`, fires the renewal, and commits the
-outcome through `ExternalUsageStore.record_credential_renewal_outcome`
+`runner host` (`HostTick`, `blizzard/src/blizzard/runner/loop/host_tick.py`), first after the host's report and ahead of
+the usage sampling, so a slow vendor endpoint never delays it. It never runs in a runner's tick. Per slug it gates on
+the newest claim's cadence, asks the renewer binding whether a renewal is due, then writes three steps in order: it
+commits a claim through `ExternalUsageStore.claim_credential_renewal`, fires the renewal, and commits the outcome
+through `ExternalUsageStore.record_credential_renewal_outcome`
 (`blizzard/src/blizzard/runner/store/internal/host_external_usage_store.py`). The claim and the outcome are separate
 append-only facts, and the claim is never updated. The renewal itself is the vendor CLI's own rewrite of its credential
 file, driven as a bounded one-shot subprocess
@@ -483,11 +483,13 @@ The verdict the row is checked against is held only in the process: `IdentityVer
 (`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
 process `UNCHECKED`. A crash therefore loses it, and the restart re-derives it from a fresh check. The check is the head
 of every tick (`blizzard/src/blizzard/runner/loop/tick.py`): it asks the hub which runner the token belongs to and
-compares that id with the row's, before any other hub call. Until the verdict is `MATCHED`, every call through
-`VerifiedHubClient` (`blizzard/src/blizzard/runner/hub/verified.py`) answers a `HubClientError`, so an unchecked loop
-behaves exactly as it does during a hub outage, taking only the outage paths every step already owns. The transcript
-operator verbs, backfill and reship, build their own process graph and run the same check once before their first hub
-call (`LoopWiring` in `blizzard/src/blizzard/runner/loop_wiring.py`).
+compares that id with the row's, before any other hub call. One function, `tick_scope`
+(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`), then decides from the verdict whether the rest of the tick
+runs every step, the registration alone beside the local steps, or the local steps alone. Until the verdict is
+`MATCHED`, every call through `VerifiedHubClient` (`blizzard/src/blizzard/runner/hub/verified.py`) answers a
+`HubClientError`, so an unchecked loop behaves exactly as it does during a hub outage, taking only the outage paths
+every step already owns. The transcript operator verbs, backfill and reship, build their own process graph and run the
+same check once before their first hub call (`LoopWiring` in `blizzard/src/blizzard/runner/loop_wiring.py`).
 
 The runner's hub proxy (`blizzard/src/blizzard/runner/api/hub_proxy.py`) is a first contact of its own. While the loop
 has not checked, `ProxyIdentityCheck` (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`) has the proxy ask the
@@ -569,7 +571,8 @@ checker's `runner:outbox-counter-above-seq` asserts that no retained row sits ab
 
 ### Held-binding completion
 
-`CompleteHeldBindings` (`blizzard/src/blizzard/runner/loop/steps.py`), a step ahead of FILL, gives each held
+`CompleteHeldBindings` (`blizzard/src/blizzard/runner/loop/steps.py`), a step ahead of FILL that runs
+`HeldBindingCompletion` (`blizzard/src/blizzard/runner/lifecycle/held_binding_completion.py`), gives each held
 `env_bindings` row lacking them its workspace and its chunk's project. One probe finds the incomplete held rows, and
 with none nothing else runs. Every completion is one update over the rows in a single transaction, and each column it
 sets is guarded by `COALESCE`, so it fills only an empty column. This is a **no-window** write: a crash leaves each row
