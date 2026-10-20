@@ -98,10 +98,10 @@ may also import `testing`:
 | `core`    | L0    | —                                    |
 | `asks`    | L1    | —                                    |
 | `events`  | L1    | —                                    |
-| `host`    | L1    | —                                    |
-| `machine` | L1    | —                                    |
-| `board`   | L1    | `asks`, `machine`                    |
-| `shell`   | L2    | `board`, `events`, `host`, `machine` |
+| `runners` | L1    | —                                    |
+| `host`    | L1    | `runners`                            |
+| `board`   | L1    | `asks`, `runners`                    |
+| `shell`   | L2    | `board`, `events`, `host`, `runners` |
 
 **Why.** A declared one-way folder graph lets a feature be read, moved, or lazy-loaded without dragging its importers
 along. Without it the app root drifts back into being both shell and kernel — importing every feature while every
