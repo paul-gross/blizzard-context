@@ -1219,3 +1219,34 @@ current line. The successful cut moves notes and the boundary under `## Upgradin
 `check` passes. The guide orders deprecations by carrying release, pairs their retiring removals and upgrade prose, then
 lists unrelated breaking notes. Both tag renders agree despite working-tree changes, open with **Upgrading to <line>**,
 link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone.
+
+### `blizzard:manual-release-verify`
+
+**Surface.** `scripts/verify-release.sh <tag>` in the `blizzard` repo, run by hand from a machine outside GitHub's
+runners against a release already published on `paul-gross/blizzard`: the image's signature and attestations, the
+attached files, and an install from the release page. The `verify` job runs the same script on a runner; this method is
+the one verifier that shares nothing with the run that built the release. It also proves the script's refusal of a
+release cut before the first verifiable one.
+
+**Setup.** An empty directory under `$BLIZZARD_TMPDIR`, with the script copied in alone from the worktree under
+verification, so the run proves it needs no checkout. The workspace's own `gh` has no `attestation` command and `cosign`
+is not installed, so `mise` supplies both pinned, run from that directory:
+
+```bash
+mkdir -p "$BLIZZARD_TMPDIR/verify-release" && cd "$BLIZZARD_TMPDIR/verify-release"
+cp <env>/blizzard/scripts/verify-release.sh .
+mise x cosign@3.1.3 gh@2.102.0 -- ./verify-release.sh <tag>
+```
+
+**Steps.**
+
+1. Run the script against the newest published release; it prints one `== n.` line per check and then `OK`. Keep the
+   output with the change under verification.
+2. Run it against a release cut before the first verifiable one (`v0.1.0-rc.1`) and read its exit status.
+
+**Passes when.** The run against a verifiable release exits 0 after all four checks, and the pre-floor tag exits 1
+naming the first verifiable release (`v0.2.0-rc.2`) with no check run. A verifiable release that fails a check is a red
+release, reported as one, not a reason to move the script's floor.
+
+**Hazards.** Read-only against GitHub and the registry; the script keeps its downloads and virtualenv in a temporary
+directory it removes.
