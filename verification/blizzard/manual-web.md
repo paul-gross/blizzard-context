@@ -57,12 +57,13 @@ gesture's effect is confirmed in the hub's own state, and the console and networ
 ### `web:manual-panel`
 
 **Surface.** The runner panel — the Angular `runner` app — driven in a real browser against a running runner: what its
-BOARD and EVENTS tabs render from the runner's machine-local state, and what a gesture on it does to that state. Whether
-a fleet seed itself renders coherently beside the board is
+Board, Events and Host tabs render from the runner's machine-local state, and what a gesture on it does to that state.
+Whether a fleet seed itself renders coherently beside the board is
 [`blizzard-mock:manual-seeded-fleet`](./manual-mock.md#blizzard-mockmanual-seeded-fleet)'s.
 
-**Setup.** The shared preamble above; the panel is at `http://localhost:${BZ_RUNNER_WEB_PORT}/`, the host page, and each
-runner's pages — `board`, `board/chunk/<chunk-id>`, `events`, and `machine` — are under `/runners/<id>/`. Seed the
+**Setup.** The shared preamble above; the panel is one app across the host's runners at
+`http://localhost:${BZ_RUNNER_WEB_PORT}/`, its pages `board`, `board/chunk/<chunk-id>`, `events`, and `host` at the
+root, narrowed to one runner by the Runner filter (`?runner=<id>`) and to one project by the Project filter. Seed the
 runner store with `tool:mock-data`'s `scenario fleet`, after the daemons are up —
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) §Seeding both stores together owns the command and
 why the order matters.
