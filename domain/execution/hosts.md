@@ -10,9 +10,9 @@ A **host** is the one presence of blizzard on a machine. It owns the machine's w
 operator pays for, and runs as many runners as the operator declares. Each runner is still the unit the hub grants work
 to: it claims, holds, and lands its own chunks under its own identity and its own brakes, exactly as a runner does
 ([./responsibilities.md](./responsibilities.md)). A runner that cannot work — a credential the hub refuses, an identity
-that is not its own, or a hub that no longer holds it under this host or holds it in another tenant — stops alone, and
-its neighbours carry on; it resumes once that is put right, with nothing lost. A hub that cannot be reached changes no
-runner's standing.
+that is not its own, a hub that no longer holds it under this host or holds it in another tenant, or a version the hub's
+window does not admit — stops alone, and its neighbours carry on; it resumes once that is put right, with nothing lost.
+A hub that cannot be reached changes no runner's standing.
 
 A host is a record of its tenant at the hub, beside its runners:
 

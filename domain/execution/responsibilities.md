@@ -41,6 +41,10 @@ one, or where a binding that also classifies the versions it admits could not cl
 the same kind of fact the brakes above are: a runner's own assertion, superseded whole on its next registration, never a
 condition the hub derives from other rows or from a capability's absence over time.
 
+The entry also reports the version the runner last registered with and where the hub's compatibility window places it:
+within the window, unversioned, or refused and why. A registration the window refuses still records that judgement, and
+the runner claims nothing until a later registration is admitted.
+
 The entry also reports subscription usage. A runner under a host the hub holds declares no roster of its own: its entry
 shows the usage of the one subscription it spends, as its host reports it ([./hosts.md](./hosts.md) §Subscriptions). A
 runner standing alone reports its own, keyed off its declared roster: at registration a runner declares its subscription
