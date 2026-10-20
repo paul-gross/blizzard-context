@@ -137,12 +137,11 @@ runner's registration declares it, so the runner serves the chunks the board sho
 2. Open the board at `http://localhost:${BZ_HUB_WEB_PORT}/`, confirm the six seeded chunks render with their statuses,
    and note the census.
 
-3. On the runner panel's host page at `http://localhost:${BZ_RUNNER_WEB_PORT}/`, the environments grouped by workspace
-   show the two held bindings, each naming its runner and project, beside the env's own unheld workspace environment.
-   Click the runner to reach its board at `/runners/<id>/board`: its ACTIVE LEASES panel shows the one parked lease
-   (`PARKED`, `pid —`) — the closed, escalated lease is deliberately absent; its CHUNKS ON THIS MACHINE · DERIVED STATUS
-   list shows both mirrored chunks as `WAITING · ASK` and `HUMAN IN SESSION`; and its LOCAL ASKS panel shows the open
-   ask with its question text.
+3. On the runner panel's host page at `http://localhost:${BZ_RUNNER_WEB_PORT}/host`, the environments grouped by
+   workspace show the two held bindings, each naming its runner and project, beside the env's own unheld workspace
+   environment. On the panel's board at `/board`, filtered to the runner with the Runner filter, both mirrored chunks
+   show as `WAITING · ASK` and `HUMAN IN SESSION`, the one parked lease's worker reads `PARKED` — the closed, escalated
+   lease is deliberately absent — and the rail's open-asks panel shows the open ask with its question text.
 
 4. Select the `HUMAN IN SESSION` chunk and confirm the detail pane renders the mirrored escalation — the closed lease
    and its session id, then an ESCALATED — RESUME SESSION block whose resume command is built from the escalation's own

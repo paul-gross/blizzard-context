@@ -85,8 +85,8 @@ under an oauth-mode hub, the worker-hook and CLI-socket lanes ungated (`tests/te
 - `test_one_sign_in_at_a_registered_host_reaches_both_runners_pages` — proves a registered host is the panel's one
   sign-in client: the signed-in superuser adds a host at the hub, the host adds two runners under itself with its host
   token, and one `blizzard-runner host` holding that token runs both as `[[runner]]` entries. Sign-in waits until the
-  hub has answered the host's report. A sessionless Chromium visit to the first runner's `/runners/<id>/board` bounces
-  to `authorize` with the host id as `client`, and lands holding exactly one runner session cookie,
-  `bz_runner_session_<host id>`. The second runner's `/runners/<id>/board` then renders signed in with no second bounce
-  to the hub. That the host signs in only while its latest report was answered as itself is pinned at the component tier
-  (`tests/test_runner_federation.py`).
+  hub has answered the host's report. A sessionless Chromium visit to the first runner's legacy `/runners/<id>/board`
+  link, which redirects to the board filtered to that runner, bounces to `authorize` with the host id as `client`, and
+  lands holding exactly one runner session cookie, `bz_runner_session_<host id>`. The second runner's
+  `/runners/<id>/board` then renders signed in with no second bounce to the hub. That the host signs in only while its
+  latest report was answered as itself is pinned at the component tier (`tests/test_runner_federation.py`).
