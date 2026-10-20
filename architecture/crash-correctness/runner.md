@@ -555,11 +555,11 @@ exists, so neither can create the second file.
 ### The `init` id write
 
 `runner init` writes the joined runner's id into the host file between the token and the identity row
-(`write_runner_id`, `blizzard/src/blizzard/runner/host_layout.py`). Each file write is atomic: the token's `.env` and
-the host file are each written whole to a temporary file and renamed over the original, so a crash leaves the old file
-or the new one. A crash between any two steps leaves a state running `init` again completes, keeping the runner the
-token names; a stale configured id is rewritten only under `--allow-readd`, with a store that is fresh or names only
-that runner, and any other mismatch is refused with nothing written. This is a **no-window** write.
+(`write_runner_id`, `blizzard/src/blizzard/runner/host_file.py`). Each file write is atomic: the token's `.env` and the
+host file are each written whole to a temporary file and renamed over the original, so a crash leaves the old file or
+the new one. A crash between any two steps leaves a state running `init` again completes, keeping the runner the token
+names; a stale configured id is rewritten only under `--allow-readd`, with a store that is fresh or names only that
+runner, and any other mismatch is refused with nothing written. This is a **no-window** write.
 
 ### The outbox counter advance
 
