@@ -186,3 +186,25 @@ table included. A table the revision itself creates is created tight and needs n
 **Don't.** `op.add_column("chunks", sa.Column("tenant_id", sa.String(), nullable=False, server_default="ten_…"))` — one
 statement rewrites every row at once, the default outlives the backfill it stood in for, and the foreign key it still
 lacks needs a second unguarded copy.
+
+## Expand, then contract (`bzh:store-expand-contract`)
+
+**Rule.** A schema revision only expands: a table, a nullable column or one with a server default, an index, or a value.
+Everything else is a contraction — a table or column dropped or renamed, a type changed, a column made `NOT NULL`
+without a server default, a unique or check constraint added to a table that already existed, a primary key or foreign
+key changed. A contraction is a break (`bzh:released-surface-additive`,
+[../architecture/system-shape/released-surfaces.md](../architecture/system-shape/released-surfaces.md)): it passes only
+where the window admits a break, and only on a table or column every supported release marks deprecated, with
+`info={"deprecated": "<line>"}` on its `Table` or `Column` in `schema.py`.
+
+**Why.** A daemon refuses a store whose revision is not its own (`bzh:manual-migrations`), so a release inside the
+window meets a newer store only by walking the store back (`docs/rollback.md`). A walk back across an expansion loses
+nothing; across a contraction it does.
+
+**Detect.** `blizzard:compat` reports a contraction as a finding on the `store` surface, from `contracts/store/hub.json`
+and `contracts/store/runner.json`.
+
+**Do.** Add the new column or table beside the old, move readers and writers over, mark the old deprecated, and drop it
+in a later change that the window admits.
+
+**Don't.** Rename a column or tighten a constraint on an existing table in one revision.

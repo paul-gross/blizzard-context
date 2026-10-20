@@ -12,13 +12,13 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 `mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
 (`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, the contract-document drift check
-(`blizzard-export-contracts` and a `git diff` over `contracts/`), hub↔runner wire compatibility
-(`blizzard:wire-compat`), the change-note check (`mise run change-notes`, which runs
-`uv run blizzard-change-notes check`), then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`),
-the bundle-composition check (`web:bundle-composition`), the story render check (`web:story-render`), and
-generated-client drift over `web/`. Stage regenerated `openapi/`, `contracts/` or `web/` client output before running
-it: the drift checks are a working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an
-unstaged one fails (`web:client-drift`).
+(`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility against the supported releases
+(`blizzard:compat`), the change-note check (`mise run change-notes`, which runs `uv run blizzard-change-notes check`),
+then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`), the bundle-composition check
+(`web:bundle-composition`), the story render check (`web:story-render`), and generated-client drift over `web/`. Stage
+regenerated `openapi/`, `contracts/` or `web/` client output before running it: the drift checks are a
+working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails
+(`web:client-drift`).
 
 `mise run gate` is not the full master merge gate — it omits `blizzard:service-test` and the bounded crash-sweep CI
 profile (`mise run crash-sweep-ci`); the `pr` and `push` workflows run both as separate real gate jobs, so a PR breaking
@@ -38,17 +38,19 @@ same-repo `.py` pointer, is a hard failure. The generated web clients are exclud
 configured extensions. That token list is the one statement of what the gate flags. `gate.yml` runs the command as its
 own dedicated job, installing Vale through `jdx/mise-action`.
 
-### blizzard:wire-compat
+### blizzard:compat
 
-`mise run wire-compat` (`uv run blizzard-wire-compat --baseline merge-base --against origin/master`) fails on a breaking
-change to the declared hub↔runner wire surface (`bzh:fleet-wire-additive`,
-[`../../../architecture/system-shape/fleet-wire.md`](../../../architecture/system-shape/fleet-wire.md)):
-`openapi/hub.openapi.json`'s `/api/fleet/*` paths, the `POST /api/runners` operation `runner init` adds a runner
-through, the `/api/auth/jwks.json`/`/api/auth/authorize` federation routes, the query and path parameters of those
-operations, and every component schema they reach. Walks `HEAD`'s merge-base with `origin/master` one first-parent
-commit at a time, failing unless a commit the step lands carries a `!` (`bzh:fleet-wire-additive`). `gate.yml`'s
-`wire-compat` job runs this only when the triggering event is `pull_request`; `push.yml`'s `wire-compat-deployed` job
-runs `--baseline deployed` instead, diffing against the last commit `edge` was published from, and `dev-image` needs it.
+`mise run compat` (`uv run blizzard-compat --commits origin/master..HEAD`) holds HEAD's committed contract documents —
+the OpenAPI documents, `contracts/config/`, `contracts/traces/`, `contracts/egress/`, and `contracts/store/` — to each
+supported release's copy (`bzh:released-surface-additive`,
+[`../../../architecture/system-shape/released-surfaces.md`](../../../architecture/system-shape/released-surfaces.md)),
+the releases `src/blizzard/wire/window.toml` and the tags select. A finding the base of the range already carried is
+reported as inherited and does not fail. A finding passes only where the window admits a break: deprecated in every
+supported release and a commit in the range carrying `!`; or, on a `master` whose window carries `opening`, a `!` and a
+breaking change note naming it. Nothing passes on a release branch (`--line release/X.Y`). `--json` prints every
+finding; `--tag <version>` judges HEAD as that tag and writes `compat-breaks.json`. `gate.yml`'s `compat` job (named
+`compatibility against supported releases`) runs it on every trigger but a tag; `release.yml`'s job of the same name
+runs `--tag` before any build. `blizzard:manual-compat` drives the tool by hand.
 
 ### blizzard:wheel
 
@@ -118,7 +120,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / pytest (unit + component)"},
       {"context": "gate / OpenAPI spec drift"},
       {"context": "gate / contract drift"},
-      {"context": "gate / hub↔runner wire compatibility"},
+      {"context": "gate / compatibility against supported releases"},
       {"context": "gate / change notes"},
       {"context": "gate / eslint + vitest + client drift"},
       {"context": "gate / exemplar check (web)"},

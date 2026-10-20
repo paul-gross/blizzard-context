@@ -12,3 +12,4 @@ the facts a step acts on stay with their owners, pointed to. Parent hub: [../ind
 | [findings-sweep.md](./findings-sweep.md)                         | Running the findings sweep — the recurring operator pass that re-verifies the hub's live findings and drafts them into proposals or withdrawals          |
 | [marshalling.md](./marshalling.md)                               | Told to marshal the backlog, or minting a chunk by any path — turning resting chunks into ordered, claimable work                                        |
 | [domain-orchestration-split.md](./domain-orchestration-split.md) | Told to split a concept's domain and orchestration, in any wording naming split, domain, and orchestration — moving its business rules onto its model    |
+| [judging-a-break.md](./judging-a-break.md)                       | Told to judge whether a change breaks a supported release — deciding each finding `blizzard-compat` reports                                              |

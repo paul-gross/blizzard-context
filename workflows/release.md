@@ -35,6 +35,9 @@ the tag with any `-rc.K` suffix removed), failing before anything is built.
   [../verification/blizzard.md](../verification/blizzard.md)) and the worktree sits at exactly that commit — nothing
   local or unpushed. A landing after the cut commit belongs to the next release and is not carried.
 
+Before tagging, run `uv run blizzard-compat --tag <version>` over the cut commit's tree, the check the release workflow
+runs again at the tag. A failure routes to [judging-a-break.md](./judging-a-break.md).
+
 ## Tag and watch
 
 The candidate tag names the cut commit's version with its candidate suffix, and sits on that commit:
