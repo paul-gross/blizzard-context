@@ -242,6 +242,10 @@ class CheckB2Tests(unittest.TestCase):
         findings = drift.check_B2("verification/commands.md", text, self.blizzard, out_of_tier)
         self.assertEqual(_shape(findings), [("B2", "fail")])
 
+    def test_store_baseline_method_id_and_word_name_its_tier(self):
+        self.assertEqual(drift._named_tiers("run under blizzard:store-baseline"), {"store_baseline"})
+        self.assertEqual(drift._named_tiers("the store baseline tier"), {"store_baseline"})
+
     def test_rehearsal_method_id_names_its_tier(self):
         self.assertEqual(drift._named_tiers("run under blizzard:rehearsal"), {"rehearsal"})
         self.assertEqual(drift._named_tiers("the rehearsal tier"), {"rehearsal"})
