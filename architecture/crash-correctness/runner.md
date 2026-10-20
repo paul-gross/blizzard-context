@@ -493,12 +493,12 @@ same check once before their first hub call (`LoopWiring` in `blizzard/src/blizz
 
 The runner's hub proxy (`blizzard/src/blizzard/runner/api/hub_proxy.py`) is a first contact of its own. While the loop
 has not checked, `ProxyIdentityCheck` (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`) has the proxy ask the
-hub which runner the token belongs to through the runner's own token-identity reader, once and without retrying, and
-judges the answer against the configured id. It remembers a match for the process, so the proxy asks once. A hub that
-does not answer — an outage, or a `401` that is not the hub's typed refusal — fails a proxied read with a 503 naming the
-outage; a refused token, a hub without the identity read, or a mismatch forwards nothing and answers 503 naming the
-reason. The proxy writes neither the row nor the verdict: once the loop has checked, its verdict prevails, and a
-`MISMATCHED` one answers 503 without contacting the hub.
+hub which runner the token belongs to through the runner's own token-identity reader — retrying a silent hub within the
+forward's own budget — and judges the answer against the configured id. It remembers a match for the process, so the
+proxy asks once. A hub that does not answer — an outage, or a `401` that is not the hub's typed refusal — fails a
+proxied read with a 503 naming the outage; a refused token, a hub without the identity read, or a mismatch forwards
+nothing and answers 503 naming the reason. The proxy writes neither the row nor the verdict: once the loop has checked,
+its verdict prevails, and a `MISMATCHED` one answers 503 without contacting the hub.
 
 A `MISMATCHED` runner also skips the steps that drive leases or deliver facts until a check matches again, and a hub
 that does not answer leaves the verdict as it stood. Nothing durable is lost to any of this: restoring the right token
