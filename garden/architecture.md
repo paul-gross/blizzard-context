@@ -36,6 +36,10 @@ A rule already enforced by a command is out of range: it belongs to its gate, wh
 every run of this axis, and judging it here too would give one check two owners
 (`winter-canon:/enforcement-channels.md`).
 
+Kernel placement stays in range despite the single-side kernel check. That check sees whole modules only, so a one-sided
+rule living as a name in a shared module is judged here for good, and a whole one-sided module stays in range while the
+check is new.
+
 ## Measurement
 
 Every run records, findings or none:
