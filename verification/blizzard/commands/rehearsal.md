@@ -9,12 +9,11 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 ### blizzard:rehearsal
 
-`BLIZZARD_REHEARSAL=1 uv run pytest -m rehearsal tests/rehearsal/` (`mise run rehearsal`) — the upgrade an operator
-performs, rehearsed for real: each supported release's own published wheel seeds a hub and a runner host, the hub is
-upgraded first to the candidate, the baseline runner keeps working against it, then the runner is upgraded too, and both
-stores are walked down to the baseline and forward again. It is skipped without `BLIZZARD_REHEARSAL=1`, and a tree with
-no supported release skips it and says so. The contract is
-`blizzard-product:/plans/release-engineering/compat-floor/spec/rehearsal.md`.
+`scripts/rehearsal.sh` (`mise run rehearsal`) — the upgrade an operator performs, rehearsed for real: each supported
+release's own published wheel seeds a hub and a runner host, the hub is upgraded first to the candidate, the baseline
+runner keeps working against it, then the runner is upgraded too, and both stores are walked down to the baseline and
+forward again. It is skipped without `BLIZZARD_REHEARSAL=1`, and a tree with no supported release skips it and says so.
+The contract is `blizzard-product:/plans/release-engineering/compat-floor/spec/rehearsal.md`.
 
 **Inputs.** Each leg holds two isolated virtualenvs, every daemon and verb a subprocess: the baseline is the release's
 published wheel from its GitHub Release, and the candidate is the wheel built from HEAD. `blizzard-mock` is checked out
