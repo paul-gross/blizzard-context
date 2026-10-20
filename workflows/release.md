@@ -44,6 +44,14 @@ git tag v0.2.0-rc.1
 git push origin v0.2.0-rc.1
 ```
 
+The `release` workflow checks out the `blizzard-mock` tag of the same name, so push that tag first, at the commit
+`blizzard-product:` `mock.md` §Branches and tags names. For a candidate cut on `master` that is the mock sha the cut
+commit's `push` run recorded:
+
+```bash
+gh run download <run-id> --repo paul-gross/blizzard --name proven-against
+```
+
 The `v*` tag triggers the `release` workflow: the full verification suite, the wheel built with the embedded frontend, a
 multi-arch hub image pushed to GHCR and signed, a GitHub Release with the inventory attached, and last the `verify` job,
 which proves what was published; `docs/ci.md` owns the release workflow's jobs.
@@ -59,8 +67,8 @@ by assumption:
 test "$(git rev-list -n1 v0.2.0-rc.1)" = "$(git rev-parse HEAD)" && git tag v0.2.0 && git push origin v0.2.0
 ```
 
-A promotion writes no cut commit: `pyproject.toml` already names the stable version, and the notes were final at the
-candidate.
+Push the mock's stable tag first, on the commit the candidate's mock tag sits on. A promotion writes no cut commit:
+`pyproject.toml` already names the stable version, and the notes were final at the candidate.
 
 ## Confirm the cut
 
