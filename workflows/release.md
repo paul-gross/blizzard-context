@@ -45,8 +45,8 @@ git push origin v0.2.0-rc.1
 ```
 
 The `v*` tag triggers the `release` workflow: the full verification suite, the wheel built with the embedded frontend, a
-multi-arch hub image pushed to GHCR and signed, and a GitHub Release with the inventory attached; `docs/ci.md` owns the
-release workflow's jobs.
+multi-arch hub image pushed to GHCR and signed, a GitHub Release with the inventory attached, and last the `verify` job,
+which proves what was published; `docs/ci.md` owns the release workflow's jobs.
 
 ## Promoting a candidate
 
@@ -64,8 +64,12 @@ candidate.
 
 ## Confirm the cut
 
-- Watch the `release.yml` run to green (`blizzard:ci`), then confirm the Release and its attached wheel:
-  `gh release view v0.2.0-rc.1 --repo paul-gross/blizzard`.
+- Watch the `release.yml` run to green through `verify`, not only through `publish` (`blizzard:ci`) — `verify` is the
+  confirmation of the signatures, attestations, bills of materials, checksums, and the install from the release page —
+  then confirm the Release and its attached wheel: `gh release view v0.2.0-rc.1 --repo paul-gross/blizzard`.
+- Run `scripts/verify-release.sh v0.2.0-rc.1` once from outside GitHub's runners (`blizzard:manual-release-verify`), so
+  a verifier that shares nothing with the run that built the release proves it too. The script and `docs/ci.md` own what
+  it checks.
 - Confirm the image with an anonymous `docker pull ghcr.io/paul-gross/blizzard-hub:0.2.0-rc.1` — the GHCR push has no
   local proof, and package visibility is a one-time repo setting no workflow can assert — see `docs/ci.md` §Trigger
   workflows: a documented gap proven by each real cut, never invented around.
@@ -79,6 +83,16 @@ candidate.
 
 Repair forward: a further candidate (`-rc.K+1`), or the next patch, each at a cut commit of its own on the branch the
 train document names for it. A pushed tag is immutable — never re-pointed, deleted, or reused.
+
+A release that published but does not verify — a red `verify` job, or a red `blizzard:manual-release-verify` — is a red
+run too. The release stays: an install that pinned it fetches its files by their address on its page, so deleting the
+page breaks exactly the operators who did what the docs asked, and a tag is never re-pointed. The fix is the next tag.
+
+When the fault could hand an operator a wrong or unverifiable artifact, a maintainer also prepends a warning to the
+release's body — immutable releases lock the tag and the attached files, not the body — naming the fault and the release
+that replaces it once one exists. A signature that fails to verify always meets that bar; a missing bill of materials
+never does. Then the instance is not moved onto that release, or is moved off it, through
+[release-deploy.md](./release-deploy.md) (`bzh:release-deploy`), whose first step already reads the release body.
 
 **Don't.** Publish a wheel or image by hand — a build no tag produced is a build no gate proved.
 
