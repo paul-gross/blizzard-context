@@ -63,3 +63,34 @@ field on the view that already carries the raw value.
 **See also.** `bzh:generated-client` ([`../../standards/frontend.md`](../../standards/frontend.md)) forbids hand-written
 request code; `bzh:fleet-wire-additive` ([`../system-shape/fleet-wire.md`](../system-shape/fleet-wire.md)) governs what
 a backend change to the wire may do to a running runner.
+
+## A field the server always sends is required in the schema (`bzh:wire-sent-is-required`)
+
+**Rule.** A response-only wire model subclasses `blizzard.wire.base.WireModel`, so its exported schema lists every field
+as required — a defaulted one included. "Response-only" means all three hold: no request body reaches the model, it is
+not an `SseFramePayload` (whose `to_payload` omits unset fields), and no route serves it with a
+`response_model_exclude_*` flag. A model that fails one of them stays on `BaseModel`: marking a field required where the
+server can omit it misleads the client, and marking one required where a request parses it splits the schema into
+`-Input` and `-Output` components, which the released surface may not do (`bzh:released-surface-additive`).
+
+**Why.** A field the server always sends but the schema types as optional invites the frontend to guard it with a
+fallback, and the fallback re-derives a judgment the wire already made (`bzh:frontend-wire-conformist`).
+
+**Detect.** The `blizzard:unit-test` guard `tests/test_wire_sent_is_required.py` derives the response-only schemas from
+both built apps and fails when one lists an optional property, or when an exclude-flagged model shows up split.
+`blizzard:compat` reports a split that slips past it as a deleted component schema.
+
+**Do.**
+
+- `class FleetSpendView(WireModel):` with `estimated_cost_usd: float | None = None` — the client reads
+  `estimated_cost_usd: number | null`, always present.
+
+**Don't.**
+
+- A defaulted field on a bare `BaseModel` response: the client types it `x?: T | null`, and a consumer writes
+  `x ?? fallback`.
+- `WireModel` on a request body, an SSE payload, or a model under `response_model_exclude_none=True`.
+
+**See also.** `bzh:frontend-wire-conformist` (above); `bzh:fleet-wire-additive`
+([`../system-shape/fleet-wire.md`](../system-shape/fleet-wire.md)) governs what a backend change to the wire may do to a
+running runner.

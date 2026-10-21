@@ -223,3 +223,5 @@ orchestration and carries no marker.
   edge that resolves ids and maps domain models to DTOs.
 - `bzh:internal-visibility` ([./clean-architecture.md](./clean-architecture.md)) — why a store row under a store's
   `internal/` stays out of reach of the package's neighbors.
+- `bzh:wire-sent-is-required` ([./frontend-structure/wire.md](./frontend-structure/wire.md)) — the `wire/` base a
+  response-only model subclasses, so the schema lists every field it always sends as required.
