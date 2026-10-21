@@ -268,6 +268,9 @@ ignored: an undeclared key in a file loads, and an undeclared read in the test s
 - A key read through the view and absent from the registry, or declared and never read.
 - A registry edit with no regenerated `contracts/config/` document.
 
+The `bzh:config-key-declared` ast-grep rule fails a `tomllib` import anywhere under `blizzard/src/blizzard/runner/` or
+`blizzard/src/blizzard/hub/` outside the two loaders and the version window's in-memory decode.
+
 **Do.** Pass the registry to the loader's root view, and hand each section parser the view at its table; declare a
 section's keys beside its parser.
 
