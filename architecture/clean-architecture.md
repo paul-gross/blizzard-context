@@ -168,7 +168,9 @@ the same process graph with explicit lifetimes:
   [./system-shape/tenancy.md](./system-shape/tenancy.md))
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py` — `build_host_process` holding one
   `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
-  runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`
+  runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`. `HostStores` and the telemetry receiver
+  are host-scoped and built once per host; each `RunnerProcess` holds only runner-bound collaborators plus its attempt
+  handle, the one runner-scoped external-usage write
 
 Every click command body under a `*/cli/` directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is a
 short-lived root: it wires collaborators once, inline, at the top, without joining the hosted process graph. A root
