@@ -340,10 +340,11 @@ cross-fact invariant a second writer could disagree with.
 
 `ExternalUsageSamplePass` (`blizzard/src/blizzard/runner/usage/external_usage_sample.py`) runs on the host tick in
 `runner host`, never in a runner's tick, over every `[[subscription]]` the host declares. Per slug it gates on the
-newest attempt's cadence, samples, and records the attempt with its report in one transaction. An unregistered host
-records through its first runner's bound `ExternalUsageStore.record_external_usage_attempt`, whose report lands in that
-runner's `outbound_buffer`; a registered host records through `HostLaneStore.record_host_external_usage_attempt`, whose
-report lands in `host_outbound_buffer`. Both are **no-window** writes: a `kill -9` commits the attempt and its report or
+newest attempt's cadence, samples, and records the attempt with its report in one transaction. Which lane is
+`ExternalUsageAttemptLane`'s rule, beside the pass in `runner/usage/`. An unregistered host records through its first
+registered runner's attempt handle — `record_external_usage_attempt` over that runner's bound connections — whose report
+lands in that runner's `outbound_buffer`; a registered host records through
+`HostLaneStore.record_host_external_usage_attempt`, whose report lands in `host_outbound_buffer`. Both are **no-window** writes: a `kill -9` commits the attempt and its report or
 neither, and the next pass re-samples a slug whose attempt did not commit.
 
 ## The host's lane
