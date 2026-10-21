@@ -113,8 +113,8 @@ which the draw runs under the lock.
 - A blocking acquisition of the lock from a loop step. Not mechanically checkable; judged at review.
 - A second process serving one data directory, which voids the premise.
 
-**Do.** `IWorkspaces.try_acquisition_lock` yields whether the lock was taken; `claim_one` returns `False`, "nothing more
-this tick", when it was not, and the next tick tries again.
+**Do.** `IWorkspaceAcquisition.try_acquisition_lock` yields whether the lock was taken; `claim_one` returns `False`,
+"nothing more this tick", when it was not, and the next tick tries again.
 
 **Don't.** Block on the lock inside the claim, or draw from the pool without it because the pool looks free.
 
