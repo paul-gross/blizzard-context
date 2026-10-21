@@ -344,8 +344,9 @@ newest attempt's cadence, samples, and records the attempt with its report in on
 `ExternalUsageAttemptLane`'s rule, beside the pass in `runner/usage/`. An unregistered host records through its first
 registered runner's attempt handle — `record_external_usage_attempt` over that runner's bound connections — whose report
 lands in that runner's `outbound_buffer`; a registered host records through
-`HostLaneStore.record_host_external_usage_attempt`, whose report lands in `host_outbound_buffer`. Both are **no-window** writes: a `kill -9` commits the attempt and its report or
-neither, and the next pass re-samples a slug whose attempt did not commit.
+`HostLaneStore.record_host_external_usage_attempt`, whose report lands in `host_outbound_buffer`. Both are **no-window**
+writes: a `kill -9` commits the attempt and its report or neither, and the next pass re-samples a slug whose attempt did
+not commit.
 
 ## The host's lane
 
