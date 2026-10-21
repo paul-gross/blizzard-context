@@ -6,7 +6,8 @@ follow the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sha
 ## Chrome comes from the kit (`bzh:frontend-kit-floor`)
 
 **Rule.** Every presentational component builds its chrome — panel shell, async loading/error/empty state, tone badges,
-action buttons, choice chips, single-select dropdowns, tab strips — from `fleet/lib/kit/`, never a re-typed copy.
+action buttons, choice chips, single-select dropdowns, tab strips and their counts, inline mutation-error lines — from
+`fleet/lib/kit/`, never a re-typed copy.
 
 **Why.** A shared floor makes "no duplicated chrome" structural rather than a review habit, and a chrome fix (a token, a
 state message) lands once.
@@ -28,7 +29,8 @@ genuinely should not convert; a kit component (`fleet/lib/kit/*`) importing a qu
 client — this half stays a review question.
 
 **Do.** A new panel imports `KitPanel`/`KitAsyncState`/`KitBadge` from `fleet` and composes them; a status message
-renders through `KitAsyncState`'s `loading`/`error`/`empty` states rather than a local `<p class="status">`.
+renders through `KitAsyncState`'s `loading`/`error`/`empty` states rather than a local `<p class="status">`. A tab's
+count is `KitTab`'s `count`, and a failed gesture's inline line is `KitErrorLine`, fed the failure's message.
 
 **Don't.** A new panel pasting another `.panel { background: linear-gradient(...); border: 1px solid var(--bezel); }`
 block.

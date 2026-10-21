@@ -401,7 +401,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `projects-table.shell-sweep.spec.ts` covers the admin projects table, mounted with a project whose name, slug, and
   description have no break opportunity and whose "no runner" badge shows: at 360px, 768px, and 1280px the page never
   scrolls sideways, the table stays inside the viewport, the badge keeps a width and stays on screen, and each row's
-  project swatch sits beside its light.
+  project swatch sits beside its light. A wired project's light paints the `--green` token and a wanting project's the
+  `--red` one.
 - `project-detail.shell-sweep.spec.ts` covers the admin project detail page at 1280px and 390px: the empty pick prompt,
   no queue or empty revisions while their reads are in flight, the empty-revisions state once read, and no sideways
   scroll. It also shows the Color fact with its swatch, and the color picker dialog's palette chips wrapping inside the

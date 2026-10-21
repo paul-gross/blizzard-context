@@ -10,8 +10,8 @@ by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
 refetched: every `queryClient.invalidateQueries(...)` call inside the hook is returned (or `Promise.all`'d and returned)
 from `onSettled`, never fired with `void` from `onSuccess`. The control that triggers the mutation is disabled while it
 is pending, scoped to the specific item it acts on — one row's control does not disable a sibling row's. A mutation's
-failure renders through the view's existing inline `actionError` slot via `errorMessage`
-(`fleet/src/lib/core/error-message.ts`); no mutation fails silently.
+failure renders through `KitErrorLine`, fed by `errorMessage` (`fleet/src/lib/core/error-message.ts`); no mutation fails
+silently.
 
 **Why.** Without this, the UI acknowledges a click as "done" before the visible state has actually changed — the change
 only appears on the next SSE/poll-driven refetch, so a user can't tell whether their click worked, and nothing stops a
