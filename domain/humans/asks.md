@@ -17,6 +17,14 @@ Answering resumes the dormant agent session with the answer delivered into it. T
 session on the chunk, and binds them: none asks again what a person already decided, or contradicts it. An answer is
 refused once the chunk has ended (`stopped` or `done`).
 
+## A person's note
+
+A person resolving a gate ([./gates.md](./gates.md)), requeueing a chunk at the hub
+([../execution/recovery.md](../execution/recovery.md#requeue)), or restarting one
+([../work/restart.md](../work/restart.md)) may leave a free-text note. The note binds every later session on the chunk
+exactly as an answer does, and stays readable to them. A blank note is no note, and the verb behaves exactly as it does
+without one.
+
 Answered and delivered are distinct derived states: a person decided, versus the resume ran and the agent heard. A
 question row surfaces both, so the answerer sees the return trip rather than inferring it from the chunk moving. A
 delivery is refused unless the question is answered, belongs to the chunk it is reported for, and was not superseded by
