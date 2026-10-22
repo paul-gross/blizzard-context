@@ -98,9 +98,10 @@ Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — 
    from `<env>/blizzard`, `GET /runners/<id>/api/dashboard`, or, for a read, the seed or the drive that put the state
    there — and keep the commands run and their output with the change under verification.
 
-`--runner-url` and `--dir` name the host. The verbs that reach a runner — `pause`, `start`, `status`, `takeover`,
-`requeue`, `selftest`, and `traces status`/`traces replay` — take `--runner <name|id>` to pick one; on a host of one
-they pick its runner when it is omitted.
+`--runner-url` and `--dir` name the host. The verbs that reach a runner — `pause`, `start`, `clear-floor`, `status`,
+`takeover`, `requeue`, `selftest`, and `traces status`/`traces replay` — take `--runner <name|id>` to pick one; on a
+host of one they pick its runner when it is omitted. `clear-floor` takes `--runner` only in place of `--subscription`,
+naming exactly one.
 
 The CLI verbs whose help is labeled **Worker:** resolve their lease from a spawned worker's environment, so they are
 exercised by a worker the runner spawns, not typed by hand.

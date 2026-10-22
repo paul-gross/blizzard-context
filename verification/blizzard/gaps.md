@@ -503,6 +503,9 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
 - **The host-ingests revision.** `20261015_1000_host_ingests` creates the empty host-scoped `host_ingests` table and its
   downgrade drops it. It has not been executed on Postgres; it creates one table of portable column types and writes no
   data.
+- **The usage-limit floor revision.** `20261022_1000_usage_limit_floor` creates the empty `subscription_usage_limits`,
+  `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables and its downgrade drops them. It
+  has not been executed on Postgres; it creates four tables of portable column types and writes no data.
 - **The empty-store upgrade.** The runner chain cannot reach head on Postgres from an empty store: the Boolean
   `server_default` in `20260920_0200_usage_cost_is_share.py` is `0`, which Postgres rejects. The hand run builds the
   tightening revision's parent shape from `src/blizzard/runner/store/schema.py` as it stood then, so no revision below
@@ -511,9 +514,10 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
 
 Standing in for a tier: the revisions' migration tests
 (`src/blizzard/runner/store/migrations/tests/20261011_1000_runner_scope_test.py`,
-`20261013_1000_runner_scope_tighten_test.py`, `20261015_1000_host_ingests_test.py`) and the seam's component tests on
-SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand run is not repeatable from a durable
-script, since the matrix carries the method and no driver. The gap closes as the tenancy one above does.
+`20261013_1000_runner_scope_tighten_test.py`, `20261015_1000_host_ingests_test.py`,
+`20261022_1000_usage_limit_floor_test.py`) and the seam's component tests on SQLite, and the portable SQL
+`bzh:sql-portable` holds each statement to. The hand run is not repeatable from a durable script, since the matrix
+carries the method and no driver. The gap closes as the tenancy one above does.
 
 ## What the project lens and the project columns do not cover
 

@@ -212,19 +212,18 @@ is the no-window ground; no registry point is owed.
 The park's named-elicitation column is what the teardown reads to tell two standing records apart. An in-flight
 elicitation record still standing under an open pause park is one of exactly two things: the park's own interrupted
 record, which the park names, and which the teardown books and clears; or a usage-limit judge park's deliberately
-standing record, which no park names, and which `on_unpause` answers with a fresh elicitation once the brake lifts. A
+standing record, which no park names, and which `on_unpause` answers with a fresh elicitation once the floor opens. A
 named record that has since vanished, or a park naming none, leaves the teardown nothing to do.
 
-## The usage-limit brake fan-out
+## The usage-limit mark
 
-`UsageLimitBrakes.engage` (`blizzard/src/blizzard/runner/throttle/pause.py`) engages the reporting runner's brake and
-that of every other runner of the host spending the same subscription in one write transaction: each runner's
-`local_pause_facts` row and its `outbound_buffer` report, stamped by that runner's own bound adapter on the transaction
-the reporter's store opened. A `kill -9` commits every member's fact and report or none of them, so the fan-out is a
-**no-window** write and owes no registry point. The park stays after it, and the existing points
-`usagelimit.worker-after-brake.before-park` and `usagelimit.judge-after-brake.before-park` still cover the gap between
-brake and park, their meaning unchanged: a crash there leaves every member braked and the lease unparked, and the next
-pass classifies the exit again, finds each brake already engaged, and completes the park.
+`_mark` (`blizzard/src/blizzard/runner/lifecycle/usage_limit.py`) writes one row — a `subscription_usage_limits` row for
+the subscription the runner spends, or a `runner_usage_limits` row for a runner spending none — in one transaction,
+unique on the invocation it was classified from. A `kill -9` commits the mark or nothing, so it is a **no-window** write
+and owes no registry point. The park stays after it, and the points `usagelimit.worker-after-mark.before-park` and
+`usagelimit.judge-after-mark.before-park` cover the gap between mark and park: a crash there leaves the floor marked and
+the lease unparked, and the next pass classifies the exit again, replays the mark as a no-op under its invocation key,
+and completes the park. No brake is engaged on either side of the gap.
 
 ## The identity-failure-mark-before-close gap
 

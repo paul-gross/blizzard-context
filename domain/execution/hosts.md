@@ -108,5 +108,6 @@ names.
 The host samples each subscription once, however many runners spend it — one that no runner spends included — and
 reports it to the hub once, as the host's. The host's entry shows each subscription once, naming the runners spending
 it, by the same rules a runner's entry follows ([./responsibilities.md](./responsibilities.md)); a runner's own entry
-shows the usage of the subscription it spends, and nothing for a runner spending none. An exhausted subscription brakes
-every runner spending it and no other — `bzh:subscription-brake-reach`, owned by [./pause.md](./pause.md).
+shows the usage of the subscription it spends, and nothing for a runner spending none. An exhausted subscription holds
+back every runner spending it and no other — `bzh:subscription-floor-reach`, owned by
+[./throttling.md](./throttling.md).

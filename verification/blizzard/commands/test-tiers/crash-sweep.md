@@ -46,7 +46,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
 - `hostlane.` — a registered host's own fact lane's after-push, before-mark window.
 - `ingest.` — `blizzard runner ingest`'s after-copy and after-config windows.
-- `usagelimit.` — the runner's own usage-limit brake-then-park window, on a worker generation's exit and a judge
+- `usagelimit.` — the runner's own usage-limit mark-then-park window, on a worker generation's exit and a judge
   elicitation's exit alike.
 
 Ungrouped generic build-to-deliver points, which mostly fire in the runner loop, sit beside them. No case count is kept
