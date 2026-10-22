@@ -63,6 +63,14 @@ derived chunk total read off the live `GET /api/chunks/{id}` and `GET /api/chunk
 pushed `estimated_cost_usd` reads back on both the per-step row and the total, kept apart from `cost_usd`, and
 `cost_partial` flags a row only when it carries neither amount.
 
+**The one dollar figure** (`test_spend_figure_service.py`) drives both spend controls off an estimate alone: a real
+runner's OpenCode turns run under a subscription-billed `mock-opencode` (`BLIZZARD_MOCK_OPENCODE_BILLED_ZERO=1`), priced
+off a `models.json` in the worker's passed-through `XDG_CACHE_HOME`.
+`test_runner_ceiling_pauses_on_an_estimated_spend_with_a_tilde_led_reason` sets `runner_ceiling_usd` under the lease's
+estimate and reads the engaged local pause's `~$`-led reason off the runner's own `GET /api/runner`;
+`test_chunk_cap_escalates_on_an_estimated_chunk_cost_with_a_tilde_marked_detail` seeds an estimate-only chunk total past
+`chunk_cap_usd` on the mock hub and reads the `spend-cap` escalation's `~`-marked detail back off it.
+
 **Hub SSE live fan-out** is proven only at this tier: the component tier can only assert an event was recorded, off the
 broker's replay tail, while the publish-to-subscriber-queue-to-wire leg a live board depends on is real only here, via
 the `sse_tap` helper in `tests/service/support.py`. A subscriber on `GET /api/events/stream` before the act receives
