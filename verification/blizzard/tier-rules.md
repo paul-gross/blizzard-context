@@ -135,7 +135,9 @@ before; each tenant's live stream replays its own events only; a runner-minted i
 token acts in its chunk's tenant only; the packaged system artifacts read alike from either; the hub-level export routes
 refuse a tenant member; and every sweep acts in each open tenant and opens no closed one.
 `tests/test_tenant_isolation_adapters.py` proves the same at the store: every row a tenant wrote carries its id, and
-each tenant's adapters read back none of the other's records.
+each tenant's adapters read back none of the other's records. `tests/pass_isolation.py` is the poisoned-tenant fixture
+beside it: it runs each hub-wide pass with and without one failing or bursting tenant and fails when any other tenant's
+calls differ (`bzh:pass-isolates-tenants`).
 
 The scenario's route table names every live tenant route beside the probe that proves its isolation, and
 `test_the_table_names_every_live_tenant_route_and_nothing_else` checks the table against the live app both ways, so a

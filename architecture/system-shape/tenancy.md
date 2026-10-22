@@ -182,9 +182,10 @@ pass never holds one tenant's scope while acting on another tenant's row.
 through the row's own tenant is what keeps a write the pass makes on the same side of the boundary as the row that
 caused it.
 
-**Scope.** A probe that gates a pass (`bzh:probe-gated-pass`) stays hub-wide. A hub-wide job that is not a sweep — boot
-slot release, key coverage, key rotation — loops over open tenants and acts through each one's stores. Trace export and
-fact egress write nothing into any tenant's store; their rows carry their tenant's id instead.
+**Scope.** A probe that gates a pass (`bzh:probe-gated-pass`) is read hub-wide, in one statement, and its value is per
+tenant (`bzh:pass-isolates-tenants`). A hub-wide job that is not a sweep — boot slot release, key coverage, key rotation
+— loops over open tenants and acts through each one's stores. Trace export and fact egress write nothing into any
+tenant's store; their rows carry their tenant's id instead.
 
 **Detect.** No structural gate reaches it: the statement guard sees a scoped write as scoped whichever tenant it was
 opened for. A reviewer asks of each write a pass makes: whose scope is this, and is it the tenant of the row being acted
@@ -195,6 +196,35 @@ tenant the close belongs to and issues the close through that tenant's work-sour
 
 **Don't.** A pass that opens the first row's tenant's stores before its loop and reuses them for every row — the second
 tenant's annotations are written into the first tenant's event log.
+
+## A hub-wide pass keeps one tenant out of every other's outcome (`bzh:pass-isolates-tenants`)
+
+**Rule.** A hub-wide pass that converges or drains work per tenant keeps three things per tenant: its convergence state
+(a tenant is due on its own probe value and last full pass alone), its share of the pass's budget (a fair share across
+the tenants with due work), and its fault boundary (a raise from one tenant's open, read, or write is caught at that
+tenant, logged naming it, and counted as that tenant unconverged or failed, and the pass goes on to the next tenant).
+
+**Why.** The hub runs one pass for every tenant, so any state, budget, or failure the pass shares is a channel through
+which one tenant's broken source or burst of work changes what the pass does for another — the wall
+([../../domain/tenancy.md](../../domain/tenancy.md)) holding for the store and not for the hub's own loops.
+
+**Scope.** It binds the forge-status and event-derivation reconcilers, the close drain, and tenant teardown. Trace
+export and fact egress are outside it: each advances one cursor in fact order, which is the order their sink receives,
+so each holds the cursor on any fact it cannot place; isolating them needs a cursor per tenant, which is a separate
+change. Boot loops and key rotation fail fast by design and are not periodic passes. The probe read stays hub-wide and
+one statement (`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due.
+
+**Detect.** The poisoned-tenant fixture, `tests/pass_isolation.py`, is a `blizzard:component-test`: it runs a pass twice
+on the virtual clock, once with a tenant whose units raise, report unconverged, or hold a burst of due work, and once
+without that tenant, and fails when any other tenant's recorded calls differ. Every pass this rule binds uses it. By
+eye: a convergence flag folded across tenants, one probe value for the hub, a budget sliced from one ordered list, or a
+catch around a pass's whole tenant loop rather than inside it.
+
+**Do.** The close drain groups due intents by tenant and takes one in turn from each, starting at a rotating tenant,
+until it reaches its pass limit, so a tenant with a burst never takes another's slots.
+
+**Don't.** `converged &= reconcile(tenant)` across the tenants: one tenant that never converges keeps every tenant's
+probe from being recorded, and the healthy ones redo their full pass every interval.
 
 ## See also
 

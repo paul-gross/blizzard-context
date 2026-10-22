@@ -23,7 +23,8 @@ converging and pruning passes, including `Retention`. Each rule follows the slot
    from `blizzard/src/blizzard/foundation/lane_retry.py` rather than keeping its own.
 4. **Isolation.** A lane's failure never escapes into its host's other work. The hub runs each `Sweep` as its own task
    with its own catch. A runner tick-step lane catches its own failures inside `run()`, so later tick steps still run. A
-   runner driver catches per pass.
+   runner driver catches per pass. A hub pass that serves many tenants carries this down to each tenant
+   (`bzh:pass-isolates-tenants`).
 5. **Hosting.** On the runner, a lane whose only sink is the hub is a step of the pass that owns its rows: a runner's
    lane is a step of that runner's tick, and the host's own lane, `HostLaneDrain`, is a step of the host tick, which
    runs on its own driver beside the runners' ticks. Either way the hub client bounds each call, and the pass's later
@@ -82,7 +83,9 @@ floor alone keeps aged rows at most one floor past its window.
 `Sweep` driver in `blizzard/src/blizzard/hub/app.py`, which owns cadence and jitter and steps the pass as a black box. A
 fixed cadence where a change signal would do is judged here, at the pass: the probe is what makes a fixed interval
 cheap, so the answer to it is a gated pass, not a re-timed driver. A per-item resolution inside the pass is
-[`./read-cost.md`](./read-cost.md) `bzh:bulk-reconstitution`'s, not this rule's. Each pass shape owes:
+[`./read-cost.md`](./read-cost.md) `bzh:bulk-reconstitution`'s, not this rule's. A pass over tenants reads one probe
+statement for the hub and keeps its value and last full pass per tenant, so a tenant is judged on its own
+(`bzh:pass-isolates-tenants`). Each pass shape owes:
 
 | Shape                                                                                                                                                                | Example                                                                                                                         | Owes                                                                                                                                                                                                          |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -92,14 +95,15 @@ cheap, so the answer to it is a gated pass, not a re-timed driver. A per-item re
 | Acts on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases | `CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_items/closure.py`; the runner's `Reap` and `Advance` steps | Nothing here — it is outside this rule: its due-set is the live work the pass exists to answer, often made due by time passing alone, so no change probe sees it and a floor would delay the reaction it owes |
 
 **Detect.** A converging pass whose first statement is its full-corpus read, with no value compared against the previous
-pass's; a pass whose skip has no floor behind it, so a probe that lies once skips forever; a tick step that prunes a
-day-scale window unconditionally every tick. The fix is a probe seam on the store — a max-watermark or a signature query
-answering in one statement — compared against the value the pass last converged on, plus a recorded last-full-pass
-instant checked against the floor; for a pruning pass, the recorded instant and the floor alone.
+pass's, or one value folded across every tenant of a hub-wide pass; a pass whose skip has no floor behind it, so a probe
+that lies once skips forever; a tick step that prunes a day-scale window unconditionally every tick. The fix is a probe
+seam on the store — a max-watermark or a signature query answering in one statement — compared against the value the
+pass last converged on (per tenant, for a pass over tenants), plus a recorded last-full-pass instant checked against the
+floor; for a pruning pass, the recorded instant and the floor alone.
 
 **Do.** `blizzard/src/blizzard/hub/domain/observability/analytics/derivation.py`'s `EventDerivationReconciler.sweep`
-reads `derivation_signature()` first, returns when it matches the last converged signature and the ten-minute floor is
-not due, and otherwise runs the full pass and records both the signature and the instant. An unchanged pass costs the
+reads `derivation_signature()` first, converges only the tenants whose signature differs from their last converged one
+or whose ten-minute floor is due, and records each converged tenant's signature and instant. An unchanged pass costs the
 probe's one statement.
 
 **Don't.** A converging `sweep()` that reads its whole corpus and every remote's state unconditionally on each pass, so

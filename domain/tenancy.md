@@ -16,6 +16,8 @@ tenant only, so two tenants never collide on a name neither knows the other hold
 A project is not a second wall inside the tenant: it is a lens over the tenant's state ([projects.md](./projects.md)).
 The tenant is the only boundary.
 
+One tenant's failing or heavy work never changes what the hub's own passes do for another tenant.
+
 ## A tenant's id and name
 
 A tenant has an id and a name, each with one job:
