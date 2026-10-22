@@ -19,7 +19,9 @@ hold at the first unusable entry and claim nothing that tick, or pass over it �
 fleet-wide rule. The matched peek considers only chunks of the projects the runner serves, as the hub holds its
 declaration: a chunk of any other project is skipped under either policy, never held at, and a runner serving nothing is
 offered nothing ([../projects.md](../projects.md)) — nor through a binding the hub flags against its host
-([./hosts.md](./hosts.md) §Bindings).
+([./hosts.md](./hosts.md) §Bindings). A matched peek that names the projects it is asking for holds per project: an
+unusable entry holds only its own project's later entries, and the scan goes on to the other named projects' chunks, so
+one blocked project never stands in front of another's work.
 
 A claim is refused first on the runner, before any race: it is not registered at the hub, it is retired, or the hub has
 paused it. Under the claim lock the runner is judged again before anything else: a runner that is no longer registered

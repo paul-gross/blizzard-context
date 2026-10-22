@@ -79,16 +79,18 @@ invariant it audits after every crash.
 
 ## Bindings
 
-A runner **binds** each project it serves to exactly one workspace of its host, with a count of agents that may work it
-at once. A chunk belongs to one project, so the runner claiming it already knows the one workspace its work will happen
-in; the route locates it ([./acquisition.md](./acquisition.md) §The route). A runner's bindings are its declaration of
-the projects it serves ([../projects.md](../projects.md) §Runners serve the projects they declare).
+A runner **binds** each project it serves to exactly one workspace of its host. A chunk belongs to one project, so the
+runner claiming it already knows the one workspace its work will happen in; the route locates it
+([./acquisition.md](./acquisition.md) §The route). A runner's bindings are its declaration of the projects it serves
+([../projects.md](../projects.md) §Runners serve the projects they declare).
 
-- **Agents are not environments.** A binding's agents cap that binding alone, separately from how many environments its
-  workspace holds: a binding allowed more agents than there are free environments claims only as environments free, and
-  one allowed fewer leaves the rest of the pool to other bindings.
-- **A full binding asks for nothing.** A binding with no free agent seeks no work, so a full project never stands in
-  front of another project's work.
+- **One count of agents, shared.** A runner has a single count of agents, shared by every one of its bindings; a binding
+  fixes only the workspace its project runs in. Any free agent works whichever project the hub's ready queue ranks next
+  among those the runner can take, so the queue's order alone decides which project an agent serves and a full project
+  never stands in front of another's work.
+- **Agents are not environments.** The count is separate from how many environments a workspace holds: an agent whose
+  next project's workspace has no free environment claims only as one frees, and the runner looks to the projects whose
+  workspaces have one.
 - **The workspace is fixed for the chunk's tenure.** Recovery, release, and resume work in the workspace the chunk was
   claimed through; a binding changed later affects only the next claim.
 - **One project, one binding.** Two of a runner's bindings that resolve to the same project leave the runner claiming
