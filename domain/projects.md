@@ -128,8 +128,8 @@ board says so.
 - **A project counts as served only by a runner that can claim it.** A paused, retired, or version-refused runner, and
   one whose bindings to the project are withheld, serve it in name only: the project reads as unserved until a runner
   that can claim it is live.
-- **Each project has its own agents.** A runner binds each project it serves to a workspace with its own count of
-  agents, so a full project never stands in front of another ([execution/hosts.md](./execution/hosts.md) §Bindings).
+- **A runner's agents are shared across its projects.** A runner binds each project it serves to a workspace and has one
+  count of agents for all of them ([execution/hosts.md](./execution/hosts.md) §Bindings).
 
 ## The lens
 
