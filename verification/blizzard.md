@@ -32,6 +32,7 @@ A command method passes when its command exits 0.
 | `blizzard:build`                 | `uv sync` from the repo root — installs the `blizzard` project and its `dev` group                                                                                |
 | `blizzard:lint`                  | `uv run ruff check .`                                                                                                                                             |
 | `blizzard:format`                | `uv run ruff format --check .`                                                                                                                                    |
+| `blizzard:markdown-format`       | `mise x dprint@0.55.2 -- dprint check` — the markdown format gate `dprint.json` declares                                                                          |
 | `blizzard:typecheck`             | `uv run pyright`                                                                                                                                                  |
 | `blizzard:structural-gate`       | `uv run ast-grep scan --error=unused-suppression .` then `uv run ast-grep test` — the ast-grep structural channel gate (`contracts/ast-grep/`)                    |
 | `blizzard:unit-test`             | `uv run pytest -m unit` — one class or function in isolation *(more)*                                                                                             |
