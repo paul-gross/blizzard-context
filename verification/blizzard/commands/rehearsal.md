@@ -35,12 +35,14 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
 
 A failing step names the step, the baseline, and the backend, and attaches both daemons' logs.
 
-**Where it runs, and why never on a pull request.** `.github/workflows/rehearsal.yml` is reusable, called by `push.yml`
-on every `master` push — `dev-image` needs it, so `edge` advances only on a commit whose upgrade from every supported
-release succeeded — and by `release.yml` on every `-rc.` tag before the image push. A stable tag promotes a candidate's
-commit and relies on its candidate's run. A pull request does not run it: it takes minutes, and `blizzard:compat`
-already holds every pull request to the same releases statically, so the rehearsal is the post-merge proof that the
-static check's verdict holds for a real upgrade, not an ungated check.
+**Where it runs.** `.github/workflows/rehearsal.yml` is reusable, called by `push.yml` on every `master` push —
+`dev-image` needs it, so `edge` advances only on a commit whose upgrade from every supported release succeeded — and by
+`release.yml` on every `-rc.` tag before the image push. A stable tag promotes a candidate's commit and relies on its
+candidate's run. `pr.yml` calls it on a release cut's pull request — one with a commit carrying a `Release-Cut:` trailer
+— against a wheel built from the head, so a cut needs no local rehearsal; an ordinary pull request does not run it,
+since it takes minutes and `blizzard:compat` already holds every pull request to the same releases statically. The
+required check is the always-running `upgrade rehearsal (release cut)` result job, which passes on a non-cut pull
+request.
 
 ### blizzard:store-baseline
 
@@ -72,6 +74,7 @@ foreign key and serial sequence, which a baseline creating the table under the n
 each such table beside the name it was renamed from; nothing else is read away, so a difference not of that class fails.
 
 **Where it runs.** `.github/workflows/store-baseline.yml` is reusable, called by `pr.yml` when a pull request changes
-either tree's `versions/` directory and by `release.yml` on candidate and patch tags, never a stable promotion. It is
-not a required check on `master`, and not in `blizzard:gate`: the gate is token-free and reaches no network beyond
+either tree's `versions/` directory and by `release.yml` on candidate and patch tags, never a stable promotion. It is a
+required check on `master`, reported by the always-running `store baseline (blizzard:store-baseline)` result job (which
+passes when no revision changed), and not in `blizzard:gate`: the gate is token-free and reaches no network beyond
 package installs.

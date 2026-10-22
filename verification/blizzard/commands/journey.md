@@ -10,9 +10,10 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 ### blizzard:journey
 
 `BLIZZARD_JOURNEY=1 uv run pytest -m journey tests/journey/` (`mise run journey`) — the capstone: the MVP acceptance
-journey as one committed, repeatable test over real host daemons, `blizzard hub host` plus `blizzard runner host`. It
-runs locally and nowhere else: it needs the sibling provisioned `blizzard-mock` worktree and a local winter source,
-passed to the fixture mint explicitly, and is skipped without `BLIZZARD_JOURNEY=1`.
+journey as one committed, repeatable test over real host daemons, `blizzard hub host` plus `blizzard runner host`. It is
+winter-free: its runner uses the built-in `basic` provider over a fixture of bare origins minted with no winter source,
+so it needs only the sibling provisioned `blizzard-mock` worktree, and is skipped without `BLIZZARD_JOURNEY=1`.
+`upper-tiers.yml` runs it as a job on every pull request and tag.
 
 One shared `build → review → deliver` graph drives the journeys by reading each chunk's work item through the hub
 pass-through (`blizzard runner work-items`) and branching on a directive in the issue body. Five issues are filed across
@@ -23,7 +24,7 @@ journeys:
 - a review-fail loop carrying its findings asset and `prompt_addendum` back into build (criterion 9);
 - an ask parked `waiting_on_human` and answered with `blizzard hub answer` (criterion 7);
 - a genuine failure escalated to `needs_human` whose takeover command, run verbatim, resumes the stuck session
-  (criterion 6), its `wrapped_takeover_command` shape-checked alongside.
+  (criterion 6), its `wrapped_takeover_command` shape-checked alongside, naming the runner holding the chunk.
 
 Every phase gates on a latched hub state, not timing — the run is deterministic. Mid-run both daemons are `SIGKILL`ed
 and restarted through the migrate-then-host path; the invariant checker is green immediately after, and every chunk
