@@ -153,6 +153,13 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 - `build_stores`, `build_production_harness_registry`, or `HarnessHealthCache` called anywhere under
   `blizzard/src/blizzard/` other than `runner/composition.py` — a second copy of the runner's process graph.
 
+Two ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
+
+- `cli-httpx-confined` fails any httpx import under the three CLI trees (`cli/`, `hub/cli/`, `runner/cli/`) other than
+  `blizzard/src/blizzard/cli/collaborators.py`.
+- `cli-patch-not-seam` fails any test `setattr` whose first argument is a string naming a `blizzard.` path with a `cli`
+  segment.
+
 **Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
 the same process graph with explicit lifetimes:
@@ -176,10 +183,13 @@ Every click command body under a `*/cli/` directory, and the `OperatorGroup` and
 short-lived root: it wires collaborators once, inline, at the top, without joining the hosted process graph. A root
 resolves what a test may swap from `ctx.find_object(<carrier>)` and defaults to the production one when the invoker
 handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test patches is not a
-seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`; the root groups resolve
-it and pass it into `OperatorTrace` and `WorkerSession` as required arguments. `runner/cli/runtime.py`'s `init` resolves
-its own hub-clients carrier the same way, keeping the HTTP default out of the `runner` group so a worker verb never
-loads a daemon's stack.
+seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one httpx
+import: every command builds its HTTP client through the carrier's `client_factory` and takes httpx's types (`Client`,
+`Response`, the error classes) from that module, never from httpx. The root groups resolve the carrier and pass it into
+`OperatorTrace` and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory.
+`runner/cli/runtime.py`'s `init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the
+`runner` group so a worker verb never loads a daemon's stack; the carrier also holds the `host` verb's process and
+harness-bundle builders, which only `runtime.py` — a composition root — may import.
 
 This prose rule is wider than the mechanical roster: `tests/test_layering.py::_COMPOSITION_ROOTS` stays the narrower set
 of modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a CLI module
@@ -188,9 +198,9 @@ outside it is not a violation.
 The same reasoning extends to a helper a command's own root calls into rather than repeating, provided the root passes
 in whatever varies:
 
-- `blizzard/src/blizzard/runner/cli/daemon.py`'s `uds_client` builds the local UDS `httpx.Client` both
-  `RunnerDaemon.reach` and `runner/cli/transcript.py`'s `_daemon_holding` need, shared rather than duplicated; each
-  caller passes the trace-header source its command resolved, so no call site reads one ambiently.
+- `blizzard/src/blizzard/runner/cli/daemon.py`'s `Door.uds_client` builds the local UDS client, through the carrier's
+  factory, that both `RunnerDaemon.reach` and `daemon_holding` need, shared rather than duplicated; each caller passes
+  the `Door` its command resolved from the context, so no call site reads a trace source or a factory ambiently.
 - `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_stores` builds the runner's read-only store bundle and disposes
   the engine on exit, so `runner/cli/prompt.py`'s `_stored_override` calls into it instead of repeating the construction
   outside a composition root.
