@@ -1295,8 +1295,8 @@ the implementation under exercise.
 exactly the absorbed revisions below the floor revision and their colocated tests, and no revision above it changed.
 Step 3 holds for both trees. Step 4 passes. Step 5 exits with the refusal naming `<floor-tag>` and leaves the store byte
 for byte as it was. Step 6 is green. Step 7 folds nothing and says so for each tree. The default suite's failures on the
-folded clone are tests pinning absorbed revisions: record them as the input `workflows/store-fold.md`'s retirement step
-names, not as a result.
+folded clone are tests pinning absorbed revisions: record them as the input
+`workspace:/context/project/workflows/store-fold.md`'s retirement step names, not as a result.
 
 **Hazards.** Everything runs in the clone; nothing is pushed. The floor's wheel is downloaded into a temporary
 directory.
