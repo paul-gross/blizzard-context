@@ -22,6 +22,14 @@ question row surfaces both, so the answerer sees the return trip rather than inf
 delivery is refused unless the question is answered, belongs to the chunk it is reported for, and was not superseded by
 a restart; a repeated delivery is a no-op.
 
+## A person's note
+
+A person resolving a gate ([./gates.md](./gates.md)), requeueing a chunk at the hub
+([../execution/recovery.md](../execution/recovery.md#requeue)), or restarting one
+([../work/restart.md](../work/restart.md)) may leave a free-text note. The note binds every later session on the chunk
+exactly as an answer does, and stays readable to them. A blank note is no note, and the verb behaves exactly as it does
+without one.
+
 ## What an operator's restart does
 
 An operator's restart ([../work/restart.md](../work/restart.md)) consumes an open question: the asking step is gone, so

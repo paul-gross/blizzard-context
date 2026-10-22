@@ -50,7 +50,8 @@ so an interrupted step has none to keep — only landed steps do.
 
 A restart naming another graph writes a migration fact for the re-pin and a restart fact for the forced clean re-entry,
 and the two land atomically — one instant, one epoch, the restart the newer — so no crash lands one half without the
-other. Naming no other graph, it is the restart fact alone; a refused restart writes nothing.
+other. Naming no other graph, it is the restart fact alone; a refused restart writes nothing. The restart fact records
+who moved the chunk, and may carry their note ([../humans/asks.md#a-persons-note](../humans/asks.md#a-persons-note)).
 
 ## What it defers
 

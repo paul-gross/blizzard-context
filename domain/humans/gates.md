@@ -26,7 +26,9 @@ an answer ([./asks.md](./asks.md)) — and the holding runner then writes the or
 a closing fact references a runner-configured gate, the runner's plain completion out of that node-step — one naming no
 decision — is refused, whether the gate is still waiting or already resolved: only the transition naming the decision
 moves on, and only to the resolved choice. A resolution to a `requires_checks` choice over a red check is accepted — a
-human's judgement is not bound by the gate that binds an agent — and is recorded as an override with the resolution. A
+human's judgement is not bound by the gate that binds an agent — and is recorded as an override with the resolution. The
+resolution records who chose what, and may carry the resolver's note
+([./asks.md#a-persons-note](./asks.md#a-persons-note)); a losing resolution's note is dropped with its choice. A
 decision closes by one of:
 
 - the holding runner's transition — the ordinary case;
