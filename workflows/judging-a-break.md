@@ -19,7 +19,13 @@ whether the surface can stay, which no tool decides.
    and `floor` can be raised to a line that deprecates it; or, on a `master` whose window carries `opening`, when the
    change declares it with a `!` commit and a breaking change note. `docs/versioning.md` and `blizzard:compat`
    ([../verification/blizzard.md](../verification/blizzard.md)) own the window and the admission.
-4. **Otherwise** the change deprecates the surface and leaves the removal to a later change.
+4. **If not, do that release's consumers already survive it?** Read the release's own tree, not `master`'s: every
+   consumer of the surface it ships — the runner, its CLI, the panel, the board — and what each does with the change. A
+   consumer survives when it handles the change without failing. One that fails until reloaded, and whose reload loads
+   the new release's client, survives after a reload. One that fails and that a reload does not fix does not survive.
+   When every one survives, the finding takes an allowance in `contracts/compat/allowances.toml`, whose README owns the
+   entry and when it applies.
+5. **Otherwise** the change deprecates the surface and leaves the removal to a later change.
 
 ## Verdicts
 
@@ -27,4 +33,8 @@ Report one per finding:
 
 - **Additive.** The change keeps both forms; nothing more is owed.
 - **An allowed break.** Name the `floor` the change raises or the note it declares, and the `!` its commit needs.
+- **An allowance.** Name the release's line, the exact finding, and the `because`: each of that release's consumers, the
+  file and line where it reads the surface, and why it survives. A consumer left unread is named as such, and so is one
+  that survives only after a reload, which may be admitted. A consumer that fails and that a reload does not fix is no
+  allowance.
 - **A break that waits.** Name the deprecation that starts its clock.

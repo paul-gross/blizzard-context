@@ -1223,14 +1223,16 @@ link to the tag's boundary and end in the collapsed commit block. The legacy tag
 ### `blizzard:manual-compat`
 
 **Surface.** `uv run blizzard-compat` driven by hand: its verdicts against the supported releases, the inherited-finding
-rule, the declared-break admission, tag mode, and the two outputs (`--json` and `compat-breaks.json`). The unit tests
-build their repositories from hand-made documents; this method reads the verdicts and files as a person running the
-check would.
+rule, the declared-break admission, the open-marked response enum, recorded allowances, tag mode, and the two outputs
+(`--json` and `compat-breaks.json`). The unit tests build their repositories from hand-made documents; this method reads
+the verdicts and files as a person running the check would.
 
 **Setup.** A throwaway `git clone` of the `blizzard` worktree under `$BLIZZARD_TMPDIR`, run from its root. Tags created
 there are never pushed. Tag two synthetic releases (a stable `v0.2.0` and a candidate) on commits whose committed
 documents carry a deprecated route and an undeprecated one, and set `src/blizzard/wire/window.toml` to the matching
-`floor`. The clone's CLI must load the implementation under exercise.
+`floor`. For steps 6 to 9, tag `v0.2.0` and `v0.3.0` instead, with `floor = "0.2"`, on commits whose wire route answers
+a response enum: `v0.2.0`'s position reaching it unmarked, `v0.3.0`'s marked `x-blizzard-open`. The clone's CLI must
+load the implementation under exercise.
 
 **Steps.**
 
@@ -1241,13 +1243,26 @@ documents carry a deprecated route and an undeprecated one, and set `src/blizzar
    (`breaking: true`, the surface, the route under `breaks`); then delete the note.
 5. Run `blizzard-compat --tag <version>` for a candidate and for a patch (`X.Y.1`), and read `compat-breaks.json`; run
    again with `--json`.
+6. Gain a value in the enum and run `blizzard-compat`.
+7. Add an entry to `contracts/compat/allowances.toml` for line `0.2`'s finding, with a `because`. Run `blizzard-compat`,
+   `--tag 0.4.0` (then read `compat-breaks.json` and run again with `--json`), and `--tag 0.2.1`.
+8. Change the entry's `where` to one no finding has and run `--tag 0.4.0`; then run `--line release/0.3`. Point the
+   entry at line `0.1` and run `blizzard-compat`.
+9. Restore the step 7 entry, tag `v0.2.1` on `v0.2.0`'s commit, and run `blizzard-compat`, `--tag 0.4.0`, and
+   `--tag 0.2.2`.
 
 **Passes when.** Step 1 exits 0 and reports the documents additive. Step 2: the undeprecated removal exits 1 as a
 `BREAK`; the deprecated removal exits 1 without the `!` and 0 with it. Step 3 reports the finding as inherited and
 exits 0. Step 4 exits 0 with the note and the `!`, and 1 once the note is gone. Step 5: the candidate exits 0 and
 `compat-breaks.json` holds `tag` and a sorted `breaks` list naming each break let through (an empty list when none); the
-patch exits 1 on any break; `--json` entries carry `release`, `surface`, `where`, `reason`, `deprecated`, `inherited`
-and `passes`.
+patch exits 1 on any break; `--json` entries carry `release`, `surface`, `where`, `reason`, `deprecated`, `inherited`,
+`passes` and `allowance`. Step 6 exits 1 with the gain a `BREAK` against `v0.2.0` alone, `v0.3.0` reading additive. Step
+7: the first two runs exit 0 with the finding under `[allowance]` and its `because` on the next line, and both
+`compat-breaks.json` and `--json` carry it with `allowance` holding the `line` and the `because`; `--tag 0.2.1` exits 1
+with the finding a `BREAK`. Step 8: `--tag 0.4.0` exits 1 naming the entry under `allowance: [BREAK]` as matching no
+finding against `v0.2.0`; `--line release/0.3` exits 0; the line `0.1` entry exits 1 as outside the window. Step 9, with
+the entry unedited: the first two runs exit 0 with the finding under `[allowance]` against `v0.2.1` and no stale entry;
+`--tag 0.2.2` exits 1 with the finding a `BREAK`.
 
 **Hazards.** Read-only against the clone's git history; nothing is pushed, and `compat-breaks.json` is written in the
 clone only.

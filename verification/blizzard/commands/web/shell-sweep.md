@@ -53,7 +53,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   its runner and project, and subscriptions naming their spenders. A runner row's facts sit beside its held chunks at a
   desktop width and stack under them at 900px and below (the `@media (max-width: 900px)` collapse jsdom cannot
   evaluate), with no horizontal overflow and every runner row and environment line inside the viewport, from 1400px down
-  to 320px.
+  to 320px. A second case serves a registration state the build's generated vocabulary does not list
+  (`bzh:frontend-open-vocabulary`): over the same widths the host title's registration badge reads the raw state, with
+  no horizontal overflow and no page error. It is proven able to fail by letting the registration lookup answer
+  `undefined` for an unknown state, the destructure that throws.
 - `app-panel-layout.shell-sweep.spec.ts` covers the runner's desktop board (`LocalPanelLayout`): the three lanes sit
   beside one another in the center column and the rail's hub, host and open-asks panels stack in their own fixed column
   to the right, with nothing — a long runner name, a two-workspace runner's binding lines, a long-named environment —
@@ -284,7 +287,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `board-shell.shell-sweep.spec.ts` covers `BoardShell`'s lane grid under a long current-node name: one running chunk
   whose node name runs to 120 characters, mounted at 1440px, must leave every lane equal-width and inside the viewport,
   with the name clipped inside its card and readable whole from the card's `title` — a layout claim jsdom cannot make,
-  since it never lays out the lane grid.
+  since it never lays out the lane grid. A second case adds a chunk whose status the build's generated vocabulary does
+  not list (`bzh:frontend-open-vocabulary`), at 1440px and at the narrowest centre column the desktop board renders, as
+  `board-list.shell-sweep.spec.ts` frames it: at both, the unknown lane renders headed with the raw status, every lane
+  stays equal-width inside the board and the viewport, and the chunk's card sits inside that lane.
 - `gardening-page.shell-sweep.spec.ts` covers a project's garden page: a bare `/p/{project}/gardening` lands on the
   Proposals tab; the gardening strip wears the kit's sub-strip — 30px tall on `--panel-deep`, its active tab cyan on
   `--overlay-30` with a `--cyan-dim` underline — beneath the app's own strip; the Proposals count turns `--amber-hi`

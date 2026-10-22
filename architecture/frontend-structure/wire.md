@@ -94,3 +94,59 @@ both built apps and fails when one lists an optional property, or when an exclud
 **See also.** `bzh:frontend-wire-conformist` (above); `bzh:fleet-wire-additive`
 ([`../system-shape/fleet-wire.md`](../system-shape/fleet-wire.md)) governs what a backend change to the wire may do to a
 running runner.
+
+## A wire vocabulary is open to a value the client does not know (`bzh:frontend-open-vocabulary`)
+
+**Rule.** Every branch on, and every lookup of, a vocabulary a hub or runner response carries handles a value the
+generated client does not list. A lookup table keyed by a generated vocabulary is built through `fleet`'s `openLookup`
+(`fleet/src/lib/core/open-lookup.ts`): its table stays a full `Record` over the vocabulary, so a value the client learns
+fails to compile until it is placed, and a raw value outside it resolves through the table's fallback instead of to
+`undefined`. A TypeScript `switch` carries a `default`, and a template `@switch` an `@default`. A `switch` that gives
+every declared value its own `case` hands its `default` to `fleet`'s `unlisted`, whose `never` parameter keeps a value
+the client learns a compile error there while a raw value still reaches it at run time. An unknown value renders raw, in
+the `idle` tone (`fleet/src/lib/kit/tone.ts`), or is skipped where it names nothing the surface can show. The board
+seats a chunk whose status it does not know in its own lane, declared beside `LANES` in
+`fleet/src/lib/core/chunk-lanes.ts` as `unknownLane`: shown only while such a chunk is on the board, headed with the raw
+status, and given no titlebar stat cell, since `ChunkCountsView` carries no count for a status the board cannot name.
+
+**Why.** The board and the runner panel read whatever server they are pointed at, and a server newer than the build adds
+values to its vocabularies (`bzh:open-response-vocabulary`,
+[`../system-shape/released-surfaces.md`](../system-shape/released-surfaces.md)). The web reads wire values with no
+runtime check, so a `Record` lookup returns `undefined` for a gained value and a destructure of that answer throws,
+taking the whole view down over one field.
+
+**Scope.** Every hand-written `.ts` and `.html` under `web/projects/` except specs and stories, and every vocabulary the
+generated clients declare — a response field's, an SSE frame's event type, and a request vocabulary a response also
+carries, such as the verbs a record names as legal. A local union the frontend builds itself is held too: lint is not
+type-aware, so the `switch` rule cannot tell one from a wire value.
+
+**Detect.** `web:lint` (its `default-case` rule, probed by `web/scripts/default-case-lint-probe.js`) and
+`web:structural-gate` (the open-vocabulary sweeps, with no exemption list) fail a branch with no unknown arm;
+`web/scripts/open-lookup-type-probe.js` proves the compiler still refuses a table or a `switch` missing a declared
+value.
+[`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
+owns each check's scope and self-test. Whether an unknown value's fallback is the right reading — raw, `idle`, or
+skipped — is a review question.
+
+**Do.**
+
+- `openLookup<EventView['severity'], Tone>({ critical: 'stale', warning: 'running', info: 'idle' }, () => 'idle')` — an
+  unknown severity reads `idle`.
+- `const LABEL = openLookup<HostRegistrationView['state'], readonly [string, Tone]>({ … }, (raw) => [raw, 'idle']);` —
+  an unknown state reads raw rather than throwing at the destructure.
+- An action menu offers only the verbs its lookup `has`; a verb the build cannot name gets no control.
+- `default: return { label: unlisted(lease.state).toUpperCase(), tone: 'idle' };` after a `case` per declared state — an
+  unknown state reads raw, and a state the client learns fails to compile until it has a `case`.
+
+**Don't.**
+
+- `const LABEL: Record<HostRegistrationView['state'], …> = { … }` read as `const [label, tone] = LABEL[view.state]` —
+  throws on the first state the client does not know.
+- `const tones: Partial<Record<string, Tone>> = STATE_TONE; return tones[state] ?? 'idle';` — tolerant, but a second
+  hand-written spelling of what `openLookup` already owns.
+- An `@switch (author.kind)` with a case per known kind and no `@default`.
+- `case 'enroll': default: enroll.mutate(…)` — folding `default` into a known case acts on a value it never named, and
+  silences the compile error a new value would raise.
+
+**See also.** `bzh:frontend-wire-conformist` (above): the vocabulary still comes from the generated client; this rule
+only stops the client assuming it is the whole vocabulary.

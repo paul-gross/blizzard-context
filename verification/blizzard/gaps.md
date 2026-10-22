@@ -522,3 +522,28 @@ Two project boundaries are drawn by no tier because the system does not draw the
 - **The lens is not an access boundary.** The board's project lens narrows what a view reads, and a call naming no
   project reads the whole tenant; access is decided by the tenant alone. Nothing proves a person sees only a project's
   records, because nothing restricts them to one — a stated non-goal, not a missing check.
+
+## Response bodies `blizzard:compat` does not read
+
+`blizzard:compat` judges only the `2xx` response schemas of the committed OpenAPI documents. A refusal body the runner
+parses can be absent from both documents: the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, carrying
+`ClaimDenialReason`) is in neither, so a value its vocabulary gains, or a field it loses, reaches no finding. The runner
+parses those bodies with open vocabularies (`bzh:open-response-vocabulary`), which keeps a gained value from failing it,
+but nothing holds the body's shape to a supported release.
+
+Standing in for a tier: the open-vocabulary gate test (`tests/test_open_response_vocabulary.py`) takes the classes the
+runner's client modules parse as well as the documents' response components, so every vocabulary such a body carries is
+open or declared closed; a change to one of those bodies owes the by-hand judgement
+[../../workflows/judging-a-break.md](../../workflows/judging-a-break.md) describes. The gap closes when the tool reads
+the refusal bodies a route declares.
+
+## An older client reading a newer response value
+
+No method runs a client from a supported release against a value its vocabulary gained. `blizzard:rehearsal` upgrades
+each release's daemons onto the candidate but stages no gained value, and a live env cannot stage one either, since its
+own build knows every value it can write. That an open field tolerates an unknown value is proven only inside the tree.
+
+Standing in for a tier: the unit and component tests that feed an unknown value through the parse, the runner's
+lifecycle decisions, the drain, and a proxy route (`tests/test_open_response_vocabulary_paths.py`,
+`tests/test_runner_unknown_vocabulary_rules.py`), and the open mark a release's document carries for each position its
+clients tolerate.

@@ -18,22 +18,22 @@ Parent: [../index.md](../index.md).
 
 Under `blizzard/exemplars/python/exemplar/`.
 
-| Exemplar                                                   | Copy it when you are…                                                                                                                                  |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `hub/domain/permits/model.py`                              | Adding a hub concept, or a state, verb, rule, or refusal to one — its verb→allowed-states table, decision methods, facts, read/write ports, and errors |
-| `hub/domain/permits/service.py`                            | Adding a use case — read the clock, let the model decide, hand the decision to a port, under the row lock when exactly one writer may win              |
-| `foundation/permits.py`                                    | Giving a wire model a vocabulary type — an enum the hub domain also uses                                                                               |
-| `hub/store/internal/permit_store.py`                       | Adding or extending a hub store adapter — scoped reads and writes, batched and newest-fact reads, a lost insert race, a locked write                   |
-| `hub/store/schema.py`                                      | Adding a hub table — tenant-led keys and uniqueness, an append-only facts table, the indexes its reads need                                            |
-| `hub/store/migrations/versions/20261015_0900_permits.py`   | Writing a hub migration that adds tables                                                                                                               |
-| `hub/store/migrations/tests/20261015_0900_permits_test.py` | Testing a migration, beside its revision — upgrade from its parent, the declared schema, re-run, downgrade                                             |
-| `hub/api/permits.py`                                       | Adding a route — guards, path resolvers, the domain → view mapper, and each refusal mapped to its status                                               |
-| `hub/api/refusals.py`                                      | Turning a domain refusal into an HTTP status                                                                                                           |
-| `hub/api/permit_params.py`                                 | Resolving a path id to its loaded object, or a `404`, before a route calls the domain                                                                  |
-| `wire/permit.py`                                           | Adding a wire model — the `*Request` / `*View` / `*Response` taxonomy, envelopes, field comments, instants, `bzh:wire-sent-is-required`                |
-| `hub/composition.py`                                       | Wiring a new store and service into a tenant's services                                                                                                |
-| `hub/graphs/scripts/land_clean.py`                         | Writing an `executor: hub` node's `run:` step script                                                                                                   |
-| `hub/graphs/basic-development-workflow/prompts/`           | Writing a worker node's prompt, its judgement, or an edge's addendum                                                                                   |
+| Exemplar                                                   | Copy it when you are…                                                                                                                                                                                                |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hub/domain/permits/model.py`                              | Adding a hub concept, or a state, verb, rule, or refusal to one — its verb→allowed-states table, decision methods, facts, read/write ports, and errors                                                               |
+| `hub/domain/permits/service.py`                            | Adding a use case — read the clock, let the model decide, hand the decision to a port, under the row lock when exactly one writer may win                                                                            |
+| `foundation/permits.py`                                    | Defining a vocabulary type — an enum the hub domain also uses                                                                                                                                                        |
+| `hub/store/internal/permit_store.py`                       | Adding or extending a hub store adapter — scoped reads and writes, batched and newest-fact reads, a lost insert race, a locked write                                                                                 |
+| `hub/store/schema.py`                                      | Adding a hub table — tenant-led keys and uniqueness, an append-only facts table, the indexes its reads need                                                                                                          |
+| `hub/store/migrations/versions/20261015_0900_permits.py`   | Writing a hub migration that adds tables                                                                                                                                                                             |
+| `hub/store/migrations/tests/20261015_0900_permits_test.py` | Testing a migration, beside its revision — upgrade from its parent, the declared schema, re-run, downgrade                                                                                                           |
+| `hub/api/permits.py`                                       | Adding a route — guards, path resolvers, the domain → view mapper, and each refusal mapped to its status                                                                                                             |
+| `hub/api/refusals.py`                                      | Turning a domain refusal into an HTTP status                                                                                                                                                                         |
+| `hub/api/permit_params.py`                                 | Resolving a path id to its loaded object, or a `404`, before a route calls the domain                                                                                                                                |
+| `wire/permit.py`                                           | Adding a wire model — the `*Request` / `*View` / `*Response` taxonomy, envelopes, field comments, instants, `bzh:wire-sent-is-required`, and a response vocabulary field typed open (`bzh:open-response-vocabulary`) |
+| `hub/composition.py`                                       | Wiring a new store and service into a tenant's services                                                                                                                                                              |
+| `hub/graphs/scripts/land_clean.py`                         | Writing an `executor: hub` node's `run:` step script                                                                                                                                                                 |
+| `hub/graphs/basic-development-workflow/prompts/`           | Writing a worker node's prompt, its judgement, or an edge's addendum                                                                                                                                                 |
 
 ## Runner
 
@@ -52,9 +52,9 @@ Under `blizzard/exemplars/python/exemplar/`.
 
 Under `blizzard/exemplars/web/`.
 
-| Exemplar               | Copy it when you are…                                                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `hub/src/app/permits/` | Adding an Angular feature — a routed container, its model, a presentational view, its query and mutations, their specs |
+| Exemplar               | Copy it when you are…                                                                                                                                                                               |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hub/src/app/permits/` | Adding an Angular feature — a routed container, its model, a presentational view, its query and mutations, their specs, and an `openLookup` over a wire vocabulary (`bzh:frontend-open-vocabulary`) |
 
 ## Tests
 

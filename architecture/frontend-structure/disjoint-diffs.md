@@ -37,11 +37,11 @@ not contended.
 - `transcripts/index.ts` re-exports every transcripts-feature symbol a consumer outside `transcripts/` imports, and
   `public-api.ts` carries one `export * from './lib/transcripts'` line; a sibling mounted only by its own feature stays
   unexported.
-- A new live board feature adds a row keyed by its event type to `EVENT_INVALIDATION_REGISTRY` — a
-  `Record<HubEventType, (data) => readonly (readonly unknown[])[]>`, exhaustive over `HUB_EVENT_TYPES` so an unhandled
-  event type is a compile error — and a new live runner-panel read does the same in
-  `RUNNER_EVENT_INVALIDATION_REGISTRY`, exhaustive over `RunnerEventType`: each registry exhaustive over its own
-  daemon's event union, never growing a branch for the other's kind.
+- A new live board feature adds a row keyed by its event type to `EVENT_INVALIDATION_REGISTRY` — an `openLookup` table
+  whose rows stay exhaustive over `HUB_EVENT_TYPES`, so an unhandled event type is a compile error, while a type this
+  build does not know stales nothing (`bzh:frontend-open-vocabulary`, [wire.md](./wire.md)) — and a new live
+  runner-panel read does the same in `RUNNER_EVENT_INVALIDATION_REGISTRY`, exhaustive over `RunnerEventType`: each
+  registry exhaustive over its own daemon's event union, never growing a branch for the other's kind.
 
 **Don't.** Two features both editing the same span of `public-api.ts` to add their exports, or both adding a `case` to
 the same `switch`.
