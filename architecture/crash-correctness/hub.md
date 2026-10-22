@@ -113,8 +113,8 @@ has no window that loses anything.
   with nothing to clear. The entry write is ordered ahead of the effects so that a crash plus the source then being
   disabled can never orphan labels no memory names.
 
-The probe and last-pass instant live in memory only. A restart runs a full pass, so no durable probe state is owed under
-`bzh:probe-gated-pass`'s floor.
+Each tenant's probe and last-pass instant live in memory only. A restart runs a full pass, so no durable probe state is
+owed under `bzh:probe-gated-pass`'s floor.
 
 ## The egress export sweep
 
