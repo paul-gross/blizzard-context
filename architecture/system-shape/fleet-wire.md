@@ -33,8 +33,11 @@ project keeps the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, `src
 a `reason` (`ClaimDenialReason`, `capability` by default) and a `detail` naming the project, so a previous-minor runner
 reads it as the refusal it already handles.
 
-**Don't.** A response enum gaining a value with no admitted break — an older runner's closed-enum parse (e.g.
-`ChunkStatus`, `ApplyOutcome`) raises on the unrecognized value instead of round-tripping it.
+Whether a response enum gaining a value is additive is decided per supported release by `bzh:open-response-vocabulary`
+([./released-surfaces.md](./released-surfaces.md)), which owns how an open field and a declared-closed one behave.
+
+**Don't.** A response enum gaining a value that `bzh:open-response-vocabulary` does not make additive and no admitted
+break covers.
 
 **See also.** `bzh:shared-kernel` ([../clean-architecture.md](../clean-architecture.md)): where a vocabulary type the
 wire carries is defined.

@@ -31,6 +31,17 @@ The HTML template `no-restricted-syntax` selector rejects native `<button>`, `<s
 interaction uses a reasoned, element-level ESLint suppression; `web/scripts/kit-control-lint-probe.js` checks the AST
 gate's must-fail and must-pass cases (`node web/scripts/kit-control-lint-probe.js` from the app repo root).
 
+The `default-case` rule fails a TypeScript `switch` with no `default` branch
+([`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
+`bzh:frontend-open-vocabulary`): a newer server may send a value the generated client does not list. Lint is not
+type-aware, so the rule holds every switch, a local union's included. `web/scripts/default-case-lint-probe.js` checks a
+bare switch is refused and a defaulted one passes, in an app file and a `fleet` file
+(`node web/scripts/default-case-lint-probe.js` from the app repo root). A `default` would silence the compiler's own
+exhaustiveness check, so a `switch` naming every declared value defaults to `fleet`'s `unlisted`, typed `never`;
+`web/scripts/open-lookup-type-probe.js` compiles fixtures against the real helper under `web/tsconfig.json` and checks
+an `openLookup` table or such a `switch` missing a value fails to compile while the complete forms compile
+(`node web/scripts/open-lookup-type-probe.js` from the app repo root) — `web:unit-test` never type-checks.
+
 ### web:typecheck
 
 `npm run build` in `web/` — a real AOT compile of both Angular apps, the type check `web:unit-test`'s esbuild-based
@@ -137,6 +148,28 @@ line — file, line, the `computed()` field, and the deriving kinds — under
 helper, and a component injecting only through a project-local wrapper; must-pass `??` and comparison composition, an
 event-handler ternary, a presentational component, a non-component helper, a story, and a local `computed` not imported
 from Angular — runs before the sweep is trusted.
+
+The same script also runs the two open-vocabulary sweeps (`web/scripts/open-vocabulary-sweep.js`;
+[`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
+`bzh:frontend-open-vocabulary`), neither with an exemption list:
+
+- The template-switch sweep fails an `@switch` block in any `.html` below `web/projects` with no `@default` of its own —
+  a nested block's `@default` does not count for its parent — printing each site under
+  `template @switch blocks with no @default`. Its self-test, `assertTemplateSwitchDetectorWorks`, must-catches a bare
+  block, a bare block nested in a defaulted one, and a bare parent of a defaulted one, and must-passes a defaulted
+  block.
+- The vocabulary-record sweep reads every generated vocabulary, and every generated type's vocabulary field, from
+  `fleet/src/lib/api/{hub,runner}/types.gen.ts` at run time, and fails a full table keyed by one — a `Record`, or a
+  mapped type over it (`{ [K in RunnerEventType]: … }`) — outside an `openLookup(…)` call, over every `.ts` below
+  `web/projects` except specs, stories, and the generated `fleet/src/lib/api/`. A table declared by an unexported
+  `const` that its file reads only inside `openLookup(…)` calls is the helper's own and passes. Lint is not type-aware,
+  so it matches the key's written form: the vocabulary named directly or through its namespace
+  (`hubApi.EventLogSeverity`), a field's type (`HostRegistrationView['state']`), or a type alias declared in the same
+  file as either. A `Partial<Record<…>>` or an optional mapped type is not full and passes. It prints each site under
+  `tables keyed by a generated vocabulary outside openLookup`. Its self-test, `assertVocabularyRecordDetectorWorks`,
+  must-catches each written form, an alias of an alias, a type assertion, a mapped type, and a table also read outside
+  the helper or exported, and must-passes the helper's own form, a table inside an `openLookup` call or read only
+  through one, a `Partial` or optional mapped type, a non-vocabulary key, and a field that is not a vocabulary.
 
 The script also censuses every TypeScript, template, and stylesheet below `web/projects` for the retired board Top/group
 contract: its type, inputs, handlers, grouping mutation facade, and test handles. Generated grouping-client symbols are
