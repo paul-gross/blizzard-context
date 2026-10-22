@@ -45,6 +45,12 @@ The entry also reports the version the runner last registered with and where the
 within the window, unversioned, or refused and why. A registration the window refuses still records that judgement, and
 the runner claims nothing until a later registration is admitted.
 
+The entry also reports why the runner is declining: one reason for each throttle saying no to new work right now — the
+throttle, the reading, the subscription it concerns, and when its hold expects to lift — and none while a brake holds
+the runner or when nothing says no. Like capabilities, it is the runner's own assertion, superseded whole on every
+registration, never a setting and never derived by the hub; a runner that reports none, or predates the report, is shown
+declining nothing.
+
 The entry also reports subscription usage. A runner under a host the hub holds declares no roster of its own: its entry
 shows the usage of the one subscription it spends, as its host reports it ([./hosts.md](./hosts.md) §Subscriptions). A
 runner standing alone reports its own, keyed off its declared roster: at registration a runner declares its subscription
