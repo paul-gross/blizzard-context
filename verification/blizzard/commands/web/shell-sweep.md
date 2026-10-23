@@ -283,7 +283,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   BACKLOG and one DONE row, at a wide centre column and at the narrowest the desktop board renders (a 768px viewport
   less the rail and gutters; below it the hub serves the mobile glance board). Every row and each of its cells stays
   inside the list, each armed row's reorder grip clears its lane icon, and the READY/BACKLOG line sits between the two
-  ranked runs — layout claims jsdom cannot make.
+  ranked runs — layout claims jsdom cannot make. A second case seeds a row per status and holds each row's left edge to
+  its lane icon's computed color, and a selected row's edge to cyan.
 - `board-shell.shell-sweep.spec.ts` covers `BoardShell`'s lane grid under a long current-node name: one running chunk
   whose node name runs to 120 characters, mounted at 1440px, must leave every lane equal-width and inside the viewport,
   with the name clipped inside its card and readable whole from the card's `title` — a layout claim jsdom cannot make,
