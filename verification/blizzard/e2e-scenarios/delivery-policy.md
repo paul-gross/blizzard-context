@@ -49,6 +49,19 @@ through the same generic `executor: hub` primitive. Its `fleet traces` subtest p
   routes `failure` back to `build`, the `delivery-findings/foreign-head` artifact naming that commit, with nothing
   merged at the forge and bare `main` never moving.
 
+## test_hub_actions_e2e
+
+A hub node that names an action, through a real hub process: `land` against the mock forge, and the two test actions the
+hub admits only behind `BLIZZARD_TEST_ACTIONS=1` beside `BLIZZARD_CRASH_FENCE=1`, which the e2e launcher sets.
+
+- `test_land_lands_a_chunk_against_the_mock_forge` — proves `land` opens the chunk's PR and merges it: the chunk reaches
+  `done` reporting the repository landed at bare `main`'s new tip, through one merged PR, the change on `main` exactly
+  once.
+- `test_test_actions_drive_hub_nodes` — proves `test.answer` routes its `choice` in one pass, and `test.sequence` waits
+  on its first pass and answers `done` on its second, recording `test-sequence/0` and `test-sequence/1`.
+- `test_a_hub_without_the_test_fences_refuses_the_test_actions` — proves a hub started without both fences refuses a
+  graph naming either test action at mint, each as an unknown action.
+
 ## test_checks_gate_e2e
 
 Checks-gate enforcement: a graph whose `build` choice carries `requires_checks: true` shows the gate — not the worker's
