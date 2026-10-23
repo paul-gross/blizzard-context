@@ -44,11 +44,11 @@ not a proxy for being worked: a consumer folding routes into live occupancy must
 
 ## Giving tenure back
 
-Three writes release a route by giving tenure back: detach, the hub's requeue of an escalated chunk, and a migration
-that re-queues the chunk onto another graph. After each the route is free and the next claim fences the old runner out;
-what the chunk derives then rests on its remaining facts, and detach supersedes none of them. What detach and the
-requeue each are is owned by [./recovery.md](./recovery.md), which also distinguishes the hub's requeue from the holding
-runner's own.
+Four writes release a route by giving tenure back: detach, the hub's requeue of an escalated chunk, a migration that
+re-queues the chunk onto another graph, and the holding runner's own release. After each the route is free and the next
+claim fences the old runner out; what the chunk derives then rests on its remaining facts, and neither detach nor a
+release supersedes any of them. What detach, the requeue, and the release each are is owned by
+[./recovery.md](./recovery.md), which also distinguishes the hub's requeue from the holding runner's own.
 
 Stop releases the route terminally — no next claim to fence — and a hub node landing the chunk's terminal releases it
 too.

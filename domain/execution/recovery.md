@@ -39,6 +39,19 @@ finisher's leftover, which holds no claim to release.
 Detach **ends** the chunk rather than parking it: the worker is killed and the session is discarded, not resumable — the
 inverse of a per-chunk pause's park, which keeps the same session for a later resume ([./pause.md](./pause.md)).
 
+## Release
+
+Release is the holding runner's own giving back of a running chunk mid-graph, so that another runner — or the same one,
+later — claims it from the queue. Tenure goes back as with detach: the route is freed, nothing is superseded, and no
+epoch is bumped, so the chunk re-derives `ready` at its current node and the next claim's reserved epoch fences the old
+holder out; the next holder enters the node cold, in fresh environments, and no retry is spent.
+
+Release has four refusals, and each guards only who holds the chunk at which epoch: the caller does not hold the chunk's
+route, the chunk is not `running`, the chunk has moved past the epoch the caller last saw, or the chunk is not the
+tenant's. None judges whether letting go is wise — that is the caller's judgement, made on its own runner before it
+asks. Each caller brings a reason, an open string the hub records and never interprets, so a new caller needs no change
+to the release itself.
+
 ## Reassignment
 
 Reassignment moves a held chunk to another runner — the supported exception to stickiness. A new environment can be
