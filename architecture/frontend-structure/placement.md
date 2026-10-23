@@ -39,7 +39,7 @@ written there first.
 
 **See also.**
 
-- `bzh:frontend-eager-shell-entry` ([`./eager-shell.md`](./eager-shell.md)) — what the hub may reach on the eager path.
+- `bzh:frontend-eager-shell-entry` ([`./eager-shell.md`](./eager-shell.md)) — what each app may reach on the eager path.
 - `bzh:frontend-package-layers` below — which folder of its project a unit lands in, and what that folder may import.
 
 ## Folders import only what their project's layer table allows (`bzh:frontend-package-layers`)
@@ -50,9 +50,10 @@ edge. A unit is a folder below the project's source root — `fleet/src/lib/`, `
 a file belongs to the longest unit that prefixes its path, so `garden` owns only the files directly in `garden/`. Every
 folder directly under a source root, or under `garden/`, is a unit, and no file sits loose at a source root. Every unit
 may also import its project's kernel, and the kernel imports no other unit. An app reaches `fleet` only through the
-`fleet`, `fleet/shell`, and `fleet/testing` entry points, never by a relative path. A unit's layer orders its table: no
-edge points to a higher layer, but a row may list a unit of its own layer — a declared feature-to-feature edge such as
-`board` → `runners` — unlike `bzh:domain-package-layers`, whose edges all point strictly down.
+`fleet`, `fleet/shell`, `fleet/runner-shell`, and `fleet/testing` entry points, never by a relative path. A unit's layer
+orders its table: no edge points to a higher layer, but a row may list a unit of its own layer — a declared
+feature-to-feature edge such as `board` → `runners` — unlike `bzh:domain-package-layers`, whose edges all point strictly
+down.
 
 `fleet`, rooted at `fleet/src/lib/`, has no kernel, so every edge is listed; a `*.spec.ts` or `*.stories.ts` in any unit
 may also import `testing`:
@@ -109,11 +110,11 @@ feature imports it — and folder cycles form unseen.
 
 **Scope.** Binds every git-tracked `.ts`, `.css`, and `.html` file below the three source roots and its relative edges:
 static, type-only, and dynamic imports, a component's `styleUrl`, `styleUrls`, and `templateUrl`, and CSS `@import`. The
-`fleet` barrels (`fleet/src/public-api.ts`, `shell-api.ts`) and each app's `src/main.ts` sit outside the source roots
-and are not bound. Which project a unit belongs to is `bzh:frontend-placement`'s call; this rule governs the edges
-inside one project. These tables own each project's graph; `web/scripts/structural-gate.js`'s `FLEET_LAYERS`,
-`HUB_LAYERS`, and `RUNNER_LAYERS` mirror them, so a new edge or unit changes a table here and its mirror in the same
-change.
+`fleet` barrels (`fleet/src/public-api.ts`, `shell-api.ts`, `runner-shell-api.ts`) and each app's `src/main.ts` sit
+outside the source roots and are not bound. Which project a unit belongs to is `bzh:frontend-placement`'s call; this
+rule governs the edges inside one project. These tables own each project's graph; `web/scripts/structural-gate.js`'s
+`FLEET_LAYERS`, `HUB_LAYERS`, and `RUNNER_LAYERS` mirror them, so a new edge or unit changes a table here and its mirror
+in the same change.
 
 **Detect.** The package-layers sweep inside `web:structural-gate`, proven first by `assertPackageLayersDetectorWorks`,
 carries the three tables as data with no exemption list and fails an import its table does not allow, a file in no
@@ -133,7 +134,7 @@ query keys kept in that feature's folder while the kernel's live-updates module 
 **See also.**
 
 - `bzh:frontend-placement` above — whether a unit belongs in `fleet` or in an app at all.
-- `bzh:frontend-eager-shell-entry` ([`./eager-shell.md`](./eager-shell.md)) — what the hub's `shell/` may import from
+- `bzh:frontend-eager-shell-entry` ([`./eager-shell.md`](./eager-shell.md)) — what an app's `shell/` may import from
   `fleet` on the eager path.
 - `bzh:shared-kernel` ([`../clean-architecture.md`](../clean-architecture.md)) — the daemons' kernel, which imports no
   daemon package, as this rule's `core/` imports no feature.

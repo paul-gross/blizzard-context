@@ -206,15 +206,16 @@ exempted fixture would still be caught without it — alongside the other detect
 
 `npm run bundle-check` in `web/` (`web/scripts/bundle-check.js`) — the tooled half of
 [`../../../../architecture/frontend-structure/eager-shell.md`](../../../../architecture/frontend-structure/eager-shell.md)
-`bzh:frontend-eager-shell-entry`. Builds the hub app with esbuild's own metafile (`ng build hub --stats-json`, into a
-temp directory) and resolves the initial chunk from it twice. At output granularity — the output whose entry point is
-`main.ts`, plus every output it reaches over a static `import-statement` edge, a `dynamic-import` edge starting a lazy
-chunk instead — it prints the per-area byte breakdown (framework, CDK, each fleet area) that a bundle-size change
-records. At source-file granularity, over the same metafile's module graph, it enforces the gate: a source file
-reachable eagerly that matches a forbidden pattern — the fleet `chunk-detail/` or `transcripts/` sub-barrels, the hub's
-`garden/`, `graphs/`, or `board/chunk-dock/` folders, `@dagrejs/*`, or `@angular/cdk`'s `menu`/`overlay`/`listbox`
-bundles — fails the run, named together with the file that imports it. Its own fixture self-test,
-`assertBundleCompositionDetectorWorks` — one eager import matching a forbidden pattern, one eager import that does not,
-and a forbidden pattern reached only through a dynamic import — runs before the walk is trusted
-(`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json` is the size backstop the same build enforces.
-Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside `web:structural-gate`.
+`bzh:frontend-eager-shell-entry`. Builds each app — the hub, then the runner — with esbuild's own metafile
+(`ng build <app> --stats-json`, into a temp directory) and resolves its initial chunk from it twice. At output
+granularity — the output whose entry point is `main.ts`, plus every output it reaches over a static `import-statement`
+edge, a `dynamic-import` edge starting a lazy chunk instead — it prints the per-area byte breakdown (framework, CDK,
+each fleet area) that a bundle-size change records. At source-file granularity, over the same metafile's module graph,
+it enforces the gate: a source file reachable eagerly that matches a forbidden pattern fails the run, named together
+with the file that imports it. Both apps forbid the fleet `chunk-detail/` or `transcripts/` sub-barrels and
+`@angular/cdk`'s `menu`/`overlay`/`listbox` bundles; the hub also forbids its `garden/`, `graphs/`, and
+`board/chunk-dock/` folders and `@dagrejs/*`. Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one
+eager import matching a forbidden pattern, one eager import that does not, and a forbidden pattern reached only through
+a dynamic import — runs before the walk is trusted (`bzh:case-pins-its-own-name`). The `initial` budget in
+`angular.json` is the size backstop each app's build enforces. Wired into `gate.yml`'s `frontend` job and
+`scripts/ci-gate.sh` beside `web:structural-gate`.

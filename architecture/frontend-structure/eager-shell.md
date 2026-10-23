@@ -1,44 +1,54 @@
 # The eager shell
 
-What the hub's always-loaded shell may import, how chrome it needs only on interaction is loaded, and how the project
+What an app's always-loaded shell may import, how chrome it needs only on interaction is loaded, and how the project
 lens the shell derives reaches a view. A spoke of the [frontend structure hub](../frontend-structure.md); each rule
 follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
 
 ## Eager shell code imports `fleet/shell` (`bzh:frontend-eager-shell-entry`)
 
-**Rule.** A module statically reachable from the hub's `main.ts` — the hub's `shell/` folder (the app root, its config
-and route table, and the nav chrome the root mounts outside a `@defer` block) and the hub modules they reach
-(`core/auth/` — among them the no-access screen and the tenant picker the root renders in place of the shell, and the
-tenant context and interceptor every hub call and the live stream read — the board, spend, health, and questions reads,
-and `runners/runner-host-names.ts` with the `runners/hosts.query.ts` read it provides from `shell/app.config.ts`, so
-every runner reference names its host) — imports the `fleet` library only through the `fleet/shell` entry point
-(`projects/fleet/src/shell-api.ts`, a file-by-file list of named re-exports); a `fleet` module on that eager path
-imports a sibling by file (`../../kit/kit-button`), never through a sub-barrel (`../../kit`); and chrome the shell needs
-only on interaction — the profile menu and the mobile titlebar, with the CDK menu stack behind them — is
-`@defer`-loaded.
+**Rule.** A module statically reachable from an app's `main.ts` imports the `fleet` library only through an entry point;
+a `fleet` module on that eager path imports a sibling by file (`../../kit/kit-button`), never through a sub-barrel
+(`../../kit`); and chrome the shell needs only on interaction — the profile menu and the mobile titlebar, with the CDK
+menu stack behind them — is `@defer`-loaded.
+
+- **The hub.** Its `shell/` folder (the app root, its config and route table, and the nav chrome the root mounts outside
+  a `@defer` block) and the hub modules they reach (`core/auth/` — among them the no-access screen and the tenant picker
+  the root renders in place of the shell, and the tenant context and interceptor every hub call and the live stream read
+  — the board, spend, health, and questions reads, and `runners/runner-host-names.ts` with the `runners/hosts.query.ts`
+  read it provides from `shell/app.config.ts`, so every runner reference names its host) import through `fleet/shell`
+  (`projects/fleet/src/shell-api.ts`, a file-by-file list of named re-exports).
+- **The runner.** Its `shell/` folder (the same parts) and the `core/` modules they reach (the host, lease, and status
+  reads, the session and its recovery, the live stream, and the panel reads) import through `fleet/shell` for what both
+  apps read and through `fleet/runner-shell` (`projects/fleet/src/runner-shell-api.ts`) for what only the runner does —
+  the runner API and client, its live-stream vocabulary, and its query keys. The runner's exports sit in a second file
+  because esbuild keeps every module a re-export names, so the same exports in `shell-api.ts` would grow the hub's
+  initial chunk.
 
 **Why.** esbuild keeps every decorated module a barrel on the eager path names, whether or not the shell reads its
 export, so one `from 'fleet'` in the app root ships every feature area before the board renders. A lazy route page keeps
 importing `fleet`: a barrel behind a `loadComponent` boundary costs the initial chunk nothing.
 
-**Scope.** Binds the hub app's eager shell and the `fleet` modules `shell-api.ts` reaches; a lazy route page, the
-contents of a `@defer` block, and the runner app's own shell are outside it. `bzh:generated-client`'s `'../api/hub'`
-import stays as it is.
+**Scope.** Binds each app's eager shell and the `fleet` modules `shell-api.ts` and `runner-shell-api.ts` reach; a lazy
+route page and the contents of a `@defer` block are outside it. `bzh:generated-client`'s `'../api/hub'` import stays as
+it is.
 
-**Detect.** `from 'fleet'` in `hub/src/main.ts`, `shell/app.ts`, `shell/app.config.ts`, `shell/app.routes.ts`, or a nav
-component the app root mounts outside a `@defer` block; a `from '../<feature>'` sub-barrel import in a module
-`shell-api.ts` reaches; an export added to `shell-api.ts` that only a lazy page uses. Each surfaces as a forbidden
-module in the initial chunk under `web:bundle-composition` (`npm run bundle-check`,
-[`../../verification/blizzard.md`](../../verification/blizzard.md)), which names the module and the file that imports
-it; the `initial` budget in `angular.json` is the size backstop for growth the forbidden list does not name.
+**Detect.** `from 'fleet'` in either app's `main.ts`, `shell/app.ts`, `shell/app.config.ts`, `shell/app.routes.ts`, a
+nav component the app root mounts outside a `@defer` block, or a `core/` module they reach; a `from '../<feature>'`
+sub-barrel import in a module either entry file reaches; an export added to an entry file that only a lazy page uses; an
+export only the runner reads added to `shell-api.ts`. Each surfaces as a forbidden module in the initial chunk under
+`web:bundle-composition` (`npm run bundle-check`, [`../../verification/blizzard.md`](../../verification/blizzard.md)),
+which names the module and the file that imports it; the `initial` budget in `angular.json` is the size backstop for
+growth the forbidden list does not name.
 
-**Do.** `shell/app.ts` imports `AppShell` from `'fleet/shell'` and `injectMeQuery` from `'../core/auth/me.query'`;
-`app.html` mounts `<app-nav-menu>` inside `@defer (on immediate)` wrapped in
-`<ng-container ngProjectAs="[header-trailing]">`, because a `@defer` block does not carry its root node's slot attribute
-through content projection; `core/auth/no-access.ts` and `core/auth/tenant-picker.ts` import `KitButton` from
-`'fleet/shell'`, and `core/auth/tenant.interceptor.ts` takes `hubClient`, `FetchEventSource`, and `EVENT_SOURCE_FACTORY`
-from it, so the one tenant context names the tenant on the generated client's requests and on the live stream's own
-`fetch`.
+**Do.** The runner's `shell/app.ts` imports `AppShell` from `'fleet/shell'`, its `core/host.query.ts` takes `runnerApi`
+from `'fleet/runner-shell'`, its `app.html` mounts `<app-mobile-titlebar>` inside `@defer (on immediate)` with a
+fixed-height placeholder, and `nav/app-header.html` mounts `<app-profile-menu>` the same way. The hub's `shell/app.ts`
+imports `AppShell` from `'fleet/shell'` and `injectMeQuery` from `'../core/auth/me.query'`; `app.html` mounts
+`<app-nav-menu>` inside `@defer (on immediate)` wrapped in `<ng-container ngProjectAs="[header-trailing]">`, because a
+`@defer` block does not carry its root node's slot attribute through content projection; `core/auth/no-access.ts` and
+`core/auth/tenant-picker.ts` import `KitButton` from `'fleet/shell'`, and `core/auth/tenant.interceptor.ts` takes
+`hubClient`, `FetchEventSource`, and `EVENT_SOURCE_FACTORY` from it, so the one tenant context names the tenant on the
+generated client's requests and on the live stream's own `fetch`.
 
 **Don't.** `import { AppShell } from 'fleet'` in `shell/app.ts` — one line that puts the chunk-detail and transcripts
 barrels back into the initial chunk; an eager import of the hub's `garden/` or `graphs/` folder, which brings the whole

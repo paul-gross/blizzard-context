@@ -70,7 +70,7 @@ A command method passes when its command exits 0.
 | `web:structural-gate`            | `npm run structural-gate` in `web/` — the static sweeps `web/scripts/structural-gate.js` runs over the Angular workspace *(more)*                                 |
 | `web:shell-sweep`                | `npm run shell-sweep` in `web/` — the real-Chromium proof for what jsdom cannot evaluate *(more)*                                                                 |
 | `web:story-render`               | `npm run story-render` in `web/` — type-checks the stories, builds the workshop, and renders every story in headless Chromium *(more)*                            |
-| `web:bundle-composition`         | `npm run bundle-check` in `web/` — the hub's initial chunk resolved from esbuild's metafile, failing on a forbidden feature module *(more)*                       |
+| `web:bundle-composition`         | `npm run bundle-check` in `web/` — each app's initial chunk resolved from esbuild's metafile, failing on a forbidden feature module *(more)*                      |
 | `web:client-drift`               | `npm run generate:client` in `web/`, then fail on any unstaged diff (`bzh:generated-client`) *(more)*                                                             |
 | `blizzard-mock:build`            | `uv sync` in the `blizzard-mock` repo                                                                                                                             |
 | `blizzard-mock:lint`             | `uv run ruff check .`                                                                                                                                             |
