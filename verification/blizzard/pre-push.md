@@ -14,7 +14,8 @@ type-checks — board `data-testid` and `data-*` attributes in `tests/e2e/`, wir
 green `blizzard:gate` buys a red pull request, found after the push instead of before.
 
 **Do.** Run `mise run gate-full` ([`blizzard:gate-full`](./commands/packaging.md#blizzardgate-full)), or only the tier
-the change reaches. Every `pr.yml` job and its local command:
+the change reaches. For changed store revisions, also run `mise run store-baseline`; for a release cut, also run
+`mise run rehearsal`. Every `pr.yml` job and its local command:
 
 | CI job                                                           | Local command                        |
 | ---------------------------------------------------------------- | ------------------------------------ |

@@ -21,20 +21,21 @@ working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passe
 (`web:client-drift`).
 
 `mise run gate` is not the full master merge gate — it omits every upper tier, which the `pr` workflow runs as separate
-real gate jobs; `blizzard:gate-full` below reproduces the whole pipeline, and `bzh:ci-job-local-command`
+real gate jobs; `blizzard:gate-full` below reproduces the unconditional tiers, and `bzh:ci-job-local-command`
 ([`../pre-push.md`](../pre-push.md)) maps each CI job to its local command. `mise run gate` runs
 `blizzard:process-ref-lint` as one of its own steps (`scripts/ci-gate.sh`), so a green `blizzard:gate` already covers
 it; the row below exists for running the rule on its own.
 
 ### blizzard:gate-full
 
-`mise run gate-full` (`./scripts/gate-full.sh`) reproduces the `pr` workflow locally: `blizzard:gate`
+`mise run gate-full` (`./scripts/gate-full.sh`) reproduces the unconditional `pr` tiers locally: `blizzard:gate`
 (`./scripts/ci-gate.sh`), then `mise run service-test`, the FULL `mise run crash-sweep`, `mise run e2e`,
 `mise run journey`, `mise run image-smoke` and `mise run compose-smoke`, serially, because the smokes bind fixed ports.
 A red tier does not stop the later ones: the run ends with a per-tier verdict and exits non-zero on any red.
-`GATE_FULL_TIERS` narrows it to the named tiers. The release-cut rehearsal is not in it — it needs `gh` and Postgres, so
-a cut PR's local command is `mise run rehearsal` (`blizzard:rehearsal`). It needs everything its tiers need: the sibling
-`blizzard-mock` worktree, Chromium, and a docker daemon with compose v2.
+`GATE_FULL_TIERS` narrows it to the named tiers. The conditional checks are separate: for changed store revisions run
+`mise run store-baseline` (`blizzard:store-baseline`), and for a cut PR run `mise run rehearsal` (`blizzard:rehearsal`).
+Both need `gh` and Postgres. The task needs everything its tiers need: the sibling `blizzard-mock` worktree, Chromium,
+and a docker daemon with compose v2.
 
 ### blizzard:process-ref-lint
 
