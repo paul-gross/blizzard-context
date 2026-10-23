@@ -20,9 +20,12 @@ The facets:
   resume form falls back to spawning fresh when no matching session exists — never an error or stall. `session` governs
   entry only: a within-node retry always spawns fresh, and an operator restart forces a fresh session for the visit it
   lands ([../work/restart.md](../work/restart.md)).
-- **`executor`** — names who runs the steps: a runner (the default) or the hub. A hub-executed node declares `run:`
-  command steps, never an agent turn (contract: [../../standards/hub-nodes.md](../../standards/hub-nodes.md)); a
-  delivery node is just this shape.
+- **`executor`** — names who runs the steps: a runner (the default) or the hub. A hub-executed node names an `action:`,
+  one of the hub's own catalogued actions, and passes it arguments through `with:`, each one value or a list; until it
+  is carried over, a hub node may instead declare `run:` command steps, and it names exactly one of the two. Either way
+  it takes no agent turn (contract: [../../standards/hub-nodes.md](../../standards/hub-nodes.md)), and validation
+  refuses an action the catalogue does not hold, an argument it does not declare, a required one left out, and an answer
+  the node authors no choice for; a delivery node is just this shape.
 - **`checks`** — deterministic commands the runner runs at worker exit and injects into the exit judgement as durable
   facts, so the worker judges against mechanical truth; a `requires_checks` choice may gate on them. `checks_cwd` (where
   checks run, relative to the leased env's workdir) and `checks_timeout` (per-check seconds) configure checks and are

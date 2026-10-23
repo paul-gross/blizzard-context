@@ -56,3 +56,9 @@ reliable process kills.
   write can land level with the attempt it displaces, and level is displaced.
 
 **Don't.** Never accept a transition because the submitter still holds the route — route tenure is not attempt fencing.
+
+**Exception.** A hub action's record of a merge that has already happened on a forge — the repository's landed marker,
+its landed row, and the close intents beside them — is admitted past the fence: a terminal chunk or a stale epoch does
+not refuse it, because it records what the forge already did rather than a step the chunk may take. The fence is still
+read on that write, and where it would have refused, the action is told so and touches no further repository. It stays
+idempotent per chunk, node, marker name, and epoch.

@@ -37,7 +37,7 @@ caller's transaction, so none has a window of its own — each leaves its intent
 enqueued them. The callers are:
 
 - a landing-marker artifact write, in whichever store records it;
-- the `delivery_repo_landed` write, on the hub node's landing step;
+- the `delivery_repo_landed` write, on the hub node's landing step and in a hub action's landing record;
 - the `delivery_landed` write and the `finalize_delivery` terminal transition — seam methods no live path calls, so a
   chunk reaches the terminal without either enqueuing anything;
 - an operator's hand-completion.
@@ -72,6 +72,27 @@ same transaction, so it carries no separate once-only claim of its own. `hub:no-
 `hub:no-pending-intent-against-terminal-ref` are both legal-history invariants, not accepted false positives: the first
 catches a broken idempotency guard letting a ref carry both `closed` and `gone`, the second a stuck retirement past the
 point the folded transaction ever leaves one standing alone.
+
+## A hub action pass's effect writes
+
+`ActionPassDriver.take` (`blizzard/src/blizzard/hub/delivery/action_pass.py`) writes each effect a pass records on the
+caller's thread, one at a time, and releases it back to the action only once it is durable; each effect is one
+transaction of its own, so the windows are the spans between them. Four points name them:
+
+| Point                                    | Window                                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `action.after-effect.before-write`       | The action's forge write — a merge, a pull request opened, a check re-run — is done; the effect recording it is not yet durable |
+| `action.after-write.before-resume`       | An effect is durable; the action has not resumed                                                                                |
+| `close.after-enqueue.before-drain`       | A landing record and its close intents are durable in one transaction; no drain has run yet                                     |
+| `hubnode.after-poll.before-slot-release` | The poll-attempt fact is durable; the tenant's slot is not yet released                                                         |
+
+A crash in any of them loses only the pass in flight: the next pass reads the forge and the node's markers and
+converges, as it does after any crash, so an unwritten effect is written once on the re-take and a written one is
+counted past. The kill-9 sweep (`tests/crash/test_kill9_sweep.py`) reaches the `action.` family through `test.sequence`
+and through a two-repository `land` against the mock forge. Every landing record reaches
+`close.after-enqueue.before-drain`, so the sweep opens the window between `land`'s two repositories there: killed with
+the first landing durable and the second repository not yet merged, the restarted hub lands the second without merging
+the first twice.
 
 ## The trace export sweep
 
