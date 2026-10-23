@@ -60,6 +60,7 @@ A command method passes when its command exits 0.
 | `blizzard:ci`                    | `gh run watch --repo paul-gross/blizzard <run-id> --exit-status` — the authoritative remote gate *(more)*                                                         |
 | `blizzard:wheel`                 | `mise run build` — both Angular apps, then the one wheel, node-free *(more)*                                                                                      |
 | `blizzard:wheel-smoke`           | The serve smoke on the built wheel in a node-free venv — the **P5 exit criterion** *(more)*                                                                       |
+| `blizzard:gate-full`             | `mise run gate-full` — the local reproduction of the unconditional pull-request tiers: the gate, then every upper tier *(more)*                                   |
 | `blizzard:image-smoke`           | `mise run image-smoke` — the hub image booted on an empty data volume *(more)*                                                                                    |
 | `blizzard:compose-smoke`         | `mise run compose-smoke` — the reference compose deployment on a local image *(more)*                                                                             |
 | `blizzard:ci-workflows`          | `mise x actionlint@1.7.12 -- actionlint`                                                                                                                          |

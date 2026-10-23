@@ -20,11 +20,22 @@ regenerated `openapi/`, `contracts/` or `web/` client output before running it: 
 working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails
 (`web:client-drift`).
 
-`mise run gate` is not the full master merge gate — it omits `blizzard:service-test` and the bounded crash-sweep CI
-profile (`mise run crash-sweep-ci`); the `pr` and `push` workflows run both as separate real gate jobs, so a PR breaking
-either tier still fails. `bzh:sweep-release-only-tiers` ([`../pre-push.md`](../pre-push.md)) names the surfaces this
-blind spot bites. `mise run gate` runs `blizzard:process-ref-lint` as one of its own steps (`scripts/ci-gate.sh`), so a
-green `blizzard:gate` already covers it; the row below exists for running the rule on its own.
+`mise run gate` is not the full master merge gate — it omits every upper tier, which the `pr` workflow runs as separate
+real gate jobs; `blizzard:gate-full` below reproduces the unconditional tiers, and `bzh:ci-job-local-command`
+([`../pre-push.md`](../pre-push.md)) maps each CI job to its local command. `mise run gate` runs
+`blizzard:process-ref-lint` as one of its own steps (`scripts/ci-gate.sh`), so a green `blizzard:gate` already covers
+it; the row below exists for running the rule on its own.
+
+### blizzard:gate-full
+
+`mise run gate-full` (`./scripts/gate-full.sh`) reproduces the unconditional `pr` tiers locally: `blizzard:gate`
+(`./scripts/ci-gate.sh`), then `mise run service-test`, the FULL `mise run crash-sweep`, `mise run e2e`,
+`mise run journey`, `mise run image-smoke` and `mise run compose-smoke`, serially, because the smokes bind fixed ports.
+A red tier does not stop the later ones: the run ends with a per-tier verdict and exits non-zero on any red.
+`GATE_FULL_TIERS` narrows it to the named tiers. The conditional checks are separate: for changed store revisions run
+`mise run store-baseline` (`blizzard:store-baseline`), and for a cut PR run `mise run rehearsal` (`blizzard:rehearsal`).
+Both need `gh` and Postgres. The task needs everything its tiers need: the sibling `blizzard-mock` worktree, Chromium,
+and a docker daemon with compose v2.
 
 ### blizzard:process-ref-lint
 
@@ -79,10 +90,10 @@ answers.
 (`packaging/docker/Dockerfile`) and boots it on an empty data volume, asserting what a docker-free unit test cannot: a
 non-root uid, `git` on `PATH`, `import psycopg` succeeding, the store migrated to head before serving begins
 (`bzh:manual-migrations` — the entrypoint orders `init`-if-absent, `migrate`, `exec host`, never folded into daemon
-startup), and a live `GET /api/health` `200` plus `GET /api/ready` `ready: true`. Local-only: CI builds and pushes the
-multi-arch image but never boots what it publishes. The docker-free static image contract (`USER`, the `git` install,
-the migrate-before-host ordering, the `ENV` defaults, the documented mount path) is pinned at `blizzard:unit-test` in
-`tests/test_container_image.py` — packaging rot fails the default gate with no docker.
+startup), and a live `GET /api/health` `200` plus `GET /api/ready` `ready: true`. `upper-tiers.yml` runs it as a job on
+every pull request and tag; the multi-arch GHCR publish is not booted. The docker-free static image contract (`USER`,
+the `git` install, the migrate-before-host ordering, the `ENV` defaults, the documented mount path) is pinned at
+`blizzard:unit-test` in `tests/test_container_image.py` — packaging rot fails the default gate with no docker.
 
 ### blizzard:compose-smoke
 
@@ -90,11 +101,11 @@ the migrate-before-host ordering, the `ENV` defaults, the documented mount path)
 (`packaging/docker/compose.yaml`: hub, postgres, Caddy) against a locally-built image on the localhost http-only
 evaluation profile, asserting: `GET /api/ready` through the Caddy proxy port reports `ready: true`; the hub's resolved
 `BZ_HUB_DB_URL` is the postgres one; and `docker compose down` without `-v` then `up` loses nothing — a durable artifact
-written into the postgres volume before the restart is still readable. Local-only — no CI compose smoke, the same
-pattern as `blizzard:image-smoke`. The docker-free static compose contract (every durable path a named volume, the
-postgres health dependency, `trusted_proxies` matching the declared network subnet, the hub naming a postgres
-`BZ_HUB_DB_URL`, and — `test_hub_has_no_published_ports_only_reachable_through_the_proxy` — the hub publishing no port
-of its own) is pinned at `blizzard:unit-test` in `tests/test_compose_deployment.py`.
+written into the postgres volume before the restart is still readable. `upper-tiers.yml` runs it as a job on every pull
+request and tag, like `blizzard:image-smoke`. The docker-free static compose contract (every durable path a named
+volume, the postgres health dependency, `trusted_proxies` matching the declared network subnet, the hub naming a
+postgres `BZ_HUB_DB_URL`, and — `test_hub_has_no_published_ports_only_reachable_through_the_proxy` — the hub publishing
+no port of its own) is pinned at `blizzard:unit-test` in `tests/test_compose_deployment.py`.
 
 ### blizzard:collector-config
 
@@ -112,8 +123,10 @@ Falsify it by planting an unknown key in the file and observing `validate` rejec
 master or the `pr` gate, to completion, exiting non-zero on failure. This is the authoritative remote gate; the
 workflows and the watch loop are documented in the `blizzard` app repo's `docs/ci.md`.
 
-**Required checks on `master`.** The `pr.yml` checks below are the set an operator applies and verifies via
-`blizzard:manual-branch-protection`:
+**Required checks on `master`.** The checks below are every job `pr.yml` runs for a `master` base — `line provenance`
+runs only on a release-line base, so it is not among them. The jobs a pull request skips by condition (the store
+baseline, the rehearsal) are required through always-running result jobs that pass when the guarded job was skipped by
+its condition. The set is what an operator applies and verifies via `blizzard:manual-branch-protection`:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'EOF'
@@ -127,11 +140,19 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / contract drift"},
       {"context": "gate / compatibility against supported releases"},
       {"context": "gate / change notes"},
+      {"context": "gate / flag lifecycle"},
+      {"context": "gate / dprint"},
       {"context": "gate / eslint + vitest + client drift"},
       {"context": "gate / exemplar check (web)"},
       {"context": "gate / process-reference and change-history lint"},
       {"context": "upper-tiers / service tier (blizzard:service-test)"},
-      {"context": "upper-tiers / kill-9 crash sweep — CI profile (blizzard:crash-sweep)"}
+      {"context": "upper-tiers / kill-9 crash sweep (blizzard:crash-sweep)"},
+      {"context": "upper-tiers / e2e acceptance loop (blizzard:e2e)"},
+      {"context": "upper-tiers / acceptance journey (blizzard:journey)"},
+      {"context": "upper-tiers / hub image smoke (blizzard:image-smoke)"},
+      {"context": "upper-tiers / reference compose smoke (blizzard:compose-smoke)"},
+      {"context": "store baseline (blizzard:store-baseline)"},
+      {"context": "upgrade rehearsal (release cut)"}
     ]
   },
   "enforce_admins": false,

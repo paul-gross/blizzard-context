@@ -26,7 +26,6 @@ swept whether or not it found anything:
    - `blizzard-context:registry-drift`
    - `blizzard:wheel` — `mise run build`, which also runs the web build
    - `web:shell-sweep`
-   - `blizzard:e2e`
    - `dprint check` in `blizzard`, over `docs/` and the rest of its markdown
 6. **Stale baselines.** A committed baseline or census that no longer matches the tree it measures —
    `blizzard/scripts/prose-density-baseline.json` is the shape.

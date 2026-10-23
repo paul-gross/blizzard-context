@@ -1,27 +1,43 @@
 # The by-hand sweeps before you push (`bzh:matrix-pre-push`)
 
-A local gate cannot reach every surface. This file owns the sweeps that stand in for the ones it leaves unchecked; which
-tiers `blizzard:gate` cannot run is stated in its own row at [`./commands.md`](./commands/packaging.md#blizzardgate).
+A local gate cannot reach every surface. This file owns what stands in for the ones it leaves unchecked; which tiers
+`blizzard:gate` cannot run is stated in its own row at [`./commands.md`](./commands/packaging.md#blizzardgate).
 
-## Sweep the release-only tiers before you push (`bzh:sweep-release-only-tiers`)
+## Reproduce a CI job with its local command (`bzh:ci-job-local-command`)
 
-**Rule.** Before you push, sweep the release-only tiers for every handle or field the change renamed or removed, then
-run whatever the change touched.
+**Rule.** A red CI job is reproduced with its local command, and a change that touches a surface only an upper tier
+reads is run through `blizzard:gate-full` before you push.
 
-**Why.** Those tiers, and the board's kiosk demo mode (`?demo=true`), are the only readers of surfaces nothing else
-type-checks — board `data-testid` and `data-*` attributes in `tests/e2e/`, and wire field names off a live API response
-in `tests/service/` — so renaming either ships green and breaks them where you will not see it. The demo mode steers on
-`chunk-detail`/`detail-id` and `artifacts-tab-artifact`/`artifacts-tab-artifact-key` from production code, and fails
-quietly where a scenario fails loudly.
+**Why.** `blizzard:gate` is the shared `gate` job alone; the upper tiers are the only readers of surfaces nothing else
+type-checks — board `data-testid` and `data-*` attributes in `tests/e2e/`, wire field names off a live API response in
+`tests/service/`, the kiosk demo mode (`?demo=true`) — and every pull request runs them. Renaming one and pushing on a
+green `blizzard:gate` buys a red pull request, found after the push instead of before.
 
-**Do.**
+**Do.** Run `mise run gate-full` ([`blizzard:gate-full`](./commands/packaging.md#blizzardgate-full)), or only the tier
+the change reaches. For changed store revisions, also run `mise run store-baseline`; for a release cut, also run
+`mise run rehearsal`. Every `pr.yml` job and its local command:
+
+| CI job                                                           | Local command                        |
+| ---------------------------------------------------------------- | ------------------------------------ |
+| `gate / …` (every gate job)                                      | `mise run gate`                      |
+| `upper-tiers / service tier (blizzard:service-test)`             | `mise run service-test`              |
+| `upper-tiers / kill-9 crash sweep (blizzard:crash-sweep)`        | `mise run crash-sweep`               |
+| `upper-tiers / e2e acceptance loop (blizzard:e2e)`               | `mise run e2e`                       |
+| `upper-tiers / acceptance journey (blizzard:journey)`            | `mise run journey`                   |
+| `upper-tiers / hub image smoke (blizzard:image-smoke)`           | `mise run image-smoke`               |
+| `upper-tiers / reference compose smoke (blizzard:compose-smoke)` | `mise run compose-smoke`             |
+| `store baseline (blizzard:store-baseline)`                       | `mise run store-baseline`            |
+| `upgrade rehearsal (release cut)`                                | `mise run rehearsal`                 |
+| `line provenance` (release-line base only)                       | `./scripts/check-line-provenance.sh` |
+
+The sweep for a rename, before the tiers: grep the surfaces only they read.
 
 ```bash
 grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
 ```
 
 **Don't.** Rename a `data-testid` and push on a green `blizzard:gate` — the e2e scenario reading the old handle fails
-only on the release run, after the rename has landed.
+the pull request's `e2e` check.
 
 ## Board test handles
 
