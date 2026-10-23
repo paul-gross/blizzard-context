@@ -6,9 +6,11 @@ What holds a runner back from starting work without anyone braking it, and what 
 Before every start — a claim, a step, a continuation of a parked session — a runner asks its gate whether to start, and
 the gate answers from readings, never from a flag anyone set. The breakers answer first: a runner's brakes
 ([./pause.md](./pause.md)) refuse outright, and only past them is a throttle asked. A throttle declines rather than
-refuses, and lifts of itself once its reading changes; its only one today is the subscription floor. An escalation asks
-the breakers alone. The gate's shape — its verdict, the kinds of start, and how a declined claim is reported — is
-`blizzard-product:/plans/throttling/spec/gate.md`.
+refuses, and lifts of itself once its reading changes. The subscription floor is one; the operator may configure three
+more, a pace against a window's elapsed share, a utilization line, and a schedule, asked in that order after the floor.
+A continuation of a step already begun answers to the floor alone. An escalation asks the breakers alone. The levers are
+`blizzard-product:/plans/throttling/spec/levers.md`. The gate's shape — its verdict, the kinds of start, and how a
+declined claim is reported — is `blizzard-product:/plans/throttling/spec/gate.md`.
 
 ## An exhausted subscription holds back every runner spending it (`bzh:subscription-floor-reach`)
 
