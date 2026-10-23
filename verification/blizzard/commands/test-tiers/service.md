@@ -108,7 +108,7 @@ against a real `build_hosted_app` daemon: `"local"` while the lease is open, `"a
 segments — still `"archived"` after the local file is deleted mid-run — and `hub_unreachable: true` once the mock-hub
 subprocess is gone. That closed-lease walk is the only real-counterpart drive of the runner's outbound fleet-plane read;
 the unit tier binds a stubbed transport, and `test_transcript_segments_service.py` drives the hub-side route with raw
-httpx.
+httpx2.
 
 **The OAuth login dance** (`test_auth_login_service.py`) is proven only at this tier: a running hub under
 `auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` stub IdP (`tool:mock-fleet`, `blizzard-mock-idp` —

@@ -13,7 +13,7 @@ Protocol.
 
 ## Domain core (`bzh:domain-core`)
 
-**Rule.** Business rules live in a domain layer that depends on nothing outward — no FastAPI, SQLAlchemy, click, httpx,
+**Rule.** Business rules live in a domain layer that depends on nothing outward — no FastAPI, SQLAlchemy, click, httpx2,
 filesystem, or network — with frameworks, stores, and transports outside it, depending inward.
 
 **Why.** A domain core free of outward dependencies is unit-testable with no store or server, and survives a framework
@@ -21,7 +21,7 @@ swap untouched.
 
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
 app. `tests/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module, importing
-fastapi, starlette, sqlalchemy, click, httpx, os, shutil, subprocess, or tempfile. A harness binding package
+fastapi, starlette, sqlalchemy, click, httpx2, os, shutil, subprocess, or tempfile. A harness binding package
 (`runner/harness/claude_code/`, `runner/harness/opencode/`) is an adapter, not a concept package: it may bind a process
 or the filesystem, so it is exempt from the `os`, `shutil`, `subprocess`, and `tempfile` half of the check and still
 held to the framework five. The binding set is named explicitly, so a new binding fails the gate until it is named. Any
@@ -37,8 +37,8 @@ no row lists. The same layer walker fails a `hub/domain/` module importing `bliz
 
 **Do.** `blizzard/src/blizzard/hub/domain/` and the runner's concept packages (`runner/leases/`, `runner/lifecycle/`,
 `runner/tracing/`, …) import no web, ORM, or CLI package; `hub/api/`, `hub/store/`, `runner/api/`, and `runner/store/`
-depend on them, never the reverse. The hub-JWKS seam `IJwksCache` sits in `runner/auth/jwks_cache.py`; its httpx binding
-sits in `runner/auth/internal/http_jwks_cache.py`, built only in the app composition root. The runner's FastAPI
+depend on them, never the reverse. The hub-JWKS seam `IJwksCache` sits in `runner/auth/jwks_cache.py`; its httpx2
+binding sits in `runner/auth/internal/http_jwks_cache.py`, built only in the app composition root. The runner's FastAPI
 federation router lives at `runner/api/federation.py`, not under `runner/auth/`. A config value the hub domain reads is
 a domain-owned type the config edge builds (`hub/config.py` parses and renders; the domain holds the value). A domain
 service types a delivery collaborator by a domain Protocol, as `ApplyService` does with `IHubNodeExecutor`.
@@ -155,7 +155,7 @@ singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
 
 Two ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 
-- `cli-httpx-confined` fails any httpx import under the three CLI trees (`cli/`, `hub/cli/`, `runner/cli/`) other than
+- `cli-httpx-confined` fails any httpx2 import under the three CLI trees (`cli/`, `hub/cli/`, `runner/cli/`) other than
   `blizzard/src/blizzard/cli/collaborators.py`.
 - `cli-patch-not-seam` fails any test `setattr` whose first argument is a string naming a `blizzard.` path with a `cli`
   segment.
@@ -183,10 +183,10 @@ Every click command body under a `*/cli/` directory, and the `OperatorGroup` and
 short-lived root: it wires collaborators once, inline, at the top, without joining the hosted process graph. A root
 resolves what a test may swap from `ctx.find_object(<carrier>)` and defaults to the production one when the invoker
 handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test patches is not a
-seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one httpx
-import: every command builds its HTTP client through the carrier's `client_factory` and takes httpx's types (`Client`,
-`Response`, the error classes) from that module, never from httpx. The root groups resolve the carrier and pass it into
-`OperatorTrace` and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory.
+seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one
+httpx2 import: every command builds its HTTP client through the carrier's `client_factory` and takes httpx2's types
+(`Client`, `Response`, the error classes) from that module, never from httpx2. The root groups resolve the carrier and
+pass it into `OperatorTrace` and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory.
 `runner/cli/runtime.py`'s `init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the
 `runner` group so a worker verb never loads a daemon's stack; the carrier also holds the `host` verb's process and
 harness-bundle builders, which only `runtime.py` — a composition root — may import.
