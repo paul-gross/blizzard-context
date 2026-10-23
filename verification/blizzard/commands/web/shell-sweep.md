@@ -61,8 +61,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   beside one another in the center column and the rail's hub, host and open-asks panels stack in their own fixed column
   to the right, with nothing — a long runner name, a two-workspace runner's binding lines, a long-named environment —
   pushing the page sideways, with the chunk dock open or closed.
-- `glance-view.shell-sweep.spec.ts` covers the mobile glance board at 390px and 320px: its attention, motion, queue, and
-  completed-work sections remain ordered vertically, and the board has no horizontal overflow or page error.
+- `glance-view.shell-sweep.spec.ts` covers the mobile glance board at 390px and 320px: the day's spend sits below the
+  vitals strip and above its attention, motion, queue, and completed-work sections, which remain ordered vertically; a
+  row's work ref and short id share its head line at opposite ends, its long title clamps to two lines, and the board
+  has no horizontal overflow or page error.
 - `events-scroll.shell-sweep.spec.ts` checks that a long events feed scrolls within its bounded rows at desktop and
   phone widths.
 - `chunk-page-layout.shell-sweep.spec.ts` covers the hub chunk detail page, reached from the mobile board — the General
@@ -133,19 +135,17 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   1280px each runner's name line — light, name, pause glyphs and last contact — sits above its agents bars, one per
   binding with its name and cells on one line, inside the panel with no overflow, and a runner declaring no bindings
   draws none. A runner both locally and hub paused must render its pause glyph in `--amber` and its stop glyph in
-  `--red`, both on the name line, and every runner's light must sit in one fixed-width column.
+  `--red`, both on the name line, and every runner's light must sit in one fixed-width column. At 390px and 320px a long
+  runner name holds to one ellipsised line beside its whole seen tag, and, where the phone's Fleet tab offers the hub
+  brake, each runner's pause/resume toggle spans the runner at a finger-sized height.
+- `host-detail.shell-sweep.spec.ts` covers the host detail the phone's Fleet tab opens full-screen: at 390px and 320px
+  its `@container fleet-detail` breakpoint stacks the connection facts, keeps each environment line inside its section,
+  and sets each runner's facts above its held chunks, every held chunk a finger-sized link, with no horizontal overflow.
 - `fleet-page.shell-sweep.spec.ts` covers the desktop Fleet tab (`FleetView`): at 1280px the host list and the selected
   host's detail sit side by side, the title-bar host actions are on screen and hit-testable, and the detail pane has no
   horizontal overflow; at 1024px nothing overflows horizontally. A selected host-less runner's env slot bar and
   subscription pace bars must stay inside the detail at both widths, their aging and stale "refreshed … ago" labels
   resolving to distinct, non-body-text computed colours.
-- `runners-view.shell-sweep.spec.ts` covers the mobile Fleet screen at 390px and 320px: runner cards stack without
-  overlap, and long claim ids and subscription names remain inside both their card and the surrounding panel, including
-  the aging/stale colour and long-miss-reason claims of the shared subscription-pace group component. At 390px and
-  1280px a host card holding two runners — a long workspace id, binding lines with an unreported workspace, named
-  spenders, and an unrostered subscription — must stay inside the panel with its rows stacked, and the host-less heading
-  and its row must sit below the card. At 390px an online runner's light holds steady green, a paused one's steady
-  amber, an offline one's blinks red in the 1.2s step, and a never-connected one's is a hollow mark.
 - `session-recovery-view.shell-sweep.spec.ts` covers `SessionRecoveryView`, which the runner app renders in place of the
   whole panel when a federation bounce could not complete silently: at 390px and 320px its headline/detail block and
   retry control must render with no view-wide horizontal overflow; proven able to fail by adding `white-space: nowrap`
