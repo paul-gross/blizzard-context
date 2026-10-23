@@ -420,7 +420,9 @@ up; a new edge is a change to its dict, made only when an import needs it and on
 edge whose last import is removed leaves it.
 
 **Do.** `UNSET` lives in `blizzard/src/blizzard/hub/domain/kernel/unset.py`, so `config`, `garden`, and `work_items`
-take it without importing `operations`. The requeue and attachment repository seams live in
+take it without importing `operations`. The hub action catalogue is `graph`'s (`hub/domain/graph/actions.py`), since
+graph validation reads it, while the visit and the effects an action is handed sit in `actions`, a package above `chunk`
+and `graph` that only the delivery edge imports. The requeue and attachment repository seams live in
 `blizzard/src/blizzard/runner/leases/operator_requests.py`: the `lifecycle` claim and dormant steps read through
 `IReadRequeueRepository` and `IReadAttachmentRepository`, and the `operator` services import the write seams from there.
 `WorktreeGitError` sits beside `IWorktreeGit` in `runner/environments/worktree.py`, so
