@@ -19,9 +19,9 @@ landing. A worker that cannot finish just exits with its facts, and the platform
 
 - Delivery is a hub-executed node, not an agent's role
   ([../domain/artifacts/delivery.md](../domain/artifacts/delivery.md)). Every code-delivering lane lands through
-  `land-pr-ci` — its `deliver` node runs `land_pr_ci`, which opens a pull request for each repo with work to land; the
-  hub merges it with a merge commit only after a terminal-green check verdict. No lane parks a chunk on an open PR for a
-  human to merge.
+  `land-pr-ci` — its `deliver` node takes the `land` action, which opens a pull request for each repo with work to land;
+  the hub merges it with a merge commit only after a terminal-green check verdict. No lane parks a chunk on an open PR
+  for a human to merge.
 - A human enters only where invited or where failure parks the chunk — asks, gate decisions, takeover
   ([../domain/humans.md](../domain/humans.md)).
 

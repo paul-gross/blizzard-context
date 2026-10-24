@@ -30,9 +30,9 @@ content the step chooses.
 **Detect.** `run:` authored on a node whose `executor` is not `hub`; a hub node also declaring `prompt`, `checks`, or
 `judgement.prompt`; a hub node with no judgement at all; a hub node authoring no `failure` choice.
 
-**Do.** The `deliver` node in `src/blizzard/hub/graphs/basic-development-workflow/graph.yaml` is `executor: hub` with
-the single `run:` step `land-every-repo` (`command: python3 -m blizzard.hub.graphs.scripts.land_pr_ci`) and a judgement
-authoring only the `landed`/`conflict`/`failure`/`inherited-failure` choices its script can print.
+**Do.** A `deliver` node that is `executor: hub` with the single `run:` step `land-every-repo`
+(`command: python3 -m blizzard.hub.graphs.scripts.land_pr_ci`) and a judgement authoring only the
+`landed`/`conflict`/`failure`/`inherited-failure` choices its script can print.
 
 **Don't.** An `executor: hub` node carrying `prompt: Land every repo` beside its `run:` list — the mint-time validator
 refuses it, since no agent will ever read the prompt.
