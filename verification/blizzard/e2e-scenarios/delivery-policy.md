@@ -27,9 +27,9 @@ across the bounce, and scans the export for the same planted tokens; it skips wi
 
 ## test_delivery_pr_ci_e2e
 
-Delivery policy lives in YAML, not code: the module's graph differs from the default only in `deliver`'s `run:` script
-and poll cadence, names the same `land_pr_ci` script and choice names the shipped graph authors, and drives every route
-through the same generic `executor: hub` primitive. Its `fleet traces` subtest proves what the acceptance loop's does.
+Delivery policy lives in YAML, not code: the module's graph differs from the default only in `deliver`'s poll cadence
+and routing, names the same `land` action and choice names the shipped graph authors, and drives every route through the
+same generic `executor: hub` primitive. Its `fleet traces` subtest proves what the acceptance loop's does.
 
 - `test_pr_ci_bounces_a_dirty_conflict_back_to_build` — proves a real merge conflict routes the first recorded bounce,
   cause `conflict`, back to `build`, with nothing merged at the forge.

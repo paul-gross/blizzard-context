@@ -15,7 +15,7 @@ The module needs the sibling provisioned `blizzard-mock` worktree and skips with
 ## test_garden_routine_e2e
 
 The real packaged `garden-routine` YAML with only its prompts swapped for scripts — name, nodes, edges, session pools,
-and the `garden_deliver` command all reach the mint verbatim — run as a real routine (`POST /routines/{id}/run`) against
+and the `garden-deliver` action all reach the mint verbatim — run as a real routine (`POST /routines/{id}/run`) against
 a live hub, one chunk per authored path.
 
 - `test_garden_routine_runs_end_to_end_on_all_six_paths` — seven runs of one routine: `found` mints the survey's
@@ -39,8 +39,8 @@ a live hub, one chunk per authored path.
 ## test_ideation_e2e
 
 The real packaged `ideation` YAML with only its prompts swapped for scripts — name, nodes, edges, session pools, and the
-delivery command all reach the mint verbatim — run as a real routine (`POST /routines/{id}/run`) against a live hub
-minted with a gardening-axes registry declaring the routine's ideation axis, one chunk per authored path.
+`garden-deliver` action all reach the mint verbatim — run as a real routine (`POST /routines/{id}/run`) against a live
+hub minted with a gardening-axes registry declaring the routine's ideation axis, one chunk per authored path.
 
 - `test_ideation_runs_end_to_end_on_all_authored_paths` — repeated runs of one routine: the declared-axis path carries
   survey → reconcile → propose → deliver to a docket spanning all three graph-owned classes (`direction`, `tweak`,
@@ -53,9 +53,9 @@ minted with a gardening-axes registry declaring the routine's ideation axis, one
   empty-survey path delivers the skeleton delta with no candidates at all; propose's own decline path delivers the
   skeleton with no proposals attached; the invalid path has delivery reject a wrongly-scoped delta and bounce to propose
   rather than reconcile — the opposite of `garden-routine`'s `invalid`, which returns to reconcile — where the corrected
-  delta delivers only if the `invalid` edge's `prompt_addendum` actually threaded into re-entry; the failure path has
-  the deliver command exit non-zero once behind a crash-once shim the scripted mint wraps it in, routing the `failure`
-  edge to propose, whose addendum republishes the docket unchanged and whose retry records it exactly once; a second
+  delta delivers only if the `invalid` edge's `prompt_addendum` actually threaded into re-entry; the failure path runs
+  on a version whose deliver takes a `test.sequence` answering `failure` once, then `recorded`, routing the `failure`
+  edge to propose, whose addendum republishes the docket unchanged before the retry answers `recorded`; a second
   consecutive `invalid` at deliver escalates via `blizzard runner ask` rather than retrying a third time, and the
   human's answer resolves the delivery; and the undeclared-axis path has survey itself park the chunk on
   `waiting_on_human` with a `blizzard runner ask` question naming the missing axis — answered that the axis stays
