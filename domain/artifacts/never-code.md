@@ -23,8 +23,11 @@ only under the transcript-read permission.
 
 - A commit pointer (`git_commit`) is refused unless it names a repository, a branch free of `:`, and a full lowercase
   40- or 64-hex commit hash; the forge is optional.
-- A finding — the garden finding delta and the review finding delta — is refused when malformed, foreign-scoped,
-  duplicated, or carrying an empty `class`, `locus`, or `summary`; `class` is indexed and never interpreted.
+- A finding — the garden finding delta and the review finding delta — is refused when malformed, duplicated, or carrying
+  an empty `class`, `locus`, or `summary`; the garden delta is also refused when foreign-scoped — naming a finding
+  outside the run's own scope — where the review delta mints whatever scopes it names
+  ([findings-and-proposals](../findings-and-proposals.md) §A finding can also be raised by a delivery lane's review).
+  `class` is indexed and never interpreted.
 
 Every other asset, a worker node's included, is stored as submitted. A graph's `artifacts:` declaration is authored
 definition text, the same class as an inlined `prompt:`, and always the asset kind. Hub-command output is recorded as

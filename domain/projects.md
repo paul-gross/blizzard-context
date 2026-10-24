@@ -77,13 +77,12 @@ of projects may link the same record, and a link never makes the record the proj
 
 A chunk's project is set once, when its items are ingested, and never changes.
 
-- **Grouping across projects is refused.** Folding a chunk into one of another project is refused rather than resolved
-  by a guess.
+- **Grouping never crosses projects.** The refusal is [work/chunk.md](./work/chunk.md) §Grouping's.
 - **An item sits in one project at a time.** An item is held by at most one live chunk, so it belongs to at most one
   project at a time; once that chunk is finished, the item may be ingested again into any project.
 - **Dependencies cross projects.** A chunk may wait on a chunk of another project, as it waits on any blocker.
-- **Findings follow their chunk.** A review finding takes the reviewed chunk's project, and a garden proposal cites only
-  findings of its own project.
+- **Findings follow their chunk.** Which project a finding and a proposal take, and what a proposal may cite, is
+  [findings-and-proposals.md](./findings-and-proposals.md)'s.
 
 ### Which project an ingest goes into
 

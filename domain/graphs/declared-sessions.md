@@ -64,12 +64,12 @@ bounds an ordinary lineage — declaring both chooses that deliberately, and nei
 
 ## Rotation bounds
 
-Rotation bounds make a lineage finite: a session continues only while every measurable declared bound is under
-threshold; past one, the next member starts a new session in the same pool. That new session is a fresh mint, its owner
-sourced as [Harness set](#harness-set) and [Model preference](#model-preference) state, never carried from the session
-it replaces. Bounds cover context size, transcript size, and harness invocations — the last counting spawns, resumes,
-and judgements, so a node-step spends two or three. An unmeasurable bound is not a breach; a missing measurement leaves
-the session standing.
+Rotation bounds make a lineage finite: a session continues while every measurable declared bound is at or under its
+threshold; strictly over one, the next member starts a new session in the same pool. That new session is a fresh mint,
+its owner sourced as [Harness set](#harness-set) and [Model preference](#model-preference) state, never carried from the
+session it replaces. Bounds cover context size, transcript size, and harness invocations — the last counting spawns,
+resumes, and judgements, so a node-step spends two or three. An unmeasurable bound is not a breach; a missing
+measurement leaves the session standing.
 
 ## Harness set
 
@@ -79,9 +79,11 @@ default harness set ([../work/chunk.md](../work/chunk.md) §Model, effort, and h
 inherited set exactly as it walks an authored one; an empty inherited set is the one case that bypasses selection
 ([Model preference](#model-preference)). Resolution is harness-primary, model-secondary: a fresh mint walks the set in
 declared order, and only for whichever harness can serve does its own model preference resolve, never the reverse — a
-later harness's earlier-preferred model still loses to an earlier harness's later one. A member the fleet doesn't hold
-is still valid authored policy: which harnesses a runner actually binds is a runner-time fact, never a mint-validation
-concern, so authoring an id no runner yet binds mints cleanly. A single-harness set follows
-[Model preference](#model-preference), including its authored-tier resolution requirement; a multi-harness set requires
-strict per-harness resolution for any nonempty model preference list — a harness resolving none of it is skipped rather
-than falling back within it.
+later harness's earlier-preferred model still loses to an earlier harness's later one. A within-node retry is the one
+fresh mint that walks nothing: it stays on the failed lease's harness, and when that harness has since left the node's
+acceptable set the retry escalates rather than switching owners ([../humans/escalation.md](../humans/escalation.md)
+§What raises an escalation). A member the fleet doesn't hold is still valid authored policy: which harnesses a runner
+actually binds is a runner-time fact, never a mint-validation concern, so authoring an id no runner yet binds mints
+cleanly. A single-harness set follows [Model preference](#model-preference), including its authored-tier resolution
+requirement; a multi-harness set requires strict per-harness resolution for any nonempty model preference list — a
+harness resolving none of it is skipped rather than falling back within it.

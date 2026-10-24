@@ -61,21 +61,23 @@ One state is recorded by no hand at the moment it lands, and it is not an exit: 
 proposal minted closes that proposal's still-live findings to **delivered**, carrying the accepter's own authority —
 [Closing a proposal](#closing-a-proposal-pass-or-accept) owns the mechanics. `delivered` is neither `live` nor one of
 the five exits below; nobody has confirmed the delivery's claim yet. It stays visible to the routine that owns the
-finding, and only that routine's own next run clears it — a `gone` op against a `delivered` finding is the one case
-where a run's own word does settle it for good, completing the exit to **resolved** that the delivery only claimed; an
-`observed` op against one instead reads as the delivery having been wrong or premature, and restores it to `live`,
-exactly like reviving a merely-`gone` finding. That rule governs settling the delivery's claim, not a person: a person's
-exit applies to a `delivered` finding as to a live one.
+finding — or, for a review-sourced finding, which no routine owns, to every routine sweeping its scope (§A finding can
+also be raised by a delivery lane's review) — and only one of those routines' next run clears it: a `gone` op against a
+`delivered` finding is the one case where a run's own word does settle it for good, completing the exit to **resolved**
+that the delivery only claimed; an `observed` op against one instead reads as the delivery having been wrong or
+premature, and restores it to `live`, exactly like reviving a merely-`gone` finding. That rule governs settling the
+delivery's claim, not a person: a person's exit applies to a `delivered` finding as to a live one.
 
 A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
 **not-a-finding**, **superseded** — and **reopened** undoes any of them, or a `gone` flag, or a delivery, the same
 append-only fact the way `gone` and `observed` already are: never a stored column, always a newest-fact-wins read. A
 routine's trend counts a `reopened` only when it undoes an exit; a reopen from `gone` or `delivered` undoes none, so it
 is not trend inflow. **superseded** is the one verb that names another finding: the one absorbing it, which must itself
-be live and is never the finding being exited, though it may belong to any routine or scope. An exit verb on a finding
-already exited is refused — reopen it first — and `reopened` on a live finding is refused, as is one request naming the
-same finding twice. Two people acting on one finding at once are judged in turn: the second is refused as if it had read
-the first one's verb, so a finding is never exited twice. The five split into two kinds of exit. **Outflow** — resolved,
+be live and is never the finding being exited, though it may belong to any routine or scope. Every exit verb, and
+`reopened`, carries a person's note, and a blank or missing one is refused. An exit verb on a finding already exited is
+refused — reopen it first — and `reopened` on a live finding is refused, as is one request naming the same finding
+twice. Two people acting on one finding at once are judged in turn: the second is refused as if it had read the first
+one's verb, so a finding is never exited twice. The five split into two kinds of exit. **Outflow** — resolved,
 gone-confirmed — is the ground itself changing: work landed, or a person confirmed by hand that the finding no longer
 reproduces, the same kind of event a `gone` fact already reports, just said with a person's authority instead of a
 run's. **Withdrawn** — wont-fix, not-a-finding, superseded — is a judgment call about the finding itself, never the
@@ -97,7 +99,8 @@ refuses the whole delivery, since a finding nobody can read is no observation at
 A garden proposal may name no findings at all: the hub enforces no minimum. Whether a graph's own routine requires one
 is that graph's own decision to make, never the hub's — the hub only stores, groups, and counts whatever a proposal
 names. Grouping findings under one response is still the proposal's whole job when it names any; a finding itself never
-groups.
+groups. A list names each finding once: naming one twice is refused wherever a proposal takes its findings — a run's
+delivery, which it refuses whole, or an operator's `create`, `attach`, or `detach`.
 
 ## A proposal's origin: a routine's run, or an operator
 
@@ -112,9 +115,10 @@ A routine's run is shown every finding it may cite: its routine's non-exited fin
 review-sourced ones on its own scope. Its proposals may cite any of them — a run can only speak for what it swept, so
 another routine's finding is out of reach — while its finding set's `observed` and `gone` ops stay within its own scope.
 An operator's `create` and `attach` follow the same rule where findings are concerned: any non-exited finding,
-`delivered` and `gone` included, from any routine or scope of the proposal's project; only an exited finding, or one of
-another project, is refused, naming that finding. Both origins apply the same test of standing — not exited — and differ
-only in reach: a run's is bounded by its routine, an operator's is not.
+`delivered` and `gone` included, from any routine or scope of the proposal's project; an exited finding, or one of
+another project, is refused, naming that finding, and so is an attach naming a finding the proposal already links (§A
+proposal may be edited while it is open). Both origins apply the same test of standing — not exited — and differ only in
+reach: a run's is bounded by its routine, an operator's is not.
 
 ## A proposal may be edited while it is open
 
@@ -123,8 +127,9 @@ origin — a routine-run proposal is exactly as editable as an operator-authored
 passed or accepted, no further edit, attach, or detach reaches it. This is a plain in-place replacement, not an
 append-only history — the newest edit is the only one that survives, never a superseded trail of prior versions. An edit
 replaces only the fields it names: a field it leaves out keeps its value, so two edits naming different fields both
-survive. An attach or detach naming no finding is refused. A proposal's title, class, and body are never blank,
-whichever origin wrote them — a routine run's delivery included.
+survive. An attach or detach naming no finding is refused, as is an attach naming a finding the proposal already links,
+or a detach naming one it does not link — an exited finding detaches, since detaching asks nothing of its standing. A
+proposal's title, class, and body are never blank, whichever origin wrote them — a routine run's delivery included.
 
 ## Closing a proposal: pass or accept
 
@@ -146,10 +151,11 @@ still live are closed to **delivered** in that same act — carrying the accepte
 answered, but not yet an exit — while a finding a run has since reported gone, or a person has already exited, is left
 exactly as it stands. The closure lands once per proposal: a retry of the delivery never redoes it. Delivering an item
 already withdrawn leaves its closure withdrawn, yet still reports the close and still closes the proposal's live
-findings to **delivered**. What settles a `delivered` finding for good is the owning routine's own next run, not the
-delivery itself (§Liveness is derived, and reversible) — a later `reopened` on one that has already settled to
-`resolved` is a person's word that only a person can answer again. Until that delivery, an accepted proposal's findings
-stay live unless a run reports them gone or a person exits them.
+findings to **delivered**. What settles a `delivered` finding for good is a run, not the delivery itself — the owning
+routine's next run, or for a review-sourced finding the next run of any routine sweeping its scope (§Liveness is
+derived, and reversible); a later `reopened` on one that has already settled to `resolved` is a person's word that only
+a person can answer again. Until that delivery, an accepted proposal's findings stay live unless a run reports them gone
+or a person exits them.
 
 ## What the hub does not do
 

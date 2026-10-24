@@ -24,7 +24,8 @@ A worker node's asset is normally submitted by explicit worker declaration per t
 ([declarations](../../standards/worker-nodes/declarations.md)). A declared asset's content is never empty. Declaring
 stays open after the worker exits — while its exit is judged — and the latest content under a name wins until the
 node-step's outcome is settled. A declaration, asset or commit pointer, arriving once the outcome is settled is refused:
-nothing would submit it.
+nothing would submit it. The one door past that point is a takeover's closed reference lease, where a commit pointer is
+accepted but rides no completion ([takeover](../humans/takeover.md) §Entering).
 
 ## Scopes
 

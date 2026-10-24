@@ -8,12 +8,12 @@ Reach for the real wire path — a work source record, a minted forge fixture, a
 when the ingest path itself, rather than the data it produces, is what is under test. The sequence that path rides is
 owned by `blizzard:manual-hub` in [`../verification/blizzard.md`](../verification/blizzard.md). Create the source with
 `blizzard hub source create`; the hub reads its records on every call, so a created or edited source takes effect on the
-next ingest with no restart. A source or repository created this way is the tenant's and linked to no project: a project
-reaches it only through a link, which a configuration document's `projects` entry writes (`bzh:config-apply`,
-[`../architecture/system-shape/configuration.md`](../architecture/system-shape/configuration.md)); a legacy import links
-what it creates to the tenant's only project. So link the created source to the project the ingest goes into —
-`blizzard hub project link`, or the document's `projects` entry — before the ingest: an ingest refuses a source its
-project does not link, naming the source, and never links one by itself.
+next ingest with no restart. A source or repository created this way is the tenant's and linked to no project
+([`../domain/projects.md`](../domain/projects.md) §What a project owns, and what it links), and an ingest refuses a
+source its project does not link rather than linking it ([`../domain/projects.md`](../domain/projects.md) §Which project
+an ingest goes into). So link the created source to the project the ingest goes into before the ingest —
+`blizzard hub project link`, or a configuration document's `projects` entry (`bzh:config-apply`,
+[`../architecture/system-shape/configuration.md`](../architecture/system-shape/configuration.md)).
 
 ## Running it
 

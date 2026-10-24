@@ -8,9 +8,8 @@ letters, digits, and hyphens, at least one character and nothing else; whatever 
 
 Every scope and routine belongs to one project ([projects.md](./projects.md)), fixed at its mint. A scope's slug and a
 routine's name are unique within its project, so two projects may each hold a scope of one slug or a routine of one
-name, and they are different records. Finding a scope or routine by its name, or minting one, acts in the project the
-call names, or the tenant's only project when it names none ([projects.md](./projects.md) §A call that needs a project);
-a listing that names no project reads the whole tenant.
+name, and they are different records. Finding a scope or routine by its name, minting one, or listing them is a call
+that needs a project, resolved as [projects.md](./projects.md) §A call that needs a project states.
 
 ## Mint-on-name
 
@@ -36,15 +35,20 @@ default scope, or its run preferences, but never what it is named.
 ## The retired brake
 
 A scope and a routine each carry a reversible, append-only retirement brake: retiring or re-enabling records a fact
-without editing their stored fields. Repeating either act is legal and writes nothing. Graph retirement has its own fact
-behavior ([graphs/identity.md](./graphs/identity.md)).
+without editing their stored fields. Repeating either act is legal and writes nothing. A configuration document that
+declares a retired scope or routine re-enables it as part of the apply, so declaring a record is a third way to lift the
+brake beside the explicit act (`bzh:config-apply`,
+[../architecture/system-shape/configuration.md](../architecture/system-shape/configuration.md)). Graph retirement has
+its own fact behavior ([graphs/identity.md](./graphs/identity.md)).
 
 What retiring a scope does is withdraw it from selection — a retired scope is offered to no new run, and a routine's
 record of when it last swept each scope covers a retired one only where that routine has already swept it — while
 nothing recorded under it moves: its findings keep whatever state they had, and stay queryable, and its membership in a
 routine's declared set stands until an explicit unlink. Naming a retired scope again, by minting it or as a routine's
 default, is not refused, and neither is editing its description or linking it into a routine's declared set; running
-against it is ([What refuses](#what-refuses)).
+against it is ([What refuses](#what-refuses)). Unlinking a scope from a routine's declared set cuts deeper than retiring
+it: the scope drops out of that routine's last-swept record and out of its measurement series, even where the routine
+already swept it.
 
 Retiring a routine withdraws it from running only: it keeps every run, finding, proposal, and closure recorded under it,
 each staying exactly as queryable as before, and it stays editable and fully readable — naming it, viewing it, changing

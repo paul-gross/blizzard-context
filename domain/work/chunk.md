@@ -8,14 +8,10 @@ chunk stores no status: the current node derives from the newest movement fact �
 a restart's target — and status derives from recorded facts (`bzh:facts-not-status`,
 [../../architecture/system-shape/store-facts.md](../../architecture/system-shape/store-facts.md)).
 
-A chunk belongs to exactly one project of its tenant, set when it is minted and never changed; what the chunk
-accumulates belongs to that project through it ([../projects.md](../projects.md) §A chunk belongs to exactly one
-project). The ingest sets it: an ingest that names a project goes into it, and one that names none takes the project its
-items agree on — the one project each configured source among them is linked to, or, for hub items alone, the project
-they were created in — and is refused, naming the candidates, when they do not agree. Every configured source the ingest
-draws on must be linked to that project. A hub item is created in a project and chunked into it
-([../projects.md](../projects.md) §Which project an ingest goes into). A chunk may wait on a chunk of another project,
-as it waits on any prerequisite.
+A chunk belongs to exactly one project of its tenant, set by the ingest that mints it and never changed; what the chunk
+accumulates belongs to that project through it, and [../projects.md](../projects.md) §A chunk belongs to exactly one
+project owns what else about a chunk may cross projects. Which project an ingest goes into, and when it is refused
+instead, is owned by [../projects.md](../projects.md) §Which project an ingest goes into.
 
 ## Work refs
 
