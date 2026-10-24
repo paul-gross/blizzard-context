@@ -23,7 +23,7 @@ whole node re-runs — skipping any step whose `produces` marker already exists
 since the last attempt (default 30s, overridable per node). Pending itself spends no retry and no bounce budget; only a
 poll timeout or an incomplete-delivery crossing does.
 
-Exceeding `poll_timeout` (default 30 minutes, measured from the first recorded pending attempt) stops polling and kicks
+Exceeding `poll_timeout` (default three hours, measured from the first recorded pending attempt) stops polling and kicks
 the chunk back: a bounce fact is recorded and the chunk re-routes through the node's `failure` edge. A chunk is also
 kicked back when an authored edge routes to a non-terminal node while any repo among the node's own commits has no
 `merged/<repo>` marker artifact recorded yet — the convention a landing script's `record-marker` calls are expected to
