@@ -176,22 +176,6 @@ Its other writes are exempt:
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps and usage past its
 own cursors — the rows it has not yet written — never a corpus it would rescan to find nothing changed.
 
-## The marker-write capability token
-
-`MarkerAuthority` (`blizzard/src/blizzard/hub/delivery/marker_auth.py`) mints an in-memory, process-scoped token per
-`(chunk_id, node_id, epoch)` immediately before that hub-node step's `run:` commands execute and revokes it in a
-`finally` once the step's visit is done with it — never persisted, yet gating a marker write that is itself durable.
-
-A crash mid-step orphans the land script the step spawned, leaving it holding a token minted by a process that no longer
-exists, so its later marker-write POSTs fail against the restarted process's fresh, empty authority. That rejection is
-safe rather than a gap: the executor's at-least-once-per-step contract (`bzh:hub-node-step-idempotence`,
-[`../../standards/hub-nodes/step-idempotence.md`](../../standards/hub-nodes/step-idempotence.md)) re-runs that exact
-step from its own first command on the next hub-advance, minting a fresh token and re-recording the marker idempotently,
-and no crash-sweep assertion depends on an orphan's rejected write landing.
-
-The token needs neither mechanism because it is in-memory, credential-shaped state with no durable form and no
-partial-write window of its own.
-
 ## The boot release of live hub-execution slots
 
 `HubNodeExecutor.release_orphaned_slots` runs from the hub daemon's startup, once in each open tenant before the hub
@@ -326,7 +310,7 @@ marker artifact row, all on the same connection — five candidate tables and th
 Unlike a marker an action records after its effect lands, the marker here is checked for existence and, if absent,
 inserted as this same transaction's last statement. That is what makes a replay safe on either side of the commit: a
 crash before commit loses the whole write, findings and marker alike, with nothing yet durable for a re-run to collide
-with; a crash after commit leaves the marker already present, so the next `garden_deliver` POST
+with; a crash after commit leaves the marker already present, so the next `garden-deliver` pass
 (`bzh:hub-node-step-idempotence`,
 [`../../standards/hub-nodes/step-idempotence.md`](../../standards/hub-nodes/step-idempotence.md)) finds it on its own
 idempotence check and returns `recorded` having minted nothing a second time.
@@ -349,7 +333,7 @@ delivery entry above: it writes a review round's whole plan — the new `finding
 `store.write("deliver")` connection. The idempotence check (`already_delivered`, keyed on `chunk_id` alone, not
 `(chunk_id, node_id, epoch)`, since a chunk owes at most one review-findings delivery) reads for the marker before
 writing, exactly as garden delivery's does, giving the same before/after-commit replay safety: nothing durable on a
-pre-commit crash, and the next `review_deliver.py` POST finding its own marker and minting nothing further on one after.
+pre-commit crash, and the next `record-findings` pass finding its own marker and minting nothing further on one after.
 
 This entry deviates from the garden precedent on one point: a scope a `deferred` entry names that does not yet exist is
 minted inside this same transaction (`domain/routines-and-scopes.md`'s own mint-on-name path for review delivery), where

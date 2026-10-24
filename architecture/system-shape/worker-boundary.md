@@ -46,9 +46,9 @@ shell — and a child holding inherited stdin can block on the daemon's terminal
 per-call-site flag to remember.
 
 **Scope.** Governs every `subprocess` and `pty` launch under `src/blizzard/runner/**` and `src/blizzard/foundation/**`;
-the hub's one sanctioned launch site is `hub/delivery/internal/hub_command_runner.py`. Takeover's foreground child is
-the one exception to the group and the timeout: it still goes through the seam's foreground entry, but runs with no new
-group and no timeout, because an interactive child must keep the terminal's foreground group.
+the hub has no sanctioned launch site, and `hub/**` launches no process at all. Takeover's foreground child is the one
+exception to the group and the timeout: it still goes through the seam's foreground entry, but runs with no new group
+and no timeout, because an interactive child must keep the terminal's foreground group.
 
 **Detect.** `bzh:runner-child-launch` is tooled by `blizzard:structural-gate`'s ast-grep scan
 (`contracts/ast-grep/rules/runner-child-launch.yml`), which refuses `import subprocess`, `from subprocess import …`, and

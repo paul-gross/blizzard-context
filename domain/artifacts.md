@@ -18,7 +18,7 @@ invariant, it does so in the slot skeleton owned by `winter-canon:/rule-shape.md
 ## See also
 
 - [./work.md](./work.md) — the transition an artifact commits with, and the `done` status delivery derives.
-- [../standards/hub-nodes.md](../standards/hub-nodes.md) — the technical authoring contract a hub command node like
-  `deliver` is held to.
+- [../standards/hub-nodes.md](../standards/hub-nodes.md) — the technical authoring contract a hub node like `deliver` is
+  held to.
 - [../standards/worker-nodes.md](../standards/worker-nodes.md) — the technical authoring contract a worker node's
   declared asset is held to.
