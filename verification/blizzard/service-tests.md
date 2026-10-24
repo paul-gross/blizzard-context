@@ -106,4 +106,19 @@ project discovery in `tests/playwright.config.ts` provides the profile boundary,
 
 **Don't.** Toggle a shared hub's feature flag before an assertion and toggle it back afterward.
 
+## Register what a fleet call needs (`bzh:service-fleet-registration`)
+
+**Rule.** `fleet(name)` mints a runner token and nothing more. A case whose route needs a registered runner, such as a
+claim, makes its own `POST /api/fleet/runners` call first and names its epoch explicitly.
+
+**Why.** The token alone authenticates the runner's calls; the hub grants a claim only to a registered one, and a
+fixture that registered it would hide the step the case is about.
+
+**Detect.** Review a fleet claim or completion call whose spec never registers the runner; the hub refuses it at run
+time.
+
+**Do.** Register the runner with its capabilities, then claim, then complete at the epoch the claim reserved.
+
+**Don't.** Assume `fleet()` registered the runner, or leave the epoch to a default.
+
 Grow this rulebook when a port settles a practice a capable service-test author would not discover independently.
