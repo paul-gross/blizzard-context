@@ -525,6 +525,22 @@ Standing in for a tier: the revisions' migration tests
 `bzh:sql-portable` holds each statement to. The hand run is not repeatable from a durable script, since the matrix
 carries the method and no driver. The gap closes as the tenancy one above does.
 
+## The hub action revisions under Postgres
+
+Every tier runs the two hub action revisions on SQLite only, where `20261023_0901_hub_actions` adds `graph_nodes.action`
+and `graph_nodes.action_args` and `20261024_0900_hub_legacy_run` adds `graph_nodes.legacy_run` and carries each stored
+hub row with no action onto one.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, the chain
+  reached head, returned to base, and reached head again, with one translatable and one untranslatable hub row seeded at
+  `20261023_0901_hub_actions`: the first came out carrying its script's action, the second keeping its `run:` in
+  `legacy_run`.
+- **What no tier repeats.** No CI tier runs that pass, so a later change to either revision is unverified on Postgres
+  until someone runs it again, and neither revision's backfill has run there over more than those two rows.
+
+Standing in for a tier: the second revision's colocated migration test and `blizzard:store-contract`, both on SQLite,
+and the portable SQL `bzh:sql-portable` holds each statement to.
+
 ## What the project lens and the project columns do not cover
 
 Two project boundaries are drawn by no tier because the system does not draw them:

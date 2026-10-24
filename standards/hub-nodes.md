@@ -10,7 +10,7 @@ Parent: [./index.md](./index.md).
 
 | Spoke                                                  | When to read                                                                            |
 | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [run-steps.md](./hub-nodes/run-steps.md)               | The node declares its work as `run:` steps                                              |
+| [action-shape.md](./hub-nodes/action-shape.md)         | The node declares its work as one catalogued `action:`                                  |
 | [env-contract.md](./hub-nodes/env-contract.md)         | A step's command needs the chunk's identity, prior work, or the forge credential        |
 | [outcome-protocol.md](./hub-nodes/outcome-protocol.md) | A step must select a routed choice, poll, or bounce the chunk                           |
 | [step-idempotence.md](./hub-nodes/step-idempotence.md) | A step's command must be safe to re-run after a crash                                   |

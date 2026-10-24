@@ -323,23 +323,23 @@ run's whole delta in one `store.write("deliver")` transaction: the run's new `fi
 `finding_sets`, `garden_proposals`, and `garden_proposal_findings` rows, plus the delivery's own `garden-delivered`
 marker artifact row, all on the same connection — five candidate tables and the marker land together or not at all.
 
-Unlike most of this register's writes, the marker here is not the executor's own after-the-fact `produces:` bookkeeping
-— it is checked for existence and, if absent, inserted as this same transaction's last statement. That is what makes a
-replay safe on either side of the commit: a crash before commit loses the whole write, findings and marker alike, with
-nothing yet durable for a re-run to collide with; a crash after commit leaves the marker already present, so the next
-`garden_deliver.py` POST (`bzh:hub-node-step-idempotence`,
+Unlike a marker an action records after its effect lands, the marker here is checked for existence and, if absent,
+inserted as this same transaction's last statement. That is what makes a replay safe on either side of the commit: a
+crash before commit loses the whole write, findings and marker alike, with nothing yet durable for a re-run to collide
+with; a crash after commit leaves the marker already present, so the next `garden_deliver` POST
+(`bzh:hub-node-step-idempotence`,
 [`../../standards/hub-nodes/step-idempotence.md`](../../standards/hub-nodes/step-idempotence.md)) finds it on its own
 idempotence check and returns `recorded` having minted nothing a second time.
 
-The window this leaves is between `deliver`'s own commit and the hub-node executor's separate step-completion
-bookkeeping — already `hubnode.after-step.before-marker` in `bzh:crash-point-registry`, and already covered: the next
-hub-advance re-runs the step from its own first command, and the in-transaction marker's own idempotence is what absorbs
-that re-run, so this write opens no window `hubnode.after-step.before-marker` doesn't already name.
+The window this leaves is between `deliver`'s own commit and the action's resuming — already
+`action.after-write.before-resume` in `bzh:crash-point-registry`, and already covered: the next hub-advance re-runs the
+pass, and the in-transaction marker's own idempotence is what absorbs that re-run, so this write opens no window
+`action.after-write.before-resume` doesn't already name.
 
 The write owes the checker nothing because it is a single-transaction, multi-table insert, not a derived cross-fact
-invariant to recompute — and, unlike most of this register's writes, whose idempotence marker rides the executor's own
-after-the-fact bookkeeping, this one's marker is folded into its own transaction, which is what gives its replay
-idempotence in the first place.
+invariant to recompute — and, unlike most of this register's writes, whose idempotence marker an action records after
+its effect lands, this one's marker is folded into its own transaction, which is what gives its replay idempotence in
+the first place.
 
 ## Review findings delivery, marker folded into its own transaction
 
