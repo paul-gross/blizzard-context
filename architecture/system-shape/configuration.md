@@ -194,10 +194,6 @@ is used, and lives only inside the object built from it. A value is never blank:
 **Why.** Every surface that can return or record a value is a place it leaks from and a copy that survives its
 replacement. A value that nothing can read back needs no read permission to guard and leaves nothing behind to scrub.
 
-**Exception.** The forge token placed in a `run:` step's environment, which `bzh:hub-node-env-contract`
-([../../standards/hub-nodes/env-contract.md](../../standards/hub-nodes/env-contract.md)) owns — the one place a value
-leaves the hub process, and no licence to log or return it there.
-
 **Scope.** A secret belongs to one tenant, like every configured record, and its name is unique within that tenant
 (`bzh:tenant-scoped-uniqueness`). The hub's one secret key seals every tenant's values, each against its own
 `(name, revision)` (`blizzard/src/blizzard/hub/secrets/internal/aes_gcm.py`); the tenant boundary on a value is the

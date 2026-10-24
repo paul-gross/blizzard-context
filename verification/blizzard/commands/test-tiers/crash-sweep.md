@@ -33,7 +33,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `resume.`
 - `abandon.`
 - `pause.`
-- `hubnode.` — the generic hub command node's pending-poll window.
+- `hubnode.` — a hub node's pending-poll window only; it names no step point.
 - `action.` — a hub action pass's effect and resume windows.
 - `migrate.`
 - `attach.`

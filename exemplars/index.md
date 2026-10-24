@@ -32,7 +32,7 @@ Under `blizzard/exemplars/python/exemplar/`.
 | `hub/api/permit_params.py`                                 | Resolving a path id to its loaded object, or a `404`, before a route calls the domain                                                                                                                                |
 | `wire/permit.py`                                           | Adding a wire model — the `*Request` / `*View` / `*Response` taxonomy, envelopes, field comments, instants, `bzh:wire-sent-is-required`, and a response vocabulary field typed open (`bzh:open-response-vocabulary`) |
 | `hub/composition.py`                                       | Wiring a new store and service into a tenant's services                                                                                                                                                              |
-| `hub/graphs/scripts/land_clean.py`                         | Writing an `executor: hub` node's `run:` step script                                                                                                                                                                 |
+| `hub/delivery/actions/land_clean.py`                       | Writing a hub action — an `executor: hub` node's catalogued `action:`                                                                                                                                                |
 | `hub/graphs/basic-development-workflow/prompts/`           | Writing a worker node's prompt, its judgement, or an edge's addendum                                                                                                                                                 |
 
 ## Runner

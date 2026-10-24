@@ -77,10 +77,9 @@ adapter imports a sibling, or has grown a second module of its own while still f
 
 **Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
 basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while
-tests bind the blizzard-mock fleet. The hub reaches its external systems through `IWorkSource` and its capability
-family, `IOAuthProvider`, and `IHubCommandRunner`/`IHubWorkdir`. `blizzard/src/blizzard/runner/harness/wiring.py` is the
-one module naming both harness adapters; the harness core reaches them only through `IHarnessDeclaration` and
-`HarnessSection`.
+tests bind the blizzard-mock fleet. The hub reaches its external systems through `IWorkSource` and its capability family
+and `IOAuthProvider`. `blizzard/src/blizzard/runner/harness/wiring.py` is the one module naming both harness adapters;
+the harness core reaches them only through `IHarnessDeclaration` and `HarnessSection`.
 
 **Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
 mock harness. Nor a harness-core module importing an adapter's constant — a denied-tool list, a section kind — so the

@@ -18,6 +18,14 @@ their kind); from `blizzard.foundation`, only `roles`, `escalation_causes`, `fin
 action reaches, directly or through another, imports nothing that reaches a process or the network, and touches no part
 of `os` but `os.urandom`. Each `Visit` is immutable all the way down, and each action is constructed with no arguments.
 
+A delivery marker a pass records takes the one `content` shape its name fixes: a PR reference,
+`delivery-pr/<repo>/<number>` or the bare `delivery-pr/<repo>`, carries the JSON object
+`{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }` whose `repo`, and `number` where the name
+carries one, match the name; `merged/<repo>` carries the landed revision, and blank content records no landing;
+`awaiting-external-merge`'s content is never read. The chunk-artifacts store's delivery read, which feeds the hub's
+projection of these markers, skips a PR reference of any other shape without error. What each marker means is
+[delivery](../../domain/artifacts/delivery.md)'s.
+
 **Why.** A pass runs on a thread shared by every tenant's passes, beside the process environment that holds the key
 sealing every tenant's secrets. An action that could read the environment, open a process or a socket, write the store,
 or take a collaborator through its constructor could leak a secret or decide an effect the executor never sees made
@@ -28,10 +36,11 @@ happens, and keeps the action testable from a fixture visit alone.
 an HTTP client, or a `blizzard.foundation` module not named above; an attribute of `asyncio` that starts a process or
 opens a connection; an allowlisted module that reaches a process or the network, or any of `os` but `os.urandom`, behind
 it; a `Visit` holding a `list`, `dict`, `set`, `bytearray`, a mapping that is not a `MappingProxyType`, or a dataclass
-that is not frozen; an action whose constructor takes an argument. `blizzard/tests/test_layering.py` fails the unit tier
-on each import and the transitive reach, and `blizzard/tests/test_hub_actions.py` on the visit's runtime values and the
-constructions; planted cases in both prove each check fires. The allowlist is the test's own literal: a later change
-that widens it names the module in its own spec.
+that is not frozen; an action whose constructor takes an argument; a delivery marker whose content departs from the
+shapes above. `blizzard/tests/test_layering.py` fails the unit tier on each import and the transitive reach, and
+`blizzard/tests/test_hub_actions.py` on the visit's runtime values and the constructions; planted cases in both prove
+each check fires. The allowlist is the test's own literal: a later change that widens it names the module in its own
+spec.
 
 **Do.** `garden-deliver` (`hub/delivery/actions/garden_deliver.py`) reads its `delta` and `proposals` from the visit's
 node arguments, hands a `RecordGardenDelivery` to the sink, and answers from the `EffectResult` it gets back; the
