@@ -15,8 +15,10 @@ in the same commit. An exemplar sits where its production counterpart would: Pyt
 `blizzard/exemplars/python/exemplar/` mirrors `blizzard/src/blizzard/` with `exemplar` in place of `blizzard`, its tests
 sit flat in `blizzard/exemplars/python/tests/` as `blizzard/tests/` does (a migration's test beside its revision, as
 `bzh:colocated-migration-tests` places it), and Angular files under `blizzard/exemplars/web/` mirror
-`blizzard/web/projects/`. It imports the real blizzard infrastructure its counterpart would, never a placeholder
-library. This file and [./index.md](./index.md), the router to them, stay in the harness.
+`blizzard/web/projects/`. A live spec chosen as the reference, such as a Playwright service spec, stays where it runs,
+since a copy outside the package could not reach a hub; it is held to the package's own gates, not to a mirror under
+`blizzard/exemplars/`. It imports the real blizzard infrastructure its counterpart would, never a placeholder library.
+This file and [./index.md](./index.md), the router to them, stay in the harness.
 
 ## The `# exemplar:` device
 
@@ -37,6 +39,8 @@ patterned off it.
   `bzh:prose-budget` caps and the `bzh:data-roles`, `bzh:domain-core`, and `bzh:internal-visibility` scans;
   `blizzard:exemplar-check` runs the strict Angular type-check, eslint, the specs, and `web:structural-gate` over the
   web half, and fails when the committed client stand-in differs from the one generated from the exemplar router.
+- The Playwright package's own gates failing over a live-spec exemplar: `blizzard:gate`'s playwright-static step (`tsc`,
+  eslint, wire drift) and `blizzard:service-test`.
 - An exemplar whose prose density exceeds its production layer's, as `prose_density.py measure` in `blizzard/scripts/`
   reports it — judged at review.
 - An exemplar diverging from the shape its layer's production code settled on — a second name for a role, a second

@@ -58,17 +58,18 @@ Under `blizzard/exemplars/web/`.
 
 ## Tests
 
-Under `blizzard/exemplars/python/tests/`. For a new Playwright service spec rather than a Python exemplar, read the
-[service-test rulebook](../verification/blizzard/service-tests.md); the rows below are Python files.
+Under `blizzard/exemplars/python/tests/`, except the Playwright row, which is a live spec under `blizzard/tests/`. A new
+Playwright service spec also follows the [service-test rulebook](../verification/blizzard/service-tests.md).
 
-| Exemplar                 | Copy it when you are…                                                                                            |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `test_permit_rules.py`   | Testing a domain model's rules — by value, with no repository, clock, or fake                                    |
-| `test_permit_service.py` | Testing a use-case service — a hand-written fake proved against its port, and a fixed clock                      |
-| `test_permit_store.py`   | Testing a hub store adapter — a migrated store, tenant isolation, a duplicate insert, paging, a flat query count |
-| `test_permit_api.py`     | Testing a route — each status and body its docstring promises                                                    |
-| `test_disk_floor.py`     | Testing a runner loop step across the moves it makes                                                             |
-| `test_injected_clock.py` | Writing an architectural gate as a test — a live scan plus planted trees proving its reach                       |
+| Exemplar                                              | Copy it when you are…                                                                                            |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `blizzard/tests/service/hub/analytics-events.spec.ts` | Writing a Playwright service spec — isolation declared once, state built through the fixtures and clients        |
+| `test_permit_rules.py`                                | Testing a domain model's rules — by value, with no repository, clock, or fake                                    |
+| `test_permit_service.py`                              | Testing a use-case service — a hand-written fake proved against its port, and a fixed clock                      |
+| `test_permit_store.py`                                | Testing a hub store adapter — a migrated store, tenant isolation, a duplicate insert, paging, a flat query count |
+| `test_permit_api.py`                                  | Testing a route — each status and body its docstring promises                                                    |
+| `test_disk_floor.py`                                  | Testing a runner loop step across the moves it makes                                                             |
+| `test_injected_clock.py`                              | Writing an architectural gate as a test — a live scan plus planted trees proving its reach                       |
 
 ## Keeping them true
 
