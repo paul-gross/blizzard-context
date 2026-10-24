@@ -58,7 +58,8 @@ Under `blizzard/exemplars/web/`.
 
 ## Tests
 
-Under `blizzard/exemplars/python/tests/`.
+Under `blizzard/exemplars/python/tests/`. For a new Playwright service spec rather than a Python exemplar, read the
+[service-test rulebook](../verification/blizzard/service-tests.md); the rows below are Python files.
 
 | Exemplar                 | Copy it when you are…                                                                                            |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------- |

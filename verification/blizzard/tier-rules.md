@@ -14,7 +14,7 @@ only locally. The mocks the upper tiers bind are owned by `blizzard-mock`.
 | ------------------ | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | **Unit**           | `blizzard:unit-test`      | One class or function in isolation.                                                                                                                                                       | pytest                                                                                                                              |
 | **Component**      | `blizzard:component-test` | A domain slice wired with real internal collaborators, doubles only at the seams.                                                                                                         | pytest                                                                                                                              |
-| **Service**        | `blizzard:service-test`   | A running hub or runner's HTTP API exercised from outside, or an out-of-process external-tool binding driven against a mock-fleet binary — seams bound to the mock fleet either way.      | pytest + HTTP                                                                                                                       |
+| **Service**        | `blizzard:service-test`   | A running hub or runner's HTTP API exercised from outside, or an out-of-process external-tool binding driven against a mock-fleet binary — seams bound to the mock fleet either way.      | Playwright Test + HTTP; pytest for an external-CLI binding                                                                          |
 | **Winter binding** | `blizzard:winter-binding` | The winter workspace provider against the real winter CLI, plus one chunk landed over `provider="winter"`. Local-only, never in CI; the platform tiers run on the basic provider instead. | pytest, gated on `BLIZZARD_WINTER_BINDING=1`                                                                                        |
 | **E2E**            | `blizzard:e2e`            | The full system — hub, runner, web app — through the browser and CLI, every seam bound to the mock fleet.                                                                                 | pytest plus a real Chromium via Playwright; each browser-driven scenario states its own guard in the [registry](./e2e-scenarios.md) |
 
@@ -28,19 +28,21 @@ fixtures.
 Tests run against sqlite. Postgres is a configuration concern, held by staying inside SQLAlchemy's portable surface
 (`bzh:sql-portable`) rather than by a second test matrix.
 
-Stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`), never through ad-hoc SQL.
+In Python tiers, stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`), never through ad-hoc
+SQL. Playwright service specs create data through the hub's public surfaces, never by seeding the store.
 
 ## The tenant statement guard is on in every tier
 
-Every test the suite runs, at every tier, runs with the tenant statement guard on. The suite plugin's
-(`tests/suite_plugin.py`) `pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs the guard
+Every daemon any tier spawns runs with the tenant statement guard on, whether the suite is Python or Playwright. The
+Python suite plugin's (`tests/suite_plugin.py`) `pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs the guard
 (`src/blizzard/hub/store/tenant_guard.py`) in the test process, and every hub a service, e2e, or crash test spawns
-inherits the variable and installs the guard as it opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`).
-Before a statement executes, the guard refuses one that reaches a tenant-owned table without naming its tenant — a
-select, update, or delete in which no condition scopes that table to a tenant, or an insert into it with no `tenant_id`
-— raising `UnscopedTenantStatement`. A statement marked hub-scoped passes unwalked, and raw SQL is never walked. Only
-the value `1` switches the guard on; a hub started outside the suite runs without it unless its environment sets that,
-and production leaves it off.
+inherits the variable and installs the guard as it opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`). The
+Playwright harness sets it through `tests/daemon-env.json`; its daemon-log refusal check fails the request's test, or
+the run when no request owns the refusal. Before a statement executes, the guard refuses one that reaches a tenant-owned
+table without naming its tenant — a select, update, or delete in which no condition scopes that table to a tenant, or an
+insert into it with no `tenant_id` — raising `UnscopedTenantStatement`. A statement marked hub-scoped passes unwalked,
+and raw SQL is never walked. Only the value `1` switches the guard on; a hub started outside the suite runs without it
+unless its environment sets that, and production leaves it off.
 
 A refusal is the finding, never something to switch off: scope the statement, or route a read that must span tenants
 through the seam `bzh:hub-scoped-reads-confined` names. Only `tests/test_tenant_guard.py`, whose subject is the switch
@@ -49,10 +51,12 @@ guard's reach, so it names the tenant itself.
 
 ## The runner statement guard is on in every tier
 
-The runner store has a guard of its own, switched on beside the tenant guard in every tier. The same `pytest_configure`
-sets `BLIZZARD_RUNNER_GUARD=1` and installs the guard (`src/blizzard/runner/store/runner_guard.py`) in the test process.
-Every runner a service, e2e, or crash test spawns inherits the variable and installs the guard as it composes its host
-graph (`build_host_process`, `src/blizzard/runner/composition.py`).
+The runner store has a guard of its own, switched on beside the tenant guard in every spawned daemon. Python's same
+`pytest_configure` sets `BLIZZARD_RUNNER_GUARD=1` and installs the guard (`src/blizzard/runner/store/runner_guard.py`)
+in the test process. Every runner a service, e2e, or crash test spawns inherits the variable and installs the guard as
+it composes its host graph (`build_host_process`, `src/blizzard/runner/composition.py`). Playwright's
+`tests/daemon-env.json` also sets it; the harness fails a refusal in a daemon log against the responsible test or the
+run.
 
 Before a statement executes, the guard refuses one that reaches a runner-scoped table without naming its runner, raising
 `UnscopedRunnerStatement`:
@@ -149,6 +153,38 @@ A one-sided service test drives the mock counterpart: runner service tests run a
 against the mock runner, and a diagnostic driving a real external tool runs against the mock fleet's own CLI-surface
 artifact instead. Its edge cases come from driving the mock's levers, never from contriving the real daemon or the real
 external tool into a rare state.
+
+## New daemon behavior tests use Playwright (`bzh:service-tests-in-playwright`)
+
+**Rule.** Write a new service test whose subject is a daemon's behavior as a Playwright Test spec under tests/service/.
+Add a Python service case only for the out-of-process external-tool binding below.
+
+**Why.** The shared hub, tenant-aware clients, event stream, and isolation fixtures give daemon behavior one coherent
+service harness; new pytest daemon cases would keep growing the older parallel harness.
+
+**Detect.** A new `tests/service/test_*_service.py` whose subject is not an external-tool CLI binding is a reviewable
+signature; the registry check verifies cited tier membership, not placement of every new test.
+
+**Do.** Read [service-tests.md](./service-tests.md) before authoring a daemon spec.
+
+**Don't.** Add another pytest HTTP-daemon case because nearby existing cases still use pytest.
+
+## A port moves its citations (`bzh:port-moves-citations`)
+
+**Rule.** In the same change that ports a service case, delete its Python original, repoint its citations in blizzard
+and blizzard-context to the replacement spec, retain the function name as the test title, and remove its entry from
+`scripts/prose-density-baseline.json`.
+
+**Why.** A duplicate test and a stale registry citation leave two purported owners of the same behavior; a baseline
+entry for a deleted file silently keeps dead accounting.
+
+**Detect.** `blizzard-context:registry-drift` check A fails citations of deleted files and missing `file::title` names;
+review the deleted file's references and prose-density entry for omissions the checker cannot see.
+
+**Do.** Search both repos for the old filename and function name, then replace citations with `file::title` where
+precise.
+
+**Don't.** Leave the old pytest case or its density-baseline row behind after the spec takes over.
 
 ## A whole-CLI harness fake is a service-tier binding (`bzh:external-cli-fake-is-service-tier`)
 

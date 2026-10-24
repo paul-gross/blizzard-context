@@ -10,11 +10,14 @@ The service spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md). R
 
 ### blizzard:service-test
 
-The tier command is `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`) — a running hub
-or runner daemon's HTTP API exercised from outside the process against a mock counterpart, seams bound to the mock
-fleet. It is distinct from `blizzard:e2e`, which drives the loop in-process one tick at a time and drives the served
-board through a real browser. It needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet
-console scripts, the stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
+The daemon-HTTP half runs `npx playwright test` (`mise run playwright`), selecting service projects with
+`mise run playwright -- --project='service-*'` from the repo root. New daemon behavior tests live in that package under
+`tests/service/`; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python half runs
+`BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`), retaining its described daemon
+cases until ported and the external-tool bindings whose subject is Python itself. Both exercise a running daemon from
+outside against the mock fleet. This differs from `blizzard:e2e`, which drives the loop in-process and the served board
+in a real browser. The Python half needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet
+scripts, stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 

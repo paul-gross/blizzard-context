@@ -39,9 +39,11 @@ Binds code prose in both of blizzard's languages, each in its own vocabulary:
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, `blizzard/exemplars/python` | `#` comments and docstrings                                                                                                                       |
 | `blizzard/web/projects`, `blizzard/exemplars/web`                                  | `//` and `/* */` comments and `/** */` TSDoc blocks in a `.ts` file, and the `<!-- -->` and `/* */` comments in a component's template and styles |
+| `blizzard/tests` (handwritten `.ts`)                                               | `//` and `/* */` comments and `/** */` TSDoc blocks                                                                                               |
 
 The generated client, `blizzard/web/projects/fleet/src/lib/api/`, is not bound: its JSDoc is `blizzard/openapi/`'s
-description text rendered, held at the wire model that generates it under §Generated docstrings.
+description text rendered, held at the wire model that generates it under §Generated docstrings. The generated
+`blizzard/tests/harness/client/wire/` types are excluded likewise.
 
 The closed set reads the same in either language. Where a Python shape has no literal TypeScript form, its Angular
 counterpart is:

@@ -33,7 +33,7 @@ the change reaches. For changed store revisions, also run `mise run store-baseli
 The sweep for a rename, before the tiers: grep the surfaces only they read.
 
 ```bash
-grep -rn '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
+grep -rn --exclude-dir=node_modules '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
 ```
 
 **Don't.** Rename a `data-testid` and push on a green `blizzard:gate` — the e2e scenario reading the old handle fails
