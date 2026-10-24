@@ -38,8 +38,9 @@ The facets:
   must instruct submitting each by name
   ([../../standards/worker-nodes/declarations.md](../../standards/worker-nodes/declarations.md)).
 - **`retries`** — the bounded failure budget — crashes, verdict-less exits, reaps — and where exhaustion escalates; a
-  judged failure edge never consumes it, and neither does a verdict-less exit the runner classifies as its harness
-  hitting a usage limit — that one parks the lease behind its subscription's floor instead
-  ([../execution/throttling.md](../execution/throttling.md)). Omitting `retries:` does not lift the bound: the runner
-  supplies its own default of two retries, so every other failure is budgeted whether or not the graph authored one.
+  judged failure edge never consumes it, the budget is per visit — a node re-entered through an edge starts it afresh —
+  and neither does a verdict-less exit the runner classifies as its harness hitting a usage limit — that one parks the
+  lease behind its subscription's floor instead ([../execution/throttling.md](../execution/throttling.md)). Omitting
+  `retries:` does not lift the bound: the runner supplies its own default of two retries, so every other failure is
+  budgeted whether or not the graph authored one.
 - **`judgement`** — how the exit is judged and the choices it produces — owned by [./edges.md](./edges.md).

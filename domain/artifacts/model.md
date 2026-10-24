@@ -23,8 +23,8 @@ clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing`, [
 A worker node's asset is normally submitted by explicit worker declaration per the node's `produces:` list
 ([declarations](../../standards/worker-nodes/declarations.md)). A declared asset's content is never empty. Declaring
 stays open after the worker exits — while its exit is judged — and the latest content under a name wins until the
-node-step's completion is submitted. A commit pointer declared once the node-step's outcome is already settled is
-refused: nothing would submit it.
+node-step's outcome is settled. A declaration, asset or commit pointer, arriving once the outcome is settled is refused:
+nothing would submit it.
 
 ## Scopes
 
