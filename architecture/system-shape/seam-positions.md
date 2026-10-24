@@ -37,13 +37,9 @@ plus one path outside the Rule entirely:
 | `IWorkEditor`          | Never — only the built-in hub source seats one, and that source has no external forge behind it                                                                                    | Protocol seam of the work-source capability family                                                                                                                                                                                   |
 | `IOAuthProvider`       | Login                                                                                                                                                                              | Protocol seam                                                                                                                                                                                                                        |
 | `GitHubCommitResolver` | Resolving a garden delivery's commits; it sees only bare repo names, so it resolves a name or `owner/repo` against the enabled records and answers nothing for one no record names | Behind the `CommitResolver` callable (`hub/domain/garden/delivery/validation.py`): injected and composition-root-selected, a one-call type alias rather than a Protocol, satisfying the Rule's swappability intent without being one |
-| Graph land scripts     | Landing, directly through the `run:` env contract's `BZ_FORGE_*` variables                                                                                                         | Outside the Rule's sites (a loop step, domain, or store), because the script is the landing policy                                                                                                                                   |
 
 The hub holds no shared forge endpoint and no owner fallback: each repository is a record naming its forge, owner, base
 branch and secret, and a `deliver` step and the garden commit resolver each resolve every repository they act on to its
 record on every use; the work-source family and the OAuth provider each declare their own endpoint through their own
-record or config entry likewise. How a `deliver` step resolves the chunk's commit pointers to that record, and when it
-refuses the visit, is owned by `bzh:hub-node-env-contract` in
-[../../standards/hub-nodes/env-contract.md](../../standards/hub-nodes/env-contract.md);
-[../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md) owns how tests bind the mock
-forge for the land-script path.
+record or config entry likewise. [../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md)
+owns how tests bind the mock forge for the land action's path.

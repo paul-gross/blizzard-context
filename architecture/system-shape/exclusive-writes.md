@@ -141,8 +141,6 @@ Stated so a reviewer need not re-derive them:
 - **Single-process components outside this rule.** Each is single-process by construction, and this rule governs none of
   them:
   - **The event broker** — an in-memory subscriber fan-out.
-  - **Marker-write tokens** — held by an in-memory authority, so a token verifies only in the process that minted it
-    ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The marker-write capability token).
   - **Background sweeps** — loops with no cross-process coordination.
   - **Migrate-on-boot** — a migration run assumed uncontended at boot.
   - **The open-tenant set and the tenant cache** — the open tenants with their names, and each opened tenant's stores

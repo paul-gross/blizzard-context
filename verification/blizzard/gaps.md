@@ -266,13 +266,13 @@ no tier runs.
 
 The same residue covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and `bas-hwf`'s
 `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through on every lane
-— and each lane's `pre-push.md` rebase-to-empty qualifier. `land_pr_ci`'s own classification is proven by
-`blizzard:unit-test`'s scripted-forge cases and `tests/test_graph_authoring.py`'s per-lane edge/addendum pins; that a
-worker reads the addendum's repair charge correctly, or applies the loop bound's chunk-history check rather than
-repeating the repair a second time, is not. Nor is whether a `failure` bounce's own-defect case is actually triaged
-`significant` rather than treated as a plain rebase, or whether a repair worker reads `delivery-findings` at all. No
-tier asserts that a repair worker reads a foreign-advance `failure` correctly, rather than adopting the foreign commit
-under `resolved`.
+— and each lane's `pre-push.md` rebase-to-empty qualifier. The `land` action's own classification is proven by
+`blizzard:unit-test`'s `land` action cases over a scripted forge and `tests/test_graph_authoring.py`'s per-lane
+edge/addendum pins; that a worker reads the addendum's repair charge correctly, or applies the loop bound's
+chunk-history check rather than repeating the repair a second time, is not. Nor is whether a `failure` bounce's
+own-defect case is actually triaged `significant` rather than treated as a plain rebase, or whether a repair worker
+reads `delivery-findings` at all. No tier asserts that a repair worker reads a foreign-advance `failure` correctly,
+rather than adopting the foreign commit under `resolved`.
 
 Every lane's `retrospective.md` verifies landing by the PR's own merge state and its merged sha's reachability from
 base, never the sha pre-push declared — no tier reads this leg back; a worker misreading it (checking the wrong sha, or
