@@ -393,6 +393,12 @@ def _resolve_test_file(token: str, blizzard_root: Path) -> Path | None:
     if "/" in token:
         candidate = blizzard_root / token
         return candidate if candidate.is_file() else None
+    if _SPEC_BARE_RE.fullmatch(token):
+        # A bare service citation must not bind a same-named harness spec.
+        service_matches = sorted((blizzard_root / "tests" / "service").rglob(token))
+        service_files = [p for p in service_matches if p.is_file()]
+        if service_files:
+            return service_files[0]
     matches = glob.glob(str(blizzard_root / "**" / token), recursive=True)
     matches = [m for m in matches if not any(part in PRUNE_DIRS for part in Path(m).parts)]
     matches = [m for m in matches if os.path.isfile(m)]

@@ -126,6 +126,16 @@ class CheckATests(unittest.TestCase):
         self.assertEqual(_shape(drift.check_A([("x.md", "`example.spec.ts::absent`")], self.checkouts, {}, listing)), [("A", "fail")])
         self.assertEqual(_shape(drift.check_A([("x.md", "`tests/service/hub/missing.spec.ts`")], self.checkouts, {}, listing)), [("A", "fail")])
 
+    def test_bare_service_spec_prefers_service_project_over_same_named_harness_spec(self):
+        _write(self.blizzard / "tests/harness/checks/events.spec.ts", "// harness\n")
+        _write(self.blizzard / "tests/service/hub/events.spec.ts", "// service\n")
+        listing = {"tests/service/hub/events.spec.ts": {"event reaches its tenant"}}
+        citation = "`events.spec.ts::event reaches its tenant`"
+        self.assertEqual(drift.check_A([("x.md", citation)], self.checkouts, {}, listing), [])
+        self.assertEqual(drift.check_B1([("x.md", citation)], self.blizzard, {}, listing), [])
+        service = "### blizzard:service-test\n\n" + citation
+        self.assertEqual(drift.check_B2("x.md", service, self.blizzard, {}, listing), [])
+
     def test_embedded_command_line_non_path_tokens_stay_silent(self):
         _write(self.blizzard / "scripts" / "prose_density.py", "# x\n")
         text = "`scripts/prose_density.py check src tests ../blizzard-mock/src`"
