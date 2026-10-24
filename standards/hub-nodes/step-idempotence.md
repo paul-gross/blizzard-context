@@ -27,7 +27,7 @@ the verification this rule is proven against.
 records a `merged/<repo>` marker immediately after each push, skips a repo whose marker already exists, and treats a PR
 a re-run finds already merged as success rather than a fresh conflict.
 
-`garden_deliver` is a second shape: its idempotence key is a `garden-delivered` marker written by the hub itself, inside
+`garden-deliver` is a second shape: its idempotence key is a `garden-delivered` marker written by the hub itself, inside
 the same transaction as the delta it materializes — a re-run's POST finds that marker already durable and answers
 `recorded` having minted nothing a second time, with no separate re-run-skip logic in the action at all.
 
