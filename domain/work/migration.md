@@ -108,3 +108,6 @@ after landing keys on that executor, never the node's name — a delivery node i
 case. Landed off a transition-borne trigger, a hub-executed node derives `delivering` — the chunk stays in the hub's
 hands — while a runner node re-queues `ready`; how an eager restart's landing re-enters its node is
 [./restart.md](./restart.md)'s own.
+
+A landing on a human-judged runner node opens that visit's decision and waits on the human; the decision is part of the
+landing write ([../humans/gates.md](../humans/gates.md)).
