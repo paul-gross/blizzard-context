@@ -3,16 +3,16 @@
 
 Builds fake registry-markdown trees and fake checkouts under ``tempfile``
 directories and asserts each check's finding shape, including one silent
-case per exclusion class named in the plan. Collection-backed checks (B1,
-B2, C) mostly run against a canned ``collect_cache`` dict, decoupled from
-how it is obtained; one dedicated test proves the stub-interpreter plumbing
-(``_resolve_interpreter`` / ``_collect``) itself, so no real pytest run is
-needed anywhere in this suite.
+case per exclusion class. Collection-backed checks (A, B1, B2, C) run
+against canned pytest nodes and Playwright listings, decoupled from how they
+are obtained; dedicated tests prove the stub-interpreter collection and JSON
+listing plumbing, so no real test runner is needed anywhere in this suite.
 """
 
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import stat
 import sys
@@ -118,6 +118,14 @@ class CheckATests(unittest.TestCase):
         findings = self._run(text, collect_cache)
         self.assertEqual(_shape(findings), [("A", "fail")])
 
+    def test_playwright_file_and_title_are_distinct(self):
+        _write(self.blizzard / "tests/service/hub/example.spec.ts", "// spec\n")
+        listing = {"tests/service/hub/example.spec.ts": {"creates a chunk"}}
+        text = "`tests/service/hub/example.spec.ts` `example.spec.ts::creates a chunk`"
+        self.assertEqual(drift.check_A([("x.md", text)], self.checkouts, {}, listing), [])
+        self.assertEqual(_shape(drift.check_A([("x.md", "`example.spec.ts::absent`")], self.checkouts, {}, listing)), [("A", "fail")])
+        self.assertEqual(_shape(drift.check_A([("x.md", "`tests/service/hub/missing.spec.ts`")], self.checkouts, {}, listing)), [("A", "fail")])
+
     def test_embedded_command_line_non_path_tokens_stay_silent(self):
         _write(self.blizzard / "scripts" / "prose_density.py", "# x\n")
         text = "`scripts/prose_density.py check src tests ../blizzard-mock/src`"
@@ -203,6 +211,12 @@ class CheckB1Tests(unittest.TestCase):
         findings = self._run("`test_idp.py`", collect_cache)
         self.assertEqual(findings, [])
 
+    def test_service_spec_requires_service_project(self):
+        _write(self.blizzard / "tests/service/hub/case.spec.ts", "// spec\n")
+        text = "`tests/service/hub/case.spec.ts`"
+        self.assertEqual(_shape(drift.check_B1([("x.md", text)], self.blizzard, {}, {})), [("B1", "fail")])
+        self.assertEqual(drift.check_B1([("x.md", text)], self.blizzard, {}, {"tests/service/hub/case.spec.ts": {"case"}}), [])
+
 
 # --------------------------------------------------------------------------
 # Check B2 — own-tier agreement
@@ -249,6 +263,15 @@ class CheckB2Tests(unittest.TestCase):
     def test_rehearsal_method_id_names_its_tier(self):
         self.assertEqual(drift._named_tiers("run under blizzard:rehearsal"), {"rehearsal"})
         self.assertEqual(drift._named_tiers("the rehearsal tier"), {"rehearsal"})
+
+    def test_service_project_attribution_and_wrong_tier(self):
+        _write(self.blizzard / "tests/service/hub/case.spec.ts", "// spec\n")
+        listing = {"tests/service/hub/case.spec.ts": {"case"}}
+        service = "### blizzard:service-test\n\n`tests/service/hub/case.spec.ts`\n"
+        unit = service.replace("service-test", "unit-test")
+        self.assertEqual(drift.check_B2("x.md", service, self.blizzard, {}, listing), [])
+        self.assertEqual(_shape(drift.check_B2("x.md", unit, self.blizzard, {}, listing)), [("B2", "fail")])
+        self.assertEqual(_shape(drift.check_B2("x.md", service, self.blizzard, {}, {})), [("B2", "fail")])
 
 
 # --------------------------------------------------------------------------
@@ -442,6 +465,8 @@ class CheckDTests(unittest.TestCase):
                 'run = "uv run python scripts/prose_density.py check src tests ../blizzard-mock/src"\n\n'
                 '[tasks.image-smoke]\n'
                 'run = "./scripts/image-smoke.sh"\n'
+                '[tasks.playwright]\n'
+                'run = "npx playwright test"\n'
             ),
         )
         (self.blizzard / "web").mkdir(parents=True)
@@ -468,6 +493,10 @@ class CheckDTests(unittest.TestCase):
     def test_exact_match_silent(self):
         text = "`mise run gate` (`./scripts/ci-gate.sh`)"
         self.assertEqual(self._d2(text), [])
+
+    def test_playwright_pair_agrees_and_mismatch_fails(self):
+        self.assertEqual(self._d2("`mise run playwright` (`npx playwright test`)"), [])
+        self.assertEqual(_shape(self._d2("`mise run playwright` (`npx playwright test --project harness`)")), [("D2", "fail")])
 
     def test_strict_prefix_warns(self):
         text = "`mise run journey` (`BLIZZARD_JOURNEY=1 uv run pytest -m journey`)"
@@ -557,6 +586,9 @@ class RunEffectivenessGateTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
+        patcher = mock.patch.object(drift, "_collect_playwright", return_value={})
+        self.playwright_collect = patcher.start()
+        self.addCleanup(patcher.stop)
         self.repo_root = Path(self.tmp.name) / "repo"
         _write(self.repo_root / "verification" / "blizzard.md", "# blizzard\n")
         _write(self.repo_root / "verification" / "blizzard" / "commands.md", "# commands\n")
@@ -783,6 +815,36 @@ class RunEffectivenessGateTests(unittest.TestCase):
         findings, exit_code = drift.run(self.repo_root, self.blizzard, self.blizzard_mock, gate=True)
         self.assertEqual(exit_code, 0)
         self.assertEqual([f for f in findings if f.status == "fail"], [])
+
+    def test_failed_playwright_listing_cannot_gate_green_without_citations(self):
+        self._write_stub_interpreter()
+        self.playwright_collect.return_value = None
+        findings, exit_code = drift.run(self.repo_root, self.blizzard, self.blizzard_mock, gate=True)
+        self.assertEqual(exit_code, 1)
+        self.assertTrue(any("Playwright JSON listing failed" in f.message for f in findings))
+        self.assertIn("B2", next(f.message for f in findings if f.check == "skipped"))
+
+
+class PlaywrightCollectionTests(unittest.TestCase):
+    def test_service_projects_only_and_nested_titles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            listing = {"config": {"rootDir": str(root / "tests/service/hub")}, "errors": [], "suites": [
+                {"title": "case.spec.ts", "specs": [{"file": "case.spec.ts", "title": "plain", "tests": [{"projectName": "harness"}, {"projectName": "service-hub"}]}], "suites": [
+                    {"title": "group", "specs": [{"file": "case.spec.ts", "title": "nested", "tests": [{"projectName": "service-hub"}]}]}
+                ]}
+            ]}
+            with mock.patch.object(drift.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=json.dumps(listing))) as call:
+                self.assertEqual(drift._collect_playwright(root), {"tests/service/hub/case.spec.ts": {"plain", "nested", "group nested"}})
+                self.assertEqual(call.call_args.args[0], ["npx", "playwright", "test", "--list", "--reporter=json"])
+                self.assertEqual(call.call_args.kwargs["cwd"], root / "tests")
+            listing["suites"][0]["specs"][0]["tests"] = [{"projectName": "setup-service-hub"}]
+            listing["suites"][0]["suites"] = []
+            with mock.patch.object(drift.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=json.dumps(listing))):
+                self.assertEqual(drift._collect_playwright(root), {})
+            for result in (mock.Mock(returncode=2, stdout="{}"), mock.Mock(returncode=0, stdout="not json"), mock.Mock(returncode=0, stdout='{"suites": []}')):
+                with mock.patch.object(drift.subprocess, "run", return_value=result):
+                    self.assertIsNone(drift._collect_playwright(root))
 
 
 # --------------------------------------------------------------------------
