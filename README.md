@@ -77,3 +77,8 @@ looks like.
 
 Issues and ideas are welcome. Changes target a convention file directly — read [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 first for the commit format, the canon slot skeleton every rule is written in, and the pre-push expectations above.
+
+## License
+
+Source-available under the Functional Source License 1.1 (FSL-1.1-ALv2). Each release converts to Apache License 2.0 two
+years after it ships. See [LICENSE](./LICENSE).
