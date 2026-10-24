@@ -62,11 +62,11 @@ proposal minted closes that proposal's still-live findings to **delivered**, car
 [Closing a proposal](#closing-a-proposal-pass-or-accept) owns the mechanics. `delivered` is neither `live` nor one of
 the five exits below; nobody has confirmed the delivery's claim yet. It stays visible to the routine that owns the
 finding — or, for a review-sourced finding, which no routine owns, to every routine sweeping its scope (§A finding can
-also be raised by a delivery lane's review) — and only one of those routines' next run clears it: a `gone` op against a
-`delivered` finding is the one case where a run's own word does settle it for good, completing the exit to **resolved**
-that the delivery only claimed; an `observed` op against one instead reads as the delivery having been wrong or
-premature, and restores it to `live`, exactly like reviving a merely-`gone` finding. That rule governs settling the
-delivery's claim, not a person: a person's exit applies to a `delivered` finding as to a live one.
+also be raised by a delivery lane's review) — and only a next run of one of those routines clears it: a `gone` op
+against a `delivered` finding is the one case where a run's own word does settle it for good, completing the exit to
+**resolved** that the delivery only claimed; an `observed` op against one instead reads as the delivery having been
+wrong or premature, and restores it to `live`, exactly like reviving a merely-`gone` finding. That rule governs settling
+the delivery's claim, not a person: a person's exit applies to a `delivered` finding as to a live one.
 
 A person closes that loop with one of five exit verbs — **resolved**, **gone-confirmed**, **wont-fix**,
 **not-a-finding**, **superseded** — and **reopened** undoes any of them, or a `gone` flag, or a delivery, the same
@@ -116,9 +116,8 @@ review-sourced ones on its own scope. Its proposals may cite any of them — a r
 another routine's finding is out of reach — while its finding set's `observed` and `gone` ops stay within its own scope.
 An operator's `create` and `attach` follow the same rule where findings are concerned: any non-exited finding,
 `delivered` and `gone` included, from any routine or scope of the proposal's project; an exited finding, or one of
-another project, is refused, naming that finding, and so is an attach naming a finding the proposal already links (§A
-proposal may be edited while it is open). Both origins apply the same test of standing — not exited — and differ only in
-reach: a run's is bounded by its routine, an operator's is not.
+another project, is refused, naming that finding. Both origins apply the same test of standing — not exited — and differ
+only in reach: a run's is bounded by its routine, an operator's is not.
 
 ## A proposal may be edited while it is open
 

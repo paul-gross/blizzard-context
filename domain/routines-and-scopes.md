@@ -8,8 +8,8 @@ letters, digits, and hyphens, at least one character and nothing else; whatever 
 
 Every scope and routine belongs to one project ([projects.md](./projects.md)), fixed at its mint. A scope's slug and a
 routine's name are unique within its project, so two projects may each hold a scope of one slug or a routine of one
-name, and they are different records. Finding a scope or routine by its name, minting one, or listing them is a call
-that needs a project, resolved as [projects.md](./projects.md) §A call that needs a project states.
+name, and they are different records. Finding a scope or routine by its name, or minting one, is a call that needs a
+project, and a listing naming none reads the whole tenant — [projects.md](./projects.md) §A call that needs a project.
 
 ## Mint-on-name
 
