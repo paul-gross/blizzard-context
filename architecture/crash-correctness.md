@@ -52,12 +52,12 @@ clock can't move.
 ## A crash-point registry (`bzh:crash-point-registry`)
 
 **Rule.** The dangerous windows carry stable names in a code-owned, **enumerable** registry — e.g.
-`fill.after-env-acquire.before-claim`, `advance.after-buffer.before-flush`, `hubnode.after-step.before-marker`,
+`fill.after-env-acquire.before-claim`, `advance.after-buffer.before-flush`, `action.after-effect.before-write`,
 `reap.after-kill.before-expire`; under test scaffolding a daemon subprocess SIGKILLs itself on reaching the armed point,
 selected via an environment variable and fenced so it can never fire outside a test-marked environment. The segment
 before the point's first `.` is the **boundary family** the sweep partitions the registry on — it resolves which
 scenario (the generic `build → deliver` sweep, or a dedicated scenario such as `resume.`, `abandon.`, `pause.`,
-`hubnode.`) is the one that arms and reaches that point — so name a point for the boundary its reaching scenario opens,
+`action.`) is the one that arms and reaches that point — so name a point for the boundary its reaching scenario opens,
 never for the step whose source happens to call `.reached()`.
 
 **Why.** An enumerable registry is what the sweep iterates — one run per armed point — and it doubles as the

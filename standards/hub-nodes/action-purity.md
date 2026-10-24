@@ -44,5 +44,5 @@ lists make it mutable through them.
 
 **See also.** `bzh:domain-package-layers` in
 [../../architecture/clean-architecture.md](../../architecture/clean-architecture.md) orders `hub/domain/actions/`;
-`bzh:data-roles` governs the visit's types as domain models; the hub command node's `run:` contract is
-[run-steps.md](./run-steps.md).
+`bzh:data-roles` governs the visit's types as domain models; the hub node's `action:` contract is
+[action-shape.md](./action-shape.md).

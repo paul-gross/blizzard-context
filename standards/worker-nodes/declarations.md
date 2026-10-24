@@ -16,8 +16,8 @@ to cover more than one.
 declares, or alias the whole node's judgement assessment to a name — so an un-instructed worker silently yields the
 weaker fallback, and a multi-name node relying on the alias loses per-name provenance entirely.
 
-**Scope.** Binds worker nodes; a hub node's step-level `produces` marker is recorded by the executor itself, never by a
-worker ([../hub-nodes/run-steps.md](../hub-nodes/run-steps.md), `bzh:hub-node-run-shape` Scope).
+**Scope.** Binds worker nodes; a hub node's markers are recorded by its action itself, never by a worker
+([../hub-nodes/action-shape.md](../hub-nodes/action-shape.md), `bzh:hub-node-action-shape` Scope).
 `--scope node|graph|system` is a separate axis the `artifact` verbs do not all share:
 
 | Verb                                 | Scope behavior                                                                                                                                                                                                                                                                                                                       |

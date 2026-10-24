@@ -1,50 +1,45 @@
-# A hub step's outcome
+# A hub action's outcome
 
-How a step's output selects a routed choice, and what happens when it polls or bounces the chunk.
+How a pass's answer selects a routed choice, and what happens when it waits or bounces the chunk.
 
 Parent: [../hub-nodes.md](../hub-nodes.md).
 
-## The last stdout line, or a reserved literal (`bzh:hub-node-outcome-protocol`)
+## The choice a pass answers, or a reserved wait (`bzh:hub-node-outcome-protocol`)
 
-**Rule.** A step's last non-blank stdout line is the node's authored choice when it names one of the node's judgement
-choices; the resulting choice routes through the node's authored edges exactly like a worker's judged choice
-([../../domain/graphs/edges.md](../../domain/graphs/edges.md)). A step exiting 0 without naming a choice falls through
-to the next step, and a run in which no step ever names one defaults to the reserved `success` choice when the node
-authors it, and to `failure` otherwise. A step exiting nonzero always yields `failure`, the other reserved default,
-unless its last stdout line explicitly names one of the node's own choices — a nonzero exit can never select a success
-outcome by accident, however the script prints.
+**Rule.** Each pass of a hub node's action answers one choice — one of the node's authored judgement choices, or a
+reserved wait — or an escalation in place of one. An authored choice routes through the node's authored edges exactly
+like a worker's judged choice ([../../domain/graphs/edges.md](../../domain/graphs/edges.md)); `failure` is the reserved
+choice every hub node authors, and `success` is a reserved name a node authors only when its action can answer it.
 
-Exit 0 with the last line reading the reserved literal `pending` is neither success nor failure: no marker is recorded,
-no transition happens, the poll-attempt fact is recorded, and the tenant's `hub_exec_slot` is released immediately.
-`pending` is machinery-reserved and never authored as one of a node's own choices; `success` and `failure` are reserved
-names whose edges a node authors — every hub node authors `failure`, and `success` is opt-in. After a `pending`, the
-whole node re-runs — skipping any step whose `produces` marker already exists
-([./step-idempotence.md](./step-idempotence.md), `bzh:hub-node-step-idempotence`) — once `poll_interval` has elapsed
-since the last attempt (default 30s, overridable per node). Pending itself spends no retry and no bounce budget; only a
-poll timeout or an incomplete-delivery crossing does.
+A reserved wait — one of the catalogue's `RESERVED_WAITS`, today only `pending` — is neither success nor failure: no
+transition happens, the poll-attempt fact is recorded, and the tenant's `hub_exec_slot` is released immediately. A
+reserved wait is machinery-reserved and never authored as one of a node's own choices; only a node whose action can
+answer one may carry `poll_interval` and `poll_timeout`. After a wait, the action runs a fresh pass — skipping the work
+its own markers already record ([./step-idempotence.md](./step-idempotence.md), `bzh:hub-node-step-idempotence`) — once
+`poll_interval` has elapsed since the last attempt (default 30s, overridable per node). A wait itself spends no retry
+and no bounce budget; only a poll timeout or an incomplete-delivery crossing does.
 
-Exceeding `poll_timeout` (default three hours, measured from the first recorded pending attempt) stops polling and kicks
-the chunk back: a bounce fact is recorded and the chunk re-routes through the node's `failure` edge. A chunk is also
-kicked back when an authored edge routes to a non-terminal node while any repo among the node's own commits has no
-`merged/<repo>` marker artifact recorded yet — the convention a landing script's `record-marker` calls are expected to
-follow. This incomplete-delivery kick-back records its bounce fact and a `bounce-envelope` artifact but lets the chunk
-travel the authored choice's own edge — it is detected from the landed-marker fact, never from the choice name, so no
-outcome name is privileged. Either kick-back escalates to `needs_human` once the node's `bounce_cap` (default 5,
-overridable per node) is crossed.
+Exceeding `poll_timeout` (default three hours, measured from the first recorded wait) stops polling and kicks the chunk
+back: a bounce fact is recorded and the chunk re-routes through the node's `failure` edge. A chunk is also kicked back
+when an authored edge routes to a non-terminal node while any repo among the node's own commits has no `merged/<repo>`
+marker the action recorded yet. This incomplete-delivery kick-back records its bounce fact and a `bounce-envelope`
+artifact but lets the chunk travel the authored choice's own edge — it is detected from the landed-marker fact, never
+from the choice name, so no outcome name is privileged. Either kick-back escalates to `needs_human` once the node's
+`bounce_cap` (default 5, overridable per node) is crossed. An answer the node authors no edge for escalates the chunk at
+once, naming the choice, rather than re-polling.
 
-**Why.** A subprocess has no structured return channel but stdout and an exit code, and fixing "last stdout line, or a
-reserved literal" as the entire vocabulary lets a script report freely to a human on stderr while still selecting
-exactly one router-legible outcome. The shared bounce-cap ladder keeps a stuck or repeatedly-conflicting delivery from
-bouncing a chunk forever.
+**Why.** A typed answer leaves no parsing to go wrong, and fixing "an authored choice, or a reserved wait" as the whole
+vocabulary lets mint-time validation prove every answer routes. The shared bounce-cap ladder keeps a stuck or
+repeatedly-conflicting delivery from bouncing a chunk forever.
 
-**Detect.** A `run:` script printing its choice anywhere but the last stdout line; a node authoring `pending` as one of
-its own choices; a script relying on exit code alone to select among more than the two reserved defaults.
+**Detect.** A node authoring `pending` or another reserved wait as one of its own choices; an action answering a choice
+outside its catalogued answers; poll keys on a node whose action can never wait.
 
 **Do.**
 
-- `land_default.py` prints `conflict` before its push stage ever starts, so nothing lands when one repo is dirty.
-- `land_pr_ci.py` prints `pending` as its last stdout line while it waits for an unsettled PR; the script owns its
-  forge-state decisions and other outcomes.
+- `land` answers `conflict` before its push stage ever starts, so nothing lands when one repo is dirty.
+- `land` answers `pending` while it waits for an unsettled PR; the action owns its forge-state decisions and other
+  outcomes.
 
-**Don't.** A land script that prints `landed` and then a trailing summary line to stdout — the summary is now the last
-line, names no choice, and the step falls through as if it had said nothing.
+**Don't.** A graph authoring a `pending` choice with an edge back to its own node — the wait is the machinery's, and the
+mint-time validator refuses the choice.

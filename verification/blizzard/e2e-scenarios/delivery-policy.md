@@ -62,6 +62,16 @@ hub admits only behind `BLIZZARD_TEST_ACTIONS=1` beside `BLIZZARD_CRASH_FENCE=1`
 - `test_a_hub_without_the_test_fences_refuses_the_test_actions` — proves a hub started without both fences refuses a
   graph naming either test action at mint, each as an unknown action.
 
+## test_run_carry_over_e2e
+
+A store held before hub nodes named actions, carried onto them by a real migrate and hub: a HEAD hub pins one chunk per
+shipped `run:` command and one to an empty `run:`, the `land_pr_ci` one left waiting on `pending`; the store walks down
+to `20261023_0901_hub_actions`, each hub node is rewritten to the `run:` row it was minted as, and the HEAD migrate and
+hub carry it.
+
+- `test_a_store_held_before_actions_carries_over_and_lands_every_chunk` — proves every pinned chunk lands with its
+  script's choice and markers once its hub node is carried onto the action its `run:` named.
+
 ## test_checks_gate_e2e
 
 Checks-gate enforcement: a graph whose `build` choice carries `requires_checks: true` shows the gate — not the worker's

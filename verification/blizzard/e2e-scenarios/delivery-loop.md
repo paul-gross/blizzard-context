@@ -68,9 +68,9 @@ The cycle where review fails once, then passes, and the chunk lands. It runs und
 ## test_post_merge_node_e2e
 
 The authored post-merge edge: a graph whose `deliver` hub command node authors `landed → verify`, a post-merge runner
-node. The crash-tier companion is `tests/crash/test_kill9_sweep.py::test_kill9_at_hub_command_node_crash_point` — the
-`hubnode.after-marker.before-next` window, after a hub node marks a repo landed but before it moves on, shared by every
-hub command node.
+node. The crash-tier companion is `tests/crash/test_kill9_sweep.py::test_kill9_at_action_crash_point_through_land` — the
+`action.after-write.before-resume` window, after `land` marks a repo landed but before it resumes, shared by every hub
+action.
 
 - `test_authored_landed_edge_runs_a_post_merge_node_after_landing` — merges every repo to bare `main`, then the runner
   advances the held chunk into `verify` in its warm environment after the land — the transition history reads
