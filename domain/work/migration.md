@@ -64,12 +64,20 @@ resolved gate decision alike. A hub node's own exit consults no intent, so an in
 waits for its next worker-or-gate transition. A chunk holds at most one live intent — setting overwrites, clearing
 removes — with no history of superseded ones to reconcile.
 
+Setting an intent refuses:
+
+- An unknown or retired target graph ([../graphs/identity.md](../graphs/identity.md) §Operational surfaces).
+- The chunk's current pin.
+- A forced intent naming a node the target does not carry.
+
+A refused set writes nothing, so whatever intent stood before stands unchanged.
+
 A forced intent anchors its own named node and migrates to it unconditionally, whatever the transition's destination
 would have been. An auto intent anchors the transition's own destination node name with no entry fallback: it migrates
 only when that name also exists on the target graph, landing on the same-named node; an unmatched name leaves the
-transition to apply unchanged on the current graph, and the intent stays set. An intent whose target graph cannot be
-resolved at consult time — never minted or since retired — is skipped like an auto no-match: the transition applies
-unchanged and the intent stays set, visible to cancel or re-aim.
+transition to apply unchanged on the current graph, and the intent stays set. An intent whose target was retired after
+it was set cannot be resolved at consult time, and is skipped like an auto no-match: the transition applies unchanged
+and the intent stays set, visible to cancel or re-aim.
 
 ### Follow-latest
 
@@ -83,8 +91,10 @@ inherited-by-default setting — the fleet-wide default is what sustains drift a
 The landing anchors the transition's same destination name with the entry fallback: the policy has nothing to stay set
 for, and falling through would defer it forever on exactly the graph that changed enough to drop the node.
 
-Follow-latest only moves forward: a chunk on the newest mint, or with every newer mint retired, is left alone — no
-error, no fact — as is one whose own mint is retired, where name resolution would hand back an older mint and rewind it.
+Follow-latest only moves forward: it moves a chunk only to an enabled mint strictly newer than its pin, so a chunk on
+the newest mint, or with every newer mint retired, is left alone — no error, no fact. Retirement of the chunk's own mint
+stops nothing: with a newer enabled mint of the name the chunk drifts onto it, and when the newest enabled mint is older
+than the retired pin, the never-backwards rule is what leaves the chunk alone rather than rewinding it onto that mint.
 It never follows a transition to the terminal: a finished chunk has no next node-step to govern, and following would
 restart the workflow instead of completing it. A chunk carrying a standing intended migration is never moved by
 follow-latest — even when that auto intent fell through for want of a name match.

@@ -96,6 +96,6 @@ non-empty in either direction, for a chunk at any status. Each entry names a nei
 whether the edge is **satisfied** — never stored, derived fresh the same way the blocked marking is: a prerequisite edge
 is satisfied when that neighbor reads `done`; a dependent edge is satisfied when the chunk itself does, so every
 dependent reads the same satisfaction as one another. A neighbor absent from the fleet's statuses — the same residual
-race the blocked marking's conservative read guards against — still draws, unsatisfied, with a null status, rather than
-being dropped. Like the blocked marking, the neighborhood takes no further hop past its own edges: a prerequisite's own
-prerequisites are not walked into it.
+race the blocked marking's conservative read guards against — still draws with a null status rather than being dropped:
+unsatisfied as a prerequisite, and satisfied exactly as the chunk itself is as a dependent. Like the blocked marking,
+the neighborhood takes no further hop past its own edges: a prerequisite's own prerequisites are not walked into it.

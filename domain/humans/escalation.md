@@ -37,15 +37,14 @@ hub-authored escalation always lacks the wrapped verb: the hub has no runner run
 wrapped verb also needs the runner's own location, but any runner new enough to compose it always knows that, so
 location is never a distinct reason the verb is missing.
 
-When the wrapped verb is absent but the raw command is present, the board renders the raw command as the primary
-copyable command.
+When the wrapped verb is absent but the raw command is present, the hub board renders the raw command as the primary
+copyable command; the runner board shows it as plain text with no copy control.
 
-## The parked session's identity
+## What the commands resume
 
-Beside either command the escalation carries the parked session's identity — its declared session and the model and
-effort it actually ran under — read back from what ran, never re-derived, so the operator lands in the configuration the
-fleet was using. A session predating that identity record carries none of it, and the command stays bare rather than
-guessing.
+Either command resumes the parked session itself, under the model and effort it actually ran with, read back from the
+runner's record of that session, never re-derived — so the operator lands in the configuration the fleet was using. A
+session predating that record gets a bare command rather than a guessed one.
 
 ## What each origin carries
 

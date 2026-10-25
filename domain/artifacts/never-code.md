@@ -12,12 +12,14 @@ guidance that prompts and authored prose carry, not a content check the hub runs
 **Why.** The forge already durably owns code, so a pointer keeps the hub small and safe to centralize and expose to the
 board. The hub validates only what has a required structure; policing free-form content would need a scanner that cannot
 tell a quoted snippet from a diff. Transcripts earn their exception because what the agent actually did exists nowhere
-else once a runner rotates its session files, and the caps and permission gate keep that exception from reintroducing
-the size and exposure the rule prevents.
+else once a runner rotates its session files; the lane's caps bound how much of it the hub holds, and its read gates
+bound who reads it.
 
-**Exception.** Transcripts, only through the transcript lane: the hub retains normalized turn slices of an agent session
-— never files, diffs, or patches — bounded by the lane's per-record, per-chunk, and per-runner-day caps and readable
-only under the transcript-read permission.
+**Exception.** Transcripts, only through the transcript lane: the hub retains an agent session's turns — tool calls and
+their output included, verbatim, so code the agent wrote or read can appear in them — each message and each tool call's
+output capped on its own, a tool call's input kept whole, and the whole bounded by the lane's per-record, per-chunk, and
+per-runner-day caps. They are readable by a person holding the transcript-read permission, and by the owning runner for
+its own lease's segments; every other artifact kind stays under the rule.
 
 **Scope.** The validated kinds, and what each check covers:
 

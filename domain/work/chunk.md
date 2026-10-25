@@ -67,9 +67,11 @@ logs.
 
 A chunk is pinned to exactly one immutable graph, set at mint from a default. While the chunk is unclaimed and has never
 moved — `not_ready` or unclaimed `ready` — the pin is a plain editable selection, the operator's pre-flight repin
-window, and editing the pin to its current value is an idempotent no-op. Once the chunk has moved, the pin is immutable
-and changes only when a migration ([./migration.md](./migration.md)) applies. A chunk detached back to `ready` mid-graph
-is past that window: it stands on a node another graph need not contain, so only a migration can move it.
+window, and editing the pin to its current value is an idempotent no-op. Even inside that window the edit refuses a
+retired target ([../graphs/identity.md](../graphs/identity.md) §Operational surfaces). Once the chunk has moved, the pin
+is immutable and changes only when a migration ([./migration.md](./migration.md)) applies. A chunk detached back to
+`ready` mid-graph is past that window: it stands on a node another graph need not contain, so only a migration can move
+it.
 
 ### Model, effort, and harness defaults
 

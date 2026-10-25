@@ -1,8 +1,10 @@
 # Gate decisions
 
-A gate's decision is a durable multiple-choice ask written where a worker-judged node would have written its transition,
-carrying the step's artifacts for the deciding human; it is the gate's parking row — the chunk parks `waiting_on_human`
-until a person resolves it. Spoke of the human-entry hub, [../humans.md](../humans.md).
+A gate's decision is a durable multiple-choice ask written where a worker-judged node would have written its transition;
+it is the gate's parking row — the chunk parks `waiting_on_human` until a person resolves it. A runner-configured gate's
+decision opens at the step's exit and carries the step's artifacts for the deciding human; a graph gate's opens on the
+chunk's arrival at the human-judged node, before any step has run there, so it carries none. Spoke of the human-entry
+hub, [../humans.md](../humans.md).
 
 A decision's choices are exactly the node's judgement choices, owned by [../graphs/edges.md](../graphs/edges.md). A
 runner-configured gate on a node declaring `checks:` runs them at the step's exit, so the decision carries the step's
@@ -11,7 +13,9 @@ check results beside its artifacts and the person decides with them in view.
 ## How a gate arises
 
 Gates arrive structurally, as a human-judged node, or by runner configuration selecting node names — human sign-off
-added without editing any graph. At a human-judged node a runner-submitted transition is rejected.
+added without editing any graph. At a human-judged node a runner-submitted transition naming no decision is rejected; of
+a runner's submissions, only the holding runner's transition naming the resolved decision leaves it, as Resolution below
+describes.
 
 Each arrival at a human-judged node opens one decision for that visit's epoch, whether a transition, migration, or
 operator restart landed it, including a restart back onto the same node. The arrival and decision commit together; a
