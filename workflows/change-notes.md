@@ -14,6 +14,8 @@ from the notes alone.
 ## Steps
 
 1. **Does the change owe a note?** Apply `bzh:change-note`. A change an operator would not notice writes nothing; stop.
+   One that touches a watched contract document (`blizzard:change-notes`) still carries the
+   `Change-Note: none — <reason>` trailer on a commit, or the gate fails it.
 2. **Choose the id** — `changes/README.md` §The id — unique across the whole of `changes/`.
 3. **Set the kind and fields** — `changes/README.md` §Frontmatter: the kind, the surfaces it touches, and `flag` when
    the change ships behind one.

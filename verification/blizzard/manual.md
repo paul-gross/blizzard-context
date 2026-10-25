@@ -1193,8 +1193,8 @@ node consumed the asset as its addendum directs, and the runner's lease never re
 
 ### `blizzard:manual-change-notes`
 
-**Surface.** `blizzard-change-notes guide`, `cut` and `render`, and `mise run release-notes`, driven by hand — the
-commands a release engineer runs and the Markdown a person reads on a release page. No test fixture shows how the
+**Surface.** `blizzard-change-notes guide`, `cut`, `render` and `owed`, and `mise run release-notes`, driven by hand —
+the commands a release engineer runs and the Markdown a person reads on a release page. No test fixture shows how the
 rendered notes read, or that the task resolves the tag's tree rather than the working tree's.
 
 **Setup.** A throwaway `git clone` of the `blizzard` worktree under `$BLIZZARD_TMPDIR`, run from its root. Tags created
@@ -1214,12 +1214,19 @@ clone's CLI must load the implementation under exercise.
    `mise run release-notes v<X.Y.0>` twice. Add an unrelated working-tree note after tagging and compare the output.
    Repeat a candidate cut into the same version directory and confirm the guide and rendered tag remain deterministic.
 4. In the real worktree, run `mise run release-notes v0.1.0-rc.1` for the legacy no-notes-directory fallback.
+5. In the same clone, commit each case on a branch off `master` and run `blizzard-change-notes owed --against master`,
+   reading the output as well as the exit code: (a) a one-field edit to `openapi/hub.openapi.json` with no note; (b) the
+   same edit with an added unreleased note; (c) the same edit with `Change-Note: none — <reason>`; (d) the same edit
+   with `Change-Note: none`; (e) a `feat!:` commit with no note; (f) a `breaking: true` note with `## Upgrade` and no
+   `!`; (g) a body edit to a released note; (h) a frontmatter edit to a released note.
 
 **Passes when.** Refusals name every unkept promise and write nothing; released postponements change the displayed
 current line. The successful cut moves notes and the boundary under `## Upgrading to <X.Y.0>` with its heading intact;
 `check` passes. The guide orders deprecations by carrying release, pairs their retiring removals and upgrade prose, then
 lists unrelated breaking notes. Both tag renders agree despite working-tree changes, open with **Upgrading to <line>**,
-link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone.
+link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone. For
+`owed`: (a), (d), (e), (f) and (h) fail, (a) naming the document and (d) the expected trailer form; (b), (c) and (g)
+pass, (c) printing its reason.
 
 ### `blizzard:manual-compat`
 

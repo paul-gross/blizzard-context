@@ -24,7 +24,8 @@ to it, and a note describing the implementation tells that operator nothing they
 
 ## Detect
 
-A change touching a surface the Rule lists, with no added note under `changes/unreleased/`; a note whose body names a
+A change touching a surface the Rule lists, with no added note under `changes/unreleased/` (`blizzard:change-notes`
+already fails a changed contract document with none, so a reviewer reads for the rest); a note whose body names a
 module, a cause, or the work item it came from; a note on a change no operator can notice; two notes for one change.
 
 ## Do
