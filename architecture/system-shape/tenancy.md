@@ -185,7 +185,8 @@ caused it.
 **Scope.** A probe that gates a pass (`bzh:probe-gated-pass`) is read hub-wide, in one statement, and its value is per
 tenant (`bzh:pass-isolates-tenants`). A hub-wide job that is not a sweep — boot slot release, key coverage, key rotation
 — loops over open tenants and acts through each one's stores. Trace export and fact egress write nothing into any
-tenant's store; their rows carry their tenant's id instead.
+tenant's store; their rows carry their tenant's id instead. A one-tenant pass is the same pass narrowed to one tenant:
+it reads the same hub-scoped probe and corpus and acts only in that tenant.
 
 **Detect.** No structural gate reaches it: the statement guard sees a scoped write as scoped whichever tenant it was
 opened for. A reviewer asks of each write a pass makes: whose scope is this, and is it the tenant of the row being acted
@@ -212,13 +213,16 @@ which one tenant's broken source or burst of work changes what the pass does for
 export and fact egress are outside it: each advances one cursor in fact order, which is the order their sink receives,
 so each holds the cursor on any fact it cannot place; isolating them needs a cursor per tenant, which is a separate
 change. Boot loops and key rotation fail fast by design and are not periodic passes. The probe read stays hub-wide and
-one statement (`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due.
+one statement (`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due. A one-tenant
+pass reads and writes only its own tenant's convergence entry, never rebinding or pruning state across tenants, and
+leaves the close drain's rotation unmoved.
 
 **Detect.** The poisoned-tenant fixture, `tests/pass_isolation.py`, is a `blizzard:component-test`: it runs a pass twice
 on the virtual clock, once with a tenant whose units raise, report unconverged, or hold a burst of due work, and once
-without that tenant, and fails when any other tenant's recorded calls differ. Every pass this rule binds uses it. By
-eye: a convergence flag folded across tenants, one probe value for the hub, a budget sliced from one ordered list, or a
-catch around a pass's whole tenant loop rather than inside it.
+without that tenant, and fails when any other tenant's recorded calls differ. It also interleaves a poisoned tenant's
+one-tenant passes with timed passes and fails the same way. Every pass this rule binds uses it. By eye: a convergence
+flag folded across tenants, one probe value for the hub, a budget sliced from one ordered list, or a catch around a
+pass's whole tenant loop rather than inside it.
 
 **Do.** The close drain groups due intents by tenant and takes one in turn from each, starting at a rotating tenant,
 until it reaches its pass limit, so a tenant with a burst never takes another's slots.

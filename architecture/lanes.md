@@ -2,9 +2,10 @@
 
 A **lane** is a periodic pass or store-and-forward pass that moves facts toward a sink. On the hub, every pass hosted by
 the `Sweep` driver is a lane: the annotation and event-derivation reconcilers, the close drain, tenant teardown, the
-trace export sweep, and the egress sweep. `Sweep.all` (`blizzard/src/blizzard/hub/app.py`) owns that roster. On the
-runner, every pass that moves facts off the runner is one: `OutboundDrain`, `TranscriptDrain`, `LeaseTraceSweep`, and a
-registered host's own `HostLaneDrain`. The core phases (REAP, PULL, FILL, ADVANCE, RESUME), the samplers, and
+trace export sweep, and the egress sweep. `SweepRoster` (`blizzard/src/blizzard/hub/domain/sweeps/`), built once in
+`build_services`, owns that roster, and `Sweep.all` (`blizzard/src/blizzard/hub/app.py`) yields its timed members. On
+the runner, every pass that moves facts off the runner is one: `OutboundDrain`, `TranscriptDrain`, `LeaseTraceSweep`,
+and a registered host's own `HostLaneDrain`. The core phases (REAP, PULL, FILL, ADVANCE, RESUME), the samplers, and
 `Retention` are not lanes. `bzh:steppable-loop` in [`./crash-correctness.md`](./crash-correctness.md) governs loop
 phases; `bzh:probe-gated-pass` below governs the cost of converging and pruning passes, including `Retention`. Each rule
 follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
@@ -22,14 +23,15 @@ follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sh
 3. **One failure shape per sink class.** The lane takes the shape its sink class names below, and takes its retry state
    from `blizzard/src/blizzard/foundation/lane_retry.py` rather than keeping its own.
 4. **Isolation.** A lane's failure never escapes into its host's other work. The hub runs each `Sweep` as its own task
-   with its own catch. A runner tick-step lane catches its own failures inside `run()`, so later tick steps still run. A
-   runner driver catches per pass. A hub pass that serves many tenants carries this down to each tenant
-   (`bzh:pass-isolates-tenants`).
+   with its own catch, and a requested pass's raise is caught by the route that ran it. A runner tick-step lane catches
+   its own failures inside `run()`, so later tick steps still run. A runner driver catches per pass. A hub pass that
+   serves many tenants carries this down to each tenant (`bzh:pass-isolates-tenants`).
 5. **Hosting.** On the runner, a lane whose only sink is the hub is a step of the pass that owns its rows: a runner's
    lane is a step of that runner's tick, and the host's own lane, `HostLaneDrain`, is a step of the host tick, which
    runs on its own driver beside the runners' ticks. Either way the hub client bounds each call, and the pass's later
    steps consume its result. A lane whose sink is operator-configured, such as an exporter, runs on a dedicated driver,
-   so a stalled sink never holds a tick. On the hub, every lane is a `Sweep`.
+   so a stalled sink never holds a tick. On the hub, every lane is a `SweepRoster` entry, stepped by a `Sweep` when
+   timed and by the sweep routes on request.
 
 The failure shapes, by sink class:
 
