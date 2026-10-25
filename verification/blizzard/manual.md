@@ -1219,13 +1219,23 @@ clone's CLI must load the implementation under exercise.
    same edit with an added unreleased note; (c) the same edit with `Change-Note: none — <reason>`; (d) the same edit
    with `Change-Note: none`; (e) a `feat!:` commit with no note; (f) a `breaking: true` note with `## Upgrade` and no
    `!`; (g) a body edit to a released note; (h) a frontmatter edit to a released note.
+6. Breaks cross-check, in a clone whose supported release carries a deprecated route that HEAD removes under a `!`
+   commit. Stage an unrelated breaking note and run `cut <X.Y.0>`: it refuses naming the route's surface, `where` and
+   release, and leaves `changes/` and `docs/upgrade.md` byte-for-byte unchanged. Name the route in a breaking note's
+   `surfaces` and `breaks`, plus a second `breaks` value compat does not record: the cut succeeds and prints that value
+   as a non-failing line. Commit, tag, run `blizzard-compat --tag <X.Y.0>`, then
+   `render v<X.Y.0> --breaks
+   compat-breaks.json`: **Upgrade notes** ends with the recorded break beside its note, the
+   unrecorded value goes to stderr, the exit code is 0. Add an entry no note names to `compat-breaks.json` and
+   re-render: it exits non-zero naming the entry, with empty stdout; a `tag` naming another tag is refused too.
 
 **Passes when.** Refusals name every unkept promise and write nothing; released postponements change the displayed
 current line. The successful cut moves notes and the boundary under `## Upgrading to <X.Y.0>` with its heading intact;
 `check` passes. The guide orders deprecations by carrying release, pairs their retiring removals and upgrade prose, then
 lists unrelated breaking notes. Both tag renders agree despite working-tree changes, open with **Upgrading to <line>**,
-link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone. For
-`owed`: (a), (d), (e), (f) and (h) fail, (a) naming the document and (d) the expected trailer form; (b), (c) and (g)
+link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone. An
+unnamed compat break refuses the cut and the render with nothing written or printed; a named one is listed beside its
+note. For `owed`: (a), (d), (e), (f) and (h) fail, (a) naming the document and (d) the expected trailer form; (b), (c) and (g)
 pass, (c) printing its reason.
 
 ### `blizzard:manual-compat`
