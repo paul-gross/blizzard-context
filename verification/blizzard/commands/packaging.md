@@ -13,12 +13,12 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
 (`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, the contract-document drift check
 (`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility against the supported releases
-(`blizzard:compat`), the change-note check (`mise run change-notes`, which runs `uv run blizzard-change-notes check`),
-then eslint, vitest, the web structural gate's sweeps (`web:structural-gate`), the bundle-composition check
-(`web:bundle-composition`), the story render check (`web:story-render`), and generated-client drift over `web/`. Stage
-regenerated `openapi/`, `contracts/` or `web/` client output before running it: the drift checks are a
-working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails
-(`web:client-drift`).
+(`blizzard:compat`), the change-note check (`mise run change-notes`, which runs
+`uv run blizzard-change-notes check && uv run blizzard-change-notes owed --against origin/master`), then eslint, vitest,
+the web structural gate's sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`), the
+story render check (`web:story-render`), and generated-client drift over `web/`. Stage regenerated `openapi/`,
+`contracts/` or `web/` client output before running it: the drift checks are a working-tree-vs-index `git diff`, so a
+staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
 
 `mise run gate` is not the full master merge gate — it omits every upper tier, which the `pr` workflow runs as separate
 real gate jobs; `blizzard:gate-full` below reproduces the unconditional tiers, and `bzh:ci-job-local-command`
@@ -67,6 +67,18 @@ entries under `allowances`; `--tag <version>` judges HEAD as that tag and writes
 carry the same field. `gate.yml`'s `compat` job (named `compatibility against supported releases`) runs it on every
 trigger but a tag; `release.yml`'s job of the same name runs `--tag` before any build. `blizzard:manual-compat` drives
 the tool by hand.
+
+### blizzard:change-notes
+
+`mise run change-notes` runs two commands. `blizzard-change-notes check` asserts every file under `changes/` is a note
+in the documented format. `blizzard-change-notes owed --against <ref>` asserts the commits in
+`merge-base(HEAD, <ref>)..HEAD` owe no note they do not add: a changed contract document (the compat registry's less the
+store schema, plus the CLI contract) carries an added or edited unreleased note or a reasoned `Change-Note: none —`
+trailer; a `!` commit and a newly breaking note owe each other, the note with an `## Upgrade` section; and a released
+note changes only in its body outside the cut of its own version. Git reads only: the working tree is never consulted.
+CI runs `owed` on pull requests only, against `origin/<base branch>`; a push runs `check` alone. Locally it runs against
+`origin/master`, so fetch first. The OpenAPI documents have no contract-document row of their own: `blizzard:gate`'s
+spec-drift check above and `owed` both hold them.
 
 ### blizzard:wheel
 
