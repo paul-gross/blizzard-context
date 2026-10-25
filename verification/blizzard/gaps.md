@@ -226,8 +226,8 @@ The worker, not the runner, pushes its branch before declaring it (`blizzard run
 workspace mints, never against a real forge.
 
 Standing in for a tier: a push failure specific to a real remote — auth, a GitHub branch-protection rule, network — is
-exercised by the dogfood deployment (`workspace:/context/project/local-instance.md`), whose build transcripts show the
-worker pushing to real GitHub. Do not add a real-forge CI tier.
+exercised by the dogfood deployment (`workspace:/context/project/singleton-instance.md`), whose build transcripts show
+the worker pushing to real GitHub. Do not add a real-forge CI tier.
 
 ## A garden node prompt's wording
 
@@ -247,7 +247,7 @@ class a proposal correctly, is asserted by nothing: a prompt is an input to a mo
 
 Standing in for a tier: a live routine run against a real fleet, whose delivered finding set and docket are read back
 and judged against what the axis entry declares — the dogfood deployment
-(`workspace:/context/project/local-instance.md`) is where that evidence is produced, and a prompt rewrite owes one
+(`workspace:/context/project/singleton-instance.md`) is where that evidence is produced, and a prompt rewrite owes one
 before its wording is treated as proven. Do not answer this with a tier that scores prompt prose against a rubric, and
 do not read the scripted e2e path as evidence about the model: it asserts the machinery a model's output flows through,
 which is the half that already has a tier.
@@ -297,10 +297,10 @@ declared, carries a prior report forward only when the change's functions did no
 bullet is reachable only on a review-`fail` round, which that run does not force, and is asserted by nothing.
 
 Standing in for a tier: a live chunk run through each lane on the dogfood deployment
-(`workspace:/context/project/local-instance.md`), whose transitions, bounces, and retrospective are read back and judged
-against the routing these prompts intend. That evidence is only producible once the landed graph directory is re-minted,
-so this entry records a standing obligation on the lanes' wording rather than a phase gate. Do not answer this with a
-tier that scores prompt prose against a rubric.
+(`workspace:/context/project/singleton-instance.md`), whose transitions, bounces, and retrospective are read back and
+judged against the routing these prompts intend. That evidence is only producible once the landed graph directory is
+re-minted, so this entry records a standing obligation on the lanes' wording rather than a phase gate. Do not answer
+this with a tier that scores prompt prose against a rubric.
 
 ## The cross-repo OpenCode lever roster
 

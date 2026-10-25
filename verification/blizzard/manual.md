@@ -82,7 +82,7 @@ The env's runner spawns the fenced mock harness (`tool:mock-fleet`), never a rea
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns why on both counts.
 
 Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — with `winter service restart <env>/runner`;
-`workspace:/context/project/local-instance.md` §Traps on this machine owns how to stop any other runner.
+`workspace:/context/project/singleton-instance.md` §Traps on `xps` owns how to stop any other runner.
 
 **Steps.**
 
@@ -749,7 +749,7 @@ separately, by an operator, once a release containing the measured bulk-read cha
 `GET /api/backlog` and the runner's own `GET /api/fleet/queue/peek` share `list_ready`/`list_not_ready`, so the same
 reading covers all three. The hosted reading is owed separately, as above.
 
-**Hot-path indexes and spend-fold reading.** Store: an on-disk copy found at this machine's
+**Hot-path indexes and spend-fold reading.** Store: an on-disk copy found at `xps`'s
 `~/projects/blizzard-blizzard/backups/hub-20260905T175650Z.db`, of unverified provenance — nothing in `blizzard-infra`
 produces a file at that path/name, so treat it as an unofficial, undocumented copy rather than a guaranteed
 application-consistent one. `PRAGMA integrity_check` passed, and its `usage_facts`/`transcript_segments` row counts

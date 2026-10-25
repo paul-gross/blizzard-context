@@ -2,7 +2,7 @@
 
 Develop and demo the board against a local store seeded directly by `blizzard-mock-data` (`tool:mock-data`); never point
 `blizzard-mock-data`, `ng serve`, or any other dev surface at the hosted deployment, whose standing rule
-`workspace:/context/project/local-instance.md` owns.
+`workspace:/context/project/hub-data-modes.md` owns.
 
 Reach for the real wire path — a work source record, a minted forge fixture, and a real `POST /api/chunks` ingest — only
 when the ingest path itself, rather than the data it produces, is what is under test. The sequence that path rides is
