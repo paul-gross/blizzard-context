@@ -39,7 +39,8 @@ earlier answerer still wins), a gate decision not yet closed closes whether or n
 escalation is superseded as by a requeue ([../humans/asks.md](../humans/asks.md),
 [../humans/gates.md](../humans/gates.md), [../humans/escalation.md](../humans/escalation.md)). A cross-graph move also
 clears any standing intended migration ([./migration.md](./migration.md)); nothing survives to re-park or re-aim the
-chunk at a node it no longer stands on.
+chunk at a node it no longer stands on. A landing on a human-judged node opens a decision for the restart's fresh epoch,
+even when it is the same gate whose old decision the move closed ([../humans/gates.md](../humans/gates.md)).
 
 It spends no retry budget: the budget counts failed attempts and a preempted attempt was superseded, not failed —
 restarting a stuck step never carries it toward `retries.exhausted`. Durably recorded artifacts stay; a step's artifacts

@@ -13,6 +13,10 @@ check results beside its artifacts and the person decides with them in view.
 Gates arrive structurally, as a human-judged node, or by runner configuration selecting node names — human sign-off
 added without editing any graph. At a human-judged node a runner-submitted transition is rejected.
 
+Each arrival at a human-judged node opens one decision for that visit's epoch, whether a transition, migration, or
+operator restart landed it, including a restart back onto the same node. The arrival and decision commit together; a
+replayed arrival opens no second decision. This does not impose a graph gate on a worker-judged runner node.
+
 A decision records whether the graph declared its gate or a named runner's configuration imposed it. A runner declares
 its gate set to the hub, which reports it and never enforces it.
 
@@ -25,9 +29,12 @@ an answer ([./asks.md](./asks.md)) — and the holding runner then writes the or
 ([../work/transitions.md](../work/transitions.md)) referencing the decision: the runner still advances the chunk. Until
 a closing fact references a runner-configured gate, the runner's plain completion out of that node-step — one naming no
 decision — is refused, whether the gate is still waiting or already resolved: only the transition naming the decision
-moves on, and only to the resolved choice. A resolution to a `requires_checks` choice over a red check is accepted — a
-human's judgement is not bound by the gate that binds an agent — and is recorded as an override with the resolution. The
-resolution records who chose what, and may carry the resolver's note
+moves on, and only to the resolved choice of a decision from the current node arrival's epoch. A claim may reserve a
+newer epoch without moving the chunk; its completion must clear the current lease fence, while the gate decision still
+belongs to the same visit. A return to the gate through another transition, migration, or restart is a new visit, and
+the earlier visit's decision cannot authorize it. A resolution to a `requires_checks` choice over a red check is
+accepted — a human's judgement is not bound by the gate that binds an agent — and is recorded as an override with the
+resolution. The resolution records who chose what, and may carry the resolver's note
 ([./asks.md#a-persons-note](./asks.md#a-persons-note)); a losing resolution's note is dropped with its choice. A
 decision closes by one of:
 
