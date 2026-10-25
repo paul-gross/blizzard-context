@@ -2027,7 +2027,11 @@ SWEPT_CHECKOUT_GLOBS = {
 # Generated trees are mirrors of an owner, never independent sites, so a count in one
 # is not a copy to dispose of.
 SWEPT_EXCLUDED_PREFIXES = {
-    "blizzard": (("src", "blizzard", "static"), ("web", "projects", "fleet", "src", "lib", "api")),
+    "blizzard": (
+        ("src", "blizzard", "static"),
+        ("web", "projects", "fleet", "src", "lib", "api"),
+        ("tests", "harness", "client", "wire"),
+    ),
     "blizzard-mock": (),
 }
 

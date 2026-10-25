@@ -91,6 +91,7 @@ Excludes generated output:
 
 - `blizzard/openapi/`
 - `blizzard/web/projects/fleet/src/lib/api/`
+- `blizzard/tests/harness/client/wire/`
 - `blizzard/src/blizzard/static/`
 
 A fact's home may live outside every bound tree — a domain concept's home, `blizzard-context:/domain/`, is none of them;
