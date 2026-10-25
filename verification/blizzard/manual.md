@@ -1268,6 +1268,36 @@ the entry unedited: the first two runs exit 0 with the finding under `[allowance
 **Hazards.** Read-only against the clone's git history; nothing is pushed, and `compat-breaks.json` is written in the
 clone only.
 
+### `blizzard:manual-flag-lifecycle`
+
+**Surface.** `uv run blizzard-flag-lifecycle` driven by hand: the tombstone rules (`tombstone-removable`,
+`tombstone-removed`) in `pr`, `cut` and `tag` mode, the flip rule (`flip-without-note`) against `--base`, and the
+check's refusal when `blizzard-compat` cannot name the supported releases. The unit and component tests build their
+repositories from synthetic snapshots and a stubbed `blizzard-compat`; this method runs the real one.
+
+**Setup.** A throwaway `git clone` of the `blizzard` worktree under `$BLIZZARD_TMPDIR`, run from its root. Tags created
+there are never pushed. Tag two synthetic releases (a candidate and a stable `v0.2.0`) on commits whose
+`src/blizzard/foundation/flags/registry.toml` declares one flag `off`, and set `src/blizzard/wire/window.toml` so
+`uv run blizzard-compat releases` lists them. The clone's CLI must load the implementation under exercise.
+
+**Steps.**
+
+1. Move the flag into `[retired]`, commit, and run `blizzard-flag-lifecycle pr`. Tag a further stable release on a
+   commit that no longer declares the flag, advance the window past the older tags, and run it again.
+2. Restore the state of step 1's first run, delete the `[retired]` entry, and run `blizzard-flag-lifecycle pr`, then
+   `cut`, then `tag`.
+3. Flip a declared flag `off` to `on`, commit it on a branch from `origin/master`, and run `mise run flag-lifecycle`.
+   Add a `changes/unreleased/` note with `flag: <name>` and run it again.
+4. Corrupt the clone's `src/blizzard/wire/window.toml` and run `blizzard-flag-lifecycle pr`.
+
+**Passes when.** Step 1: the first run prints `NOTE [tombstone-removable]` for the name only once no supported release
+holds it live, and exits 0 in both runs; before that point it prints no note for it. Step 2: all three modes exit 1 with
+`FAIL [tombstone-removed]` naming the flag and the supported release that holds it. Step 3: the first run exits 1 with
+`FAIL [flip-without-note]`; with the note it exits 0 and prints no such finding. Step 4 exits 1 with a one-line message
+naming `blizzard-compat`.
+
+**Hazards.** Read-only against the clone's git history; nothing is pushed.
+
 ### `blizzard:manual-store-fold`
 
 **Surface.** `scripts/fold_store.py <floor-tag>` driven by hand against a published release: the baseline it writes for
