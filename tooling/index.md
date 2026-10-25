@@ -1,7 +1,7 @@
 # Tooling
 
 This file routes to the surface owning each external tool a blizzard agent drives beyond the winter CLI. The winter CLI
-itself is workspace-owned at `workspace:/context/winter-cli/index.md` and is not re-routed here. The parent hub is
+itself is workspace-owned at `workspace:/context/winter/cli/index.md` and is not re-routed here. The parent hub is
 [`../index.md`](../index.md).
 
 | Surface                                                                  | Read when…                                                                                                                                                                                                                   |
