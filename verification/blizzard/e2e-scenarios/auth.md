@@ -30,11 +30,11 @@ seam real, no network beyond the two local subprocesses.
     `/login?refusal=invite_only` — the login page rendered, no board chrome, and no `bz_session` cookie: a refused
     sign-in writes nothing.
   - An invitation into the store's one tenant as `guest`, for the stub IdP's verified email, is minted in the store
-    (`tests/service/test_auth_login_service.py`'s `invite`, the suite's mint-what-no-route-reaches pattern for fixture
-    state) and opened as `GET /api/auth/<provider>/authorize?invite=<token>`. The dance accepts it and sets the session
-    cookie, and the board then renders its shell with the SSE stream open (`board-shell` present) over a seeded
-    not-ready chunk whose card renders no Promote control: the end-to-end proof a `guest` reads everything and mutates
-    nothing. The seeded graph, chunk, and memberships all name the store's one tenant.
+    (`tests/support.py`'s `invite`, the suite's mint-what-no-route-reaches pattern for fixture state) and opened as
+    `GET /api/auth/<provider>/authorize?invite=<token>`. The dance accepts it and sets the session cookie, and the board
+    then renders its shell with the SSE stream open (`board-shell` present) over a seeded not-ready chunk whose card
+    renders no Promote control: the end-to-end proof a `guest` reads everything and mutates nothing. The seeded graph,
+    chunk, and memberships all name the store's one tenant.
   - A newer `contributor` membership fact written directly in the store, then a reload: that same card's Promote control
     is present.
   - With every `sessions` row deleted (an unambiguous expiry stand-in — the resolve path treats missing and expired
