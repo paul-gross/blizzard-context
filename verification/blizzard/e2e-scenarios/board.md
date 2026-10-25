@@ -70,13 +70,13 @@ The mobile glance board at a real ~390px width under `bzh:narrow-viewport-tier-r
 `narrow_viewport` fixture); `/board` routes to the glance shell.
 
 - `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` — captures and holds open the
-  `GET /api/chunks` read, proves the glance shell renders `needs-you-loading` and no `needs-you-empty` row while the
-  read is in flight, then releases the held route, landing the row and clearing loading — the empty state never shown on
-  a populated fleet.
+  `GET /api/chunks` read, proves the glance shell renders `glance-list-loading` and no `glance-list-empty` row while the
+  read is in flight, then releases the held route, landing the card and clearing loading — the empty state never shown
+  on a populated fleet.
 - `test_the_glance_board_shows_a_cost_estimate_never_a_plain_billed_zero` — claims a chunk with no billed cost at all,
   pushes it a subscription-only `usage.recorded` fact (an estimate, no billed cost), and proves the "Fleet spend ·
-  today" panel and the in-motion row both render the one `~`-marked figure — never a plain billed `$0.00` standing in
-  for a window whose only spend is an estimate.
+  today" panel and the running chunk's card both render the one `~`-marked figure — never a plain billed `$0.00`
+  standing in for a window whose only spend is an estimate.
 
 ## test_event_log_e2e
 

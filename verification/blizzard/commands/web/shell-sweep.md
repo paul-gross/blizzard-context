@@ -62,9 +62,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   to the right, with nothing — a long runner name, a two-workspace runner's binding lines, a long-named environment —
   pushing the page sideways, with the chunk dock open or closed.
 - `glance-view.shell-sweep.spec.ts` covers the mobile glance board at 390px and 320px: the day's spend sits below the
-  vitals strip and above its attention, motion, queue, and completed-work sections, which remain ordered vertically; a
-  row's work ref and short id share its head line at opposite ends, its long title clamps to two lines, and the board
-  has no horizontal overflow or page error.
+  vitals strip and above its one list of cards — attention and work in flight, READY over the divider over BACKLOG, then
+  completed work — which stays ordered vertically; a card's work ref and short id share its head line at opposite ends,
+  its long title clamps to two lines, its node and runner hold one meta line without running into its cost or past its
+  edge, and the board has no horizontal overflow or page error.
 - `events-scroll.shell-sweep.spec.ts` checks that a long events feed scrolls within its bounded rows at desktop and
   phone widths.
 - `chunk-page-layout.shell-sweep.spec.ts` covers the hub chunk detail page, reached from the mobile board — the General
