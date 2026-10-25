@@ -46,10 +46,10 @@ label.
 ### Every tenant starts with one
 
 A tenant holds a project with the slug `default` from the moment it exists, so it can ingest, hold a routine, and give a
-runner something to serve before anyone configures anything. A hub that was running before projects existed carries its
-whole state into that project — its chunks, scopes, routines, findings, and proposals — linked to every work source and
-repository it already held, with every runner serving it. Nothing else sets `default` apart: its slug and name change
-like any other project's.
+runner something to serve before anyone configures anything. An upgrade from a revision without projects places the
+store's chunks, scopes, routines, findings, and proposals in `default`, links it to every work source and repository the
+store holds, and has every runner serve it. Nothing else sets `default` apart: its slug and name change like any other
+project's.
 
 A project, once created, stays: there is no retiring one.
 

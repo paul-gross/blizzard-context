@@ -1,13 +1,13 @@
 # Periodic passes and lanes
 
 A **lane** is a periodic pass or store-and-forward pass that moves facts toward a sink. On the hub, every pass hosted by
-the `Sweep` driver is a lane: the annotation and event-derivation reconcilers, the close drain, the trace export sweep,
-and the egress sweep. On the runner, every pass that moves facts off the runner is one: `OutboundDrain`,
-`TranscriptDrain`, `LeaseTraceSweep`, and a registered host's own `HostLaneDrain`. The core phases (REAP, PULL, FILL,
-ADVANCE, RESUME), the samplers, and `Retention` are not lanes. `bzh:steppable-loop` in
-[`./crash-correctness.md`](./crash-correctness.md) governs loop phases; `bzh:probe-gated-pass` below governs the cost of
-converging and pruning passes, including `Retention`. Each rule follows the slot skeleton owned by
-`winter-canon:/rule-shape.md` (`canon:rule-shape`).
+the `Sweep` driver is a lane: the annotation and event-derivation reconcilers, the close drain, tenant teardown, the
+trace export sweep, and the egress sweep. `Sweep.all` (`blizzard/src/blizzard/hub/app.py`) owns that roster. On the
+runner, every pass that moves facts off the runner is one: `OutboundDrain`, `TranscriptDrain`, `LeaseTraceSweep`, and a
+registered host's own `HostLaneDrain`. The core phases (REAP, PULL, FILL, ADVANCE, RESUME), the samplers, and
+`Retention` are not lanes. `bzh:steppable-loop` in [`./crash-correctness.md`](./crash-correctness.md) governs loop
+phases; `bzh:probe-gated-pass` below governs the cost of converging and pruning passes, including `Retention`. Each rule
+follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## What a lane owes around its body (`bzh:lane-contract`)
 
@@ -33,11 +33,11 @@ converging and pruning passes, including `Retention`. Each rule follows the slot
 
 The failure shapes, by sink class:
 
-| Sink class                                                  | Shape                                                                                                                                                                                                                    | Lanes                                                                      |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| Operator-configured, with an outage the operator can act on | Whole-pass backoff and an **outage latch**: one failed event when an outage starts, one recovered event when it ends. The first pass seeds the latch from the newest persisted latch, so a restart mid-outage is silent. | Hub trace export sweep, hub egress sweep, runner `LeaseTraceSweep`         |
-| Per-item outcomes against a forge                           | Per-item backoff, persisted as attempt history and computed with the shared formula, plus per-item events. No latch: one item failing does not mean the sink is down.                                                    | Close drain                                                                |
-| The hub as sink, or a local-store converging pass           | Retry on the next pass, with no backoff and no latch. A failed pass costs one bounded request, and an announcement would ride the channel that is failing.                                                               | `OutboundDrain`, `TranscriptDrain`, `HostLaneDrain`, the three reconcilers |
+| Sink class                                                  | Shape                                                                                                                                                                                                                    | Lanes                                                                                                             |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Operator-configured, with an outage the operator can act on | Whole-pass backoff and an **outage latch**: one failed event when an outage starts, one recovered event when it ends. The first pass seeds the latch from the newest persisted latch, so a restart mid-outage is silent. | Hub trace export sweep, hub egress sweep, runner `LeaseTraceSweep`                                                |
+| Per-item outcomes against a forge                           | Per-item backoff, persisted as attempt history and computed with the shared formula, plus per-item events. No latch: one item failing does not mean the sink is down.                                                    | Close drain                                                                                                       |
+| The hub as sink, or a local-store converging pass           | Retry on the next pass, with no backoff and no latch. A failed pass costs one bounded request, and an announcement would ride the channel that is failing.                                                               | `OutboundDrain`, `TranscriptDrain`, `HostLaneDrain`, annotation and event-derivation reconcilers, tenant teardown |
 
 **Why.** A lane runs unattended for as long as its sink is down, so every clause bounds a cost that otherwise grows
 without limit: an unbounded pass starves its host, an unreplayable item corrupts on the crash the sweep arms, an

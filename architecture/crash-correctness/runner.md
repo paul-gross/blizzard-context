@@ -515,12 +515,9 @@ facts.
 
 ### Binding at the configured id
 
-The store binds to its runner (`bzh:runner-scoped-store`) from configuration: every composition binds the stores to the
-entry's `id` before anything runs, the hub reachable or not — the host and tick graphs and the offline read verbs. The
-invariant checker reads across runners through the exempt `runner_audit`, so it takes no binding. The binding is
-in-process, never changes once set, and is never read back from the identity row. A connection never bound reads a
-runner-scoped table as empty and refuses a write with `RunnerUnbound`, so no write lands before the id it must carry
-exists. A `kill -9` leaves nothing to reconcile: the binding is reseeded from the host file at the next boot.
+The binding contract belongs to `bzh:runner-scoped-store`'s Scope
+([../system-shape/runner-scoping.md](../system-shape/runner-scoping.md#adapters-hold-the-bound-seam-bzhrunner-scoped-store)).
+A `kill -9` leaves nothing to reconcile: the binding is reseeded from the host file at the next boot.
 
 The tightening revision (`blizzard/src/blizzard/runner/store/migrations/versions/20261013_1000_runner_scope_tighten.py`)
 makes `runner_id` `NOT NULL` on every runner-scoped table, so a row naming no runner cannot exist. It stamps any row a

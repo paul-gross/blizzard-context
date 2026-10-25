@@ -19,9 +19,7 @@ the one that creates the tenant, which inserts that row instead.
 **Why.** An in-process lock only serializes callers inside one process; the moment a second hub process shares the
 store, two processes' own locks stop serializing each other, and the transaction is the only thing both still share.
 Locking first is what makes the guard reads atomic with the write: on SQLite the lock takes the single writer lock
-before any later read; on Postgres it takes the row lock a concurrent locker of the same row queues behind. The
-tenant-row lock ahead of it changes neither: on SQLite it already took the writer lock, and on Postgres every writer
-takes the tenant row first and its chunk or keyed rows after, so the order two writers lock in never inverts.
+before any later read; on Postgres it takes the row lock a concurrent locker of the same row queues behind.
 
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
 stop, complete, detach, and requeue — and the epoch-fenced writes (`bzh:epoch-fencing`), which the row lock serialises
@@ -31,14 +29,16 @@ secret-retire / referrer-write pair too: a secret's retire reads that no active 
 and each such record's create, edit, or enable reads that its secret is not retired, so both lock the secret's own row
 first (`lock_secret_row`, `hub/store/internal/secret_store.py`). A macro-shape constraint on deployment topology, on
 what holds once more than one hub process may share a store — not a `kill -9` crash-correctness requirement; one hub
-process already serializes every one of these correctly today. Dependency **release** needs no row lock for cycle
-safety: it can only shrink the standing set and can never close a cycle. Its ordering against a fold's edge rewrite
-still depends on the residual per-tenant lock in [Known debt](#known-debt). A create whose only race is a duplicate of a
-tenant-chosen name is no decision under this rule: the table's tenant-led primary key or unique constraint
-(`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's `IntegrityError` to
-the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A create that reads
-state before its insert — a cap, a parent's state, a default it mints — stays a decision under this rule, in the
-keyed-lock form under **Do**.
+process already serializes every one of these correctly today. The tenant-row lock ahead of the decision's lock changes
+neither guarantee: on SQLite it already took the writer lock, and on Postgres every writer takes the tenant row first
+and its chunk or keyed rows after, so the order two writers lock in never inverts. Dependency **release** needs no row
+lock for cycle safety: it can only shrink the standing set and can never close a cycle. Its ordering against a fold's
+edge rewrite still depends on the residual per-tenant lock in [Known debt](#known-debt). A create whose only race is a
+duplicate of a tenant-chosen name is no decision under this rule: the table's tenant-led primary key or unique
+constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's
+`IntegrityError` to the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A
+create that reads state before its insert — a cap, a parent's state, a default it mints — stays a decision under this
+rule, in the keyed-lock form under **Do**.
 
 **Detect.**
 
@@ -96,10 +96,9 @@ binding — runs under that workspace's one in-process acquisition lock, shared 
 that cannot take the lock without waiting skips its claim for that tick and does not wait for it.
 
 **Why.** `bzh:environment-held-once` needs one arbiter of the pool, and the runner store has no row both runners' draws
-could lock, so the host's in-process lock is the arbiter. It is sound only on `HostLock`'s premise of one process per
-data directory: a second process would hold its own lock, and the two would stop serializing each other. A runner that
-waited on the lock inside its claim would hold the tick before its Advance and transcript steps ran, stalling the leases
-it already serves for as long as another runner's draw takes.
+could lock, so the host's in-process lock is the arbiter. A runner that waited on the lock inside its claim would hold
+the tick before its Advance and transcript steps ran, stalling the leases it already serves for as long as another
+runner's draw takes.
 
 **Scope.** Governs `ReadyQueue.claim_one` (`runner/lifecycle/claim.py`) and any later path that draws an environment
 from a pool. The hub claim that follows the draw runs outside the lock. Exactly-once still rests on `require_unheld`,

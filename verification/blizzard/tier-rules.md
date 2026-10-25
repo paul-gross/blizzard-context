@@ -38,16 +38,10 @@ Python suite plugin's (`tests/suite_plugin.py`) `pytest_configure` sets `BLIZZAR
 (`src/blizzard/hub/store/tenant_guard.py`) in the test process, and every hub a service, e2e, or crash test spawns
 inherits the variable and installs the guard as it opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`). The
 Playwright harness sets it through `tests/daemon-env.json`; its daemon-log refusal check fails the request's test, or
-the run when no request owns the refusal. Before a statement executes, the guard refuses one that reaches a tenant-owned
-table without naming its tenant — a select, update, or delete in which no condition scopes that table to a tenant, or an
-insert into it with no `tenant_id` — raising `UnscopedTenantStatement`. A statement marked hub-scoped passes unwalked,
-and raw SQL is never walked. Only the value `1` switches the guard on; a hub started outside the suite runs without it
-unless its environment sets that, and production leaves it off.
-
-A refusal is the finding, never something to switch off: scope the statement, or route a read that must span tenants
-through the seam `bzh:hub-scoped-reads-confined` names. Only `tests/test_tenant_guard.py`, whose subject is the switch
-itself, starts a case without the guard (its `no_hub_guard` fixture). Fixture SQL a test writes raw is outside the
-guard's reach, so it names the tenant itself.
+the run when no request owns the refusal. Only the value `1` switches the guard on. Fixture SQL a test writes raw is
+outside the guard's reach, so it names the tenant itself. `bzh:tenant-scoped-store`'s Detect
+([../../architecture/system-shape/tenancy.md](../../architecture/system-shape/tenancy.md#adapters-hold-scoped-connections-only-bzhtenant-scoped-store))
+owns what the guard refuses and its exemption.
 
 ## The runner statement guard is on in every tier
 
@@ -58,20 +52,11 @@ it composes its host graph (`build_host_process`, `src/blizzard/runner/compositi
 `tests/daemon-env.json` also sets it; the harness fails a refusal in a daemon log against the responsible test or the
 run.
 
-Before a statement executes, the guard refuses one that reaches a runner-scoped table without naming its runner, raising
-`UnscopedRunnerStatement`:
-
-- a select, update, or delete in which no condition scopes that table by a `runner_id` equality;
-- an insert into it with no `runner_id`.
-
-A statement marked runner-unscoped passes unwalked: only `HostStores'` one exempt member, the runner audit, and
-migrations carry the mark (`bzh:host-stores-confined`). Raw SQL is never walked, and only the value `1` switches the
-guard on; production leaves it off.
-
-A refusal is the finding, as with the tenant guard. Only `tests/test_runner_statement_guard.py`, whose subject is the
-switch itself, starts a case without the guard (its `no_runner_guard` fixture). `tests/test_runner_store_isolation.py`,
-at `blizzard:component-test`, seeds the same shapes for two runner ids in one store. It proves that one runner's
-adapters neither read nor change the other's rows, holding its coverage of the read and write census by reflection.
+Only the value `1` switches the guard on. `bzh:runner-scoped-store`'s Detect
+([../../architecture/system-shape/runner-scoping.md](../../architecture/system-shape/runner-scoping.md#adapters-hold-the-bound-seam-bzhrunner-scoped-store))
+owns what the guard refuses and its exemption. `tests/test_runner_store_isolation.py`, at `blizzard:component-test`,
+seeds the same shapes for two runner ids in one store. It proves that one runner's adapters neither read nor change the
+other's rows, holding its coverage of the read and write census by reflection.
 
 ## Head-migrated test stores come from prototypes (`bzh:head-store-prototypes`)
 

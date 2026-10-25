@@ -12,7 +12,7 @@ way the table below gives.
 
 Every compatibility check compares the surface a release carries and reads no flag. Surface skipped while its flag is
 off could be reshaped after it had shipped, and an operator holding a client written against the off route would find it
-broken the morning the flag turned on. A flag buys time for behavior, never for shape.
+broken the morning the flag turned on.
 
 ## Detect
 

@@ -41,14 +41,14 @@ rather than a list of its own. How the binding survives a crash is
 **Detect.** The runner statement guard — a `before_execute` listener
 (`blizzard/src/blizzard/runner/store/runner_guard.py`) the test suite switches on in every tier and production leaves
 off — fails a select, update, or delete naming a runner-scoped table without a `runner_id` equality, and an insert into
-one whose values lack `runner_id`, raising `UnscopedRunnerStatement`. Only statements marked runner-unscoped are exempt,
-and `bzh:host-stores-confined` confines the mark. A refusal is the finding, never something to switch off: a test
-outside `blizzard/tests/test_runner_statement_guard.py` that borrows its `no_runner_guard` fixture or unsets
-`BLIZZARD_RUNNER_GUARD` is itself the violation
-([../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md#the-runner-statement-guard-is-on-in-every-tier)).
-`blizzard/tests/test_runner_store_isolation.py` proves that runner A's adapters read and change none of runner B's rows
-in one store. By eye: an adapter constructor typed `Engine`; an adapter method taking a `runner_id` parameter; a raw
-`sa.select(table)` on a runner-scoped table inside an adapter.
+one whose values lack `runner_id`, raising `UnscopedRunnerStatement`. Raw SQL is never walked. Only statements marked
+runner-unscoped are exempt, and `bzh:host-stores-confined` confines the mark. A refusal is the finding, never something
+to switch off: a test outside `blizzard/tests/test_runner_statement_guard.py` that borrows its `no_runner_guard` fixture
+or unsets `BLIZZARD_RUNNER_GUARD` is itself the violation.
+[The tier rules](../../verification/blizzard/tier-rules.md#the-runner-statement-guard-is-on-in-every-tier) own how the
+test processes and spawned daemons install the guard. `blizzard/tests/test_runner_store_isolation.py` proves that runner
+A's adapters read and change none of runner B's rows in one store. By eye: an adapter constructor typed `Engine`; an
+adapter method taking a `runner_id` parameter; a raw `sa.select(table)` on a runner-scoped table inside an adapter.
 
 **Do.** An adapter's read is `self._store.select(env_bindings, ...)`, and its insert is `self._store.insert(leases)`;
 neither line names a runner, and both carry the bound one.
