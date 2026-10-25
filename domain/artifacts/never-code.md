@@ -17,9 +17,9 @@ bound who reads it.
 
 **Exception.** Transcripts, only through the transcript lane: the hub retains an agent session's turns — tool calls and
 their output included, verbatim, so code the agent wrote or read can appear in them — each message and each tool call's
-input and output capped on its own, and the whole bounded by the lane's per-record, per-chunk, and per-runner-day caps.
-They are readable by a person holding the transcript-read permission, and by the owning runner for its own lease's
-segments; every other artifact kind stays under the rule.
+output capped on its own, a tool call's input kept whole, and the whole bounded by the lane's per-record, per-chunk, and
+per-runner-day caps. They are readable by a person holding the transcript-read permission, and by the owning runner for
+its own lease's segments; every other artifact kind stays under the rule.
 
 **Scope.** The validated kinds, and what each check covers:
 

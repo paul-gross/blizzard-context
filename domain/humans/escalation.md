@@ -40,9 +40,9 @@ location is never a distinct reason the verb is missing.
 When the wrapped verb is absent but the raw command is present, the hub board renders the raw command as the primary
 copyable command; the runner board shows it as plain text with no copy control.
 
-## What the raw command resumes
+## What the commands resume
 
-The raw command resumes the parked session itself, under the model and effort it actually ran with, read back from the
+Either command resumes the parked session itself, under the model and effort it actually ran with, read back from the
 runner's record of that session, never re-derived — so the operator lands in the configuration the fleet was using. A
 session predating that record gets a bare command rather than a guessed one.
 
