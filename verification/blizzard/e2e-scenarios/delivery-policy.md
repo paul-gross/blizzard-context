@@ -48,6 +48,21 @@ same generic `executor: hub` primitive. Its `fleet traces` subtest proves what t
 - `test_pr_ci_refuses_a_foreign_commit_on_the_head` — proves a commit pushed onto the PR's branch after submission
   routes `failure` back to `build`, the `delivery-findings/foreign-head` artifact naming that commit, with nothing
   merged at the forge and bare `main` never moving.
+- `test_pr_ci_lands_an_unstable_pr_once_checks_are_green` — proves a PR the forge reports `unstable` is mergeable: once
+  its required checks read green it merges and the chunk reaches `done`.
+- `test_pr_ci_waits_on_a_draft_or_hooked_pr` — proves a green PR the forge reports `draft` or `has_hooks`, one case
+  each, pends over repeated polls with no bounce, nothing merged at the forge and bare `main` never moving.
+- `test_pr_ci_waits_on_a_startup_failure_check_then_lands` — proves a check concluded `startup_failure` pends rather
+  than routing `failure`, and the chunk lands once the check reads green.
+- `test_pr_ci_routes_conflict_when_updating_a_behind_branch_conflicts` — proves a behind PR whose base really conflicts
+  with the change meets a refused `update-branch` and routes the first bounce, cause `conflict`, back to `build`, with
+  nothing merged at the forge.
+- `test_pr_ci_escalates_a_rejected_credential_as_forge_auth` — proves the forge rejecting the repository's credential
+  escalates the chunk to `needs_human` at `deliver` with cause `forge-auth`, the detail naming the repository, rather
+  than bouncing it.
+- `test_pr_ci_escalates_a_repository_the_forge_does_not_know_as_forge_config` — proves a repository record whose forge
+  does not know it escalates the chunk to `needs_human` with cause `forge-config`, the detail naming that forge, nothing
+  merged.
 
 ## test_hub_actions_e2e
 
