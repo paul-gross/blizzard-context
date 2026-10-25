@@ -15,7 +15,8 @@ The fleet's brake stops new claims and nothing else: a chunk already in flight r
 brake also starts no process at all — no next attempt, no judgement, no resume of a dormant session — so an in-flight
 chunk halts at its next step boundary, and neither a stalled worker's reap nor an exhausted attempt's escalation fires
 until it lifts. Two things still happen under it. A lease minted but never spawned is reaped: it is crash residue with
-no live work behind it. And an operator restart that fences out a worker is honored at once: the displaced worker,
+no live work behind it. And an operator restart that fences out a worker is honored at once, unless a per-chunk pause holds the chunk
+([Per-chunk pause](#per-chunk-pause)): the displaced worker,
 already at a stale epoch, is killed and its attempt closed, and only the re-entry into the moved node waits for the
 brake to lift — as does a restart-resume after downtime, which preempts a fenced-out session rather than waking it.
 
@@ -38,4 +39,6 @@ path: a step the hub applied into a next node, or a pending requeue, holds the b
 once the pause lifts.
 
 Pause does not freeze the chunk: an operator restart recorded while paused still mints its own epoch, and resume then
-re-enters the moved node instead of the parked session ([../work/restart.md](../work/restart.md)).
+re-enters the moved node instead of the parked session ([../work/restart.md](../work/restart.md)). The pause outranks
+the restart's fence: the fenced-out worker is parked, not killed, and the runner honors the move — preempting the
+worker and re-entering the node — on the tick after the pause lifts.

@@ -23,7 +23,8 @@ before any later read; on Postgres it takes the row lock a concurrent locker of 
 
 **Scope.** Governs the chunk claim and every writer it must exclude — edit, restart, delete, dependency declare, group,
 stop, complete, detach, and requeue — and the epoch-fenced writes (`bzh:epoch-fencing`), which the row lock serialises
-against stop and restart. It also governs three decisions whose guard reads facts the write itself creates: chunk
+against stop and restart. It also governs the route-token rekey, whose holder and ended-chunk guards are re-read under the chunk's lock, and three
+decisions whose guard reads facts the write itself creates: chunk
 ingest's pointer-held refusal, the default graph's first mint, and promote's promotability judgment. It governs the
 secret-retire / referrer-write pair too: a secret's retire reads that no active work source or repository references it,
 and each such record's create, edit, or enable reads that its secret is not retired, so both lock the secret's own row
