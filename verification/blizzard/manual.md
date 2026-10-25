@@ -1235,8 +1235,8 @@ current line. The successful cut moves notes and the boundary under `## Upgradin
 lists unrelated breaking notes. Both tag renders agree despite working-tree changes, open with **Upgrading to <line>**,
 link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone. An
 unnamed compat break refuses the cut and the render with nothing written or printed; a named one is listed beside its
-note. For `owed`: (a), (d), (e), (f) and (h) fail, (a) naming the document and (d) the expected trailer form; (b), (c) and (g)
-pass, (c) printing its reason.
+note. For `owed`: (a), (d), (e), (f) and (h) fail, (a) naming the document and (d) the expected trailer form; (b), (c)
+and (g) pass, (c) printing its reason.
 
 ### `blizzard:manual-compat`
 
