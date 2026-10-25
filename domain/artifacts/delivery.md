@@ -43,11 +43,9 @@ worker node's judgement ([edges](../graphs/edges.md)).
   [feature delivery](../../workflows/feature-delivery.md) describes the shipped policy. Each commit pointer is resolved
   to its own repository record; whether a chunk may mix forges, owners, base branches or credentials is the policy's to
   decide.
-- **A chunk delivers one project's work.** The chunk belongs to exactly one project, and the repositories it lands in
-  are the tenant's records, which a project reaches only through a link ([../projects.md](../projects.md) §What a
-  project owns, and what it links). A chunk lands only in repositories its project links, as the links stand when the
-  landing step begins: a chunk commit naming a repository its project does not link is refused before any push, naming
-  the repository and the project ([../projects.md](../projects.md) §Where a chunk may land).
+- **A chunk delivers one project's work.** A chunk lands only in repositories its project links, and a commit naming one
+  it does not link is refused before any push — [../projects.md](../projects.md) §Where a chunk may land owns the rule,
+  the moment the links are read, and the refusal.
 - **Environment retention.** The holding runner keeps the chunk's environments throughout delivery, until the outcome is
   known.
 
