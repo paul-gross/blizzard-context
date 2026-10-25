@@ -41,7 +41,7 @@ child its own process group, kills the whole group on timeout, and closes stdin 
 run-to-completion launch takes a required timeout.
 
 **Why.** A child killed alone leaves its grandchildren running — a `sh -c` check command's forked `sleep` outlives the
-shell — and a child holding inherited stdin can block on the daemon's terminal. Either wedges a tick
+shell — and a child holding inherited stdin can block on the daemon's terminal, either of which wedges a tick
 (`bzh:deterministic-shell`). One seam makes the group, the kill, and the closed stdin structural rather than a
 per-call-site flag to remember.
 

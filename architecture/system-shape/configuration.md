@@ -148,11 +148,10 @@ another write — seeding a tenant at its creation — either joins `TenantAdmin
 `ScopedConnections.founding` (`blizzard/src/blizzard/hub/store/scoped.py`), as
 [../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant creation, one identity unit of work describes, or
 names the window between its commits in that file, owing what [../crash-correctness.md](../crash-correctness.md)
-§Recorded exemptions — durable state the sweep does not arm sets for an entry on that ground.
-
-A document's `projects` section reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind
-added beside them — may name a project the same document declares. The apply itself resolves no project: the package
-that owns projects plans the section and the project each entry acts in, and hands both to it planned
+§Recorded exemptions — durable state the sweep does not arm sets for an entry on that ground. A document's `projects`
+section reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind added beside them — may
+name a project the same document declares. The apply itself resolves no project: the package that owns projects plans
+the section and the project each entry acts in, and hands both to it planned
 (`blizzard/src/blizzard/hub/domain/projects/declarations.py`). A project entry's stated `sources` or `repositories` list
 is that project's whole set, so a name the list leaves out is unlinked — the one write an omission drives, retiring a
 link and never a record; a list the entry omits leaves the stored links. A project entry naming a former slug is refused

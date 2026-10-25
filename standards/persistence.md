@@ -16,13 +16,11 @@ runner's durable counter in `outbox_counters`, never from the backend's key gene
 (`src/blizzard/runner/store/internal/base.py`) is the one place that inserts into `outbound_buffer` or
 `transcript_outbound_buffer`, advancing the counter in the row's transaction.
 
-**Why.** A bare sqlite key reuses a pruned row's rowid and a postgres sequence burns values, so a `seq` that came from
-either could be reissued below one a consumer already treated as final, or leave a gap; a counter that only moves
-forward behaves the same on both. sqlite is the fast local default and what tests run against; postgres support is held
-by staying inside SQLAlchemy's portable surface, not by a second test matrix, so postgres costs a configuration switch
-and the local and CI loops stay cheap. On ordering, sqlite's incidental rowid order coincides with insertion order — a
-select missing a real `order_by` still comes back in write order, indistinguishable from deliberate ordering to any
-sqlite-backed test, and only postgres's unordered contract exposes the gap.
+**Why.** sqlite is the fast local default and what tests run against; postgres support is held by staying inside
+SQLAlchemy's portable surface, not by a second test matrix, so postgres costs a configuration switch and the local and
+CI loops stay cheap. On ordering, sqlite's incidental rowid order coincides with insertion order — a select missing a
+real `order_by` still comes back in write order, indistinguishable from deliberate ordering to any sqlite-backed test,
+and only postgres's unordered contract exposes the gap.
 
 **Exception.**
 
@@ -44,6 +42,10 @@ sqlite-backed test, and only postgres's unordered contract exposes the gap.
   runner outboxes (`outbound_buffer`, `transcript_outbound_buffer`) are not in this list — their `seq` comes from
   `outbox_counters`. `test_dialect_table_options_are_all_admitted` in `tests/test_layering.py` fails a table that sets a
   dialect-specific option without being named here.
+
+**Scope.** A bare sqlite key reuses a pruned row's rowid and a postgres sequence burns values, so a `seq` that came from
+either could be reissued below one a consumer already treated as final, or leave a gap; a counter that only moves
+forward behaves the same on both.
 
 **Detect.** A dialect-specific column type, function, or `text()` SQL; a test asserting behavior only one backend gives;
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit

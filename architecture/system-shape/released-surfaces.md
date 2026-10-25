@@ -17,10 +17,11 @@ a release tolerates a response enum's gained value is read from that release's o
 marked deprecated, until a later change may remove it.
 
 **Why.** A deployment moves its hub, its runner hosts, and its clients onto a release at their own pace, so a break
-reaches a live consumer with nothing to catch it. Holding the change to the supported releases, not to a neighbouring
-branch, makes the check mean the same thing on every trigger, and attributes a break to the change that makes it. An
-allowance records a reviewed fact about one shipped line, so it admits that break against that line's releases and
-nowhere else; keyed on the line, it survives a patch cut there with no edit.
+reaches a live consumer with nothing to catch it. Holding the change to supported releases makes the check mean the same
+thing on every trigger, and attributes a break to the change that makes it.
+
+**Scope.** An allowance records a reviewed fact about one shipped line, so it admits that break against that line's
+releases and nowhere else; keyed on the line, it survives a patch cut there with no edit.
 
 **Detect.** `blizzard:compat` fails the pull request, the push, and the tag whose committed contract documents break a
 supported release in a way neither the window nor a recorded allowance admits; a stale allowance fails it too. A surface
@@ -53,8 +54,10 @@ a code or discriminator, counts as declared closed.
 **Why.** A deployment's clients — the runner, its CLI, and its panel — read a newer server's responses across the skew
 window, so a closed parse turns every value a vocabulary gains into a failed read. Open, each typed consumer meets
 `Unrecognized` in the type checker and decides what an unknown value means to it: show it, skip it, or defer to the
-server's own state. A request stays closed so a server still refuses a value it does not know, and the mark records, per
-release, which positions that release's clients tolerate.
+server's own state.
+
+**Scope.** A request stays closed so a server still refuses a value it does not know, and the mark records, per release,
+which positions that release's clients tolerate.
 
 **Detect.** The gate test `tests/test_open_response_vocabulary.py` fails a response-only vocabulary field that is
 neither open nor declared closed, and an open field on any class outside the response-only set. The response-only set is

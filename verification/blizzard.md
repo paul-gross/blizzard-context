@@ -96,10 +96,9 @@ The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scope
 `blizzard:crash-sweep` exercises, and `blizzard:e2e`'s scenario registry is
 [`./blizzard/e2e-scenarios.md`](./blizzard/e2e-scenarios.md).
 
-Every daemon any tier spawns, whether the test is Python or Playwright, runs with the tenant statement guard
-(`BLIZZARD_TENANT_GUARD`) and runner statement guard (`BLIZZARD_RUNNER_GUARD`) on. The Python suite installs them in its
-test process too; `tests/daemon-env.json` switches them on for the Playwright suite's spawned daemons;
-[`./blizzard/tier-rules.md`](./blizzard/tier-rules.md) owns what each guard refuses and the isolation scenarios.
+For the statement guards' tier mechanics and isolation scenarios, see
+[`./blizzard/tier-rules.md`](./blizzard/tier-rules.md); their refusals belong to `bzh:tenant-scoped-store` and
+`bzh:runner-scoped-store`.
 
 `blizzard:ci-workflows` and `blizzard-mock:ci-workflows` scan `.github/workflows/` by default (run from each repo's own
 root) and are local-only — neither is wired into that repo's own `gate.yml`. The Python exemplars under

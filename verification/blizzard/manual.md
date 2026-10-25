@@ -737,7 +737,7 @@ recorded reading below used.
 | After (`load_all_facts`/`load_all_routes` list read, fact-table indexes) | 40      | 10.4ms       |
 
 A ~125x query-count reduction and ~33x latency reduction on the same local sqlite store. The hosted reading is owed
-separately, by an operator, once a release carrying this change is deployed there.
+separately, by an operator, once a release containing the measured bulk-read change is deployed there.
 
 **Queue-peek reading** (same method, `GET /api/queue`; scratch `build_hub` store, N=173 promoted chunks, 5 warmed reps):
 
@@ -842,8 +842,8 @@ and total SQL query count per call, both sides on the same seeded store:
 A 2x query-count reduction on both routes, tracked by a roughly proportional latency drop: dropping the per-request
 `load_all_facts` bulk read once `ChunkRecordStore`/`QueueService` take an already-derived `statuses` map instead of
 deriving it from facts internally removes that read's own statement cost entirely, not just its per-chunk shape — the
-count was already flat in fleet size before this change, per the queue-peek reading above. The hosted reading is owed
-separately, by an operator, once a release carrying this change is deployed there.
+count was already flat in fleet size at `3c96c0d4`, per the queue-peek reading above. The hosted reading is owed
+separately, by an operator, once a release containing `8fdb7577` is deployed there.
 
 ### `blizzard:manual-trace-backends`
 
@@ -1005,12 +1005,12 @@ row content, so the two compressed-byte totals differ while the shape stays fixe
 | After (`330ae7c4`, 119.6 MB compressed), same reconciler | 1          | 0.002s    | 0                                         |
 | After (`330ae7c4`), fresh reconciler (restart shape)     | 4          | 0.07s     | 0                                         |
 
-A steady-state pass before this change re-decodes every visible segment's content in full to compare fingerprints. After
-the digest-based candidacy read and the derivation change probe, a repeated pass over an unchanged store costs one
-statement — the probe's own aggregate read — and decodes nothing. A fresh reconciler's first pass, which never consults
-the in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
+A steady-state pass at `f75916df` re-decodes every visible segment's content in full to compare fingerprints. With the
+digest-based candidacy read and the derivation change probe, a repeated pass over an unchanged store costs one statement
+— the probe's own aggregate read — and decodes nothing. A fresh reconciler's first pass, which never consults the
+in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
 statements, no content decoded, well under the 60s interval either way. The hosted reading is owed separately, by an
-operator, once a release carrying this change is deployed there.
+operator, once a release containing `330ae7c4` is deployed there.
 
 ### `blizzard:manual-branch-protection`
 

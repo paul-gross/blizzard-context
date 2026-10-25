@@ -103,8 +103,8 @@ added or reshaped it (`canon:no-process-refs`, `canon:no-retro`). An exemption w
 code leaves with the window, whether the write went with it or only changed shape: deleted rather than kept to say it
 was retired.
 
-The transcript lane is split out of both daemon files: a runner-side or hub-side write that belongs to it is recorded in
-`transcripts.md`, not in the daemon's own register.
+The transcript lane is recorded apart from both daemon files: a runner-side or hub-side write that belongs to it is
+recorded in `transcripts.md`, not in the daemon's own register.
 
 | File                                                                     | Read when the write you are judging is…            |
 | ------------------------------------------------------------------------ | -------------------------------------------------- |

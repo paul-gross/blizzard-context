@@ -13,9 +13,8 @@ cursor and enqueues the deltas in one `record_transcript_deltas` transaction. A 
 loses only the read, since `turns_since` is a pure forward read of an immutable log and the next tick re-reads from the
 same unadvanced cursor for the same batch.
 
-The enqueued rows take their `seq` from the runner's `transcript` lane in `outbox_counters`, advanced by
-`insert_outbox_row` (`blizzard/src/blizzard/runner/store/internal/base.py`) in the same transaction as the row. This is
-a **no-window** write: a crash leaves each row with its advance or neither, so a pruned row's `seq` is never reissued.
+The enqueued rows take their `seq` from the runner's `transcript` lane through `insert_outbox_row`; the
+[outbox counter advance](./runner.md#the-outbox-counter-advance) owns why that write has no window.
 
 The write half sits behind the boundary the `transcript.*` crash-point family already guards — the drain's submit/ack
 window in `TranscriptDrain` (`blizzard/src/blizzard/runner/transcripts/transcript_drain.py`), which the generic sweep

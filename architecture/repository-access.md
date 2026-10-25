@@ -20,9 +20,8 @@ one.
 **Scope.** A seam whose reads only project other concepts' own fact tables, with no mutation of its own, stays read-only
 rather than pairing with an empty write half: `blizzard/src/blizzard/hub/domain/chunk/ports/facts.py`'s
 `IReadChunkFactsRepository` has no write counterpart because `load_facts`/`load_all_facts` project the union of the
-other seams' own writes, and splitting that projection per concept would turn one bounded read into one per seam.
-
-A hub Protocol carries no tenant in its signatures: the tenant is the instance's, opened per tenant
+other seams' own writes, and splitting that projection per concept would turn one bounded read into one per seam. A hub
+Protocol carries no tenant in its signatures: the tenant is the instance's, opened per tenant
 (`bzh:tenant-scoped-store`, [./system-shape/tenancy.md](./system-shape/tenancy.md)), so the read half a controller holds
 cannot widen to another tenant either.
 

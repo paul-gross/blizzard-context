@@ -38,3 +38,10 @@ Report one per finding:
   that survives only after a reload, which may be admitted. A consumer that fails and that a reload does not fix is no
   allowance.
 - **A break that waits.** Name the deprecation that starts its clock.
+
+## Don't
+
+- Treat a finding as real without regenerating the contract documents and rerunning the check.
+- Raise `floor` or record an allowance while the old surface can stay beside its replacement.
+- Judge a release's consumers from `master` instead of from that release's own tree.
+- Admit an allowance for a consumer that fails even after reloading its client.
