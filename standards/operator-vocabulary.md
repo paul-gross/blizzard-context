@@ -4,7 +4,7 @@ Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-r
 
 ## Rule
 
-Operator-facing copy — web UI strings, CLI help text, and `docs/` operator prose — uses the terms
+Operator-facing copy — web UI strings, CLI help text, `docs/` operator prose, and change-note bodies — uses the terms
 [`domain/execution/claim-vocabulary.md`](../domain/execution/claim-vocabulary.md) (`bzh:claim-vocabulary`) defines, and
 never one of that taxonomy's barred internal terms.
 
@@ -15,10 +15,10 @@ label or tooltip should never have to learn one of blizzard's internal terms to 
 
 ## Scope
 
-Binds only copy a change **authors or edits** — it does not indict copy no change has touched. Known, undischarged by
-this rule alone: the sections of `docs/deployment/control-verbs.md` that still carry barred terms, `blizzard hub chunk`
-help text, and the board surfaces beyond the chunk detail dock. A change touching any of those still owes this rule at
-the copy it edits.
+Binds change-note bodies (`bzh:change-note`) as it binds `docs/` operator prose. It binds only copy a change **authors
+or edits** — it does not indict copy no change has touched. Known, undischarged by this rule alone: the sections of
+`docs/deployment/control-verbs.md` that still carry barred terms, `blizzard hub chunk` help text, and the board surfaces
+beyond the chunk detail dock. A change touching any of those still owes this rule at the copy it edits.
 
 ## Detect
 

@@ -58,6 +58,7 @@ A command method passes when its command exits 0.
 | `blizzard:gate`                  | `mise run gate` — the local reproduction of CI's shared `gate` job *(more)*                                                                                                 |
 | `blizzard:process-ref-lint`      | `mise run process-ref-lint` — Vale's process-reference and change-history prose gate over the surface `.vale.ini` configures *(more)*                                       |
 | `blizzard:compat`                | `mise run compat` — holds HEAD's committed contract documents to the supported releases (`bzh:released-surface-additive`) *(more)*                                          |
+| `blizzard:change-notes`          | `mise run change-notes` — `blizzard-change-notes check`, the change notes under `changes/` against the format `changes/README.md` documents                                 |
 | `blizzard:ci`                    | `gh run watch --repo paul-gross/blizzard <run-id> --exit-status` — the authoritative remote gate *(more)*                                                                   |
 | `blizzard:wheel`                 | `mise run build` — both Angular apps, then the one wheel, node-free *(more)*                                                                                                |
 | `blizzard:wheel-smoke`           | The serve smoke on the built wheel in a node-free venv — the **P5 exit criterion** *(more)*                                                                                 |
