@@ -4,15 +4,21 @@ What holds a runner back from starting work without anyone braking it, and what 
 [execution hub](../execution.md).
 
 Before each tick's claims, and before every step or continuation of a parked session, a runner asks its gate whether to
-start, and the gate answers from readings, never from a flag anyone set. The gate is asked once per tick for its claims,
-not once per claim: the tick's claims start only if the gate admits them, and a reading that turns restrictive takes
-effect at the next tick. The breakers answer first: a runner's brakes ([./pause.md](./pause.md)) refuse outright, and
-only past them is a throttle asked. A throttle declines rather than refuses, and lifts of itself once its reading
-changes. The subscription floor is one; the operator may configure four more, a pace against a window's elapsed share, a
-utilization line, a budget — spend over a trailing window against a dollar ceiling — and a schedule, asked in that order
-after the floor. A continuation of a step already begun answers to the floor alone. An escalation asks the breakers
-alone. The levers are `blizzard-product:/delivered/throttling/spec/levers.md`. The gate's shape — its verdict, the kinds
-of start, and how a declined claim is reported — is `blizzard-product:/delivered/throttling/spec/gate.md`.
+start, and the gate answers from readings, never from a flag anyone set. A reading that turns restrictive stops further
+claims from the next tick, while every step, a claimed chunk's first included, still asks before it starts. The breakers
+answer first: a runner's brakes ([./pause.md](./pause.md)) refuse outright, and only past them is a throttle asked. A
+throttle declines rather than refuses, and lifts of itself once its reading changes. The throttles, asked in this order
+— the floor, then each the operator configures:
+
+- The subscription floor.
+- A pace against a window's elapsed share.
+- A utilization line.
+- A budget of spend over a trailing window against a dollar ceiling.
+- A schedule.
+
+A continuation of a step already begun answers to the floor alone. An escalation asks the breakers alone. The levers are
+`blizzard-product:/delivered/throttling/spec/levers.md`. The gate's shape — its verdict, the kinds of start, and how a
+declined claim is reported — is `blizzard-product:/delivered/throttling/spec/gate.md`.
 
 ## An exhausted subscription holds back every runner spending it (`bzh:subscription-floor-reach`)
 

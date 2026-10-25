@@ -93,13 +93,15 @@ runner claiming it already knows the one workspace its work will happen in; the 
   workspaces have one.
 - **The workspace is fixed for the chunk's tenure.** Recovery, release, and resume work in the workspace the chunk was
   claimed through; a binding changed later affects only the next claim.
-- **One project, one binding.** Two bindings naming the same project literally are a host-file error — the project is
-  bound more than once — and the runner halts before it registers. Two distinct entries the hub resolves to one project
-  leave the runner registered but claiming nothing, its status naming both, until one is removed.
-- **Checked against the host, and refused there.** A binding naming a workspace its host file does not declare, or a
-  runner naming a subscription outside its host's roster, halts that runner before it registers: the host file fails
-  loudly at startup, where the operator is looking, and the host's other runners are unaffected. The hub holds no flag
-  for either; it offers the runner nothing because the runner never registers.
+- **One project, one binding.** A runner that binds the same project twice by name halts before it registers. Two
+  distinct entries the hub resolves to one project leave the runner registered but claiming nothing until one is
+  removed.
+- **Checked against the host twice.** A binding naming a workspace its host does not declare, or a runner naming a
+  subscription outside its host's roster, halts that runner before it registers; the host's other runners are
+  unaffected. The hub checks again against what the host last described: it offers no work through a binding whose
+  workspace the host has not described, and none at all to a runner whose subscription is outside the host's roster. The
+  hub flags such a binding rather than refusing it — the runner keeps registering — and flags nothing while the host has
+  never described itself.
 
 ## Subscriptions
 

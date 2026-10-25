@@ -13,8 +13,9 @@ check results beside its artifacts and the person decides with them in view.
 ## How a gate arises
 
 Gates arrive structurally, as a human-judged node, or by runner configuration selecting node names — human sign-off
-added without editing any graph. At a human-judged node a runner-submitted transition naming no decision is rejected;
-only the holding runner's transition naming the resolved decision leaves it, as Resolution below describes.
+added without editing any graph. At a human-judged node a runner-submitted transition naming no decision is rejected; of
+a runner's submissions, only the holding runner's transition naming the resolved decision leaves it, as Resolution below
+describes.
 
 Each arrival at a human-judged node opens one decision for that visit's epoch, whether a transition, migration, or
 operator restart landed it, including a restart back onto the same node. The arrival and decision commit together; a

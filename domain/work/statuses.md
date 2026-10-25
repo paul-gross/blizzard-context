@@ -97,7 +97,5 @@ whether the edge is **satisfied** — never stored, derived fresh the same way t
 is satisfied when that neighbor reads `done`; a dependent edge is satisfied when the chunk itself does, so every
 dependent reads the same satisfaction as one another. A neighbor absent from the fleet's statuses — the same residual
 race the blocked marking's conservative read guards against — still draws with a null status rather than being dropped:
-unsatisfied as a prerequisite, since an unresolved neighbor is never read as `done`, and satisfied exactly as the chunk
-itself is as a dependent, since that edge's satisfaction derives from the chunk, not from the neighbor. Like the blocked
-marking, the neighborhood takes no further hop past its own edges: a prerequisite's own prerequisites are not walked
-into it.
+unsatisfied as a prerequisite, and satisfied exactly as the chunk itself is as a dependent. Like the blocked marking,
+the neighborhood takes no further hop past its own edges: a prerequisite's own prerequisites are not walked into it.

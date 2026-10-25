@@ -16,10 +16,10 @@ else once a runner rotates its session files; the lane's caps bound how much of 
 bound who reads it.
 
 **Exception.** Transcripts, only through the transcript lane: the hub retains an agent session's turns — tool calls and
-their output included, verbatim, so code the agent wrote or read can appear in them — each block capped, and the whole
-bounded by the lane's per-record, per-chunk, and per-runner-day caps. They are readable by a person holding the
-transcript-read permission, and by the owning runner for its own lease's segments; every other artifact kind stays under
-the rule.
+their output included, verbatim, so code the agent wrote or read can appear in them — each message and each tool call's
+input and output capped on its own, and the whole bounded by the lane's per-record, per-chunk, and per-runner-day caps.
+They are readable by a person holding the transcript-read permission, and by the owning runner for its own lease's
+segments; every other artifact kind stays under the rule.
 
 **Scope.** The validated kinds, and what each check covers:
 

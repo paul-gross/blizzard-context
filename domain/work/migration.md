@@ -64,16 +64,20 @@ resolved gate decision alike. A hub node's own exit consults no intent, so an in
 waits for its next worker-or-gate transition. A chunk holds at most one live intent — setting overwrites, clearing
 removes — with no history of superseded ones to reconcile.
 
-Setting an intent is refused when its target names no graph the hub holds — a name whose every mint is retired reads as
-unknown — when the target is retired, when the target is the chunk's current pin, or when a forced intent names a node
-absent from the target. A refused set writes nothing, so whatever intent stood before stands unchanged.
+Setting an intent refuses:
+
+- An unknown or retired target graph ([../graphs/identity.md](../graphs/identity.md) §Operational surfaces).
+- The chunk's current pin.
+- A forced intent naming a node the target does not carry.
+
+A refused set writes nothing, so whatever intent stood before stands unchanged.
 
 A forced intent anchors its own named node and migrates to it unconditionally, whatever the transition's destination
 would have been. An auto intent anchors the transition's own destination node name with no entry fallback: it migrates
 only when that name also exists on the target graph, landing on the same-named node; an unmatched name leaves the
-transition to apply unchanged on the current graph, and the intent stays set. The one stale intent the set-time refusals
-let through is a target retired after the intent was set; at consult time it is skipped like an auto no-match: the
-transition applies unchanged and the intent stays set, visible to cancel or re-aim.
+transition to apply unchanged on the current graph, and the intent stays set. An intent whose target was retired after
+it was set cannot be resolved at consult time, and is skipped like an auto no-match: the transition applies unchanged
+and the intent stays set, visible to cancel or re-aim.
 
 ### Follow-latest
 
