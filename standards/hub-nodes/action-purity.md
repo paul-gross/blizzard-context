@@ -14,9 +14,10 @@ the allowlist: from the standard library, the pure modules that reach neither th
 (`asyncio` without its subprocess and connection functions, `dataclasses`, `json`, `re`, `typing`, `urllib.parse`, and
 their kind); from `blizzard.foundation`, only `roles`, `escalation_causes`, `findings`, `garden_proposals`, and
 `repo_ref`; and of blizzard's own, only `hub/domain/actions/`, `hub/domain/graph/actions.py`,
-`hub/domain/config/repositories.py`, `hub/delivery/forge_handle.py`, and its own package. Every blizzard module an
-action reaches, directly or through another, imports nothing that reaches a process or the network, and touches no part
-of `os` but `os.urandom`. Each `Visit` is immutable all the way down, and each action is constructed with no arguments.
+`hub/domain/config/repositories.py`, `hub/domain/config/capabilities.py`, `hub/forge/landing.py`, and its own package.
+Every blizzard module an action reaches, directly or through another, imports nothing that reaches a process or the
+network, and touches no part of `os` but `os.urandom`. Each `Visit` is immutable all the way down, and each action is
+constructed with no arguments.
 
 A delivery marker a pass records takes the one `content` shape its name fixes: a PR reference,
 `delivery-pr/<repo>/<number>` or the bare `delivery-pr/<repo>`, carries the JSON object
@@ -45,7 +46,7 @@ spec.
 **Do.** `garden-deliver` (`hub/delivery/actions/garden_deliver.py`) reads its `delta` and `proposals` from the visit's
 node arguments, hands a `RecordGardenDelivery` to the sink, and answers from the `EffectResult` it gets back; the
 executor runs the garden delivery recorder when it writes the effect, with the run context the action cannot hold. A
-forge's client stays outside the package, behind the handle Protocol in `hub/delivery/forge_handle.py`.
+forge's client stays outside the package, behind the landing seam's role Protocols in `hub/forge/landing.py`.
 
 **Don't.** An action reading `os.environ` for a token, building its own HTTP client, or importing a store adapter to
 check a marker; an action taking a recorder in its constructor; a visit carrying the domain's `Chunk` or `Node`, whose
