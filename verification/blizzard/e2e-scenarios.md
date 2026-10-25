@@ -13,14 +13,14 @@ section homed in exactly one spoke — check C of `blizzard-context:/scripts/che
 every spoke and fails a module documented in more than one file, so single-homing is machine-enforced. This hub carries
 no module sections; the routing table below is the routing map and the discovery entry point for the spokes.
 
-| Spoke                                                    | When to read                                                                                                                                             |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [delivery-loop.md](./e2e-scenarios/delivery-loop.md)     | The canonical delivery shape, the chunk shapes riding it, the edges carrying a chunk past its graph or past the land, and a fresh runner's first offer   |
-| [human-loop.md](./e2e-scenarios/human-loop.md)           | The stops-for-a-person scenarios — retries exhausted, a question asked, a gated decision                                                                 |
-| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | `deliver` against a red check, conflict, or pending CI, plus the forge label projection                                                                  |
-| [node-sessions.md](./e2e-scenarios/node-sessions.md)     | What a node's session carries from one entry to the next                                                                                                 |
-| [auth.md](./e2e-scenarios/auth.md)                       | The hub's invite-only login dance and the multi-daemon runner SSO bounce                                                                                 |
-| [board.md](./e2e-scenarios/board.md)                     | The browser proofs over the hub-served web app — board views, live SSE updates, the graph explorer, the project lens                                     |
-| [runner-panel.md](./e2e-scenarios/runner-panel.md)       | The panel a runner serves itself                                                                                                                         |
-| [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden graphs' run paths                                                                                                                    |
-| [egress.md](./e2e-scenarios/egress.md)                   | The hub's fact export proven from its files alone — the steps and spend of a night of chunks, or the derived events, read back the way a warehouse would |
+| Spoke                                                    | When to read                                                                                                      |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [delivery-loop.md](./e2e-scenarios/delivery-loop.md)     | Verifying a chunk's path from its first offer through graph execution to completion, including work after landing |
+| [human-loop.md](./e2e-scenarios/human-loop.md)           | The stops-for-a-person scenarios — retries exhausted, a question asked, a gated decision                          |
+| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | `deliver` against a red check, conflict, or pending CI, plus the forge label projection                           |
+| [node-sessions.md](./e2e-scenarios/node-sessions.md)     | What a node's session carries from one entry to the next                                                          |
+| [auth.md](./e2e-scenarios/auth.md)                       | The hub's invite-only login dance and the multi-daemon runner SSO bounce                                          |
+| [board.md](./e2e-scenarios/board.md)                     | Verifying operator interactions with the hub-served web app and its live data                                     |
+| [runner-panel.md](./e2e-scenarios/runner-panel.md)       | The panel a runner serves itself                                                                                  |
+| [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden graphs' run paths                                                                             |
+| [egress.md](./e2e-scenarios/egress.md)                   | Verifying that exported facts can be read from files alone and agree with the hub's record                        |

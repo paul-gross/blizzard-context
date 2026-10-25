@@ -14,4 +14,3 @@ Parent: [./index.md](./index.md).
 | [outcome-protocol.md](./hub-nodes/outcome-protocol.md) | An action's pass must answer a routed choice, poll, or bounce the chunk                 |
 | [step-idempotence.md](./hub-nodes/step-idempotence.md) | An action's pass must be safe to re-run after a crash                                   |
 | [action-purity.md](./hub-nodes/action-purity.md)       | The node names an action — writing or changing a hub action, or what its pass is handed |
-| [../exemplars/index.md](../exemplars/index.md) §Hub    | You are writing a hub action and want the reference one to pattern it off               |
