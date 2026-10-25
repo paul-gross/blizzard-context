@@ -10,7 +10,7 @@ races the orchestrator, producing double work.
 
 **Scope.** This rule governs delivery through blizzard. Ecosystem work delivered outside a fleet — landing to `master`
 by hand from a winter feature environment — follows `workspace:/context/project/contributing.md` §Delivery and
-`workspace:/context/worktree-ops.md`, plus [../CONTRIBUTING.md](../CONTRIBUTING.md) for harness changes.
+`workspace:/context/winter/worktree-ops.md`, plus [../CONTRIBUTING.md](../CONTRIBUTING.md) for harness changes.
 
 ## What the platform owns
 

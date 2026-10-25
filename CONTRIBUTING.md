@@ -65,4 +65,4 @@ pass criteria; what belongs here is only *which* a change owes:
   ([verifiability.md](./verifiability.md) owns what they run) are what give a PR here a gate to wait on, whether the
   fleet or an agent working by hand opened it.
 - By hand: `workspace:/context/project/contributing.md` §The by-hand path owns the sequence.
-- See `workspace:/context/worktree-ops.md` for the exact git commands per worktree.
+- See `workspace:/context/winter/worktree-ops.md` for the exact git commands per worktree.

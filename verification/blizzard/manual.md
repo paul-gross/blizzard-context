@@ -237,8 +237,9 @@ projections, and rendering paths a subscription-shape retirement was supposed to
 describes them as live.
 
 **Setup.** Run in the `blizzard` worktree of the feature env the retirement was built in, or in `projects/blizzard/`
-when working from the source checkout; `workspace:/context/workspace-layout.md` owns both shapes. The mock's mirror of
-these response models is not in surface here — `blizzard-mock:unit-test`'s wire-parity guard holds it mechanically.
+when working from the source checkout; `workspace:/context/winter/workspace-layout.md` owns both shapes. The mock's
+mirror of these response models is not in surface here — `blizzard-mock:unit-test`'s wire-parity guard holds it
+mechanically.
 
 **Phrase declarations.** Search these exact identifiers and semantic legacy-shape phrases:
 
