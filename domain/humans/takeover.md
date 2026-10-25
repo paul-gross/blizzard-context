@@ -9,8 +9,9 @@ Ordinarily the chunk is already parked `needs_human`, so no live attempt is disp
 
 The reference session's recorded harness owner must be known and available to the runner. Entry resolves that owner
 before recording the takeover fact; an unknown or unavailable owner refuses entry and records nothing, regardless of
-what parked the chunk. Entry is also refused while a requeue through the holding runner is pending: the next fill would
-start a fresh attempt in the person's workdir.
+what parked the chunk. A chunk carries at most one open takeover, so entry is refused while one is open. Entry is also
+refused while a requeue through the holding runner is pending: the next fill would start a fresh attempt in the person's
+workdir.
 
 Entering through the wrapped verb ([./escalation.md](./escalation.md)) records the takeover fact with the daemon before
 anything resumes, so no loop step can respawn or judge the held session while a person holds it. The same fact

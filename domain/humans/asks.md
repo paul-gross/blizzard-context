@@ -20,7 +20,8 @@ refused once the chunk has ended (`stopped` or `done`).
 Answered and delivered are distinct derived states: a person decided, versus the resume ran and the agent heard. A
 question row surfaces both, so the answerer sees the return trip rather than inferring it from the chunk moving. A
 delivery is refused unless the question is answered, belongs to the chunk it is reported for, and was not superseded by
-a restart; a repeated delivery is a no-op.
+a restart; a repeated delivery is a no-op unless a restart has since passed the question's epoch, which refuses the
+replay too — supersession is judged before delivery is.
 
 ## A person's note
 
