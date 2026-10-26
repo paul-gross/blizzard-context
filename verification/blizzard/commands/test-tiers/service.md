@@ -76,7 +76,8 @@ estimate and reads the engaged local pause's `~$`-led reason off the runner's ow
 
 **Hub SSE live fan-out** is proven only at this tier: the component tier can only assert an event was recorded, off the
 broker's replay tail, while the publish-to-subscriber-queue-to-wire leg a live board depends on is real only here, via
-`tests/service/hub/hub.spec.ts`, reading the stream through the harness's `tests/harness/events.ts`. A subscriber on
+`tests/service/hub/hub.spec.ts`, reading the stream through the Playwright `events` fixture in
+`tests/harness/events.ts`. A subscriber on
 `GET /api/events/stream` before the act receives `queue-changed` the instant a cross-graph migration re-queues a chunk,
 and exactly one frame across the migration and its duplicate-delivery replay (the mock runner's `replay` lever) — 0 if
 the publish drops, 2 if the replay guard fails. The operational event feed (`event-log.spec.ts`) rides the same
