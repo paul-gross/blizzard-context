@@ -31,7 +31,8 @@ route to the appropriate client rather than bypassing it.
 **Detect.** `tests/eslint.config.mjs` rejects `fetch` in specs; a literal daemon URL or direct request context is a
 reviewable signature that lint alone does not cover.
 
-**Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface.
+**Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface. To act as anyone but the
+tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and `events.open`.
 
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
@@ -105,7 +106,8 @@ project discovery in `tests/playwright.config.ts` provides the profile boundary,
 harness refuses `hubConfig` or `hubEnv` below `fresh-hub`.
 
 **Do.** Put a hub-wide variant in its own profile, or request a one-off case with
-`test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`.
+`test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people belongs under the `auth` profile; a
+test whose subject is the login throttle takes a `fresh-hub` with the throttle left on.
 
 **Don't.** Toggle a shared hub's feature flag before an assertion and toggle it back afterward.
 
