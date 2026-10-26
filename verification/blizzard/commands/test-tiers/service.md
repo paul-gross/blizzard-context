@@ -79,7 +79,7 @@ broker's replay tail, while the publish-to-subscriber-queue-to-wire leg a live b
 `tests/service/hub/hub.spec.ts`, reading the stream through the harness's `tests/harness/events.ts`. A subscriber on
 `GET /api/events/stream` before the act receives `queue-changed` the instant a cross-graph migration re-queues a chunk,
 and exactly one frame across the migration and its duplicate-delivery replay (the mock runner's `replay` lever) — 0 if
-the publish drops, 2 if the replay guard fails. The operational event feed (`test_event_log_service.py`) rides the same
+the publish drops, 2 if the replay guard fails. The operational event feed (`event-log.spec.ts`) rides the same
 fan-out: the mock runner's `/_drive/report-event` drives one `event.recorded` fact, a pre-connected subscriber receives
 `event-logged` exactly once, the folded event reads back off the live `GET /api/events`, and a fixed-seq replay pins
 idempotency; the real runner's own emission and buffering is proven at the unit and component tiers.
