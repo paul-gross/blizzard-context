@@ -122,7 +122,7 @@ two-provider hub lists both from `GET /api/auth/providers`, `POST /api/auth/logo
 `login_failed` fact, the linking rule, and the no-token-cookie shape; only the service method exercises a real HTTP
 authorize/token/userinfo exchange.
 
-**CLI login** (`test_cli_login_service.py`) proves the `blizzard hub login` PKCE code exchange only at this tier: the
+**CLI login** (`cli-login.spec.ts`) proves the `blizzard hub login` PKCE code exchange only at this tier: the
 hub's `client=cli` authorize branch (mandatory S256 PKCE) serves a browserless scripted "browser" that captures the
 single-use code from both the loopback-redirect form (a 302 query-string code, never a token) and the paste-code page,
 then redeems it with its verifier at `POST /api/auth/cli/token` for a hub-minted session token, never a runner-style
