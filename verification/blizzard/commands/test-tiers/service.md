@@ -59,12 +59,12 @@ unmarked entry behind it is driven under both of a runner's selection policies a
 `test_fill_reaches_past_a_marked_head_by_default_against_a_real_mock_hub` claims the unmarked entry while the marked one
 stays `ready`, and `test_fill_strict_holds_at_a_marked_head_against_a_real_mock_hub` (`[queue] strict`) claims neither.
 
-**Usage over the wire** (`test_usage_service.py`) runs both directions. Runner-to-mock-hub, a real runner's
+**Usage over the wire** runs both directions. Runner-to-mock-hub (`test_usage_service.py`), a real runner's
 `usage.recorded` facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once.
-Mock-runner-to-live-hub, usage pushed through the real `POST /api/fleet/events` becomes per-node-step usage plus the
-derived chunk total read off the live `GET /api/chunks/{id}` and `GET /api/chunks`, idempotent on a replayed seq — a
-pushed `estimated_cost_usd` reads back on both the per-step row and the total, kept apart from `cost_usd`, and
-`cost_partial` flags a row only when it carries neither amount.
+Mock-runner-to-live-hub (`tests/service/hub/usage.spec.ts`), usage pushed through the real `POST /api/fleet/events`
+becomes per-node-step usage plus the derived chunk total read off the live `GET /api/chunks/{id}` and `GET /api/chunks`,
+idempotent on a replayed seq — a pushed `estimated_cost_usd` reads back on both the per-step row and the total, kept
+apart from `cost_usd`, and `cost_partial` flags a row only when it carries neither amount.
 
 **The one dollar figure** (`test_spend_figure_service.py`) drives both spend controls off an estimate alone: a real
 runner's OpenCode turns run under a subscription-billed `mock-opencode` (`BLIZZARD_MOCK_OPENCODE_BILLED_ZERO=1`), priced
