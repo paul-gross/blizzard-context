@@ -87,6 +87,17 @@ hub carry it.
 - `test_a_store_held_before_actions_carries_over_and_lands_every_chunk` — proves every pinned chunk lands with its
   script's choice and markers once its hub node is carried onto the action its `run:` named.
 
+## test_forge_carry_over_e2e
+
+A store held before forges were records, carried onto them by a real migrate and hub: a HEAD hub seeded through its
+doors with the old address fields — the fixture work source's `api_base` and its repository's `forge_api_url`, both the
+mock forge's `http://127.0.0.1:<port>` — lands one chunk; the store walks down to `20261024_0900_hub_legacy_run`, where
+no forge exists, and the HEAD migrate and hub carry it.
+
+- `test_a_store_held_before_forges_carries_over_and_lands_a_chunk_as_before` — proves both records name one forge for
+  that origin, its port kept in its slug, and a second chunk lands against the mock forge with the same deliver
+  choices and marker kinds as the chunk landed before the carry-over.
+
 ## test_checks_gate_e2e
 
 Checks-gate enforcement: a graph whose `build` choice carries `requires_checks: true` shows the gate — not the worker's
