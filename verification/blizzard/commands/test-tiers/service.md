@@ -113,14 +113,17 @@ segments — still `"archived"` after the local file is deleted mid-run — and 
 subprocess is gone. That closed-lease walk is the only real-counterpart drive of the runner's outbound fleet-plane read;
 the unit tier binds a stubbed transport, and `tests/service/hub/transcript-segments.spec.ts` drives the hub-side route.
 
-**The OAuth login dance** (`test_auth_login_service.py`) is proven only at this tier: a running hub under
+**The OAuth login dance** (`tests/service/hub/auth/auth-login.spec.ts`) is proven only at this tier: a running hub under
 `auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` stub IdP (`tool:mock-fleet`, `blizzard-mock-idp` —
 both provider shapes at one origin) and whose `callback` exchanges the stub's code over the real wire, ending in a
 resolving `bz_session` cookie and a working `GET /api/me`, for both the `oidc` and `github` conformers. Also here: a
 two-provider hub lists both from `GET /api/auth/providers`, `POST /api/auth/logout` deletes the session row so `/api/me`
-401s, and the stub's `refuse_callback` lever surfaces as `login_failed` over the wire. The component-tier
-`test_auth_login_api.py` drives the same routes against an in-repo fake provider — covering bad `state`, the
-`login_failed` fact, the linking rule, and the no-token-cookie shape; only the service method exercises a real HTTP
+401s, an uninvited first sign-in is refused without a session, and the stub's `refuse_callback` lever surfaces as
+`login_failed` over the wire. A fresh hub also checks the configured superuser's first verified sign-in: an
+authoritative provider claims the bootstrap, while a non-authoritative one refuses it. Invitations are issued through
+`POST /api/invitations`, and provider listings include the profile's `stub` beside `github` when configured. The
+component-tier `test_auth_login_api.py` drives the same routes against an in-repo fake provider — covering bad `state`,
+the `login_failed` fact, the linking rule, and the no-token-cookie shape; only the service method exercises a real HTTP
 authorize/token/userinfo exchange.
 
 **CLI login** (`cli-login.spec.ts`) proves the `blizzard hub login` PKCE code exchange only at this tier: the hub's
