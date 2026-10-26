@@ -122,16 +122,15 @@ two-provider hub lists both from `GET /api/auth/providers`, `POST /api/auth/logo
 `login_failed` fact, the linking rule, and the no-token-cookie shape; only the service method exercises a real HTTP
 authorize/token/userinfo exchange.
 
-**CLI login** (`test_cli_login_service.py`) proves the `blizzard hub login` PKCE code exchange only at this tier: the
-hub's `client=cli` authorize branch (mandatory S256 PKCE) serves a browserless scripted "browser" that captures the
-single-use code from both the loopback-redirect form (a 302 query-string code, never a token) and the paste-code page,
-then redeems it with its verifier at `POST /api/auth/cli/token` for a hub-minted session token, never a runner-style
-JWT. A bare bearer client — the CLI's own shape — authenticates `GET /api/me` off that token alone, and
-`POST /api/auth/logout` with the same bearer revokes it server-side so a byte-identical retry 401s; the CLI never
-contacts the stub IdP, only the hub's own routes. The exchange's rejection matrix — wrong or missing verifier,
-unregistered redirect form, replayed code, and expired code — is pinned by the component-tier `test_cli_login_api.py`;
-the loopback listener and paste-code mechanics sit with the unit-tier `test_cli_login_mechanics.py` and
-`test_hub_cli_login.py`.
+**CLI login** (`cli-login.spec.ts`) proves the `blizzard hub login` PKCE code exchange only at this tier: the hub's
+`client=cli` authorize branch (mandatory S256 PKCE) serves a browserless scripted "browser" that captures the single-use
+code from both the loopback-redirect form (a 302 query-string code, never a token) and the paste-code page, then redeems
+it with its verifier at `POST /api/auth/cli/token` for a hub-minted session token, never a runner-style JWT. A bare
+bearer client — the CLI's own shape — authenticates `GET /api/me` off that token alone, and `POST /api/auth/logout` with
+the same bearer revokes it server-side so a byte-identical retry 401s; the CLI never contacts the stub IdP, only the
+hub's own routes. The exchange's rejection matrix — wrong or missing verifier, unregistered redirect form, replayed
+code, and expired code — is pinned by the component-tier `test_cli_login_api.py`; the loopback listener and paste-code
+mechanics sit with the unit-tier `test_cli_login_mechanics.py` and `test_hub_cli_login.py`.
 
 **Joining a runner with `blizzard runner init`** (`test_runner_init_service.py`) is proven over the real wire only at
 this tier: init runs in its own process against a real hub on `auth.mode = "none"`, adds the runner through
