@@ -7,8 +7,9 @@ for allocation and statement guards. The harness owns fixtures in `tests/harness
 
 ## Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
-**Rule.** Name the fixtures a test needs — tenant, project, clients, people, and event stream — and import only
-`tests/harness/fixtures.ts`. Do not use Playwright's built-in `request` or set shared state in `test.beforeAll`.
+**Rule.** Name the fixtures a test needs — tenant, project, clients, people, event stream, the `blizzard` CLI, a fresh
+hub's stop, kill, and start lifecycle, and the OTLP sink — and import only `tests/harness/fixtures.ts`. Do not use
+Playwright's built-in `request` or set shared state in `test.beforeAll`.
 
 **Why.** The harness fixtures own daemon lifetime, tenant routing, cleanup, and test isolation. A bare request context
 reaches no tenant; file-wide mutable setup crosses parallel tests.
@@ -100,9 +101,11 @@ cannot infer ownership from a lever's arguments.
 **Why.** A setting changed mid-run alters the behavior of concurrent tests on that hub.
 
 **Detect.** Review writes to hub-wide config within a spec and profile declarations under tests/service/hub/; the
-project discovery in `tests/playwright.config.ts` provides the profile boundary, not a lint ban on config calls.
+project discovery in `tests/playwright.config.ts` provides the profile boundary, not a lint ban on config calls. The
+harness refuses `hubConfig` or `hubEnv` below `fresh-hub`.
 
-**Do.** Put a hub-wide variant in its own profile, or request `fresh-hub` for a one-off case.
+**Do.** Put a hub-wide variant in its own profile, or request a one-off case with
+`test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`.
 
 **Don't.** Toggle a shared hub's feature flag before an assertion and toggle it back afterward.
 
