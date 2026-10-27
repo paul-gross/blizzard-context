@@ -8,8 +8,9 @@ for allocation and statement guards. The harness owns fixtures in `tests/harness
 ## Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
 **Rule.** Name the fixtures a test needs — tenant, project, clients, people, event stream, the `blizzard` CLI, a fresh
-hub's stop, kill, and start lifecycle, and the OTLP sink — and import only `tests/harness/fixtures.ts`. Do not use
-Playwright's built-in `request` or set shared state in `test.beforeAll`.
+hub's stop, kill, and start lifecycle, and the OTLP sink — and import only `tests/harness/fixtures.ts`. A runner-only
+test takes `runnerTest`'s own `mockHub` and `authStub` instead of any shared-hub fixture. Do not use Playwright's
+built-in `request` or set shared state in `test.beforeAll`.
 
 **Why.** The harness fixtures own daemon lifetime, tenant routing, cleanup, and test isolation. A bare request context
 reaches no tenant; file-wide mutable setup crosses parallel tests.
@@ -31,8 +32,9 @@ route to the appropriate client rather than bypassing it.
 **Detect.** `tests/eslint.config.mjs` rejects `fetch` in specs; a literal daemon URL or direct request context is a
 reviewable signature that lint alone does not cover.
 
-**Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface. To act as anyone but the
-tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and `events.open`.
+**Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface; in `runnerTest`, the mock-hub
+client on `mockHub` and the runner clients from `runnerHost` and `runnerStream`. To act as anyone but the tenant's
+admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and `events.open`.
 
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
@@ -84,7 +86,8 @@ static gate proves the store-access timing or the test's subject.
 ## Own mock state (`bzh:service-own-mock-state`)
 
 **Rule.** A mock-fleet lever targets only the test's own repository, issue, or runner. Never use a lever without `repo`
-or reset forge levers outside a fresh hub.
+or reset forge levers outside a fresh hub. A test's own mock hub, which `runnerTest`'s `mockHub` starts for that test
+alone, is exempt: its levers, seeds, captures, and resets are global only to a process no other test reaches.
 
 **Why.** A global lever or reset changes another test's mock world while that test is still running.
 
