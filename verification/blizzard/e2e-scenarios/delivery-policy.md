@@ -95,8 +95,8 @@ mock forge's `http://127.0.0.1:<port>` — lands one chunk; the store walks down
 no forge exists, and the HEAD migrate and hub carry it.
 
 - `test_a_store_held_before_forges_carries_over_and_lands_a_chunk_as_before` — proves both records name one forge for
-  that origin, its port kept in its slug, and a second chunk lands against the mock forge with the same deliver
-  choices and marker kinds as the chunk landed before the carry-over.
+  that origin, its port kept in its slug, and a second chunk lands against the mock forge with the same deliver choices
+  and marker kinds as the chunk landed before the carry-over.
 
 ## test_checks_gate_e2e
 
