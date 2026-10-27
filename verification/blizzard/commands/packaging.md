@@ -11,9 +11,9 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 `mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
-(`blizzard:structural-gate`), pytest, the OpenAPI spec-drift check, the contract-document drift check
-(`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility against the supported releases
-(`blizzard:compat`), the change-note check (`mise run change-notes`, which runs
+(`blizzard:structural-gate`), the repo-path pointer check (`blizzard:pointer-check`), pytest, the OpenAPI spec-drift
+check, the contract-document drift check (`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility
+against the supported releases (`blizzard:compat`), the change-note check (`mise run change-notes`, which runs
 `uv run blizzard-change-notes check && uv run blizzard-change-notes owed --against origin/master`), then eslint, vitest,
 the web structural gate's sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`), the
 story render check (`web:story-render`), and generated-client drift over `web/`. Stage regenerated `openapi/`,
@@ -48,6 +48,23 @@ repository Protocol naming who holds its variant (`depends on this variant`, `he
 same-repo `.py` pointer, is a hard failure. The generated web clients are excluded; `.html` templates are outside the
 configured extensions. That token list is the one statement of what the gate flags. `gate.yml` runs the command as its
 own dedicated job, installing Vale through `jdx/mise-action`.
+
+### blizzard:pointer-check
+
+`mise run pointer-check` (`uv run python scripts/repo_pointers.py check`) fails when a repo-root path named in the prose
+of a tracked `.py` file under `src/`, `tests/`, `scripts/` or `exemplars/python/` is not tracked. The prose is the
+docstrings and full-line comments `scripts/prose_spans.py` extracts, plus trailing inline comments; string literals are
+not prose. A path is a token rooted at one of the local roots `styles/Blizzard/ShortFormPointer.yml` lists. A file
+pointer resolves only to a file in `git ls-files`; a directory pointer needs a tracked descendant, so an untracked file
+on disk satisfies nothing. A glob or `<placeholder>` template passes when it matches at least one tracked path.
+
+It checks file existence only: never a `#anchor`, `::symbol` or `:line` suffix (all stripped), never Markdown,
+TypeScript or YAML, and never workspace notation, a URL or another repo's path — a token preceded by `:`, `/`, `.` or a
+word character is skipped. Each reviewed exception is an entry in `scripts/repo-pointers-exemptions.json`, keyed by
+`file`, `symbol` and `target`, with its exact `count`, a `kind` (`illustration`, `generated` or `debt`) and a `reason`.
+An occurrence above an entry's count fails, and so does a stale entry whose count is no longer reached. There is no
+regenerate mode. It needs no sibling checkout, and `blizzard:gate` runs it as one of its steps, as does `gate.yml`'s
+`ruff + pyright + structural gate` job.
 
 ### blizzard:compat
 
