@@ -39,15 +39,20 @@ and a docker daemon with compose v2.
 
 ### blizzard:process-ref-lint
 
-`mise run process-ref-lint` (`vale --output=line .`) from the repo root — `styles/Blizzard/ProcessReference.yml`,
-`styles/Blizzard/ChangeHistory.yml`, `styles/Blizzard/VariantHolder.yml`, and `styles/Blizzard/ShortFormPointer.yml`
+`mise run process-ref-lint` (`vale --output=line .`, then `tests/test_route_clause_rule.py` with Vale required) from the
+repo root — `styles/Blizzard/ProcessReference.yml`, `styles/Blizzard/ChangeHistory.yml`,
+`styles/Blizzard/VariantHolder.yml`, `styles/Blizzard/ShortFormPointer.yml`, and `styles/Blizzard/RouteClause.yml`
 against `.vale.ini`'s `[*.md]`, `[{src,tests,scripts}/**/*.py]`, `[src/**/*.{yaml,yml}]`, and
 `[web/projects/**/*.{ts,css}]` sections. A process reference (tracker, issue or PR number, review/finding id, phase, or
 lettered-change token) or crisp change-history narration — the shapes `ChangeHistory.yml`'s own token list names — or a
 repository Protocol naming who holds its variant (`depends on this variant`, `held by read-path edges`), or a short-form
-same-repo `.py` pointer, is a hard failure. The generated web clients are excluded; `.html` templates are outside the
-configured extensions. That token list is the one statement of what the gate flags. `gate.yml` runs the command as its
-own dedicated job, installing Vale through `jdx/mise-action`.
+same-repo `.py` pointer, is a hard failure; so is a `client of <METHOD> /route` clause in a `.py` file under
+`src/blizzard/hub/cli/` or `src/blizzard/runner/cli/` (`RouteClause.yml`, enabled only in that section). The test module
+copies its fixtures into a temp tree under the repo's real `.vale.ini` and proves both directory scopes, the clause
+allowed elsewhere, and the other rules still firing; it skips when Vale is absent unless `BLIZZARD_REQUIRE_VALE=1`. The
+generated web clients are excluded; `.html` templates are outside the configured extensions. That token list is the one
+statement of what the gate flags. `gate.yml` runs the command as its own dedicated job, installing Vale through
+`jdx/mise-action`.
 
 ### blizzard:pointer-check
 
