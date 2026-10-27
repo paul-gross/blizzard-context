@@ -36,6 +36,9 @@ selection fails. Only an empty effective harness set — none authored and none 
 chooses its default harness, whose model resolution falls back to its default even for an entirely unresolvable tier
 list.
 
+A native name is satisfiable on a harness only where that runner declares it supported — each runner binding states the
+native names it accepts, as exact names or patterns — and a tier only by a mapping. A pattern never satisfies a tier.
+
 A session's model is resolved once, where a pool starts the session, and is that session's model for its whole lineage;
 a resume never re-resolves it. Model changes therefore take effect only where a pool starts a session: a mid-chunk edit
 rotates the pool at its next member rather than switching a running session's model.
