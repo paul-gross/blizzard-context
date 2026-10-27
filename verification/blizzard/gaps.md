@@ -512,6 +512,14 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
 - **The usage-limit floor revision.** `20261022_1000_usage_limit_floor` creates the empty `subscription_usage_limits`,
   `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables and its downgrade drops them. It
   has not been executed on Postgres; it creates four tables of portable column types and writes no data.
+- **The fact append sequence revision.** `20261026_1000_fact_append_sequence` adds a nullable `seq` to `env_bindings`,
+  `binding_releases`, `pause_parks`, `pause_park_resumes`, `requeues` and `leases`, creates `fact_counters`, and numbers
+  every existing row per runner, openers before closers at a tied instant. The hand run seeded the parent shape with two
+  runners holding same-instant ties across all three closure pairs, upgraded it, and found every held binding, open park
+  and pending requeue unchanged, each counter at its runner's row count, and the invariants holding. It then took the
+  revision down, which restored the parent schema with every row kept, up again to the same schema, and re-ran the
+  upgrade over the numbered store, which changed nothing. Two writers racing the first allocation of a new runner's fact
+  counter were not run on Postgres; the allocation is the outbox counter's, which that run covers.
 - **The empty-store upgrade.** The runner chain cannot reach head on Postgres from an empty store: the Boolean
   `server_default` in `20260920_0200_usage_cost_is_share.py` is `0`, which Postgres rejects. The hand run builds the
   tightening revision's parent shape from `src/blizzard/runner/store/schema.py` as it stood then, so no revision below
@@ -521,9 +529,9 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
 Standing in for a tier: the revisions' migration tests
 (`src/blizzard/runner/store/migrations/tests/20261011_1000_runner_scope_test.py`,
 `20261013_1000_runner_scope_tighten_test.py`, `20261015_1000_host_ingests_test.py`,
-`20261022_1000_usage_limit_floor_test.py`) and the seam's component tests on SQLite, and the portable SQL
-`bzh:sql-portable` holds each statement to. The hand run is not repeatable from a durable script, since the matrix
-carries the method and no driver. The gap closes as the tenancy one above does.
+`20261022_1000_usage_limit_floor_test.py`, `20261026_1000_fact_append_sequence_test.py`) and the seam's component tests
+on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand run is not repeatable from a
+durable script, since the matrix carries the method and no driver. The gap closes as the tenancy one above does.
 
 ## The hub action revisions under Postgres
 
