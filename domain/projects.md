@@ -61,8 +61,8 @@ within its project, and two projects never collide on the name of a sweep
 ([routines-and-scopes.md](./routines-and-scopes.md#what-refuses)), and a run's work is ingested into the routine's
 project.
 
-Work sources and repositories are the tenant's, not any project's. A project reaches one only through a link, any number
-of projects may link the same record, and a link never makes the record the project's own:
+Forges, work sources and repositories are the tenant's, not any project's. A project reaches a source or repository only
+through a link, any number of projects may link the same record, and a link never makes the record the project's own:
 
 - **A source link** says the project draws from that source. Closing and annotating an item still go through its source,
   whichever project carried the work.
@@ -70,6 +70,7 @@ of projects may link the same record, and a link never makes the record the proj
   project links receives nothing.
 - **The built-in hub source** is one list for the whole tenant, linked to every project without being configured, and
   cannot be unlinked. Each item in it belongs to the project it was created in.
+- **A forge is never linked.** A project reaches one only through the sources and repositories it links.
 - **A project holds no secrets.** A credential belongs to the source or repository that uses it, and a project reaches
   it only by linking that record.
 
