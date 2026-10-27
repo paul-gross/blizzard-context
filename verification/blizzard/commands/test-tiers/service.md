@@ -90,14 +90,16 @@ the unit and component tiers.
 
 - `test_runner_stream_delivers_live_and_replays_from_last_event_id` proves live delivery to a pre-connected subscriber
   and resume from `Last-Event-ID` across a reconnect.
-- `test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor` covers the fresh broker already
-  holding buffered events at reconnect, so the stale cursor reaches the replay read — unresolved, it silently empties
-  the tail rather than merely dropping live frames.
-- `test_runner_stream_resumes_live_after_a_restart_reset_the_broker_ids` covers a second daemon instance behind the same
-  port, its broker minting ids from zero, resuming a cursor the first minted; the clamp is pinned by the unit-tier
-  `tests/test_foundation_events.py`.
 - `test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves a signal-driven shutdown still
   returns `server.run()` with a client held open.
+
+The runner route's restart clamp — a stale `Last-Event-ID` against a fresh broker — is proven at component tier, not
+here:
+
+- Live resumption, component tier:
+  `tests/test_runner_events_stream.py::test_runner_stream_resumes_live_after_a_restart_reset_the_broker_ids`.
+- Buffered replay, component tier:
+  `tests/test_runner_events_stream.py::test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor`.
 
 `blizzard:e2e`'s `test_runner_panel_live_e2e` scenario
 ([`../../e2e-scenarios/runner-panel.md`](../../e2e-scenarios/runner-panel.md)) carries the fan-out one tier further — a
