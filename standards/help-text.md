@@ -22,7 +22,9 @@ bounds what the exception admits.
 ## Detect
 
 A client verb's `--help` naming the mechanism behind an effect — a loop step, a bumped counter, an internal reconciler,
-a daemon-side process — where the effect alone tells the operator what they need.
+a daemon-side process — where the effect alone tells the operator what they need. The `client of <METHOD> /route` clause
+in `src/blizzard/hub/cli/` and `src/blizzard/runner/cli/` is caught mechanically by `blizzard:process-ref-lint`'s
+`styles/Blizzard/RouteClause.yml`; every other mechanism naming is judged by reading.
 
 ## Do
 
