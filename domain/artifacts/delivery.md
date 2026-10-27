@@ -41,8 +41,8 @@ worker node's judgement ([edges](../graphs/edges.md)).
 - **The policy is the action's.** Which policy a chunk gets is a fact about the graph it travels, and the policy is
   whatever its action does. A graph adopts a policy by declaring its action in `deliver`, never by an engine switch;
   [feature delivery](../../workflows/feature-delivery.md) describes the shipped policy. Each commit pointer is resolved
-  to its own repository record; whether a chunk may mix forges, owners, base branches or credentials is the policy's to
-  decide.
+  to its own repository record, which names the forge record it lands on; whether a chunk may mix forges, owners, base
+  branches or credentials is the policy's to decide.
 - **A chunk delivers one project's work.** A chunk lands only in repositories its project links, and a commit naming one
   it does not link is refused before any push — [../projects.md](../projects.md) §Where a chunk may land owns the rule,
   the moment the links are read, and the refusal.
