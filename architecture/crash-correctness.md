@@ -11,7 +11,8 @@ skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 **Rule.** The daemon loop's phases — the runner's REAP, PULL, FILL, ADVANCE, and the hub's coordinator loop — are
 individually callable step functions, each a pure function of (store, clock, seam clients); the tick timer is merely one
-driver of them.
+driver of them. A runner host started with `loop = "stepped"` starts no timer, and `POST /runners/{runner_id}/api/ticks`
+and `POST /api/host/ticks` are the loop's handle from outside: each runs one pass and answers once it has finished.
 
 **Why.** Tests drive the same step functions directly, one at a time, stopping exactly at a boundary — which is how
 boundary-order and recovery logic get cheap in-process coverage and how the sweep arms a precise crash point. A loop
