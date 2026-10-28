@@ -96,7 +96,9 @@ Hold a mock worker's turn open at `workerCheckpoint`, not a sleep. Change a samp
 the spec minted, followed by `stepHost()`.
 
 A `runnerHost` boots `stepped`: `step()` and `stepHost()` each resolve once the pass has completed, so a test steps,
-then reads. It never waits on a timer for a pass the host would run on its own.
+then reads. It never waits on a timer for a pass the host would run on its own. The halted and multi-runner examples
+live in `tests/service/runner/host-halted-runners.spec.ts`; their foreign-identity and persisted host-fact specimens
+live in `tests/service/runner/store/host-halted-runners.spec.ts`.
 
 To keep a hub outage open under an in-flight read, hold the `mockHubRelay` option's relay (`mockHub.relay`): stop the
 hub, issue the read, and wait on the relay's `refusal()` as the barrier that the read is in flight. Restart the hub and
@@ -191,6 +193,11 @@ runner's `id`; a layout no CLI verb produces is made by editing the documented f
 class.
 
 A layout no verb produces after first boot is a `reconfigure` of the stopped host, never a write to its store.
+
+For an initialized, stopped host, `prepareStopped` can replace a runner's documented-file subscription, id, or token,
+and the host token in `.env`, before `restart()` boots it. Token values come from enrollment; the seam never mints one.
+It refuses edits while the host runs. Store specimens open `data/host.db` only before boot or after stop, with table and
+column names checked against `contracts/store/runner.json`.
 
 A runner spec produces a subscription sample through the vendor counterpart, never a store write: set what the
 credential reports on `vendorUsage`, `stepHost()`, then read the recorded sample off `GET /api/host/subscriptions`. Mint
