@@ -549,6 +549,21 @@ hub row with no action onto one.
 Standing in for a tier: the second revision's colocated migration test and `blizzard:store-contract`, both on SQLite,
 and the portable SQL `bzh:sql-portable` holds each statement to.
 
+## The flows revision under Postgres
+
+Every tier runs `20261027_0900_flows` on SQLite only. It creates `flows`, `flow_submissions`, `flow_submission_flows`,
+`flow_submission_closures`, `hub_turns`, and `flow_facts`, with their indexes, and writes no row.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
+  store reached head at the revision, returned to base leaving only `alembic_version`, and reached head again. It then
+  stepped down to `20261025_0900_forges`, which left none of the six tables, and up to head once more.
+- **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
+  someone runs it again. No row was written through the tables there either, so the foreign keys SQLite never enforces
+  have not met a submission, a closure, or a turn on Postgres.
+
+Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
+portable SQL `bzh:sql-portable` holds each statement to.
+
 ## What the project lens and the project columns do not cover
 
 Two project boundaries are drawn by no tier because the system does not draw them:

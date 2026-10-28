@@ -23,15 +23,20 @@ follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sh
 3. **One failure shape per sink class.** The lane takes the shape its sink class names below, and takes its retry state
    from `blizzard/src/blizzard/foundation/lane_retry.py` rather than keeping its own.
 4. **Isolation.** A lane's failure never escapes into its host's other work. The hub runs each `Sweep` as its own task
-   with its own catch, and a requested pass's raise is caught by the route that ran it. A runner tick-step lane catches
-   its own failures inside `run()`, so later tick steps still run. A runner driver catches per pass. A hub pass that
-   serves many tenants carries this down to each tenant (`bzh:pass-isolates-tenants`).
+   with its own catch, the flow driver catches each tick on its own, and a requested pass's raise is caught by the route
+   that ran it. A runner tick-step lane catches its own failures inside `run()`, so later tick steps still run. A runner
+   driver catches per pass. A hub pass that serves many tenants carries this down to each tenant
+   (`bzh:pass-isolates-tenants`).
 5. **Hosting.** On the runner, a lane whose only sink is the hub is a step of the pass that owns its rows: a runner's
    lane is a step of that runner's tick, and the host's own lane, `HostLaneDrain`, is a step of the host tick, which
    runs on its own driver beside the runners' ticks. Either way the hub client bounds each call, and the pass's later
    steps consume its result. A lane whose sink is operator-configured, such as an exporter, runs on a dedicated driver,
    so a stalled sink never holds a tick. On the hub, every lane is a `SweepRoster` entry, stepped by a `Sweep` when
-   timed and by the sweep routes on request.
+   timed and by the sweep routes on request, except one. `FlowDriver`
+   (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) is the one hub lane that is not a `Sweep` or a `SweepRoster`
+   entry: its own coroutine, started in the hub's lifespan beside the sweeps' tasks and awaited before the action loop
+   stops, steps its `tick` through `asyncio.to_thread`. It runs no turn tasks, and every write it makes is one store
+   transaction with no external effect, so it names no crash-point family.
 
 The failure shapes, by sink class:
 
@@ -91,7 +96,7 @@ statement for the hub and keeps its value and last full pass per tenant, so a te
 
 | Shape                                                                                                                                                                | Example                                                                                                                         | Owes                                                                                                                                                                                                          |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rescans a corpus to converge a derived state from it                                                                                                                 | The hub's annotation and event-derivation reconcilers                                                                           | A probe and a floor                                                                                                                                                                                           |
+| Rescans a corpus to converge a derived state from it                                                                                                                 | The hub's annotation and event-derivation reconcilers, and the flow driver's reconcile of each tenant's flow lines              | A probe and a floor                                                                                                                                                                                           |
 | Prunes or expires what has aged past a window far longer than its floor                                                                                              | The runner's `Retention` step in `blizzard/src/blizzard/runner/loop/steps.py`, pruning its day-scale lanes on a one-hour floor  | A floor, not a probe                                                                                                                                                                                          |
 | Enforces a window without pruning it                                                                                                                                 | The runner's `SpendCeiling` step, which engages the pause brake once rolling-window spend reaches its cap                       | Nothing here — it is outside this rule: it owes its reaction on the tick the cap is crossed, and a floor would let spend overshoot the cap for up to one floor                                                |
 | Acts on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases | `CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_items/closure.py`; the runner's `Reap` and `Advance` steps | Nothing here — it is outside this rule: its due-set is the live work the pass exists to answer, often made due by time passing alone, so no change probe sees it and a floor would delay the reaction it owes |

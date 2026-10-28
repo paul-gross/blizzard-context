@@ -63,6 +63,13 @@ same generic `executor: hub` primitive. Its `fleet traces` subtest proves what t
 - `test_pr_ci_escalates_a_repository_the_forge_does_not_know_as_forge_config` — proves a repository record whose forge
   does not know it escalates the chunk to `needs_human` with cause `forge-config`, the detail naming that forge, nothing
   merged.
+- `test_pr_ci_waiting_on_pending_checks_reads_conditionally_one_lookup_a_pass` — proves a landing pending over ten polls
+  spends no counted forge call on a landing read after its first pass, every one answered `304`, and makes its
+  already-merged lookup as one head-filtered read a pass, nothing merged.
+- `test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish` — proves a revision whose one check
+  is green, gaining a second pending check before the next pass, is not merged until that check is green, then lands.
+- `test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` — proves a revision armed with no check is never
+  green: it pends and bounces at the node's poll timeout, cause `poll-timeout`, nothing merged.
 
 ## test_hub_actions_e2e
 
@@ -97,6 +104,20 @@ no forge exists, and the HEAD migrate and hub carry it.
 - `test_a_store_held_before_forges_carries_over_and_lands_a_chunk_as_before` — proves both records name one forge for
   that origin, its port kept in its slug, and a second chunk lands against the mock forge with the same deliver choices
   and marker kinds as the chunk landed before the carry-over.
+
+## test_flow_record_e2e
+
+The flow record, kept by the hub's own flow driver over a real hub: a chunk held pending at `deliver` — the mock forge's
+`checks_pending` lever armed — and a store walked below `20261027_0900_flows`, carried back by a real migrate and hub.
+After each step the three flow invariants — `hub:one-turn-per-flow`, `hub:one-turn-per-visit`, and
+`hub:flow-line-standing` — hold, and no `hub_turns` row exists.
+
+- `test_a_held_chunk_is_submitted_and_its_landing_supersedes_it` — proves a chunk held at the hub node across a driver
+  tick is submitted to its branch's flow, and once the lever clears and it lands, the next tick closes that submission
+  `superseded`.
+- `test_a_store_walked_below_flows_submits_its_pending_chunks_in_the_order_they_entered_deliver` — proves two chunks
+  pending at `deliver` when the store walks down, minted so their id order is the reverse, are submitted on the migrated
+  hub's boot in the order they entered `deliver`, both still delivering.
 
 ## test_checks_gate_e2e
 
