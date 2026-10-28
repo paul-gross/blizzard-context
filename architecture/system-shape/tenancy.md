@@ -183,10 +183,11 @@ through the row's own tenant is what keeps a write the pass makes on the same si
 caused it.
 
 **Scope.** A probe that gates a pass (`bzh:probe-gated-pass`) is read hub-wide, in one statement, and its value is per
-tenant (`bzh:pass-isolates-tenants`). A hub-wide job that is not a sweep — boot slot release, key coverage, key rotation
-— loops over open tenants and acts through each one's stores. Trace export and fact egress write nothing into any
-tenant's store; their rows carry their tenant's id instead. A one-tenant pass is the same pass narrowed to one tenant:
-it reads the same hub-scoped probe and corpus and acts only in that tenant.
+tenant (`bzh:pass-isolates-tenants`). A hub-wide job that is not a sweep — boot slot release, boot turn recovery, the
+flow driver's tick, key coverage, key rotation — loops over open tenants and acts through each one's stores. Trace
+export and fact egress write nothing into any tenant's store; their rows carry their tenant's id instead. A one-tenant
+pass is the same pass narrowed to one tenant: it reads the same hub-scoped probe and corpus and acts only in that
+tenant.
 
 **Detect.** No structural gate reaches it: the statement guard sees a scoped write as scoped whichever tenant it was
 opened for. A reviewer asks of each write a pass makes: whose scope is this, and is it the tenant of the row being acted
