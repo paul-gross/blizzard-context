@@ -232,7 +232,8 @@ step something new to read — a probe, a config value, a store — takes three 
    step modules. Combining a new check's result with existing ones is step logic too: the phase makes one call into a
    step module and branches on that one result.
 2. Add the member to that module's context Protocol and to `LoopContext`.
-3. Keep a `_conforms_*` sentinel for that Protocol in `runner/loop/context.py`.
+3. Keep a sentinel for that Protocol in `runner/loop/context.py`: the assignment
+   `_<name>_conforms: type[<Protocol>] = LoopContext`.
 
 A pluggable seam such as a probe (`bzh:pluggable-seams` in [./system-shape.md](./system-shape.md)) is one member the
 step's Protocol declares; it never stands in for that Protocol.
@@ -258,7 +259,8 @@ they act as their own roots.
 - A `ctx` parameter or `ctx:` field under `runner/`, outside the driver, roots, and edges, not typed by a `Protocol` its
   own module declares; or a parameter or field of any other name typed — bare, module-qualified, or wrapped in a union —
   by `LoopContext` or another module's step context.
-- A step context Protocol with no `_conforms_*` sentinel in `runner/loop/context.py` proving `LoopContext` satisfies it.
+- A step context Protocol with no sentinel assignment `_<name>_conforms: type[<Protocol>] = LoopContext` in
+  `runner/loop/context.py` proving `LoopContext` satisfies it.
 
 The fix is to declare what the module reads, never to widen an exemption.
 
@@ -273,8 +275,7 @@ class AttemptContext(SpawnContext, Protocol): ...
 if TYPE_CHECKING:
     from blizzard.runner.lifecycle.attempt import AttemptContext
 
-    def _conforms_to_attempt(ctx: LoopContext) -> AttemptContext:
-        return ctx
+    _attempt_conforms: type[AttemptContext] = LoopContext
 ```
 
 A domain service takes one keyword parameter per repository seam:
