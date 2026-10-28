@@ -8,9 +8,9 @@ for allocation and statement guards. The harness owns fixtures in `tests/harness
 ## Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
 **Rule.** Name the fixtures a test needs — tenant, project, clients, people, event stream, the `blizzard` CLI, a fresh
-hub's stop, kill, and start lifecycle, and the OTLP sink — and import only `tests/harness/fixtures.ts`. A runner-only
-test takes `runnerTest`'s own `mockHub` and `authStub` instead of any shared-hub fixture. Do not use Playwright's
-built-in `request` or set shared state in `test.beforeAll`.
+hub's stop, kill, and start lifecycle, the OTLP sink, and a real runner host (`runnerHost` and `runnerHosts`) — and
+import only `tests/harness/fixtures.ts`. A runner-only test takes `runnerTest`'s own `mockHub` and `authStub` instead of
+any shared-hub fixture. Do not use Playwright's built-in `request` or set shared state in `test.beforeAll`.
 
 **Why.** The harness fixtures own daemon lifetime, tenant routing, cleanup, and test isolation. A bare request context
 reaches no tenant; file-wide mutable setup crosses parallel tests.
@@ -33,8 +33,9 @@ route to the appropriate client rather than bypassing it.
 reviewable signature that lint alone does not cover.
 
 **Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface; in `runnerTest`, the mock-hub
-client on `mockHub` and the runner clients from `runnerHost` and `runnerStream`. To act as anyone but the tenant's
-admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and `events.open`.
+client on `mockHub` and the runner clients from `runnerHostClient`, `runnerStream`, and a `runnerHost`'s own `runners`
+and `api`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option
+of `cli` and `events.open`.
 
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
@@ -67,6 +68,9 @@ no causal barrier.
 **Do.** Await the event stream or poll the client for the state the case can name.
 
 **Don't.** Sleep before asserting that no event was emitted.
+
+A `runnerHost` boots `stepped`: `step()` and `stepHost()` each resolve once the pass has completed, so a test steps,
+then reads. It never waits on a timer for a pass the host would run on its own.
 
 ## Stay on public surfaces (`bzh:service-public-surfaces`)
 
@@ -113,6 +117,13 @@ harness refuses `hubConfig` or `hubEnv` below `fresh-hub`.
 test whose subject is the login throttle takes a `fresh-hub` with the throttle left on.
 
 **Don't.** Toggle a shared hub's feature flag before an assertion and toggle it back afterward.
+
+A runner host's configuration rides a profile the same way. `runner.toml` beside the spec, or
+`test.use({ runnerConfig })` over it, is a host-file overlay checked against `contracts/config/host.json` before any
+process starts. `runnerEnv` adds environment to the host process, and the harness refuses any name `daemon-env.json`
+pins and the mock-harness fence. A profile never sets a key the CLI or the fixture owns, such as `hub_url`, `port`, or a
+runner's `id`; a layout no CLI verb produces is made by editing the documented files, never by going through a runner
+class.
 
 ## Register what a fleet call needs (`bzh:service-fleet-registration`)
 
