@@ -105,6 +105,20 @@ no forge exists, and the HEAD migrate and hub carry it.
   that origin, its port kept in its slug, and a second chunk lands against the mock forge with the same deliver choices
   and marker kinds as the chunk landed before the carry-over.
 
+## test_flow_record_e2e
+
+The flow record, kept by the hub's own flow driver over a real hub: a chunk held pending at `deliver` — the mock forge's
+`checks_pending` lever armed — and a store walked below `20261027_0900_flows`, carried back by a real migrate and hub.
+After each step the three flow invariants — `hub:one-turn-per-flow`, `hub:one-turn-per-visit`, and
+`hub:flow-line-standing` — hold, and no `hub_turns` row exists.
+
+- `test_a_held_chunk_is_submitted_and_its_landing_supersedes_it` — proves a chunk held at the hub node across a driver
+  tick is submitted to its branch's flow, and once the lever clears and it lands, the next tick closes that submission
+  `superseded`.
+- `test_a_store_walked_below_flows_submits_its_pending_chunks_in_the_order_they_entered_deliver` — proves two chunks
+  pending at `deliver` when the store walks down, minted so their id order is the reverse, are submitted on the migrated
+  hub's boot in the order they entered `deliver`, both still delivering.
+
 ## test_checks_gate_e2e
 
 Checks-gate enforcement: a graph whose `build` choice carries `requires_checks: true` shows the gate — not the worker's
