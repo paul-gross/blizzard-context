@@ -50,18 +50,23 @@ closing that proposal's findings to `delivered` through one requested pass of th
 
 **Runner against mock hub.** `unreachable` buffers, `drop_ack` proves idempotency, and a `stale_envelope` is tolerated —
 the chunk lands because the runner fences on its own lease epoch, not the envelope
-(`test_stale_envelope_is_tolerated_and_the_chunk_still_lands`).
+(`tests/service/runner/runner.spec.ts::test_stale_envelope_is_tolerated_and_the_chunk_still_lands`).
 `test_advance_harvests_git_commits_from_every_bound_environment` pins that the harvest spans every bound environment —
 the loss a `bindings[0]` read makes silent.
-`test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable` is the first service-tier exercise
-of a lease-token-authorized worker-lane read route: a `--scope graph` read resolves from the runner's own mint-time
-mirror with the mock hub down while the same lease's node-scope read still 503s (the `_worker_credential` seam). A
-seeded chunk driven to `stopped` over `POST /_seed/stop` exercises PULL's two terminal-fact paths over a real hub
-response rather than `FakeHub`: `test_pull_abandons_the_active_lease_when_the_hub_reports_the_chunk_stopped` and
-`test_pull_closes_the_local_escalation_when_the_hub_reports_the_chunk_stopped`. A peek carrying a marked head and an
-unmarked entry behind it is driven under both of a runner's selection policies against a real mock hub:
-`test_fill_reaches_past_a_marked_head_by_default_against_a_real_mock_hub` claims the unmarked entry while the marked one
-stays `ready`, and `test_fill_strict_holds_at_a_marked_head_against_a_real_mock_hub` (`[queue] strict`) claims neither.
+`tests/service/runner/runner.spec.ts::test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable`
+is the first service-tier exercise of a lease-token-authorized worker-lane read route: a `--scope graph` read resolves
+from the runner's own mint-time mirror with the mock hub down while the same lease's node-scope read still 503s (the
+worker's call takes the spawn credential the mock harness recorded — `mock-claude-code` records the `BLIZZARD_*` lease
+token, lease id and runner URL its runner exported — not a minted one). A seeded chunk driven to `stopped` over
+`POST /_seed/stop` exercises PULL's two terminal-fact paths over a real hub response rather than `FakeHub`:
+`tests/service/runner/runner.spec.ts::test_pull_abandons_the_active_lease_when_the_hub_reports_the_chunk_stopped` and
+`tests/service/runner/runner.spec.ts::test_pull_closes_the_local_escalation_when_the_hub_reports_the_chunk_stopped`. A
+peek carrying a marked head and an unmarked entry behind it is driven under both of a runner's selection policies
+against a real mock hub:
+`tests/service/runner/runner.spec.ts::test_fill_reaches_past_a_marked_head_by_default_against_a_real_mock_hub` claims
+the unmarked entry while the marked one stays `ready`, and
+`tests/service/runner/runner.spec.ts::test_fill_strict_holds_at_a_marked_head_against_a_real_mock_hub`
+(`[queue] strict`) claims neither.
 
 **Usage over the wire** runs both directions. Runner-to-mock-hub (`test_usage_service.py`), a real runner's
 `usage.recorded` facts ride the store-and-forward buffer, survive a hub outage, and flush exactly once.
@@ -90,12 +95,12 @@ a pre-connected subscriber receives `event-logged` exactly once, the folded even
 the unit and component tiers.
 
 **Runner SSE live fan-out** has the same shape over the runner's own stream and vocabulary, all in
-`tests/service/test_runner_service.py`:
+`tests/service/runner/runner.spec.ts`:
 
-- `test_runner_stream_delivers_live_and_replays_from_last_event_id` proves live delivery to a pre-connected subscriber
-  and resume from `Last-Event-ID` across a reconnect.
-- `test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves a signal-driven shutdown still
-  returns `server.run()` with a client held open.
+- `tests/service/runner/runner.spec.ts::test_runner_stream_delivers_live_and_replays_from_last_event_id` proves live
+  delivery to a pre-connected subscriber and resume from `Last-Event-ID` across a reconnect.
+- `tests/service/runner/runner.spec.ts::test_runner_sigterm_returns_promptly_with_a_client_parked_on_the_stream` proves
+  a signal-driven shutdown still returns `server.run()` with a client held open.
 
 The runner route's restart clamp — a stale `Last-Event-ID` against a fresh broker — is proven at component tier, not
 here:
@@ -109,15 +114,17 @@ here:
 ([`../../e2e-scenarios/runner-panel.md`](../../e2e-scenarios/runner-panel.md)) carries the fan-out one tier further — a
 real `blizzard-runner host` subprocess observed through a real browser on the served panel, nothing stubbed.
 
-**Transcripts.** `test_transcript_is_read_back_through_the_runner_http_api` drives a chunk through the real fleet, then
-reads `GET /runners/{runner_id}/api/leases` and `GET /runners/{runner_id}/api/leases/{lease_id}/transcript` off the
-runner's own local HTTP API — real turn kinds with `tool_output` populated, the `Bash` turn's output cross-checked
-against the real commit sha off the bare origin, unsatisfiable by a fixture.
-`test_a_closed_leases_transcript_resolves_to_the_hub_through_the_runner_api` walks the route's three provenance homes
-against a real `build_hosted_app` daemon: `"local"` while the lease is open, `"archived"` once the mock hub holds its
-segments — still `"archived"` after the local file is deleted mid-run — and `hub_unreachable: true` once the mock-hub
-subprocess is gone. That closed-lease walk is the only real-counterpart drive of the runner's outbound fleet-plane read;
-the unit tier binds a stubbed transport, and `tests/service/hub/transcript-segments.spec.ts` drives the hub-side route.
+**Transcripts.** `tests/service/runner/runner.spec.ts::test_transcript_is_read_back_through_the_runner_http_api` drives
+a chunk through the real fleet, then reads `GET /runners/{runner_id}/api/leases` and
+`GET /runners/{runner_id}/api/leases/{lease_id}/transcript` off the runner's own local HTTP API — real turn kinds with
+`tool_output` populated, the `Bash` turn's output cross-checked against the real commit sha off the bare origin,
+unsatisfiable by a fixture.
+`tests/service/runner/runner.spec.ts::test_a_closed_leases_transcript_resolves_to_the_hub_through_the_runner_api` walks
+the route's three provenance homes against a real `build_hosted_app` daemon: `"local"` while the lease is open,
+`"archived"` once the mock hub holds its segments — still `"archived"` after the local file is deleted mid-run — and
+`hub_unreachable: true` once the mock-hub subprocess is gone. That closed-lease walk is the only real-counterpart drive
+of the runner's outbound fleet-plane read; the unit tier binds a stubbed transport, and
+`tests/service/hub/transcript-segments.spec.ts` drives the hub-side route.
 
 **The OAuth login dance** (`tests/service/hub/auth/auth-login.spec.ts`) is proven only at this tier: a running hub under
 `auth.mode = "oauth"` whose `authorize` 302s to the `blizzard-mock` stub IdP (`tool:mock-fleet`, `blizzard-mock-idp` —
