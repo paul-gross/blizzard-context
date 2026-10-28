@@ -41,7 +41,7 @@ depend on them, never the reverse. The hub-JWKS seam `IJwksCache` sits in `runne
 binding sits in `runner/auth/internal/http_jwks_cache.py`, built only in the app composition root. The runner's FastAPI
 federation router lives at `runner/api/federation.py`, not under `runner/auth/`. A config value the hub domain reads is
 a domain-owned type the config edge builds (`hub/config.py` parses and renders; the domain holds the value). A domain
-service types a delivery collaborator by a domain Protocol, as `ApplyService` does with `IHubNodeExecutor`.
+service types a delivery collaborator by a domain Protocol, as `ApplyService` does with `IHubStepWake`.
 
 **Don't.** A domain function that opens a SQLAlchemy session or reads a request object.
 

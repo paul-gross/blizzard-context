@@ -12,7 +12,7 @@ like a worker's judged choice ([../../domain/graphs/edges.md](../../domain/graph
 choice every hub node authors, and `success` is a reserved name a node authors only when its action can answer it.
 
 A reserved wait — one of the catalogue's `RESERVED_WAITS`, today only `pending` — is neither success nor failure: no
-transition happens, the poll-attempt fact is recorded, and the tenant's `hub_exec_slot` is released immediately. A
+transition happens, the poll-attempt fact is recorded, and the turn ends, yielding its flows to the next in line. A
 reserved wait is machinery-reserved and never authored as one of a node's own choices; only a node whose action can
 answer one may carry `poll_interval` and `poll_timeout`. After a wait, the action runs a fresh pass — skipping the work
 its own markers already record ([./step-idempotence.md](./step-idempotence.md), `bzh:hub-node-step-idempotence`) — once

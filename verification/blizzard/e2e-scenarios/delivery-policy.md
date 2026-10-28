@@ -110,14 +110,34 @@ no forge exists, and the HEAD migrate and hub carry it.
 The flow record, kept by the hub's own flow driver over a real hub: a chunk held pending at `deliver` — the mock forge's
 `checks_pending` lever armed — and a store walked below `20261027_0900_flows`, carried back by a real migrate and hub.
 After each step the three flow invariants — `hub:one-turn-per-flow`, `hub:one-turn-per-visit`, and
-`hub:flow-line-standing` — hold, and no `hub_turns` row exists.
+`hub:flow-line-standing` — hold, and once the chunk lands no turn is open.
 
-- `test_a_held_chunk_is_submitted_and_its_landing_supersedes_it` — proves a chunk held at the hub node across a driver
-  tick is submitted to its branch's flow, and once the lever clears and it lands, the next tick closes that submission
-  `superseded`.
+- `test_a_held_chunk_is_submitted_and_its_landing_supersedes_it` — proves a chunk held at the hub node is submitted to
+  its branch's flow and polls through turns, and once the lever clears, the turn that lands it closes that submission
+  `landed`.
 - `test_a_store_walked_below_flows_submits_its_pending_chunks_in_the_order_they_entered_deliver` — proves two chunks
   pending at `deliver` when the store walks down, minted so their id order is the reverse, are submitted on the migrated
   hub's boot in the order they entered `deliver`, both still delivering.
+
+## test_flow_turns_e2e
+
+Every hub step taken as a turn on the flows of the branches it lands on, by the hub's own flow driver against the mock
+forge. Each scenario ends with the flow invariants holding and no turn open.
+
+- `test_two_repositories_land_side_by_side` — proves chunks on two repositories hold disjoint flows and both keep
+  turning while held, and one lands while the other still waits.
+- `test_two_chunks_on_one_branch_land_in_arrival_order` — proves two chunks held on one branch, come due together on a
+  hub restarted with the checks green, land in the order they arrived.
+- `test_a_garden_delivery_lands_while_a_chunk_is_held_on_a_branch` — proves a garden run's delivery, which holds no
+  branch, lands while a chunk is held pending on one.
+- `test_two_chunks_each_landing_both_repositories_both_land` — proves two chunks each landing the same two repositories
+  share both flows and both land.
+- `test_a_pending_chunk_yields_its_branch_until_its_next_poll` — proves a pending chunk is not next again before its
+  next poll, and another chunk on its branch takes a turn in every gap between its turns.
+- `test_a_chunk_whose_runner_is_gone_lands_and_records_its_findings` — proves the hub alone lands a chunk whose runner
+  is gone after build and takes it through `record-findings`.
+- `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` — proves a chunk that reaches `deliver` paused takes
+  no turn there, and lands once resumed.
 
 ## test_checks_gate_e2e
 
