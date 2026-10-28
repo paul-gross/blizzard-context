@@ -1,9 +1,11 @@
 # Authoring Playwright service tests
 
-These rules bind specs under `blizzard/tests/service/`. Start at the service method's
+These rules bind specs under `blizzard/tests/service/`, in three folders: `hub/` (the hub's own wire), `runner/` (a real
+runner host on a mock hub), and `fleet/` (a real runner host on a real hub). Start at the service method's
 [command detail](./commands/test-tiers/service.md) for the paired task commands and at [tier-rules.md](./tier-rules.md)
 for allocation and statement guards. The harness owns fixtures in `tests/harness/fixtures.ts`, clients in
-`tests/harness/client/`, and profile discovery in `tests/playwright.config.ts` and `tests/harness/profiles.ts`.
+`tests/harness/client/`, and project and profile discovery in `tests/playwright.config.ts`, `tests/harness/projects.ts`,
+and `tests/harness/profiles.ts`.
 
 ## Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
@@ -12,11 +14,19 @@ hub's stop, kill, and start lifecycle, the OTLP sink, and a real runner host (`r
 import only `tests/harness/fixtures.ts`. A runner-only test takes `runnerTest`'s own `mockHub` and `authStub` instead of
 any shared-hub fixture. Do not use Playwright's built-in `request` or set shared state in `test.beforeAll`.
 
+Each folder takes one world. `service/hub/` and `service/fleet/` take `test`; `service/runner/` takes `runnerTest`,
+which has no `isolation` option, so a runner spec declares none: its mock hub and host belong to that test alone. A
+`service/fleet/` spec declares `fresh-tenant` at least, because a host enrolls only in a tenant of the test's own, and
+`fresh-hub` when its subject is hub-wide. The fleet world's `runnerHost`, `runnerHosts`, `runnerHostClient` and
+`runnerStream` are the runner world's, defined once and bound to the test's hub.
+
 **Why.** The harness fixtures own daemon lifetime, tenant routing, cleanup, and test isolation. A bare request context
 reaches no tenant; file-wide mutable setup crosses parallel tests.
 
 **Detect.** `tests/eslint.config.mjs` rejects destructured `request`, harness imports other than fixtures, and
-`test.beforeAll`/`test.afterAll` in service specs. Review ad-hoc construction of a fixture's resource.
+`test.beforeAll`/`test.afterAll` in service specs, and the wrong world per folder: `runnerTest` outside
+`service/runner/`, `test` inside it, and `@playwright/test` itself anywhere. Review ad-hoc construction of a fixture's
+resource.
 
 **Do.** Import `test` and `expect` from the harness fixtures and declare only the resources the case reads.
 
@@ -34,8 +44,11 @@ reviewable signature that lint alone does not cover.
 
 **Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface; in `runnerTest`, the mock-hub
 client on `mockHub` and the runner clients from `runnerHostClient`, `runnerStream`, and a `runnerHost`'s own `runners`
-and `api`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option
-of `cli` and `events.open`.
+and `api`. A `runnerHost` also runs the real `blizzard-runner` on its directory with `cli(args)` (a non-zero exit is a
+result, not a throw), exports its traces to a test-owned sink under the `runnerOtlp` option (`host.otlp`), and reads a
+branch head in its world's bare origins with `originHead(repo, branch)`, so a spec proves a worker's push without
+running `git`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:`
+option of `cli` and `events.open`.
 
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
@@ -62,8 +75,8 @@ that only the expected behavior would emit before asserting its absence.
 
 **Why.** A sleep encodes machine speed; immediate absence proves only that the system has not acted yet.
 
-**Detect.** `tests/eslint.config.mjs` rejects `waitForTimeout`; review `setTimeout` sleeps and absence assertions with
-no causal barrier.
+**Detect.** `tests/eslint.config.mjs` rejects `waitForTimeout`, `setTimeout`, `setInterval`, and `node:timers`; review
+absence assertions with no causal barrier.
 
 **Do.** Await the event stream or poll the client for the state the case can name.
 
@@ -75,13 +88,18 @@ then reads. It never waits on a timer for a pass the host would run on its own.
 ## Stay on public surfaces (`bzh:service-public-surfaces`)
 
 **Rule.** Build test state through public hub surfaces. Only a `fresh-hub` test whose subject is the store may inspect
-store files, before the daemon starts or after it stops. Never seed with `tool:mock-data`.
+store files, before the daemon starts or after it stops. Never seed with `tool:mock-data`. A runner spec reads the host
+through its HTTP, socket, and stream surfaces; only `service/runner/store/` opens a runner store (`node:sqlite`) or
+touches the disk (`node:fs`), before the host starts or after it stops, by the table and column names
+`contracts/store/runner.json` declares.
 
 **Why.** A daemon service test must prove the wire and its actual effects; mutating a live store behind the daemon
 evades both the public contract and concurrent isolation.
 
-**Detect.** Review imports of store adapters, direct SQLite access, and mock-data invocations in service specs; no
-static gate proves the store-access timing or the test's subject.
+**Detect.** `tests/eslint.config.mjs` rejects `node:child_process`, `node:http`, `node:https`, `node:net`, and
+`node:sqlite` in every service spec, and `node:fs` in `service/runner/` and `service/fleet/`; `service/runner/store/` is
+the one folder that admits `node:sqlite` and `node:fs`. Review mock-data invocations and the store-access timing; no
+static gate proves them or the test's subject.
 
 **Do.** Create a repository, issue, or chunk through the fixture's hub client and observe it through the same surface.
 
@@ -110,13 +128,19 @@ cannot infer ownership from a lever's arguments.
 
 **Detect.** Review writes to hub-wide config within a spec and profile declarations under tests/service/hub/; the
 project discovery in `tests/playwright.config.ts` provides the profile boundary, not a lint ban on config calls. The
-harness refuses `hubConfig` or `hubEnv` below `fresh-hub`.
+harness refuses `hubConfig` or `hubEnv` below `fresh-hub`, and a `profile.toml` under `service/runner/` or
+`service/fleet/`.
 
 **Do.** Put a hub-wide variant in its own profile, or request a one-off case with
 `test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people belongs under the `auth` profile; a
 test whose subject is the login throttle takes a `fresh-hub` with the throttle left on.
 
 **Don't.** Toggle a shared hub's feature flag before an assertion and toggle it back afterward.
+
+A hub profile lives in `service/hub/` alone. A `service/fleet/` subfolder named after a hub profile, such as
+`fleet/auth/`, runs as `service-fleet-auth` on that profile's hub with one worker; every other fleet spec runs as
+`service-fleet` on the default profile's hubs, and a fleet test the cross-check raises to `fresh-hub` boots the profile
+its project maps to.
 
 A runner host's configuration rides a profile the same way. `runner.toml` beside the spec, or
 `test.use({ runnerConfig })` over it, is a host-file overlay checked against `contracts/config/host.json` before any

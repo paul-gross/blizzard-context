@@ -12,12 +12,16 @@ The service spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md). R
 
 The daemon-HTTP half runs `npx playwright test` (`mise run playwright`), selecting service projects with
 `mise run playwright -- --project='service-*'` from the repo root. New daemon behavior tests live in that package under
-`tests/service/`; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python half runs
-`BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`), retaining its described daemon
-cases until ported and the external-tool bindings whose subject is Python itself. Both exercise a running daemon from
-outside against the mock fleet. This differs from `blizzard:e2e`, which drives the loop in-process and the served board
-in a real browser. The Python half needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet
-scripts, stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
+`tests/service/`, in three folders that each run as their own project: `hub/` as `service-hub` and one
+`service-hub-<profile>` per profile subfolder; `runner/` as `service-runner`, a real runner host on the test's own mock
+hub with no setup; and `fleet/` as `service-fleet`, a real runner host enrolled in a tenant of the test's own on the
+shared real hub, with a `service-fleet-<profile>` for each subfolder named after a hub profile. One `service-*`
+selection reaches all of them; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python
+half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`), retaining its described
+daemon cases until ported and the external-tool bindings whose subject is Python itself. Both exercise a running daemon
+from outside against the mock fleet. This differs from `blizzard:e2e`, which drives the loop in-process and the served
+board in a real browser. The Python half needs the sibling provisioned `blizzard-mock` worktree (its venv ships the
+mock-fleet scripts, stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
