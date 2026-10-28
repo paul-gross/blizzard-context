@@ -63,6 +63,13 @@ same generic `executor: hub` primitive. Its `fleet traces` subtest proves what t
 - `test_pr_ci_escalates_a_repository_the_forge_does_not_know_as_forge_config` — proves a repository record whose forge
   does not know it escalates the chunk to `needs_human` with cause `forge-config`, the detail naming that forge, nothing
   merged.
+- `test_pr_ci_waiting_on_pending_checks_reads_conditionally_one_lookup_a_pass` — proves a landing pending over ten polls
+  spends no counted forge call on a landing read after its first pass, every one answered `304`, and makes its
+  already-merged lookup as one head-filtered read a pass, nothing merged.
+- `test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish` — proves a revision whose one check
+  is green, gaining a second pending check before the next pass, is not merged until that check is green, then lands.
+- `test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` — proves a revision armed with no check is never
+  green: it pends and bounces at the node's poll timeout, cause `poll-timeout`, nothing merged.
 
 ## test_hub_actions_e2e
 
