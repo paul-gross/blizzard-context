@@ -45,5 +45,13 @@ The hub holds no shared forge endpoint and no owner fallback: each repository is
 owner, base branch and secret, and a `deliver` step and the garden's commit check each resolve every repository they act
 on to its record on every use; a work source names its forge record likewise, and the OAuth provider declares its own
 endpoint through its config entry.
+
+Each tenant holds one rate budget per forge key — a forge record and the secret its calls go out under, or that forge's
+anonymous budget when none — beside the registry and outside its adapter cache, so an edit that rebuilds an adapter
+keeps the budget. The landing seam's role handles and the work-source family share it. The priority is carried by the
+handle, never the adapter, because one adapter serves every caller of its repository: `land` admits as `landing`, the
+garden's commit check as `sweeping`. The work-source family reaches the budget only through its own narrow rate-gate
+Protocol, fixed to `sweeping` and bound where the source is built, so it never imports the forge seam. The rule for
+whether an answer is a rate refusal and when it lifts has one home, `hub/forge/budget.py`, free of any HTTP library.
 [../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md) owns how tests bind the mock
 forge for the land action's path.

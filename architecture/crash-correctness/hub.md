@@ -63,8 +63,12 @@ rides `record_work_item_closure`'s own transaction above — the same one that w
 as durable as that fact and never separately lost. A `skipped` attempt (no closer bound for the ref's source) has no
 outcome fact and no retirement to fold alongside, so `record_close_attempt_skipped` is its own single-statement
 transaction; a crash before it commits loses nothing durable (the intent was already pending and stays pending), and
-there is nothing after it to lose. Either way the ledger is append-only (`bzh:facts-not-status`): a crash mid-sweep
-leaves some intents' backoff clocks ticked and others not, and the next pass reads each one's own history fresh.
+there is nothing after it to lose. A `deferred` attempt (the forge's rate budget turned the close away, so the row
+carries the `resume_at` the intent waits for) is the same shape: `record_close_attempt_deferred` is its own
+single-statement transaction, with no outcome fact, no retirement and no event beside it, so a crash before it commits
+loses nothing durable — the next pass re-attempts the intent, and the budget turns it away again until its reset. Either
+way the ledger is append-only (`bzh:facts-not-status`): a crash mid-sweep leaves some intents' backoff clocks ticked and
+others not, and the next pass reads each one's own history fresh.
 
 Per-ref close-once is `record_work_item_closure`'s own store-level uniqueness constraint on
 `(chunk_id, source, ref, outcome)`, mirroring `record_hub_artifact`'s own idempotent-bool contract; retirement rides the
