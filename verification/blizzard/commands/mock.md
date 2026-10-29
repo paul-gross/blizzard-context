@@ -13,9 +13,9 @@ Bare `uv run pytest` — the default suite: unit plus component coverage of the 
 every lever), the fixture-workspace scaffold, the mock coding-harness engine and façades, the CLI-surface harness mode
 and its own lever roster, the mock-data CLI, and the stub OAuth IdP (`test_idp.py` — the `blizzard-mock-idp` oidc and
 github surfaces plus its `/_levers` control plane). `.github/workflows/{pr,push}.yml` run this same method, minus the
-`needs_blizzard`-marked wire-parity and real-runner tests (`mise run test -- -m "not needs_blizzard"`, check names
-`gate / pytest (sans needs_blizzard)`) — a single-repo CI checkout carries no sibling `blizzard` for them to read. The
-bare local command stays unmarked and fail-closed.
+`needs_blizzard`-marked wire-parity and real-runner tests (`mise run test -- -m "not needs_blizzard"`, check name
+`gate / pytest (sans needs_blizzard)`). The separate optional `gate / wire parity (needs_blizzard)` job checks out the
+resolved blizzard commit and runs both marked modules. The bare local command stays unmarked and fail-closed.
 
 The wire-parity guard (`tests/test_wire_parity.py`), the mock side of `bzh:wire-change-extends-mock`, maps every
 mock-hub response model to the hub schema it mirrors and diffs field sets against the committed
@@ -27,8 +27,12 @@ response-model sweep. It also diffs the batched `/events` fact vocabulary agains
 runtime — and sweeps the mirror service entry points for two adjacent same-typed positional parameters, which transpose
 silently.
 
-The guard is local-only and fail-closed: it reads the sibling `blizzard` worktree (`$BLIZZARD_SOURCE` overrides the
-default path) and fails rather than skips when it cannot resolve one — parity never checked is not a green.
+The guard is fail-closed: it reads the sibling `blizzard` worktree (`$BLIZZARD_SOURCE` overrides the default path) and
+fails rather than skips when it cannot resolve one — parity never checked is not a green. The real-runner module also
+uses `$BLIZZARD_RUNNER_BIN` from that checkout. `.github/actions/resolve-blizzard-ref/` selects a same-named `v*` tag,
+the PR head's matching branch or its `master`/`release/X.Y` base, or `master` on a master push; other implicit events
+fail. `.github/workflows/nightly.yml` passes an explicit `master` ref to the reusable gate on a schedule. The resolver
+logs the selected ref and commit, and checkout pins that commit.
 
 ### blizzard-mock:e2e
 
@@ -37,8 +41,9 @@ mock forge merges to bare `main`.
 
 ### blizzard-mock:gate
 
-`mise run gate` (`[tasks.gate]`) mirrors `gate.yml`'s own checks locally: ruff format --check, ruff check, pyright,
-`uv run pytest -m "not needs_blizzard"`, and the process-reference Vale rule. `gate.yml` runs the Vale rule as its own
+`mise run gate` (`[tasks.gate]`) runs the ordinary checks locally: ruff format --check, ruff check, pyright,
+`uv run pytest -m "not needs_blizzard"`, and the process-reference Vale rule. Run `mise run test -- -m needs_blizzard`
+with a synced sibling blizzard checkout for the separate parity proof. `gate.yml` runs the Vale rule as its own
 dedicated job, installing it through `jdx/mise-action` the same way the `quality` job already installs mise to run
 `mise run lint`/`typecheck`.
 
@@ -50,10 +55,13 @@ dedicated job, installing it through `jdx/mise-action` the same way the `quality
 ### blizzard-mock:ci
 
 `gh run watch --repo paul-gross/blizzard-mock <run-id> --exit-status` — watch a GitHub Actions run, the `push`
-merge-gate on master or the `pr` gate, to completion, exiting non-zero on failure.
+merge-gate on master or the `pr` gate, to completion, exiting non-zero on failure. Both include the optional parity job;
+the scheduled `nightly` caller proves against blizzard's `master`. The real-to-mock parity guard covers `IHubClient`
+routes, and the mock-to-real guard covers declared response and event shapes; the mock runner's `/_drive/*` contract and
+`IHubGateway` still have no independent cross-repo diff.
 
-**Required checks on `master`.** The `pr.yml` checks below are the set an operator applies and verifies via
-`blizzard:manual-branch-protection`:
+**Required checks on `master`.** The three `pr.yml` checks below are the current set an operator applies and verifies
+via `blizzard:manual-branch-protection`:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input - <<'EOF'
