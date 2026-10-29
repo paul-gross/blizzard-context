@@ -45,8 +45,10 @@ reviewable signature that lint alone does not cover.
 **Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface; in `runnerTest`, the mock-hub
 client on `mockHub` and the runner clients from `runnerHostClient`, `runnerStream`, and a `runnerHost`'s own `runners`
 and `api`. A `runnerHost` also runs the real `blizzard-runner` on its directory with `cli(args)` (a non-zero exit is a
-result, not a throw), exports its traces to a test-owned sink under the `runnerOtlp` option (`host.otlp`), and reads a
-branch head in its world's bare origins with `originHead(repo, branch)`, so a spec proves a worker's push without
+result, not a throw), exports its telemetry to a test-owned sink under the `runnerOtlp` option (`host.otlp`, which reads
+spans, sum data points, and log records), answers its shared routes (`health`, `exportTelemetry`) over its Unix socket
+as well through `socketApi`, so a spec loops over both transports without importing `node:http` or `node:net`, and reads
+a branch head in its world's bare origins with `originHead(repo, branch)`, so a spec proves a worker's push without
 running `git`. It reads what the mock fleet wrote into the world the fixture minted with `mockSessions()` (the mock
 harness's session records in the workspace) and `opencodeExports()` (the `mock-opencode` export documents under the
 host's own transcripts root). A runner's client names each route a spec reads (`leases`, `leaseUsage`,
