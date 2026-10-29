@@ -10,8 +10,8 @@ fact vocabulary and derivation queries live in the code.
   other is refused — `not_ready`, an unclaimed `paused` chunk, and a human-gated or `delivering` chunk with no live
   route included.
 - **`running`** — claimed by a runner and being worked.
-- **`delivering`** — in the hub's own hands: queued for or undergoing delivery — the runner keeping its environments
-  until the outcome is known.
+- **`delivering`** — in the hub's own hands: submitted to the flows of the resources its hub node holds, or taking its
+  turn in them — the runner keeping its environments until the outcome is known.
 - **`paused`** — held on an operator's per-chunk pause fact: on a live route the runner interrupts the worker, then
   kills a survivor, but keeps the lease, route, epoch, environments, and retry budget so resume respawns in place, while
   an unclaimed chunk is withheld from the queue. A pause is admitted at every status but `done`, `stopped`, and

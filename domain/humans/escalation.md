@@ -16,14 +16,15 @@ graph fails to resolve, or when a node's bounce cap is crossed.
 
 Every escalation records its cause, from a closed vocabulary, and a one-line detail, at the moment it is written:
 
-| Origin                                                                 | Cause                           |
-| ---------------------------------------------------------------------- | ------------------------------- |
-| a worker's retries exhausted, or death without a verdict past the cap  | `retries-exhausted`             |
-| an existing session's recorded harness owner is unknown or unavailable | `owner-unresolvable`            |
-| no acceptable harness can serve a mint                                 | `no-acceptable-harness`         |
-| the chunk's spend cap is reached                                       | `spend-cap`                     |
-| a node's bounce cap is crossed (hub-authored)                          | `bounce-cap`                    |
-| a migrating choice's target graph fails to resolve (hub-authored)      | `migration-target-unresolvable` |
+| Origin                                                                          | Cause                           |
+| ------------------------------------------------------------------------------- | ------------------------------- |
+| a worker's retries exhausted, or death without a verdict past the cap           | `retries-exhausted`             |
+| an existing session's recorded harness owner is unknown or unavailable          | `owner-unresolvable`            |
+| no acceptable harness can serve a mint                                          | `no-acceptable-harness`         |
+| the chunk's spend cap is reached                                                | `spend-cap`                     |
+| a node's bounce cap is crossed (hub-authored)                                   | `bounce-cap`                    |
+| a migrating choice's target graph fails to resolve (hub-authored)               | `migration-target-unresolvable` |
+| a hub step's last three turns were all cut off at their deadline (hub-authored) | `hub-action-stuck`              |
 
 A missing cause means the cause was not recorded, never that the escalation had none. A worker's ask is never an
 escalation: it parks the chunk waiting on a human through a question, so no cause names it.

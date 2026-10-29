@@ -6,12 +6,16 @@ Delivery is graph-authored content, not built-in engine machinery: a hub node (`
 [nodes](../graphs/nodes.md)) whose declared action is the delivery policy, authoring its outcome choices exactly like a
 worker node's judgement ([edges](../graphs/edges.md)).
 
-- **Fleet-wide serialization.** One fleet-wide execution slot admits one chunk's hub node at a time — any hub node, not
-  delivery specifically; a chunk finding it held tries again on a later tick. The slot is not reentrant: a chunk's own
-  live run is never re-entered, and a hub node runs only while its chunk still stands at it, so a re-submitted
-  completion or a hub-advance never starts a second run, nor re-runs a node the chunk has left.
-- **Only a live, promoted chunk is driven.** A chunk standing at a hub node is run there only while it is promoted and
-  has not ended: one resting un-promoted, or stopped or done, is never driven through it.
+- **Resources and flows.** A hub step holds the resources it acts on — for a landing, each target branch it lands on —
+  and each resource has one flow: an arrival-ordered line of the visits that hold it. A visit is submitted to its flows
+  when its chunk reaches the hub node, and runs as a turn once it is next on every flow it holds, so steps on different
+  branches run side by side, chunks on one branch land in arrival order, and a step holding no branch waits on none. A
+  `pending` answer ends the turn and yields the branch to the next in line until its poll is due. A visit takes one turn
+  at a time, and a turn runs only while its chunk still stands at the node, so a re-submitted completion or a
+  hub-advance never starts a second run, nor re-runs a node the chunk has left.
+- **Only a `delivering` chunk is driven.** A chunk standing at a hub node is submitted to its flows and takes turns
+  there only while it is `delivering` ([../work/statuses.md](../work/statuses.md)): a paused chunk waits for its resume,
+  and one escalated, stopped, or done is never driven through it.
 - **Per-repository landing, with reconciliation.** A delivery action that lands a multi-repository chunk serially per
   repository records its own `merged/<repo>` marker immediately after each push; a re-run — after a crash, or a
   kicked-back redelivery — skips every repository whose marker is already durable. The engine imposes no per-repository

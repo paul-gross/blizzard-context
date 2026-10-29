@@ -75,16 +75,15 @@ point the folded transaction ever leaves one standing alone.
 
 ## A hub action pass's effect writes
 
-`ActionPassDriver.take` (`blizzard/src/blizzard/hub/delivery/action_pass.py`) writes each effect a pass records on the
-caller's thread, one at a time, and releases it back to the action only once it is durable; each effect is one
-transaction of its own, so the windows are the spans between them. Four points name them:
+`ActionPassDriver.drive` (`blizzard/src/blizzard/hub/delivery/action_pass.py`) writes each effect a pass records off the
+action loop, one at a time, through the turn's task, and releases it back to the action only once it is durable; each
+effect is one transaction of its own, so the windows are the spans between them. Three points name them:
 
-| Point                                    | Window                                                                                                                          |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `action.after-effect.before-write`       | The action's forge write — a merge, a pull request opened, a check re-run — is done; the effect recording it is not yet durable |
-| `action.after-write.before-resume`       | An effect is durable; the action has not resumed                                                                                |
-| `close.after-enqueue.before-drain`       | A landing record and its close intents are durable in one transaction; no drain has run yet                                     |
-| `hubnode.after-poll.before-slot-release` | The poll-attempt fact is durable; the tenant's slot is not yet released                                                         |
+| Point                              | Window                                                                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `action.after-effect.before-write` | The action's forge write — a merge, a pull request opened, a check re-run — is done; the effect recording it is not yet durable |
+| `action.after-write.before-resume` | An effect is durable; the action has not resumed                                                                                |
+| `close.after-enqueue.before-drain` | A landing record and its close intents are durable in one transaction; no drain has run yet                                     |
 
 A crash in any of them loses only the pass in flight: the next pass reads the forge and the node's markers and
 converges, as it does after any crash, so an unwritten effect is written once on the re-take and a written one is
@@ -176,17 +175,38 @@ Its other writes are exempt:
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps and usage past its
 own cursors — the rows it has not yet written — never a corpus it would rescan to find nothing changed.
 
-## The boot release of live hub-execution slots
+## A turn on a flow
 
-`HubNodeExecutor.release_orphaned_slots` runs from the hub daemon's startup, once in each open tenant before the hub
-serves, and releases that tenant's live `hub_exec_slot` rows in one statement. The slot is not reentrant, so a row left
-live by a `kill -9` mid-node would otherwise defer the chunk's own resume until `slot_stale_after`; at boot such a row
-belongs to a run the dead process held, since one hub process serves the store
-([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt).
+`FlowDriver.tick` (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) submits each chunk standing at a hub node while
+`delivering` to its flows and starts the turns its submissions may take; the turn's task
+(`blizzard/src/blizzard/hub/delivery/flow_turn.py`) runs the pass and ends the turn in the transaction that routes its
+answer. A verdict's transition and its turn's end are one transaction, and a landing's `merged/<repo>` marker, its
+`delivery_repo_landed` row, its close intents, its flow's `landed` fact, and its `flow-landed` event row are one more,
+so neither opens a window. The windows that remain are the `flow.` family:
 
-It has no window: the release is a single statement, and a crash before it commits leaves the same rows for the next
-boot to release. Composition never calls it, so a CLI or test build over shared stores cannot release a live daemon's
-slot.
+| Point                               | Durable                                     | Not yet                                          | Recovered by                                                                |
+| ----------------------------------- | ------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------- |
+| `flow.after-submit.before-turn`     | The submission, its flow rows, `submitted`  | Any turn                                         | The next tick takes the turn; the reconcile never submits it twice          |
+| `flow.after-turn-start.before-pass` | The turn and its `turn-started` facts       | The pass                                         | Boot recovery ends the turn `interrupted`; the next turn takes a fresh pass |
+| `flow.after-poll.before-turn-end`   | The turn and its `turn-started` facts       | The poll row and the turn's end, one transaction | Boot recovery ends the turn `interrupted`; the next turn polls afresh       |
+| `flow.boot.after-interrupt`         | One tenant's open turns ended `interrupted` | The next tenant's, the driver                    | The next boot ends the rest; ending a turn already ended writes nothing     |
+
+The windows inside a pass stay the `action.` family's above, with the turn's task as the writer. The kill-9 sweep
+(`tests/crash/test_kill9_sweep.py`) arms each `flow.` point and lands the chunk on the restarted hub without merging
+twice.
+
+## The boot recovery of open turns
+
+`FlowDriver.recover_turns` runs from the hub daemon's startup, once in each open tenant before the hub serves and before
+the driver's first tick. Every turn with no end belongs to the process that ran it, which crashed or shut down, since
+one hub process serves the store ([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known
+debt). It ends each one `interrupted`, with a `turn-ended` fact on each flow it held, a `turn-interrupted` event, and
+any withdrawal a lever deferred to it, then reconciles the tenant's lines in full. A submission still current keeps its
+place, and its next turn takes a fresh pass that skips whatever its markers say is done.
+
+Its one window is `flow.boot.after-interrupt`, between one tenant's recovery and the next. Both steps are idempotent, so
+a boot that dies midway is finished by the next. Composition never calls it, so a CLI or test build over shared stores
+cannot end a live daemon's turn.
 
 ## Tenant creation, one identity unit of work
 
@@ -316,7 +336,7 @@ with; a crash after commit leaves the marker already present, so the next `garde
 idempotence check and returns `recorded` having minted nothing a second time.
 
 The window this leaves is between `deliver`'s own commit and the action's resuming — already
-`action.after-write.before-resume` in `bzh:crash-point-registry`, and already covered: the next hub-advance re-runs the
+`action.after-write.before-resume` in `bzh:crash-point-registry`, and already covered: the visit's next turn re-runs the
 pass, and the in-transaction marker's own idempotence is what absorbs that re-run, so this write opens no window
 `action.after-write.before-resume` doesn't already name.
 

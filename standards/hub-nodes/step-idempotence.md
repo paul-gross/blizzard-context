@@ -6,12 +6,12 @@ Parent: [../hub-nodes.md](../hub-nodes.md).
 
 ## Every pass is safe to redo (`bzh:hub-node-step-idempotence`)
 
-**Rule.** Every hub action's pass must be safe to execute more than once with the same intended effect. The executor's
-crash contract is at-least-once per pass: a `kill -9` between an effect reaching the outside world and its marker
-becoming durable re-runs the whole pass on the next hub-advance, and nothing but the action's own markers tells the
-re-run what is already done. An action spanning a chunk-sized dynamic loop — one iteration per repo the chunk submitted,
-say — records each iteration's own marker as soon as that iteration's effect lands, and skips any iteration whose marker
-its visit already shows, at the granularity a re-run needs.
+**Rule.** Every hub action's pass must be safe to execute more than once with the same intended effect. A turn's crash
+contract is at-least-once per pass: a `kill -9` between an effect reaching the outside world and its marker becoming
+durable re-runs the whole pass on the visit's next turn, and nothing but the action's own markers tells the re-run what
+is already done. An action spanning a chunk-sized dynamic loop — one iteration per repo the chunk submitted, say —
+records each iteration's own marker as soon as that iteration's effect lands, and skips any iteration whose marker its
+visit already shows, at the granularity a re-run needs.
 
 **Why.** The `action.after-effect.before-write` and `action.after-write.before-resume` crash points
 (`bzh:crash-point-registry` in [../../architecture/crash-correctness.md](../../architecture/crash-correctness.md))
