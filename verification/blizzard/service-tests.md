@@ -91,6 +91,11 @@ absence assertions with no causal barrier.
 A `runnerHost` boots `stepped`: `step()` and `stepHost()` each resolve once the pass has completed, so a test steps,
 then reads. It never waits on a timer for a pass the host would run on its own.
 
+To keep a hub outage open under an in-flight read, hold the `mockHubRelay` option's relay (`mockHub.relay`): stop the
+hub, issue the read, and wait on the relay's `refusal()` as the barrier that the read is in flight. Restart the hub and
+re-seed what the read needs, then release the relay. Releasing earlier lets a retry reach a hub that does not yet know
+the caller, and that is refused for good, not retried.
+
 ## Stay on public surfaces (`bzh:service-public-surfaces`)
 
 **Rule.** Build test state through public hub surfaces. Only a `fresh-hub` test whose subject is the store may inspect
