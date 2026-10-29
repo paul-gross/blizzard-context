@@ -152,14 +152,15 @@ hub's own routes. The exchange's rejection matrix — wrong or missing verifier,
 code, and expired code — is pinned by the component-tier `test_cli_login_api.py`; the loopback listener and paste-code
 mechanics sit with the unit-tier `test_cli_login_mechanics.py` and `test_hub_cli_login.py`.
 
-**Joining a runner with `blizzard runner init`** (`test_runner_init_service.py`) is proven over the real wire only at
-this tier: init runs in its own process against a real hub on `auth.mode = "none"`, adds the runner through
-`POST /api/runners`, and leaves the minted token in the directory's `.env`; the daemon then registers under the
-hub-minted `rn_` id. The same id survives a rename by restart and a deleted runner store. Against a retired runner, init
-refuses, names `blizzard hub runner reinstate <id>`, and leaves `.env` byte-identical. After a reset of the hub's data,
-init refuses without `--allow-readd`, naming the hub URL it asked, adding nothing, and leaving `.env` byte-identical;
-with the flag it adds a fresh runner and replaces the token. Every in-process `runner init` at the unit and component
-tiers joins the suite-wide fake hub in `tests/runner_init_fakes.py` instead.
+**Joining a runner with `blizzard runner init`** (`tests/service/fleet/runner-init.spec.ts`) is proven over the real
+wire only at this tier: init runs in its own process against a real hub on `auth.mode = "none"`, adds the runner through
+`POST /api/runners`, and leaves the minted token in the host's `.env`; the host then registers under the hub-minted
+`rn_` id, online after a completed step. The same id survives a rename and a deleted runner store. Against a retired
+runner, init refuses, names `blizzard hub runner reinstate <id>`, and leaves the held tokens unchanged. After a reset of
+the hub's data, init refuses without `--allow-readd`, naming the hub URL it asked, adding nothing, and leaving the held
+tokens unchanged; with the flag it adds a fresh runner and replaces the token. The cases whose list reads are
+whole-tenant run at `fresh-tenant`; the hub-data reset runs at `fresh-hub`. Every in-process `runner init` at the unit
+and component tiers joins the suite-wide fake hub in `tests/runner_init_fakes.py` instead.
 
 **Ingesting a colliding runner into a host** (`test_host_ingest_service.py`) is proven over the real wire only at this
 tier: two host directories hold one runner each under one host the mock hub knows, their stores colliding on the
