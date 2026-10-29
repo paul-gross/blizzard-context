@@ -371,11 +371,6 @@ enforced:
   order (`DRAIN_ORDER`, `src/blizzard/hub/store/internal/tenant_teardown_store.py`) and relies on no cascade, because
   SQLite runs with `foreign_keys` off. No tier drains with foreign keys enforced, so an order that breaks one surfaces
   only on Postgres, as a failed batch.
-- **The hub-execution slot's per-tenant lock.** `acquire_hub_exec_slot`
-  (`src/blizzard/hub/store/internal/chunk_hub_exec_store.py`) reads the tenant's live slots and inserts one under the
-  scoped write's tenant-row lock, so two acquires in one tenant queue on that row while another tenant's never waits.
-  That the row lock alone keeps one live slot per tenant is unverified on Postgres; on SQLite the writer lock serializes
-  every acquire.
 - **The last-open-tenant check.** A tenant's close (`TenantTeardownStore.close`, same file as the drain) refuses to
   close the last open tenant. Two closes of the last two open tenants could each see the other still open and both
   commit, leaving none; the close guards against that by locking every `tenants` row in `tenant_id` order before the
