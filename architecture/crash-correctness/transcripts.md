@@ -72,8 +72,8 @@ partial segment but never a sealed one. The resumed run continues from the segme
 only ranges the hub's natural key `(segment_id, turn_range_start)` already dedupes.
 
 Backfill needs no new checker assertion: `TranscriptSegmentFinalizedExactlyOnce`
-(`blizzard/src/blizzard/tools/invariants.py`) already covers the finalize-plus-marker write, which is one transaction,
-and an unfinalized segment is a legal, resumable state rather than a violated invariant.
+(`blizzard/src/blizzard/runner/store/internal/invariants.py`) already covers the finalize-plus-marker write, which is
+one transaction, and an unfinalized segment is a legal, resumable state rather than a violated invariant.
 
 ## The hub's event-derivation sweep
 
@@ -137,5 +137,5 @@ idempotent closure path on the next pass rather than opening a window of its own
 `_pump_lease_before_close`, sitting right beside it, already stands on. This is what answers
 `bzh:open-facts-declare-closure` for a boundary a hub-terminal chunk leaves open: `Pull._reconcile_leases` calling
 `Attempt.abandon` on a `STOPPED` chunk reaches the same funnel as any other closure, so no separate hub-terminal mirror
-is needed. `InvocationBoundaryClosedWhenLeaseClosed` (`blizzard/src/blizzard/tools/invariants.py`) is the checker
-assertion this closure obligation earns.
+is needed. `InvocationBoundaryClosedWhenLeaseClosed` (`blizzard/src/blizzard/runner/store/internal/invariants.py`) is
+the checker assertion this closure obligation earns.

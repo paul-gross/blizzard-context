@@ -89,17 +89,18 @@ opened its stores before the close cannot write behind the drain.
 test suite switches on in every tier that opens a hub store, and production leaves off — fails a select, update, or
 delete naming a tenant-owned table without a `tenant_id` equality in its `WHERE` or join `ON`, and an insert whose
 values lack `tenant_id`, raising `UnscopedTenantStatement`. Raw SQL is never walked. Only statements marked hub-scoped
-are exempt: `HubScopedReads` (`bzh:hub-scoped-reads-confined`), the invariant checker's cross-tenant audits, and
-migrations. `tests/test_layering.py` confines the exemption by name: `HUB_SCOPED_OPTION`, or the `blizzard_hub_scoped`
-string it stands for — spelled as an import, a name, an attribute, a keyword argument, or a string — appears only in
-`hub/tenancy.py`, `hub/store/tenant_guard.py`, the `hub/store/internal/hub_scoped_*.py` modules, `tools/invariants.py`,
-and `hub/store/migrations/`; the same test fails a `ScopedConnections` constructed outside `hub/store/` and an import of
-the guard outside `hub/store/` and `hub/app.py`, which installs it. By eye: an adapter constructor typed
-`HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a raw `sa.select(table)` on a
-tenant-owned table inside an adapter. A guard refusal is the finding, never something to switch off: a test outside
-`tests/test_tenant_guard.py` that borrows its `no_hub_guard` fixture or unsets `BLIZZARD_TENANT_GUARD` is itself the
-violation. [The tier rules](../../verification/blizzard/tier-rules.md#the-tenant-statement-guard-is-on-in-every-tier)
-own how the test processes and spawned daemons install the guard.
+are exempt: `HubScopedReads` (`bzh:hub-scoped-reads-confined`), the invariant checker's hub half, and migrations.
+`tests/test_layering.py` confines the exemption by name: `HUB_SCOPED_OPTION`, or the `blizzard_hub_scoped` string it
+stands for — spelled as an import, a name, an attribute, a keyword argument, or a string — appears only in
+`hub/tenancy.py`, `hub/store/tenant_guard.py`, the `hub/store/internal/hub_scoped_*.py` modules,
+`hub/store/internal/invariants.py`, and `hub/store/migrations/`; the same test fails a `ScopedConnections` constructed
+outside `hub/store/` and an import of the guard outside `hub/store/` and `hub/app.py`, which installs it. By eye: an
+adapter constructor typed `HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a raw
+`sa.select(table)` on a tenant-owned table inside an adapter. A guard refusal is the finding, never something to switch
+off: a test outside `tests/test_tenant_guard.py` that borrows its `no_hub_guard` fixture or unsets
+`BLIZZARD_TENANT_GUARD` is itself the violation.
+[The tier rules](../../verification/blizzard/tier-rules.md#the-tenant-statement-guard-is-on-in-every-tier) own how the
+test processes and spawned daemons install the guard.
 
 **Do.** An adapter's listing reads `conn.select(s.chunks).where(...)`, and the domain asks for `stores.chunks.list(...)`
 on the `TenantStores` its request resolved — neither line names a tenant.
@@ -112,6 +113,10 @@ supplying the wrong value reads another tenant's chunks.
 **Rule.** A read that must span tenants goes through `HubScopedReads`, a read-only seam whose members form a closed
 list, and nothing outside the hub-level modules it serves may hold it. A member exists only for a read that must happen
 before a tenant is known, or that by its nature covers every tenant.
+
+The one exception is the invariant audit: the hub half of the invariant checker
+(`blizzard/src/blizzard/hub/store/internal/invariants.py`) is an admin-only read, every check of which is a `SELECT`, on
+a connection it marks hub-scoped itself, and it never holds `HubScopedReads`.
 
 **Why.** Every cross-tenant read is a hole in the boundary by design; keeping them on one named seam with a fixed
 membership turns "where can a tenant leak?" into a list a reviewer can read whole.

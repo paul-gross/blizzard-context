@@ -200,8 +200,8 @@ class NodeRow:
 ```
 
 `blizzard/src/blizzard/runner/listeners.py::Tcp` holds a host and a port and binds a listening socket, so it is a
-`@collaborator`; `blizzard/src/blizzard/tools/invariants.py::QueryCheck` holds a SQLAlchemy `Connection`, so it infers
-orchestration and carries no marker.
+`@collaborator`; `blizzard/src/blizzard/foundation/invariants.py::QueryCheck` holds a SQLAlchemy `Connection`, so it
+infers orchestration and carries no marker.
 
 ## Don't
 

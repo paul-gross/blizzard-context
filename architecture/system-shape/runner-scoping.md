@@ -82,8 +82,8 @@ adapter's binding, and the host half by the `host_ingests` member (`host_ingest_
 by each table's declared treatment and records an ingest; neither module names the other kind's tables. The
 runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it stands for — appears
 only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations. `scoped.py` declares the
-mark. `blizzard/src/blizzard/tools/invariants.py` reaches the store through the `runner_audit` member, never by spelling
-the mark.
+mark. `blizzard/src/blizzard/runner/store/internal/invariants.py` reaches the store through the `runner_audit` member it
+is handed, never by spelling the mark.
 
 **Detect.** The host-store check in `blizzard/tests/test_layering.py` fails the unit tier on a runner adapter naming a
 host-scoped table, a host adapter naming a runner-scoped one outside the admitted cross-kind write, and the
