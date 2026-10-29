@@ -66,7 +66,7 @@ The cost/usage render half: the same served board, loaded once and never reloade
 
 ## test_glance_board_e2e
 
-The mobile glance board at a real ~390px width under `bzh:narrow-viewport-tier-rule` (a second consumer of that rule's
+The mobile glance board at a real ~390px width under `bzh:narrow-viewport-tier-rule` (a consumer of the e2e tier's
 `narrow_viewport` fixture); `/board` routes to the glance shell.
 
 - `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` — captures and holds open the

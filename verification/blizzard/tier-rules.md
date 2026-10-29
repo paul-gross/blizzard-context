@@ -7,7 +7,7 @@ The tier roster, and the standard every tier's tests are written to. The command
 
 ## Test tiers
 
-Five tiers, all used — each answers a different question, and none substitutes for another; the winter-binding tier runs
+Six tiers, all used — each answers a different question, and none substitutes for another; the winter-binding tier runs
 only locally. The mocks the upper tiers bind are owned by `blizzard-mock`.
 
 | Tier               | Method                    | Scope                                                                                                                                                                                     | Tooling                                                                                                                             |
@@ -15,12 +15,13 @@ only locally. The mocks the upper tiers bind are owned by `blizzard-mock`.
 | **Unit**           | `blizzard:unit-test`      | One class or function in isolation.                                                                                                                                                       | pytest                                                                                                                              |
 | **Component**      | `blizzard:component-test` | A domain slice wired with real internal collaborators, doubles only at the seams.                                                                                                         | pytest                                                                                                                              |
 | **Service**        | `blizzard:service-test`   | A running hub or runner's HTTP API exercised from outside, or an out-of-process external-tool binding driven against a mock-fleet binary — seams bound to the mock fleet either way.      | Playwright Test + HTTP; pytest for an external-CLI binding                                                                          |
+| **UI**             | `blizzard:ui`             | The built board a test's hub serves, in a real Chromium page at a stated viewport, against the real hub on a hub profile.                                                                 | Playwright Test + Chromium; the viewport fixtures in `tests/harness/ui.ts`                                                          |
 | **Winter binding** | `blizzard:winter-binding` | The winter workspace provider against the real winter CLI, plus one chunk landed over `provider="winter"`. Local-only, never in CI; the platform tiers run on the basic provider instead. | pytest, gated on `BLIZZARD_WINTER_BINDING=1`                                                                                        |
 | **E2E**            | `blizzard:e2e`            | The full system — hub, runner, web app — through the browser and CLI, every seam bound to the mock fleet.                                                                                 | pytest plus a real Chromium via Playwright; each browser-driven scenario states its own guard in the [registry](./e2e-scenarios.md) |
 
 ## Hermetic by construction
 
-Service and e2e tests never spend a real token and never touch the network: the harness seam binds a mock coding
+Service, UI and e2e tests never spend a real token and never touch the network: the harness seam binds a mock coding
 harness, the work-source seam binds the mock GitHub forge, delivery's `land` action reaches the mock forge through the
 per-entry `forge_url` a repository record fills rather than through a seam, and the workspace seam binds mocks or local
 fixtures.
@@ -227,8 +228,8 @@ on — the guard fails the unit tier, and past it the daemon wedges once its log
 
 **Rule.** Verify a change whose observable effect is visual — layout, styling, what a component renders — by at least
 one artifact from a real render **that covers the changed surface**: a `web:shell-sweep` spec that mounts the changed
-component (add one to the roster when none does), a browser e2e assertion against that surface in the served bundle (the
-`wide_viewport`/`narrow_viewport` fixtures in `tests/e2e/conftest.py` give it a real page), a screenshot of it from a
+component (add one to the roster when none does), a `blizzard:ui` assertion against that surface in the served bundle
+(the `wideViewport`/`narrowViewport` fixtures in `tests/harness/ui.ts` give it a real page), a screenshot of it from a
 live environment (`blizzard-mock:manual-seeded-board` stands a realistic board up to render), or a screenshot of the
 changed part's stories taken by `web:manual-workshop`, a real Chromium render of the part. A workshop render covers a
 change to the part itself; a change to how a page lays a part out still needs a render of that page, since the workshop
@@ -266,7 +267,7 @@ the claim.
 below ~390px. The parent rule's `*.html`/`*.css` signature does not answer the reachability half — walk the bottom nav's
 routes to settle it, since a `.ts`-only change to a reached component is in scope too.
 
-**Do.** The `wide_viewport` and `narrow_viewport` fixtures in `tests/e2e/conftest.py` give any browser scenario a real
+**Do.** The `wideViewport` and `narrowViewport` fixtures in `tests/harness/ui.ts` give any `blizzard:ui` spec a real
 ~390px page to assert against, and `web:shell-sweep` proves the real-Chromium layout claims jsdom cannot — the surfaces
 it covers and what each of its specs asserts are stated in
 [`./commands.md`](./commands/web/shell-sweep.md#webshell-sweep).

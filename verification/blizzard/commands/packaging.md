@@ -29,7 +29,7 @@ it; the row below exists for running the rule on its own.
 ### blizzard:gate-full
 
 `mise run gate-full` (`./scripts/gate-full.sh`) reproduces the unconditional `pr` tiers locally: `blizzard:gate`
-(`./scripts/ci-gate.sh`), then `mise run service-test`, the FULL `mise run crash-sweep`, `mise run e2e`,
+(`./scripts/ci-gate.sh`), then `mise run service-test`, the FULL `mise run crash-sweep`, `mise run e2e`, `mise run ui`,
 `mise run journey`, `mise run image-smoke` and `mise run compose-smoke`, serially, because the smokes bind fixed ports.
 A red tier does not stop the later ones: the run ends with a per-tier verdict and exits non-zero on any red.
 `GATE_FULL_TIERS` narrows it to the named tiers. The conditional checks are separate: for changed store revisions run
@@ -182,6 +182,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "upper-tiers / service tier (blizzard:service-test)"},
       {"context": "upper-tiers / kill-9 crash sweep (blizzard:crash-sweep)"},
       {"context": "upper-tiers / e2e acceptance loop (blizzard:e2e)"},
+      {"context": "upper-tiers / ui (blizzard:ui)"},
       {"context": "upper-tiers / acceptance journey (blizzard:journey)"},
       {"context": "upper-tiers / hub image smoke (blizzard:image-smoke)"},
       {"context": "upper-tiers / reference compose smoke (blizzard:compose-smoke)"},

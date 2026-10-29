@@ -11,10 +11,11 @@ is linked from the others, never restated.
 
 ## Routing
 
-| File                                                  | Read when…                                                                                                                       |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| [`unit.md`](./test-tiers/unit.md)                     | …you are running or reading `blizzard:unit-test` — one class or function in isolation, and the sweep guards that ride the tier.  |
-| [`component.md`](./test-tiers/component.md)           | …you are running or reading `blizzard:component-test` — a domain slice with real internal collaborators.                         |
-| [`service.md`](./test-tiers/service.md)               | …you are running or reading `blizzard:service-test` — a running daemon's HTTP API against a mock counterpart.                    |
-| [`crash-sweep.md`](./test-tiers/crash-sweep.md)       | …you are running or reading `blizzard:crash-sweep` — the kill-9 sweep arming the crash-point registry against real subprocesses. |
-| [`winter-binding.md`](./test-tiers/winter-binding.md) | …you are running or reading `blizzard:winter-binding` — the winter workspace provider against the real winter CLI, local-only.   |
+| File                                                  | Read when…                                                                                                                        |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| [`unit.md`](./test-tiers/unit.md)                     | …you are running or reading `blizzard:unit-test` — one class or function in isolation, and the sweep guards that ride the tier.   |
+| [`component.md`](./test-tiers/component.md)           | …you are running or reading `blizzard:component-test` — a domain slice with real internal collaborators.                          |
+| [`service.md`](./test-tiers/service.md)               | …you are running or reading `blizzard:service-test` — a running daemon's HTTP API against a mock counterpart.                     |
+| [`ui.md`](./test-tiers/ui.md)                         | …you are running or reading `blizzard:ui` — the Playwright `ui*` projects, a Chromium page against the board a test's hub serves. |
+| [`crash-sweep.md`](./test-tiers/crash-sweep.md)       | …you are running or reading `blizzard:crash-sweep` — the kill-9 sweep arming the crash-point registry against real subprocesses.  |
+| [`winter-binding.md`](./test-tiers/winter-binding.md) | …you are running or reading `blizzard:winter-binding` — the winter workspace provider against the real winter CLI, local-only.    |

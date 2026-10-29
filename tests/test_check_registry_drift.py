@@ -126,6 +126,12 @@ class CheckATests(unittest.TestCase):
         self.assertEqual(_shape(drift.check_A([("x.md", "`example.spec.ts::absent`")], self.checkouts, {}, listing)), [("A", "fail")])
         self.assertEqual(_shape(drift.check_A([("x.md", "`tests/service/hub/missing.spec.ts`")], self.checkouts, {}, listing)), [("A", "fail")])
 
+    def test_bare_ui_spec_resolves_and_its_title_is_checked(self):
+        _write(self.blizzard / "tests/ui/shell.spec.ts", "// spec\n")
+        listing = {"tests/ui/shell.spec.ts": {"renders"}}
+        self.assertEqual(drift.check_A([("x.md", "`shell.spec.ts::renders`")], self.checkouts, {}, listing), [])
+        self.assertEqual(_shape(drift.check_A([("x.md", "`shell.spec.ts::absent`")], self.checkouts, {}, listing)), [("A", "fail")])
+
     def test_bare_service_spec_prefers_service_project_over_same_named_harness_spec(self):
         _write(self.blizzard / "tests/harness/checks/events.spec.ts", "// harness\n")
         _write(self.blizzard / "tests/service/hub/events.spec.ts", "// service\n")
@@ -282,6 +288,24 @@ class CheckB2Tests(unittest.TestCase):
         self.assertEqual(drift.check_B2("x.md", service, self.blizzard, {}, listing), [])
         self.assertEqual(_shape(drift.check_B2("x.md", unit, self.blizzard, {}, listing)), [("B2", "fail")])
         self.assertEqual(_shape(drift.check_B2("x.md", service, self.blizzard, {}, {})), [("B2", "fail")])
+
+    def test_ui_project_attribution_and_wrong_tier(self):
+        _write(self.blizzard / "tests/ui/shell.spec.ts", "// spec\n")
+        listing = {"tests/ui/shell.spec.ts": {"renders"}}
+        ui = "### blizzard:ui\n\n`tests/ui/shell.spec.ts`\n"
+        service = ui.replace("blizzard:ui", "blizzard:service-test")
+        self.assertEqual(drift.check_B2("x.md", ui, self.blizzard, {}, listing), [])
+        self.assertEqual(_shape(drift.check_B2("x.md", service, self.blizzard, {}, listing)), [("B2", "fail")])
+        self.assertEqual(_shape(drift.check_B2("x.md", ui, self.blizzard, {}, {})), [("B2", "fail")])
+
+    def test_service_spec_cited_under_the_ui_section_fails(self):
+        _write(self.blizzard / "tests/service/hub/case.spec.ts", "// spec\n")
+        listing = {"tests/service/hub/case.spec.ts": {"case"}}
+        ui = "### blizzard:ui\n\n`tests/service/hub/case.spec.ts`\n"
+        self.assertEqual(_shape(drift.check_B2("x.md", ui, self.blizzard, {}, listing)), [("B2", "fail")])
+
+    def test_ui_method_id_names_its_tier(self):
+        self.assertEqual(drift._named_tiers("run under blizzard:ui"), {"ui"})
 
 
 # --------------------------------------------------------------------------
@@ -836,6 +860,19 @@ class RunEffectivenessGateTests(unittest.TestCase):
 
 
 class PlaywrightCollectionTests(unittest.TestCase):
+    def test_ui_projects_join_service_projects_and_setup_projects_stay_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tests = [{"projectName": "ui"}, {"projectName": "ui-auth"}, {"projectName": "setup-service-hub"}, {"projectName": "harness"}]
+            listing = {"config": {"rootDir": str(root / "tests/ui")}, "errors": [], "suites": [
+                {"title": "shell.spec.ts", "specs": [{"file": "shell.spec.ts", "title": "renders", "tests": tests}], "suites": []}
+            ]}
+            with mock.patch.object(drift.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=json.dumps(listing))):
+                self.assertEqual(drift._collect_playwright(root), {"tests/ui/shell.spec.ts": {"renders"}})
+            listing["suites"][0]["specs"][0]["tests"] = [{"projectName": "uikit"}]
+            with mock.patch.object(drift.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=json.dumps(listing))):
+                self.assertEqual(drift._collect_playwright(root), {})
+
     def test_service_projects_only_and_nested_titles(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
