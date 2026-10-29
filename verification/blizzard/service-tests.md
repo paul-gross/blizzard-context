@@ -84,7 +84,9 @@ that only the expected behavior would emit before asserting its absence.
 **Detect.** `tests/eslint.config.mjs` rejects `waitForTimeout`, `setTimeout`, `setInterval`, and `node:timers`; review
 absence assertions with no causal barrier.
 
-**Do.** Await the event stream or poll the client for the state the case can name.
+**Do.** Await the event stream or poll the client for the state the case can name. A wait whose subject is wall-clock
+expiry, such as a trailing spend window, polls the runner read that names the expiry, with a deadline covering the
+configured window; it never counts host passes or sleeps.
 
 **Don't.** Sleep before asserting that no event was emitted.
 
