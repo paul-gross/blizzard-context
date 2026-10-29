@@ -77,6 +77,13 @@ plus the derived chunk total read off the live `GET /api/chunks/{id}` and `GET /
 seq — a pushed `estimated_cost_usd` reads back on both the per-step row and the total, kept apart from `cost_usd`, and
 `cost_partial` flags a row only when it carries neither amount.
 
+**Runner release policy** (`tests/service/runner/release.spec.ts`) exercises two runners spending distinct sampled
+subscriptions on one stepped host. A utilization line crossed during a checkpointed build releases the next node to an
+admitting neighbour; when both decline, their completed passes leave the chunk ready and unheld until either gate opens.
+A usage-limited worker books its real invocation usage before its lease closes `released`, and the neighbour takes a
+fresh lease at the start of `build`. The host environment, lease usage and runner brake reads, with the mock hub's chunk
+and decline registrations, are the public observations of these transitions.
+
 **The one dollar figure** (`tests/service/runner/spend-figure.spec.ts`) drives both spend controls off an estimate
 alone: a real runner's OpenCode turns run under a subscription-billed `mock-opencode`
 (`BLIZZARD_MOCK_OPENCODE_BILLED_ZERO=1`), priced off a `models.json` the host's `runnerModelPrices` option writes into
