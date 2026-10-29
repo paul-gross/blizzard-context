@@ -114,6 +114,12 @@ the test that needs it.
 
 **Don't.** Insert rows directly into a shared hub's store to prepare an HTTP assertion.
 
+In `service/runner/store/`, a directory's lock is held by a second real host: the subject's `data/host.lock` is a
+symbolic link to that started host's lock file, and the refusal names that host's `runnerHost.pid`. A pre-host daemon is
+the harness's `preHostDaemon` counterpart, and a directory no verb builds comes from the `scratchDirs` fixture, which
+starts no mock hub. A spec reads a running host's file list, host file, and `.env`, never its store, and reads a store's
+currentness through `blizzard-runner host --check`.
+
 A call made as a worker carries the spawn credential the mock harness recorded — the `BLIZZARD_*` lease token, lease id,
 and runner URL its runner exported — never a token the test mints, which proves a credential no worker holds.
 
