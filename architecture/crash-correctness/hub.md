@@ -184,12 +184,12 @@ answer. A verdict's transition and its turn's end are one transaction, and a lan
 `delivery_repo_landed` row, its close intents, its flow's `landed` fact, and its `flow-landed` event row are one more,
 so neither opens a window. The windows that remain are the `flow.` family:
 
-| Point                               | Durable                                     | Not yet                       | Recovered by                                                                    |
-| ----------------------------------- | ------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------- |
-| `flow.after-submit.before-turn`     | The submission, its flow rows, `submitted`  | Any turn                      | The next tick takes the turn; the reconcile never submits it twice              |
-| `flow.after-turn-start.before-pass` | The turn and its `turn-started` facts       | The pass                      | Boot recovery ends the turn `interrupted`; the next turn takes a fresh pass     |
-| `flow.after-poll.before-turn-end`   | A `pending` pass's `hub_node_poll` row      | The turn's end                | Boot recovery ends the turn `interrupted`; the poll row keeps the chunk waiting |
-| `flow.boot.after-interrupt`         | One tenant's open turns ended `interrupted` | The next tenant's, the driver | The next boot ends the rest; ending a turn already ended writes nothing         |
+| Point                               | Durable                                     | Not yet                                          | Recovered by                                                                |
+| ----------------------------------- | ------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------- |
+| `flow.after-submit.before-turn`     | The submission, its flow rows, `submitted`  | Any turn                                         | The next tick takes the turn; the reconcile never submits it twice          |
+| `flow.after-turn-start.before-pass` | The turn and its `turn-started` facts       | The pass                                         | Boot recovery ends the turn `interrupted`; the next turn takes a fresh pass |
+| `flow.after-poll.before-turn-end`   | The turn and its `turn-started` facts       | The poll row and the turn's end, one transaction | Boot recovery ends the turn `interrupted`; the next turn polls afresh       |
+| `flow.boot.after-interrupt`         | One tenant's open turns ended `interrupted` | The next tenant's, the driver                    | The next boot ends the rest; ending a turn already ended writes nothing     |
 
 The windows inside a pass stay the `action.` family's above, with the turn's task as the writer. The kill-9 sweep
 (`tests/crash/test_kill9_sweep.py`) arms each `flow.` point and lands the chunk on the restarted hub without merging
