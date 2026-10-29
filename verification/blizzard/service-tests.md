@@ -53,12 +53,18 @@ result, not a throw), edits its stopped directory through `reconfigure`, `clearH
 (`host.otlp`, which reads spans, sum data points, and log records), answers its shared routes (`health`,
 `exportTelemetry`) over its Unix socket as well through `socketApi`, so a spec loops over both transports without
 importing `node:http` or `node:net`, and reads a branch head in its world's bare origins with
-`originHead(repo, branch)`, so a spec proves a worker's push without running `git`. It reads what the mock fleet wrote
-into the world the fixture minted with `mockSessions()` (the mock harness's session records in the workspace) and
-`opencodeExports()` (the `mock-opencode` export documents under the host's own transcripts root). A runner's client
-names each route a spec reads (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`,
-`heartbeat`), so a spec reaches no route through `raw`. To act as anyone but the tenant's admin, use `user.api`, a
-person's `api` from `people`, or the `as:` option of `cli` and `events.open`.
+`originHead(repo, branch)`, so a spec proves a worker's push without running `git`; `originTree`, `originLog`
+(optionally by path) and `originFile` take that branch, or the sha `originHead` answers, and read the pushed tree,
+history and file text, each `undefined` for a repo, ref or path that is not there. `runnerWinterTrap` puts a `winter`
+that records its invocation first on every host's `PATH` (a `runnerEnv.PATH` beside it is refused), and
+`winterInvoked()` reports it. A `fresh-hub` test whose `hubConfig` names `${egress}` as `egress.directory` reads the
+Parquet the hub exports through the `egress` fixture's `query` and `recipe`, which run the docs' own DuckDB load and the
+dictionary's views once a manifest names the dataset. It reads what the mock fleet wrote into the world the fixture
+minted with `mockSessions()` (the mock harness's session records in the workspace) and `opencodeExports()` (the
+`mock-opencode` export documents under the host's own transcripts root). A runner's client names each route a spec reads
+(`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`, `heartbeat`), so a spec reaches no route
+through `raw`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:`
+option of `cli` and `events.open`.
 
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
@@ -164,8 +170,8 @@ cannot infer ownership from a lever's arguments.
 
 **Detect.** Review writes to hub-wide config within a spec and profile declarations under tests/service/hub/; the
 project discovery in `tests/playwright.config.ts` provides the profile boundary, not a lint ban on config calls. The
-harness refuses `hubConfig` or `hubEnv` below `fresh-hub`, and a `profile.toml` under `service/runner/` or
-`service/fleet/`.
+harness refuses `hubConfig` or `hubEnv` below `fresh-hub`, a `hubEnv` name a profile owns, and a `profile.toml` under
+`service/runner/` or `service/fleet/`.
 
 **Do.** Put a hub-wide variant in its own profile, or request a one-off case with
 `test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people belongs under the `auth` profile; a
@@ -177,6 +183,11 @@ A hub profile lives in `service/hub/` alone. A `service/fleet/` subfolder named 
 `fleet/auth/`, runs as `service-fleet-auth` on that profile's hub with one worker; every other fleet spec runs as
 `service-fleet` on the default profile's hubs, and a fleet test the cross-check raises to `fresh-hub` boots the profile
 its project maps to.
+
+A profile cannot carry environment, so `tests/harness/profiles.ts` names the variables a profile's hubs start with. The
+`actions` profile's, the test-action and crash fences, reach its shared hubs and any fresh hub raised in its project,
+across restart and reset, and no other profile's hub. A spec that needs the fence lives under `fleet/actions/`, and a
+test's `hubEnv` cannot name either variable.
 
 A harness a spec runs on is enabled through `test.use({ runnerConfig })`, as `runner[].opencode` with
 `${mockBin}/mock-opencode`, never in a `runner.toml`, which binds every spec in its folder. The host always holds a
