@@ -191,6 +191,12 @@ class.
 
 A layout no verb produces after first boot is a `reconfigure` of the stopped host, never a write to its store.
 
+A runner spec produces a subscription sample through the vendor counterpart, never a store write: set what the
+credential reports on `vendorUsage`, `stepHost()`, then read the recorded sample off `GET /api/host/subscriptions`. Mint
+one credential per subscription so the counterpart can move one without the other, and take a held window's label from
+that sampled read, never a literal. A usage-limited worker's named reset places its mark in a window only when it
+matches a sampled `resetsAt` to the minute, so sample first and seed the limited chunk after.
+
 ## Register what a fleet call needs (`bzh:service-fleet-registration`)
 
 **Rule.** `fleet(name)` mints a runner token and nothing more. A case whose route needs a registered runner, such as a
