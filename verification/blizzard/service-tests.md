@@ -10,9 +10,9 @@ and `tests/harness/profiles.ts`.
 ## Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
 **Rule.** Name the fixtures a test needs — tenant, project, clients, people, event stream, the `blizzard` CLI, a fresh
-hub's stop, kill, and start lifecycle, the OTLP sink, a real runner host (`runnerHost` and `runnerHosts`), and a mock
-worker's checkpoint (`workerCheckpoint`) — and import only `tests/harness/fixtures.ts`. A runner-only test takes
-`runnerTest`'s own `mockHub` and `authStub` instead of any shared-hub fixture. Do not use Playwright's built-in
+hub's stop, kill, start, and data-reset lifecycle, the OTLP sink, a real runner host (`runnerHost` and `runnerHosts`),
+and a mock worker's checkpoint (`workerCheckpoint`) — and import only `tests/harness/fixtures.ts`. A runner-only test
+takes `runnerTest`'s own `mockHub` and `authStub` instead of any shared-hub fixture. Do not use Playwright's built-in
 `request` or set shared state in `test.beforeAll`.
 
 Each folder takes one world. `service/hub/` and `service/fleet/` take `test`; `service/runner/` takes `runnerTest`,
@@ -46,16 +46,17 @@ reviewable signature that lint alone does not cover.
 **Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface; in `runnerTest`, the mock-hub
 client on `mockHub` and the runner clients from `runnerHostClient`, `runnerStream`, and a `runnerHost`'s own `runners`
 and `api`. A `runnerHost` also runs the real `blizzard-runner` on its directory with `cli(args)` (a non-zero exit is a
-result, not a throw), exports its telemetry to a test-owned sink under the `runnerOtlp` option (`host.otlp`, which reads
-spans, sum data points, and log records), answers its shared routes (`health`, `exportTelemetry`) over its Unix socket
-as well through `socketApi`, so a spec loops over both transports without importing `node:http` or `node:net`, and reads
-a branch head in its world's bare origins with `originHead(repo, branch)`, so a spec proves a worker's push without
-running `git`. It reads what the mock fleet wrote into the world the fixture minted with `mockSessions()` (the mock
-harness's session records in the workspace) and `opencodeExports()` (the `mock-opencode` export documents under the
-host's own transcripts root). A runner's client names each route a spec reads (`leases`, `leaseUsage`,
-`leaseTranscript`, `transcriptSegments`, `dashboard`, `heartbeat`), so a spec reaches no route through `raw`. To act as
-anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and
-`events.open`.
+result, not a throw), edits its stopped directory through `reconfigure`, `clearHubTokens`, `renameRunner` and
+`removeStore` (never a file by hand), exports its telemetry to a test-owned sink under the `runnerOtlp` option
+(`host.otlp`, which reads spans, sum data points, and log records), answers its shared routes (`health`,
+`exportTelemetry`) over its Unix socket as well through `socketApi`, so a spec loops over both transports without
+importing `node:http` or `node:net`, and reads a branch head in its world's bare origins with
+`originHead(repo, branch)`, so a spec proves a worker's push without running `git`. It reads what the mock fleet wrote
+into the world the fixture minted with `mockSessions()` (the mock harness's session records in the workspace) and
+`opencodeExports()` (the `mock-opencode` export documents under the host's own transcripts root). A runner's client
+names each route a spec reads (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`,
+`heartbeat`), so a spec reaches no route through `raw`. To act as anyone but the tenant's admin, use `user.api`, a
+person's `api` from `people`, or the `as:` option of `cli` and `events.open`.
 
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
