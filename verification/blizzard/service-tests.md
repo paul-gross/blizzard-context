@@ -10,9 +10,10 @@ and `tests/harness/profiles.ts`.
 ## Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
 **Rule.** Name the fixtures a test needs — tenant, project, clients, people, event stream, the `blizzard` CLI, a fresh
-hub's stop, kill, and start lifecycle, the OTLP sink, and a real runner host (`runnerHost` and `runnerHosts`) — and
-import only `tests/harness/fixtures.ts`. A runner-only test takes `runnerTest`'s own `mockHub` and `authStub` instead of
-any shared-hub fixture. Do not use Playwright's built-in `request` or set shared state in `test.beforeAll`.
+hub's stop, kill, and start lifecycle, the OTLP sink, a real runner host (`runnerHost` and `runnerHosts`), and a mock
+worker's checkpoint (`workerCheckpoint`) — and import only `tests/harness/fixtures.ts`. A runner-only test takes
+`runnerTest`'s own `mockHub` and `authStub` instead of any shared-hub fixture. Do not use Playwright's built-in
+`request` or set shared state in `test.beforeAll`.
 
 Each folder takes one world. `service/hub/` and `service/fleet/` take `test`; `service/runner/` takes `runnerTest`,
 which has no `isolation` option, so a runner spec declares none: its mock hub and host belong to that test alone. A
@@ -89,6 +90,9 @@ expiry, such as a trailing spend window, polls the runner read that names the ex
 configured window; it never counts host passes or sleeps.
 
 **Don't.** Sleep before asserting that no event was emitted.
+
+Hold a mock worker's turn open at `workerCheckpoint`, not a sleep. Change a sample by `vendorUsage.set` on a credential
+the spec minted, followed by `stepHost()`.
 
 A `runnerHost` boots `stepped`: `step()` and `stepHost()` each resolve once the pass has completed, so a test steps,
 then reads. It never waits on a timer for a pass the host would run on its own.
