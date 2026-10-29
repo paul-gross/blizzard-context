@@ -43,9 +43,11 @@ route to the appropriate client rather than bypassing it.
 **Detect.** `tests/eslint.config.mjs` rejects `fetch` in specs; a literal daemon URL or direct request context is a
 reviewable signature that lint alone does not cover.
 
-**Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface; in `runnerTest`, the mock-hub
-client on `mockHub` and the runner clients from `runnerHostClient`, `runnerStream`, and a `runnerHost`'s own `runners`
-and `api`. A `runnerHost` also runs the real `blizzard-runner` on its directory with `cli(args)` (a non-zero exit is a
+**Do.** Use the fixture's `api`, `fleet`, or `forge` client for its corresponding surface; the `federation` client
+drives a sign-in bounce from a browser at a runner host to the hub and back, holding the runner's cookies and the hub's
+in separate contexts, since both answer on `127.0.0.1` and cookies ignore the port; in `runnerTest`, the mock-hub client
+on `mockHub` and the runner clients from `runnerHostClient`, `runnerStream`, and a `runnerHost`'s own `runners` and
+`api`. A `runnerHost` also runs the real `blizzard-runner` on its directory with `cli(args)` (a non-zero exit is a
 result, not a throw), edits its stopped directory through `reconfigure`, `clearHubTokens`, `renameRunner` and
 `removeStore` (never a file by hand), exports its telemetry to a test-owned sink under the `runnerOtlp` option
 (`host.otlp`, which reads spans, sum data points, and log records), answers its shared routes (`health`,

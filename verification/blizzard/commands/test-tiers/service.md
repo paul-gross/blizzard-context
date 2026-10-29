@@ -169,11 +169,16 @@ outbound and transcript `seq`s, a `route_tokens` chunk id, a `graph_artifacts` k
 every lease, and the hub applies every backlog fact above each runner's mark. Its refusals, resume, and collisions are
 pinned at the component tier by `test_runner_ingest.py`.
 
-**Runner SSO federation's JWT/JWKS wire leg** (`test_idp_federation_service.py`) is the browserless companion to e2e's
-`test_runner_federation_e2e.py`: a real hub delivers a hub-signed, audience-bound JWT via `response_mode=form_post` to a
-real `blizzard runner host`'s `POST /api/auth/callback` — the whole chain real over localhost — ending in a
-`bz_runner_session` cookie and an unlocked human-lane route. A second federation scenario rotates the hub signing key
-(`POST /api/auth/rotate-signing-key`) and drives a fresh bounce under the just-rotated `kid`, proving the live runner's
-JWKS cache refetches with no restart. The runner's three-lane gating split — human-lane 401, worker-hook and socket
-ungated — is pinned at the unit-tier and component-tier by `test_runner_route_gating.py` and
-`test_runner_federation.py`.
+**Runner SSO federation's JWT/JWKS wire leg**
+(`tests/service/fleet/auth/idp-federation.spec.ts::test_the_wire_leg_ends_in_an_unlocked_runner_route`) is the
+browserless companion to e2e's `test_runner_federation_e2e.py`: a real hub delivers a hub-signed, audience-bound JWT via
+`response_mode=form_post` to a real `blizzard runner host`'s `POST /api/auth/callback` — the whole chain real over
+localhost — ending in a `bz_runner_session` cookie and an unlocked human-lane route. A second federation scenario
+rotates the hub signing key (`POST /api/auth/rotate-signing-key`) and drives a fresh bounce under the just-rotated
+`kid`, proving the live runner's JWKS cache refetches with no restart
+(`tests/service/fleet/auth/idp-federation.spec.ts::test_key_rotation_is_picked_up_by_a_live_runner_with_no_restart`). A
+third, on a hub with two providers, hands the unauthenticated bounce to the `/login` chooser and resumes the pending
+authorize request through the second provider
+(`tests/service/fleet/auth/idp-federation.spec.ts::test_a_two_provider_bounce_resumes_through_the_login_chooser`). The
+runner's three-lane gating split — human-lane 401, worker-hook and socket ungated — is pinned at the unit-tier and
+component-tier by `test_runner_route_gating.py` and `test_runner_federation.py`.
