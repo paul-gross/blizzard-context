@@ -26,7 +26,8 @@ and its `fleet traces` and `runner traces` subtests prove what the
 A build worker runs the real `blizzard runner ask` and exits. It runs under both mock harnesses, and its `fleet traces`
 and `runner traces` subtests prove what the acceptance loop's do. Its `platform spans` subtest proves what the
 acceptance loop's does for worker commands under their step roots, across the park and the resume, and its leak scan
-also covers the worker's question text; it skips with `fleet traces`.
+also covers the worker's question text; it skips with `fleet traces`. Route-token containment is covered by
+`tests/test_runner_loop.py` and `tests/test_completion_assembly_attachments.py`.
 
 - `test_ask_parks_then_answer_resumes_session_to_done` — proves the chunk parks `waiting_on_human` with the reap clock
   stopped (extra ticks reap nothing and consume no retry; the same single question stays open), then

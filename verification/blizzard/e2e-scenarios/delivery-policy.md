@@ -19,7 +19,8 @@ route is kept. Its `fleet traces` subtest proves what the [acceptance loop](./de
 does, and — the hub running with platform spans on at a zero root sample ratio — also that the deliver step's
 `hub run step` platform spans parent on that trace's exported `hub exec` span: the hub's inline derivation and the sweep
 agree. Its `platform spans` subtest proves what the acceptance loop's does for worker commands under their step roots,
-across the bounce, and scans the export for the same planted tokens; it skips with `fleet traces`.
+across the bounce, and scans the export for planted secrets; it skips with `fleet traces`. Route-token containment is
+covered by `tests/test_runner_loop.py` and `tests/test_completion_assembly_attachments.py`.
 
 - `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — proves the chunk's route holds at
   `build` with a `bounce-envelope` artifact recorded, cause `conflict`; the conflicted PR stays open and unmerged at the
@@ -63,13 +64,12 @@ same generic `executor: hub` primitive. Its `fleet traces` subtest proves what t
 - `test_pr_ci_escalates_a_repository_the_forge_does_not_know_as_forge_config` — proves a repository record whose forge
   does not know it escalates the chunk to `needs_human` with cause `forge-config`, the detail naming that forge, nothing
   merged.
-- `test_pr_ci_waiting_on_pending_checks_reads_conditionally_one_lookup_a_pass` — proves a landing pending over ten polls
-  spends no counted forge call on a landing read after its first pass, every one answered `304`, and makes its
-  already-merged lookup as one head-filtered read a pass, nothing merged.
 - `test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish` — proves a revision whose one check
   is green, gaining a second pending check before the next pass, is not merged until that check is green, then lands.
 - `test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` — proves a revision armed with no check is never
   green: it pends and bounces at the node's poll timeout, cause `poll-timeout`, nothing merged.
+
+Conditional forge lookup behavior is covered by `tests/test_github_landing.py`.
 
 ## test_hub_actions_e2e
 
@@ -84,40 +84,15 @@ hub admits only behind `BLIZZARD_TEST_ACTIONS=1` beside `BLIZZARD_CRASH_FENCE=1`
 - `test_a_hub_without_the_test_fences_refuses_the_test_actions` — proves a hub started without both fences refuses a
   graph naming either test action at mint, each as an unknown action.
 
-## test_run_carry_over_e2e
-
-A store held before hub nodes named actions, carried onto them by a real migrate and hub: a HEAD hub pins one chunk per
-shipped `run:` command and one to an empty `run:`, the `land_pr_ci` one left waiting on `pending`; the store walks down
-to `20261023_0901_hub_actions`, each hub node is rewritten to the `run:` row it was minted as, and the HEAD migrate and
-hub carry it.
-
-- `test_a_store_held_before_actions_carries_over_and_lands_every_chunk` — proves every pinned chunk lands with its
-  script's choice and markers once its hub node is carried onto the action its `run:` named.
-
-## test_forge_carry_over_e2e
-
-A store held before forges were records, carried onto them by a real migrate and hub: a HEAD hub seeded through its
-doors with the old address fields — the fixture work source's `api_base` and its repository's `forge_api_url`, both the
-mock forge's `http://127.0.0.1:<port>` — lands one chunk; the store walks down to `20261024_0900_hub_legacy_run`, where
-no forge exists, and the HEAD migrate and hub carry it.
-
-- `test_a_store_held_before_forges_carries_over_and_lands_a_chunk_as_before` — proves both records name one forge for
-  that origin, its port kept in its slug, and a second chunk lands against the mock forge with the same deliver choices
-  and marker kinds as the chunk landed before the carry-over.
-
 ## test_flow_record_e2e
 
 The flow record, kept by the hub's own flow driver over a real hub: a chunk held pending at `deliver` — the mock forge's
-`checks_pending` lever armed — and a store walked below `20261027_0900_flows`, carried back by a real migrate and hub.
-After each step the three flow invariants — `hub:one-turn-per-flow`, `hub:one-turn-per-visit`, and
-`hub:flow-line-standing` — hold, and once the chunk lands no turn is open.
+`checks_pending` lever armed — then landed once the lever clears. Flow invariant checks are covered by
+`tests/test_invariant_checker.py`.
 
 - `test_a_held_chunk_is_submitted_and_its_landing_supersedes_it` — proves a chunk held at the hub node is submitted to
   its branch's flow and polls through turns, and once the lever clears, the turn that lands it closes that submission
   `landed`.
-- `test_a_store_walked_below_flows_submits_its_pending_chunks_in_the_order_they_entered_deliver` — proves two chunks
-  pending at `deliver` when the store walks down, minted so their id order is the reverse, are submitted on the migrated
-  hub's boot in the order they entered `deliver`, both still delivering.
 
 ## test_flow_turns_e2e
 

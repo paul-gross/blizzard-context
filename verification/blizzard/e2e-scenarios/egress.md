@@ -14,7 +14,8 @@ ask answered by a person, a delivery conflict and an escalation — across two g
 `deliver` node. The hub exports it live as NDJSON, is re-hosted over the same record and exports it live again as
 Parquet after the real `blizzard hub egress reset`, and `blizzard hub egress backfill` writes a third copy over the
 night's window, given as `Z` instants. A module fixture runs the night once and keeps the re-hosted hub up; each test
-below is one proof, reading the directories back the way a warehouse would.
+below is one proof, reading the directories back the way a warehouse would. Late-usage convergence is covered by
+`tests/test_egress_sweep.py`; manifest integrity is covered by `tests/test_egress_files.py`.
 
 - `test_both_live_exports_hold_the_same_newest_rows` — proves the NDJSON and Parquet live newest-copy row sets are equal
   excluding `exported_at`, and that neither dataset is empty.
@@ -22,12 +23,8 @@ below is one proof, reading the directories back the way a warehouse would.
   `spend-chunks` surface, tokens and billed cost, is in both exports.
 - `test_both_exports_name_the_runner_by_its_minted_id_and_its_name` — proves every step the runner ran and every
   invocation carries, in both formats, the `rn_` id the hub minted for the runner beside its configured name.
-- `test_manifests_name_every_file` — proves every data file, live and backfilled, is named by exactly one manifest with
-  its row count and SHA-256, and every file a manifest names exists.
 - `test_nothing_planted_leaves` — proves a scan of the decoded rows, manifests and schemas finds none of the planted
   "what never leaves" values.
-- `test_late_usage_converged_in_both` — proves a usage fact forwarded on the wire after its step was exported converges
-  the step's row to the sum of its `invocations` rows in both formats.
 - `test_a_backfill_of_the_window_equals_the_live_export` — proves the backfill of the night's zoned `--since`/`--until`
   window writes rows equal to the live newest copies, excluding `exported_at`.
 - `test_recipes_agree_with_the_hubs_analytics` — proves the docs' DuckDB cost recipe matches
