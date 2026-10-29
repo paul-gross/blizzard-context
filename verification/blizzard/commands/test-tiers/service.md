@@ -75,9 +75,10 @@ becomes per-node-step usage plus the derived chunk total read off the live `GET 
 idempotent on a replayed seq — a pushed `estimated_cost_usd` reads back on both the per-step row and the total, kept
 apart from `cost_usd`, and `cost_partial` flags a row only when it carries neither amount.
 
-**The one dollar figure** (`tests/service/runner/spend-figure.spec.ts`) drives both spend controls off an estimate alone: a real
-runner's OpenCode turns run under a subscription-billed `mock-opencode` (`BLIZZARD_MOCK_OPENCODE_BILLED_ZERO=1`), priced
-off a `models.json` the host's `runnerModelPrices` option writes into its `XDG_CACHE_HOME`, passed through to the worker.
+**The one dollar figure** (`tests/service/runner/spend-figure.spec.ts`) drives both spend controls off an estimate
+alone: a real runner's OpenCode turns run under a subscription-billed `mock-opencode`
+(`BLIZZARD_MOCK_OPENCODE_BILLED_ZERO=1`), priced off a `models.json` the host's `runnerModelPrices` option writes into
+its `XDG_CACHE_HOME`, passed through to the worker.
 `test_runner_ceiling_pauses_on_an_estimated_spend_with_a_tilde_led_reason` sets `runner_ceiling_usd` under the lease's
 estimate and reads the engaged local pause's `~$`-led reason off the runner's own `GET /api/runner`;
 `test_chunk_cap_escalates_on_an_estimated_chunk_cost_with_a_tilde_marked_detail` seeds an estimate-only chunk total past
