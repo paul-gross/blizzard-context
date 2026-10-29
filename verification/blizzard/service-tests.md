@@ -21,12 +21,14 @@ which has no `isolation` option, so a runner spec declares none: its mock hub an
 `fresh-hub` when its subject is hub-wide. The fleet world's `runnerHost`, `runnerHosts`, `runnerHostClient` and
 `runnerStream` are the runner world's, defined once and bound to the test's hub.
 
-A fleet-trace companion uses `traced(originalTitle, async ({ traceSink, ... }) => ...)` from the fixtures. It registers
-`originalTitle_traced`, owns a fresh hub and one OTLP sink shared by that hub and its runner hosts, and runs its
-scenario once. Keep the ordinary shared-hub test untraced; the companion asserts only on its captured traces, not a
-second copy of the behavioral assertions. Finish the scenario first, then poll the sink for the required hub and runner
-exports before applying the trace oracle. Do not use `runnerOtlp` for a companion: it creates a separate host-owned
-sink.
+For a fleet-trace assertion, register a second case with `traced(originalTitle, async ({ traceSink, ... }) => ...)`,
+imported from `tests/harness/fixtures.ts`. **Use `traced`, not a hand-extended `test`, `runnerOtlp`, or two
+independently configured sinks.** It names the case `originalTitle_traced`, gives it a `fresh-hub`, configures both hub
+and runner exporters to its one test-owned `traceSink`, and runs the companion's scenario once. Keep the ordinary
+behavioral case on its shared hub, without trace assertions; the companion asserts only trace facts, not a second copy
+of the behavioral assertions. After finishing the scenario, poll `traceSink.spans()` until both the hub step root and
+runner invocation for that chunk have arrived, then apply the dictionary-driven trace oracle. A completed host step
+alone is not an export barrier for both daemons.
 
 **Why.** The harness fixtures own daemon lifetime, tenant routing, cleanup, and test isolation. A bare request context
 reaches no tenant; file-wide mutable setup crosses parallel tests.
