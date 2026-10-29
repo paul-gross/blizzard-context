@@ -105,6 +105,9 @@ static gate proves them or the test's subject.
 
 **Don't.** Insert rows directly into a shared hub's store to prepare an HTTP assertion.
 
+A call made as a worker carries the spawn credential the mock harness recorded — the `BLIZZARD_*` lease token, lease id,
+and runner URL its runner exported — never a token the test mints, which proves a credential no worker holds.
+
 ## Own mock state (`bzh:service-own-mock-state`)
 
 **Rule.** A mock-fleet lever targets only the test's own repository, issue, or runner. Never use a lever without `repo`
@@ -148,6 +151,8 @@ process starts. `runnerEnv` adds environment to the host process, and the harnes
 pins and the mock-harness fence. A profile never sets a key the CLI or the fixture owns, such as `hub_url`, `port`, or a
 runner's `id`; a layout no CLI verb produces is made by editing the documented files, never by going through a runner
 class.
+
+A layout no verb produces after first boot is a `reconfigure` of the stopped host, never a write to its store.
 
 ## Register what a fleet call needs (`bzh:service-fleet-registration`)
 
