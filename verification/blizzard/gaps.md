@@ -94,8 +94,8 @@ parser can name; a live `opencode export` against a genuinely absent session id 
 
 ## A bare node's chunk-declared default at spawn
 
-`test_mixed_harness_dispatch_service.py` records a proof the mock hub's fidelity leaves unreachable: a bare node
-honoring the chunk's own declared default all the way through spawn. `blizzard-mock-hub`'s own `envelope()` route,
+`tests/service/runner/mixed-harness-dispatch.spec.ts` records a proof the mock hub's fidelity leaves unreachable: a bare
+node honoring the chunk's own declared default all the way through spawn. `blizzard-mock-hub`'s own `envelope()` route,
 unlike the real hub's `EffectiveSession.of`, never bakes the chunk's `default_harnesses` back onto the node before
 handing the envelope to the runner, so while a bare node's matched peek does honor the chunk's own declared default
 (proven), the SPAWN that follows falls through to `Spawner.spawn`'s own no-`session_harnesses` fallback — this runner's
