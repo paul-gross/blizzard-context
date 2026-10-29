@@ -47,8 +47,12 @@ client on `mockHub` and the runner clients from `runnerHostClient`, `runnerStrea
 and `api`. A `runnerHost` also runs the real `blizzard-runner` on its directory with `cli(args)` (a non-zero exit is a
 result, not a throw), exports its traces to a test-owned sink under the `runnerOtlp` option (`host.otlp`), and reads a
 branch head in its world's bare origins with `originHead(repo, branch)`, so a spec proves a worker's push without
-running `git`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:`
-option of `cli` and `events.open`.
+running `git`. It reads what the mock fleet wrote into the world the fixture minted with `mockSessions()` (the mock
+harness's session records in the workspace) and `opencodeExports()` (the `mock-opencode` export documents under the
+host's own transcripts root). A runner's client names each route a spec reads (`leases`, `leaseUsage`,
+`leaseTranscript`, `transcriptSegments`, `dashboard`, `heartbeat`), so a spec reaches no route through `raw`. To act as
+anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and
+`events.open`.
 
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
@@ -101,6 +105,11 @@ evades both the public contract and concurrent isolation.
 the one folder that admits `node:sqlite` and `node:fs`. Review mock-data invocations and the store-access timing; no
 static gate proves them or the test's subject.
 
+A runner spec never reads the host's own directory: not the worker stdout files, not the harness-config snapshot, not
+the host's store. What a worker did is read from a route of the runner, or from the world the mock fleet wrote into,
+through a reader on `runnerHost`. A value no route serves is added to the runner's local API in the change that ports
+the test that needs it.
+
 **Do.** Create a repository, issue, or chunk through the fixture's hub client and observe it through the same surface.
 
 **Don't.** Insert rows directly into a shared hub's store to prepare an HTTP assertion.
@@ -144,6 +153,13 @@ A hub profile lives in `service/hub/` alone. A `service/fleet/` subfolder named 
 `fleet/auth/`, runs as `service-fleet-auth` on that profile's hub with one worker; every other fleet spec runs as
 `service-fleet` on the default profile's hubs, and a fleet test the cross-check raises to `fresh-hub` boots the profile
 its project maps to.
+
+A harness a spec runs on is enabled through `test.use({ runnerConfig })`, as `runner[].opencode` with
+`${mockBin}/mock-opencode`, never in a `runner.toml`, which binds every spec in its folder. The host always holds a
+synthetic OpenCode login at its private data home, as it holds a Claude one. A published harness bundle is given with
+the `runnerBundle` option, whose files the fixture writes into a test-owned directory before the host boots and which a
+profile names as `${bundle}`, as in `runner[].harness.config_dir`; the case then reads what a worker received of it off
+the lease's transcript.
 
 A runner host's configuration rides a profile the same way. `runner.toml` beside the spec, or
 `test.use({ runnerConfig })` over it, is a host-file overlay checked against `contracts/config/host.json` before any
