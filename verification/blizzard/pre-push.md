@@ -23,6 +23,7 @@ the change reaches. For changed store revisions, also run `mise run store-baseli
 | `upper-tiers / service tier (blizzard:service-test)`             | `mise run service-test`              |
 | `upper-tiers / kill-9 crash sweep (blizzard:crash-sweep)`        | `mise run crash-sweep`               |
 | `upper-tiers / e2e acceptance loop (blizzard:e2e)`               | `mise run e2e`                       |
+| `upper-tiers / ui (blizzard:ui)`                                 | `mise run ui`                        |
 | `upper-tiers / acceptance journey (blizzard:journey)`            | `mise run journey`                   |
 | `upper-tiers / hub image smoke (blizzard:image-smoke)`           | `mise run image-smoke`               |
 | `upper-tiers / reference compose smoke (blizzard:compose-smoke)` | `mise run compose-smoke`             |
@@ -58,10 +59,10 @@ synthesized as `` `${testid()}-key` ``, so it carries a named spec —
 ## The browser tiers run the built bundle
 
 The browser scenarios drive the built bundle `blizzard hub host` serves out of `src/blizzard/static/`, never the
-sources, so `mise run e2e` carries `depends = ["web-build"]` and must not be reached past with a bare
-`pytest tests/e2e/`. The hazard is not an unbuilt tree, which fails loudly before the first assertion, but a bundle
-present and stale, which fails quietly: the scenario exercises the previous UI and can go green against a layout that no
-longer exists.
+sources, so `mise run e2e` and `mise run ui` carry `depends = ["web-build"]` and must not be reached past with a bare
+`pytest tests/e2e/` or `npx playwright test --project='ui*'`. The hazard is not an unbuilt tree, which fails loudly
+before the first assertion, but a bundle present and stale, which fails quietly: the scenario exercises the previous UI
+and can go green against a layout that no longer exists.
 
 ## A red drift check means stage the output (`bzh:drift-stage-not-route-around`)
 

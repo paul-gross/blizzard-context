@@ -67,10 +67,12 @@ Declared limitations (stated here rather than discovered later):
   neither names a tier — and its `blizzard-mock:unit-test` method is bare
   `uv run pytest` by design, so "which tier does this file live in" has no
   answer there. Blizzard-mock-scoped citations get check A and nothing more.
-- Playwright attribution reads only `service-*` projects in the JSON listing;
-  setup, teardown, and harness projects cannot establish a service tier. A
-  cited `.spec.ts` file may exist yet have no listed title, and an empty
-  service-project listing is valid before service specs are ported.
+- Playwright attribution reads only `service-*` projects (tier `service`) and
+  `ui`/`ui-*` projects (tier `ui`) in the JSON listing, and tells the two apart
+  by the spec's folder (`tests/service/`, `tests/ui/`); setup, teardown, and
+  harness projects cannot establish a tier. A cited `.spec.ts` file may exist
+  yet have no listed title, and an empty listing is valid before specs are
+  ported.
 - Check A answers existence, not attribution: scope sets search order, and a
   citation resolving in the sibling checkout passes.
 - Angle-bracket placeholder literals and rootless wildcards are excluded
@@ -192,6 +194,7 @@ TIER_METHODS = {
     "blizzard:unit-test": "unit",
     "blizzard:component-test": "component",
     "blizzard:service-test": "service",
+    "blizzard:ui": "ui",
     "blizzard:crash-sweep": "crash_sweep",
     "blizzard:journey": "journey",
     "blizzard:rehearsal": "rehearsal",
@@ -243,7 +246,7 @@ _PAREN_INT_RE = re.compile(r"\((\d+)\)")
 
 _TIER_WORD_RE = re.compile(r"\b(unit|component|service|crash[ _-]?sweep|journey|rehearsal|store[ _-]?baseline|winter[ _-]?binding)\b", re.IGNORECASE)
 _TIER_MENTION_RE = re.compile(r"\btiers?\b", re.IGNORECASE)
-_METHOD_ID_RE = re.compile(r"blizzard:(unit-test|component-test|service-test|crash-sweep|journey|rehearsal|store-baseline|e2e|winter-binding)")
+_METHOD_ID_RE = re.compile(r"blizzard:(unit-test|component-test|service-test|crash-sweep|journey|rehearsal|store-baseline|e2e|ui|winter-binding)")
 
 
 def _normalize_tier_word(word: str) -> str:
@@ -310,7 +313,7 @@ def _iter_candidate_tokens(text: str) -> list[tuple[int, str]]:
             fence_marker = (fm.group(1)[0], len(fm.group(1)))
             continue
         for span in _CODE_SPAN_RE.finditer(line):
-            if "::" in span.group(1) and _is_service_spec(span.group(1).split("::", 1)[0]):
+            if "::" in span.group(1) and _is_playwright_spec(span.group(1).split("::", 1)[0]):
                 results.append((i, span.group(1)))
                 continue
             for tok in _safe_shlex_split(span.group(1)):
@@ -331,8 +334,13 @@ def _is_candidate_path(token: str) -> bool:
     return False
 
 
-def _is_service_spec(path: str) -> bool:
-    return path.endswith(".spec.ts") and (path.startswith("tests/service/") or "/" not in path)
+def _is_playwright_spec(path: str) -> bool:
+    return path.endswith(".spec.ts") and (path.startswith(("tests/service/", "tests/ui/")) or "/" not in path)
+
+
+def _playwright_tier(path: str) -> str:
+    """The tier a Playwright spec's folder puts it in: `ui` under `tests/ui/`, else `service`."""
+    return "ui" if path.startswith("tests/ui/") else "service"
 
 
 def _sections(text: str, level_prefix: str = "###") -> list[tuple[str, int, str]]:
@@ -399,6 +407,9 @@ def _resolve_test_file(token: str, blizzard_root: Path) -> Path | None:
         service_files = [p for p in service_matches if p.is_file()]
         if service_files:
             return service_files[0]
+        ui_files = [p for p in sorted((blizzard_root / "tests" / "ui").rglob(token)) if p.is_file()]
+        if ui_files:
+            return ui_files[0]
     matches = glob.glob(str(blizzard_root / "**" / token), recursive=True)
     matches = [m for m in matches if not any(part in PRUNE_DIRS for part in Path(m).parts)]
     matches = [m for m in matches if os.path.isfile(m)]
@@ -448,7 +459,7 @@ def check_A(md_files: list[tuple[str, str]], checkouts: dict[str, Path], collect
                 continue
             if sep and "blizzard" in checkouts:
                 test_path = _resolve_test_file(path_part, checkouts["blizzard"])
-                if test_path is not None and _is_service_spec(path_part) and playwright is not None:
+                if test_path is not None and _is_playwright_spec(path_part) and playwright is not None:
                     relpath = test_path.relative_to(checkouts["blizzard"]).as_posix()
                     if func_part not in playwright.get(relpath, set()):
                         findings.append(Finding("A", "fail", f"`{token}` — title `{func_part}` not listed for {relpath}", relfile, line_no, "Fix the title or remove the citation."))
@@ -501,7 +512,7 @@ def check_B1(
     for relfile, text in md_files:
         for line_no, token in _iter_candidate_tokens(text):
             path_part = token.split("::", 1)[0]
-            if not (_TEST_FILE_RE.fullmatch(path_part.rsplit("/", 1)[-1]) or _is_service_spec(path_part)):
+            if not (_TEST_FILE_RE.fullmatch(path_part.rsplit("/", 1)[-1]) or _is_playwright_spec(path_part)):
                 continue
             resolved = _resolve_test_file(path_part, blizzard_root)
             if resolved is None:
@@ -513,8 +524,8 @@ def check_B1(
 
     for relpath, (relfile, line_no) in seen.items():
         if relpath.rsplit("/", 1)[-1] == "conftest.py" or not relpath.endswith(".py") or "test_" not in relpath.rsplit("/", 1)[-1]:
-            if _is_service_spec(relpath) and playwright is not None and relpath not in playwright:
-                findings.append(Finding("B1", "fail", f"{relpath} collects 0 tests under service projects", relfile, line_no, "Put the spec in a service project or remove the citation."))
+            if _is_playwright_spec(relpath) and playwright is not None and relpath not in playwright:
+                findings.append(Finding("B1", "fail", f"{relpath} collects 0 tests under any service or ui project", relfile, line_no, "Put the spec in a service or ui project or remove the citation."))
             continue
         if relpath in KNOWN_UNMARKED:
             findings.append(
@@ -609,7 +620,7 @@ def check_B2(
             content = m.group(1)
             path_part = content.split("::", 1)[0]
             base = path_part.rsplit("/", 1)[-1]
-            if not (_TEST_FILE_RE.fullmatch(base) or _is_service_spec(path_part)):
+            if not (_TEST_FILE_RE.fullmatch(base) or _is_playwright_spec(path_part)):
                 continue
             resolved = _resolve_test_file(path_part, blizzard_root)
             if resolved is None:
@@ -632,9 +643,9 @@ def check_B2(
                     )
                 )
                 continue
-            if _is_service_spec(relpath):
-                if playwright is not None and (section_tier != "service" or relpath not in playwright):
-                    findings.append(Finding("B2", "fail", f"{relpath} cited under ### {heading} but does not collect in that tier's service project", commands_relfile, abs_line, "Move the citation to the service section or fix its Playwright project."))
+            if _is_playwright_spec(relpath):
+                if playwright is not None and (section_tier != _playwright_tier(relpath) or relpath not in playwright):
+                    findings.append(Finding("B2", "fail", f"{relpath} cited under ### {heading} but does not collect in that tier's Playwright project", commands_relfile, abs_line, "Move the citation to its tier's section or fix its Playwright project."))
                 continue
             if not files_for_marker:
                 continue
@@ -1970,7 +1981,7 @@ def _collect(cmd_prefix: list[str], blizzard_root: Path, marker: str) -> list[st
 
 
 def _collect_playwright(blizzard_root: Path) -> dict[str, set[str]] | None:
-    """Collect service-project file/title pairs; an empty mapping is a valid listing."""
+    """Collect service- and ui-project file/title pairs; an empty mapping is a valid listing."""
     tests_root = blizzard_root / "tests"
     try:
         result = subprocess.run(["npx", "playwright", "test", "--list", "--reporter=json"], cwd=tests_root, capture_output=True, text=True, timeout=180)
@@ -1990,7 +2001,7 @@ def _collect_playwright(blizzard_root: Path) -> dict[str, set[str]] | None:
             names = parents + ([] if root else [title])
             for spec in suite["specs"]:
                 for test in spec["tests"]:
-                    if test["projectName"].startswith("service-"):
+                    if test["projectName"].startswith("service-") or re.fullmatch(r"ui(-.+)?", test["projectName"]):
                         path = (root_dir / spec["file"]).resolve().relative_to(blizzard_root.resolve()).as_posix()
                         collected.setdefault(path, set()).add(" ".join(names + [spec["title"]]))
                         collected[path].add(spec["title"])
@@ -2173,7 +2184,7 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
     # that never ran at all — `--gate` does not distinguish the two.
     markers_ok = {m: collect_cache.get(m) is not None for m in MARKERS}
     all_markers_ok = all(markers_ok.values()) and playwright is not None
-    tier_markers_ok = all(markers_ok[m] for m in TIER_METHODS.values()) and playwright is not None
+    tier_markers_ok = all(markers_ok[m] for m in TIER_METHODS.values() if m in markers_ok) and playwright is not None
     e2e_marker_ok = markers_ok["e2e"]
 
     findings += check_A(verification_files, checkouts, collect_cache, playwright)
