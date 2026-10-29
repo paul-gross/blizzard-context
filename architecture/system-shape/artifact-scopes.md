@@ -60,7 +60,7 @@ that staleness cannot creep in through a future optimization.
 failing the read.
 
 **Do.** `_system_rows` and `_system_hit` in `src/blizzard/runner/api/artifacts.py` call through `HubProxy` on every
-invocation, with no local store consulted; the service tests in `tests/service/test_system_artifacts_service.py` hold
+invocation, with no local store consulted; the service tests in `tests/service/runner/system-artifacts.spec.ts` hold
 the read failing outright with the hub unreachable, never answering from nothing.
 
 **Don't.** Answering system scope from a local cache or pin "because it's simpler" or "to save a round-trip" — that is
