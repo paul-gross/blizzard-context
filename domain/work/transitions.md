@@ -21,6 +21,6 @@ Three guards hold at the write:
   runner-config gate decision is open at that node-step ([../humans/gates.md](../humans/gates.md)).
   - A replay of a completion or decision already recorded at the same `(from_node, epoch)` answers with its original
     outcome, ahead of this guard.
-  - While the hub's own unresolvable-target escalation is open, only a completion that would re-escalate — the same
-    cross-graph choice, its target still unresolvable — is answered, writing nothing; every other completion, and every
-    decision, is refused ([migration.md](./migration.md)).
+  - While the hub's own unresolvable-target or escalate-choice escalation is open, only a completion that would
+    re-escalate — the same cross-graph choice with its target still unresolvable, or the same `escalate` choice — is
+    answered, writing nothing; every other completion, and every decision, is refused ([migration.md](./migration.md)).

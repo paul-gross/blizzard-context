@@ -21,8 +21,8 @@ fact vocabulary and derivation queries live in the code.
   ([../execution/pause.md](../execution/pause.md)).
 - **`waiting_on_human`** — parked on invited human input — an open ask or unresolved gate decision
   ([../humans/asks.md](../humans/asks.md), [../humans/gates.md](../humans/gates.md)); the reap clock stops.
-- **`needs_human`** — parked on failure: the system ran out of moves, runner- or hub-authored, and a person must requeue
-  or take over ([../humans/escalation.md](../humans/escalation.md)).
+- **`needs_human`** — parked on failure: the system ran out of moves — or a worker took a choice that escalates —
+  runner- or hub-authored, and a person must requeue or take over ([../humans/escalation.md](../humans/escalation.md)).
 - **`stopped`** — abandoned by an operator: reachable from any status but `done` and `stopped`, acquired or not,
   artifacts and history retained.
 - **`done`** — terminal: the graph's reserved terminal transition, or an operator's directly recorded `chunk.completed`

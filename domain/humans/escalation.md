@@ -10,7 +10,8 @@ spend cap is reached, or when an existing session's recorded harness owner is un
 runner can resume that exact session, so nothing substitutes a different harness for it. It also escalates when no
 acceptable harness can serve a mint: a fresh mint exhausts harness selection, or a retry's failed owner is outside the
 current acceptable set, so requeue refuses to switch owners. The hub itself escalates when a migrating choice's target
-graph fails to resolve, or when a node's bounce cap is crossed.
+graph fails to resolve, when a node's bounce cap is crossed, or when a worker takes a choice targeting the reserved
+`escalate` ([../graphs/edges.md](../graphs/edges.md) §Escalation choices).
 
 ## Why it escalated
 
@@ -24,6 +25,7 @@ Every escalation records its cause, from a closed vocabulary, and a one-line det
 | the chunk's spend cap is reached                                                | `spend-cap`                     |
 | a node's bounce cap is crossed (hub-authored)                                   | `bounce-cap`                    |
 | a migrating choice's target graph fails to resolve (hub-authored)               | `migration-target-unresolvable` |
+| a worker takes a choice whose target is the reserved `escalate`                 | `escalate-choice`               |
 | a hub step's last three turns were all cut off at their deadline (hub-authored) | `hub-action-stuck`              |
 
 A missing cause means the cause was not recorded, never that the escalation had none. A worker's ask is never an
@@ -67,6 +69,10 @@ session predating that record gets a bare command rather than a guessed one.
   guidance in place of the raw command — which graph to mint before requeuing, not how to resume — and the session
   behind it is real and reachable through the ordinary takeover check; reached instead through a human gate's resolved
   choice, no worker ran ([./gates.md](./gates.md)), so no such session guarantee holds.
+
+- **Escalate choice taken** — a worker's own live transition or a human gate's resolved choice; the hub writes the
+  escalation, so it carries operator guidance in place of the raw command, and the session behind it is real and
+  reachable through the ordinary takeover check. No transition is recorded, and a requeue re-runs the node.
 
 ## Whether a takeover can enter
 

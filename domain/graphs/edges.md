@@ -13,9 +13,17 @@ context: prose appended to the target node's prompt.
 ## Choices
 
 A choice is one selectable outcome of one node's judgement, scoped to it, never a global registry; its description
-sharpens a worker's judgement and is a gate's button text. Its `to:` names a sibling node or the reserved terminal, or
-`graph:<name>` — a cross-graph migration target. A choice may declare `requires_checks: true` to demand green checks
-before its edge is accepted; validation rejects it on a node without `checks:` and on hub- or human-judged nodes.
+sharpens a worker's judgement and is a gate's button text. Its `to:` names a sibling node, one of two reserved targets —
+the terminal `done` and `escalate` — or `graph:<name>`, a cross-graph migration target. A choice may declare
+`requires_checks: true` to demand green checks before its edge is accepted; validation rejects it on a node without
+`checks:` and on hub- or human-judged nodes.
+
+### Escalation choices
+
+Taking an `escalate` choice records no transition: the chunk stands at its node and parks `needs_human` with an
+`escalate-choice` escalation ([../humans/escalation.md](../humans/escalation.md)), the worker's reasoning staying in the
+assets its node produced. It is legal on runner-executed nodes only — a hub node's outcomes route through its own causes
+— and no node may be named `escalate`. An `escalate` edge reaches no node and satisfies no path to the terminal.
 
 ### Migration choices
 
