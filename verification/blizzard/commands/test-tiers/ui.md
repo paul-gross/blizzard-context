@@ -27,7 +27,23 @@ and `narrowViewport` sizes, read from `tests/harness/viewports.json`, the one ho
 as well. This differs from `blizzard:e2e`, which drives a hub, runner and CLI together under pytest: a UI test needs
 only a hub, and asserts what the board renders.
 
-The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite and is a required check. Its roster is
-`tests/ui/shell.spec.ts`, the smoke that the served bundle renders the desktop board shell at the wide viewport and the
-glance board at the narrow one, rather than the placeholder the hub serves when no bundle is built. It is the evidence
-that Chromium installed, the bundle was built and served, and the fixture works.
+The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite and is a required check. Its roster:
+
+- `tests/ui/shell.spec.ts` — the smoke that the served bundle renders the desktop board shell at the wide viewport and
+  the glance board at the narrow one, rather than the placeholder the hub serves when no bundle is built. It is the
+  evidence that Chromium installed, the bundle was built and served, and the fixture works.
+- `tests/ui/event-log.spec.ts::test_the_events_tab_renders_filters_and_updates_live_in_the_browser` — seeds a
+  mixed-severity feed through `POST /api/fleet/events`, opens the Events tab from `nav-events`, and proves rows render
+  newest-first (the critical row first because it arrived last), the severity filter narrows then restores, a fresh
+  post-load event from a second runner arrives live over SSE with no reload, and a row deep-links to its chunk.
+- `tests/ui/event-log.spec.ts::test_the_events_grid_does_not_collapse_at_a_narrow_viewport` — proves the Events tab's
+  time-first grid's narrow-viewport fallback: at a real ~390px width a long-message row stays bounded in height and the
+  page gains no horizontal scroll.
+- `tests/ui/event-log.spec.ts::test_activity_rail_tracks_claim_transition_and_fact_burst_across_reload` — opens the real
+  board before a mock runner claims and completes a node, then pushes lease and usage facts through ingest. Checks the
+  distinct claim and transition, spend refresh without extra activity rows, one row for a shared-key question
+  notification, and matching durable activity identities and row count after reload.
+- `tests/ui/event-log.spec.ts::test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — on a fresh hub,
+  proves the Activity rail survives a reload: it renders every durable row on first load, the hub restarts with a fresh
+  replay ring over the same store, and the reload's `GET /api/activity` backfill restores the same rows with no
+  duplicate or missing one.
