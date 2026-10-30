@@ -129,6 +129,14 @@ checks the hub roots, runner invocations, platform request chain and planted-sec
 - `test_build_worker_reads_work_item_through_the_passthrough` — the worker fetches its issue body and comment through
   the runner-to-hub pass-through and lands the fetched text on bare `main`.
 
+**Ask/answer** (`tests/service/fleet/ask-answer.spec.ts`) parks a worker on its question under both mock harnesses,
+drives four completed inert host passes, answers with the real hub CLI, and reads the resumed session, answer delivery
+and landed origin. The `_traced` companion verifies the single build root across the park, answered ask child,
+invocation nesting, platform chain and leaked-secret exclusion.
+
+- `test_ask_parks_then_answer_resumes_session_to_done` — a question with two choices parks `waiting_on_human`; four
+  further passes keep it open. The CLI answer resumes the same session and lands a change on bare `main`.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb
