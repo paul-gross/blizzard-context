@@ -17,14 +17,13 @@ stays elastic; the cap turns pruning from a judgment call into a trigger.
 
 ## Scope
 
-Binds `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, and `blizzard-mock/tests` — exactly the roots
-`blizzard:prose-ratchet` measures — and `blizzard/exemplars/python`, whose every block `blizzard/tests/test_layering.py`
-holds to the caps outright, with no baseline to ratchet against; and no other tree: a cap is only as real as the ratchet
-that reports it, so `blizzard/web/projects`, which `bzh:comment-locality` binds and the ratchet cannot parse, carries no
-cap until the ratchet reaches it and a baseline for it is recorded. A change is held to the caps on every block it adds
-or edits, while the pre-existing surface is worked down by pruning passes and the ratchet, never blocking an
-incidentally-touched file. The distinction is per block: a new class in an old module qualifies, a fuller docstring on
-an untouched one does not.
+Binds `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, `blizzard-mock/tests`, and `blizzard/exemplars/python`; no
+other tree: `blizzard/web/projects`, which `bzh:comment-locality` binds, carries no cap. The structural test
+`blizzard/tests/test_layering.py` holds every exemplar block to the caps outright. On the other trees a change is held
+to the caps on every block it adds or edits, judged at review, while the pre-existing surface is worked down by pruning
+passes, never blocking an incidentally-touched file. The distinction is per block: a new class in an old module
+qualifies, a fuller docstring on an untouched one does not.
+[../verification/blizzard/gaps.md](../verification/blizzard/gaps.md) owns the gap.
 
 ## The caps
 
@@ -43,18 +42,10 @@ regime.
 
 ## Detect
 
-- `mise run prose-check` (`blizzard:prose-ratchet`), whose `scripts/prose_density.py check --blocks` names each over-cap
-  block as `file:line`.
+- `blizzard/tests/test_layering.py` for the exemplars, and `blizzard/scripts/prose_caps.py`'s `over_cap_blocks`, which
+  names each over-cap block as `file:line`, for any other tree.
 - A parameter-by-parameter docstring, one paragraph per field.
 - A prune that tightens wording to keep every fact: under-cap is reached by dropping content, not compressing it.
-
-## Re-recording the baseline
-
-`prose-check` ratchets per-root growth against a committed baseline, and that committed number is the ratchet's only
-teeth — so re-recording it (`measure --write-baseline`) is deliberate, never a step in going green, and warranted only
-when the growth is prose newly added code had to carry — a new module, guard, class, or method, each block under cap —
-and the change says so where it lands. Re-record once at the tip of the work, not per commit: the baseline is a
-generated snapshot, and several re-records conflict on rebase.
 
 ## Do
 
