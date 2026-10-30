@@ -137,6 +137,13 @@ invocation nesting, platform chain and leaked-secret exclusion.
 - `test_ask_parks_then_answer_resumes_session_to_done` — a question with two choices parks `waiting_on_human`; four
   further passes keep it open. The CLI answer resumes the same session and lands a change on bare `main`.
 
+**Delivery conflict** (`tests/service/fleet/delivery-conflict.spec.ts`) arms the forge's `merge_conflict` lever for its
+own repository and stops after the first bounce. Its trace companion drives the rebuilt pass to an exported root and
+checks the bounce link, hub action ancestry and planted-secret containment.
+
+- `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — the chunk remains running at `build`,
+  with one conflict envelope, no merged PR and an unchanged bare `main`.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb
