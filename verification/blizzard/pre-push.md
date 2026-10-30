@@ -5,10 +5,10 @@ A local gate cannot reach every surface. This file owns what stands in for the o
 
 ## Reproduce a CI job with its local command (`bzh:ci-job-local-command`)
 
-**Rule.** Reproduce a red CI job with its local command, and before you push run the checks your seat owes: a
-developer's local agent runs a change that touches a surface only an upper tier reads through `blizzard:gate-full`,
-while a fleet runner runs what the node it is on instructs — linter-class checks plus the targeted tests — and never the
-full gate.
+**Rule.** Reproduce a red CI job, and check a change before you push, at the scale your seat owes: a developer's local
+agent reproduces a red job with its local command and runs a change that touches a surface only an upper tier reads
+through `blizzard:gate-full`, while a fleet runner reproduces a red job narrowed to its failing step or tests and runs
+what the node it is on instructs — linter-class checks plus the targeted tests — never the full `gate` or `gate-full`.
 
 **Why.** `blizzard:gate` is the shared `gate` job alone; the upper tiers are the only readers of surfaces nothing else
 type-checks — board `data-testid` and `data-*` attributes in `tests/e2e/`, wire field names off a live API response in
@@ -18,18 +18,14 @@ session's shell cap, so CI — which every fleet delivery opens a pull request i
 first runs.
 
 **Scope.** The seat is a fact about who is driving, not about the change (`workspace:/context/project/contributing.md`
-§Delivery): a developer's local agent works by hand in a feature environment and lands through a pull request it drives,
-so the full gate is the last check before that pull request exists; a fleet runner works one node-step of a chunk's
-graph, and the hub's `deliver` node opens the pull request CI then gates. A fleet runner that times out inside
-`mise run gate-full` has proven nothing and bounced its chunk; the targeted run its node names is the whole of what it
-owes.
+§Delivery): by hand in a feature environment, or a fleet runner working one node-step of a chunk's graph.
 
 **Do.** By hand: run `mise run gate-full` ([`blizzard:gate-full`](./commands/packaging.md#blizzardgate-full)), or only
 the tier the change reaches. For changed store revisions, also run `mise run store-baseline`; for a release cut, also
 run `mise run rehearsal`. From a fleet node: the linter-class rows over what changed — `blizzard:format`,
 `blizzard:lint`, `blizzard:typecheck`, `blizzard:process-ref-lint`, `web:lint`, `web:client-drift` — plus
-`blizzard:unit-test` and `web:unit-test` narrowed to the modules the change touched; `mise run gate` is not a
-linter-class check, since it runs the whole pytest suite. Every `pr.yml` job and its local command:
+`blizzard:unit-test` and `web:unit-test` narrowed to the modules the change touched; a red `gate / …` job reproduced as
+`uv run pytest <failing test ids>` or the one red step's own command. Every `pr.yml` job and its local command:
 
 | CI job                                                           | Local command                        |
 | ---------------------------------------------------------------- | ------------------------------------ |
@@ -52,8 +48,8 @@ grep -rn --exclude-dir=node_modules '<old-testid>\|<old-field>' tests/e2e/ tests
 ```
 
 **Don't.** Rename a `data-testid` and push on a green `blizzard:gate` — the e2e scenario reading the old handle fails
-the pull request's `e2e` check. Don't run `mise run gate-full` from a fleet node either — it cannot finish inside the
-session's shell cap, and a timed-out node is a bounce, not a greener pull request.
+the pull request's `e2e` check. From a fleet node, answer a red `gate / …` job with `mise run gate` — the table's row,
+which runs the whole pytest suite.
 
 ## Board test handles
 
