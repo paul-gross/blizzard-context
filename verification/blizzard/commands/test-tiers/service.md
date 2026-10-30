@@ -77,6 +77,16 @@ plus the derived chunk total read off the live `GET /api/chunks/{id}` and `GET /
 seq — a pushed `estimated_cost_usd` reads back on both the per-step row and the total, kept apart from `cost_usd`, and
 `cost_partial` flags a row only when it carries neither amount.
 
+**The forge-status projection** (`tests/service/fleet/forge-status.spec.ts::test_forge_status_projection_e2e`) runs on a
+fresh hub of its own with `annotation_interval_seconds = 1` and a real runner host, every `forge_status` pass stepped.
+The hub spec `tests/service/hub/forge-status.spec.ts` proves only an opted-in source's issues are labelled. The case proves ingest
+shows `blizzard:ingested`, a worker held at a checkpoint shows `blizzard:in-progress`, and done clears both. A chunk
+stopped before any runner claims it has its marker cleared on the next pass. A hand-deleted label comes back only once
+the full-pass floor (five intervals) elapses, because the hub holds only in-memory probe state. A forge outage, stood in
+by the forge's own `unreachable` lever, since a process kill would wipe the forge's issue and label state, records one
+`forge-status-source-skipped` event naming the source id in `GET /api/events`, leaves chunk reads served, and the label
+is intact once the lever clears.
+
 **Runner release policy** (`tests/service/runner/release.spec.ts`) exercises two runners spending distinct sampled
 subscriptions on one stepped host. A utilization line crossed during a checkpointed build releases the next node to an
 admitting neighbour; when both decline, their completed passes leave the chunk ready and unheld until either gate opens.
