@@ -47,10 +47,10 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   proves the Activity rail survives a reload: it renders every durable row on first load, the hub restarts with a fresh
   replay ring over the same store, and the reload's `GET /api/activity` backfill restores the same rows with no
   duplicate or missing one.
-- `tests/ui/migration.spec.ts::test_the_migrated_chunks_two_graph_history_renders_on_the_served_board` — a mock runner
-  drives a chunk through a cross-graph migration to `done`; the served board's done card opens its detail dock showing
-  the chunk id, one migration step and a per-graph label in the timeline, and the `/graphs` explorer still lists both
-  graphs of the history.
+- `tests/ui/migration.spec.ts::test_cross_graph_migration_renders_the_two_graph_timeline_and_explorer` — a stepped
+  runner drives a chunk through a cross-graph migration to `done`; the served board's done card opens its detail dock
+  showing the chunk id, one migration step and a per-graph label in the timeline, and the `/graphs` explorer still lists
+  both graphs of the history.
 - `tests/ui/auth/login-session.spec.ts::test_browser_login_dance_and_mid_stream_session_expiry` — on the `ui-auth` hub,
   with the stub IdP's profile lever choosing who the browser resolves to: the signed-out landing shows one provider
   button; an uninvited dance is refused as `invite_only` with no `bz_session`; invited as guest through
