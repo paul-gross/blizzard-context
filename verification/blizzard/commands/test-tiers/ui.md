@@ -95,3 +95,12 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   authored-edge migration and the artifact carry the triage step's origin and epoch. Opens the Node history tab, selects
   the migration, and reads the triage transcript and artifact at the wide and the narrow viewport, including the narrow
   drill-down's Back control, and fails on any failed API response.
+- `tests/ui/board-cost-live.spec.ts` — `test_board_renders_cost_and_updates_live_over_sse`. The board, loaded once and
+  never reloaded, over a chunk claimed straight through `POST /api/fleet/routes`, with spend shipped as `usage.recorded`
+  facts to `POST /api/fleet/events` as a runner. Proves the card's cost badge, the header's spend-today figure
+  (`GET /api/spend?since=`) and the detail dock's cost with the four token classes inline update live off the event
+  stream; that a row with neither a billed nor an estimated amount flips every figure to its `+`-marked lower bound,
+  never a silently understated exact; and, on a second, subscription-only chunk, that an estimate renders as one
+  `~`-marked figure on the card and the dock, folds into the header's fleet total under both marks, and marks no chunk
+  partial. The partial marking and the per-step inline match are also fenced in `web:unit-test` and
+  `blizzard:component-test`.

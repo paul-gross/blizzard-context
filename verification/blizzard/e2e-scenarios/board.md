@@ -13,9 +13,9 @@ tier headless over the multi-repo checkout (Chromium via `uv run playwright inst
 `uv run playwright install chromium`).
 
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
-without either or without `BLIZZARD_E2E=1`; for the board-browser and cost modules an unbuilt bundle fails loudly
-instead of skipping. Except for the graphs-diagram module, every scenario also needs the sibling provisioned
-`blizzard-mock` worktree. The in-process event-log function needs only the worktree, no built bundle or Chromium.
+without either or without `BLIZZARD_E2E=1`; for the board-browser module an unbuilt bundle fails loudly instead of
+skipping. Except for the graphs-diagram module, every scenario also needs the sibling provisioned `blizzard-mock`
+worktree. The in-process event-log function needs only the worktree, no built bundle or Chromium.
 
 ## test_board_browser_e2e
 
@@ -43,25 +43,6 @@ The browser half of the e2e tier: a real Chromium driven by Playwright over the 
   the stop glyph), stops and then restarts new claims (MVP criterion 11), engaged before the survivor lands because the
   landing frees the runner's only agent slot in the same tick — FILL's reconcile releases the survivor's binding — so
   from that instant the brake alone holds the remaining ready chunk in the lane.
-
-## test_board_cost_live_e2e
-
-The cost/usage render half: the same served board, loaded once and never reloaded, over a chunk claimed straight through
-`POST /api/fleet/routes`.
-
-- `test_board_renders_cost_and_updates_live_over_sse` — proves the cost figures render off the live hub — the card's
-  cost badge, the header's spend-today figure (`GET /api/spend?since=`), the detail dock's cost with the four token
-  classes inline — and update live with no reload, the claim only a real browser over the real SSE spine can make: a
-  fresh `usage.recorded` fact pushed to `POST /api/fleet/events` re-broadcasts `chunk-changed`, the `FleetLiveUpdates`
-  spine invalidates the chunk read and `hubFleetSpendKey`, and card, header, and dock move in place. It also proves a
-  row with neither a billed nor an estimated amount flips every figure to its `+`-marked lower bound, never a silently
-  understated exact. The partial marking and the per-history-step `(node, epoch)` inline match are additionally fenced
-  at the component tier: `chunk-detail-panel.spec.ts`, `board-header.spec.ts`, `board-shell.spec.ts`,
-  `fleet-live.spec.ts`, `test_usage_facts_ingest.py`, `test_fleet_spend_api.py`, `test_hub_cli_status.py`. On its own
-  second chunk, a subscription-only `usage.recorded` fact (an estimate, no billed cost) proves the card renders its one
-  `~`-marked figure live (entirely estimated, never a bare `$0.00`), the header's spend-today figure folds that estimate
-  into the fleet total under both markers, the dock's cost line reads the same `~`-marked figure, and that this chunk
-  shows no PARTIAL marker: an estimate alone does not make a row partial.
 
 ## test_glance_board_e2e
 
