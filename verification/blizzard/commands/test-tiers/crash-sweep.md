@@ -15,9 +15,10 @@ The tier command is `BLIZZARD_CRASH_SWEEP=1 uv run pytest -n auto -m crash_sweep
 [`../../../../architecture/crash-correctness.md`](../../../../architecture/crash-correctness.md). The sweep enumerates
 the crash-point registry (`tests.crash_points.discover_crash_points`) and, per point, runs the hub and runner as real
 subprocesses over the mock fleet, arms the point so its owning daemon `SIGKILL`s itself there, then asserts the
-invariant checker (`blizzard dev check-invariants`) is green over both stores and the chunk still lands exactly once
-after an unarmed restart — startup is REAP. It needs the sibling `blizzard-mock` worktree and no winter source — its
-runners use the built-in `basic` provider. It is skipped without `BLIZZARD_CRASH_SWEEP=1`.
+invariant checker (an in-process `blizzard.tools.invariants.Invariants` run over both stores) is green over both stores
+and the chunk still lands exactly once after an unarmed restart — startup is REAP. It needs the sibling `blizzard-mock`
+worktree and no winter source — its runners use the built-in `basic` provider. It is skipped without
+`BLIZZARD_CRASH_SWEEP=1`.
 
 In CI the `push` workflow runs the bounded CI profile —
 `BLIZZARD_CRASH_SWEEP=1 BLIZZARD_CRASH_SWEEP_CI=1 uv run pytest -n auto -m crash_sweep tests/crash/`

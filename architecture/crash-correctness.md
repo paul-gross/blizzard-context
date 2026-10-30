@@ -148,6 +148,12 @@ keyed by one holds across tenants exactly as within one. The runner's checks rea
 member, the runner statement guard's one exempt member (`bzh:host-stores-confined`), and judge every runner's rows at
 once.
 
+**Outside handle.** Each daemon serves its half on request: the hub's at `GET /api/admin/invariants`, to hub
+administrators alone, and the runner host's at `GET /api/host/invariants`, on its human lane. Each half runs inside one
+read transaction on one connection, so every check sees the store as of one moment, whether a route, the offline
+`blizzard dev check-invariants`, or the crash sweep calls it. A daemon runs one check at a time and answers a second
+request while one runs with `409 {"code": "invariants_in_progress"}`.
+
 **Detect.** A crash test that asserts only "the process restarted" or "the chunk eventually landed" without checking the
 facts-level invariants; a new durable invariant added to the design with no assertion in the checker.
 
