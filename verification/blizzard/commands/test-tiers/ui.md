@@ -124,3 +124,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   each renders a diagram, or the fallback only when an edge leaves the graph, and that a graph authoring a targeted
   resume renders its `resume:<node>` meta line. The measurer contract the boxes are sized by is held by
   `web:shell-sweep`.
+- `tests/ui/runner-panel-live.spec.ts` — `test_runner_panel_updates_live_over_sse_with_no_reload`. The runner's own
+  panel, served by a real `blizzard-runner host` the test steps, its page pointed at the host's URL rather than the
+  hub's. Loads the panel's board at `/board` once, never reloading, over an empty board; then promotes a chunk and steps
+  the host once, and the chunk's card must arrive well inside the panel's one-minute poll backstop, so the publish,
+  stream, `RunnerLiveUpdates` registry and re-read chain alone can have put it there. The host then steps the chunk to
+  `done`, and the card settles in the Done lane with no live worker line.
