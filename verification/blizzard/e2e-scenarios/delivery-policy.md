@@ -69,7 +69,9 @@ same generic `executor: hub` primitive. Its `fleet traces` subtest proves what t
 - `test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` — proves a revision armed with no check is never
   green: it pends and bounces at the node's poll timeout, cause `poll-timeout`, nothing merged.
 
-Conditional forge lookup behavior is covered by `tests/test_github_landing.py`.
+Conditional forge lookup behavior is covered by `tests/test_github_landing.py`; the pending landing's ten-poll read
+budget and filtered lookup count are covered by
+`tests/test_land_action.py::test_pending_landing_polls_use_only_conditional_forge_reads_after_the_first_pass`.
 
 ## test_hub_actions_e2e
 
