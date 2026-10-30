@@ -559,6 +559,23 @@ Every tier runs `20261027_0900_flows` on SQLite only. It creates `flows`, `flow_
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
 
+## The runner host's invariant read under Postgres
+
+The runner host's invariant route opens its single read through the same dialect-aware opener as the hub's, which on
+Postgres sets `REPEATABLE READ` and read-only before the first statement. Every tier runs the runner store on SQLite, so
+only the `BEGIN` branch runs there.
+
+- **What the hand run reaches.** `blizzard:manual-postgres-invariants` runs the hub on Postgres, so the hub half's
+  `REPEATABLE READ` read runs there, across tenants. It runs the runner host on its default SQLite store.
+- **What no run reaches.** The runner chain cannot reach head on Postgres from an empty store (the Boolean
+  `server_default` in `20260920_0200_usage_cost_is_share.py`, as
+  [§The runner key revision under Postgres](#the-runner-key-revision-under-postgres) states), so no method hosts a
+  runner on Postgres, and the runner route's `REPEATABLE READ` branch is unexercised.
+
+Standing in for a tier: the hub half's run of the same opener under `blizzard:manual-postgres-invariants`, and the
+runner half's single-read component tests on SQLite. The gap closes the day the runner chain reaches head on Postgres
+from empty, or some tier gains a Postgres-backed runner run.
+
 ## What the project lens and the project columns do not cover
 
 Two project boundaries are drawn by no tier because the system does not draw them:

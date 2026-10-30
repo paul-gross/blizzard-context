@@ -1108,6 +1108,34 @@ invariant checks return no violation. The method needs a driver that seeds rows 
 and reads the schema by reflection; the matrix does not carry one, so each run writes its driver from this description,
 and `gaps.md` records what has been covered.
 
+### `blizzard:manual-postgres-invariants`
+
+**Surface.** The invariant routes, `GET /api/admin/invariants` on the hub and `GET /api/host/invariants` on the runner
+host, with the hub store on a throwaway local Postgres cluster. Every tier runs the hub store on SQLite; this is the one
+place the hub half's single read runs under `REPEATABLE READ` and read-only, across tenants, where each statement of an
+ordinary transaction would read its own snapshot.
+
+**Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on loopback (`initdb -A trust`, `pg_ctl` on a
+private port with a short `-k` socket directory, `createdb hub`), and every `blizzard` command run under
+`uv run --no-sync --with 'psycopg[binary]==3.3.4'`. Host the hub on the cluster with `--allow-external-db` in auth mode
+`none`, which admits the implicit operator at the hub route. Seed two tenants, each holding chunks with facts and
+records. Beside it, run a runner host on its default SQLite store with one registered runner, and keep that runner's
+token. The runner host stays on SQLite because the runner chain cannot reach head on Postgres from an empty store
+(`gaps.md` records what that leaves unexercised). Stop the cluster with `pg_ctl stop` and remove its directories when
+done.
+
+**Steps.**
+
+1. `GET /api/admin/invariants` on the hub and `GET /api/host/invariants` on the host, on the clean state.
+2. Write a deliberate breach into the Postgres store by SQL, one an invariant of the hub half names, then
+   `GET /api/admin/invariants` again.
+3. Fire two overlapping requests at one route.
+4. `GET /api/admin/invariants` bearing the runner's token.
+
+**Passes when.** Step 1 answers `200` with an empty `violations` list on both routes; step 2 answers `200` with a
+violation whose `detail` names the breached tenant's slug; step 3 draws exactly one
+`409 {"code": "invariants_in_progress"}`; and step 4 is refused.
+
 ### `blizzard:manual-live-routine`
 
 **Surface.** A garden routine run end to end by a real-harness runner against an env-local hub — the path no mock
