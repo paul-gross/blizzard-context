@@ -79,25 +79,55 @@ seq — a pushed `estimated_cost_usd` reads back on both the per-step row and th
 
 **The forge-status projection** (`tests/service/fleet/forge-status.spec.ts::test_forge_status_projection_e2e`) runs on a
 fresh hub of its own with `annotation_interval_seconds = 1` and a real runner host, every `forge_status` pass stepped.
-The hub spec `tests/service/hub/forge-status.spec.ts` proves only an opted-in source's issues are labelled. The case proves ingest
-shows `blizzard:ingested`, a worker held at a checkpoint shows `blizzard:in-progress`, and done clears both. A chunk
-stopped before any runner claims it has its marker cleared on the next pass. A hand-deleted label comes back only once
-the full-pass floor (five intervals) elapses, because the hub holds only in-memory probe state. A forge outage, stood in
-by the forge's own `unreachable` lever, since a process kill would wipe the forge's issue and label state, records one
-`forge-status-source-skipped` event naming the source id in `GET /api/events`, leaves chunk reads served, and the label
-is intact once the lever clears.
+The hub spec `tests/service/hub/forge-status.spec.ts` proves only an opted-in source's issues are labelled. The case
+proves ingest shows `blizzard:ingested`, a worker held at a checkpoint shows `blizzard:in-progress`, and done clears
+both. A chunk stopped before any runner claims it has its marker cleared on the next pass. A hand-deleted label comes
+back only once the full-pass floor (five intervals) elapses, because the hub holds only in-memory probe state. A forge
+outage, stood in by the forge's own `unreachable` lever, since a process kill would wipe the forge's issue and label
+state, records one `forge-status-source-skipped` event naming the source id in `GET /api/events`, leaves chunk reads
+served, and the label is intact once the lever clears.
 
-**The exported events** (`tests/service/fleet/egress-events.spec.ts::test_the_exported_events_agree_with_the_hubs_own_counts`)
-runs on a fresh hub exporting NDJSON, with a real runner host shipping transcripts, every hub and host pass stepped. One
-forge, hub and runner carry two chunks: a Claude Code build and an OpenCode review, whose workers read files, invoke a
-skill and spawn an agent whose child session reads a file, and an ask answered by a person, which extends its transcript
-through the resumed session. The case proves `events_current` grouped by file, skill, agent type and node equals
+**The exported events**
+(`tests/service/fleet/egress-events.spec.ts::test_the_exported_events_agree_with_the_hubs_own_counts`) runs on a fresh
+hub exporting NDJSON, with a real runner host shipping transcripts, every hub and host pass stepped. One forge, hub and
+runner carry two chunks: a Claude Code build and an OpenCode review, whose workers read files, invoke a skill and spawn
+an agent whose child session reads a file, and an ask answered by a person, which extends its transcript through the
+resumed session. The case proves `events_current` grouped by file, skill, agent type and node equals
 `blizzard hub analytics summary counts-{files,skills,agent-types,nodes}`, with paths made relative to the worker's
 working directory; the docs' files-a-station-read-last-week recipe names the review node's reads, the child session's
 included; no row, manifest or schema carries the planted prompt, tool input or output, key, question or working
 directory, or an event's payload; and after a forced `blizzard hub analytics re-derive` and a real
 `blizzard runner transcript reship` the export holds a `dropped` row for the superseded segment and the counts still
 equal the hub's.
+
+**A night of chunks, exported** (`tests/service/fleet/egress-night.spec.ts`) runs the night once, on one held stack,
+under eight titled tests that each read the directories back the way a warehouse would. One forge, one hub and one
+runner carry six chunk shapes, stepped throughout: a plain build, a review bounce, a human gate, an ask answered by a
+person, a delivery conflict from the forge's `merge_conflict` lever and an escalation, across two graphs that both name
+a `build` and a `deliver` node. The runner host's repository is the forge's own, so a landing merges the branch the
+worker pushed. The hub exports it live as NDJSON, is restarted over the same record with a changed configuration and
+exports it live again as Parquet into a second directory after the real `blizzard hub egress reset`, and
+`blizzard hub egress backfill` writes a third copy over the night's window, given as `Z` instants.
+
+- `test_both_live_exports_hold_the_same_newest_rows` — the NDJSON and Parquet live newest-copy row sets are equal
+  excluding `exported_at`, and neither dataset is empty.
+- `test_both_exports_hold_the_hubs_record` — every step in the chunks' history and every usage fact on the
+  `spend-chunks` surface, tokens and billed cost, is in both exports.
+- `test_both_exports_name_the_runner_by_its_minted_id_and_its_name` — every step the runner ran and every invocation
+  carries, in both formats, the `rn_` id the hub minted for the runner beside its configured name.
+- `test_nothing_planted_leaves` — a scan of the rows, manifests and schemas finds none of the planted "what never
+  leaves" values, the lease tokens the runner exported to the workers among them.
+- `test_a_backfill_of_the_window_equals_the_live_export` — the backfill of the night's window writes rows equal to the
+  live newest copies, excluding `exported_at`.
+- `test_recipes_agree_with_the_hubs_analytics` — the docs' cost recipe matches
+  `blizzard hub analytics summary
+  spend-nodes` over the same window per station, in both formats, and the
+  slowest-station recipe names the station built to be slowest on its own graph, held at a checkpoint across a clock
+  poll.
+- `test_cost_by_node_splits_a_shared_node_name_by_graph` — the cost recipe keeps `build` and `deliver` as a distinct
+  station on each graph that names them.
+- `test_published_newest_views_return_the_newest_copies` — the dictionary's published newest-copy views return the
+  identities the rows' own newest copies name, in both formats.
 
 **Runner release policy** (`tests/service/runner/release.spec.ts`) exercises two runners spending distinct sampled
 subscriptions on one stepped host. A utilization line crossed during a checkpointed build releases the next node to an
