@@ -49,6 +49,12 @@ The flow record, kept by the hub's own flow driver over a real hub: a chunk held
 - `test_a_held_chunk_is_submitted_and_its_landing_supersedes_it` — proves a chunk held at the hub node is submitted to
   its branch's flow and polls through turns, and once the lever clears, the turn that lands it closes that submission
   `landed`.
+- `test_a_store_walked_below_flows_submits_its_standing_chunks_in_deliver_order_and_lands_every_one` — proves the
+  landing carry-over. Two chunks pending at `deliver` and one paused there when the store walks down, the pending two
+  minted so their id order is the reverse, are carried back by the migrated hub's boot. The pending two are submitted in
+  the order they entered `deliver`, and once the lever clears both land. The paused one lands once resumed. Every chunk
+  lands with the `landed` outcome, its `merged/<repo>` marker, and its `delivery_repo_landed` row, and no turn is left
+  open.
 
 ## test_flow_turns_e2e
 
