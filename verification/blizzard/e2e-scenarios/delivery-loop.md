@@ -81,11 +81,8 @@ action.
 
 The cross-graph migration: a source graph (`default-delivery`) whose `build` node authors a cross-graph judgement
 choice, `to: graph:triage-delivery`, handing the chunk off. The crash-tier companion is
-`test_kill9_at_migrate_crash_point`, the `migrate.after-record.before-response` window. The scenario's git and
-fleet-truth assertions run in-process regardless; with Chromium installed it also drives the served board and `/graphs`
-explorer to prove the two-graph timeline renders, degrading to the in-process assertions — never skipping the module —
-without Chromium, and taking no built-bundle guard, so that browser half fails loudly on an unbuilt bundle. Its
-`fleet traces` subtest proves what the acceptance loop's does.
+`test_kill9_at_migrate_crash_point`, the `migrate.after-record.before-response` window. The two-graph timeline on the
+served board runs as `tests/ui/migration.spec.ts`. Its `fleet traces` subtest proves what the acceptance loop's does.
 
 - `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — proves taking the choice records a
   migration (never a transition), re-pins `graph_id`, and re-queues the chunk at the target graph's own `build` node

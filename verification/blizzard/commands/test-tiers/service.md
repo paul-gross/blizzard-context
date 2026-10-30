@@ -229,7 +229,7 @@ pinned at the component tier by `test_runner_ingest.py`.
 
 **Runner SSO federation's JWT/JWKS wire leg**
 (`tests/service/fleet/auth/idp-federation.spec.ts::test_the_wire_leg_ends_in_an_unlocked_runner_route`) is the
-browserless companion to e2e's `test_runner_federation_e2e.py`: a real hub delivers a hub-signed, audience-bound JWT via
+browserless companion to the UI tier's runner-federation spec: a real hub delivers a hub-signed, audience-bound JWT via
 `response_mode=form_post` to a real `blizzard runner host`'s `POST /api/auth/callback` — the whole chain real over
 localhost — ending in a `bz_runner_session` cookie and an unlocked human-lane route. A second federation scenario
 rotates the hub signing key (`POST /api/auth/rotate-signing-key`) and drives a fresh bounce under the just-rotated

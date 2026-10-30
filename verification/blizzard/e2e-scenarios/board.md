@@ -80,28 +80,12 @@ The mobile glance board at a real ~390px width under `bzh:narrow-viewport-tier-r
 
 ## test_event_log_e2e
 
-The operational event log, holding both in-process and browser-driven assertions.
+The operational event log's in-process half; its browser half runs as `tests/ui/event-log.spec.ts`.
 
 - `test_a_verdict_less_exit_surfaces_a_critical_worker_lost_event` — the in-process half: a real mock worker's
   verdict-less exit exhausts its retry budget, the runner escalates, and the emission surfaces a critical `worker-lost`
   operational event that reads back off the live `GET /api/events` and fans out as an `event-logged` SSE frame read off
   the stream's replay tail — the runner-emit, hub-fold, read-and-fan-out chain, no browser.
-- `test_the_events_tab_renders_filters_and_updates_live_in_the_browser` — seeds a mixed-severity feed through
-  `POST /api/fleet/events`, opens the Events tab from `nav-events`, and proves rows render newest-first (the critical
-  row first because it arrived last), the severity filter narrows then restores, a fresh post-load event arrives live
-  over SSE with no reload, and a row deep-links to its chunk.
-- `test_the_events_grid_does_not_collapse_at_a_narrow_viewport` — proves the Events tab's time-first grid's
-  narrow-viewport fallback: at a real ~390px width a long-message row stays bounded in height and the page gains no
-  horizontal scroll.
-- `test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — proves the board's rail — the Activity feed, a
-  separate, pure-recency feed distinct from the Events tab — survives a reload: it seeds a mixed feed across fact
-  families before the first load, confirms the initial activity read renders every durable row, restarts the hub with a
-  fresh replay ring over the same store, reloads, and confirms the same rows remain — the on-mount `GET /api/activity`
-  backfill restoring durable history — with no duplicate or missing row.
-- `test_activity_rail_tracks_claim_transition_and_fact_burst_across_reload` — opens the real board before a mock runner
-  claims and completes a node, then pushes lease and usage facts through ingest. Checks the distinct claim and
-  transition, spend refresh without extra activity rows, one row for a shared-key question notification, and matching
-  durable activity identities and row count after reload.
 
 ## test_transcript_tab_browser_e2e
 
