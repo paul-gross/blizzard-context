@@ -91,6 +91,9 @@ minted with `mockSessions()` (the mock harness's session records in the workspac
 through `raw`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:`
 option of `cli` and `events.open`.
 
+For a pasteable escalation command, call `runnerHost.takeover(command, input)`: the handle executes the command as
+printed, feeds the input to stdin, and uses the host's isolated, mock-fenced environment. A spec never spawns it.
+
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
 ## Earn the least isolation (`bzh:service-isolation-earned`)
@@ -132,6 +135,11 @@ A `runnerHost` boots `stepped`: `step()` and `stepHost()` each resolve once the 
 then reads. It never waits on a timer for a pass the host would run on its own. The halted and multi-runner examples
 live in `tests/service/runner/host-halted-runners.spec.ts`; their foreign-identity and persisted host-fact specimens
 live in `tests/service/runner/store/host-halted-runners.spec.ts`.
+
+In a `collectorTest` case, poll `collector.decision(traceId)` for the short trace while the worker is held at its
+checkpoint. Its unmarked trace-specific probe reads the collector's cached sampling decision; only a returned `dropped`
+is a barrier for asserting that later root and command spans were not forwarded. A received span and an empty forwarded
+sink cannot establish that decision.
 
 To keep a hub outage open under an in-flight read, hold the `mockHubRelay` option's relay (`mockHub.relay`): stop the
 hub, issue the read, and wait on the relay's `refusal()` as the barrier that the read is in flight. Restart the hub and
