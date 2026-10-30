@@ -57,3 +57,15 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   `POST /api/invitations` and the board's `/invite/<token>` page, the board is read-only with Promote hidden; promoted
   through `PUT /api/members/{user_id}`, a reload shows Promote; and a second page's logout through `nav-logout` sends
   the first, still-open page to `/login` with no reload.
+- `tests/ui/auth/runner-federation.spec.ts::test_multi_daemon_sso_bounce` — two adopted runner hosts under one runner
+  name: a sessionless browser visit to A bounces through the hub and the stub IdP into A's own session, with the
+  hub-signed token never in a URL. The captured callback token is refused at B (audience-bound), refused on replay at A
+  (single-use), and refused under a wrong state. After `POST /api/auth/rotate-signing-key`, a bounce into B works with
+  no restart, and A's session cookie stays in the jar beside B's.
+- `tests/ui/auth/runner-federation.spec.ts::test_runner_session_reacquisition_e2e` — an adopted runner restarted in
+  place invalidates an open tab's session; with no navigation or reload, the panel's own stream reconnect is refused and
+  the session-recovery seam re-federates through `GET /api/auth/login`, ending with a fresh runner session cookie.
+- `tests/ui/auth/runner-federation.spec.ts::test_one_sign_in_at_a_registered_host_reaches_both_runners_pages` — a
+  registered host running two runners is the panel's one sign-in client: the legacy `/runners/<id>/board` link bounces
+  to `authorize` with the host id as `client`, exactly one host session cookie results, and the second runner's board
+  loads with no second bounce.
