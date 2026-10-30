@@ -74,3 +74,10 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   link to `/p/default/board` opens the board under the `default` project's lens; a link naming the project by the slug
   it has left, or by its id, is rewritten in place to its current slug; and a link naming no project of the tenant opens
   the same view on All, with a notice.
+- `tests/ui/actions/gardening-run-dialog.spec.ts` — `test_gardening_run_dialog_browser`. The gardening run dialog,
+  opened from the selected routine's own panel, on the `actions` hub, since the routine's graph names a test action.
+  Mints a routine with a never-swept default scope, links a second scope into its related set ahead of time, and mints a
+  third scope left unlinked. Proves the dialog offers only the related set, with the unlinked scope and the mint escape
+  hatch both absent; that the never-swept note shows and the delta radio is disabled; that submitting on the linked
+  scope lands the run against it, read back from the hub; and that the confirmation names a real `ch_`-prefixed chunk
+  id, links to `/p/default/board/chunk/<id>`, renders no board of its own, and closes back to the routines list.

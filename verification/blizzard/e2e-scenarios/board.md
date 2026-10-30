@@ -14,9 +14,9 @@ tier headless over the multi-repo checkout (Chromium via `uv run playwright inst
 
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
 without either or without `BLIZZARD_E2E=1`; for the board-browser and cost modules an unbuilt bundle fails loudly
-instead of skipping. Except for the graphs-diagram and gardening-run-dialog modules, every scenario also needs the
-sibling provisioned `blizzard-mock` worktree (the transcript module needing only its forge-registered repo, never
-spawning a runner). The in-process event-log function needs only the worktree, no built bundle or Chromium.
+instead of skipping. Except for the graphs-diagram module, every scenario also needs the sibling provisioned
+`blizzard-mock` worktree (the transcript module needing only its forge-registered repo, never spawning a runner). The
+in-process event-log function needs only the worktree, no built bundle or Chromium.
 
 ## test_board_browser_e2e
 
@@ -139,17 +139,3 @@ cleanly without `BLIZZARD_E2E=1` or without Chromium, but an unbuilt bundle fail
   only when it routes an edge out of the graph — the one shape `layoutGraph` documents refusing, today the triage router
   — and is a layout regression otherwise. Graphs that author targeted resume sessions must render that metadata, and at
   least one shipped graph must keep that branch of the proof live.
-
-## test_gardening_run_dialog_browser_e2e
-
-The gardening run dialog, opened from the selected routine's own panel. Needs no runner or forge traffic — a routine's
-own `run` mints a `not_ready` chunk, never executed here — so, like the graphs-diagram module, it stands up only the
-served hub, needing just the built bundle and an installed Chromium.
-
-- `test_gardening_run_dialog_browser` — mints a routine with a never-swept default scope, links a second scope into its
-  related set ahead of time, and mints a third scope left unlinked. Opens the dialog and proves it offers only the
-  routine's related set — the default and the linked scope, the unlinked one and the mint escape hatch both absent — and
-  that the delta-steering rule renders for real: the never-swept note shows and the delta radio is disabled. Switches to
-  the linked scope and submits, then proves against a live hub read that the run landed against it, and that the
-  confirmation names a real `ch_`-prefixed chunk id and links to `/board/chunk/<id>`, rendering no board of its own.
-  Closing the confirmation tears the dialog down back to the routines list.
