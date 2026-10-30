@@ -159,6 +159,13 @@ and compares the gate span's end with the CLI's `resolved_at` at nanosecond prec
 - `test_graph_gate_parks_a_decision_then_decide_delivers` — the open decision carries the build commit and
   approve/reject choices; approval leaves no open decision in its tenant and lands the committed file on bare `main`.
 
+**Review cycle** (`tests/service/fleet/review-cycle.spec.ts`) fails review once and threads its findings and prompt
+addendum into a second build before landing. Both mock harnesses exercise it. The trace companion checks five linked
+roots and visits, chunk backlog duration, runner invocations and dictionary conformance.
+
+- `test_review_cycle_fails_once_then_delivers` — hub history contains the fail edge and findings, two build passes
+  appear in bare `main`'s file, and the addendum's addressed marker lands with them.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb
