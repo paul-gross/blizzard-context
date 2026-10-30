@@ -67,9 +67,11 @@ Declared limitations (stated here rather than discovered later):
   neither names a tier — and its `blizzard-mock:unit-test` method is bare
   `uv run pytest` by design, so "which tier does this file live in" has no
   answer there. Blizzard-mock-scoped citations get check A and nothing more.
-- Playwright attribution reads only `service-*` projects (tier `service`) and
-  `ui`/`ui-*` projects (tier `ui`) in the JSON listing, and tells the two apart
-  by the spec's folder (`tests/service/`, `tests/ui/`); setup, teardown, and
+- Playwright attribution reads only `service-*` projects (tier `service`),
+  `ui`/`ui-*` projects (tier `ui`) and the `journey` project (tier `journey`) in the
+  JSON listing, and tells them apart by the spec's folder (`tests/service/`,
+  `tests/ui/`, `tests/journey/`); the journey has no pytest marker, so a
+  `tests/journey/*.spec.ts` citation is attributed through Playwright alone; setup, teardown, and
   harness projects cannot establish a tier. A cited `.spec.ts` file may exist
   yet have no listed title, and an empty listing is valid before specs are
   ported.
@@ -186,7 +188,7 @@ KNOWN_UNMARKED: dict[str, str] = {}
 
 # The blizzard tier markers check B1/B2/C draw from, in the order the matrix
 # lists them.
-MARKERS = ("unit", "component", "service", "crash_sweep", "journey", "rehearsal", "store_baseline", "e2e", "winter_binding")
+MARKERS = ("unit", "component", "service", "crash_sweep", "rehearsal", "store_baseline", "e2e", "winter_binding")
 
 # ### <method-id> sections in commands.md that are themselves a test tier —
 # check B2's own-tier agreement is scoped to exactly these.
@@ -335,12 +337,14 @@ def _is_candidate_path(token: str) -> bool:
 
 
 def _is_playwright_spec(path: str) -> bool:
-    return path.endswith(".spec.ts") and (path.startswith(("tests/service/", "tests/ui/")) or "/" not in path)
+    return path.endswith(".spec.ts") and (path.startswith(("tests/service/", "tests/ui/", "tests/journey/")) or "/" not in path)
 
 
 def _playwright_tier(path: str) -> str:
-    """The tier a Playwright spec's folder puts it in: `ui` under `tests/ui/`, else `service`."""
-    return "ui" if path.startswith("tests/ui/") else "service"
+    """The tier a Playwright spec's folder puts it in: `ui` under `tests/ui/`, `journey` under `tests/journey/`, else `service`."""
+    if path.startswith("tests/ui/"):
+        return "ui"
+    return "journey" if path.startswith("tests/journey/") else "service"
 
 
 def _sections(text: str, level_prefix: str = "###") -> list[tuple[str, int, str]]:
@@ -1981,7 +1985,7 @@ def _collect(cmd_prefix: list[str], blizzard_root: Path, marker: str) -> list[st
 
 
 def _collect_playwright(blizzard_root: Path) -> dict[str, set[str]] | None:
-    """Collect service- and ui-project file/title pairs; an empty mapping is a valid listing."""
+    """Collect service-, ui- and journey-project file/title pairs; an empty mapping is a valid listing."""
     tests_root = blizzard_root / "tests"
     try:
         result = subprocess.run(["npx", "playwright", "test", "--list", "--reporter=json"], cwd=tests_root, capture_output=True, text=True, timeout=180)
@@ -2001,7 +2005,7 @@ def _collect_playwright(blizzard_root: Path) -> dict[str, set[str]] | None:
             names = parents + ([] if root else [title])
             for spec in suite["specs"]:
                 for test in spec["tests"]:
-                    if test["projectName"].startswith("service-") or re.fullmatch(r"ui(-.+)?", test["projectName"]):
+                    if test["projectName"].startswith("service-") or test["projectName"] == "journey" or re.fullmatch(r"ui(-.+)?", test["projectName"]):
                         path = (root_dir / spec["file"]).resolve().relative_to(blizzard_root.resolve()).as_posix()
                         collected.setdefault(path, set()).add(" ".join(names + [spec["title"]]))
                         collected[path].add(spec["title"])

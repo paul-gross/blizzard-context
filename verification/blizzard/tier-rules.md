@@ -217,9 +217,9 @@ volume is what arms the wedge, so a change that adds daemon logging can wedge a 
 lands far from the cause — suspect the wedge before the test.
 
 **Do.** The tiers that spawn real daemons with `subprocess.Popen` — `blizzard:crash-sweep`, `blizzard:service-test`,
-`blizzard:e2e`, `blizzard:journey`, and `blizzard:rehearsal` — spawn through `tests/support.py`'s `daemon_log_sink`,
-which is that file: a daemon with a runtime dir logs to `daemon.log` beside its store, and the mock fleet's dirless
-daemons log to `shared_daemon_log_dir()`.
+`blizzard:e2e`, and `blizzard:rehearsal` — spawn through `tests/support.py`'s `daemon_log_sink`, which is that file: a
+daemon with a runtime dir logs to `daemon.log` beside its store, and the mock fleet's dirless daemons log to
+`shared_daemon_log_dir()`.
 
 **Don't.** `subprocess.Popen([...], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)` for a daemon the test then waits
 on — the guard fails the unit tier, and past it the daemon wedges once its log fills the pipe.
