@@ -152,6 +152,13 @@ trace companion pins supersession, error escalation and runner invocation identi
   command opens the same session, advances Claude Code's persisted turn and records its resume message, or prints the
   OpenCode session-opening banner.
 
+**The human gate** (`tests/service/fleet/gate-decision.spec.ts`) parks a build commit on `approve-gate`, lists and
+resolves the decision through the real hub CLI, and steps the host to landing. Its trace companion links gate to deliver
+and compares the gate span's end with the CLI's `resolved_at` at nanosecond precision.
+
+- `test_graph_gate_parks_a_decision_then_decide_delivers` — the open decision carries the build commit and
+  approve/reject choices; approval leaves no open decision in its tenant and lands the committed file on bare `main`.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb
