@@ -70,24 +70,6 @@ forge. Each scenario ends with the flow invariants holding and no turn open.
 - `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` — proves a chunk that reaches `deliver` paused takes
   no turn there, and lands once resumed.
 
-## test_forge_status_e2e
-
-The forge-status label projection: one work source opted into `annotate = true` with a 1s sweep interval, over one
-minted fixture. The unit/component companions are `tests/test_work_source.py` (the GitHub adapter's annotator half),
-`tests/test_forge_status.py`, and `tests/test_annotation_loop.py` (the background driver); the service-tier
-`tests/service/hub/forge-status.spec.ts` proves only an opted-in source's issues are labelled, browserless, against the
-real mock forge.
-
-- `test_forge_status_projection_e2e` — proves the happy path: ingest shows `blizzard:ingested`, the build/review/deliver
-  drive flips it to `blizzard:in-progress` before `done`, where both clear — snapshotting label history every tick
-  because the sweep lands asynchronously on its own interval, not in lockstep with runner ticks. The same function
-  proves a chunk stopped before any runner claims it has its marker cleared on the next sweep, and a hand-deleted label
-  is re-asserted within one full-pass floor (five sweep intervals) — the hub holds only in-memory probe state, so it
-  re-derives rather than repairs. It stands in an outage, longer than the floor, with the forge's own `unreachable`
-  lever — a process kill would wipe the forge's in-memory issue/label state and defeat proving re-convergence — and
-  proves the hub keeps serving reads and transitions throughout, the daemon log records a `sources_skipped` entry naming
-  the source, and the label lands once the lever clears.
-
 ## test_forge_budget_e2e
 
 The shared forge rate budget: one work source opted into `annotate = true` with a 1s sweep interval and the repository
