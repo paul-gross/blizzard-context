@@ -908,17 +908,18 @@ the two reads.
 **Surface.** A kept fact-egress directory copied to object storage with the docs' own `rclone` recipe, loaded into a
 warehouse from each manifest's file list, and read in a BI tool: cost by node by day, the slowest station of the week,
 and from the events dataset the files a station read last week and counts by skill, equal to the DuckDB recipes over the
-same directory. `blizzard:e2e`'s night module proves the files and the DuckDB recipes; no tier proves a warehouse and a
-BI tool can read them from the dictionary alone.
+same directory. The night spec (`tests/service/fleet/egress-night.spec.ts`) proves the files and the DuckDB recipes; no
+tier proves a warehouse and a BI tool can read them from the dictionary alone.
 
-**Blind spot.** The format read is Parquet, from the night module's second export; NDJSON is not loaded. MinIO,
-ClickHouse and Grafana stand in for the operator's own bucket, warehouse and BI tool, and a loader's behavior beyond
-these two reads is not measured.
+**Blind spot.** The format read is Parquet, from the night spec's second export; NDJSON is not loaded. MinIO, ClickHouse
+and Grafana stand in for the operator's own bucket, warehouse and BI tool, and a loader's behavior beyond these two
+reads is not measured.
 
 **Setup.** All local docker on one user-defined network, no credentials of the operator's own.
 
-- The directory: `BLIZZARD_E2E=1 uv run pytest tests/e2e/test_egress_night_e2e.py --basetemp <dir>`, then the
-  `night0/export-parquet` directory under it.
+- The directory: `mise run playwright -- --project=service-fleet tests/service/fleet/egress-night.spec.ts`, then the
+  `egress-parquet` directory beside the hub's `egress` under the held stack's `fresh/` directory in the run's
+  `tests/.run/<run>/`. A run keeps it; the next run's `.run` directory is a new one.
 - MinIO (`cgr.dev/chainguard/minio`, as `minio/minio` is no longer pulled from Docker Hub) with a throwaway root key,
   and `rclone/rclone` for the copy.
 - `clickhouse/clickhouse-server` and `grafana/grafana` with `GF_INSTALL_PLUGINS=grafana-clickhouse-datasource`, the
@@ -926,7 +927,7 @@ these two reads is not measured.
 
 **Steps.**
 
-1. Run the night module with `--basetemp`.
+1. Run the night spec, and keep its run directory.
 2. `rclone copy` the Parquet directory into a MinIO bucket as `docs/deployment/egress.md`
    `### Object storage with rclone` gives it, the manifests last.
 3. In ClickHouse, create one `MergeTree` table per dataset from the `s3` table function over the file list the manifests
@@ -940,9 +941,10 @@ these two reads is not measured.
 5. Run the docs' two DuckDB recipes over the same directory and record each answer beside Grafana's. Change nothing in
    `blizzard` between the reads.
 
-6. Run `BLIZZARD_E2E=1 uv run pytest tests/e2e/test_egress_events_e2e.py --basetemp <dir>` and copy its NDJSON `export`
-   directory the same way. In ClickHouse, create a table over the `events` files from the manifests' file list, and
-   paste `contracts/egress/events_current.sql` over it unchanged as `events_current`.
+6. Run `mise run playwright -- --project=service-fleet tests/service/fleet/egress-events.spec.ts`; the hub's NDJSON
+   export is the `egress` directory under that test's `fresh/` directory in the run's `tests/.run/<run>/`. Copy it the
+   same way. In ClickHouse, create a table over the `events` files from the manifests' file list, and paste
+   `contracts/egress/events_current.sql` over it unchanged as `events_current`.
 7. In Grafana, add a table panel of the files each station read in the last seven days and one of counts by skill, from
    `events_current` alone. Run the docs' `files-a-station-read-last-week` recipe and a count by `subject` over
    `kind = 'skill_invocation'` in DuckDB over the same directory, and record each beside Grafana's.
@@ -951,9 +953,9 @@ these two reads is not measured.
 DuckDB over the same directory, its events panels give the same files by station and skill counts as DuckDB, and no
 `blizzard` file changed between the reads. Record all answers.
 
-**Recorded reading** (one night run, kept with `--basetemp`; the Parquet export held a live pass and a backfill pass, so
-each row existed twice and the newest-copy view collapsed 36 `steps` rows to 18 and 52 `invocations` rows to 26; the
-queries ran through Grafana's data source query API, the panels' own path):
+**Recorded reading** (one night run, kept; the Parquet export held a live pass and a backfill pass, so each row existed
+twice and the newest-copy view collapsed 36 `steps` rows to 18 and 52 `invocations` rows to 26; the queries ran through
+Grafana's data source query API, the panels' own path):
 
 | Station (`default-delivery`) | Day        | Billed USD, Grafana | Billed USD, DuckDB | Estimated USD, Grafana | Estimated USD, DuckDB |
 | ---------------------------- | ---------- | ------------------- | ------------------ | ---------------------- | --------------------- |

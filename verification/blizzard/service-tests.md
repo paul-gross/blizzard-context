@@ -67,8 +67,24 @@ importing `node:http` or `node:net`, and reads a branch head in its world's bare
 history and file text, each `undefined` for a repo, ref or path that is not there. `runnerWinterTrap` puts a `winter`
 that records its invocation first on every host's `PATH` (a `runnerEnv.PATH` beside it is refused), and
 `winterInvoked()` reports it. A `fresh-hub` test whose `hubConfig` names `${egress}` as `egress.directory` reads the
-Parquet the hub exports through the `egress` fixture's `query` and `recipe`, which run the docs' own DuckDB load and the
-dictionary's views once a manifest names the dataset. It reads what the mock fleet wrote into the world the fixture
+files the hub exports, in the format `egress.format` names (NDJSON by default), through the `egress` fixture's `query`
+and `recipe`, which run the docs' own DuckDB load and the dictionary's views once a manifest names the dataset: `steps`
+and `invocations` through `<dataset>_newest`, `events` through `events_current` and `events_by_version`.
+`exports(dataset)` asks once whether a manifest names it, `rowTexts(dataset)` renders every copy of every row as text,
+and `documents()` gives the text of the manifests and schemas, so a scan that a value never left needs no file read of
+its own. `copies` renders every copy of every `steps` or `invocations` row in the shape both formats share, so a test
+picks the newest copy itself and compares NDJSON with Parquet; a read may bind the dataset to the live passes' files or
+to a backfill's alone, and `at(directory, format)` reads another directory, such as a restart's second export.
+`freshHub.start(overlay)` hosts the stopped hub again with a configuration merged over its file and checked as
+`hubConfig` is, so one hub's record is exported under a second format; an unsound overlay is refused before anything is
+written. `test.use({ held: '<name>' })` on one describe block, run in order on one worker
+(`test.describe.configure({ mode: 'default' })`), gives its tests one fresh hub and one runner host instead of one each,
+built by the first test and stopped when the worker ends; `once(name, produce)` runs `produce` for the first test to ask
+and hands every later one its result, so a night too long to repeat runs once under as many titled proofs as it earns. A
+worker that restarts after a failure builds the stack and the night again. A test outside the block holds no stack, and
+`once` refuses it. The `runnerOnForge` option names forge repositories made before the host is, and `${forgeOrigins}` in
+`runnerConfig` is the directory of the forge's bare repositories, `<owner>/<name>.git` below it, so a host whose
+repository is the forge's own lands what a worker pushes. It reads what the mock fleet wrote into the world the fixture
 minted with `mockSessions()` (the mock harness's session records in the workspace) and `opencodeExports()` (the
 `mock-opencode` export documents under the host's own transcripts root). A runner's client names each route a spec reads
 (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`, `heartbeat`), so a spec reaches no route

@@ -23,4 +23,3 @@ no module sections; the routing table below is the routing map and the discovery
 | [board.md](./e2e-scenarios/board.md)                     | Verifying operator interactions with the hub-served web app and its live data                                     |
 | [runner-panel.md](./e2e-scenarios/runner-panel.md)       | The panel a runner serves itself                                                                                  |
 | [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden graphs' run paths                                                                             |
-| [egress.md](./e2e-scenarios/egress.md)                   | Verifying that exported facts can be read from files alone and agree with the hub's record                        |
