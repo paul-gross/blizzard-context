@@ -130,3 +130,16 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   the host once, and the chunk's card must arrive well inside the panel's one-minute poll backstop, so the publish,
   stream, `RunnerLiveUpdates` registry and re-read chain alone can have put it there. The host then steps the chunk to
   `done`, and the card settles in the Done lane with no live worker line.
+- `tests/ui/board-browser.spec.ts` — `test_board_browser_live_group_reorder_answer_and_pause`. The mission-control board
+  over a runner host the test steps, loaded once and never reloaded until its own `?chunk=` URL is mounted fresh.
+  Promotes three chunks from the board and proves decorative grips and no retired controls in the backlog and ready
+  lanes; groups two through `POST /api/chunks/{id}/group` and watches the merged card vanish and the survivor carry both
+  pointers' chips live; drags the survivor's card to the ready lane's top with real pointer moves, and proves the queue
+  and the next claim honour both. The survivor parks on a question, crosses to the waiting lane live, is answered from
+  the dock, and runs to `done`, the dock then rendering its node history and artifacts and linking to the chunk page's
+  Artifacts tab. The runner's hub brake, set and released from the Fleet tab in a second page, holds the remaining ready
+  chunk through four host passes and then lets it be claimed; that chunk is paused from the dock, keeping its claim and
+  naming who paused it, and resumed. The graph ends at review, and the worker's branch and its `LANDED.md` are read back
+  from the runner host's own origin: the host's origins are not the hub forge's repositories, so this entry does not
+  prove landing through the forge — a pull request opened and merged onto `main`. The dock's geometry is held by
+  `web:shell-sweep`.

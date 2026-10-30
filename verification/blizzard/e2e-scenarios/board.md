@@ -5,44 +5,16 @@
 
 # Operator-board-in-a-browser e2e scenarios (`bzh:e2e-board`)
 
-The scenarios driving a real Chromium over the web app the hub serves — the operator board's views, its live SSE
-updates, and the graph explorer.
+The scenarios driving a real Chromium over the web app the hub serves — the operator board's views and its live SSE
+updates.
 
 The browser scenarios are skipped in the `gate`/`pr` single-repo checkout; the tag `release` workflow runs the full e2e
 tier headless over the multi-repo checkout (Chromium via `uv run playwright install --with-deps chromium`; locally,
 `uv run playwright install chromium`).
 
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
-without either or without `BLIZZARD_E2E=1`; for the board-browser module an unbuilt bundle fails loudly instead of
-skipping. Every scenario also needs the sibling provisioned `blizzard-mock` worktree. The in-process event-log function
-needs only the worktree, no built bundle or Chromium.
-
-## test_board_browser_e2e
-
-The browser half of the e2e tier: a real Chromium driven by Playwright over the served mission-control board,
-`blizzard hub host` mounting the built Angular app at `/`.
-
-- `test_board_browser_live_group_reorder_answer_and_pause` — loads the board once, never reloading, proving the status
-  chip flips live over SSE as facts land and the detail drawer renders node history plus the artifact store. Its runner
-  registry lists the runner `runner init` added as never connected, then online once its first pull registers it, with
-  no reload. The same function groups two ready chunks through `POST /api/chunks/{id}/group`, then observes the survivor
-  live in the READY lane after the merged card vanishes. It asserts decorative grips in the ranked BACKLOG and READY
-  lanes and no retired board controls, then reorders the grouped survivor's whole card to the READY lane's top with real
-  pointer events (the `@angular/cdk` drop list the lane arms; the drop-to-anchor arithmetic is fenced at `web:unit-test`
-  with a synthesized `CdkDragDrop`), the next FILL claiming the grouped plural-pointer survivor first, both honored. It
-  also proves a parked chunk's question is answered from the board and the chunk resumes to `done`. It proves a running
-  chunk is paused directly from its chunk detail dock — the claim-keeping, one-chunk lever, distinct from the
-  runner-level brake: the chip flips to `paused` live with no reload (the one status a pause-parked chunk's chip shows —
-  [domain/work/statuses.md](../../../domain/work/statuses.md) ranks `paused` below the human-gated statuses, so the
-  proof needs a chunk caught genuinely running, not already parked on a question), the chunk relocates to the WAIT/HUMAN
-  column, the claim survives the runner interrupting the worker and killing only a survivor of that interrupt while
-  parking the lease, the dock names who paused it, and resuming from the dock returns it to a live, progressing status.
-  While the dock is open on that chunk it also asserts none of the three retired dependency-UI testids (the prerequisite
-  field, Declare, Release) render. And it proves the runner's pause/resume brake, driven from the Fleet tab in a second
-  page of the same browser context while the board page, never reloaded, shows the rail flip live (`data-hub-paused`,
-  the stop glyph), stops and then restarts new claims (MVP criterion 11), engaged before the survivor lands because the
-  landing frees the runner's only agent slot in the same tick — FILL's reconcile releases the survivor's binding — so
-  from that instant the brake alone holds the remaining ready chunk in the lane.
+without either or without `BLIZZARD_E2E=1`. Every scenario also needs the sibling provisioned `blizzard-mock` worktree.
+The in-process event-log function needs only the worktree, no built bundle or Chromium.
 
 ## test_event_log_e2e
 

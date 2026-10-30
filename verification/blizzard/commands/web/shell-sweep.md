@@ -194,6 +194,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `flex-direction: column; gap: 10px` (`graph-detail.css`) before the split — must genuinely stack with a real gap,
   proving `graph-detail-lifecycle.css`'s own `:host` flex column reproduces that spacing now that the container hands
   them only one flex slot; proven able to fail by setting that `:host`'s `gap` to `0`.
+- `board-dock.shell-sweep.spec.ts` covers the board page's chunk dock, `BoardPage` mounted on stubbed reads in a
+  height-bounded column. With nothing selected the dock is mounted but takes no box and the board runs the column's full
+  height; selecting a chunk opens the dock beneath the board, which keeps its left, top and width and shortens;
+  dismissing the selection restores the board's at-rest box exactly. Proven able to fail by dropping `.dock.closed`'s
+  `display: none` in `board-page.css`.
 - `graph-diagram.shell-sweep.spec.ts` covers the graph diagram's text-measurer contract (`graph-text-measurer.ts`), with
   `GraphDiagram` mounted on its production layout and canvas measurer over two graphs written in the spec. Every node
   box's width and height, every meta line's overhang, and every edge label's background width are rebuilt from the
