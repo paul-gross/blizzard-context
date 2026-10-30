@@ -116,6 +116,19 @@ agreement (unit-tier sibling `test_produces_coverage_agreement.py`): a name cove
 failing a shaping the domain applies but the wire does not surface; its component-tier sibling
 `tests/test_queue_shaping.py` asserts the same shaping without the wire.
 
+**The acceptance loop** (`tests/service/fleet/acceptance-loop.spec.ts`) runs a real hub and stepped runner against a
+test-owned mock-forge origin. Its build, review, and land steps finish under both mock harnesses; a trace-only companion
+checks the hub roots, runner invocations, platform request chain and planted-secret containment. At the component tier,
+`tests/test_completion_assembly_attachments.py` pins route-token containment at span and artifact assembly.
+
+- `test_acceptance_loop_one_chunk_ingest_to_landed` — verifies `done`, a merged PR naming the issue and chunk, and a
+  committed file and merge reference in the bare origin's `main`.
+- `test_a_tail_sampling_decision_wait_splits_or_keeps_the_chunk_trace` — the real collector observes the same three-step
+  chunk before sampling. Its short decision drops the later roots and worker command spans; the whole-chunk variant
+  forwards all roots and their platform chain.
+- `test_build_worker_reads_work_item_through_the_passthrough` — the worker fetches its issue body and comment through
+  the runner-to-hub pass-through and lands the fetched text on bare `main`.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb

@@ -15,12 +15,13 @@ uses no browser.
 
 A delivery conflict at the default graph's `deliver` node lands zero repos: with the mock forge's `merge_conflict` lever
 armed, the PR the build node opened is not cleanly mergeable, nothing lands, the bounce routes back to `build`, and the
-route is kept. Its `fleet traces` subtest proves what the [acceptance loop](./delivery-loop.md#test_acceptance_loop)'s
-does, and — the hub running with platform spans on at a zero root sample ratio — also that the deliver step's
-`hub run step` platform spans parent on that trace's exported `hub exec` span: the hub's inline derivation and the sweep
-agree. Its `platform spans` subtest proves what the acceptance loop's does for worker commands under their step roots,
-across the bounce, and scans the export for planted secrets; it skips with `fleet traces`. Route-token containment is
-covered by `tests/test_runner_loop.py` and `tests/test_completion_assembly_attachments.py`.
+route is kept. Its `fleet traces` subtest proves what the
+[service-tier acceptance loop](../commands/test-tiers/service.md#blizzardservice-test)'s does, and — the hub running
+with platform spans on at a zero root sample ratio — also that the deliver step's `hub run step` platform spans parent
+on that trace's exported `hub exec` span: the hub's inline derivation and the sweep agree. Its `platform spans` subtest
+proves what the acceptance loop's does for worker commands under their step roots, across the bounce, and scans the
+export for planted secrets; it skips with `fleet traces`. Route-token containment is covered by
+`tests/test_runner_loop.py` and `tests/test_completion_assembly_attachments.py`.
 
 - `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — proves the chunk's route holds at
   `build` with a `bounce-envelope` artifact recorded, cause `conflict`; the conflicted PR stays open and unmerged at the

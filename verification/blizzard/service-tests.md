@@ -91,6 +91,11 @@ minted with `mockSessions()` (the mock harness's session records in the workspac
 through `raw`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:`
 option of `cli` and `events.open`.
 
+A fleet test that drives delivery passes its `repository()` result to
+`runnerHosts.create({ runnerRepositories: [repo] })` before minting the graph: the host then clones that mock-forge
+origin and its `originHead`, `originTree`, `originLog`, `originFile`, and `originMessage` read the same bare git truth
+the forge merges. The default minted toy origins remain for runner-only tests.
+
 For a pasteable escalation command, call `runnerHost.takeover(command, input)`: the handle executes the command as
 printed, feeds the input to stdin, and uses the host's isolated, mock-fenced environment. A spec never spawns it.
 
