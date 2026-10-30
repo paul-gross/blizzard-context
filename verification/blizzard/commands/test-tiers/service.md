@@ -17,11 +17,15 @@ The daemon-HTTP half runs `npx playwright test` (`mise run playwright`), selecti
 hub with no setup; and `fleet/` as `service-fleet`, a real runner host enrolled in a tenant of the test's own on the
 shared real hub, with a `service-fleet-<profile>` for each subfolder named after a hub profile. One `service-*`
 selection reaches all of them; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python
-half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`), retaining its described
-daemon cases until ported and the external-tool bindings whose subject is Python itself. Both exercise a running daemon
-from outside against the mock fleet. This differs from `blizzard:e2e`, which drives the loop in-process and the served
-board in a real browser. The Python half needs the sibling provisioned `blizzard-mock` worktree (its venv ships the
-mock-fleet scripts, stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
+half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`) and keeps only the cases
+whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks, forge
+old fields), wire parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk
+findings, transcript segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health,
+credential renewal, runner self-test), and nothing else; their shared launchers live in `tests/mock_fleet_support.py`.
+Both exercise a running daemon from outside against the mock fleet. This differs from `blizzard:e2e`, which drives the
+loop in-process and the served board in a real browser. The Python half needs the sibling provisioned `blizzard-mock`
+worktree (its venv ships the mock-fleet scripts, stub IdP, and `mock-claude-code`) and skips cleanly without
+`BLIZZARD_SERVICE=1`.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
