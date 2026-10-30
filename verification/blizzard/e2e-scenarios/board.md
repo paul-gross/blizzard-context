@@ -14,9 +14,9 @@ tier headless over the multi-repo checkout (Chromium via `uv run playwright inst
 
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
 without either or without `BLIZZARD_E2E=1`; for the board-browser and cost modules an unbuilt bundle fails loudly
-instead of skipping. Except for the graphs-diagram, gardening-run-dialog, and project-lens modules, every scenario also
-needs the sibling provisioned `blizzard-mock` worktree (the transcript module needing only its forge-registered repo,
-never spawning a runner). The in-process event-log function needs only the worktree, no built bundle or Chromium.
+instead of skipping. Except for the graphs-diagram and gardening-run-dialog modules, every scenario also needs the
+sibling provisioned `blizzard-mock` worktree (the transcript module needing only its forge-registered repo, never
+spawning a runner). The in-process event-log function needs only the worktree, no built bundle or Chromium.
 
 ## test_board_browser_e2e
 
@@ -153,14 +153,3 @@ served hub, needing just the built bundle and an installed Chromium.
   the linked scope and submits, then proves against a live hub read that the run landed against it, and that the
   confirmation names a real `ch_`-prefixed chunk id and links to `/board/chunk/<id>`, rendering no board of its own.
   Closing the confirmation tears the dialog down back to the routines list.
-
-## test_project_lens_browser_e2e
-
-The board's project lens in a real router against the hub's own project resolution. Needs no runner or forge traffic,
-so, like the graphs-diagram module, it stands up only the served hub, needing just the built bundle and an installed
-Chromium.
-
-- `test_project_lens_deep_links_resolve_in_the_browser` — creates a project, then moves it to a new slug. Proves a deep
-  link to `/p/default/board` opens the board under the `default` project's lens; a link naming the project by the slug
-  it has left, or by its id, is rewritten in place to its current slug; and a link naming no project of the tenant opens
-  the same view on All, with a notice.

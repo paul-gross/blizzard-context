@@ -69,3 +69,8 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   registered host running two runners is the panel's one sign-in client: the legacy `/runners/<id>/board` link bounces
   to `authorize` with the host id as `client`, exactly one host session cookie results, and the second runner's board
   loads with no second bounce.
+- `tests/ui/project-lens.spec.ts` — `test_project_lens_deep_links_resolve_in_the_browser`. The board's project lens in a
+  real router against the hub's own project resolution. Creates a project, then moves it to a new slug. Proves a deep
+  link to `/p/default/board` opens the board under the `default` project's lens; a link naming the project by the slug
+  it has left, or by its id, is rewritten in place to its current slug; and a link naming no project of the tenant opens
+  the same view on All, with a notice.
