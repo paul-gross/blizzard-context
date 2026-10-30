@@ -51,3 +51,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   drives a chunk through a cross-graph migration to `done`; the served board's done card opens its detail dock showing
   the chunk id, one migration step and a per-graph label in the timeline, and the `/graphs` explorer still lists both
   graphs of the history.
+- `tests/ui/auth/login-session.spec.ts::test_browser_login_dance_and_mid_stream_session_expiry` — on the `ui-auth` hub,
+  with the stub IdP's profile lever choosing who the browser resolves to: the signed-out landing shows one provider
+  button; an uninvited dance is refused as `invite_only` with no `bz_session`; invited as guest through
+  `POST /api/invitations` and the board's `/invite/<token>` page, the board is read-only with Promote hidden; promoted
+  through `PUT /api/members/{user_id}`, a reload shows Promote; and a second page's logout through `nav-logout` sends
+  the first, still-open page to `/login` with no reload.

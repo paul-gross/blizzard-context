@@ -5,47 +5,14 @@
 
 # Browser-auth e2e scenarios (`bzh:e2e-auth`)
 
-The scenarios driving a real browser through the human-auth surfaces — the hub's own invite-only login dance and the
-multi-daemon runner SSO bounce. Both modules' hubs mark their stub-IdP provider `emails_authoritative`: an invitation
-admits an account only on a verified email from a provider so marked.
+The scenarios driving a real browser through the multi-daemon runner SSO bounce. The hub marks its stub-IdP provider
+`emails_authoritative`: an invitation admits an account only on a verified email from a provider so marked. The hub's
+own invite-only login dance runs as `tests/ui/auth/login-session.spec.ts`.
 
-The login module needs the built bundle `blizzard hub host` serves (`mise run e2e` declares `depends = ["web-build"]`),
-the federation module the bundle the runner itself serves; both need the sibling provisioned `blizzard-mock` worktree
-with its stub IdP plus installed Chromium, skip cleanly without `BLIZZARD_E2E=1` or the provisioned worktree/stub IdP,
-and take no `chromium_available` guard — missing Chromium or an unbuilt bundle fails loudly. The reacquisition function
+The federation module needs the bundle the runner itself serves, the sibling provisioned `blizzard-mock` worktree with
+its stub IdP plus installed Chromium, skips cleanly without `BLIZZARD_E2E=1` or the provisioned worktree/stub IdP, and
+takes no `chromium_available` guard — missing Chromium or an unbuilt bundle fails loudly. The reacquisition function
 adds no stub-IdP need beyond `_oauth_hub`/`require_stub_idp`.
-
-## test_login_session_e2e
-
-The invite-only login dance, an invitation's acceptance, and the mid-stream session-expiry redirect: a real Chromium
-over the served board under `auth.mode = "oauth"` against the real `blizzard-mock` stub IdP (`blizzard-mock-idp`), every
-seam real, no network beyond the two local subprocesses.
-
-- `test_browser_login_dance_and_mid_stream_session_expiry` — proves the whole sequence below in one loaded page:
-  - An unauthenticated hit is gated to `/login` by the app's own 401 seam, rendering the configured provider button
-    (`login-provider-<name>`) and no board chrome (`board-header` absent) — never an auto-redirect even for a single
-    provider.
-  - Clicking the provider button drives the real OAuth authorize-then-callback dance against the stub IdP for a person
-    the hub has never seen and holds no invitation for. The hub is invite-only, so the dance lands back on
-    `/login?refusal=invite_only` — the login page rendered, no board chrome, and no `bz_session` cookie: a refused
-    sign-in writes nothing.
-  - An invitation into the store's one tenant as `guest`, for the stub IdP's verified email, is minted in the store
-    (`tests/support.py`'s `invite`, the suite's mint-what-no-route-reaches pattern for fixture state) and opened as
-    `GET /api/auth/<provider>/authorize?invite=<token>`. The dance accepts it and sets the session cookie, and the board
-    then renders its shell with the SSE stream open (`board-shell` present) over a seeded not-ready chunk whose card
-    renders no Promote control: the end-to-end proof a `guest` reads everything and mutates nothing. The seeded graph,
-    chunk, and memberships all name the store's one tenant.
-  - A newer `contributor` membership fact written directly in the store, then a reload: that same card's Promote control
-    is present.
-  - With every `sessions` row deleted (an unambiguous expiry stand-in — the resolve path treats missing and expired
-    identically) and the hub restarted, the restart force-drops the open SSE stream, the reconnect receives a 401
-    through the fetch transport's one status-reading seam (`sse.service.ts`, the `authFailed` channel), and the app
-    routes back to `/login` — the auth-failure channel proven end to end rather than an unbounded retry loop.
-  - The redirect wait is a named 45s constant (not the file's 20s default), clearing `SseService`'s backoff ladder
-    (1s/2s/4s/8s/16s/30s, ~30s cumulative) plus the restarted hub's startup: reconnects racing a still-starting daemon
-    are refused rather than answered 401, so which attempt carries the 401 is not fixed, and a deadline under the ladder
-    fails a working redirect — the same shape `test_runner_session_reacquisition_e2e` bounds at its own 40s inline
-    literal.
 
 ## test_runner_federation_e2e
 
