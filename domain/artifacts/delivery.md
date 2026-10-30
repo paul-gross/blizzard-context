@@ -19,25 +19,29 @@ worker node's judgement ([edges](../graphs/edges.md)).
 - **Per-repository landing, with reconciliation.** A delivery action that lands a multi-repository chunk serially per
   repository records its own `merged/<repo>` marker immediately after each push; a re-run — after a crash, or a
   kicked-back redelivery — skips every repository whose marker is already durable. The engine imposes no per-repository
-  landing shape of its own, but reads the `merged/<repo>` marker convention to tell a fully-landed continuation apart
-  from a genuinely incomplete delivery ([outcome protocol](../../standards/hub-nodes/outcome-protocol.md)). Even
-  chunk-atomicity — checking every repository merges before pushing any — is one action's construction, not a property
-  of delivery: a policy could advance repositories one at a time and accept a partial land, recovered the same way, per
-  repository.
+  landing shape of its own, but reconciles landed and matching no-code resolutions to distinguish finished work from
+  incomplete delivery ([outcome protocol](../../standards/hub-nodes/outcome-protocol.md)). Even chunk-atomicity —
+  checking every repository merges before pushing any — is one action's construction, not a property of delivery: a
+  policy could advance repositories one at a time and accept a partial land, recovered the same way, per repository.
 - **Delivery references.** A policy that opens a PR records it as a `delivery-pr/<repo>/<number>` marker — durable,
   idempotent, written mid-run as soon as the PR is known, before any wait or merge; it is a review reference, not a
   signal that a person must merge. A replacement PR gets its own marker, so the latest recorded reference for a repo —
   latest in the order the references were durably written — is open and superseded references remain closed history; a
   reference recorded under the bare `delivery-pr/<repo>` name is read the same way. Where two references' write order
   was never recorded and they share one write instant, which one is latest cannot be known; the read's deterministic
-  pick is not evidence of the later write. The repo's `merged/<repo>` marker records the landed revision, not the
-  submitted branch tip. A landing that changes nothing lands at the target branch's revision, so that revision is its
-  landed revision. A delivery that cannot establish its landed revision records no landing for that repository. A policy
-  that deliberately parks for a person's merge may author an `awaiting-external-merge` marker in the same delivery epoch
-  as its PR reference; only that marker signals a human merge wait. The hub projects these markers alongside per-repo
-  landing facts: closed PRs stay in history, while landed rows name only repos with a landed revision. What each
-  marker's content carries is the hub action contract's to state
+  pick is not evidence of the later write. The repo's `merged/<repo>` marker records a real landed revision, not the
+  submitted branch tip. A delivery that cannot establish its landed revision records no landing for that repository. A
+  policy that deliberately parks for a person's merge may author an `awaiting-external-merge` marker in the same
+  delivery epoch as its PR reference; only that marker signals a human merge wait. The hub projects these markers
+  alongside per-repo landing facts: closed PRs stay in history, while landed rows name only repos with a landed
+  revision. What each marker's content carries is the hub action contract's to state
   ([action purity](../../standards/hub-nodes/action-purity.md)).
+- **No code to land.** An empty commit set completes without a landing. A submitted repository resolves without a merge
+  only when its submitted commit is proven contained in the intended base and its current branch and head are safe; an
+  unreadable or refused comparison is not proof. Its durable no-code evidence matches the current declaration, so replay
+  skips that work but a changed declaration does not. Resolved repositories need no flow resource and count as finished
+  for reconciliation, not as landings. A PR reference for a no-code resolution is history, not an open landing wait.
+  Mixed delivery records landing facts, revisions, events, and traces only for repositories actually merged.
 - **Conflict is a judged, authored outcome**, not an engine special case: a dirty repository is one of the action's own
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
