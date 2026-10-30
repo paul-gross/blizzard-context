@@ -1998,19 +1998,23 @@ def _collect_playwright(blizzard_root: Path) -> dict[str, set[str]] | None:
             return None
         collected: dict[str, set[str]] = {}
 
-        def visit(suite: dict, parents: list[str], *, root: bool = False) -> None:
+        def visit(suite: dict, parents: list[str], *, root: bool = False, source: str | None = None) -> None:
             title = suite["title"]
             if not isinstance(title, str):
                 raise ValueError("invalid suite title")
+            if root:
+                source = suite.get("file")
             names = parents + ([] if root else [title])
             for spec in suite["specs"]:
                 for test in spec["tests"]:
                     if test["projectName"].startswith("service-") or test["projectName"] == "journey" or re.fullmatch(r"ui(-.+)?", test["projectName"]):
-                        path = (root_dir / spec["file"]).resolve().relative_to(blizzard_root.resolve()).as_posix()
+                        # A helper may register a test from another file (e.g. traced()); the root
+                        # suite names the spec that owns it, while spec.file names the helper.
+                        path = (root_dir / (source or spec["file"])).resolve().relative_to(blizzard_root.resolve()).as_posix()
                         collected.setdefault(path, set()).add(" ".join(names + [spec["title"]]))
                         collected[path].add(spec["title"])
             for child in suite.get("suites", []):
-                visit(child, names)
+                visit(child, names, source=source)
 
         for suite in suites:
             visit(suite, [], root=True)

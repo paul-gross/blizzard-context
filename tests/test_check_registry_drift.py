@@ -881,6 +881,17 @@ class RunEffectivenessGateTests(unittest.TestCase):
 
 
 class PlaywrightCollectionTests(unittest.TestCase):
+    def test_helper_registered_case_belongs_to_its_root_spec(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            listing = {"config": {"rootDir": str(root / "tests")}, "errors": [], "suites": [
+                {"title": "service/fleet/case.spec.ts", "file": "service/fleet/case.spec.ts", "specs": [
+                    {"file": "harness/fixtures.ts", "title": "case_traced", "tests": [{"projectName": "service-fleet"}]}
+                ], "suites": []}
+            ]}
+            with mock.patch.object(drift.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=json.dumps(listing))):
+                self.assertEqual(drift._collect_playwright(root), {"tests/service/fleet/case.spec.ts": {"case_traced"}})
+
     def test_ui_projects_join_service_projects_and_setup_projects_stay_out(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

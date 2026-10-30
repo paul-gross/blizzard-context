@@ -23,6 +23,7 @@ every case with a reason naming it; set but with no source found skips naming `B
 - `tests/winter/test_winter_provider_real_cli.py` — acquire returns a clean worktree and resets the previous tenant's
   dirt, and a re-acquire recovers stale feature-branch tracking, over a real `winter ws init`.
 - `tests/winter/test_winter_chunk_lands.py` — one chunk built, reviewed, and delivered to bare `main` over
-  `provider="winter"`, the winter twin of `test_basic_workspace_chunk_lands_without_winter`.
+  `provider="winter"`, the winter twin of the
+  [basic workspace delivery service test](./service.md#blizzardservice-test).
 
 The provider's allocation logic against fake winter and git seams stays at the unit tier.
