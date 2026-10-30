@@ -144,6 +144,14 @@ checks the bounce link, hub action ancestry and planted-secret containment.
 - `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — the chunk remains running at `build`,
   with one conflict envelope, no merged PR and an unchanged bare `main`.
 
+**Escalation** (`tests/service/fleet/escalation.spec.ts`) exhausts a build's retry budget with two verdict-less
+attempts, then executes the surfaced takeover command under the test host's fenced environment with human input. Its
+trace companion pins supersession, error escalation and runner invocation identity.
+
+- `test_retries_exhausted_escalates_and_takeover_resumes_session` — `needs_human` exposes both command shapes; the raw
+  command opens the same session, advances Claude Code's persisted turn and records its resume message, or prints the
+  OpenCode session-opening banner.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb

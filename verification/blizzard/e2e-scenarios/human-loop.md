@@ -8,19 +8,6 @@
 The scenarios where a chunk stops for a person — a retry budget exhausted, a question asked, a decision gated ahead of
 deliver.
 
-## test_escalation_e2e
-
-Two verdict-less exits exhaust the node's retry budget and escalate to `needs_human`. It runs under both mock harnesses,
-and its `fleet traces` and `runner traces` subtests prove what the
-[service-tier acceptance loop](../commands/test-tiers/service.md#blizzardservice-test)'s do.
-
-- `test_retries_exhausted_escalates_and_takeover_resumes_session` — proves the chunk derives `needs_human` and the
-  surfaced takeover command, run verbatim, opens the parked mock session — under Claude Code it resumes it (its
-  persisted turn advances); `mock-opencode`'s interactive shape only names it, never automating a turn; the escalation's
-  `wrapped_takeover_command` is also shape-checked — the runner-composed
-  `blizzard runner takeover <chunk_id> --dir <resolved runner dir>` form, checked against the run's own resolved runner
-  directory — though the verbatim raw command is the one executed.
-
 ## test_gate_decision_e2e
 
 A graph with a human `approve-gate` ahead of deliver. Its `fleet traces` subtest proves what the acceptance loop's does.
