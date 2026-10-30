@@ -30,6 +30,10 @@ of the behavioral assertions. After finishing the scenario, poll `traceSink.span
 runner invocation for that chunk have arrived, then apply the dictionary-driven trace oracle. A completed host step
 alone is not an export barrier for both daemons.
 
+Before a negative leak scan of the full export, stop the companion's `runnerHost` and `freshHub` in that order, then
+read `traceSink.spans()` again. Their shutdown flushes close the worker-command and hub-export windows; the earlier
+root-and-invocation poll alone does not prove that a later command span cannot still arrive.
+
 **Why.** The harness fixtures own daemon lifetime, tenant routing, cleanup, and test isolation. A bare request context
 reaches no tenant; file-wide mutable setup crosses parallel tests.
 
