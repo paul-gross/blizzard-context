@@ -1133,7 +1133,7 @@ done.
 4. `GET /api/admin/invariants` bearing the runner's token.
 
 **Passes when.** Step 1 answers `200` with an empty `violations` list on both routes; step 2 answers `200` with a
-violation whose `detail` names the breached tenant's slug; step 3 draws exactly one
+violation whose `detail` names the breached tenant by id; step 3 draws exactly one
 `409 {"code": "invariants_in_progress"}`; and step 4 is refused.
 
 ### `blizzard:manual-live-routine`
