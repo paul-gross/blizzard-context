@@ -173,6 +173,16 @@ browser assertion belongs to [`blizzard:ui`](./ui.md#blizzardui).
 - `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — the chunk re-pins to the target, records
   one migration, completes its build and delivery there, and changes the bare origin's `LANDED.md` history exactly once.
 
+**Mixed-harness lineage** (`tests/service/fleet/mixed-harness.spec.ts`) runs a single chunk through a Claude Code build
+and an OpenCode review, with a stopped-and-restarted host at the build-judge boundary and another restart during the
+review's held worker checkpoint. Runner lease reads establish session/model/effort/version and declaration continuity;
+hub usage and derived analytics agree per node, and each committed file lands exactly once. The trace companion checks
+both invocation identities. At the component tier, `tests/test_runner_restart_resume.py` pins resume-intent persistence
+and clearing.
+
+- `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` — one traversal crosses the two
+  harnesses and survives both operator restarts without retrying the OpenCode lease or duplicating either origin commit.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb
