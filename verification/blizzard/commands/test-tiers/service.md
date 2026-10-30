@@ -87,6 +87,18 @@ by the forge's own `unreachable` lever, since a process kill would wipe the forg
 `forge-status-source-skipped` event naming the source id in `GET /api/events`, leaves chunk reads served, and the label
 is intact once the lever clears.
 
+**The exported events** (`tests/service/fleet/egress-events.spec.ts::test_the_exported_events_agree_with_the_hubs_own_counts`)
+runs on a fresh hub exporting NDJSON, with a real runner host shipping transcripts, every hub and host pass stepped. One
+forge, hub and runner carry two chunks: a Claude Code build and an OpenCode review, whose workers read files, invoke a
+skill and spawn an agent whose child session reads a file, and an ask answered by a person, which extends its transcript
+through the resumed session. The case proves `events_current` grouped by file, skill, agent type and node equals
+`blizzard hub analytics summary counts-{files,skills,agent-types,nodes}`, with paths made relative to the worker's
+working directory; the docs' files-a-station-read-last-week recipe names the review node's reads, the child session's
+included; no row, manifest or schema carries the planted prompt, tool input or output, key, question or working
+directory, or an event's payload; and after a forced `blizzard hub analytics re-derive` and a real
+`blizzard runner transcript reship` the export holds a `dropped` row for the superseded segment and the counts still
+equal the hub's.
+
 **Runner release policy** (`tests/service/runner/release.spec.ts`) exercises two runners spending distinct sampled
 subscriptions on one stepped host. A utilization line crossed during a checkpointed build releases the next node to an
 admitting neighbour; when both decline, their completed passes leave the chunk ready and unheld until either gate opens.

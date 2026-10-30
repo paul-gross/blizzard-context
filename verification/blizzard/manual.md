@@ -940,8 +940,9 @@ these two reads is not measured.
 5. Run the docs' two DuckDB recipes over the same directory and record each answer beside Grafana's. Change nothing in
    `blizzard` between the reads.
 
-6. Run `BLIZZARD_E2E=1 uv run pytest tests/e2e/test_egress_events_e2e.py --basetemp <dir>` and copy its NDJSON `export`
-   directory the same way. In ClickHouse, create a table over the `events` files from the manifests' file list, and
+6. Run `mise run playwright -- --project=service-fleet tests/service/fleet/egress-events.spec.ts`; the hub's NDJSON
+   export is the `egress` directory under that test's `fresh/` directory in the run's `tests/.run/<run>/`. Copy it the same
+   way. In ClickHouse, create a table over the `events` files from the manifests' file list, and
    paste `contracts/egress/events_current.sql` over it unchanged as `events_current`.
 7. In Grafana, add a table panel of the files each station read in the last seven days and one of counts by skill, from
    `events_current` alone. Run the docs' `files-a-station-read-last-week` recipe and a count by `subject` over

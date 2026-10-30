@@ -67,8 +67,11 @@ importing `node:http` or `node:net`, and reads a branch head in its world's bare
 history and file text, each `undefined` for a repo, ref or path that is not there. `runnerWinterTrap` puts a `winter`
 that records its invocation first on every host's `PATH` (a `runnerEnv.PATH` beside it is refused), and
 `winterInvoked()` reports it. A `fresh-hub` test whose `hubConfig` names `${egress}` as `egress.directory` reads the
-Parquet the hub exports through the `egress` fixture's `query` and `recipe`, which run the docs' own DuckDB load and the
-dictionary's views once a manifest names the dataset. It reads what the mock fleet wrote into the world the fixture
+files the hub exports, in the format `egress.format` names (NDJSON by default), through the `egress` fixture's `query` and
+`recipe`, which run the docs' own DuckDB load and the dictionary's views once a manifest names the dataset: `steps` and
+`invocations` through `<dataset>_newest`, `events` through `events_current` and `events_by_version`. `exports(dataset)`
+asks once whether a manifest names it, `rowTexts(dataset)` renders every copy of every row as text, and `documents()`
+gives the text of the manifests and schemas, so a scan that a value never left needs no file read of its own. It reads what the mock fleet wrote into the world the fixture
 minted with `mockSessions()` (the mock harness's session records in the workspace) and `opencodeExports()` (the
 `mock-opencode` export documents under the host's own transcripts root). A runner's client names each route a spec reads
 (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`, `heartbeat`), so a spec reaches no route
