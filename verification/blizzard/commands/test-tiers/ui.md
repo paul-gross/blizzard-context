@@ -114,3 +114,13 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   populated fleet. The second claims a chunk as a runner and ships it a subscription-only `usage.recorded` fact, an
   estimate with no billed cost, and proves the "Fleet spend · today" panel and the running chunk's card both render the
   one `~`-marked figure, never a plain billed `$0.00`.
+- `tests/ui/graphs-diagram.spec.ts` — `test_graphs_diagram_renders_in_the_browser`,
+  `test_graphs_diagram_selection_in_the_browser` and `test_diagram_geometry_matches_the_rendered_text`. The graph
+  explorer's diagram over a live hub. The first opens a minted build, review and deliver graph from `/graphs` and proves
+  its SVG DAG draws every declared node, the START connector lands on the entry node, an advance edge renders, and the
+  review-to-build back-edge is derived as a `retry` edge. The second proves node, edge and self-loop selection over the
+  same graph, clicking a point on a rendered curve off its label's midpoint, since jsdom cannot hit-test geometry; empty
+  canvas clears the selection. The third syncs the packaged graphs, enumerates them from `GET /api/graphs`, and proves
+  each renders a diagram, or the fallback only when an edge leaves the graph, and that a graph authoring a targeted
+  resume renders its `resume:<node>` meta line. The measurer contract the boxes are sized by is held by
+  `web:shell-sweep`.

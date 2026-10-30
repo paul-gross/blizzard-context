@@ -14,8 +14,8 @@ tier headless over the multi-repo checkout (Chromium via `uv run playwright inst
 
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
 without either or without `BLIZZARD_E2E=1`; for the board-browser module an unbuilt bundle fails loudly instead of
-skipping. Except for the graphs-diagram module, every scenario also needs the sibling provisioned `blizzard-mock`
-worktree. The in-process event-log function needs only the worktree, no built bundle or Chromium.
+skipping. Every scenario also needs the sibling provisioned `blizzard-mock` worktree. The in-process event-log function
+needs only the worktree, no built bundle or Chromium.
 
 ## test_board_browser_e2e
 
@@ -52,30 +52,3 @@ The operational event log's in-process half; its browser half runs as `tests/ui/
   verdict-less exit exhausts its retry budget, the runner escalates, and the emission surfaces a critical `worker-lost`
   operational event that reads back off the live `GET /api/events` and fans out as an `event-logged` SSE frame read off
   the stream's replay tail — the runner-emit, hub-fold, read-and-fan-out chain, no browser.
-
-## test_graphs_diagram_browser_e2e
-
-The graph-explorer diagram: a real Chromium over the served board visits `/graphs` and opens a minted graph's detail
-from the explorer. The module needs no runner and no forge traffic — a diagram is a pure read of an immutable
-`GraphView` — so it stands up only the served hub, needing just the built bundle and an installed Chromium; it skips
-cleanly without `BLIZZARD_E2E=1` or without Chromium, but an unbuilt bundle fails loudly.
-
-- `test_graphs_diagram_renders_in_the_browser` — asserts the `<fleet-graph-diagram>` SVG DAG renders against the built
-  bundle from real minted data — every declared node drawn, the START marker's connector landing on the graph's own
-  entry node (which node is the entry survives only as laid-out geometry), an advance edge, and the review-to-build
-  back-edge derived as a `retry` edge, a structural kind no wire field carries — and names the ever-present
-  `graph-diagram-fallback` path a layout failure shows instead of a broken page.
-- `test_graphs_diagram_selection_in_the_browser` — proves node, edge, and self-loop selection over the same fixture
-  extended with a self-loop (`build`'s own `retry` choice): clicking the `build` node selects it, marks its incident
-  edges (self-loop included) `data-incident`, and fills the detail pane with its fields and prompt text; clicking a
-  point on the advance edge's curve — computed off the visible path's `getPointAtLength`, offset from the label pill's
-  midpoint — selects that edge, the one tier proving a click merely near a curve actually hits it (jsdom's
-  `web:unit-test` does no geometry, proving only the companion-hit-path mechanism); the self-loop selects on the same
-  terms; empty canvas clears the selection and restores the neutral hint.
-- `test_diagram_geometry_matches_the_rendered_text` — proves every box the layout measurer sized fits the text Chromium
-  actually drew, reconstructed from the rendered SVG's own advance widths rather than a canvas of its own (which would
-  only prove Chromium's measurers agree with each other); it sweeps every graph blizzard ships, discovered from the tree
-  so a new one is covered the day it lands, and a shipped graph rendering the diagram-unavailable fallback is admitted
-  only when it routes an edge out of the graph — the one shape `layoutGraph` documents refusing, today the triage router
-  — and is a layout regression otherwise. Graphs that author targeted resume sessions must render that metadata, and at
-  least one shipped graph must keep that branch of the proof live.
