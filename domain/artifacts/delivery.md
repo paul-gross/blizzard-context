@@ -42,11 +42,18 @@ worker node's judgement ([edges](../graphs/edges.md)).
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
   against.
-- **The policy is the action's.** Which policy a chunk gets is a fact about the graph it travels, and the policy is
-  whatever its action does. A graph adopts a policy by declaring its action in `deliver`, never by an engine switch;
-  [feature delivery](../../workflows/feature-delivery.md) describes the shipped policy. Each commit pointer is resolved
-  to its own repository record, which names the forge record it lands on; whether a chunk may mix forges, owners, base
-  branches or credentials is the policy's to decide.
+- **The policy is the repository's.** How a change lands is a fact about the repository it lands in: each repository
+  record carries a landing policy, and the `land` action runs each repository's own. The one policy is `merge-on-checks`
+  — every repository's unless stated otherwise — which opens the change, keeps it up to date with its base, and merges
+  it once its checks are green; a policy is accepted only on a forge that offers every capability it needs. The graph
+  still decides where landing happens, by declaring its action in `deliver`;
+  [feature delivery](../../workflows/feature-delivery.md) describes the shipped graph. Each commit pointer is resolved
+  to its own repository record, which names the forge record it lands on, so a chunk may mix forges, owners, base
+  branches and credentials.
+- **Landing follows the project's order.** A multi-repository visit steps every unlanded repository's policy, then lands
+  them in its project's landing order ([../projects.md](../projects.md) §Where a chunk may land). The order and each
+  repository's policy are the visit's terms, taken at its first turn and kept through every retry and restart, so an
+  edit made while a visit waits reaches only the next visit.
 - **A chunk delivers one project's work.** A chunk lands only in repositories its project links, and a commit naming one
   it does not link is refused before any push — [../projects.md](../projects.md) §Where a chunk may land owns the rule,
   the moment the links are read, and the refusal.
