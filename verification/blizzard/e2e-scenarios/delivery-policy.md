@@ -88,7 +88,8 @@ hub admits only behind `BLIZZARD_TEST_ACTIONS=1` beside `BLIZZARD_CRASH_FENCE=1`
 
 The flow record, kept by the hub's own flow driver over a real hub: a chunk held pending at `deliver` — the mock forge's
 `checks_pending` lever armed — then landed once the lever clears. Flow invariant checks are covered by
-`tests/test_invariant_checker.py`.
+`tests/test_invariant_checker.py`; the migration-boundary boot order of pending visits is covered by
+`tests/test_flow_driver.py::test_a_store_carried_across_the_flows_revision_boots_pending_visits_in_entry_order`.
 
 - `test_a_held_chunk_is_submitted_and_its_landing_supersedes_it` — proves a chunk held at the hub node is submitted to
   its branch's flow and polls through turns, and once the lever clears, the turn that lands it closes that submission
