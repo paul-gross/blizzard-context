@@ -59,10 +59,11 @@ The hub registration and runner status agree on the resolved project; a peek und
 the promoted default chunk with its project id and slug.
 
 **Checks-gate enforcement** (`tests/service/fleet/checks-gate.spec.ts`) drives a real forge, hub and stepped runner.
-`test_checks_gate_bounces_a_red_pass_then_lands_when_green` proves a red gated `pass` bounces and the second build
-lands; `test_a_red_check_through_a_non_gated_fail_routes_normally` proves an ungated `fail` records a normal history
-transition before the green pass lands. Both assert two builds on main. The component-tier
-`test_checks_gate_agreement.py` checks the runner gate and hub backstop against a decision matrix.
+`tests/service/fleet/checks-gate.spec.ts::test_checks_gate_bounces_a_red_pass_then_lands_when_green` proves a red gated
+`pass` bounces and the second build lands;
+`tests/service/fleet/checks-gate.spec.ts::test_a_red_check_through_a_non_gated_fail_routes_normally` proves an ungated
+`fail` records a normal history transition before the green pass lands. Both assert two builds on main. The
+component-tier `test_checks_gate_agreement.py` checks the runner gate and hub backstop against a decision matrix.
 
 **PR and CI delivery policy.** `tests/service/fleet/delivery-pr-ci.spec.ts` drives the generic hub `land` action through
 an authored graph with the shipped choices, a brisk poll cadence, and conflict and failure edges back to `build`:
