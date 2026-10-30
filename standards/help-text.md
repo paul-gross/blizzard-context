@@ -48,3 +48,4 @@ def pause(...) -> None:
   worded in.
 - `bzh:one-prose-home` in [./one-prose-home.md](./one-prose-home.md) — `--help` as a published surface, and the pointer
   form it takes.
+- `bzh:cli-get-verb` in [./cli-get-verb.md](./cli-get-verb.md) — the name of a verb that reads one thing.

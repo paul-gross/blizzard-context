@@ -38,7 +38,7 @@ change needs with `tool:mock-data`, or through the real ingest path when ingest 
 3. Drive the behavior with `curl` against `$BZ_HUB_URL/api/…` or with the CLI verb. The app repo's
    `openapi/hub.openapi.json` carries every route and its shapes, and `blizzard hub --help` the verb tree.
 4. Confirm it through a second surface, so the observation is the hub's state rather than one surface's own echo: an API
-   write read back through `blizzard hub status` or `blizzard hub chunk show`, a CLI write through the route that serves
+   write read back through `blizzard hub status` or `blizzard hub chunk get`, a CLI write through the route that serves
    it, a read compared against the seed or the drive that put the state there.
 5. Keep the commands run and their output with the change under verification.
 
