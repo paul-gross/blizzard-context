@@ -22,8 +22,9 @@ with `fleet traces`. Its `platform spans` subtest runs the hub and the runner wi
 ratio, the runner joined to the hub through `runner init` and ticking over the one traced process graph its local API
 serves, and proves every worker command's span sits under its step's root with the runner's request as its child; a
 `runner work-items` command carries on to the runner's call to the hub, the hub's request under it and a store query
-under that. It scans the raw exported file for the workers' lease tokens, the runner's route token, its hub bearer and
-the sentinel body of the review's findings artifact, and fails on any; that subtest skips with `fleet traces`.
+under that. It scans the raw exported file for planted secrets and the sentinel body of the review's findings artifact;
+that subtest skips with `fleet traces`. Route-token containment is covered by `tests/test_runner_loop.py` and
+`tests/test_completion_assembly_attachments.py`.
 
 - `test_acceptance_loop_one_chunk_ingest_to_landed` — asserts that the commit is reachable from bare `main`, that the
   hub's facts derive `done`, that the merged PR's body names the issue's forge reference and the chunk id, and that bare
