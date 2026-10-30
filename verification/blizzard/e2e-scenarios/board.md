@@ -44,20 +44,6 @@ The browser half of the e2e tier: a real Chromium driven by Playwright over the 
   landing frees the runner's only agent slot in the same tick — FILL's reconcile releases the survivor's binding — so
   from that instant the brake alone holds the remaining ready chunk in the lane.
 
-## test_glance_board_e2e
-
-The mobile glance board at a real ~390px width under `bzh:narrow-viewport-tier-rule` (a consumer of the e2e tier's
-`narrow_viewport` fixture); `/board` routes to the glance shell.
-
-- `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` — captures and holds open the
-  `GET /api/chunks` read, proves the glance shell renders `glance-list-loading` and no `glance-list-empty` row while the
-  read is in flight, then releases the held route, landing the card and clearing loading — the empty state never shown
-  on a populated fleet.
-- `test_the_glance_board_shows_a_cost_estimate_never_a_plain_billed_zero` — claims a chunk with no billed cost at all,
-  pushes it a subscription-only `usage.recorded` fact (an estimate, no billed cost), and proves the "Fleet spend ·
-  today" panel and the running chunk's card both render the one `~`-marked figure — never a plain billed `$0.00`
-  standing in for a window whose only spend is an estimate.
-
 ## test_event_log_e2e
 
 The operational event log's in-process half; its browser half runs as `tests/ui/event-log.spec.ts`.

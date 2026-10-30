@@ -104,3 +104,13 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   `~`-marked figure on the card and the dock, folds into the header's fleet total under both marks, and marks no chunk
   partial. The partial marking and the per-step inline match are also fenced in `web:unit-test` and
   `blizzard:component-test`.
+- `tests/ui/glance-board.spec.ts` —
+  `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` and
+  `test_the_glance_board_shows_a_cost_estimate_never_a_plain_billed_zero`. The mobile glance board at the narrow
+  viewport under `bzh:narrow-viewport-tier-rule`, where `/board` routes to the glance shell. The first steps a runner
+  host until a verdict-less build escalates its chunk to `needs_human`, then captures and holds open the
+  `GET /api/chunks` read, proves the glance shell renders `glance-list-loading` and no `glance-list-empty` row while the
+  read is in flight, and releases it, landing the card and clearing loading: the empty state is never shown on a
+  populated fleet. The second claims a chunk as a runner and ships it a subscription-only `usage.recorded` fact, an
+  estimate with no billed cost, and proves the "Fleet spend · today" panel and the running chunk's card both render the
+  one `~`-marked figure, never a plain billed `$0.00`.
