@@ -6,10 +6,10 @@
 # Delivery-loop e2e scenarios (`bzh:e2e-delivery-loop`)
 
 The scenarios for the canonical `build → review → deliver` shape, the chunk shapes that ride it, the graph edges that
-carry a chunk past its own graph or past the land, and the first offer that brings a freshly set-up runner into it.
+carry a chunk past its own graph or past the land.
 
-The spike, post-merge, and migration modules each need the sibling provisioned `blizzard-mock` worktree and skip without
-`BLIZZARD_E2E=1`, and run in the tag `release` workflow's full e2e tier, not the `gate`/`pr` single-repo checkout.
+The migration module needs the sibling provisioned `blizzard-mock` worktree and skips without `BLIZZARD_E2E=1`; it runs
+in the tag `release` workflow's full e2e tier, not the `gate`/`pr` single-repo checkout.
 
 ## test_acceptance_loop
 
@@ -38,25 +38,6 @@ that subtest skips with `fleet traces`. Route-token containment is covered by `t
   through the runner-to-hub work-item pass-through and commits the fetched text, asserted reachable from bare `main` —
   MVP criterion 1 at the e2e tier.
 
-## test_basic_workspace
-
-A chunk runs through the built-in folder-backed provider against a local bare git origin, with a trap that fails if any
-child invokes winter. The mock harness owns creation of the feature branch; the provider allocates detached worktrees.
-
-- `test_basic_workspace_chunk_lands_without_winter` — builds, reviews, and delivers a real chunk to bare `main` from a
-  plain workspace directory, with the hub deriving `done` and no winter workspace or CLI invocation.
-
-## test_runner_serves_default_e2e
-
-A freshly set-up runner is offered work on its first registration, with no configuration edit between. Needs the sibling
-provisioned `blizzard-mock` worktree for its forge.
-
-- `test_a_freshly_initialized_runner_is_offered_a_default_chunk_on_first_registration` — joins a runner to a real hub
-  daemon through `blizzard-runner init`, whose scaffolded config serves `default`; one `blizzard-runner tick` registers
-  it, leaves the config byte-for-byte as scaffolded, and stores the hub's resolved answer in the runner's own store. The
-  hub's matched peek, asked under the runner's own token, then offers it the promoted chunk of `default`, naming the
-  project's id and slug.
-
 ## test_review_cycle_e2e
 
 The cycle where review fails once, then passes, and the chunk lands. It runs under both mock harnesses, and its
@@ -65,17 +46,6 @@ The cycle where review fails once, then passes, and the chunk lands. It runs und
 - `test_review_cycle_fails_once_then_delivers` — proves the findings asset and the fail edge's `prompt_addendum` thread
   back into build's re-entry envelope — the addendum's committed marker lands on bare `main` — with build running twice
   before review passes and it lands.
-
-## test_post_merge_node_e2e
-
-The authored post-merge edge: a graph whose `deliver` hub command node authors `landed → verify`, a post-merge runner
-node. The crash-tier companion is `tests/crash/test_kill9_sweep.py::test_kill9_at_action_crash_point_through_land` — the
-`action.after-write.before-resume` window, after `land` marks a repo landed but before it resumes, shared by every hub
-action.
-
-- `test_authored_landed_edge_runs_a_post_merge_node_after_landing` — merges every repo to bare `main`, then the runner
-  advances the held chunk into `verify` in its warm environment after the land — the transition history reads
-  `build → deliver (landed) → verify → done` — and the informational `landed` detail stays true at `done`.
 
 ## test_migration_e2e
 
@@ -99,12 +69,3 @@ The `record-findings` node: a review round's mixed delta lands, then mints exact
   review publishes a `review-finding-delta` holding one `deferred`, one `fixed`, and one `refuted` entry; after landing,
   `GET /api/findings` shows exactly one review-sourced finding, carrying the deferred entry's severity, class, locus,
   and the chunk that raised it — the `fixed`/`refuted` entries mint nothing.
-
-## test_spike_terminal_e2e
-
-The non-code spike chunk (MVP criterion 10): a read-only `spike` node produces a `spike-notes` asset and routes into the
-same `deliver` node a code chunk uses; with nothing to land, the chunk derives `done` with no PR and asset artifacts
-only.
-
-- `test_spike_chunk_terminates_with_only_asset_artifacts` — asserts the write-up becomes the `spike-notes` asset's
-  content, the artifacts carry no `git_commit` kind, the forge never sees a PR, and bare `main` never moves.

@@ -26,53 +26,6 @@ covered by `tests/test_runner_loop.py` and `tests/test_completion_assembly_attac
   `build` with a `bounce-envelope` artifact recorded, cause `conflict`; the conflicted PR stays open and unmerged at the
   forge; and bare `main` never moves.
 
-## test_delivery_pr_ci_e2e
-
-Delivery policy lives in YAML, not code: the module's graph differs from the default only in `deliver`'s poll cadence
-and routing, names the same `land` action and choice names the shipped graph authors, and drives every route through the
-same generic `executor: hub` primitive. Its `fleet traces` subtest proves what the acceptance loop's does.
-
-- `test_pr_ci_bounces_a_dirty_conflict_back_to_build` — proves a real merge conflict routes the first recorded bounce,
-  cause `conflict`, back to `build`, with nothing merged at the forge.
-- `test_pr_ci_bounces_a_poll_timeout_back_to_build` — proves a PR blocked past the node's few-second `poll_timeout` is a
-  kick-back: the bounce carries cause `poll-timeout` and the chunk re-enters `build`, with nothing merged at the forge
-  and bare `main` never moving; its traces subtest shows the deliver step's `hub poll pending` events, its `bounce`
-  event, and the next `build` step linked `bounce`.
-- `test_pr_ci_pends_on_blocked_then_lands_when_green` — proves a blocked PR pends over several polls with exactly one
-  unchanging `delivery-findings` artifact, then lands once the required check goes green.
-- `test_pr_ci_routes_failure_on_a_terminally_failed_check` — proves a terminally failed check routes `failure` back to
-  `build` well inside the timeout budget, ruling out a `poll_timeout` trigger, the findings content distinguishing a
-  plain CI failure from a red base check ("not this change").
-- `test_pr_ci_self_heals_a_behind_branch_and_lands` — proves a behind-base PR, with the base really moved, fires
-  `update-branch` and pends before healing, the head advancing past the submitted commit by a merge of the base and
-  reaching `done` only once the `stale_branch` lever clears through that call.
-- `test_pr_ci_refuses_a_foreign_commit_on_the_head` — proves a commit pushed onto the PR's branch after submission
-  routes `failure` back to `build`, the `delivery-findings/foreign-head` artifact naming that commit, with nothing
-  merged at the forge and bare `main` never moving.
-- `test_pr_ci_lands_an_unstable_pr_once_checks_are_green` — proves a PR the forge reports `unstable` is mergeable: once
-  its required checks read green it merges and the chunk reaches `done`.
-- `test_pr_ci_waits_on_a_draft_or_hooked_pr` — proves a green PR the forge reports `draft` or `has_hooks`, one case
-  each, pends over repeated polls with no bounce, nothing merged at the forge and bare `main` never moving.
-- `test_pr_ci_waits_on_a_startup_failure_check_then_lands` — proves a check concluded `startup_failure` pends rather
-  than routing `failure`, and the chunk lands once the check reads green.
-- `test_pr_ci_routes_conflict_when_updating_a_behind_branch_conflicts` — proves a behind PR whose base really conflicts
-  with the change meets a refused `update-branch` and routes the first bounce, cause `conflict`, back to `build`, with
-  nothing merged at the forge.
-- `test_pr_ci_escalates_a_rejected_credential_as_forge_auth` — proves the forge rejecting the repository's credential
-  escalates the chunk to `needs_human` at `deliver` with cause `forge-auth`, the detail naming the repository, rather
-  than bouncing it.
-- `test_pr_ci_escalates_a_repository_the_forge_does_not_know_as_forge_config` — proves a repository record whose forge
-  does not know it escalates the chunk to `needs_human` with cause `forge-config`, the detail naming that forge, nothing
-  merged.
-- `test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish` — proves a revision whose one check
-  is green, gaining a second pending check before the next pass, is not merged until that check is green, then lands.
-- `test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` — proves a revision armed with no check is never
-  green: it pends and bounces at the node's poll timeout, cause `poll-timeout`, nothing merged.
-
-Conditional forge lookup behavior is covered by `tests/test_github_landing.py`; the pending landing's ten-poll read
-budget and filtered lookup count are covered by
-`tests/test_land_action.py::test_pending_landing_polls_use_only_conditional_forge_reads_after_the_first_pass`.
-
 ## test_hub_actions_e2e
 
 A hub node that names an action, through a real hub process: `land` against the mock forge, and the two test actions the
@@ -117,19 +70,23 @@ forge. Each scenario ends with the flow invariants holding and no turn open.
 - `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` — proves a chunk that reaches `deliver` paused takes
   no turn there, and lands once resumed.
 
-## test_checks_gate_e2e
+## test_forge_status_e2e
 
-Checks-gate enforcement: a graph whose `build` choice carries `requires_checks: true` shows the gate — not the worker's
-judged choice — decides whether a red check bounces the attempt back to `build`, landing once green; a companion graph
-routes its failing check through a non-gated `fail` choice, an ordinary judged transition where the gate never fires.
-The component-tier companion `test_checks_gate_agreement.py` proves the runner's local gate and the hub's completion
-backstop agree over a decision matrix; this module, reusing the shared live-stack scaffolding in
-`tests/fleet_launchers.py`, proves the resulting predicate against the real forge, hub, and runner.
+The forge-status label projection: one work source opted into `annotate = true` with a 1s sweep interval, over one
+minted fixture. The unit/component companions are `tests/test_work_source.py` (the GitHub adapter's annotator half),
+`tests/test_forge_status.py`, and `tests/test_annotation_loop.py` (the background driver); the service-tier
+`tests/service/hub/forge-status.spec.ts` proves only an opted-in source's issues are labelled, browserless, against the
+real mock forge.
 
-- `test_checks_gate_bounces_a_red_pass_then_lands_when_green` — proves the gated `pass` choice is bounced while its
-  check is red, build runs again, and the chunk lands once the check is green.
-- `test_a_red_check_through_a_non_gated_fail_routes_normally` — proves a red check reported through the ungated `fail`
-  choice routes back to `build` as an ordinary judged transition, the gate never firing, and the green re-entry lands.
+- `test_forge_status_projection_e2e` — proves the happy path: ingest shows `blizzard:ingested`, the build/review/deliver
+  drive flips it to `blizzard:in-progress` before `done`, where both clear — snapshotting label history every tick
+  because the sweep lands asynchronously on its own interval, not in lockstep with runner ticks. The same function
+  proves a chunk stopped before any runner claims it has its marker cleared on the next sweep, and a hand-deleted label
+  is re-asserted within one full-pass floor (five sweep intervals) — the hub holds only in-memory probe state, so it
+  re-derives rather than repairs. It stands in an outage, longer than the floor, with the forge's own `unreachable`
+  lever — a process kill would wipe the forge's in-memory issue/label state and defeat proving re-convergence — and
+  proves the hub keeps serving reads and transitions throughout, the daemon log records a `sources_skipped` entry naming
+  the source, and the label lands once the lever clears.
 
 ## test_forge_budget_e2e
 

@@ -51,6 +51,75 @@ closing that proposal's findings to `delivered` through one requested pass of th
 **Runner against mock hub.** `unreachable` buffers, `drop_ack` proves idempotency, and a `stale_envelope` is tolerated —
 the chunk lands because the runner fences on its own lease epoch, not the envelope
 (`tests/service/runner/runner.spec.ts::test_stale_envelope_is_tolerated_and_the_chunk_still_lands`).
+
+**First default offer**
+(`tests/service/fleet/runner-serves-default.spec.ts::test_a_freshly_initialized_runner_is_offered_a_default_chunk_on_first_registration`)
+checks init's pre-overlay scaffold serves `default`, then the overlaid host file stays unchanged through its first step.
+The hub registration and runner status agree on the resolved project; a peek under the enrolled runner's token offers
+the promoted default chunk with its project id and slug.
+
+**Checks-gate enforcement** (`tests/service/fleet/checks-gate.spec.ts`) drives a real forge, hub and stepped runner.
+`test_checks_gate_bounces_a_red_pass_then_lands_when_green` proves a red gated `pass` bounces and the second build
+lands; `test_a_red_check_through_a_non_gated_fail_routes_normally` proves an ungated `fail` records a normal history
+transition before the green pass lands. Both assert two builds on main. The component-tier
+`test_checks_gate_agreement.py` checks the runner gate and hub backstop against a decision matrix.
+
+**PR and CI delivery policy.** `tests/service/fleet/delivery-pr-ci.spec.ts` drives the generic hub `land` action through
+an authored graph with the shipped choices, a brisk poll cadence, and conflict and failure edges back to `build`:
+
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_pends_on_blocked_then_lands_when_green` holds a blocked PR
+  across polls with exactly one unchanging `delivery-findings`, then lands on green; the merge preserves both parents.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_routes_failure_on_a_terminally_failed_check` routes `failure`
+  inside the timeout budget; an owned second world proves a red base routes `inherited-failure` and names "not this
+  change".
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_self_heals_a_behind_branch_and_lands` proves a really moved
+  base is merged into the head by `update-branch`, the PR pends and then lands once that action clears `stale_branch`.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_dirty_conflict_back_to_build` routes `conflict`,
+  with nothing merged.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_refuses_a_foreign_commit_on_the_head` routes `failure`, names
+  the foreign commit in `delivery-findings/foreign-head`, and leaves main unchanged.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_poll_timeout_back_to_build` proves timeout bounces
+  to build with nothing merged and main unchanged; its trace-only companion
+  `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_poll_timeout_back_to_build_traced` proves pending
+  polls, the `bounce` event and the next build's `bounce` link.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_lands_an_unstable_pr_once_checks_are_green` lands an unstable
+  PR once required checks are green.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_waits_on_a_draft_or_hooked_pr[draft]` and
+  `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_waits_on_a_draft_or_hooked_pr[has_hooks]` each pend over
+  repeated polls without a bounce, merge or movement of main.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_waits_on_a_startup_failure_check_then_lands` pends on a
+  `startup_failure` check without bouncing, then lands once green.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_routes_conflict_when_updating_a_behind_branch_conflicts`
+  proves a real base conflict refuses `update-branch` and routes `conflict`, with nothing merged.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_escalates_a_rejected_credential_as_forge_auth` escalates at
+  `deliver` with `forge-auth`, naming the repository.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_escalates_a_repository_the_forge_does_not_know_as_forge_config`
+  escalates with `forge-config`, naming the forge, with nothing merged.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish`
+  waits for a second pending check even when the first is green, then lands when the second goes green.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` pends
+  with no check and bounces `poll-timeout`, with nothing merged.
+
+The component-tier `tests/test_github_landing.py` covers conditional forge lookup behavior; the component-tier
+`tests/test_land_action.py::test_pending_landing_polls_use_only_conditional_forge_reads_after_the_first_pass` covers the
+pending landing's ten-poll read budget and filtered lookup count.
+
+**Authored post-merge edge**
+(`tests/service/fleet/post-merge-node.spec.ts::test_authored_landed_edge_runs_a_post_merge_node_after_landing`) lands a
+real forge PR and asserts the build's file on bare `main`, then observes `deliver → verify (landed)` before the runner's
+`verify → done (pass)` in history and the informational `landed` flag at `done`. Its `blizzard:crash-sweep` companion
+`tests/crash/test_kill9_sweep.py::test_kill9_at_action_crash_point_through_land` covers the
+`action.after-write.before-resume` window after a repository lands and before the hub resumes.
+
+**Non-code spike** (`tests/service/fleet/spike-terminal.spec.ts::test_spike_chunk_terminates_with_only_asset_artifacts`)
+proves a read-only spike reaches `done` through deliver with its write-up as a `spike-notes` asset, no commit artifact
+or forge PR, and unchanged bare `main` (MVP criterion 10).
+
+**Basic workspace delivery**
+(`tests/service/fleet/basic-workspace.spec.ts::test_basic_workspace_chunk_lands_without_winter`) builds, reviews and
+delivers a chunk to the forge's bare `main` through the built-in folder provider. The hub derives `done`, the workspace
+contains the worktree and project clone but no `.winter`, and a trapped winter CLI is never invoked. The mock harness
+creates the feature branch on the provider's detached worktree.
 `test_advance_harvests_git_commits_from_every_bound_environment` pins that the harvest spans every bound environment —
 the loss a `bindings[0]` read makes silent.
 `tests/service/runner/runner.spec.ts::test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable`
