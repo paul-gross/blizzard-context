@@ -417,7 +417,7 @@ foreign keys off, so each holds there by construction and stays unverified on Po
 - **A landed repository row's keys.** `delivery_repo_landed`'s foreign keys to its chunk and its tenant have never been
   enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
   landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
-  (`src/blizzard/tools/invariants.py`) alone, and its behavior under enforced keys is unverified.
+  (`src/blizzard/hub/store/internal/invariants.py`) alone, and its behavior under enforced keys is unverified.
 - **The question and decision project revision.** `20261014_0900_question_decision_project` adds `project_id` to
   `questions` and `decisions`, filling each from the row's chunk in bounded keyset pages. It reaches head and returns to
   base under `blizzard:manual-postgres-migrations`; its backfill over populated rows has run on SQLite only. The

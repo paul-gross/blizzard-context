@@ -418,9 +418,10 @@ insert and `release`'s read-then-write are each whole inside their own single tr
 two derived cross-fact invariants the engine enforces no constraint behind: a standing edge could close a cycle in the
 dependency graph, or duplicate an already-standing ordered pair, with no schema-level constraint stopping either — so it
 earns two `bzh:invariant-checker` assertions: `NoStandingDependencyCycle` (`hub:no-standing-dependency-cycle`) and
-`NoDuplicateStandingDependency` (`hub:no-duplicate-standing-dependency`), `blizzard/src/blizzard/tools/invariants.py`.
-`release` only sets `released_at`/`released_by` on an already-standing row, inside that same single transaction: it adds
-no standing edge, so it introduces no derived invariant of its own.
+`NoDuplicateStandingDependency` (`hub:no-duplicate-standing-dependency`),
+`blizzard/src/blizzard/hub/store/internal/invariants.py`. `release` only sets `released_at`/`released_by` on an
+already-standing row, inside that same single transaction: it adds no standing edge, so it introduces no derived
+invariant of its own.
 
 ### A fold's edge rewrite, riding its own `chunk_grouped` write
 
