@@ -151,8 +151,8 @@ class CheckATests(unittest.TestCase):
         self.assertEqual(drift.check_B2("x.md", service, self.blizzard, {}, listing), [])
 
     def test_embedded_command_line_non_path_tokens_stay_silent(self):
-        _write(self.blizzard / "scripts" / "prose_density.py", "# x\n")
-        text = "`scripts/prose_density.py check src tests ../blizzard-mock/src`"
+        _write(self.blizzard / "scripts" / "restated_invariants.py", "# x\n")
+        text = "`scripts/restated_invariants.py check src tests`"
         findings = self._run(text)
         self.assertEqual(findings, [])
 
@@ -515,8 +515,8 @@ class CheckDTests(unittest.TestCase):
                 'run = "./scripts/ci-gate.sh"\n\n'
                 '[tasks.journey]\n'
                 'run = "npx playwright test --project=journey"\n\n'
-                '[tasks.prose-check]\n'
-                'run = "uv run python scripts/prose_density.py check src tests ../blizzard-mock/src"\n\n'
+                '[tasks.restatement-check]\n'
+                'run = "uv run python scripts/restated_invariants.py check src tests"\n\n'
                 '[tasks.image-smoke]\n'
                 'run = "./scripts/image-smoke.sh"\n'
                 '[tasks.playwright]\n'
@@ -559,7 +559,7 @@ class CheckDTests(unittest.TestCase):
         self.assertEqual(self._d2("`mise run journey` (`npx playwright test --project=journey`)"), [])
 
     def test_missing_runner_prefix_fails(self):
-        text = "`mise run prose-check` (`scripts/prose_density.py check src tests ../blizzard-mock/src`)"
+        text = "`mise run restatement-check` (`scripts/restated_invariants.py check src tests`)"
         findings = self._d2(text)
         self.assertEqual(_shape(findings), [("D2", "fail")])
 

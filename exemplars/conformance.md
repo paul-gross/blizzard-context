@@ -41,8 +41,8 @@ patterned off it.
   web half, and fails when the committed client stand-in differs from the one generated from the exemplar router.
 - The Playwright package's own gates failing over a live-spec exemplar: `blizzard:gate`'s playwright-static step (`tsc`,
   eslint, wire drift) and `blizzard:service-test`.
-- An exemplar whose prose density exceeds its production layer's, as `prose_density.py measure` in `blizzard/scripts/`
-  reports it — judged at review.
+- An exemplar whose prose density exceeds its production layer's, as counting its blocks over cap with
+  `blizzard/scripts/prose_caps.py` shows it — judged at review.
 - An exemplar diverging from the shape its layer's production code settled on — a second name for a role, a second
   placement for a seam — with no standard choosing it.
 

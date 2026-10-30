@@ -61,7 +61,6 @@ A command method passes when its command exits 0.
 | `blizzard:egress-contract`           | `uv run pytest tests/test_egress_contract.py` — the exported `steps`, `invocations` and `events` datasets and their views against `contracts/egress/`; a change to it owes a note, held by `blizzard:change-notes` *(more)*                                                     |
 | `blizzard:restatement-sweep`         | `mise run restatement-check` — the one-home census *(more)*                                                                                                                                                                                                                     |
 | `blizzard:mutation`                  | `mise run mutation <scope>` — scoped, resumable mutation testing over `src/blizzard` *(more)*                                                                                                                                                                                   |
-| `blizzard:prose-ratchet`             | `mise run prose-check` — the per-root prose ratchet                                                                                                                                                                                                                             |
 | `blizzard:pointer-check`             | `mise run pointer-check` — every repo-root path in Python code prose resolves to a tracked target *(more)*                                                                                                                                                                      |
 | `blizzard:exemplar-check`            | `mise run exemplar-check` — the web exemplars under `exemplars/web/` held to the hub app's gates                                                                                                                                                                                |
 | `blizzard:gate`                      | `mise run gate` — the local reproduction of CI's shared `gate` job *(more)*                                                                                                                                                                                                     |
@@ -99,8 +98,7 @@ A command method passes when its command exits 0.
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by
 [`../standards/frontend.md`](../standards/frontend.md); the one-home census is governed by
-[`../standards/one-prose-home.md`](../standards/one-prose-home.md), the prose ratchet by
-[`../standards/prose-budget.md`](../standards/prose-budget.md), and the exemplar check by
+[`../standards/one-prose-home.md`](../standards/one-prose-home.md), and the exemplar check by
 [`../exemplars/conformance.md`](../exemplars/conformance.md).
 [`../architecture/crash-correctness.md`](../architecture/crash-correctness.md) owns the daemon requirements
 `blizzard:crash-sweep` exercises, and `blizzard:e2e`'s scenario registry is

@@ -42,8 +42,9 @@ Those files own every rule this axis judges by and are the only home for their p
 Where a command already judges the same prose, it owns that judgement and this axis does not
 (`winter-canon:/enforcement-channels.md`):
 
-- `bzh:prose-budget` is out of range entirely — on every tree it binds, `blizzard:prose-ratchet` judges every block
-  against its cap and every change against the committed baseline.
+- `bzh:prose-budget` is out of range on `blizzard/exemplars/python`, where `blizzard/tests/test_layering.py` holds every
+  block to its cap. On every other tree it binds no command checks the caps, so this axis is the pruning pass for that
+  backlog.
 - `bzh:one-prose-home` is in range only for a fact absent from `blizzard:restatement-sweep`'s census. A registered fact
   belongs to that sweep, which sees every site declaring it; a fact nobody registered is invisible to it and visible
   here.

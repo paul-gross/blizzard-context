@@ -25,17 +25,13 @@ score prose without reading the code.
 
 ## Per-block prose caps
 
-`bzh:prose-budget`'s `mise run prose-check` fails each root's prose total against the committed baseline, and the
-per-block caps are reported only under `--blocks`. Neither half runs automatically: the command is in no CI workflow and
-not in `blizzard:gate`, so a total drifts on `master` unratcheted until the next change re-records the baseline and
-absorbs it — `blizzard:restatement-sweep` is invoked the same way, by hand. The two halves are independent: a change can
-hold every total and still carry an over-cap block, and a baseline re-record absorbs the total while leaving the block
-standing.
+`bzh:prose-budget`'s caps are checked by `blizzard/tests/test_layering.py` on `blizzard/exemplars/python` only. No
+command checks `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, or `blizzard-mock/tests`, where a large backlog of
+over-cap blocks stands.
 
-Standing in for a tier: a change owes a `--blocks` run and a check that no block it added or edited is over cap, and a
-baseline re-record is warranted only once that holds. Gating `--blocks` repo-wide is not the fix, because it scopes to
-every block in the tree rather than the ones a change wrote, so it fails on prose the change never touched and stops
-being read.
+Standing in for a tier: a change shows that no block it added or edited is over cap, counting with
+`blizzard/scripts/prose_caps.py`. Gating the whole tree is not the fix, because it fails on prose the change never
+touched and stops being read.
 
 ## Session stickiness, effective model, and context accounting
 

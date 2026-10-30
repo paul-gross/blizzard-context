@@ -22,13 +22,12 @@ swept whether or not it found anything:
    the run — pyright's "new version available" notice is the shape.
 5. **Ungated checks red on `master`.** Each declared verification method that no pull-request gate runs, run against
    `master`. Among them:
-   - `blizzard:prose-ratchet`
    - `blizzard-context:registry-drift`
    - `blizzard:wheel` — `mise run build`, which also runs the web build
    - `web:shell-sweep`
    - `dprint check` in `blizzard`, over `docs/` and the rest of its markdown
 6. **Stale baselines.** A committed baseline or census that no longer matches the tree it measures —
-   `blizzard/scripts/prose-density-baseline.json` is the shape.
+   `blizzard/scripts/restated-invariants.json` is the shape.
 
 ## Scope
 
@@ -48,7 +47,7 @@ rather than carrying a copy:
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Build budgets    | The `budgets` blocks of `blizzard/web/angular.json` — one per app's production configuration                                                                                                                                                                                                        |
 | Ungated checks   | The Commands tables of [`../verification/blizzard.md`](../verification/blizzard.md) and [`../verifiability.md`](../verifiability.md) declare the methods; each repo's `.github/workflows/pr.yml` is what its pull-request gate actually runs — in `blizzard`, both `gate.yml` and `upper-tiers.yml` |
-| Stale baselines  | The method that reads the baseline — `blizzard:prose-ratchet` for the prose-density baseline — declared in the same tables                                                                                                                                                                          |
+| Stale baselines  | The method that reads the baseline — `blizzard:restatement-sweep` for the one-home census — declared in the same tables                                                                                                                                                                             |
 | Warnings, audits | No declared standard — the tool's own report is the criterion. A finding cites the tool and the count it printed, and nothing here sets a number of warnings that is acceptable                                                                                                                     |
 
 The one threshold this axis owns is the 10% headroom margin in item 1: a budget within 10% of its `maximumError` is a

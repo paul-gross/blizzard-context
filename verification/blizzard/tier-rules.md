@@ -158,19 +158,17 @@ signature; the registry check verifies cited tier membership, not placement of e
 ## A port moves its citations (`bzh:port-moves-citations`)
 
 **Rule.** In the same change that ports a service case, delete its Python original, repoint its citations in blizzard
-and blizzard-context to the replacement spec, retain the function name as the test title, and remove its entry from
-`scripts/prose-density-baseline.json`.
+and blizzard-context to the replacement spec, retain the function name as the test title.
 
-**Why.** A duplicate test and a stale registry citation leave two purported owners of the same behavior; a baseline
-entry for a deleted file silently keeps dead accounting.
+**Why.** A duplicate test and a stale registry citation leave two purported owners of the same behavior.
 
 **Detect.** `blizzard-context:registry-drift` check A fails citations of deleted files and missing `file::title` names;
-review the deleted file's references and prose-density entry for omissions the checker cannot see.
+review the deleted file's references for omissions the checker cannot see.
 
 **Do.** Search both repos for the old filename and function name, then replace citations with `file::title` where
 precise.
 
-**Don't.** Leave the old pytest case or its density-baseline row behind after the spec takes over.
+**Don't.** Leave the old pytest case behind after the spec takes over.
 
 ## A whole-CLI harness fake is a service-tier binding (`bzh:external-cli-fake-is-service-tier`)
 
