@@ -120,8 +120,7 @@ exports it live again as Parquet into a second directory after the real `blizzar
 - `test_a_backfill_of_the_window_equals_the_live_export` — the backfill of the night's window writes rows equal to the
   live newest copies, excluding `exported_at`.
 - `test_recipes_agree_with_the_hubs_analytics` — the docs' cost recipe matches
-  `blizzard hub analytics summary
-  spend-nodes` over the same window per station, in both formats, and the
+  `blizzard hub analytics summary spend-nodes` over the same window per station, in both formats, and the
   slowest-station recipe names the station built to be slowest on its own graph, held at a checkpoint across a clock
   poll.
 - `test_cost_by_node_splits_a_shared_node_name_by_graph` — the cost recipe keeps `build` and `deliver` as a distinct

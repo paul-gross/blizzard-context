@@ -78,8 +78,7 @@ to a backfill's alone, and `at(directory, format)` reads another directory, such
 `freshHub.start(overlay)` hosts the stopped hub again with a configuration merged over its file and checked as
 `hubConfig` is, so one hub's record is exported under a second format; an unsound overlay is refused before anything is
 written. `test.use({ held: '<name>' })` on one describe block, run in order on one worker
-(`test.describe.configure({ mode:
-'default' })`), gives its tests one fresh hub and one runner host instead of one each,
+(`test.describe.configure({ mode: 'default' })`), gives its tests one fresh hub and one runner host instead of one each,
 built by the first test and stopped when the worker ends; `once(name, produce)` runs `produce` for the first test to ask
 and hands every later one its result, so a night too long to repeat runs once under as many titled proofs as it earns. A
 worker that restarts after a failure builds the stack and the night again. A test outside the block holds no stack, and
