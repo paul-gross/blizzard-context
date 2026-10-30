@@ -9,29 +9,34 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 ### blizzard:journey
 
-`BLIZZARD_JOURNEY=1 uv run pytest -m journey tests/journey/` (`mise run journey`) — the capstone: the MVP acceptance
-journey as one committed, repeatable test over real host daemons, `blizzard hub host` plus `blizzard runner host`. It is
-winter-free: its runner uses the built-in `basic` provider over a fixture of bare origins minted with no winter source,
-so it needs only the sibling provisioned `blizzard-mock` worktree, and is skipped without `BLIZZARD_JOURNEY=1`.
-`upper-tiers.yml` runs it as a job on every pull request and tag.
+`npx playwright test --project=journey` (`mise run journey`) — the capstone: the MVP acceptance journey as one
+committed, repeatable test, `tests/journey/journey.spec.ts::test_the_acceptance_journey_end_to_end`, in the Playwright
+package's `journey` project. It runs on a fresh hub and a runner host of its own, real daemons, `blizzard hub host` plus
+`blizzard runner host`, on a timed runner loop and on the mock forge. It is winter-free: its runner uses the built-in
+`basic` provider over the forge's bare repositories, so it needs only the sibling provisioned `blizzard-mock` worktree.
+The `journey` project is no `service-*` project, so no service selection runs it. `upper-tiers.yml` runs it as a job on
+every pull request and tag.
 
-One shared `build → review → deliver` graph drives the journeys by reading each chunk's work item through the hub
-pass-through (`blizzard runner work-items`) and branching on a directive in the issue body. Five issues are filed across
-both fixture repos and ingested by id; direct hub API calls group two into one chunk and place the riskiest first. The
-journeys:
+One shared `build → review → deliver` graph, with the shipped `land` action, drives the journeys by reading each chunk's
+work item through the hub pass-through (`blizzard runner work-items`) and branching on a directive in the issue body.
+Five issues are filed across both forge repositories and ingested by id; direct hub API calls group two into one chunk
+and place the riskiest first. The journeys:
 
 - a clean multi-repo land with grouping and serial delivery (criteria 11/13);
 - a review-fail loop carrying its findings asset and `prompt_addendum` back into build (criterion 9);
-- an ask parked `waiting_on_human` and answered with `blizzard hub answer` (criterion 7);
+- an ask parked `waiting_on_human` and answered with `blizzard hub question answer` (criterion 7);
 - a genuine failure escalated to `needs_human` whose takeover command, run verbatim, resumes the stuck session
-  (criterion 6), its `wrapped_takeover_command` shape-checked alongside, naming the runner holding the chunk.
+  (criterion 6), its `wrapped_takeover_command` compared exactly against the runner's name from `GET /api/host/runners`.
 
-Every phase gates on a latched hub state, not timing — the run is deterministic. Mid-run both daemons are `SIGKILL`ed
-and restarted through the migrate-then-host path; the invariant checker is green immediately after, and every chunk
-resumes at exactly the node the hub last recorded — the exhaustive per-boundary proof stays `blizzard:crash-sweep`. The
-morning-after assertions: succeeded chunks merged to bare `main`; full history and artifacts at the hub API; the asked
-chunk resumed without takeover; each landed file reachable from bare `main` exactly once; no environment orphaned
-(`blizzard dev check-invariants` clean); and `blizzard hub status` truthful for every chunk.
+Every phase gates on a chunk's latched hub state, not timing — the run is deterministic. Mid-run both daemons are
+`SIGKILL`ed and restarted on their directories and ports; every chunk resumes at exactly the node the hub last recorded
+— the exhaustive per-boundary proof, including the window right after the kill, stays `blizzard:crash-sweep`. Both
+stores keep their invariants, checked with `blizzard dev check-invariants` in client mode once after the restart and
+again in the morning. The morning-after assertions read each surface the system offers: succeeded chunks merged to the
+forge's bare `main`, read through the harness's tree, history and file reads; full history and artifacts at the hub API;
+the asked chunk resumed without takeover, from the mock fleet's own session record; each landed file reachable from
+`main` exactly once; no environment orphaned, `GET /api/host/environments` holding the escalated chunk's alone; and
+`blizzard hub status` truthful for every chunk.
 
 Beyond `blizzard:e2e`'s `test_escalation_e2e`
 ([`../e2e-scenarios/human-loop.md#test_escalation_e2e`](../e2e-scenarios/human-loop.md#test_escalation_e2e)), the

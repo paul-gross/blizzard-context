@@ -132,6 +132,14 @@ class CheckATests(unittest.TestCase):
         self.assertEqual(drift.check_A([("x.md", "`shell.spec.ts::renders`")], self.checkouts, {}, listing), [])
         self.assertEqual(_shape(drift.check_A([("x.md", "`shell.spec.ts::absent`")], self.checkouts, {}, listing)), [("A", "fail")])
 
+    def test_journey_spec_title_is_checked_by_check_a(self):
+        _write(self.blizzard / "tests/journey/journey.spec.ts", "// spec\n")
+        listing = {"tests/journey/journey.spec.ts": {"test_the_acceptance_journey_end_to_end"}}
+        right = "`tests/journey/journey.spec.ts::test_the_acceptance_journey_end_to_end`"
+        self.assertEqual(drift.check_A([("x.md", right)], self.checkouts, {}, listing), [])
+        wrong = "`tests/journey/journey.spec.ts::test_the_acceptance_journey_end_to_end_wrong`"
+        self.assertEqual(_shape(drift.check_A([("x.md", wrong)], self.checkouts, {}, listing)), [("A", "fail")])
+
     def test_bare_service_spec_prefers_service_project_over_same_named_harness_spec(self):
         _write(self.blizzard / "tests/harness/checks/events.spec.ts", "// harness\n")
         _write(self.blizzard / "tests/service/hub/events.spec.ts", "// service\n")
@@ -183,7 +191,7 @@ class CheckB1Tests(unittest.TestCase):
 
     def test_markerless_file_fails(self):
         _write(self.blizzard / "tests" / "test_bare.py", "def test_x(): pass\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
         findings = self._run("`tests/test_bare.py`", collect_cache)
         self.assertEqual(_shape(findings), [("B1", "fail")])
 
@@ -193,7 +201,7 @@ class CheckB1Tests(unittest.TestCase):
         Naming a live entry instead couples this case to the registry's contents, and goes
         red the day that entry is retired without the branch having changed at all."""
         _write(self.blizzard / "tests" / "test_exempt.py", "def test_x(): pass\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
         exemption = {"tests/test_exempt.py": "is tracked by blizzard#000"}
         with mock.patch.dict(drift.KNOWN_UNMARKED, exemption, clear=True):
             findings = self._run("`tests/test_exempt.py`", collect_cache)
@@ -204,26 +212,26 @@ class CheckB1Tests(unittest.TestCase):
         no exemption in force a markerless file is a fail, so the warn above is the entry
         doing the work rather than something about the path itself."""
         _write(self.blizzard / "tests" / "test_exempt.py", "def test_x(): pass\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
         with mock.patch.dict(drift.KNOWN_UNMARKED, {}, clear=True):
             findings = self._run("`tests/test_exempt.py`", collect_cache)
         self.assertEqual(_shape(findings), [("B1", "fail")])
 
     def test_conftest_is_silent(self):
         _write(self.blizzard / "tests" / "conftest.py", "# fixtures\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
         findings = self._run("`tests/conftest.py`", collect_cache)
         self.assertEqual(findings, [])
 
     def test_node_id_citation_path_half_checked(self):
         _write(self.blizzard / "tests" / "test_marked.py", "def test_x(): pass\n")
-        collect_cache = {"unit": ["tests/test_marked.py::test_x"], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
+        collect_cache = {"unit": ["tests/test_marked.py::test_x"], "component": [], "service": [], "crash_sweep": [], "e2e": []}
         findings = self._run("`tests/test_marked.py::test_x`", collect_cache)
         self.assertEqual(findings, [])
 
     def test_blizzard_mock_scoped_citation_silent(self):
         # File lives only outside the blizzard checkout -> B1 does not resolve it, so it stays silent.
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "journey": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
         findings = self._run("`test_idp.py`", collect_cache)
         self.assertEqual(findings, [])
 
@@ -297,6 +305,18 @@ class CheckB2Tests(unittest.TestCase):
         self.assertEqual(drift.check_B2("x.md", ui, self.blizzard, {}, listing), [])
         self.assertEqual(_shape(drift.check_B2("x.md", service, self.blizzard, {}, listing)), [("B2", "fail")])
         self.assertEqual(_shape(drift.check_B2("x.md", ui, self.blizzard, {}, {})), [("B2", "fail")])
+
+    def test_journey_project_attribution_and_wrong_tier(self):
+        _write(self.blizzard / "tests/journey/journey.spec.ts", "// spec\n")
+        listing = {"tests/journey/journey.spec.ts": {"test_the_acceptance_journey_end_to_end"}}
+        journey = "### blizzard:journey\n\n`tests/journey/journey.spec.ts::test_the_acceptance_journey_end_to_end`\n"
+        service = journey.replace("blizzard:journey", "blizzard:service-test")
+        self.assertEqual(drift.check_B2("x.md", journey, self.blizzard, {}, listing), [])
+        self.assertEqual(_shape(drift.check_B2("x.md", service, self.blizzard, {}, listing)), [("B2", "fail")])
+        self.assertEqual(_shape(drift.check_B2("x.md", journey, self.blizzard, {}, {})), [("B2", "fail")])
+
+    def test_journey_is_no_pytest_marker(self):
+        self.assertNotIn("journey", drift.MARKERS)
 
     def test_service_spec_cited_under_the_ui_section_fails(self):
         _write(self.blizzard / "tests/service/hub/case.spec.ts", "// spec\n")
@@ -494,7 +514,7 @@ class CheckDTests(unittest.TestCase):
                 '[tasks.gate]\n'
                 'run = "./scripts/ci-gate.sh"\n\n'
                 '[tasks.journey]\n'
-                'run = "BLIZZARD_JOURNEY=1 uv run pytest -m journey tests/journey/"\n\n'
+                'run = "npx playwright test --project=journey"\n\n'
                 '[tasks.prose-check]\n'
                 'run = "uv run python scripts/prose_density.py check src tests ../blizzard-mock/src"\n\n'
                 '[tasks.image-smoke]\n'
@@ -533,9 +553,10 @@ class CheckDTests(unittest.TestCase):
         self.assertEqual(_shape(self._d2("`mise run playwright` (`npx playwright test --project harness`)")), [("D2", "fail")])
 
     def test_strict_prefix_warns(self):
-        text = "`mise run journey` (`BLIZZARD_JOURNEY=1 uv run pytest -m journey`)"
+        text = "`mise run journey` (`npx playwright test`)"
         findings = self._d2(text)
         self.assertEqual(_shape(findings), [("D2", "warn")])
+        self.assertEqual(self._d2("`mise run journey` (`npx playwright test --project=journey`)"), [])
 
     def test_missing_runner_prefix_fails(self):
         text = "`mise run prose-check` (`scripts/prose_density.py check src tests ../blizzard-mock/src`)"
@@ -872,6 +893,16 @@ class PlaywrightCollectionTests(unittest.TestCase):
             listing["suites"][0]["specs"][0]["tests"] = [{"projectName": "uikit"}]
             with mock.patch.object(drift.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=json.dumps(listing))):
                 self.assertEqual(drift._collect_playwright(root), {})
+
+    def test_the_journey_project_joins_the_listing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tests = [{"projectName": "journey"}, {"projectName": "harness"}]
+            listing = {"config": {"rootDir": str(root / "tests/journey")}, "errors": [], "suites": [
+                {"title": "journey.spec.ts", "specs": [{"file": "journey.spec.ts", "title": "the journey", "tests": tests}], "suites": []}
+            ]}
+            with mock.patch.object(drift.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=json.dumps(listing))):
+                self.assertEqual(drift._collect_playwright(root), {"tests/journey/journey.spec.ts": {"the journey"}})
 
     def test_service_projects_only_and_nested_titles(self):
         with tempfile.TemporaryDirectory() as tmp:
