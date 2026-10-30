@@ -166,6 +166,13 @@ roots and visits, chunk backlog duration, runner invocations and dictionary conf
 - `test_review_cycle_fails_once_then_delivers` — hub history contains the fail edge and findings, two build passes
   appear in bare `main`'s file, and the addendum's addressed marker lands with them.
 
+**Cross-graph migration** (`tests/service/fleet/migration.spec.ts`) has a source build hand the chunk to a target graph,
+where only the target build commits and delivers. The trace companion checks the migration link and the graph names; the
+browser assertion belongs to [`blizzard:ui`](./ui.md#blizzardui).
+
+- `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — the chunk re-pins to the target, records
+  one migration, completes its build and delivery there, and changes the bare origin's `LANDED.md` history exactly once.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb
