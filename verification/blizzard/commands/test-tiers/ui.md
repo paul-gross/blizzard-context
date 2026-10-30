@@ -81,3 +81,11 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   hatch both absent; that the never-swept note shows and the delta radio is disabled; that submitting on the linked
   scope lands the run against it, read back from the hub; and that the confirmation names a real `ch_`-prefixed chunk
   id, links to `/p/default/board/chunk/<id>`, renders no board of its own, and closes back to the routines list.
+- `tests/ui/transcript-tab.spec.ts` — `test_chunk_transcripts_tab_browser`. The chunk board's Transcripts tab, over
+  segments seeded straight through `POST /api/fleet/transcripts` as a runner principal rather than a live runner's
+  shipping lane, which ships disabled by default and is covered at the component tier by `tests/test_transcript_pump.py`
+  and `tests/test_transcript_drain.py`. Opens the tab on a bare-issued chunk, with no claim, lease or transition, so its
+  one step of segments groups under the unmatched bucket. Expands the first segment's collapsed-by-default thinking
+  turn, and opens a tool call to reach the sidechain nested inline under it, since `toContainText` reads `textContent`,
+  populated even behind a closed `<details>`. Follows the continues-in link to the second segment, opens its unlinked
+  sidechain standalone and back, then follows the continued-from link back.

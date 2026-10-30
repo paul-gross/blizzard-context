@@ -15,8 +15,7 @@ tier headless over the multi-repo checkout (Chromium via `uv run playwright inst
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
 without either or without `BLIZZARD_E2E=1`; for the board-browser and cost modules an unbuilt bundle fails loudly
 instead of skipping. Except for the graphs-diagram module, every scenario also needs the sibling provisioned
-`blizzard-mock` worktree (the transcript module needing only its forge-registered repo, never spawning a runner). The
-in-process event-log function needs only the worktree, no built bundle or Chromium.
+`blizzard-mock` worktree. The in-process event-log function needs only the worktree, no built bundle or Chromium.
 
 ## test_board_browser_e2e
 
@@ -86,22 +85,6 @@ The operational event log's in-process half; its browser half runs as `tests/ui/
   verdict-less exit exhausts its retry budget, the runner escalates, and the emission surfaces a critical `worker-lost`
   operational event that reads back off the live `GET /api/events` and fans out as an `event-logged` SSE frame read off
   the stream's replay tail — the runner-emit, hub-fold, read-and-fan-out chain, no browser.
-
-## test_transcript_tab_browser_e2e
-
-The chunk board's Transcripts tab, seeding segments straight through `POST /api/fleet/transcripts` as a runner principal
-— the shortest honest seeding, asserting nothing about how a segment got there — rather than through a live runner's
-shipping lane, which ships disabled by default (`[transcripts] ship = false`) and is covered at the component tier by
-`tests/test_transcript_pump.py` and `tests/test_transcript_drain.py`.
-
-- `test_chunk_transcripts_tab_browser` — opens the tab on a bare-ingested chunk (no claim, lease, or transition)
-  carrying one step of segments grouped under the tab's unmatched bucket rather than a history-matched step
-  (`transcript-steps.spec.ts` unit-tests the grouping); it expands the first segment's collapsed-by-default thinking
-  turn and a tool call to reach the sidechain nested inline under it — the card must actually open, since
-  `to_contain_text` reads `textContent`, populated even behind a closed `<details>` — follows the continues-in link to
-  the second segment, opens its unlinked sidechain standalone and back, then follows the continued-from link back,
-  proving the tab, the lazy per-segment fetch, the thinking render, the nested-versus-standalone sidechain split, and
-  the resume-seam links.
 
 ## test_triage_history_browser_e2e
 

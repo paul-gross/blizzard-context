@@ -164,11 +164,11 @@ Observed on `claude` 2.1.288 to 2.1.289:
 
 `blizzard-mock`'s `ClaudeTranscriptWriter` (`blizzard-mock/src/blizzard_mock/harness/facades/_transcript.py`)
 deliberately mints none of the shapes involved, so no mock-driven `blizzard:service-test` or `blizzard:e2e` exercises
-the normalizer, which could drift from a future Claude Code CLI with every tier green. `test_transcript_tab_browser_e2e`
-does not close it either: it seeds hand-authored `TurnSegmentView` JSON straight to `POST /api/fleet/transcripts`, so no
-normalizer output ever reaches it. OpenCode's own `opencode.transcript.normalizer` is a separate code path this gap does
-not reach either way — it is exercised by `blizzard-mock`'s `OpenCodeTranscriptWriter` through a real mock-driven
-`blizzard:service-test`, which this one is not.
+the normalizer, which could drift from a future Claude Code CLI with every tier green.
+`tests/ui/transcript-tab.spec.ts::test_chunk_transcripts_tab_browser` does not close it either: it seeds hand-authored
+`TurnSegmentView` JSON straight to `POST /api/fleet/transcripts`, so no normalizer output ever reaches it. OpenCode's
+own `opencode.transcript.normalizer` is a separate code path this gap does not reach either way — it is exercised by
+`blizzard-mock`'s `OpenCodeTranscriptWriter` through a real mock-driven `blizzard:service-test`, which this one is not.
 
 Standing in for a tier: sidechain and thinking-turn normalization is proven only against hand-authored fixtures, pinned
 at `blizzard:unit-test` and by the component-tier projection golden tests, both fed by the same record fixtures — which
