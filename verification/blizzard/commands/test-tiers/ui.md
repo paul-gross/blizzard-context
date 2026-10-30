@@ -89,3 +89,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   turn, and opens a tool call to reach the sidechain nested inline under it, since `toContainText` reads `textContent`,
   populated even behind a closed `<details>`. Follows the continues-in link to the second segment, opens its unlinked
   sidechain standalone and back, then follows the continued-from link back.
+- `tests/ui/triage-history.spec.ts` — `test_triage_migration_selects_transcript_and_artifact`. The packaged default
+  graph routes a claimed triage step into a lane. Syncs the packaged graphs, then claims, mints a lease, completes on
+  `basic` with a `triage-findings` artifact, and ships a transcript segment, all as a runner; a hub read confirms the
+  authored-edge migration and the artifact carry the triage step's origin and epoch. Opens the Node history tab, selects
+  the migration, and reads the triage transcript and artifact at the wide and the narrow viewport, including the narrow
+  drill-down's Back control, and fails on any failed API response.
