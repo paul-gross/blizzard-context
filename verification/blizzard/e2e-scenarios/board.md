@@ -14,6 +14,10 @@ tier headless over the multi-repo checkout (Chromium via `uv run playwright inst
 
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
 without either or without `BLIZZARD_E2E=1`. Every scenario also needs the sibling provisioned `blizzard-mock` worktree.
+
+The other board browser scenarios run under `blizzard:ui` in `tests/ui/`; see the
+[UI method](../commands/test-tiers/ui.md) for their roster.
+
 ## test_flow_lanes_browser_e2e
 
 The board's Delivery band and place lines over a real hub landing two chunks on one branch, held in its line by the mock
