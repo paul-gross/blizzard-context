@@ -69,3 +69,77 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   registered host running two runners is the panel's one sign-in client: the legacy `/runners/<id>/board` link bounces
   to `authorize` with the host id as `client`, exactly one host session cookie results, and the second runner's board
   loads with no second bounce.
+- `tests/ui/project-lens.spec.ts` — `test_project_lens_deep_links_resolve_in_the_browser`. The board's project lens in a
+  real router against the hub's own project resolution. Creates a project, then moves it to a new slug. Proves a deep
+  link to `/p/default/board` opens the board under the `default` project's lens; a link naming the project by the slug
+  it has left, or by its id, is rewritten in place to its current slug; and a link naming no project of the tenant opens
+  the same view on All, with a notice.
+- `tests/ui/actions/gardening-run-dialog.spec.ts` — `test_gardening_run_dialog_browser`. The gardening run dialog,
+  opened from the selected routine's own panel, on the `actions` hub, since the routine's graph names a test action.
+  Mints a routine with a never-swept default scope, links a second scope into its related set ahead of time, and mints a
+  third scope left unlinked. Proves the dialog offers only the related set, with the unlinked scope and the mint escape
+  hatch both absent; that the never-swept note shows and the delta radio is disabled; that submitting on the linked
+  scope lands the run against it, read back from the hub; and that the confirmation names a real `ch_`-prefixed chunk
+  id, links to `/p/default/board/chunk/<id>`, renders no board of its own, and closes back to the routines list.
+- `tests/ui/transcript-tab.spec.ts` — `test_chunk_transcripts_tab_browser`. The chunk board's Transcripts tab, over
+  segments seeded straight through `POST /api/fleet/transcripts` as a runner principal rather than a live runner's
+  shipping lane, which ships disabled by default and is covered at the component tier by `tests/test_transcript_pump.py`
+  and `tests/test_transcript_drain.py`. Opens the tab on a bare-issued chunk, with no claim, lease or transition, so its
+  one step of segments groups under the unmatched bucket. Expands the first segment's collapsed-by-default thinking
+  turn, and opens a tool call to reach the sidechain nested inline under it, since `toContainText` reads `textContent`,
+  populated even behind a closed `<details>`. Follows the continues-in link to the second segment, opens its unlinked
+  sidechain standalone and back, then follows the continued-from link back.
+- `tests/ui/triage-history.spec.ts` — `test_triage_migration_selects_transcript_and_artifact`. The packaged default
+  graph routes a claimed triage step into a lane. Syncs the packaged graphs, then claims, mints a lease, completes on
+  `basic` with a `triage-findings` artifact, and ships a transcript segment, all as a runner; a hub read confirms the
+  authored-edge migration and the artifact carry the triage step's origin and epoch. Opens the Node history tab, selects
+  the migration, and reads the triage transcript and artifact at the wide and the narrow viewport, including the narrow
+  drill-down's Back control, and fails on any failed API response.
+- `tests/ui/board-cost-live.spec.ts` — `test_board_renders_cost_and_updates_live_over_sse`. The board, loaded once and
+  never reloaded, over a chunk claimed straight through `POST /api/fleet/routes`, with spend shipped as `usage.recorded`
+  facts to `POST /api/fleet/events` as a runner. Proves the card's cost badge, the header's spend-today figure
+  (`GET /api/spend?since=`) and the detail dock's cost with the four token classes inline update live off the event
+  stream; that a row with neither a billed nor an estimated amount flips every figure to its `+`-marked lower bound,
+  never a silently understated exact; and, on a second, subscription-only chunk, that an estimate renders as one
+  `~`-marked figure on the card and the dock, folds into the header's fleet total under both marks, and marks no chunk
+  partial. The partial marking and the per-step inline match are also fenced in `web:unit-test` and
+  `blizzard:component-test`.
+- `tests/ui/glance-board.spec.ts` —
+  `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` and
+  `test_the_glance_board_shows_a_cost_estimate_never_a_plain_billed_zero`. The mobile glance board at the narrow
+  viewport under `bzh:narrow-viewport-tier-rule`, where `/board` routes to the glance shell. The first steps a runner
+  host until a verdict-less build escalates its chunk to `needs_human`, then captures and holds open the
+  `GET /api/chunks` read, proves the glance shell renders `glance-list-loading` and no `glance-list-empty` row while the
+  read is in flight, and releases it, landing the card and clearing loading: the empty state is never shown on a
+  populated fleet. The second claims a chunk as a runner and ships it a subscription-only `usage.recorded` fact, an
+  estimate with no billed cost, and proves the "Fleet spend · today" panel and the running chunk's card both render the
+  one `~`-marked figure, never a plain billed `$0.00`.
+- `tests/ui/graphs-diagram.spec.ts` — `test_graphs_diagram_renders_in_the_browser`,
+  `test_graphs_diagram_selection_in_the_browser` and `test_diagram_geometry_matches_the_rendered_text`. The graph
+  explorer's diagram over a live hub. The first opens a minted build, review and deliver graph from `/graphs` and proves
+  its SVG DAG draws every declared node, the START connector lands on the entry node, an advance edge renders, and the
+  review-to-build back-edge is derived as a `retry` edge. The second proves node, edge and self-loop selection over the
+  same graph, clicking a point on a rendered curve off its label's midpoint, since jsdom cannot hit-test geometry; empty
+  canvas clears the selection. The third syncs the packaged graphs, enumerates them from `GET /api/graphs`, and proves
+  each renders a diagram, or the fallback only when an edge leaves the graph, and that a graph authoring a targeted
+  resume renders its `resume:<node>` meta line. The measurer contract the boxes are sized by is held by
+  `web:shell-sweep`.
+- `tests/ui/runner-panel-live.spec.ts` — `test_runner_panel_updates_live_over_sse_with_no_reload`. The runner's own
+  panel, served by a real `blizzard-runner host` the test steps, its page pointed at the host's URL rather than the
+  hub's. Loads the panel's board at `/board` once, never reloading, over an empty board; then promotes a chunk and steps
+  the host once, and the chunk's card must arrive well inside the panel's one-minute poll backstop, so the publish,
+  stream, `RunnerLiveUpdates` registry and re-read chain alone can have put it there. The host then steps the chunk to
+  `done`, and the card settles in the Done lane with no live worker line.
+- `tests/ui/board-browser.spec.ts` — `test_board_browser_live_group_reorder_answer_and_pause`. The mission-control board
+  over a runner host the test steps, loaded once and never reloaded until its own `?chunk=` URL is mounted fresh.
+  Promotes three chunks from the board and proves decorative grips and no retired controls in the backlog and ready
+  lanes; groups two through `POST /api/chunks/{id}/group` and watches the merged card vanish and the survivor carry both
+  pointers' chips live; drags the survivor's card to the ready lane's top with real pointer moves, and proves the queue
+  and the next claim honour both. The survivor parks on a question, crosses to the waiting lane live, is answered from
+  the dock, and runs to `done`, the dock then rendering its node history and artifacts and linking to the chunk page's
+  Artifacts tab. The runner's hub brake, set and released from the Fleet tab in a second page, holds the remaining ready
+  chunk through four host passes and then lets it be claimed; that chunk is paused from the dock, keeping its claim and
+  naming who paused it, and resumed. The graph ends at review, and the worker's branch and its `LANDED.md` are read back
+  from the runner host's own origin: the host's origins are not the hub forge's repositories, so this entry does not
+  prove landing through the forge — a pull request opened and merged onto `main`. The dock's geometry is held by
+  `web:shell-sweep`.

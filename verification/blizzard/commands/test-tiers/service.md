@@ -171,9 +171,9 @@ here:
 - Buffered replay, component tier:
   `tests/test_runner_events_stream.py::test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor`.
 
-`blizzard:e2e`'s `test_runner_panel_live_e2e` scenario
-([`../../e2e-scenarios/runner-panel.md`](../../e2e-scenarios/runner-panel.md)) carries the fan-out one tier further — a
-real `blizzard-runner host` subprocess observed through a real browser on the served panel, nothing stubbed.
+`blizzard:ui`'s `tests/ui/runner-panel-live.spec.ts::test_runner_panel_updates_live_over_sse_with_no_reload`
+([`ui.md`](./ui.md)) carries the fan-out one tier further — a real `blizzard-runner host` observed through a real
+browser on the served panel, nothing stubbed.
 
 **Transcripts.** `tests/service/runner/runner.spec.ts::test_transcript_is_read_back_through_the_runner_http_api` drives
 a chunk through the real fleet, then reads `GET /runners/{runner_id}/api/leases` and
