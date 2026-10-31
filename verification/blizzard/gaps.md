@@ -54,14 +54,14 @@ not add a real-token tier to close this gap.
 
 ## The declared compaction window
 
-The declared compaction window travels to the harness as the per-invocation `--autocompact` flag, reasserted on every
-invocation and never sticky by omission. The mock-visible tiers — `blizzard:unit-test`'s command-list pins and
-`blizzard:component-test`'s wire/stamp round-trip — prove only that the flag is built and threaded, never that it
-compacts anything.
+The declared compaction window is applied on each invocation. Mock-visible unit and component tests prove configuration
+composition and stamp propagation, but not that a harness compacts at the resulting threshold. OpenCode's compatibility
+diagnostic also proves configuration acceptance rather than the threshold itself.
 
-Standing in for a tier: `blizzard:manual-autocompact-window` closes this as a live procedure, the same shape as
+Standing in for a tier: `blizzard:manual-autocompact-window` provides a live procedure, the same shape as
 [`blizzard:manual-external-usage-probe`](./manual.md#blizzardmanual-external-usage-probe) — an external harness's live
-compaction behavior sits outside a hermetic, network-free CI tier's reach.
+compaction behavior sits outside a hermetic, network-free CI tier's reach. The procedure is evidence only when run and
+its threshold contrast is observed; a configuration echo or a documented procedure alone does not close the gap.
 
 ## OpenCode's compaction tail marker
 

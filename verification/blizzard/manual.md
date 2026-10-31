@@ -341,6 +341,9 @@ real CLI command; the env-local runner API check below proves that command's end
    arrives for each completed tool call.
 3. Resume the same session, send a nudge, run a judgement and invoke a child `task` session. For each invocation compare
    the adapter's effective environment, resolved config, plugin execution count and heartbeat count to the tool events.
+   For fresh, resume, nudge and judgement, inspect `debug config --pure` under each exact launch environment with a
+   numeric window and an operator model-output override. Check both explicit and default reserves: the stamped model's
+   input limit less the effective reserve equals the window, while its output limit and permission denials survive.
 4. Introduce a collision with `question` and separately with the runner plugin in the operator bundle; attempt startup
    and confirm the error names the native source file and the previously published snapshot remains readable. Repeat
    duplicate plugin identity tests across bundle, project and user JSON entries and native plugin directories. A
@@ -433,9 +436,9 @@ but modest, not the ceiling case this budget ultimately needs.
 
 ### `blizzard:manual-autocompact-window`
 
-**Surface.** The `--autocompact` flag's effect rather than its presence: a session spawned with a declared
-`--autocompact <window>` compacts near that value rather than growing toward the model's own maximum context. No CI tier
-can observe effective harness behavior here — [`./gaps.md`](./gaps.md#the-declared-compaction-window) owns that gap.
+**Surface.** A declared compaction window's effect rather than its presence: a session compacts near that value rather
+than growing toward the model's own maximum context. No CI tier observes effective harness behavior here —
+[`./gaps.md`](./gaps.md#the-declared-compaction-window) owns that gap.
 
 **Setup.** A real Claude Code CLI (`claude 2.1.234` or newer, the version its tested assumptions were measured against),
 a workdir it can run non-interactively in with `-p`, and turns big enough to add tens of thousands of tokens each, so a
@@ -466,6 +469,20 @@ handful of turns crosses a low declared window.
 or two of first crossing it and stays down, while the undeclared run's context size keeps climbing past 100k without
 dropping. That contrast is the compaction event itself, because no other mechanism resets a session's context
 mid-lineage.
+
+**OpenCode exercise.** From the provisioned `blizzard` worktree, use an admitted real OpenCode binary and run:
+
+```bash
+uv run python scripts/probe_opencode_compaction_window.py --binary <absolute-opencode> --window 8k --evidence-dir "$BLIZZARD_TMPDIR/compaction-window"
+```
+
+The probe uses the production adapter, a fixture limits catalog, disposable roots and a loopback provider. It grows
+fresh and continued turns through the numeric threshold, then repeats the workload with `auto` and no window. Retain the
+version, effective configurations, provider requests, usage and events or exports. The numeric run must create a real
+compaction summary on the next eligible turn after crossing the window; both controls must cross it without compacting,
+and provider requests must retain the same output cap. A configuration echo alone is not threshold proof.
+
+Inspect the retained evidence for sensitive material before sharing it.
 
 ### `blizzard:manual-worker-deny-list`
 
