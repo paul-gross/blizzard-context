@@ -46,8 +46,9 @@ also the file installed into every blizzard agent context, so an agent working o
 | [`garden/`](./garden/index.md)             | The named axes blizzard is recurringly evaluated along, and what each judges by.                         |
 | [`exemplars/`](./exemplars/index.md)       | The router to the reference implementations in `blizzard/exemplars/`, and what they are held to.         |
 
-Alongside them sit this repo's own: [`CONTRIBUTING.md`](./CONTRIBUTING.md) for commit format, authoring conventions, and
-delivery, and [`verifiability.md`](./verifiability.md) for how a change *here* is verified.
+Alongside them sit [`review-criteria.md`](./review-criteria.md), the entry a review of a blizzard change reads to find
+which domain judges each of its axes, and this repo's own: [`CONTRIBUTING.md`](./CONTRIBUTING.md) for commit format,
+authoring conventions, and delivery, and [`verifiability.md`](./verifiability.md) for how a change *here* is verified.
 
 ## A harness held to its own standard
 
