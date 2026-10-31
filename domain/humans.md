@@ -8,12 +8,12 @@ Parent: [./index.md](./index.md).
 
 ## The entries
 
-| Spoke                                   | Entry         | Initiated by                                               | Parks              |
-| --------------------------------------- | ------------- | ---------------------------------------------------------- | ------------------ |
-| [asks.md](./humans/asks.md)             | Ask           | The worker, mid-step                                       | `waiting_on_human` |
-| [gates.md](./humans/gates.md)           | Gate decision | The workflow (a human-judged node) or runner configuration | `waiting_on_human` |
-| [escalation.md](./humans/escalation.md) | Escalation    | The system, on exhausted failure                           | `needs_human`      |
-| [takeover.md](./humans/takeover.md)     | Takeover      | A person entering a held session                           | Nothing of its own |
+| Spoke                                   | Entry         | Initiated by                                                      | Parks              |
+| --------------------------------------- | ------------- | ----------------------------------------------------------------- | ------------------ |
+| [asks.md](./humans/asks.md)             | Ask           | The worker, mid-step                                              | `waiting_on_human` |
+| [gates.md](./humans/gates.md)           | Gate decision | The workflow (a human-judged node) or runner configuration        | `waiting_on_human` |
+| [escalation.md](./humans/escalation.md) | Escalation    | The system, on exhausted failure, or a worker's `escalate` choice | `needs_human`      |
+| [takeover.md](./humans/takeover.md)     | Takeover      | A person entering a held session                                  | Nothing of its own |
 
 ## The two parked conditions
 
