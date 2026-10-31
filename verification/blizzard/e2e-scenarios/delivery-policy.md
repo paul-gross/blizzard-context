@@ -18,6 +18,10 @@ Fast-forward landing against the live mock forge and hub.
   instead.
 - `test_diverged_base_creates_and_cleans_proven_candidate` — proves a diverged base lands and the candidate branch is
   cleaned up.
+- `test_fast_forward_stands_when_second_forge_refuses_merge_method` — proves the first repository's PR-free landing
+  remains durable when a second forge refuses its merge method.
+- `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` — proves an unproven candidate never
+  advances the base and eventually follows the node's pending-timeout edge.
 
 ## test_park_e2e
 
@@ -25,8 +29,14 @@ Parked landing against the live mock forge and hub.
 
 - `test_park_waits_past_node_timeout_then_records_human_merge` — proves the wait outlasts the node timeout and a
   person's merge, squash, or rebase records the landed revision.
-- `test_closed_parked_change_escalates_then_requeue_opens_fresh_change` — proves a closed change escalates; the requeue
-  case is expected to fail while the mock forge omits `closed_at` from its change response.
+- `test_closed_parked_change_escalates_then_requeue_opens_fresh_change` — proves a closed change escalates and a requeue
+  opens a fresh change.
+- `test_parked_repository_holds_landing_order_until_person_merges` — proves both library-first and consumer-first
+  arrangements wait on the parked repository before landing its successor.
+- `test_second_parked_repository_has_its_own_review_clock` — proves an aged first change's marker cannot time out a
+  second parked change that was opened after the first human merge.
+- `test_park_timeout_then_person_merge_is_adopted_on_requeue` — proves a repository timeout escalates, then a requeue
+  notices the person's intervening merge and records its squash revision.
 
 ## test_flow_record_e2e
 
