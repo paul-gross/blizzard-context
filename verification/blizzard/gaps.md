@@ -557,6 +557,16 @@ Every tier runs `20261027_0900_flows` on SQLite only. It creates `flows`, `flow_
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
 
+## Landing-policy operator guidance
+
+The policy-selection page's capability preconditions follow `hub/domain/config/landing_policies.py` and the runtime
+capability guard in `hub/delivery/flow_turn.py`. Its fast-forward candidate, protected-write and orphan-pruning claims
+follow `hub/delivery/actions/landing/fast_forward.py` and the forge ref calls in `hub/forge/internal/github_landing.py`.
+Its park timeout and human-merge claims follow `hub/delivery/actions/landing/park.py` and the wait cadence in
+`hub/domain/delivery/flows.py`; rollback settlement is enforced in
+`hub/store/migrations/versions/20261030_0900_park_wait.py`. The mock-forge e2e and policy crash sweep reach the
+principal paths, but no tier verifies an operator's push-CI configuration or the manual orphan-branch pruning step.
+
 ## The runner host's invariant read under Postgres
 
 The runner host's invariant route opens its single read through the same dialect-aware opener as the hub's, which on
