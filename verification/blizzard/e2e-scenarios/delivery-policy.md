@@ -10,6 +10,24 @@ What `deliver` does when the forge answers with a pending CI run, and the order 
 Every module in this file needs the sibling provisioned `blizzard-mock` worktree, skips without `BLIZZARD_E2E=1`, and
 uses no browser.
 
+## test_fast_forward_e2e
+
+Fast-forward landing against the live mock forge and hub.
+
+- `test_ahead_fast_forward_and_protected_base` — proves an ahead branch lands without a PR, and protection escalates
+  instead.
+- `test_diverged_base_creates_and_cleans_proven_candidate` — proves a diverged base lands and the candidate branch is
+  cleaned up.
+
+## test_park_e2e
+
+Parked landing against the live mock forge and hub.
+
+- `test_park_waits_past_node_timeout_then_records_human_merge` — proves the wait outlasts the node timeout and a
+  person's merge, squash, or rebase records the landed revision.
+- `test_closed_parked_change_escalates_then_requeue_opens_fresh_change` — proves a closed change escalates; the requeue
+  case is expected to fail while the mock forge omits `closed_at` from its change response.
+
 ## test_flow_record_e2e
 
 The flow record, kept by the hub's own flow driver over a real hub: a chunk held pending at `deliver` — the mock forge's

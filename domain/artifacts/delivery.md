@@ -47,10 +47,16 @@ worker node's judgement ([edges](../graphs/edges.md)).
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
   against.
 - **The policy is the repository's.** How a change lands is a fact about the repository it lands in: each repository
-  record carries a landing policy, and the `land` action runs each repository's own. The one policy is `merge-on-checks`
-  — every repository's unless stated otherwise — which opens the change, keeps it up to date with its base, and merges
-  it once its checks are green; a policy is accepted only on a forge that offers every capability it needs. The graph
-  still decides where landing happens, by declaring its action in `deliver`;
+  record carries a landing policy, and the `land` action runs each repository's own. A policy is accepted only on a
+  forge that offers its required capabilities. The policies are:
+
+  | Policy            | Landing behavior                                                                                      |
+  | ----------------- | ----------------------------------------------------------------------------------------------------- |
+  | `merge-on-checks` | Default; opens a change, updates it from the base, and merges when checks are green.                  |
+  | `fast-forward`    | Checks the work revision, or a proven merge candidate when the base diverged, then advances the base. |
+  | `park`            | Opens a change for a person to merge and observes its outcome.                                        |
+
+  The graph still decides where landing happens, by declaring its action in `deliver`;
   [feature delivery](../../workflows/feature-delivery.md) describes the shipped graph. Each commit pointer is resolved
   to its own repository record, which names the forge record it lands on, so a chunk may mix forges, owners, base
   branches and credentials.

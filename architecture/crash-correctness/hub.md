@@ -100,6 +100,20 @@ and through a two-repository `land` against the mock forge. Every landing record
 the first landing durable and the second repository not yet merged, the restarted hub lands the second without merging
 the first twice.
 
+## Landing policy effect windows
+
+The policy crash points in `fast_forward.py` and `park.py` name these effect-to-record windows. Recovery re-reads forge
+state and durable markers; a candidate is proven before reuse and cleanup follows a durable landing record.
+
+| Point                                       | Window                                                 |
+| ------------------------------------------- | ------------------------------------------------------ |
+| `policy.after-create-ref.before-merge-into` | Candidate branch created, before merging work into it. |
+| `policy.after-merge-into.before-advance`    | Candidate merge created, before advancing the base.    |
+| `policy.after-advance.before-marker`        | Base advanced, before the landing record.              |
+| `policy.after-marker.before-delete-ref`     | Landing recorded, before candidate branch cleanup.     |
+| `policy.after-open-change.before-marker`    | Parked change opened, before its reference marker.     |
+| `policy.after-merged-read.before-marker`    | Parked merge observed, before its landing record.      |
+
 ## The trace export sweep
 
 `TraceExportSweep.sweep` (`blizzard/src/blizzard/hub/domain/observability/tracing/sweep.py`) tells closed node steps to

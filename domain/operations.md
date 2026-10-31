@@ -76,6 +76,13 @@ the log does not re-model it — every currently-open escalation projects as a `
 one surface. The per-attempt `worker-lost` event and the standing `needs-human` projection are distinct, complementary
 kinds — the terminal failure is not double-counted.
 
+Delivery can escalate with these causes, each projected as `needs-human`:
+
+- `change-closed` — a parked change was closed without merging.
+- `park-timeout` — the parked change exceeded its review timeout.
+- `branch-protected` — branch protection refused the required branch operation.
+- `merge-method-refused` — the forge refused the required merge method.
+
 A deliberately deferred failure — a runner that told its operator it will start no processes — surfaces nothing.
 
 ### The hub's own log
