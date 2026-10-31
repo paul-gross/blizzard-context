@@ -23,8 +23,7 @@ conditional on a flag, and a flag read hand-rolled inside a controller instead o
 
 ## Do
 
-Each surface while its flag is off. The design record is
-`blizzard-product:/plans/release-engineering/dark-launch/spec/contract.md`.
+Each surface while its flag is off.
 
 | Surface                       | While the flag is off                                                                                                                             |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |

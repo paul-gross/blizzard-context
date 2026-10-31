@@ -72,8 +72,7 @@ scope — the routine's own default, or an explicit override, which must already
 its own, and its chunk rests behind the ordinary promote gate rather than entering the ready queue. Mode settles the
 baseline, never admission: a `full` run needs no baseline, while a `delta` run runs against the routine/scope pair's own
 recorded revision, and downgrades to `full` — on the record, never refused — when the pair has recorded none yet. What
-turns a run away is [What refuses](#what-refuses). What the pair carries between runs is
-`blizzard-product:/delivered/garden/machinery.md`'s own fact; this states only the run's behavior over it.
+turns a run away is [What refuses](#what-refuses).
 
 ## What refuses
 
