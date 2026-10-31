@@ -170,12 +170,8 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
     "checks": [
       {"context": "gate / ruff + pyright + structural gate"},
       {"context": "gate / pytest (unit + component)"},
-      {"context": "gate / OpenAPI spec drift"},
-      {"context": "gate / contract drift"},
+      {"context": "gate / spec drift + change notes + flag lifecycle + dprint"},
       {"context": "gate / compatibility against supported releases"},
-      {"context": "gate / change notes"},
-      {"context": "gate / flag lifecycle"},
-      {"context": "gate / dprint"},
       {"context": "gate / eslint + vitest + client drift"},
       {"context": "gate / exemplar check (web)"},
       {"context": "gate / process-reference and change-history lint"},
