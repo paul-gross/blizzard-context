@@ -29,6 +29,81 @@ worktree (its venv ships the mock-fleet scripts, stub IdP, and `mock-claude-code
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
+**Hub action nodes** (`tests/service/fleet/actions/hub-actions.spec.ts` and
+`tests/service/fleet/hub-actions-refusal.spec.ts`) run a real host against a tenant's mock-forge repository. The land
+action merges one PR, advances `main` and records the landed revision. Behind the actions profile's test-action and
+crash fences, `test.answer` routes onward and `test.sequence` records `pending` then `done`; a fresh default-profile hub
+refuses both test actions at graph mint. The cases retain the titles `test_land_lands_a_chunk_against_the_mock_forge`,
+`test_test_actions_drive_hub_nodes`, and `test_a_hub_without_the_test_fences_refuses_the_test_actions`.
+
+**Verdict-less worker exit**
+(`tests/service/fleet/actions/event-log.spec.ts::test_a_verdict_less_exit_surfaces_a_critical_worker_lost_event`) drives
+a real runner host against the actions profile: a build whose judgement emits no verdict exhausts its retry budget and
+leaves the chunk `needs_human`. A subscriber connected before execution receives the critical `worker-lost`
+`event-logged` frame, and the same event reads back from `GET /api/events`; a stream barrier orders the fan-out read
+after the run without relying on a replay tail.
+
+**Flow record**
+(`tests/service/fleet/flow-record.spec.ts::test_a_held_chunk_is_submitted_and_its_landing_supersedes_it`) drives a real
+host through `build` and the hub's `land` action. A repository-scoped `checks_pending` lever holds the chunk at
+`deliver` while its branch's flow has one open submission, read through the chunk's flow-submissions API. Clearing the
+lever lets the same submission close `landed` as the chunk reaches `done` and `landed`. The component-tier
+`tests/test_invariant_checker.py` covers the no-open-turn close-out and flow invariants; the component-tier
+`tests/test_flow_driver.py::test_a_store_carried_across_the_flows_revision_boots_pending_visits_in_entry_order` covers
+the migration-boundary boot order of pending visits.
+
+**Node session modes** (`tests/service/fleet/session-modes.spec.ts`) run a real host through a
+`build → review → build → review → deliver` fail-cycle, with every node entry observed through the runner's
+chunk-filtered lease read in mint order. `test_session_modes_resume_targeted_and_fresh_across_a_cycle` proves two
+`resume:build` entries share a session with more than one visit's turns, while the two fresh reviews have distinct
+sessions, including the most recent session overall before delivery — not the build session a bare resume would inherit.
+`test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model` proves each `fresh:code` build mints a new
+head and the following `resume:code` review continues it across nodes. Lease model/effort and the mock's per-turn argv
+show the resolved sonnet model on mint and every resume, and medium effort on every turn; the effective model remains
+outside the mock's observation, as [gaps.md](../../gaps.md) records.
+
+**Resume-time spawn preamble** (`tests/service/fleet/resume-preamble.spec.ts`) runs the same build/review fail-cycle,
+entering `build` twice on one session. The runner's public lease transcript records the preamble actually delivered to
+the mock Claude Code harness at each spawn; the facts-table header distinguishes spawns from other user turns. Both
+standing layers carry padded sentinel prose, so elision is a measurable saving rather than a one-line comparison.
+`test_resumed_node_entry_elides_unchanged_standing_layers` proves the fresh entry carries both layers and the resumed
+entry carries only the unchanged banner, plus the newly minted lease id in its facts table instead of the prior id.
+`test_resumed_node_entry_announces_a_replaced_workspace_prompt` observes the intervening review lease, replaces the
+workspace prompt through the live host-workspace API before build re-enters, and proves the next spawn leads with the
+update notice and new policy while the old policy disappears and layer 1 remains collapsed. The component tier's
+`test_worker_preamble.py` pins the rendering independently of delivery to a real harness process.
+
+**Review findings at delivery**
+(`tests/service/fleet/review-findings-delivery.spec.ts::test_review_finding_delta_mints_exactly_its_deferred_entry_at_landing`)
+reads the packaged `bas-dwf` authoring body through the hub, swaps only runner prompts for scripts, and mints it with
+`deliver` and `record-findings` intact. A scripted review publishes a `review-finding-delta` with one `deferred`, one
+`fixed`, and one `refuted` entry. The real `land` action merges the build into bare `main`, and the `record-findings`
+history step reports `recorded`; `GET /api/findings` returns exactly the deferred review-sourced finding with its
+severity, class, locus and raising chunk. The fixed and refuted entries mint nothing.
+
+**Garden routine** (`tests/service/fleet/garden-routine.spec.ts::test_garden_routine_runs_end_to_end_on_all_six_paths`)
+reads the packaged `garden-routine` authoring body, swaps only its prompts and the invalid edge's addendum for scripts,
+and runs one real routine seven times through every authored path. `found` mints two findings; `clean` delivers an empty
+finding set whose measurement and revisions read from `GET /api/runs/{chunk_id}`; `excessive` runs twice, observing the
+same bail-out finding before a handoff proposal cites it. `invalid` rejects an unknown finding id and bounces to
+reconcile, where the edge addendum corrects the delta without leaking a write. `virgin` cites its own newly added refs
+in a proposal whose links resolve to the same delivery's minted finding ids; `no-strategy` delivers the undeclared-axis
+gap as a finding. The run list and `GET /api/runs/{chunk_id}` expose `found`'s delivery; chunk-filtered leases and mock
+sessions prove reconcile has cold eyes, propose resumes its match session, and bounced reconcile mints a fresh session.
+
+**Ideation** (`tests/service/fleet/actions/ideation.spec.ts::test_ideation_runs_end_to_end_on_all_authored_paths`) reads
+the packaged `ideation` authoring body through the hub and swaps its prompts and delivery-bounce addenda for scripts. A
+real routine runs over the authored paths under the actions fence: the first survey → reconcile → propose → deliver
+produces three finding-free proposals (`direction`, `tweak`, `retire`) and an empty finding set with its measurement.
+After one proposal is accepted without an item and another passed with a reason, reconcile drops all three candidates; a
+later changed candidate revives the passed proposal by id. Empty survey and declined proposal paths deliver their
+skeleton delta. Wrongly scoped delivery bounces to propose and succeeds after correction; a `test.sequence` delivery
+fails once and records on retry with the docket intact. Two consecutive invalid bounces park on an ask instead of trying
+a third; answering repairs the delta. Survey's undeclared-axis ask can either end with no delivery or resume after
+declaration and deliver an empty sweep. Chunk-filtered leases in mint order prove reconcile starts cold and propose
+resumes its session; the test observes the public run, proposal, question, and graph-authoring reads without opening a
+store.
+
 **Hub against mock runner plus mock forge.** A claim then a completion advances the chunk over the wire
 (`test_claim_and_completion_advance_the_chunk_over_the_wire`), stale epochs are rejected, and route-token authz runs
 under `route_token_mode=enforce`. Under `produces_mode=enforce` a completion for a node declaring `produces:` is fenced

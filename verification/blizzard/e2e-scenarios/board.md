@@ -14,16 +14,9 @@ tier headless over the multi-repo checkout (Chromium via `uv run playwright inst
 
 Every browser scenario here needs the built bundle `blizzard hub host` serves and installed Chromium, skipping cleanly
 without either or without `BLIZZARD_E2E=1`. Every scenario also needs the sibling provisioned `blizzard-mock` worktree.
-The in-process event-log function needs only the worktree, no built bundle or Chromium.
 
-## test_event_log_e2e
-
-The operational event log's in-process half; its browser half runs as `tests/ui/event-log.spec.ts`.
-
-- `test_a_verdict_less_exit_surfaces_a_critical_worker_lost_event` — the in-process half: a real mock worker's
-  verdict-less exit exhausts its retry budget, the runner escalates, and the emission surfaces a critical `worker-lost`
-  operational event that reads back off the live `GET /api/events` and fans out as an `event-logged` SSE frame read off
-  the stream's replay tail — the runner-emit, hub-fold, read-and-fan-out chain, no browser.
+The other board browser scenarios run under `blizzard:ui` in `tests/ui/`; see the
+[UI method](../commands/test-tiers/ui.md) for their roster.
 
 ## test_flow_lanes_browser_e2e
 

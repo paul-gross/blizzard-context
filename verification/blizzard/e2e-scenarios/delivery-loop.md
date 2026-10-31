@@ -59,13 +59,3 @@ served board runs as `tests/ui/migration.spec.ts`. Its `fleet traces` subtest pr
   (name-match, else entry), which commits and delivers to bare `main`; asserted at both ends — the change reachable from
   `main` exactly once (the target's branch is the only landing one) and the hub showing the `migrations` step, the
   two-graph history, the re-pinned `graph_id`, and `done`.
-
-## test_review_findings_delivery_e2e
-
-The `record-findings` node: a review round's mixed delta lands, then mints exactly its deferred entry.
-
-- `test_review_finding_delta_mints_exactly_its_deferred_entry_at_landing` — the real packaged `bas-dwf` graph, `deliver`
-  and `record-findings` unscripted (the real `land`/`record-findings` actions and hub route run for real); a scripted
-  review publishes a `review-finding-delta` holding one `deferred`, one `fixed`, and one `refuted` entry; after landing,
-  `GET /api/findings` shows exactly one review-sourced finding, carrying the deferred entry's severity, class, locus,
-  and the chunk that raised it — the `fixed`/`refuted` entries mint nothing.

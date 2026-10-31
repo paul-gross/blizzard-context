@@ -41,9 +41,10 @@ whose resume passes only the session — the contract rests on that harness rest
 nothing asserts that restoration. The live OpenCode compatibility diagnostic checks that the requested provider/model
 and variant survive fresh and resumed exports, but it deliberately supplies them on every invocation and therefore does
 not assert effective model stickiness when they are omitted, as the runner's resumes omit them. No tier asserts the
-effective context accounting a harness ran under, because the mock façade sees argv and nothing else. `blizzard:e2e`'s
-`test_session_modes_e2e.py::test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model` asserts the flag
-on the Claude Code façade — the mint and every resume carry the same resolved model — and stops there.
+effective context accounting a harness ran under, because the mock façade sees argv and nothing else.
+`blizzard:service-test`'s
+`tests/service/fleet/session-modes.spec.ts::test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model`
+asserts the flag on the Claude Code façade — the mint and every resume carry the same resolved model — and stops there.
 
 Standing in for a tier: what backs the surrounding export behavior is a one-time empirical observation of Claude Code
 CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted range (currently `>=1.18.25,<2.0`).
@@ -235,11 +236,12 @@ resolution and proposal-classing behavior that replaces `garden-routine`'s stand
 target's own charter rather than a standard, and classing a proposal as `direction`/`tweak`/`retire` rather than citing
 findings a fix answers. The declared methods reach the mechanical half only — `blizzard:unit-test`'s packaged-prompt
 byte bars (`blizzard/tests/test_prompt_byte_bars.py`) and its `blizzard hub` verb guard, `blizzard:component-test`'s
-graph mint and choice-edge resolution, and `blizzard:e2e`'s `test_garden_routine_runs_end_to_end_on_all_six_paths` and
-`test_ideation_e2e`'s own run, whose scripted node bodies deliberately exercise no model at all. That `survey` actually
-resolves its axis from the target's registry rather than improvising a yardstick, that `propose` actually cites the refs
-its own run just minted, or that `ideation`'s `survey`/`reconcile`/`propose` actually resolve the target's charter and
-class a proposal correctly, is asserted by nothing: a prompt is an input to a model no tier runs.
+graph mint and choice-edge resolution, and `blizzard:service-test`'s
+`test_garden_routine_runs_end_to_end_on_all_six_paths` and `test_ideation_runs_end_to_end_on_all_authored_paths`, whose
+scripted node bodies deliberately exercise no model at all. That `survey` actually resolves its axis from the target's
+registry rather than improvising a yardstick, that `propose` actually cites the refs its own run just minted, or that
+`ideation`'s `survey`/`reconcile`/`propose` actually resolve the target's charter and class a proposal correctly, is
+asserted by nothing: a prompt is an input to a model no tier runs.
 
 Standing in for a tier: a live routine run against a real fleet, whose delivered finding set and docket are read back
 and judged against what the axis entry declares — the dogfood deployment
