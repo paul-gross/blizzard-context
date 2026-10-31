@@ -116,6 +116,73 @@ agreement (unit-tier sibling `test_produces_coverage_agreement.py`): a name cove
 failing a shaping the domain applies but the wire does not surface; its component-tier sibling
 `tests/test_queue_shaping.py` asserts the same shaping without the wire.
 
+**The acceptance loop** (`tests/service/fleet/acceptance-loop.spec.ts`) runs a real hub and stepped runner against a
+test-owned mock-forge origin. Its build, review, and land steps finish under both mock harnesses; a trace-only companion
+checks the hub roots, runner invocations, platform request chain and planted-secret containment. At the component tier,
+`tests/test_completion_assembly_attachments.py` pins route-token containment at span and artifact assembly.
+
+- `test_acceptance_loop_one_chunk_ingest_to_landed` — verifies `done`, a merged PR naming the issue and chunk, and a
+  committed file and merge reference in the bare origin's `main`.
+- `test_a_tail_sampling_decision_wait_splits_or_keeps_the_chunk_trace` — the real collector observes the same three-step
+  chunk before sampling. Its short decision drops the later roots and worker command spans; the whole-chunk variant
+  forwards all roots and their platform chain.
+- `test_build_worker_reads_work_item_through_the_passthrough` — the worker fetches its issue body and comment through
+  the runner-to-hub pass-through and lands the fetched text on bare `main`.
+
+**Ask/answer** (`tests/service/fleet/ask-answer.spec.ts`) parks a worker on its question under both mock harnesses,
+drives four completed inert host passes, answers with the real hub CLI, and reads the resumed session, answer delivery
+and landed origin. The `_traced` companion verifies the single build root across the park, answered ask child,
+invocation nesting, platform chain and leaked-secret exclusion.
+
+- `test_ask_parks_then_answer_resumes_session_to_done` — a question with two choices parks `waiting_on_human`; four
+  further passes keep it open. The CLI answer resumes the same session and lands a change on bare `main`.
+
+**Delivery conflict** (`tests/service/fleet/delivery-conflict.spec.ts`) arms the forge's `merge_conflict` lever for its
+own repository and stops after the first bounce. Its trace companion drives the rebuilt pass to an exported root and
+checks the bounce link, hub action ancestry and planted-secret containment.
+
+- `test_conflict_lands_zero_repos_and_routes_the_bounce_envelope_back_to_build` — the chunk remains running at `build`,
+  with one conflict envelope, no merged PR and an unchanged bare `main`.
+
+**Escalation** (`tests/service/fleet/escalation.spec.ts`) exhausts a build's retry budget with two verdict-less
+attempts, then executes the surfaced takeover command under the test host's fenced environment with human input. Its
+trace companion pins supersession, error escalation and runner invocation identity.
+
+- `test_retries_exhausted_escalates_and_takeover_resumes_session` — `needs_human` exposes both command shapes; the raw
+  command opens the same session, advances Claude Code's persisted turn and records its resume message, or prints the
+  OpenCode session-opening banner.
+
+**The human gate** (`tests/service/fleet/gate-decision.spec.ts`) parks a build commit on `approve-gate`, lists and
+resolves the decision through the real hub CLI, and steps the host to landing. Its trace companion links gate to deliver
+and compares the gate span's end with the CLI's `resolved_at` at nanosecond precision.
+
+- `test_graph_gate_parks_a_decision_then_decide_delivers` — the open decision carries the build commit and
+  approve/reject choices; approval leaves no open decision in its tenant and lands the committed file on bare `main`.
+
+**Review cycle** (`tests/service/fleet/review-cycle.spec.ts`) fails review once and threads its findings and prompt
+addendum into a second build before landing. Both mock harnesses exercise it. The trace companion checks five linked
+roots and visits, chunk backlog duration, runner invocations and dictionary conformance.
+
+- `test_review_cycle_fails_once_then_delivers` — hub history contains the fail edge and findings, two build passes
+  appear in bare `main`'s file, and the addendum's addressed marker lands with them.
+
+**Cross-graph migration** (`tests/service/fleet/migration.spec.ts`) has a source build hand the chunk to a target graph,
+where only the target build commits and delivers. The trace companion checks the migration link and the graph names; the
+browser assertion belongs to [`blizzard:ui`](./ui.md#blizzardui).
+
+- `test_cross_graph_migration_repins_requeues_and_lands_under_the_new_graph` — the chunk re-pins to the target, records
+  one migration, completes its build and delivery there, and changes the bare origin's `LANDED.md` history exactly once.
+
+**Mixed-harness lineage** (`tests/service/fleet/mixed-harness.spec.ts`) runs a single chunk through a Claude Code build
+and an OpenCode review, with a stopped-and-restarted host at the build-judge boundary and another restart during the
+review's held worker checkpoint. Runner lease reads establish session/model/effort/version and declaration continuity;
+hub usage and derived analytics agree per node, and each committed file lands exactly once. The trace companion checks
+both invocation identities. At the component tier, `tests/test_runner_restart_resume.py` pins resume-intent persistence
+and clearing.
+
+- `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` — one traversal crosses the two
+  harnesses and survives both operator restarts without retrying the OpenCode lease or duplicating either origin commit.
+
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
 run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb

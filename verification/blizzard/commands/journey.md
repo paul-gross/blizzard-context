@@ -38,9 +38,8 @@ the asked chunk resumed without takeover, from the mock fleet's own session reco
 `main` exactly once; no environment orphaned, `GET /api/host/environments` holding the escalated chunk's alone; and
 `blizzard hub status` truthful for every chunk.
 
-Beyond `blizzard:e2e`'s `test_escalation_e2e`
-([`../e2e-scenarios/human-loop.md#test_escalation_e2e`](../e2e-scenarios/human-loop.md#test_escalation_e2e)), the
-journey adds the process boundary: the takeover command is composed by a runner spawned as its own OS process, not by
-the loop's tick function called inside the test process. Deliberately unstressed: a simultaneous hub-and-runner crash
-inside a build's base turn before the commit is submitted — the reboot targets a latched fleet, so no chunk is
-mid-build.
+Beyond the service tier's `test_retries_exhausted_escalates_and_takeover_resumes_session`
+([`./test-tiers/service.md`](./test-tiers/service.md)), the journey adds the process boundary: the takeover command is
+composed by a runner spawned as its own OS process, not by the loop's tick function called inside the test process.
+Deliberately unstressed: a simultaneous hub-and-runner crash inside a build's base turn before the commit is submitted —
+the reboot targets a latched fleet, so no chunk is mid-build.

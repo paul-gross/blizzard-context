@@ -30,6 +30,10 @@ of the behavioral assertions. After finishing the scenario, poll `traceSink.span
 runner invocation for that chunk have arrived, then apply the dictionary-driven trace oracle. A completed host step
 alone is not an export barrier for both daemons.
 
+Before a negative leak scan of the full export, stop the companion's `runnerHost` and `freshHub` in that order, then
+read `traceSink.spans()` again. Their shutdown flushes close the worker-command and hub-export windows; the earlier
+root-and-invocation poll alone does not prove that a later command span cannot still arrive.
+
 **Why.** The harness fixtures own daemon lifetime, tenant routing, cleanup, and test isolation. A bare request context
 reaches no tenant; file-wide mutable setup crosses parallel tests.
 
@@ -91,6 +95,14 @@ minted with `mockSessions()` (the mock harness's session records in the workspac
 through `raw`. To act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:`
 option of `cli` and `events.open`.
 
+A fleet test that drives delivery passes its `repository()` result to
+`runnerHosts.create({ runnerRepositories: { [repo.name]: repo.origin! } })` before minting the graph: the host then
+clones that mock-forge origin and its `originHead`, `originTree`, `originLog`, `originFile`, and `originMessage` read
+the same bare git truth the forge merges. The default minted toy origins remain for runner-only tests.
+
+For a pasteable escalation command, call `runnerHost.shell(command, input)`: the handle executes the command as printed,
+feeds the input to stdin, and uses the host's isolated, mock-fenced environment. A spec never spawns it.
+
 **Don't.** Assemble `http://localhost:${port}/api/...` in a spec.
 
 ## Earn the least isolation (`bzh:service-isolation-earned`)
@@ -132,6 +144,11 @@ A `runnerHost` boots `stepped`: `step()` and `stepHost()` each resolve once the 
 then reads. It never waits on a timer for a pass the host would run on its own. The halted and multi-runner examples
 live in `tests/service/runner/host-halted-runners.spec.ts`; their foreign-identity and persisted host-fact specimens
 live in `tests/service/runner/store/host-halted-runners.spec.ts`.
+
+In a `collectorTest` case, poll `collector.decision(traceId)` for the short trace while the worker is held at its
+checkpoint. Its unmarked trace-specific probe reads the collector's cached sampling decision; only a returned `dropped`
+is a barrier for asserting that later root and command spans were not forwarded. A received span and an empty forwarded
+sink cannot establish that decision.
 
 To keep a hub outage open under an in-flight read, hold the `mockHubRelay` option's relay (`mockHub.relay`): stop the
 hub, issue the read, and wait on the relay's `refusal()` as the barrier that the read is in flight. Restart the hub and
