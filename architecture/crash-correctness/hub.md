@@ -33,8 +33,8 @@ rows a landing or completion transaction enqueued. Its two windows are both regi
 by one dedicated scenario driving the built-in `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
 
 Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) rides its own
-caller's transaction, so none has a window of its own — each leaves its intents durable together with the fact that
-enqueued them. The callers are:
+caller's transaction, so none has a window of its own — each leaves its intents or terminal no-closer skip facts durable
+together with the triggering fact. The callers are:
 
 - a landing-marker artifact write, in whichever store records it;
 - the `delivery_repo_landed` write, on the hub node's landing step and in a hub action's landing record;
@@ -47,35 +47,34 @@ The only span open past any of them is the window between that commit and the dr
 caller opens the identical span.
 
 Within one intent's own attempt, past `close.after-close.before-record`, one transaction — `record_work_item_closure` —
-writes the outcome fact and, for a `closed`/`gone` outcome, retires the intent together; a second, separate write
-follows for the outcome's dedupe-gated `event_log` row. Folding the outcome and the retirement into one transaction is
-what keeps a second dangerous window closed here: written separately, a crash between them could leave the intent
-transiently pending against an already-terminal ref, the exact shape `hub:no-pending-intent-against-terminal-ref` flags
-— and the armed crash point is checked for invariants immediately after the kill, before any recovery pass runs, so that
-shape would be a guaranteed trip, not a rare race. A crash before the folded transaction commits loses nothing (the
-closer's own contract is idempotent, so the next pass's re-attempt is a clean no-op — the GitHub closer's trace comment
-is deduped by a hidden per-chunk marker read before posting, so a re-attempt after a posted comment, a failed close, or
-a crash here never double-posts); a crash after it, before the event write, loses only the informational, append-only
-event, never the fact or the retirement.
+writes the outcome fact and, for a `closed`/`gone`/`skipped` outcome, retires the intent together; a second, separate
+write follows for the outcome's dedupe-gated `event_log` row. Folding the outcome and the retirement into one
+transaction is what keeps a second dangerous window closed here: written separately, a crash between them could leave
+the intent transiently pending against an already-terminal ref, the exact shape
+`hub:no-pending-intent-against-terminal-ref` flags — and the armed crash point is checked for invariants immediately
+after the kill, before any recovery pass runs, so that shape would be a guaranteed trip, not a rare race. A crash before
+the folded transaction commits loses nothing (the closer's own contract is idempotent, so the next pass's re-attempt is
+a clean no-op — the GitHub closer's trace comment is deduped by a hidden per-chunk marker read before posting, so a
+re-attempt after a posted comment, a failed close, or a crash here never double-posts); a crash after it, before the
+event write, loses only the informational, append-only event, never the fact or the retirement.
 
 The sweep's per-intent backoff (`close_intent_attempts`) opens no window of its own. A `failed` outcome's attempt row
 rides `record_work_item_closure`'s own transaction above — the same one that writes the outcome fact — so it is exactly
-as durable as that fact and never separately lost. A `skipped` attempt (no closer bound for the ref's source) has no
-outcome fact and no retirement to fold alongside, so `record_close_attempt_skipped` is its own single-statement
-transaction; a crash before it commits loses nothing durable (the intent was already pending and stays pending), and
-there is nothing after it to lose. A `deferred` attempt (the forge's rate budget turned the close away, so the row
-carries the `resume_at` the intent waits for) is the same shape: `record_close_attempt_deferred` is its own
-single-statement transaction, with no outcome fact, no retirement and no event beside it, so a crash before it commits
-loses nothing durable — the next pass re-attempts the intent, and the budget turns it away again until its reset. Either
-way the ledger is append-only (`bzh:facts-not-status`): a crash mid-sweep leaves some intents' backoff clocks ticked and
-others not, and the next pass reads each one's own history fresh.
+as durable as that fact and never separately lost. A due intent with no bound closer records a terminal `skipped`
+outcome and retires in one transaction; a crash before commit leaves the intent pending for another pass. A `deferred`
+attempt (the forge's rate budget turned the close away, so the row carries the `resume_at` the intent waits for) is the
+same shape: `record_close_attempt_deferred` is its own single-statement transaction, with no outcome fact, no retirement
+and no event beside it, so a crash before it commits loses nothing durable — the next pass re-attempts the intent, and
+the budget turns it away again until its reset. Either way the ledger is append-only (`bzh:facts-not-status`): a crash
+mid-sweep leaves some intents' backoff clocks ticked and others not, and the next pass reads each one's own history
+fresh.
 
 Per-ref close-once is `record_work_item_closure`'s own store-level uniqueness constraint on
 `(chunk_id, source, ref, outcome)`, mirroring `record_hub_artifact`'s own idempotent-bool contract; retirement rides the
 same transaction, so it carries no separate once-only claim of its own. `hub:no-double-terminal-closure` and
 `hub:no-pending-intent-against-terminal-ref` are both legal-history invariants, not accepted false positives: the first
-catches a broken idempotency guard letting a ref carry both `closed` and `gone`, the second a stuck retirement past the
-point the folded transaction ever leaves one standing alone.
+catches a broken idempotency guard letting a ref carry multiple terminal outcomes, the second a stuck retirement past
+the point the folded transaction ever leaves one standing alone.
 
 ## A hub action pass's effect writes
 
