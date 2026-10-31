@@ -22,10 +22,9 @@ whose subject is Python itself, in three kinds: store-file subjects (host gradua
 old fields), wire parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk
 findings, transcript segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health,
 credential renewal, runner self-test), and nothing else; their shared launchers live in `tests/mock_fleet_support.py`.
-Both exercise a running daemon from outside against the mock fleet. This differs from `blizzard:e2e`, which drives the
-loop in-process and the served board in a real browser. The Python half needs the sibling provisioned `blizzard-mock`
-worktree (its venv ships the mock-fleet scripts, stub IdP, and `mock-claude-code`) and skips cleanly without
-`BLIZZARD_SERVICE=1`.
+Both exercise a running daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this
+tier's. The Python half needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts,
+stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 

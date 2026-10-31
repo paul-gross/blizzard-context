@@ -4,25 +4,25 @@ A surface can land on one side of a boundary and go silently unserved on the oth
 in the same commit for that not to happen. Across the repo boundary, the domain statement an author-facing surface owes
 is the companion that `bzh:owed-claims-landed` in [./evidence.md](./evidence.md) requires of a `blizzard` change.
 
-## An e2e change extends the registry (`bzh:e2e-change-extends-registry`)
+## An e2e change updates the registry (`bzh:e2e-change-extends-registry`)
 
-**Rule.** Adding, renaming, or deleting a `tests/e2e/` test lands its matching entry in the e2e scenario registry, in
-the same change — never as a follow-up. The entry belongs in the spoke under [`./e2e-scenarios/`](./e2e-scenarios/) that
-owns the reader question the scenario answers; the registry hub [`./e2e-scenarios.md`](./e2e-scenarios.md) routes to it
-and carries no entries itself.
+**Rule.** Renaming, deleting, or porting a `tests/e2e/` test lands its matching registry change in the same change —
+never as a follow-up. The tier takes no new test (`bzh:service-tests-in-playwright`). A scenario's entry lives in the
+spoke under [`./e2e-scenarios/`](./e2e-scenarios/) that owns the reader question it answers; the registry hub
+[`./e2e-scenarios.md`](./e2e-scenarios.md) routes to it and carries no entries itself.
 
-**Why.** The registry is what the drift check reads, so a scenario landed without its entry turns that check red for
-every change behind it, and the entry ends up written by an author who never built the scenario.
+**Why.** The registry is what the drift check reads, so a renamed or removed scenario left behind in it turns that check
+red for every change behind it, and the fix ends up written by an author who never touched the scenario.
 
-**Detect.** `blizzard-context:registry-drift` is the mechanical companion that catches a missing registry entry.
+**Detect.** `blizzard-context:registry-drift` is the mechanical companion that catches a stale registry entry.
 
-**Don't.** A `blizzard` commit that adds a browser scenario with this message, and no companion `blizzard-context`
-change under `verification/blizzard/e2e-scenarios/`:
+**Don't.** A `blizzard` commit that ports an e2e scenario to a `tests/service/fleet/` spec with this message, and no
+companion `blizzard-context` change under `verification/blizzard/e2e-scenarios/`:
 
 ```text
-test(e2e): drive the pause banner through the browser
+test(fleet): port the landing-order scenario
 
-Registry entry to follow once the spoke it belongs in is settled.
+Registry entry to drop once the port settles.
 ```
 
 ## A wire change extends the mock (`bzh:wire-change-extends-mock`)

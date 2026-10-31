@@ -52,9 +52,10 @@ against the live stack rather than seeding past it:
 3. File a forge issue.
 4. `POST /api/chunks`, so the env's runner ticks the chunk to `done`.
 
-`blizzard:e2e` runs this same loop as a tier, and the `mise run e2e` source is the exact in-process sequence to read
-when a by-hand step is unclear. Walking it by hand exercises a change on the loop while watching it; it never stands in
-for the tier.
+`blizzard:service-test` runs this same loop as a tier, and
+`tests/service/fleet/acceptance-loop.spec.ts::test_acceptance_loop_one_chunk_ingest_to_landed` is the exact sequence to
+read when a by-hand step is unclear. Walking it by hand exercises a change on the loop while watching it; it never
+stands in for the tier.
 
 **Passes when.** The stated observable holds on the running hub, confirmed through a second surface — and, for a loop
 walk, the chunk lands in the bare origin and the hub's facts derive `done`, with no tokens and no network.
@@ -143,11 +144,11 @@ answering at `<hub-url>`; one on `auth.mode = "none"` needs no sign-in.
 
 ### `blizzard:manual-standing-idp`
 
-**Surface.** `blizzard:e2e`'s login-session scenario proves the full OAuth dance and its role-dependent UI only for a
-pytest fixture's lifetime, so this method covers the same behavior against a standing hub a human or a
-`frontend-verifier` agent can point a real browser at in a provisioned feature env. It stays manual because no automated
-tier drives a real browser against a standing, out-of-fixture process pair, and giving the e2e tier a persistent-process
-mode it does not otherwise need costs more than the surface is worth.
+**Surface.** `blizzard:ui`'s login-session spec (`tests/ui/auth/login-session.spec.ts`) proves the full OAuth dance and
+its role-dependent UI only for a test fixture's lifetime, so this method covers the same behavior against a standing hub
+a human or a `frontend-verifier` agent can point a real browser at in a provisioned feature env. It stays manual because
+no automated tier drives a real browser against a standing, out-of-fixture process pair, and giving the UI tier a
+persistent-process mode it does not otherwise need costs more than the surface is worth.
 
 **Setup.** Start the stub IdP standing per `blizzard-mock/src/blizzard_mock/idp/README.md` §"Standing instance" —
 `blizzard-mock-idp --host 127.0.0.1 --port <idp-port>`, confirmed with `GET /healthz`. Run `mise run web-build` so the
@@ -849,9 +850,9 @@ separately, by an operator, once a release containing `8fdb7577` is deployed the
 
 **Surface.** One hub's fleet traces leaving through one operator collector, running the documented config
 (`packaging/otel-collector/collector.yaml` in `blizzard`) unmodified, to **two real backends at once** — a self-hosted
-store and a hosted service — and a reader finding a chunk's slowest step in each. `blizzard:e2e`'s `fleet traces`
-subtests prove the exported shape through a file exporter and `blizzard:collector-config` proves the config parses;
-neither delivers a span to a backend or reads one back.
+store and a hosted service — and a reader finding a chunk's slowest step in each. `blizzard:service-test`'s traced fleet
+cases in `tests/service/fleet/acceptance-loop.spec.ts` prove the exported shape through a loopback OTLP receiver and
+`blizzard:collector-config` proves the config parses; neither delivers a span to a backend or reads one back.
 
 **Blind spot.** The self-hosted store is Jaeger all-in-one, not Tempo, which the config's comments name; both speak OTLP
 gRPC, so the exporter block is the same. A backend's own query and retention behavior beyond the one chunk read here is

@@ -24,8 +24,8 @@ selection lists none of them. A spec imports `test` and `expect` from the harnes
 spec apply, and `page` is allowed. The facade's UI fixture (`tests/harness/ui.ts`) supplies the page's `baseURL` from
 the test's hub, opens the page in the test's own tenant rather than at the board's tenant picker, and the `wideViewport`
 and `narrowViewport` sizes, read from `tests/harness/viewports.json`, the one home the e2e tier's viewport fixtures read
-as well. This differs from `blizzard:e2e`, which drives a hub, runner and CLI together under pytest: a UI test needs
-only a hub, and asserts what the board renders.
+as well. A UI test asserts what the board renders. Its hub is always real; a scenario that needs runners behind the
+board steps real runner hosts through the `runnerHosts` fixture, as `tests/ui/auth/runner-federation.spec.ts` does.
 
 The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite and is a required check. Its roster:
 
