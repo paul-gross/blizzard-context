@@ -23,15 +23,14 @@ re-ingesting the same item mints a fresh chunk. An item already wrapped by a liv
 ingest naming one item twice wraps it once, in first-seen order.
 
 A chunk's work refs are closed at their own source through its binding once the chunk lands, reaches the reserved `done`
- terminal, or an operator marks it done by hand. Close intents commit atomically with the triggering fact; source closure
- is best-effort. With a closer bound, failures retry and rate-limited attempts wait for the reset. With no closer bound,
- closure is terminally skipped with reason `no closer`; no intent remains pending, and binding a closer later does not
- resurrect it. A landing can close refs while the chunk keeps running; a chunk that lands and
-is only later abandoned still closes its work items, because it was in fact delivered. A partial no-code resolution or
-nonterminal success alone does not close refs. Intent deduplication excludes ephemeral chunks and terminal refs. Closing
-a delivered item leaves a note naming what landed it only at a source with its own comment surface, once per chunk
-however often the close is retried; a hub-authored item records nothing about its landing beyond its `delivered` closure
-and its work ref.
+terminal, or an operator marks it done by hand. Close intents commit atomically with the triggering fact; source closure
+is best-effort. With a closer bound, failures retry and rate-limited attempts wait for the reset. With no closer bound,
+closure is terminally skipped with reason `no closer`; no intent remains pending, and binding a closer later does not
+resurrect it. A landing can close refs while the chunk keeps running; a chunk that lands and is only later abandoned
+still triggers closure, because it was in fact delivered. A partial no-code resolution or nonterminal success alone does
+not close refs. Intent deduplication excludes ephemeral chunks and terminal refs. Closing a delivered item leaves a note
+naming what landed it only at a source with its own comment surface, once per chunk however often the close is retried;
+a hub-authored item records nothing about its landing beyond its `delivered` closure and its work ref.
 
 A hub item is `open`, `delivered`, or `withdrawn`, and both closures are terminal. Its title and body are never blank,
 whichever door writes them. Editing and withdrawing apply to an open item only, and an edit naming no field still stamps
