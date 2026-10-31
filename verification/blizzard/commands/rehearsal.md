@@ -13,7 +13,6 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 release's own published wheel seeds a hub and a runner host, the hub is upgraded first to the candidate, the baseline
 runner keeps working against it, then the runner is upgraded too, and both stores are walked down to the baseline and
 forward again. It is skipped without `BLIZZARD_REHEARSAL=1`, and a tree with no supported release skips it and says so.
-The contract is `blizzard-product:/plans/release-engineering/compat-floor/spec/rehearsal.md`.
 
 **Inputs.** Each leg holds two isolated virtualenvs, every daemon and verb a subprocess: the baseline is the release's
 published wheel from its GitHub Release, and the candidate is the wheel built from HEAD. `blizzard-mock` is checked out
@@ -51,8 +50,7 @@ request.
 builds. For each tree, the baseline alone is applied to an empty store, the floor release's own published wheel builds
 its history's store from empty with its own `migrate` verbs, and the two are compared on the same backend: every table's
 columns (type, nullability, default), primary key, foreign keys, unique constraints and indexes, by name; every row; and
-on SQLite each table's `AUTOINCREMENT`, read from its DDL. The contract is
-`blizzard-product:/plans/release-engineering/release-lines/spec/fold.md` §The two proofs.
+on SQLite each table's `AUTOINCREMENT`, read from its DDL.
 
 It is skipped without `BLIZZARD_STORE_BASELINE=1`, and skips and says so while no tree's base revision declares a
 `BASELINE_FLOOR`, which is every run before the first fold. `BLIZZARD_STORE_BASELINE_PG_URL` names the Postgres server

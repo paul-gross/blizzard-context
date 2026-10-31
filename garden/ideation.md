@@ -1,9 +1,9 @@
 # The `ideation` axis
 
-The gardening axis that holds the product as built to the intent `blizzard-product:/charter/` declares, and asks what it
-could become. A spoke of the [garden registry](./index.md); the four fields below are the shape `canon:gardening-axes`
-requires. Each scope is a place to ideate — the surfaces a person drives, blizzard's structure, what the fleet uses,
-what the fleet spends — and each field below is stated per scope where they differ.
+The gardening axis that holds the product as built to the intent its charter declares, and asks what it could become. A
+spoke of the [garden registry](./index.md); the four fields below are the shape `canon:gardening-axes` requires. Each
+scope is a place to ideate — the surfaces a person drives, blizzard's structure, what the fleet uses, what the fleet
+spends — and each field below is stated per scope where they differ.
 
 ## Evaluates
 
@@ -65,9 +65,8 @@ One slug per place to ideate.
 
 ## Criteria
 
-`blizzard-product:/charter/` — its mission, vision, and personas — owns every statement of intent this axis judges
-against and is the only home for that prose; each persona's card under `charter/personas/` is the single home of its
-`persona:<slug>` id.
+The product charter — its mission, vision, and personas — owns every statement of intent this axis judges against and is
+the only home for that prose; each persona's card is the single home of its `persona:<slug>` id.
 
 This axis judges against intent and enforces no standard. The charter says what the product is for, never what the code
 must look like, so nothing it states is a rule the product can violate, and a proposal here is an opinion about what the
@@ -97,8 +96,8 @@ the rows into one per name — a node keyed `<graph>/<node>` — and never sums 
 
 These bodies bound what counts as a gap:
 
-- `blizzard-product:/epics.md` is the record of what is already planned. A capability, use, or saving `epics.md` already
-  commits to is not a gap this axis reports; it is intent already on its way.
+- The product's epic registry is the record of what is already planned. A capability, use, or saving the registry
+  already commits to is not a gap this axis reports; it is intent already on its way.
 - Code that violates a constraint [`../architecture/`](../architecture/index.md) declares is out of range for every
   scope, `architecture` included: that drift is the [`architecture`](./architecture.md) axis's finding. What
   `architecture` holds is the opposite reading of the same ground — whether the constraints themselves, and the

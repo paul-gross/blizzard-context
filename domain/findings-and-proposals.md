@@ -4,8 +4,7 @@ A **finding** is one instance a routine's run observed — not a theme, not a ta
 weed are seventeen findings, each with its own locus and its own id. A **garden proposal** is a proposed response to the
 findings behind it — it may name none at all (§A proposal's findings are optional). Both are durable hub entities, first
 class the way an artifact is, and both persist as evidence whether or not anyone ever acts. Part of the
-[domain model](./index.md); the machinery both ride is `blizzard-product:/delivered/garden/machinery.md`, which this
-does not restate.
+[domain model](./index.md).
 
 Each finding and each proposal belongs to one project ([projects.md](./projects.md)): a run's finding takes its
 routine's project, a review-sourced finding takes the reviewed chunk's, and a proposal takes its routine's, or for an

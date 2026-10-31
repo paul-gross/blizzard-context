@@ -16,9 +16,7 @@ throttle declines rather than refuses, and lifts of itself once its reading chan
 - A budget of spend over a trailing window against a dollar ceiling.
 - A schedule.
 
-A continuation of a step already begun answers to the floor alone. An escalation asks the breakers alone. The levers are
-`blizzard-product:/delivered/throttling/spec/levers.md`. The gate's shape — its verdict, the kinds of start, and how a
-declined claim is reported — is `blizzard-product:/delivered/throttling/spec/gate.md`.
+A continuation of a step already begun answers to the floor alone. An escalation asks the breakers alone.
 
 ## An exhausted subscription holds back every runner spending it (`bzh:subscription-floor-reach`)
 

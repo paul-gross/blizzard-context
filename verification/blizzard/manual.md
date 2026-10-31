@@ -378,12 +378,11 @@ and the run ends the way the page says it will.
 ### `blizzard:manual-opencode-export-budget`
 
 **Surface.** `OpenCodeTranscriptSource`'s wall-clock cost — one `opencode export <session-id>` shell-out plus its strict
-parse — under fleet-realistic concurrency, against the cursor token-size budget
-`blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s Performance boundary sets. No CI tier measures
-wall-clock time at all, and every component-tier test of the source binds a scripted export rather than a real
-`opencode` binary, so neither the shell-out's latency nor the parser's cost at a large retained conversation is pinned
-anywhere else. If the budget this reading records fails, that boundary's own contingency applies: the source moves
-behind OpenCode's documented server API instead, without changing the seam.
+parse — under fleet-realistic concurrency, against the cursor's token-size budget. No CI tier measures wall-clock time
+at all, and every component-tier test of the source binds a scripted export rather than a real `opencode` binary, so
+neither the shell-out's latency nor the parser's cost at a large retained conversation is pinned anywhere else. If the
+budget this reading records fails, the source moves behind OpenCode's documented server API instead, without changing
+the seam.
 
 **Blind spot.** A dev machine's `opencode export` cost is not the hosted runner host's — different disk, different CPU
 class, a different concurrent-worker count. What it measures instead is the **ratio** between the export's cost at a
@@ -392,7 +391,7 @@ shape a budget decision turns on, not an absolute SLA.
 
 **Setup.** A real `opencode` binary (or the emitted mock CLI-surface artifact, once it gains a general `export`,
 standing in when a live provider is unavailable), driving one session compacted enough to carry a fleet-realistic
-retained-turn count, per `blizzard-product:plans/adapters/opencode/spec/transcripts.md`'s Forward reads section.
+retained-turn count.
 
 **Steps.**
 
