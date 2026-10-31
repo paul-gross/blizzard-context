@@ -38,13 +38,17 @@ enqueued them. The callers are:
 
 - a landing-marker artifact write, in whichever store records it;
 - the `delivery_repo_landed` write, on the hub node's landing step and in a hub action's landing record;
-- the `delivery_landed` write and the `finalize_delivery` terminal transition — seam methods no live path calls, so a
-  chunk reaches the terminal without either enqueuing anything;
+- an admitted transition to the reserved `done` terminal, on the same tenant-scoped locked transaction as its intents;
+- the `delivery_landed` write and the `finalize_delivery` terminal transition — seam methods no live path calls;
 - an operator's hand-completion.
 
 The only span open past any of them is the window between that commit and the drain, which
 `close.after-enqueue.before-drain` arms — once, on the marker path, rather than once per enqueuing caller, because every
 caller opens the identical span.
+
+A terminal transition and its intents commit or roll back together, whether the transition comes from a hub node or a
+later graph node. A no-code marker alone and a nonterminal transition enqueue nothing. Retried enqueues deduplicate, and
+ephemeral chunks and already-terminal refs remain excluded.
 
 Within one intent's own attempt, past `close.after-close.before-record`, one transaction — `record_work_item_closure` —
 writes the outcome fact and, for a `closed`/`gone` outcome, retires the intent together; a second, separate write

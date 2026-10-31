@@ -21,12 +21,12 @@ and no bounce budget; only a poll timeout or an incomplete-delivery crossing doe
 
 Exceeding `poll_timeout` (default three hours, measured from the first recorded wait) stops polling and kicks the chunk
 back: a bounce fact is recorded and the chunk re-routes through the node's `failure` edge. A chunk is also kicked back
-when an authored edge routes to a non-terminal node while any repo among the node's own commits has no `merged/<repo>`
-marker the action recorded yet. This incomplete-delivery kick-back records its bounce fact and a `bounce-envelope`
-artifact but lets the chunk travel the authored choice's own edge — it is detected from the landed-marker fact, never
-from the choice name, so no outcome name is privileged. Either kick-back escalates to `needs_human` once the node's
-`bounce_cap` (default 5, overridable per node) is crossed. An answer the node authors no edge for escalates the chunk at
-once, naming the choice, rather than re-polling.
+when an authored edge routes to a non-terminal node while any repo among the node's own commits has neither a landing
+marker nor a no-code resolution matching its current declaration. This incomplete-delivery kick-back records its bounce
+fact and a `bounce-envelope` artifact but lets the chunk travel the authored choice's own edge — it is detected from
+resolved facts, never from the choice name, so no outcome name is privileged. Either kick-back escalates to
+`needs_human` once the node's `bounce_cap` (default 5, overridable per node) is crossed. An answer the node authors no
+edge for escalates the chunk at once, naming the choice, rather than re-polling.
 
 **Why.** A typed answer leaves no parsing to go wrong, and fixing "an authored choice, or a reserved wait" as the whole
 vocabulary lets mint-time validation prove every answer routes. The shared bounce-cap ladder keeps a stuck or

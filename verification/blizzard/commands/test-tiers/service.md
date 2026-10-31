@@ -259,7 +259,7 @@ real forge PR and asserts the build's file on bare `main`, then observes `delive
 
 **Non-code spike** (`tests/service/fleet/spike-terminal.spec.ts::test_spike_chunk_terminates_with_only_asset_artifacts`)
 proves a read-only spike reaches `done` through deliver with its write-up as a `spike-notes` asset, no commit artifact
-or forge PR, and unchanged bare `main` (MVP criterion 10).
+or `merged/` marker, a closed work item, no forge PR, and unchanged bare `main` (MVP criterion 10).
 
 **Basic workspace delivery**
 (`tests/service/fleet/basic-workspace.spec.ts::test_basic_workspace_chunk_lands_without_winter`) builds, reviews and
