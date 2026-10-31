@@ -574,6 +574,27 @@ Standing in for a tier: the hub half's run of the same opener under `blizzard:ma
 runner half's single-read component tests on SQLite. The gap closes the day the runner chain reaches head on Postgres
 from empty, or some tier gains a Postgres-backed runner run.
 
+## The landing policies revision under Postgres
+
+Every tier runs `20261029_1200_landing_policies` on SQLite only. It adds `repositories.landing_policy` and
+`hub_node_poll.kind`, each added nullable with its server default, filled in bounded pages, and tightened to `NOT NULL`
+keeping that default. It adds nullable `repositories.park_timeout_hours` and `hub_node_poll.last_polled_at`, and creates
+`project_repository_positions` and `flow_submission_terms` empty. On SQLite each tightening is a `batch_alter_table`
+rebuild; on Postgres it is a native `ALTER`.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
+  store reached head, returned to base leaving only `alembic_version`, and reached head again. It then stepped down to
+  `20261029_0900_close_attempt_resume_at`, seeded 2,500 `repositories` rows and 2,500 `hub_node_poll` rows, and came
+  back up to head. Every row read `merge-on-checks` and `pending`, both columns read `NOT NULL` with their defaults, and
+  a row inserted without either column read its default. A second step down kept every seeded row and dropped the four
+  columns and both tables.
+- **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
+  someone runs it again. No row was written through the two new tables there, so their foreign keys onto a link and a
+  submission have not been enforced against a row.
+
+Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
+portable SQL `bzh:sql-portable` holds each statement to.
+
 ## What the project lens and the project columns do not cover
 
 Two project boundaries are drawn by no tier because the system does not draw them:

@@ -68,6 +68,9 @@ through a link, any number of projects may link the same record, and a link neve
   whichever project carried the work.
 - **A repository link** says the project's chunks may land in that repository, and grants nothing else. A repository no
   project links receives nothing.
+- **A project orders the repositories it links.** Each link may hold a position in the project's landing order, or be
+  unranked. The order is the project's, not the repository's: two projects linking the same repositories may order them
+  differently. Unlinking a repository takes it out of the order, and relinking it restores the position it held.
 - **The built-in hub source** is one list for the whole tenant, linked to every project without being configured, and
   cannot be unlinked. Each item in it belongs to the project it was created in.
 - **A forge is never linked.** A project reaches one only through the sources and repositories it links.
@@ -102,8 +105,13 @@ Every source the ingest draws on must be linked to the project it goes into; ing
 
 A chunk lands only in repositories its project links, as the links stand when the landing step begins. A landing into a
 repository the project was not given is refused before anything is pushed, naming the repository and the project — a
-refusal distinct from landing into a repository the tenant has not configured at all. Landing itself behaves as it does
-for any chunk.
+refusal distinct from landing into a repository the tenant has not configured at all.
+
+A chunk landing several repositories lands them in its project's landing order: ranked repositories first, lowest
+position first, then every unranked one, each tie broken by slug. A project that ranks nothing lands its repositories by
+slug. A visit takes the order, and each repository's policy, at its first turn and keeps them across a retry or a
+restart, so a reorder reaches the next visit, never one already under way. Landing otherwise behaves as it does for any
+chunk.
 
 ## A call that needs a project
 

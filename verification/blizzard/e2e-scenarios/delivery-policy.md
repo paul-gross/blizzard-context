@@ -5,8 +5,8 @@
 
 # Delivery-policy and forge e2e scenarios (`bzh:e2e-delivery-policy`)
 
-What `deliver` does when the forge answers with a red check, a conflict, or a pending CI run, plus the label projection
-reporting a chunk's state back to the forge.
+What `deliver` does when the forge answers with a red check, a conflict, or a pending CI run, the order a project lands
+its repositories in, plus the label projection reporting a chunk's state back to the forge.
 
 Every module in this file needs the sibling provisioned `blizzard-mock` worktree, skips without `BLIZZARD_E2E=1`, and
 uses no browser.
@@ -59,6 +59,45 @@ forge. Each scenario ends with the flow invariants holding and no turn open.
   is gone after build and takes it through `record-findings`.
 - `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` — proves a chunk that reaches `deliver` paused takes
   no turn there, and lands once resumed.
+
+## test_policy_carry_over_e2e
+
+A store held before repositories carried a landing policy, carried onto them by a real migrate and hub: a HEAD hub is
+seeded through its doors and lands one single-repository chunk while a second waits mid-delivery behind the mock forge's
+`checks_pending` lever; the store walks down to `20261029_0900_close_attempt_resume_at`, where no repository holds a
+policy, no project an order, and no submission its terms, and the HEAD migrate and hub carry it back up.
+`hub:landing-position-on-link`, `hub:submission-terms-standing`, and `hub:repository-references-in-tenant` hold on the
+carried-over store and at the end.
+
+- `test_a_store_held_before_landing_policies_carries_over_and_lands_its_chunks_as_before` — proves every carried
+  repository reads `merge-on-checks` and every project its links unranked; once the lever is released the chunk waiting
+  at the upgrade lands, a third chunk lands after it, and both show the outcome and marker kinds the first chunk did.
+
+## test_landing_order_e2e
+
+A project's landing order deciding the order a multi-repository chunk lands, against the mock forge's `toy-api` and
+`toy-web` repositories and, where a scenario needs a third, `toy-lib` added through the forge's `POST /_repos`. Each
+scenario reads the order the merges reached the forge in, and ends with `hub:landing-position-on-link`,
+`hub:submission-terms-standing`, and `hub:repository-references-in-tenant` holding.
+
+- `test_a_library_ranked_first_lands_before_its_consumer` — proves `toy-web`, ranked ahead of `toy-api` against slug
+  order, lands first.
+- `test_a_second_project_lands_the_same_repositories_in_its_own_order` — proves two projects linking both repositories
+  in reverse orders each land their own chunk in their own order.
+- `test_one_ranked_repository_lands_before_two_unranked_in_slug_order` — proves with only `toy-web` ranked, it lands
+  first, then `toy-api` and `toy-lib` by slug.
+- `test_a_relinked_repository_keeps_its_position` — proves unlinking a ranked repository drops it from the order, and
+  relinking it restores its position, a chunk then landing in that order.
+- `test_an_exhausted_gap_is_renumbered_and_the_order_lands` — proves moves that halve the gap after one repository until
+  no midpoint is left make the next move renumber the order `1.0, 2.0, …` and take the midpoint, and a chunk lands in
+  the order that leaves.
+- `test_a_reorder_while_a_chunk_waits_behind_another_reaches_only_later_chunks` — proves two chunks waiting behind the
+  checks, the second behind the first, both land in the order their first turns took despite a reorder, while a chunk
+  whose first turn follows the reorder lands in the new order.
+- `test_an_interrupted_turn_keeps_the_terms_its_first_turn_took` — proves a chunk reordered under after its first turn,
+  while waiting behind the checks, lands in the order it first took once the hub restarts with the checks green.
+- `test_an_exported_document_applies_back_writing_nothing` — proves a hub with a ranked and an unranked repository
+  exports its configuration, and applying the document back writes no record and no position.
 
 ## test_forge_budget_e2e
 

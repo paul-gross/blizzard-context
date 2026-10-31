@@ -54,20 +54,28 @@ sources and repositories carry the lifecycle in its place, each its own revision
 verbs — `create` for a link, `retire` for an unlink, `enable` for a relink — each beside its link fact. A link is named
 into being by `PUT /api/projects/{project}/source-links/{source}` (or `repository-links/{repository}`), which links or
 relinks and leaves a standing link as it is, and unlinked by that path's `POST …/retire`; on the CLI,
-`blizzard hub project link` and `unlink`. A record a project owns is created in the project the call names — `--project`
-on the CLI, by id or slug — and a call naming none falls back or is refused as
-[../../domain/projects.md](../../domain/projects.md) §A call that needs a project states, the refusal
-`422 project_required` listing the tenant's projects; its list, and the change log, take `?project=` to narrow to one
-project and read the whole tenant without it. A change row of a project, a project's link, or a record of any kind a
-project owns — a scope, a routine, or a kind added beside them — names that record's project, since its key means
-something only inside its project; one of a tenant-wide record — a forge, a work source, a repository, a secret — names
-none. A graph is an immutable mint, so its definition takes no patch — an edit is a new mint — and only its mutable
-flags take the sparse `PATCH`, beside its retire and enable, each of which appends a fact even when it repeats the
-standing value ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A work item is work, not
-configuration: its patch carries the sparse-merge meaning, and it takes no revision, no change row, and keeps its
-`DELETE`. A secret takes replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on
-the CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision
-and appends its change row.
+`blizzard hub project link` and `unlink`. A project's landing order is written on its repository links, never on the
+repository: `PUT /api/projects/{project}/landing-order` sets the whole order and
+`POST /api/projects/{project}/landing-order/position` moves one repository — on the CLI, `blizzard hub project order`
+and `position` — each appending a position fact only for a link whose position changes, and refusing a repository the
+project does not link with `422 repository_not_linked`. A repository carries its landing policy as two fields:
+`landing_policy`, required and never null, which a request takes from the closed policy set and a response reports as an
+open string, and `park_timeout_hours`, the one repository field an explicit `null` clears. A repository write whose
+policy needs a capability its forge does not offer is refused `forge_capability_missing` on `landing_policy`, naming
+each missing capability, the policy, and the forge — on create, on a policy or forge edit, and on every repository write
+a document apply plans. A record a project owns is created in the project the call names — `--project` on the CLI, by id
+or slug — and a call naming none falls back or is refused as [../../domain/projects.md](../../domain/projects.md) §A
+call that needs a project states, the refusal `422 project_required` listing the tenant's projects; its list, and the
+change log, take `?project=` to narrow to one project and read the whole tenant without it. A change row of a project, a
+project's link, or a record of any kind a project owns — a scope, a routine, or a kind added beside them — names that
+record's project, since its key means something only inside its project; one of a tenant-wide record — a forge, a work
+source, a repository, a secret — names none. A graph is an immutable mint, so its definition takes no patch — an edit is
+a new mint — and only its mutable flags take the sparse `PATCH`, beside its retire and enable, each of which appends a
+fact even when it repeats the standing value ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A
+work item is work, not configuration: its patch carries the sparse-merge meaning, and it takes no revision, no change
+row, and keeps its `DELETE`. A secret takes replace in place of edit: its value is replaced whole by
+`PUT /api/secrets/{name}/value` — on the CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the
+replace still increments the revision and appends its change row.
 
 **Detect.**
 
@@ -154,12 +162,15 @@ name a project the same document declares. The apply itself resolves no project:
 the section and the project each entry acts in, and hands both to it planned
 (`blizzard/src/blizzard/hub/domain/projects/declarations.py`). A project entry's stated `sources` or `repositories` list
 is that project's whole set, so a name the list leaves out is unlinked — the one write an omission drives, retiring a
-link and never a record; a list the entry omits leaves the stored links. A project entry naming a former slug is refused
-rather than taking the slug back ([../../domain/projects.md](../../domain/projects.md) §Former slugs), and an entry of
-any kind a project owns acts in the project its `project` names, by id or slug, resolved as
-[../../domain/projects.md](../../domain/projects.md) §A call that needs a project states. Export writes each project by
-its slug, the `projects` section first, so applying an export back writes nothing. A legacy import links the sources and
-repositories it writes to the tenant's only project, and is refused when the tenant holds several.
+link and never a record; a list the entry omits leaves the stored links. A project entry's `landing_order` lists the
+repositories it ranks, first to land first, leaves every other linked repository unranked, and is planned after the
+entry's links; an entry that omits it leaves the order as it stands, and export writes it only for a project that ranks
+a repository. A project entry naming a former slug is refused rather than taking the slug back
+([../../domain/projects.md](../../domain/projects.md) §Former slugs), and an entry of any kind a project owns acts in
+the project its `project` names, by id or slug, resolved as [../../domain/projects.md](../../domain/projects.md) §A call
+that needs a project states. Export writes each project by its slug, the `projects` section first, so applying an export
+back writes nothing. A legacy import links the sources and repositories it writes to the tenant's only project, and is
+refused when the tenant holds several.
 
 **Detect.**
 
