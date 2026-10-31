@@ -1,13 +1,13 @@
 # Architecture — blizzard
 
 Blizzard's **architecture guidance**: the structural invariants and design decisions a change must honor, read when
-planning a change or reviewing a plan. Conforms to the canon concept at `winter-canon:/architecture-guidance.md`. Where
-the companion [standards/](../standards/index.md) domain governs the code-quality details a finished change is held to,
-this domain governs how the code is *structured and designed* — consulted before writing new code so you build with the
-existing structure rather than reverse-engineering it.
+planning a change, reviewing a plan, or reviewing a change. Conforms to the canon concept at
+`winter-canon:/architecture-guidance.md`. Where the companion [standards/](../standards/index.md) domain governs the
+code-quality details a finished change is held to, this domain governs how the code is *structured and designed* —
+consulted before writing new code so you build with the existing structure rather than reverse-engineering it.
 
-**Read this index before changing the code of any blizzard daemon, seam, store, or the Angular suite**, and follow the
-one row that matches your change rather than reading the whole tree.
+**Read this index before changing or reviewing the code of any blizzard daemon, seam, store, or the Angular suite**, and
+follow the one row that matches your change rather than reading the whole tree.
 
 Parent: [../index.md](../index.md).
 
@@ -19,7 +19,7 @@ Parent: [../index.md](../index.md).
 | [./clean-architecture.md](./clean-architecture.md#narrow-seams-and-step-context-protocols-bzhnarrow-seams) § Narrow seams and step context Protocols | Adding a runner loop step, or a member a step or service reads — the step's own context Protocol and the narrow seams a collaborator takes instead of a bundle                                                                                                                 |
 | [./data-roles.md](./data-roles.md)                                                                                                                   | Adding, changing, or reviewing any data class under `src/blizzard/` — a `@dataclass`, `NamedTuple`, or pydantic model — or importing a `wire/` model somewhere new: choosing its role, where its role puts it, or fixing a `tests/test_layering.py` data-role failure          |
 | [./repository-access.md](./repository-access.md)                                                                                                     | Deciding which layer may hold a repository or what a domain call may take across its boundary                                                                                                                                                                                  |
-| [./read-cost.md](./read-cost.md)                                                                                                                     | Designing or reviewing a store read for bounded cost on a page or repeating path                                                                                                                                                                                               |
+| [./read-cost.md](./read-cost.md)                                                                                                                     | Designing or reviewing a store read for bounded cost on a page or repeating path, or any code that reads the store inside a loop, comprehension, or per-item path — a service, handler, or domain call as much as a store adapter                                              |
 | [./lanes.md](./lanes.md)                                                                                                                             | Adding or changing a periodic pass or store-and-forward lane on the hub or runner                                                                                                                                                                                              |
 | [./transcript-ranges.md](./transcript-ranges.md)                                                                                                     | Defining which invocation's transcript turns a worker or judge reads                                                                                                                                                                                                           |
 | [./system-shape.md](./system-shape.md)                                                                                                               | Designing a daemon, an external-system seam, a store schema, a workflow graph, a hub↔runner wire model, a configured record or a read of configuration, or anything crossing the runner–worker seam — the macro-shape invariants, and the route to the rule that governs yours |
