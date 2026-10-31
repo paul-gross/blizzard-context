@@ -27,6 +27,31 @@ is a second opinion fighting the one ruff already is.
 `UP`, `B`, `C4`, `SIM`, `RUF`, not bandit's `S` family, so it silences a rule ruff never runs and fails as an unused
 noqa instead.
 
+## Strict types (`bzh:strict-types`)
+
+**Rule.** Shipping code type-checks under strict pyright, and a suppression waives one named rule at one line, with its
+reason beside it.
+
+**Why.** A signature is the first thing an agent meeting a module reads, and it builds on what the signature says.
+Strict mode keeps that promise honest: it rejects an untyped parameter and a value whose type it cannot infer. A bare
+`# type: ignore` silences every rule on its line whatever its brackets name, so one copied from module to module hides
+real errors behind a comment that looks deliberate.
+
+**Scope.** `pyproject.toml`'s `[tool.pyright]` `strict` names `src` and `exemplars/python`; the tests stay `standard`
+until they are typed. A store migration test under `src` that is not yet typed carries a `# pyright: standard` header,
+the one whole-file waiver; typing it deletes the header, and a new migration test never adds one.
+
+**Detect.** `blizzard:typecheck` reports every strict error. The structural gate's `bzh:strict-types` rule
+(`blizzard:structural-gate`) flags a `type: ignore` comment and a `# pyright: basic` or `# pyright: standard` header in
+shipping code outside the store migration tests.
+
+**Do.** `# pyright: ignore[reportMissingTypeStubs]  # ships no py.typed` on the import of a library that ships no type
+information, as `src/blizzard/foundation/platform_tracing/internal/pipeline.py` does; a JSON payload typed where it is
+decoded, `decoded: dict[str, list[object]] = json.loads(payload)`.
+
+**Don't.** A `# type: ignore[...]` naming a mypy code — the repo never runs mypy; a `cast` or `Any` that quiets an
+unknown whose real type is knowable; a `# pyright: standard` header outside a store migration test.
+
 ## Docstring prose (`bzh:docstring-prose-authoring`)
 
 **Rule.** A docstring is code, not a markdown file — but every rule in `winter-canon:/principles.md` binds it too. State
