@@ -201,7 +201,8 @@ own cursors — the rows it has not yet written — never a corpus it would resc
 `FlowDriver.tick` (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) submits each chunk standing at a hub node while
 `delivering` to its flows and starts the turns its submissions may take; the turn's task
 (`blizzard/src/blizzard/hub/delivery/flow_turn.py`) runs the pass and ends the turn in the transaction that routes its
-answer. A verdict's transition and its turn's end are one transaction, and a landing's `merged/<repo>` marker, its
+answer. A verdict's transition — or, on a cross-graph choice, the migration it records, with any gate it opens — and its
+turn's end are one transaction, and a landing's `merged/<repo>` marker, its
 `delivery_repo_landed` row, its close intents, its flow's `landed` fact, and its `flow-landed` event row are one more,
 so neither opens a window. The windows that remain are the `flow.` family:
 
