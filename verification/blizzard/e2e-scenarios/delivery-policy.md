@@ -44,32 +44,6 @@ forge. Each scenario ends with the flow invariants holding and no turn open.
 - `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` — proves a chunk that reaches `deliver` paused takes
   no turn there, and lands once resumed.
 
-## test_landing_order_e2e
-
-A project's landing order deciding the order a multi-repository chunk lands, against the mock forge's `toy-api` and
-`toy-web` repositories and, where a scenario needs a third, `toy-lib` added through the forge's `POST /_repos`. Each
-scenario reads the order the merges reached the forge in, and ends with `hub:landing-position-on-link`,
-`hub:submission-terms-standing`, and `hub:repository-references-in-tenant` holding.
-
-- `test_a_library_ranked_first_lands_before_its_consumer` — proves `toy-web`, ranked ahead of `toy-api` against slug
-  order, lands first.
-- `test_a_second_project_lands_the_same_repositories_in_its_own_order` — proves two projects linking both repositories
-  in reverse orders each land their own chunk in their own order.
-- `test_one_ranked_repository_lands_before_two_unranked_in_slug_order` — proves with only `toy-web` ranked, it lands
-  first, then `toy-api` and `toy-lib` by slug.
-- `test_a_relinked_repository_keeps_its_position` — proves unlinking a ranked repository drops it from the order, and
-  relinking it restores its position, a chunk then landing in that order.
-- `test_an_exhausted_gap_is_renumbered_and_the_order_lands` — proves moves that halve the gap after one repository until
-  no midpoint is left make the next move renumber the order `1.0, 2.0, …` and take the midpoint, and a chunk lands in
-  the order that leaves.
-- `test_a_reorder_while_a_chunk_waits_behind_another_reaches_only_later_chunks` — proves two chunks waiting behind the
-  checks, the second behind the first, both land in the order their first turns took despite a reorder, while a chunk
-  whose first turn follows the reorder lands in the new order.
-- `test_an_interrupted_turn_keeps_the_terms_its_first_turn_took` — proves a chunk reordered under after its first turn,
-  while waiting behind the checks, lands in the order it first took once the hub restarts with the checks green.
-- `test_an_exported_document_applies_back_writing_nothing` — proves a hub with a ranked and an unranked repository
-  exports its configuration, and applying the document back writes no record and no position.
-
 ## test_forge_budget_e2e
 
 The shared forge rate budget: one work source opted into `annotate = true` with a 1s sweep interval and the repository

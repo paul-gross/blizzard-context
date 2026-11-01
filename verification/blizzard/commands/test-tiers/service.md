@@ -34,6 +34,19 @@ stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
+**Landing order** (`tests/service/fleet/landing-order.spec.ts`):
+
+- `test_a_library_ranked_first_lands_before_its_consumer` proves ranked order defeats slug order and captures terms.
+- `test_a_second_project_lands_the_same_repositories_in_its_own_order` proves each project's independent ordering.
+- `test_one_ranked_repository_lands_before_two_unranked_in_slug_order` proves ranked then slug order.
+- `test_a_relinked_repository_keeps_its_position` proves unlink and relink retain position and affect landing.
+- `test_an_exhausted_gap_is_renumbered_and_the_order_lands` proves exhausted midpoint gaps are renumbered and land.
+- `test_a_reorder_while_a_chunk_waits_behind_another_reaches_only_later_chunks` proves both queued chunks retain their
+  captured order, while the later chunk takes the new order.
+- `test_an_interrupted_turn_keeps_the_terms_its_first_turn_took` proves captured terms survive a reorder and hub restart.
+- `test_an_exported_document_applies_back_writing_nothing` proves unchanged apply outcomes and positions; the exact
+  no-position-fact-write proof remains in component-tier `tests/test_landing_policy_doors.py`.
+
 **Fast-forward landing** (`tests/service/fleet/fast-forward.spec.ts`) drives a real host against owned forge origins:
 
 - `test_ahead_fast_forward_and_protected_base[False]` and `test_ahead_fast_forward_and_protected_base[True]` prove an
