@@ -34,6 +34,15 @@ stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
+**Forge budget** (`tests/service/fleet/forge-budget.spec.ts`) drives a stepped host and a fresh hub sharing one forge
+budget across annotation, landing and close. `test_a_low_budget_turns_the_sweep_away_while_a_landing_proceeds` proves
+the sweep spends nothing, the landing succeeds, and the close has exactly one deferred attempt at reset, no closure and
+an unretired intent after another drain. `test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[rate_limited]`
+and `test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[secondary_rate_limited]` prove each refusal's
+retry and eventual landing. The `blizzard:unit-test` companions are `tests/test_forge_budget.py` and
+`tests/test_github_work_source_rate_gate.py`; the `blizzard:component-test` companions are
+`tests/test_forge_registry.py` and `tests/test_flow_driver.py`.
+
 **Flow turns** (`tests/service/fleet/flow-turns.spec.ts`) uses public submission, turn and landing histories; the
 component checker exercises flow invariants independently.
 
