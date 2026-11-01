@@ -34,6 +34,18 @@ stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
+**Flow turns** (`tests/service/fleet/flow-turns.spec.ts`) uses public submission, turn and landing histories; the
+component checker exercises flow invariants independently.
+
+- `test_two_repositories_land_side_by_side` proves disjoint flows keep turning and land independently.
+- `test_two_chunks_on_one_branch_land_in_arrival_order` proves arrival order survives a hub restart.
+- `test_a_garden_delivery_lands_while_a_chunk_is_held_on_a_branch` proves a zero-flow garden visit can complete.
+- `test_two_chunks_each_landing_both_repositories_both_land` proves two visits share both flows and both land.
+- `test_a_pending_chunk_yields_its_branch_until_its_next_poll` proves a brisk visit takes each slow polling gap.
+- `test_a_chunk_whose_runner_is_gone_lands_and_records_its_findings` proves hub-only landing and finding recording.
+- `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` observes the unacknowledged runner completion and
+  proves the paused visit takes no turn before resumption.
+
 **Landing order** (`tests/service/fleet/landing-order.spec.ts`):
 
 - `test_a_library_ranked_first_lands_before_its_consumer` proves ranked order defeats slug order and captures terms.
@@ -43,7 +55,8 @@ The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`b
 - `test_an_exhausted_gap_is_renumbered_and_the_order_lands` proves exhausted midpoint gaps are renumbered and land.
 - `test_a_reorder_while_a_chunk_waits_behind_another_reaches_only_later_chunks` proves both queued chunks retain their
   captured order, while the later chunk takes the new order.
-- `test_an_interrupted_turn_keeps_the_terms_its_first_turn_took` proves captured terms survive a reorder and hub restart.
+- `test_an_interrupted_turn_keeps_the_terms_its_first_turn_took` proves captured terms survive a reorder and hub
+  restart.
 - `test_an_exported_document_applies_back_writing_nothing` proves unchanged apply outcomes and positions; the exact
   no-position-fact-write proof remains in component-tier `tests/test_landing_policy_doors.py`.
 
