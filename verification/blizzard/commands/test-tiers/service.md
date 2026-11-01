@@ -34,6 +34,22 @@ stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
+**Parked landing** (`tests/service/fleet/park.spec.ts`) exercises a real host, hub and mock forge:
+
+- `test_park_waits_past_node_timeout_then_records_human_merge[merge]`,
+  `test_park_waits_past_node_timeout_then_records_human_merge[squash]`, and
+  `test_park_waits_past_node_timeout_then_records_human_merge[rebase]` — the wait outlasts the node timeout and the
+  person's merge records the landed revision.
+- `test_closed_parked_change_escalates_then_requeue_opens_fresh_change[closed]` and
+  `test_closed_parked_change_escalates_then_requeue_opens_fresh_change[closed-requeue]` — a closed change escalates;
+  requeue opens a fresh change.
+- `test_parked_repository_holds_landing_order_until_person_merges[library-parked]` and
+  `test_parked_repository_holds_landing_order_until_person_merges[consumer-parked]` — landing waits for the parked
+  repository in either order.
+- `test_second_parked_repository_has_its_own_review_clock` — the first change's aged marker cannot time out the second.
+- `test_park_timeout_then_person_merge_is_adopted_on_requeue` — timeout escalates, then requeue adopts the person's
+  squash merge.
+
 **Hub action nodes** (`tests/service/fleet/actions/hub-actions.spec.ts` and
 `tests/service/fleet/hub-actions-refusal.spec.ts`) run a real host against a tenant's mock-forge repository. The land
 action merges one PR, advances `main` and records the landed revision. Behind the actions profile's test-action and
