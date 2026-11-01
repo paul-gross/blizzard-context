@@ -24,26 +24,6 @@ The flow record, kept by the hub's own flow driver over a real hub: a chunk held
   lands with the `landed` outcome, its `merged/<repo>` marker, and its `delivery_repo_landed` row, and no turn is left
   open.
 
-## test_flow_turns_e2e
-
-Every hub step taken as a turn on the flows of the branches it lands on, by the hub's own flow driver against the mock
-forge. Each scenario ends with the flow invariants holding and no turn open.
-
-- `test_two_repositories_land_side_by_side` — proves chunks on two repositories hold disjoint flows and both keep
-  turning while held, and one lands while the other still waits.
-- `test_two_chunks_on_one_branch_land_in_arrival_order` — proves two chunks held on one branch, come due together on a
-  hub restarted with the checks green, land in the order they arrived.
-- `test_a_garden_delivery_lands_while_a_chunk_is_held_on_a_branch` — proves a garden run's delivery, which holds no
-  branch, lands while a chunk is held pending on one.
-- `test_two_chunks_each_landing_both_repositories_both_land` — proves two chunks each landing the same two repositories
-  share both flows and both land.
-- `test_a_pending_chunk_yields_its_branch_until_its_next_poll` — proves a pending chunk is not next again before its
-  next poll, and another chunk on its branch takes a turn in every gap between its turns.
-- `test_a_chunk_whose_runner_is_gone_lands_and_records_its_findings` — proves the hub alone lands a chunk whose runner
-  is gone after build and takes it through `record-findings`.
-- `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` — proves a chunk that reaches `deliver` paused takes
-  no turn there, and lands once resumed.
-
 ## test_forge_budget_e2e
 
 The shared forge rate budget: one work source opted into `annotate = true` with a 1s sweep interval and the repository
