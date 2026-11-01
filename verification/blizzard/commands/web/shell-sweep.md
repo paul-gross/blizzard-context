@@ -104,15 +104,15 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `--kv-label-col`/`--chunk-facts-pad` custom properties keep the tables' columns aligned when a long wrapped Runner
   value gives them different content widths. A second case proves a standing-edge row (Depends on/Blocks) shares that
   same grid: with one prerequisite present, its value column's `left` must match the facts table's own Runner row.
-- `hover-tint.shell-sweep.spec.ts` covers the `--tint-hover`/`--tint-selected` tokens where they compose —
-  `BoardCardComponent`, `ChunkTimeline`'s history rows, and `ChunkArtifacts`'s artifact rows — a computed-style proof: a
-  real Playwright pointer (`userEvent.hover`) must distinguish hovered from resting `background-color` and, on the board
-  card and `ChunkTimeline`'s `selected` row, from a selected-but-unhovered row's. It also pins that hovering an
+- `hover-tint.shell-sweep.spec.ts` covers the `--tint-hover`/`--tint-selected` tokens where they compose — the fleet
+  `ChunkCard`, `ChunkTimeline`'s history rows, and `ChunkArtifacts`'s artifact rows — a computed-style proof: a real
+  Playwright pointer (`userEvent.hover`) must distinguish hovered from resting `background-color` and, on the board card
+  and `ChunkTimeline`'s `selected` row, from a selected-but-unhovered row's. It also pins that hovering an
   `.artifact-link` washes its row while a contentless `.artifact-plain` row stays unwashed. The tokens live in the
   global stylesheet `web/projects/fleet/src/lib/core/design/tokens.css`, loaded by every app build but by no standalone
   component test, so the spec reads the sheet's real text via `commands.readFile` — the vitest browser command exposed
   for exactly this — and injects it as a `<style>` element. Every assertion is proven able to fail by reverting its own
-  rule: the `:hover` tint backgrounds in `board-card.css` and `chunk-timeline.css`, the selected-row backgrounds pointed
+  rule: the `:hover` tint backgrounds in `chunk-card.css` and `chunk-timeline.css`, the selected-row backgrounds pointed
   at `--tint-hover` instead of `--tint-selected`, and `chunk-artifacts.css`'s `:has()` re-scoped to
   `.artifact-plain:hover`.
 - `app-panel-mobile.shell-sweep.spec.ts` covers the runner's mobile board — `LocalPanelMobile` and its chunk cards, the
@@ -269,20 +269,23 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   note field must render without overflowing the dialog panel, the `supersede` verb's extra absorbing-finding field must
   render below or beside the note field with no overlap, and the footer's Cancel/submit buttons must sit side by side
   without overflowing the panel — real CSS layout claims jsdom cannot make.
-- `board-card-cost.shell-sweep.spec.ts` covers `BoardCardComponent`'s right-hand meta group at its fullest: a done-lane
+- `board-card-cost.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s right-hand meta group at its fullest: a done-lane
   card carrying its completion stamp and its one combined cost figure, billed, estimated, and partial at once. At 800px
   and at 390px/320px (`bzh:narrow-viewport-tier-rule`) the two must sit side by side on one line, neither overlapping
   the other and neither overflowing the card — a real CSS layout claim jsdom cannot make.
-- `board-card-selected.shell-sweep.spec.ts` covers `BoardCardComponent`'s selected state through the kit select row's
+- `board-card-selected.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s selected state through the kit select row's
   `bare` mode. At 800px and at 390px/320px (`bzh:narrow-viewport-tier-rule`) a selected card's inner button must carry a
   transparent background and no border while the outer card holds the cyan left edge, the PR links must sit inside the
   card's rect, and the content's inset from the card edge must be the card's own border and padding alone — a real CSS
   cascade claim jsdom cannot make.
-- `board-card-rows.shell-sweep.spec.ts` covers `BoardCardComponent`'s row order at 800px and at 390px/320px
+- `board-card-rows.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s row order at 800px and at 390px/320px
   (`bzh:narrow-viewport-tier-rule`): title, blocked marking, PR links, step row, and cost row stack inside the card; the
   project's swatch leads the step row, the step stays left-aligned with the title, and the id stays in the step row,
   clear of the step and flush right with the cost; a multi-prerequisite count stays unclipped at 320px; and a real
   pointer reaches the PR link, the fold, and Promote.
+- `chunk-card-tone.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s and `ChunkListRow`'s status colour with the
+  design tokens loaded: in every `Tone`, the left edge and the id must resolve to exactly the colour `toneColor` names
+  for the view's tone, and a selected card's or row's edge must resolve to the selection cyan.
 - `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out at 800px and at
   390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding, bottom hairline, left edge and
   `--surface-selected` background, while `bare` draws no padding, border or background selected or hovered, and a flex
