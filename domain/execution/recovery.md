@@ -20,8 +20,9 @@ the one lease is reached, at which point it falls through to an ordinary judged 
 
 ## Requeue
 
-Requeue names two operations. The hub's supersedes the escalation and releases the route, returning the chunk to the
-queue for the next claimant; it records who requeued, and may carry their note
+Requeue names two operations. The hub's supersedes the escalation and releases the route. A chunk requeued at a runner
+node returns to the queue for the next claimant; one requeued at a hub-executed node is taken again by the hub's flow
+driver. The hub's requeue records who requeued, and may carry their note
 ([../humans/asks.md#a-persons-note](../humans/asks.md#a-persons-note)). The holding runner's own — the hand-back after a
 takeover ([../humans/takeover.md](../humans/takeover.md)) — keeps route, environments, and tenure, re-attempting the
 current node in place against its existing retry budget, and carries no note. The runner refuses its own requeue of a
