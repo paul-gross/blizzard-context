@@ -138,11 +138,12 @@ transaction, then re-read and validate any race-sensitive facts under its locks.
 requires a fresh guard because state can change before the lock is acquired.
 
 **Scope.** This applies to the entire locked scope, including calls made through collaborators, not just repository
-methods. The ordinary tenant unit opens through the tenant-open guard: it refuses a closed tenant and holds its row lock
-until commit or rollback, so close and a concurrent ordinary write serialize. Only tenant teardown's drain and
-completion use the teardown opener for a closed tenant; an ordinary unit must not bypass the guard or use that opener.
-The scoped store contract is owned by `bzh:tenant-scoped-store`
-([./system-shape/tenancy.md](./system-shape/tenancy.md)).
+methods. The ordinary tenant unit opens through the tenant-open guard and holds the tenant row lock until commit or
+rollback. The intended refusal of a closed tenant has a Postgres close-interleaving gap described in
+[tenancy's verification gaps](../verification/blizzard/gaps.md#tenancys-migrations-and-locks-under-postgres); SQLite
+serializes the close and the ordinary write. Only tenant teardown's drain and completion use the teardown opener for a
+closed tenant; an ordinary unit must not bypass the guard or use that opener. The scoped store contract is owned by
+`bzh:tenant-scoped-store` ([./system-shape/tenancy.md](./system-shape/tenancy.md)).
 
 **Detect.** A network client call inside a locked transaction, or an ordinary unit opened without the tenant-open guard
 or through the teardown opener. Review the full scope and its collaborators; no general mechanical gate checks network

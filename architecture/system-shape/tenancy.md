@@ -82,8 +82,11 @@ cannot widen the scope it was given (`bzh:controller-read-only`). Repository Pro
 
 **Scope.** The scope is the tenant and nothing narrower: a project filter is an ordinary argument of the read that
 applies it, never part of the scope. Services are built from one tenant's `TenantStores`, never from the unscoped core
-(`bzh:dependency-injection`). A write on a closed tenant's scope is refused inside its own transaction, so a writer that
-opened its stores before the close cannot write behind the drain.
+(`bzh:dependency-injection`). On SQLite, a write on a closed tenant's scope is refused inside its own transaction, so a
+writer that opened its stores before the close cannot write behind the drain. On Postgres, a write blocked by a
+concurrent close can still proceed after that close commits;
+[tenancy's verification gaps](../../verification/blizzard/gaps.md#tenancys-migrations-and-locks-under-postgres)
+describes the interleaving and its consequences.
 
 For the opener and locked-scope obligations of a domain unit of work, see `bzh:short-locked-unit`
 ([../repository-access.md](../repository-access.md)).
