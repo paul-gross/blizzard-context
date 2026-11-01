@@ -29,6 +29,10 @@ board steps real runner hosts through the `runnerHosts` fixture, as `tests/ui/au
 
 The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite and is a required check. Its roster:
 
+- `tests/ui/flow-lanes.spec.ts::test_the_delivery_band_shows_a_branch_line_and_collapses_live_once_it_lands` — a stepped
+  real host brings two chunks to one branch line, held by the mock forge. The board loads once: the lane and card place
+  lines show arrival order, then both chunks land and the lane collapses live after the lever clears. Its title opens
+  the flow record in the dock with both landings.
 - `tests/ui/shell.spec.ts` — the smoke that the served bundle renders the desktop board shell at the wide viewport and
   the glance board at the narrow one, rather than the placeholder the hub serves when no bundle is built. It is the
   evidence that Chromium installed, the bundle was built and served, and the fixture works.
