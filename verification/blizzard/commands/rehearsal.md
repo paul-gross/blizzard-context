@@ -34,6 +34,11 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
 
 A failing step names the step, the baseline, and the backend, and attaches both daemons' logs.
 
+Landing-policy carry-over is also covered by the component tier revision test
+`src/blizzard/hub/store/migrations/tests/20261029_1200_landing_policies_test.py` and component tier invariant fixture
+`tests/test_invariant_checker_carry_over.py`. The rehearsal proves a held delivery and a later delivery land across a
+released-build upgrade; the revision test proves the policy default and schema transition.
+
 **Where it runs.** `.github/workflows/rehearsal.yml` is reusable, called by `push.yml` on every `master` push —
 `dev-image` needs it, so `edge` advances only on a commit whose upgrade from every supported release succeeded — and by
 `release.yml` on every `-rc.` tag before the image push. A stable tag promotes a candidate's commit and relies on its
