@@ -34,6 +34,19 @@ stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
+**Fast-forward landing** (`tests/service/fleet/fast-forward.spec.ts`) drives a real host against owned forge origins:
+
+- `test_ahead_fast_forward_and_protected_base[False]` and `test_ahead_fast_forward_and_protected_base[True]` prove an
+  ahead branch lands without a PR and protection escalates instead.
+- `test_diverged_base_creates_and_cleans_proven_candidate[diverged]`,
+  `test_diverged_base_creates_and_cleans_proven_candidate[stale-candidate]`, and
+  `test_diverged_base_creates_and_cleans_proven_candidate[protected-landing]` prove candidate creation, cleanup and
+  protected-candidate escalation.
+- `test_fast_forward_stands_when_second_forge_refuses_merge_method` proves the first forge's PR-free landing survives
+  the second forge's refusal.
+- `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` proves missing checks time out without
+  advancing the base.
+
 **Parked landing** (`tests/service/fleet/park.spec.ts`) exercises a real host, hub and mock forge:
 
 - `test_park_waits_past_node_timeout_then_records_human_merge[merge]`,
