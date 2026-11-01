@@ -10,6 +10,12 @@ The service spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md). R
 
 ### blizzard:service-test
 
+Terminal no-closer closure is exercised by `tests/service/hub/close-intents.spec.ts` (CLI completion, replay,
+configuration removal with an inherited pending intent, and re-enabling closers) and
+`tests/service/fleet/acceptance-loop.spec.ts` (real landing with forge closure disabled). Run these cases with
+`mise run playwright -- --project='service-*' --grep 'closer|unclosable'`; they assert one skip event, an unchanged open
+forge item, clean invariants, and normal closure for a fresh ref with a bound closer.
+
 The daemon-HTTP half runs `npx playwright test` (`mise run playwright`), selecting service projects with
 `mise run playwright -- --project='service-*'` from the repo root. New daemon behavior tests live in that package under
 `tests/service/`, in three folders that each run as their own project: `hub/` as `service-hub` and one
