@@ -339,9 +339,9 @@ hermetic, network-free CI tier's reach.
 ## Per-key non-serialization of keyed write locks
 
 `keyed_locks` rows (`bzh:store-exclusive-write`) serialize two ingests of one pointer, or two first mints of one graph
-name, while letting writers of different keys proceed. That per-key property holds only on Postgres. Every tier runs on
-SQLite, whose single writer lock serializes every writer whatever its key, so no tier can observe a writer of a
-different key proceeding, or a concurrent insert of one key losing to an `IntegrityError`.
+name, while letting writers of different keys proceed. That per-key property holds only on Postgres. The SQLite tiers
+cannot observe a writer of a different key proceeding, or a concurrent insert of one key losing to an `IntegrityError`.
+`blizzard:postgres-uow-concurrency` checks same-key contention and ordering on pre-existing lock rows, not either gap.
 
 Standing in for a tier: the per-key structure, asserted at `blizzard:component-test` on what is written — each ingest
 locks only the `keyed_locks` rows of its own pointers — together with the same-key interleaving, which SQLite does
@@ -349,10 +349,10 @@ exercise. Do not add a Postgres tier to close this.
 
 ## Tenancy's migrations and locks under Postgres
 
-Every tier runs on SQLite, whose single writer lock serializes every writer, and no tier runs a migration or a
-concurrent write against Postgres. The tenancy mechanisms below therefore hold on SQLite by construction and stay
-unverified on Postgres, where each statement of a READ COMMITTED transaction reads its own snapshot and foreign keys are
-enforced:
+The Python tiers run on SQLite, whose single writer lock serializes every writer. The focused
+`blizzard:postgres-uow-concurrency` method checks production tenant-guard contention but not the close interleavings
+below. The tenancy mechanisms therefore hold on SQLite by construction and stay unverified on Postgres, where each
+statement of a READ COMMITTED transaction reads its own snapshot and foreign keys are enforced:
 
 - **The migration chain.** The tenancy revisions, `20261008_1100_tenants` through
   `20261008_1720_tenant_deletion_closed_at` (`src/blizzard/hub/store/migrations/versions/`), reach head and return to

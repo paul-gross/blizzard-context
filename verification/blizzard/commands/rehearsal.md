@@ -7,6 +7,19 @@
 Read [`../../blizzard.md`](../../blizzard.md) first for the short command and the method-id inventory;
 [`../commands.md`](../commands.md) routes to the other methods' detail.
 
+### blizzard:postgres-uow-concurrency
+
+`uv run python scripts/check_hub_uow_postgres.py` requires the Postgres extra installed (`uv sync --extra postgres`),
+and `BLIZZARD_UOW_POSTGRES_URL` naming a Postgres server whose user may create and drop databases. The command creates
+and force-drops a uniquely named scratch database through `tests/rehearsal/stores.py`; do not point it at a server on
+which that privilege is inappropriate. Missing prerequisites fail, never skip.
+
+Two independent database connections request the same chunk rows in opposite order, then the same keyed locks in
+opposite order. A test-only tenant-open guard allows concurrent writers; the proof observes the second backend blocked
+by the first at the decision lock and checks both complete in canonical order. A separate run checks contention with the
+production tenant guard. Database lock and statement timeouts and a process deadline make stalled writers fail. Scratch
+tables contain only the guard and locking columns; this is not a migration, teardown-race, or delete-atomicity test.
+
 ### blizzard:rehearsal
 
 `scripts/rehearsal.sh` (`mise run rehearsal`) — the upgrade an operator performs, rehearsed for real: each supported
