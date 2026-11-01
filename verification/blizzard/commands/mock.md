@@ -14,8 +14,8 @@ every lever), the fixture-workspace scaffold, the mock coding-harness engine and
 and its own lever roster, the mock-data CLI, and the stub OAuth IdP (`test_idp.py` — the `blizzard-mock-idp` oidc and
 github surfaces plus its `/_levers` control plane). `.github/workflows/{pr,push}.yml` run this same method, minus the
 `needs_blizzard`-marked wire-parity and real-runner tests (`mise run test -- -m "not needs_blizzard"`, check name
-`gate / pytest (sans needs_blizzard)`). The separate optional `gate / wire parity (needs_blizzard)` job checks out the
-resolved blizzard commit and runs both marked modules. The bare local command stays unmarked and fail-closed.
+`gate / pytest (sans needs_blizzard)`). The separate `gate / wire parity (needs_blizzard)` job checks out the resolved
+blizzard commit and runs both marked modules. The bare local command stays unmarked and fail-closed.
 
 The wire-parity guard (`tests/test_wire_parity.py`), the mock side of `bzh:wire-change-extends-mock`, maps every
 mock-hub response model to the hub schema it mirrors and diffs field sets against the committed
@@ -55,13 +55,13 @@ dedicated job, installing it through `jdx/mise-action` the same way the `quality
 ### blizzard-mock:ci
 
 `gh run watch --repo paul-gross/blizzard-mock <run-id> --exit-status` — watch a GitHub Actions run, the `push`
-merge-gate on master or the `pr` gate, to completion, exiting non-zero on failure. Both include the optional parity job;
-the scheduled `nightly` caller proves against blizzard's `master`. The real-to-mock parity guard covers `IHubClient`
-routes, and the mock-to-real guard covers declared response and event shapes; the mock runner's `/_drive/*` contract and
+merge-gate on master or the `pr` gate, to completion, exiting non-zero on failure. Both include the parity job; the
+scheduled `nightly` caller proves against blizzard's `master`. The real-to-mock parity guard covers `IHubClient` routes,
+and the mock-to-real guard covers declared response and event shapes; the mock runner's `/_drive/*` contract and
 `IHubGateway` still have no independent cross-repo diff.
 
-**Required checks on `master`.** The three `pr.yml` checks below are the current set an operator applies and verifies
-via `blizzard:manual-branch-protection`:
+**Required checks on `master`.** The four `pr.yml` checks below are the set an operator applies and verifies via
+`blizzard:manual-branch-protection`:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input - <<'EOF'
@@ -71,7 +71,8 @@ gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input 
     "checks": [
       {"context": "gate / ruff + pyright"},
       {"context": "gate / pytest (sans needs_blizzard)"},
-      {"context": "gate / process-reference lint"}
+      {"context": "gate / process-reference lint"},
+      {"context": "gate / wire parity (needs_blizzard)"}
     ]
   },
   "enforce_admins": false,
