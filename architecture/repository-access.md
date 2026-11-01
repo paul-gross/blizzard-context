@@ -57,6 +57,124 @@ domain services, which hold the write chunk repository.
 
 **Don't.** An API route that constructs a chunk and saves it through a write repository.
 
+## Name the unit of work at the domain seam (`bzh:unit-of-work`)
+
+**Rule.** When one domain operation must commit work across repositories together, let the domain orchestrator open a
+named unit of work and pass its opaque transaction to each participant.
+
+**Why.** The domain names the atomic operation without acquiring a database connection or making one repository own
+another's behavior. One transaction makes its participating reads and writes share visibility and commit or roll back
+together.
+
+**Scope.** The hub's tenant-scoped seam is `IHubTransactions` and `Transaction` in
+`blizzard/src/blizzard/hub/domain/kernel/transactions.py`. The identity unit has its own seam in
+`blizzard/src/blizzard/hub/auth/identity_transaction.py`; its tenant participation is described in
+[./crash-correctness/hub.md](./crash-correctness/hub.md). A single repository's self-contained write need not open a
+domain unit.
+
+**Detect.** A multi-repository atomic operation hidden in one adapter, or a domain service carrying a SQLAlchemy
+connection. Review the transaction boundary and each participant; no general mechanical gate enforces this rule.
+
+**Do.** `DeleteService.delete` opens `IHubTransactions.begin` and coordinates chunk, dependency, and item repositories
+with the resulting token.
+
+**Don't.** Make the item adapter delete a chunk and release another repository's dependencies to manufacture atomicity.
+
+**See also.** `bzh:transaction-participation`, `bzh:transaction-graduation`, `bzh:short-locked-unit`,
+`bzh:tenant-scoped-store` ([./system-shape/tenancy.md](./system-shape/tenancy.md)).
+
+## Participate through the supplied transaction (`bzh:transaction-participation`)
+
+**Rule.** A repository participating in a unit of work uses the supplied transaction for every participating read and
+write, without opening or committing an independent transaction.
+
+**Why.** A separate connection can miss earlier writes or commit even when the unit rolls back. Validating the token
+keeps its authority confined to its store, tenant, and lifetime.
+
+**Scope.** A repository may also offer a standalone call that opens its own transaction when no token is supplied.
+Connections and token resolution stay in the store layer; `connection_for` in
+`blizzard/src/blizzard/hub/store/transactions.py` validates the token and any required lock coverage.
+
+**Detect.** A participant ignores its token, opens a second write, accepts a token from another scope or after its
+lifetime, or resolves a connection in domain code. Review the adapter and callers; no general mechanical gate enforces
+this rule.
+
+**Do.** `WorkItemStore.withdraw_open` joins a supplied transaction or opens its own scoped write when called alone.
+
+**Don't.** Call a standalone committing repository method from inside a unit expecting rollback to undo it.
+
+**See also.** `bzh:unit-of-work`, `bzh:transaction-graduation`.
+
+## Declare locks before participating (`bzh:transaction-graduation`)
+
+**Rule.** Graduate a hub unit requiring exclusive resources once, before any repository statement, by declaring its
+complete lock set; pass the resulting locked token to its participants.
+
+**Why.** Taking a partial set and later acquiring more can invert another writer's order and deadlock. The locked token
+lets adapters verify authority over each resource they mutate.
+
+**Scope.** `lock_chunks`, `lock_keys`, and `lock_set` graduate the unit; the store sorts chunk ids and then
+namespace-key pairs. The original token is superseded, and a graduated token cannot acquire further locks. The scoped
+tenant opener precedes graduation; lock ordering and the remaining legacy seams are owned by
+[./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md) `bzh:store-exclusive-write`.
+
+**Detect.** A repository statement before graduation, a second graduation, use of the superseded token, or a locked
+mutation without coverage of its resource. `blizzard/tests/test_hub_transactions.py` exercises token lifetime, scope,
+graduation, and coverage.
+
+**Do.** `DeleteService.delete` calls `transaction.lock_chunks` before reading fresh facts and passes the locked token to
+the repositories.
+
+**Don't.** Lock one chunk, read a repository, then attempt to add another chunk to the lock set.
+
+**See also.** `bzh:transaction-participation`, `bzh:short-locked-unit`, `bzh:store-exclusive-write`.
+
+## Keep locked units short and local (`bzh:short-locked-unit`)
+
+**Rule.** Keep a locked unit of work short and perform no network I/O while it is open; do external calls outside the
+transaction, then re-read and validate any race-sensitive facts under its locks.
+
+**Why.** A remote call can wait indefinitely while holding locks needed by other writers. Moving it outside the unit
+requires a fresh guard because state can change before the lock is acquired.
+
+**Scope.** This applies to the entire locked scope, including calls made through collaborators, not just repository
+methods. The ordinary tenant unit opens through the tenant-open guard: it refuses a closed tenant and holds its row lock
+until commit or rollback, so close and a concurrent ordinary write serialize. Only tenant teardown's drain and
+completion use the teardown opener for a closed tenant; an ordinary unit must not bypass the guard or use that opener.
+The scoped store contract is owned by `bzh:tenant-scoped-store`
+([./system-shape/tenancy.md](./system-shape/tenancy.md)).
+
+**Detect.** A network client call inside a locked transaction, or an ordinary unit opened without the tenant-open guard
+or through the teardown opener. Review the full scope and its collaborators; no general mechanical gate checks network
+calls inside a unit.
+
+**Do.** `DeleteService.delete` reads fresh facts and performs its local repository writes inside the locked unit.
+
+**Don't.** Hold a chunk lock while waiting for a forge API response, or use teardown's opener to write to a closed
+tenant.
+
+**See also.** `bzh:unit-of-work`, `bzh:transaction-graduation`, `bzh:store-exclusive-write`.
+
+## Keep sibling adapters independent (`bzh:sibling-adapter-independence`)
+
+**Rule.** Coordinate distinct repositories through their domain-facing seams, not by importing or invoking a sibling's
+adapter implementation or private helpers.
+
+**Why.** Adapter-to-adapter dependencies hide the domain operation and couple persistence implementations. A shared
+transaction lets each repository own its own facts without sacrificing atomicity.
+
+**Scope.** Existing composite mint methods in `WorkItemStore` use shared store helpers; they remain current
+implementation, not a pattern for new cross-repository operations.
+
+**Detect.** An adapter imports a sibling adapter or its private write helper to perform another repository's mutation.
+Review the operation and move coordination to the domain seam.
+
+**Do.** `DeleteService.delete` invokes each repository's own write under one transaction.
+
+**Don't.** Put chunk deletion, dependency release, and item withdrawal in the item adapter.
+
+**See also.** `bzh:unit-of-work`, `bzh:transaction-participation`.
+
 ## Domain operations take objects (`bzh:domain-takes-objects`)
 
 **Rule.** Domain operations receive already-loaded, typed domain objects, never raw identifiers; resolving an identifier

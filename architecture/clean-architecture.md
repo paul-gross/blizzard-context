@@ -311,6 +311,9 @@ share.
 **Don't.** A store adapter in one package importing an adapter or helper from another package's `internal/`, rather than
 taking the seam or a public module.
 
+**See also.** `bzh:sibling-adapter-independence` ([./repository-access.md](./repository-access.md)) applies a narrower
+repository boundary even when both adapters are under the same `internal/` and this visibility rule permits the import.
+
 ## Shared kernel (`bzh:shared-kernel`)
 
 **Rule.** `blizzard/src/blizzard/wire/`, `foundation/`, and `auth_core/` are the shared kernel both daemons import, and

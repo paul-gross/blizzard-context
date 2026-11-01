@@ -55,21 +55,20 @@ rule, in the keyed-lock form under **Do**.
   `UPDATE` locks nothing on an empty table, so the exclusion never engages. Not mechanically checkable; judged at
   review. The remedy is the keyed-lock-row form under **Do**.
 
-**Do.** `lock_chunk_row` (`hub/store/internal/chunk_rows.py`) — a no-op `UPDATE` on the chunk's own row, already minted
-before any claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
+**Do.** `lock_chunk_row` (`hub/store/locking.py`) — a no-op `UPDATE` on the chunk's own row, already minted before any
+claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
 `ScopedConnections.write` (`hub/store/scoped.py`) opens with, with every guard read that follows it on the same
-connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunk/ports/exclusive.py`) is the one place this crosses the
-domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock on Postgres, where two writers
-naming the same set in different orders could otherwise wait on each other) before yielding `ILockedChunkRead` — a
-domain-facing handle carrying no connection. A sibling write repository's own `*_locked` method takes that same handle
-and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a package-private cast only the
-store layer ever calls — the domain layer never sees a `Connection`.
+connection. `IHubTransactions.begin` opens a tenant unit; its `lock_set` declares the complete set once before any
+repository statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating
+repository (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents
+writers naming the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token,
+not the domain. Existing `IChunkExclusiveWrites` callers still use their own locked handles and `*_locked` methods.
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
-locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/internal/chunk_rows.py`). The table is lock-only:
-it holds no state, nothing reads it as a fact, and its rows are never deleted. For each key, in sorted order, the helper
-inserts the row if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op `UPDATE` on it, so the
-first statements after the tenant-row lock lock a row that exists. The table is keyed `(tenant_id, namespace, key)`, the
+locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/locking.py`). The table is lock-only: it holds no
+state, nothing reads it as a fact, and its rows are never deleted. For each key, in sorted order, the helper inserts the
+row if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op `UPDATE` on it, so the first
+statements after the tenant-row lock lock a row that exists. The table is keyed `(tenant_id, namespace, key)`, the
 scoped insert stamping the write's tenant, so two tenants locking one graph name each lock their own row
 (`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
 injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.locked_work_refs` and
@@ -157,6 +156,8 @@ Stated so a reviewer need not re-derive them:
 
 - [../crash-correctness/hub.md](../crash-correctness/hub.md) — whether a write this rule's locks wrap has a crash
   window, which no lock here decides.
+- [../repository-access.md](../repository-access.md) — `bzh:unit-of-work` and `bzh:transaction-graduation`, the domain
+  seam for composing repository writes and declaring their locks.
 - [../../standards/persistence.md](../../standards/persistence.md) — `bzh:sql-portable`, which this rule's locked
   statement is itself held to.
 - [../crash-correctness.md](../crash-correctness.md) — `bzh:invariant-checker`'s `hub:one-live-route-per-chunk`, the

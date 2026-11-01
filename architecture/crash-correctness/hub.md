@@ -297,31 +297,19 @@ recompute.
 
 ## Chunk delete, then hub-item withdrawal
 
-`WorkItemStore.delete_chunk_and_withdraw_hub_items_locked`
-(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the chunk's `chunk_deleted` row and closes every
-open `hub:`-source item it holds as withdrawn, both on the handle's already-locked connection — the same
-single-transaction shape `create_with_chunk` above uses for its own pairing. The `chunk_deleted` insert runs through
-`record_deleted_row` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`), a free function shared the same way
-`insert_chunk_rows` is for the mint side; the `work_items` closures reuse `WorkItemStore._close_conn`, the same
-connection-scoped update `close` itself calls. A `forge:`-sourced pointer on the same chunk is left untouched — only
-`hub:`-source items close.
+`DeleteService.delete` (`blizzard/src/blizzard/hub/domain/operations/delete.py`) records `chunk_deleted`, releases the
+chunk's outgoing dependency edges, and withdraws its open `hub:`-source items through their own repositories in one
+tenant unit of work. A `forge:`-sourced pointer on the same chunk is left untouched — only `hub:`-source items close.
 
-`DeleteService.delete` (`blizzard/src/blizzard/hub/domain/operations/delete.py`) reaches this write from both a direct
-chunk delete and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, always inside the same locked
-transaction `ClaimService`/`EditService`/`RestartService` share (`bzh:store-exclusive-write`,
-[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md)) — the chunk's row lock is the
-transaction's first statement, ahead of the guard reads and the composite write alike, so a claim cannot land on a chunk
-this write is mid-way through deleting. That row lock closes a cross-process concurrency race — a single-writer lock the
-store itself enforces, not a Python object a second hub process could ever share — not a crash window: the call sequence
-it guards only reads — `handle.facts` and `handle.standing_edges()` — before acting, with no write of its own ahead of
-the one atomic transaction — unlike `create_with_chunk`'s own sibling gap, `allocate_ref` running in its own transaction
-before the insert it feeds, there is no narrower window here to name and accept.
+Both a direct delete and `WorkItemEditService.withdraw`'s cascade use this operation. The scoped tenant opener precedes
+the chunk lock, and the fresh guard reads and writes follow on the same transaction (`bzh:store-exclusive-write`,
+[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md)); a claim cannot land during the delete.
+The transaction seam and participation contract are owned by [`../repository-access.md`](../repository-access.md)
+`bzh:unit-of-work`. There is no partial-write window within this unit to arm; this exemption does not claim a kill-9
+test of the transaction.
 
-The same transaction also releases the deleted chunk's own standing outgoing dependency edges, via
-`release_outgoing_edges_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) called on the
-same `conn` right after `record_deleted_row` — still inside the one `engine.begin()`, so a deleted dependent's own edges
-never survive it. `DeleteService.delete` also holds the residual fleet-wide lock across that transaction — like the row
-lock above, a guard against a concurrent writer rather than a crash;
+`DeleteService.delete` also holds the residual per-tenant lock across that transaction — like the row lock above, a
+guard against a concurrent writer rather than a crash;
 [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt owns who shares it and the race
 it closes.
 
