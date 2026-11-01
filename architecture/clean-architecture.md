@@ -189,7 +189,9 @@ httpx2 import: every command builds its HTTP client through the carrier's `clien
 pass it into `OperatorTrace` and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory.
 `runner/cli/runtime.py`'s `init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the
 `runner` group so a worker verb never loads a daemon's stack; the carrier also holds the `host` verb's process and
-harness-bundle builders, which only `runtime.py` — a composition root — may import.
+harness-bundle builders, which only `runtime.py` — a composition root — may import. A runner verb resolves the shared
+carrier extended with the child-process launcher and the loopback transport from `runner/cli/children.py`, so it reads
+its clocks and launcher from one carrier and a test hands HTTP and launcher fakes in one `obj`.
 
 This prose rule is wider than the mechanical roster: `tests/test_layering.py::_COMPOSITION_ROOTS` stays the narrower set
 of modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a CLI module
