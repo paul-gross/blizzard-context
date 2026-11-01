@@ -24,21 +24,26 @@ hub with no setup; and `fleet/` as `service-fleet`, a real runner host enrolled 
 shared real hub, with a `service-fleet-<profile>` for each subfolder named after a hub profile. One `service-*`
 selection reaches all of them; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python
 half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`) and keeps only the cases
-whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks, forge
-old fields), wire parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk
-findings, transcript segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health,
-credential renewal, runner self-test), and nothing else; their shared launchers live in `tests/mock_fleet_support.py`.
-Both exercise a running daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this
-tier's. The Python half needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts,
-stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
+whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks), wire
+parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk findings, transcript
+segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health, credential renewal, runner
+self-test), and nothing else; their shared launchers live in `tests/mock_fleet_support.py`. Both exercise a running
+daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this tier's. The Python half
+needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts, stub IdP, and
+`mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
+
+**Old forge fields**
+(`tests/service/hub/forge-old-fields.spec.ts::test_the_old_fields_resolve_to_forges_with_a_warning_at_every_door`) uses
+the real CLI and hub to check three warnings and ordered events, preservation on omitted fields, and `--clear`.
 
 **Forge budget** (`tests/service/fleet/forge-budget.spec.ts`) drives a stepped host and a fresh hub sharing one forge
 budget across annotation, landing and close. `test_a_low_budget_turns_the_sweep_away_while_a_landing_proceeds` proves
 the sweep spends nothing, the landing succeeds, and the close has exactly one deferred attempt at reset, no closure and
-an unretired intent after another drain. `test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[rate_limited]`
-and `test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[secondary_rate_limited]` prove each refusal's
+an unretired intent after another drain.
+`test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[rate_limited]` and
+`test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[secondary_rate_limited]` prove each refusal's
 retry and eventual landing. The `blizzard:unit-test` companions are `tests/test_forge_budget.py` and
 `tests/test_github_work_source_rate_gate.py`; the `blizzard:component-test` companions are
 `tests/test_forge_registry.py` and `tests/test_flow_driver.py`.
