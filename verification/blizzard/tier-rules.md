@@ -161,7 +161,7 @@ component tests stay pytest.
 one coherent harness; every new pytest service or e2e case grows the older parallel harness the Playwright package
 replaces.
 
-**Detect.** A new `tests/e2e/test_*.py`, or a new pytest case under `tests/service/` driving a daemon's HTTP API, is a
+**Detect.** A new pytest test module under `tests/e2e/`, or a new pytest case under `tests/service/` driving a daemon's HTTP API, is a
 reviewable signature; the registry check verifies cited tier membership, not placement of every new test.
 
 **Do.** Read [service-tests.md](./service-tests.md) before authoring a spec. A scenario that ingests an issue, runs its
