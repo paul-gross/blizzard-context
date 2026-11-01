@@ -66,10 +66,10 @@ not the domain. Existing `IChunkExclusiveWrites` callers still use their own loc
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
 locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/locking.py`). The table is lock-only: it holds no
-state, nothing reads it as a fact, and its rows are never deleted. For each key, in sorted order, the helper inserts the
-row if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op `UPDATE` on it, so the first
-statements after the tenant-row lock lock a row that exists. The table is keyed `(tenant_id, namespace, key)`, the
-scoped insert stamping the write's tenant, so two tenants locking one graph name each lock their own row
+state, nothing reads it as a fact, and its rows are never deleted. For each distinct key, in sorted order, the helper
+first selects the row, inserts it if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op
+`UPDATE` to lock it before any decision guard read. The table is keyed `(tenant_id, namespace, key)`, the scoped insert
+stamping the write's tenant, so two tenants locking one graph name each lock their own row
 (`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
 injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.locked_work_refs` and
 `IWriteGraphRepository.locked_name`, each yielding a handle of its own — never an `ILockedChunkRead`, so a handle that
