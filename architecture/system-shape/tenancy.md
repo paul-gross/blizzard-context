@@ -85,6 +85,9 @@ applies it, never part of the scope. Services are built from one tenant's `Tenan
 (`bzh:dependency-injection`). A write on a closed tenant's scope is refused inside its own transaction, so a writer that
 opened its stores before the close cannot write behind the drain.
 
+For the opener and locked-scope obligations of a domain unit of work, see `bzh:short-locked-unit`
+([../repository-access.md](../repository-access.md)).
+
 **Detect.** The test-suite statement guard — a `before_execute` listener (`src/blizzard/hub/store/tenant_guard.py`) the
 test suite switches on in every tier that opens a hub store, and production leaves off — fails a select, update, or
 delete naming a tenant-owned table without a `tenant_id` equality in its `WHERE` or join `ON`, and an insert whose
