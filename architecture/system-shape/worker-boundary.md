@@ -25,10 +25,12 @@ an `AllowlistedEnv` profile; the launch seam's `env` parameter takes only a prof
 (`blizzard:typecheck`) refuses a bare mapping.
 
 **Do.** `AllowlistedEnv` in `src/blizzard/runner/process/child_env.py` builds both profiles. `tool()` is the base
-allowlist plus `LC_*` plus `env_passthrough`, with `PATH` led by `[worker] path_prepend`'s configured directories ahead
-of the daemon's own; `worker(identity)` is the tool profile plus the per-spawn identity variables (`BLIZZARD_LEASE_ID`,
-the lease token, the scratch dir, the tracing exporter). Any other per-launch variable is an explicit `adding(...)` on
-the profile value. A tool that needs a daemon variable is named in `env_passthrough`.
+allowlist plus `LC_*` plus `env_passthrough`, with `PATH` led by the configured `path_prepend` directories ahead of the
+daemon's own — a runner's `[worker] path_prepend` for its children, and for a host-scoped tool child the host tool
+profile (`[tools]`, or the runners' values when they all agree); `worker(identity)` is the tool profile plus the
+per-spawn identity variables (`BLIZZARD_LEASE_ID`, the lease token, the scratch dir, the tracing exporter). Any other
+per-launch variable is an explicit `adding(...)` on the profile value. A tool that needs a daemon variable is named in
+`env_passthrough`.
 
 **Don't.** `env=os.environ`, or a bare `env=dict(os.environ)` — either hands the child the per-runner token
 (`BZ_HUB_TOKEN_<NAME>`) and every other daemon secret. Don't give a tool child the worker profile: it carries the lease
