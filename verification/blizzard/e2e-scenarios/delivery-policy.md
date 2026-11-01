@@ -44,19 +44,6 @@ forge. Each scenario ends with the flow invariants holding and no turn open.
 - `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` — proves a chunk that reaches `deliver` paused takes
   no turn there, and lands once resumed.
 
-## test_policy_carry_over_e2e
-
-A store held before repositories carried a landing policy, carried onto them by a real migrate and hub: a HEAD hub is
-seeded through its doors and lands one single-repository chunk while a second waits mid-delivery behind the mock forge's
-`checks_pending` lever; the store walks down to `20261029_0900_close_attempt_resume_at`, where no repository holds a
-policy, no project an order, and no submission its terms, and the HEAD migrate and hub carry it back up.
-`hub:landing-position-on-link`, `hub:submission-terms-standing`, and `hub:repository-references-in-tenant` hold on the
-carried-over store and at the end.
-
-- `test_a_store_held_before_landing_policies_carries_over_and_lands_its_chunks_as_before` — proves every carried
-  repository reads `merge-on-checks` and every project its links unranked; once the lever is released the chunk waiting
-  at the upgrade lands, a third chunk lands after it, and both show the outcome and marker kinds the first chunk did.
-
 ## test_landing_order_e2e
 
 A project's landing order deciding the order a multi-repository chunk lands, against the mock forge's `toy-api` and
