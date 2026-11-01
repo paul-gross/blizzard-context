@@ -425,8 +425,11 @@ recomputes the identical path. `remove` runs only once the closure is already du
 an orphan directory behind a lease that is already closed, never a still-active lease with its directory gone.
 `LoopWiring.context`'s own one-shot sweep (`blizzard/src/blizzard/runner/loop_wiring.py`), run only from
 `PeriodicDriver`'s daemon-start build, ahead of its first tick, removes exactly that kind of orphan — anything under
-`worker-tmp/` whose name is not a currently active lease id — and is not a candidate for `bzh:probe-gated-pass` or
-`Retention`, since it runs once at daemon start rather than on a recurring cadence.
+this runner's own `worker-tmp/<runner-id>/` subtree whose name is not a currently active lease id. A host serves several
+runners from one runtime root, so the sweep never reads past its own subtree. A pre-upgrade entry directly under
+`worker-tmp/` is removed only when this runner's own lease store holds that lease id and the lease is no longer active;
+any other top-level entry may be another runner's and is left alone. The sweep is not a candidate for
+`bzh:probe-gated-pass` or `Retention`, since it runs once at daemon start rather than on a recurring cadence.
 
 The write earns **no window at all**: neither half has a partner write to be separated from, and the worst either
 ordering leaves a crash to interrupt is one orphan directory, collected at the next restart.
