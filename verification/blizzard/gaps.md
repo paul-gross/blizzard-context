@@ -339,8 +339,9 @@ hermetic, network-free CI tier's reach.
 ## Per-key non-serialization of keyed write locks
 
 `keyed_locks` rows (`bzh:store-exclusive-write`) serialize two ingests of one pointer, or two first mints of one graph
-name, while letting writers of different keys proceed. That per-key property holds only on Postgres. The SQLite tiers
-cannot observe a writer of a different key proceeding, or a concurrent insert of one key losing to an `IntegrityError`.
+name. On Postgres the keyed rows themselves do not exclude writers of different keys, but the current production
+tenant-open guard serializes ordinary writes within one tenant before they reach those rows. The SQLite tiers cannot
+observe independent key-row locks, or a concurrent insert of one key losing to an `IntegrityError`.
 `blizzard:postgres-uow-concurrency` checks same-key contention and ordering on pre-existing lock rows, not either gap.
 
 Standing in for a tier: the per-key structure, asserted at `blizzard:component-test` on what is written — each ingest
@@ -595,13 +596,11 @@ rebuild; on Postgres it is a native `ALTER`.
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
 
-## What the project lens and the project columns do not cover
+## The project lens is not an access boundary
 
-Two project boundaries are drawn by no tier because the system does not draw them:
-
-- **The lens is not an access boundary.** The board's project lens narrows what a view reads, and a call naming no
-  project reads the whole tenant; access is decided by the tenant alone. Nothing proves a person sees only a project's
-  records, because nothing restricts them to one — a stated non-goal, not a missing check.
+The board's project lens narrows what a view reads, and a call naming no project reads the whole tenant; access is
+decided by the tenant alone. Nothing proves a person sees only a project's records, because nothing restricts them to
+one — a stated non-goal, not a missing check.
 
 ## Response bodies `blizzard:compat` does not read
 

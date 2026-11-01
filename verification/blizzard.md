@@ -91,9 +91,9 @@ A command method passes when its command exits 0.
 | `blizzard-mock:ci`               | `gh run watch --repo paul-gross/blizzard-mock <run-id> --exit-status` — the authoritative remote gate *(more)*                                                                                                                                                                                                                                                                                           |
 | `blizzard-mock:ci-workflows`     | `mise x actionlint@1.7.12 -- actionlint`                                                                                                                                                                                                                                                                                                                                                                 |
 
-| Method                              | Command                                                                                                       |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `blizzard:postgres-uow-concurrency` | `uv run python scripts/check_hub_uow_postgres.py` — focused Postgres lock-order and contention proof *(more)* |
+| Method                              | Command                                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `blizzard:postgres-uow-concurrency` | `uv run --extra postgres python scripts/check_hub_uow_postgres.py` — focused Postgres lock-order and contention proof *(more)* |
 
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by
