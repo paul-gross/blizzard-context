@@ -267,6 +267,11 @@ independence.
 **Additional decision bindings.** These refine the boundaries in the table; they do not certify the full families. Paths
 are relative to `blizzard/src/blizzard` unless they start with `tests/`.
 
+- **Flow departure.** The reconciler locks the submission's chunk, then its flow decision locks, before reading chunk
+  facts and deciding withdrawal on the handle connection. Closure rechecks for an open turn on that transaction.
+  `tests/postgres_locks/test_flow_reconcile.py` observes a concurrent stop blocking departure and verifies the committed
+  withdrawal reason; omitting the chunk lock produces a stale reason. Submission resource resolution remains outside
+  this proof.
 - **Project landing-order authoring.** `ProjectAuthoring.order_repositories` and `position_repository` open a position
   decision that takes `config-authoring/config` before reading standing repository links, their newest position facts,
   and slugs on the same connection. They compute and append position facts on that connection, including no-op
