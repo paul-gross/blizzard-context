@@ -13,12 +13,12 @@ these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
-**Rule.** Give every configured record the same verb set — create, list, show, edit, retire, enable — an edit that is a
-sparse merge, a `revision` that every committed write increments, one `config_changes` row appended in the same
-transaction as each write, and retirement in place of deletion. A sparse merge leaves an absent field unchanged, sets a
-present field, and takes an explicit `null` as clearing a nullable field, refusing it on any other. A retire of a
-retired record, or an enable of an enabled one, writes nothing; an edit of a retired record is legal and leaves it
-retired.
+**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable. A project
+has no retire or enable: its source and repository links have their own lifecycle. Give editable records a sparse-merge
+edit, and each record a `revision` that every committed write increments and one `config_changes` row appended in the
+same transaction as each write. A sparse merge leaves an absent field unchanged, sets a present field, and takes an
+explicit `null` as clearing a nullable field, refusing it on any other. A retire of a retired record, or an enable of an
+enabled one, writes nothing; an edit of a retired record is legal and leaves it retired.
 
 Implement a configured kind against the shared `ConfiguredRecord` capability and reuse its applicable lifecycle
 mechanics rather than copying them. Projects use the base capability without retirement; project links use their own
@@ -34,7 +34,8 @@ encryption and revision lifecycle. The defining modules and consumer-level proof
 | retire | `POST /api/<kind>/{key}/retire` |
 | enable | `POST /api/<kind>/{key}/enable` |
 
-Enable reverses a retirement. Every CLI noun carries the same six verbs, a secret's replace standing in for its edit.
+Enable reverses a retirement. Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its
+edit; projects and links use the verbs described in Scope.
 
 A record that other records reference and an operator renames — a project, a repository, a forge — carries three names,
 each with one job: a hub-minted, immutable `<prefix>_<ulid>` id that every stored reference holds, a **slug** unique
