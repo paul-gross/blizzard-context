@@ -267,6 +267,12 @@ independence.
 **Additional decision bindings.** These refine the boundaries in the table; they do not certify the full families. Paths
 are relative to `blizzard/src/blizzard` unless they start with `tests/`.
 
+- **Config apply.** `ApplyParticipants.open` takes the config-authoring key before constructing readers on the same
+  scoped connection, then runs reconciliation and writes on that connection; dry runs roll back the transaction and
+  no-op applies still enter it. Graph mint and lifecycle operations take config-authoring before their graph-name key,
+  fencing apply's enabled-graph read. `tests/postgres_locks/test_config_apply_unit.py` exercises key contention,
+  post-wait decisions and lock-omission controls, including graph retirement and dry runs. Standalone routine authoring
+  resolves graphs before its repository takes the config key; its graph guard remains to be repaired.
 - **Flow departure.** The reconciler locks the submission's chunk, then its flow decision locks, before reading chunk
   facts and deciding withdrawal on the handle connection. Closure rechecks for an open turn on that transaction.
   `tests/postgres_locks/test_flow_reconcile.py` observes a concurrent stop blocking departure and verifies the committed
@@ -278,7 +284,7 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   decisions. Repository link writers and position writes take the same key.
   `tests/postgres_locks/test_project_landing_order.py` observes the key wait without tenant admission, checks committed
   position and unlink facts after the wait, and removes the decision lock as a negative control. Config apply plans its
-  position facts before acquiring this key; its stale planning window remains unresolved.
+  position facts inside its config-authoring transaction.
 - **Queue decisions versus pause and mint.** `tests/postgres_locks/test_queue_decision_race.py` holds an unnamed
   candidate's chunk row without tenant admission and inserts a pause fact. Reorder waits and excludes it after commit;
   omitting that row lock lets reorder complete with the stale candidate. The test also holds the queue key without
