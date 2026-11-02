@@ -73,7 +73,7 @@ carrying no connection. A sibling write repository's own `*_locked` method takes
 connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a package-private cast only the store layer ever
 calls — the domain layer never sees a `Connection`.
 
-Two specialized chunk handles add locks before yielding that same read interface:
+Specialized chunk handles add locks before yielding a chunk read interface:
 
 - `locked_queue` takes the tenant-scoped `queue-positions/queue` key, then sorted chunk rows. Promote and demote use it;
   their position and promotion writes share its connection. Direct promotion takes the same key before its chunk row;
@@ -85,6 +85,8 @@ Two specialized chunk handles add locks before yielding that same read interface
   recording its route. The graph key protects the edge set used to select prerequisite locks; the prerequisite rows
   fence changes to their facts and the registry key orders eligibility against participating registry writers. This is
   distinct from `locked`, which only locks the explicitly named rows.
+- `locked_flow_admission` takes `config-authoring/config` before sorted chunk rows, yielding a handle that also marks
+  config admission. The reconciler uses it before taking the candidate's flow keys and reading terms.
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
 locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/internal/chunk_rows.py`). The table is lock-only:
@@ -203,6 +205,9 @@ Production changes concurrently, so recheck the census against the worktree befo
 | `hub/domain/chunk/ports/queue.py` → `hub/store/internal/chunk_queue_store.py`: `record_promote_with_position_locked`, `record_demote_with_position_locked`     | `hub/domain/operations/promote.py`, `demote.py`, respectively            |
 | `hub/domain/chunk/model.py` → `hub/store/internal/work_item_store.py`: `delete_chunk_and_withdraw_hub_items_locked`                                            | `hub/domain/operations/delete.py`                                        |
 | `hub/domain/delivery/ports/flows.py` → `hub/store/internal/flow_store.py`: `end_turn_locked`                                                                   | `hub/delivery/flow_turn.py`, `hub/domain/delivery/reconcile.py`          |
+| Same files: `turn_contenders_locked`, `take_turn_locked`                                                                                                       | `hub/domain/delivery/reconcile.py`                                       |
+| Same files: `candidate_terms_locked`                                                                                                                           | `hub/domain/delivery/reconcile.py`                                       |
+| Same files: `poll_policies_locked`                                                                                                                             | `hub/domain/delivery/reconcile.py`                                       |
 | `hub/domain/graph/model.py` → `hub/store/internal/graph_store.py`: `mint_locked`                                                                               | `hub/domain/graph/authoring.py`                                          |
 | `runner/throttle/pause.py` → `runner/store/internal/pause_store.py`: `local_brake_locked`, `record_local_pause_locked`                                         | `runner/throttle/pause.py`                                               |
 | `runner/transfer/rows.py` → `runner/store/internal/host_ingest_store.py`: `merge_host_rows_locked`, `record_host_ingest_locked`                                | `runner/store/internal/runner_transfer_store.py`                         |
@@ -322,26 +327,40 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   `tests/postgres_locks/test_transcript_admission_locks.py` asserts key waits and selective omission controls for
   admission and direct refresh, including old and new supersedes targets; it does not race complete ingest outcomes.
   `tests/test_transcript_ingest_service.py` asserts missing-chunk batch rollback, retry and accepted-key behavior, a
-  retirement recheck, lock selection and selected competing SQLite ingests. Postgres outcome and omission proofs for
-  caps, replay, retirement, chunk creation/deletion and epoch-owner competitors, including teardown, full writer
+  retirement recheck, lock selection and selected competing SQLite ingests.
+  `tests/postgres_locks/test_transcript_decision_contention.py` holds decision locks without tenant admission and
+  inserts competing natural-key, chunk-budget, runner-budget, high-water, retirement or epoch-owner facts. It checks
+  waits, persisted outcomes and selective omission controls for those orderings. The winners are lower-level writes, not
+  competing services; other replay, retirement, chunk creation/deletion and epoch-owner races, teardown, full writer
   coverage and cross-family lock order remain open.
 - **Transcript event replacement versus drop.** `TranscriptEventStore.replace_segment_events` locks the tenant-scoped
   `transcript-events-segment/<segment_id>` key before deleting and replacing one extractor version's events and marker.
   `drop_segments` locks all segment keys in sorted order before reading identities and deleting every version. Both use
   their write connection, and the common segment key spans extractor versions. Segment ingest and direct segment writes
   take the same visibility keys for affected segment and supersedes IDs. Under that key replacement rechecks visibility
-  and the current fingerprint; drop rechecks visibility and skips visible IDs. The versioned fingerprint includes each
-  record's content digest, chunk, node, epoch, spawn generation, normalizer, harness, model, effort and rejection state.
-  Tenant and hub-wide candidacy reads use the same fingerprint. The service propagates replacement refusal, re-reads
-  candidacy for `remaining` when an attempted re-derive fails, and counts only IDs processed by drop.
-  `tests/postgres_locks/test_transcript_event_locks.py` asserts key waits, omission controls and tenant/segment key
-  independence; `tests/test_transcript_event_store.py` asserts sequential stale fingerprint and visibility outcomes.
-  `tests/test_transcript_event_derivation.py` asserts context-only changes invalidate replacements and both candidacy
-  reads, and failed re-derives report a remaining candidate in selected scopes. These are test assertions, not recorded
-  runs or a Postgres outcome proof for ingest versus replace/drop. `EventDerivationService` reads graph pins before
-  replacement; neither the fingerprint nor candidacy detects a graph-pin-only change, and the store does not revalidate
-  pins under the key. Graph-pin changes, teardown and other visibility writers, stale derivation interleavings and
-  complete lock ordering remain open.
+  and the current content fingerprint; drop rechecks visibility and skips visible IDs. Replacement first locks the
+  expected chunk, then the segment key, and checks the expected chunk and graph pin on that connection. The pin is the
+  newest matching node/epoch transition, with greatest graph ID breaking timestamp ties, or the current chunk graph if
+  none matches. The derivation fingerprint combines that pin with each record's content digest, chunk, node, epoch,
+  spawn generation, normalizer, harness, model, effort and rejection state. Tenant and hub-wide candidacy reads use the
+  same fingerprint, including for an empty event list. The service propagates replacement refusal, re-reads candidacy
+  for `remaining` when an attempted re-derive fails, and counts only IDs processed by drop. Tenant and hub-wide sweep
+  signatures return bounded-size aggregates, not resolved per-segment pins: segment count, maximum ID and receipt time;
+  chunk count, minimum and maximum graph ID and distinct graph count; transition count and latest transition time. A pin
+  reassignment that preserves those aggregates, or a content change that preserves segment aggregates, can evade the
+  probe. The sweep's forced full-pass floor eventually revisits candidacy; bounded output is not a guarantee of constant
+  database work or immediate detection. `tests/postgres_locks/test_transcript_event_locks.py` asserts key waits,
+  omission controls and tenant/segment key independence; `tests/test_transcript_event_store.py` asserts sequential stale
+  fingerprint and visibility outcomes. `tests/test_transcript_event_derivation.py` asserts context-only changes
+  invalidate replacements and both candidacy reads, and failed re-derives report a remaining candidate in selected
+  scopes. It also checks selected fallback, transition and timestamp-tie pin changes, including empty derivations,
+  against both candidacy reads and a next sweep; those examples change the aggregate signature and do not establish
+  detection of aggregate-preserving changes. `tests/postgres_locks/test_transcript_graph_pin_race.py` uses shared tenant
+  admission and a transition store writer: replacement waits for its chunk lock and refuses the stale pin after commit;
+  omitting the replacement lock permits a stale marker and event, which tenant and hub-wide candidacy identify. These
+  are test assertions, not recorded runs or a Postgres outcome proof for ingest versus replace/drop. Other graph-pin
+  writers, reverse winner orders, teardown and other visibility writers, stale derivation interleavings and complete
+  lock ordering remain open.
 - **Source links and ingest.** `IngestService.ingest` first chooses a project on separate reads, then takes
   `locked_work_refs` and repeats the chosen project's standing-source-link check through `handle.source_links` on the
   write connection before `live_holders` and `mint_locked`. `tests/postgres_locks/test_ingest_source_link_race.py` holds
@@ -413,16 +432,33 @@ computes withdrawal before calling `close`; the store locks the submission and r
 `tests/postgres_locks/test_flow_reconcile.py` asserts a wait behind an uncommitted `take_turn`, no closure after commit,
 and a closure with the submission lock omitted, bypassing tenant admission on both sides. It does not prove freshness of
 the precomputed withdrawal or all departure competitors. These bindings describe assertions, not recorded test runs.
-`take_turn` receives eligibility and landing terms computed before its resource locks: its locked rechecks alone do not
-establish freshness of those inputs. Identify their writers and intended snapshot semantics before claiming those
-decisions are independently protected.
 
-The traced order on the writing connection is chunk row → `flow-chunk` → `flow-arrival` → sorted `flow` resource keys,
-omitting arrival where not needed. Submit takes all four; submission and turn helpers omit arrival, and withdrawal
-selects submissions after the chunk and flow-chunk locks before taking their resource keys. `lock_keys` sorts keys.
-`tests/postgres_locks/test_flow_decisions.py` binds selected key waits with omission controls, selected competing
-outcomes with tenant admission bypassed, chunk-before-flow for submit and interrupted end, shared-resource turns, and
-arrival allocation across chunks. It is not a complete competitor or deadlock proof, nor a recorded test result here.
+Admission tentatively discovers submissions on the candidate's flows, takes the config-authoring key, locks the
+candidate and discovered earlier contenders' chunk rows in sorted order, then takes the candidate's flow locks and
+reloads earlier contenders. If a newly found contender's chunk is absent from the handle, it retries discovery up to
+three times rather than locking a chunk after a flow key. It reads contender facts and records through the handle,
+resolves graph policies, rechecks eligibility and passes the resulting ineligible set to `take_turn_locked` on that
+transaction. `poll_policies_locked` reads graph-node intervals and timeouts on that connection; `candidate_terms_locked`
+reads repository records, standing links and positions there too. `take_turn_locked` rechecks closure, open turns, busy
+flows and earlier contenders before writing. The direct `take_turn` entry point accepts caller-supplied eligibility and
+terms. Same-connection reads alone do not establish exclusion against every policy or term writer; complete writer
+coverage and intended snapshot semantics remain open. `tests/postgres_locks/test_flow_admit_candidate.py` checks stop
+and restart facts against admission, and `test_flow_admit_contenders.py` checks an earlier contender becoming eligible;
+both observe waits, persisted outcomes and chunk-lock omission controls with a lower-level competing fact.
+`tests/test_flow_changed_frames.py` simulates one missed contender and checks the retry. `test_flow_terms_freshness.py`
+holds config-authoring without tenant admission and changes repository policy, position or link by direct SQL; it checks
+the wait, config-before-chunk order, persisted terms, omission controls and first-turn term retention.
+`test_flow_admit_pool.py` checks a single-connection pool, poll-policy values and batching, with a nested-checkout
+negative control. These are assertions, not recorded test runs; they do not cover retry exhaustion, all contenders,
+movement or config services, reverse orders, every term or policy writer, or a complete lock graph.
+
+The traced flow-key order on the writing connection is chunk row → `flow-chunk` → `flow-arrival` → sorted `flow`
+resource keys, omitting arrival where not needed. Admission precedes its chunk rows with config-authoring. Submit takes
+all four; submission and turn helpers omit arrival, and withdrawal selects submissions after the chunk and flow-chunk
+locks before taking their resource keys. `lock_keys` sorts keys. `tests/postgres_locks/test_flow_decisions.py` binds
+selected key waits with omission controls, selected competing outcomes with tenant admission bypassed, chunk-before-flow
+for submit and interrupted end, shared-resource turns, and arrival allocation across chunks. It is not a complete
+competitor or deadlock proof, nor a recorded test result here.
 
 `FlowStore.end_turn_locked` first looks up the open turn's submission chunk on the handle connection and rejects it if
 the handle's `locked_ids` does not contain that chunk, before calling `lock_flow_turn`; a missing or ended turn returns
@@ -481,7 +517,8 @@ The following are observed lock sites, not an exhaustive inventory of all check-
   dependency-graph key before sorted chunk rows. Declare, group, and delete use the latter. `locked_claim` takes that
   key before discovering and locking the candidate and prerequisites, then takes the host registry key. `locked_queue`
   takes the queue key before chunk rows. `locked_work_refs` takes the dependency-graph key, an optional
-  project-source-links key, then work-ref keys; ingest uses that handle.
+  project-source-links key, then work-ref keys; ingest uses that handle. `locked_flow_admission` takes config-authoring
+  before sorted chunk rows; flow admission takes its flow keys afterwards.
 - `hub/store/internal/graph_store.py`: `locked_name`, `mint`, and lifecycle handling lock the graph-name key; graph
   authoring uses `locked_name` for its mint.
 - `hub/store/internal/config_authoring_lock.py`: the config-authoring key is shared by the authoring sites listed above.
@@ -500,10 +537,10 @@ The following are observed lock sites, not an exhaustive inventory of all check-
   dependency-graph key.
 - `hub/store/internal/secret_store.py`, `work_source_record_store.py`, and `repository_record_store.py` call
   `lock_secret_row` for secret retirement and referrer decisions.
-- `hub/store/internal/transcript_event_store.py` locks segment visibility keys for replace and drop;
-  `transcript_segment_store.py` takes those keys along with natural-key, budget and high-water keys for locked ingest,
-  and takes the applicable decision and visibility keys for direct segment writes. The unresolved decision and graph-pin
-  boundaries are described above.
+- `hub/store/internal/transcript_event_store.py` locks the expected chunk then the segment visibility key for replace,
+  and segment visibility keys for drop; `transcript_segment_store.py` takes those keys along with natural-key, budget
+  and high-water keys for locked ingest, and takes the applicable decision and visibility keys for direct segment
+  writes. The unresolved decision and graph-pin boundaries are described above.
 - `hub/store/internal/finding_store.py` locks sorted finding rows for guarded facts; direct and garden callers still
   need a complete competitor and ordering audit.
 - Direct chunk-row lock calls also occur in `chunk_rows.py`, `chunk_delivery_store.py`, `chunk_artifacts_store.py`,
