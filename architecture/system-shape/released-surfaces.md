@@ -50,8 +50,11 @@ of more than one value — is open or declared closed. An open field, `Annotated
 `E`'s own schema in the OpenAPI document, and marks the position open there. A field is declared closed,
 `Annotated[E, DeclaredClosed("…")]`, only when no safe fallback exists: acting without knowing the value would do wrong
 work, as for the envelope's dispatch fields. A request field, and any class a server validates as input — a request body
-or parameter, an ingested document, a class used as both request and response — stays closed. A single-value `Literal`,
-a code or discriminator, counts as declared closed.
+or parameter, an ingested document, a class used as both request and response — stays closed, with one carve-out: a
+request field whose server reads every unknown value as a declared default takes the tolerated-request annotation
+(`ToleratedRequestVocabulary` in `src/blizzard/wire/vocabulary.py`), which parses `E | Unrecognized` and keeps the
+field's schema a plain `string`. `QueuePeekRequest.policy` is the one such field. A single-value `Literal`, a code or
+discriminator, counts as declared closed.
 
 **Why.** A deployment's clients — the runner, its CLI, and its panel — read a newer server's responses across the skew
 window, so a closed parse turns every value a vocabulary gains into a failed read. Open, each typed consumer meets
@@ -59,7 +62,9 @@ window, so a closed parse turns every value a vocabulary gains into a failed rea
 server's own state.
 
 **Scope.** A request stays closed so a server still refuses a value it does not know, and the mark records, per release,
-which positions that release's clients tolerate.
+which positions that release's clients tolerate. The carve-out is for a request field whose every unknown value has one
+declared reading in the server; a field whose unknown value needs a refusal stays closed. The tolerated field's schema
+stays `string` because a request property moving from `string` to an enum reads as narrowed to every older client.
 
 **Detect.** The gate test `tests/test_open_response_vocabulary.py` fails a response-only vocabulary field that is
 neither open nor declared closed, and an open field on any class outside the response-only set. The response-only set is
@@ -78,7 +83,8 @@ artifact kinds, are declared closed: a runner cannot run a node-step whose dispa
 
 **Don't.** Type a response vocabulary as plain `str` to make it tolerant, which hides the decision from the type
 checker, or add a sentinel member to the vocabulary, which reaches the OpenAPI document and loses the raw value. Open a
-field a server validates as input.
+field a server validates as input, or mark a tolerated request field `OPEN`, which fails the gate test on a request
+class.
 
 **See also.** `bzh:fleet-wire-additive` ([./fleet-wire.md](./fleet-wire.md)): a gained value on an open field reaches a
 runner that tolerates it. `bzh:shared-kernel` ([../clean-architecture.md](../clean-architecture.md)): why `Unrecognized`
