@@ -309,25 +309,39 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   `tests/postgres_locks/test_transcript_high_water.py` holds the key without admission, shows a wait and a lock-omission
   control for the first write, and checks that a committed 9 beats the waiting 3. It does not prove all transcript
   segment admission, byte-limit, natural-key or high-water callers and their interleavings.
-- **Transcript segment admission.** `TranscriptIngestService.ingest` reads the high-water and epoch owners, then
-  `_apply` reads natural-key state and chunk and runner byte sums through separate store reads before invoking a
-  separate insert or conditional update. The insert and update methods in `transcript_segment_store.py` take no segment,
-  chunk-byte, or runner-window decision key; the high-water key is acquired only in the later `set_high_water`
-  transaction. Competing ingests can therefore base decisions on the same prior state even while each individual write
-  takes tenant admission. Natural-key uniqueness or a rejected-only update does not establish cap enforcement or correct
-  replay outcomes. `tests/test_transcript_segment_store.py` exercises store behavior, but a direct-lock contention and
-  omission proof for the complete ingest decision is unresolved, as are retirement and epoch-owner changes during
-  ingest.
+- **Transcript segment admission.** `TranscriptIngestService.ingest` checks retirement, then `locked_ingest` takes
+  sorted incoming chunk rows → host registry → natural-key → chunk-budget → runner-budget → runner high-water →
+  segment-visibility keys. It rechecks runner and host retirement under the registry key. After the natural keys, it
+  reads matching existing records to include their chunk, runner and superseded IDs in the later key sets; incoming
+  segment and supersedes IDs are included too. High-water, epoch owners, chunk existence, natural-key state, byte sums,
+  segment writes and the high-water update use the handle's single transaction. A missing chunk has no row to lock. In
+  sequence order, after lease-owner and replay checks, an absent chunk with a non-accepted natural key raises
+  `TranscriptChunkMissing` inside the transaction, rolling back the whole batch. An accepted natural key can pass that
+  check. Unexpected write failures also roll back the transaction. Direct segment writes take the incoming chunk row and
+  the natural-key, budget and visibility keys, but do not run the service's admission guards.
+  `tests/postgres_locks/test_transcript_admission_locks.py` asserts key waits and selective omission controls for
+  admission and direct refresh, including old and new supersedes targets; it does not race complete ingest outcomes.
+  `tests/test_transcript_ingest_service.py` asserts missing-chunk batch rollback, retry and accepted-key behavior, a
+  retirement recheck, lock selection and selected competing SQLite ingests. Postgres outcome and omission proofs for
+  caps, replay, retirement, chunk creation/deletion and epoch-owner competitors, including teardown, full writer
+  coverage and cross-family lock order remain open.
 - **Transcript event replacement versus drop.** `TranscriptEventStore.replace_segment_events` locks the tenant-scoped
   `transcript-events-segment/<segment_id>` key before deleting and replacing one extractor version's events and marker.
   `drop_segments` locks all segment keys in sorted order before reading identities and deleting every version. Both use
-  their write connection, and the common segment key spans extractor versions.
-  `tests/postgres_locks/test_transcript_event_locks.py` holds that key without tenant admission, observes drop and
-  replace waits with omission controls, checks a drop removes a marker committed by the holder, and checks independence
-  across tenants and segment IDs. The test does not establish that a stale replacement cannot follow a drop:
-  `EventDerivationService` reads visibility, inputs and graph pins before `replace_segment_events`, and the store does
-  not revalidate them under the key. Segment ingestion uses different transactions and no event-segment key. Visibility
-  changes, stale derivations and all writer ordering remain open.
+  their write connection, and the common segment key spans extractor versions. Segment ingest and direct segment writes
+  take the same visibility keys for affected segment and supersedes IDs. Under that key replacement rechecks visibility
+  and the current fingerprint; drop rechecks visibility and skips visible IDs. The versioned fingerprint includes each
+  record's content digest, chunk, node, epoch, spawn generation, normalizer, harness, model, effort and rejection state.
+  Tenant and hub-wide candidacy reads use the same fingerprint. The service propagates replacement refusal, re-reads
+  candidacy for `remaining` when an attempted re-derive fails, and counts only IDs processed by drop.
+  `tests/postgres_locks/test_transcript_event_locks.py` asserts key waits, omission controls and tenant/segment key
+  independence; `tests/test_transcript_event_store.py` asserts sequential stale fingerprint and visibility outcomes.
+  `tests/test_transcript_event_derivation.py` asserts context-only changes invalidate replacements and both candidacy
+  reads, and failed re-derives report a remaining candidate in selected scopes. These are test assertions, not recorded
+  runs or a Postgres outcome proof for ingest versus replace/drop. `EventDerivationService` reads graph pins before
+  replacement; neither the fingerprint nor candidacy detects a graph-pin-only change, and the store does not revalidate
+  pins under the key. Graph-pin changes, teardown and other visibility writers, stale derivation interleavings and
+  complete lock ordering remain open.
 - **Source links and ingest.** `IngestService.ingest` first chooses a project on separate reads, then takes
   `locked_work_refs` and repeats the chosen project's standing-source-link check through `handle.source_links` on the
   write connection before `live_holders` and `mint_locked`. `tests/postgres_locks/test_ingest_source_link_race.py` holds
@@ -389,9 +403,16 @@ selection to be safe. Closure, open-turn and scheduling guards are read after th
 no flow locks; later guards handle the absent record where applicable. This reasoning does not cover arbitrary SQL, all
 indirect callers, or teardown interleavings independently of tenant admission.
 
-The reconciler discovers submission candidates before locking the chunk, then rechecks the graph, status, node and epoch
-under its chunk handle and submits on that transaction. `tests/test_flow_changed_frames.py` covers a stop or restart
-between candidate selection and submission; PostgreSQL contention and lock-omission proofs remain outstanding.
+The reconciler discovers submission candidates and resolves resources before locking the chunk, then rechecks the graph
+ID, status, node and epoch under its chunk handle and submits on that transaction. `tests/test_flow_changed_frames.py`
+asserts stop and restart between candidate selection and submission.
+`tests/postgres_locks/test_flow_submit_reconcile.py` asserts waits behind direct stop or restart facts, no submission
+after commit, and stale submission when the reconciler's chunk lock is omitted. The competing movement is direct SQL,
+not the service; resource freshness, other competitors and orders remain open. In the departure pass, the reconciler
+computes withdrawal before calling `close`; the store locks the submission and rechecks for an open turn.
+`tests/postgres_locks/test_flow_reconcile.py` asserts a wait behind an uncommitted `take_turn`, no closure after commit,
+and a closure with the submission lock omitted, bypassing tenant admission on both sides. It does not prove freshness of
+the precomputed withdrawal or all departure competitors. These bindings describe assertions, not recorded test runs.
 `take_turn` receives eligibility and landing terms computed before its resource locks: its locked rechecks alone do not
 establish freshness of those inputs. Identify their writers and intended snapshot semantics before claiming those
 decisions are independently protected.
@@ -479,9 +500,10 @@ The following are observed lock sites, not an exhaustive inventory of all check-
   dependency-graph key.
 - `hub/store/internal/secret_store.py`, `work_source_record_store.py`, and `repository_record_store.py` call
   `lock_secret_row` for secret retirement and referrer decisions.
-- `hub/store/internal/transcript_event_store.py` locks segment keys for replace and drop; `transcript_segment_store.py`
-  locks runner high-water keys only for the high-water write. Neither key protects the complete segment ingestion or
-  stale event derivation decision; their specific unresolved boundaries are described above.
+- `hub/store/internal/transcript_event_store.py` locks segment visibility keys for replace and drop;
+  `transcript_segment_store.py` takes those keys along with natural-key, budget and high-water keys for locked ingest,
+  and takes the applicable decision and visibility keys for direct segment writes. The unresolved decision and graph-pin
+  boundaries are described above.
 - `hub/store/internal/finding_store.py` locks sorted finding rows for guarded facts; direct and garden callers still
   need a complete competitor and ordering audit.
 - Direct chunk-row lock calls also occur in `chunk_rows.py`, `chunk_delivery_store.py`, `chunk_artifacts_store.py`,
