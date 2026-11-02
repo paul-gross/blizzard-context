@@ -514,6 +514,11 @@ by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what tha
   revision down, which restored the parent schema with every row kept, up again to the same schema, and re-ran the
   upgrade over the numbered store, which changed nothing. Two writers racing the first allocation of a new runner's fact
   counter were not run on Postgres; the allocation is the outbox counter's, which that run covers.
+- **The takeover entries revision.** `20261029_1000_takeover_entries` creates `takeover_entries`, with a foreign key to
+  `takeovers`, and inserts an entry for every takeover open at that moment; its downgrade drops the table. It has not
+  been hand-run under `blizzard:manual-postgres-runner-migrations`: its colocated test walks it forward, back and
+  forward again on SQLite only, and it uses portable column types and `INSERT … SELECT`. SQLite leaves foreign keys off,
+  so the foreign key is enforced on Postgres alone and no tier exercises it.
 - **The empty-store upgrade.** The runner chain cannot reach head on Postgres from an empty store: the Boolean
   `server_default` in `20260920_0200_usage_cost_is_share.py` is `0`, which Postgres rejects. The hand run builds the
   tightening revision's parent shape from `src/blizzard/runner/store/schema.py` as it stood then, so no revision below
