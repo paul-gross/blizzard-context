@@ -133,17 +133,69 @@ losing the retried prune's effect costs nothing beyond a few more rows lingering
 answer from either read. `Retention.run` also isolates each lane's own prune in its own `try`/`except`, so one lane
 raising costs that lane's pass, not the other three, and it retries at the next floor.
 
+## The lease mint
+
+`Spawner._mint` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) writes four things for a new lease: the `leases` and
+`lease_context` rows, the mint owner (`leases.harness_id`, set only when one is chosen), the hash of the lease's
+capability token, and the `lease.minted` outbound row. `LeaseRecordStore.record_mint` commits all four in one
+transaction, with the payload and token hash rendered before it opens, so a lease never exists without the owner, token
+and fence fact a retry or the hub's completion check relies on. The `lease.minted` row goes through `insert_outbox_row`;
+SSE publishes follow the commit.
+
+With no intermediate state to cross, the mint needs no point of its own. The boundary after the transaction is the armed
+`spawn.after-lease-mint.before-spawn`, where a lease is minted and no worker is spawned. REAP's orphan sweep recovers
+it: any lease with no recorded pid or session is failed, as
+[§The unresolvable-pool-owner escalation mint](#the-unresolvable-pool-owner-escalation-mint) describes. The sweep
+asserts, on the killed store, that the newest lease carries its owner, its token hash and its buffered `lease.minted`
+fact. `Spawner.preamble` re-mints a token and the session store sets owners through `record_lease_token` and
+`record_mint_owner`, which stay for those callers.
+
+## The takeover entry
+
+`TakeoverService.open` (`blizzard/src/blizzard/runner/lifecycle/takeover.py`) over a live worker is three steps, each
+durable before the next:
+
+1. **The decision transaction.** `record_takeover` commits the `takeovers` row, the fence `lease.minted` outbound row
+   and the reference lease's re-minted token hash together. It keeps fact-before-command: nothing is killed before it
+   commits. Rotating the token here is deliberate, because the displaced worker loses runner-verb authority at the same
+   moment the takeover holds its lease.
+2. **The commands.** Kill the worker, then kill and clear any in-flight elicitation. Both go through liveness- and
+   identity-checked kills, so a repeat is safe.
+3. **The entry fact.** `record_takeover_entry` appends a `takeover_entries` row (runner-scoped, append-only, keyed by
+   the takeover; `bzh:facts-not-status`) and only then returns the token plaintext. An entry with nothing to kill writes
+   its entry fact inside the decision transaction and has no window.
+
+Two points arm the live entry: `takeover.after-open.before-kill` after the decision, and
+`takeover.after-kill.before-entry` after the commands. The CI subset sweeps the first.
+
+An open takeover with no entry fact was interrupted (`OpenTakeover.interrupted`). `TakeoverRecovery` finishes it once at
+startup, per runner, after `ResumeMarking.on_startup` so the crash-orphan marking still skips the held lease, and before
+any runner thread, the host tick or the server runs. Entries open only through the daemon's HTTP route, so none can be
+mid-flight then; a per-tick sweep would race a live `open`. For each interrupted takeover it re-drives the kill of the
+recorded worker and the elicitation kill and clear, then appends a `takeover_ends` row. The token plaintext died with
+the crashed request, so no person holds the session. Ending gives the state of "entered, then left": the fence stands at
+the hub, the lease stays open, the worker is dead, and the operator's retry is admitted as a fresh entry. A crash during
+the recovery re-runs at the next startup, each half independently harmless — the kill is idempotent and the end a lone
+idempotent insert — so it earns no point.
+
+The `takeover_entries` revision backfills an entry for every takeover open at migration time, so a person's takeover
+opened under a prior release is not ended by the first startup on this one.
+
+The window after the entry fact commits and before the HTTP response is the ordinary lost-response case, accepted and
+named: the response is all it loses, the takeover stays open and entered, and the retry is refused naming
+`blizzard runner takeover <chunk> --end` as the remedy.
+
 ## The graph-artifact mirror
 
 `Spawner._mint` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) records a pinned mint's graph-scope declarations
-into the runner's own `graph_artifacts` table, insert-if-absent keyed on `graph_id`, immediately before `record_lease` —
-ahead of the lease those rows exist to serve. The presence check and every insert behind it are one transaction, so a
-mint's declarations land all or none and the `graph_id`-granular check can never mistake a half-written set for a
-complete one and skip the remainder for that mint's life. A crash between the artifact write and `record_lease` leaves
-at most a complete orphan set keyed to an immutable mint, and the retried mint writes identical rows, insert-if-absent
-making the retry a no-op past the first success. A `graph_artifacts` row owes the checker nothing because it is a
-durable fact about an immutable mint, never revised once written, so agreement between readers after a crash is
-structural.
+into the runner's own `graph_artifacts` table, insert-if-absent keyed on `graph_id`, immediately before the mint
+transaction (see [§The lease mint](#the-lease-mint)) — ahead of the lease those rows exist to serve. The presence check
+and every insert behind it are one transaction, so a mint's declarations land all or none and the `graph_id`-granular
+check can never mistake a half-written set for a complete one and skip the remainder for that mint's life. A crash
+between the artifact write and the mint transaction leaves at most a complete orphan set keyed to an immutable mint, and
+the retried mint writes identical rows, insert-if-absent making the retry a no-op past the first success. A
+`graph_artifacts` row owes the checker nothing because it is a durable fact about an immutable mint, never revised once
+written, so agreement between readers after a crash is structural.
 
 The pin guarantee reaches exactly as far as the mint, and the window past it is accepted rather than repaired. A lease
 already in flight resumes through `Spawner.preamble`, which re-mints only the capability token and never re-enters
@@ -268,7 +320,7 @@ never-spawned lease purely to give `Attempt.escalate_owner_unresolvable`
 (`blizzard/src/blizzard/runner/lifecycle/attempt.py`) an existing lease to close, when an existing recorded session's
 owner cannot be dispatched to at node entry — a named pool's head, or a plain, un-pooled resume's own latest session
 alike; `SessionResolver.resolve_resume` surfaces both shapes through the same `ResumeTarget.owner_unresolvable`, so
-`enter_node` routes both through this one mint. Between that mint's own `record_lease` and the escalation's own closure
+`enter_node` routes both through this one mint. Between that mint's own transaction and the escalation's own closure
 landing, the lease sits exactly as any other post-mint, pre-spawn lease does, so `_CP_AFTER_MINT`
 (`spawn.after-lease-mint.before-spawn`) is reused rather than duplicated: a `kill -9` here leaves the identical "lease
 minted; worker not spawned" shape a `HarnessSpawnError`'d ordinary mint already leaves, which the sweep's generic
@@ -296,8 +348,8 @@ This same pattern has a second entry point: `Spawner.escalate_no_acceptable_harn
 harness set with nothing servable, and from `Attempt.requeue`'s own membership guard — a retry whose lease's owner has
 fallen out of a since-edited acceptable set, never a candidate to resume under. Its `_mint` call passes
 `harness_id=None`, the same escalation-only mode `_escalate_unresolvable_resume_owner`'s call never needs: no owner is
-chosen, so no stamps resolve (model, effort, and compaction window all land `None`) and no mint owner is recorded,
-leaving `leases.harness_id` at its already-nullable unset value. It shares this section's whole crash-correctness
+chosen, so no stamps resolve (model, effort, and compaction window all land `None`) and the mint transaction records no
+owner, leaving `leases.harness_id` at its already-nullable unset value. It shares this section's whole crash-correctness
 account otherwise: the same `_CP_AFTER_MINT` window, the same REAP recovery through the ordinary exhausted-retries path
 (a zero-budget lease with no session composes no takeover, same as any other never-spawned lease), and the same
 `open_escalation_for_chunk` guard ahead of the mint, so a chunk already escalated this way cannot loop a second mint on

@@ -48,6 +48,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
 - `hostlane.` — a registered host's own fact lane's after-push, before-mark window.
 - `ingest.` — `blizzard runner ingest`'s after-copy and after-config windows.
+- `takeover.` — a forced takeover entry's after-decision and after-kill windows.
 - `usagelimit.` — the runner's own usage-limit mark-then-park window, on a worker generation's exit and a judge
   elicitation's exit alike.
 
@@ -73,6 +74,11 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   with full provenance is still readable via `attachments_for_lease` after an unarmed restart. `attach.` is an
   out-of-band HTTP write no loop step drives, so its scenario stands up a real runner daemon alone — no hub, no forge —
   seeding a parked lease and its capability token, the invariant checker running over the runner store only.
+- `takeover.`, the forced takeover entry's windows armed on the runner, is swept by
+  `test_kill9_at_takeover_crash_point`: a seeded lease with a real worker process is force-taken-over through the
+  runner's HTTP route, the kill lands after the decision transaction or after the commands, and an unarmed restart ends
+  the interrupted entry. The scenario asserts the worker is dead, the takeover ended, a fresh forced entry admitted and
+  the invariant checker green.
 - `declare-commit.`, the worker git-commit declaration's record-before-response window armed on the runner, is swept by
   `test_kill9_at_declare_commit_crash_point`: `attach.`'s sibling on the runner's out-of-band declare endpoint, standing
   up a real runner daemon alone the same way, the kill landing right after the declaration is recorded, the declaration

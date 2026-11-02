@@ -51,7 +51,8 @@ spawn into the person's workdir — an operator who restarts a chunk they have t
 ## Ending
 
 A takeover ends when the person leaves the interactive session. A chunk ending — stopped or done — while a takeover is
-open closes the takeover fact through the hub's own terminal fact, though nothing infers a person is done.
+open closes the takeover fact through the hub's own terminal fact, though nothing infers a person is done. A runner
+restarted mid-entry finishes the displacement it began and ends that entry, and the person enters again.
 
 A takeover holds every epoch up to the highest of its reference lease's, its fence's, and the chunk's latest when it
 opened — so an escalation's sessionless lease above the reference lease stays the person's — not the chunk for good.
