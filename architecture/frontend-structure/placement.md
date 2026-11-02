@@ -93,6 +93,8 @@ may also import `testing`:
 | `garden`           | L1    | `garden/core`, `garden/doorway`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`                                                        |
 | `shell`            | L2    | `admin`, `board`, `delivery`, `demo`, `events`, `garden`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`, `graphs`, `login`, `runners` |
 
+`web/scripts/structural-gate.js`'s `HUB_LAYERS` is this table's executable copy and must match it row for row.
+
 `runner`, rooted at `runner/src/app/`, with kernel `core`:
 
 | Unit      | Layer | May import                           |

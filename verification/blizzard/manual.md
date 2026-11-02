@@ -172,10 +172,10 @@ running env's own service stack serves everything unauthenticated until this set
    Reach out to your administrator for access.*, with no board and no session.
 4. Invite that identity: `uv run blizzard hub invite create --email <email> --role guest` from the superuser's signed-in
    CLI prints the link. Open it in the second context and sign in from its landing: the account lands in the tenant and
-   the board renders read-only — a not-ready chunk's Promote control absent. Opening the used link again lands on the
-   sign-in page with the `invitation_unusable` text, and a live link opened by an account without the invited email with
-   the `invitation_email_mismatch` text, the invitation staying live. Change the person's role from the members page and
-   reload on the same session cookie: the Promote control appears for `contributor`.
+   the board renders read-only — a chunk opened in the dock carries no ⋮ actions menu. Opening the used link again lands
+   on the sign-in page with the `invitation_unusable` text, and a live link opened by an account without the invited
+   email with the `invitation_email_mismatch` text, the invitation staying live. Change the person's role from the
+   members page and reload on the same session cookie: the dock's ⋮ actions menu appears for `contributor`.
 5. Create a second tenant with `uv run blizzard hub tenant create <name> --admin <user_id>` for the second person. A
    person holding one membership never sees a choice. With two, a fresh tab renders the tenant picker outside the shell;
    the chosen tenant's name shows in the header, the profile menu's switcher moves the tab to the other, and a reload
