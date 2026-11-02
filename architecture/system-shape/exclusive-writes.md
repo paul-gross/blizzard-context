@@ -271,8 +271,15 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   scoped connection, then runs reconciliation and writes on that connection; dry runs roll back the transaction and
   no-op applies still enter it. Graph mint and lifecycle operations take config-authoring before their graph-name key,
   fencing apply's enabled-graph read. `tests/postgres_locks/test_config_apply_unit.py` exercises key contention,
-  post-wait decisions and lock-omission controls, including graph retirement and dry runs. Standalone routine authoring
-  resolves graphs before its repository takes the config key; its graph guard remains to be repaired.
+  post-wait decisions and lock-omission controls, including graph retirement and dry runs.
+- **Standalone routine authoring.** `RoutineAuthoringParticipants.open` takes the config-authoring key on its scoped
+  write connection before constructing the graph, routine and scope participants on that connection. Create resolves the
+  graph there; edit re-reads the routine revision and resolves a changed graph there. Restating its current graph does
+  not require it to remain enabled. Routine writes and any default-scope mint commit together. Graph mint and lifecycle
+  writers take config-authoring before their graph-name key. `tests/postgres_locks/test_routine_authoring_admission.py`
+  exercises create waiting for retirement, a fresh refusal and a lock-omission control; it does not prove every graph
+  writer or edit interleaving. `tests/test_routine_record_api.py` exercises admission-time graph changes, restatements,
+  stale revisions and scope-mint rollback through the composed API.
 - **Flow departure.** The reconciler locks the submission's chunk, then its flow decision locks, before reading chunk
   facts and deciding withdrawal on the handle connection. Closure rechecks for an open turn on that transaction.
   `tests/postgres_locks/test_flow_reconcile.py` observes a concurrent stop blocking departure and verifies the committed
