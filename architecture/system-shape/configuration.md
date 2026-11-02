@@ -22,8 +22,8 @@ retired.
 
 Implement a configured kind against the shared `ConfiguredRecord` capability and reuse its applicable lifecycle
 mechanics rather than copying them. Projects use the base capability without retirement; project links use their own
-link capability and transitions, with landing positions separate from link revisions. The defining modules and
-consumer-level proofs are named in **Do** below.
+link capability and transitions, with landing positions separate from link revisions. Secrets use their separate
+encryption and revision lifecycle. The defining modules and consumer-level proofs are named in **Do** below.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
