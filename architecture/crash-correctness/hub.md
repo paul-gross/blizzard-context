@@ -508,17 +508,22 @@ place, so re-applying it re-writes the row and counts nothing twice. No crash po
 
 ## Hosts: retire, and add with adopt
 
-`HostRetirementService.retire` (`blizzard/src/blizzard/hub/domain/execution/host_retirement.py`) decides the refusal in
-the `Host` model over every live runner's holdings before it writes, then writes in two steps. First,
-`HostRegistryStore.record_retirement` appends the host's retire fact and revokes its token in one transaction, so the
-host can add no runner from that instant. Second, `FleetService.retire` runs once per runner under the host.
+The binding retirement contract is a two-step operation: after the `Host` model checks live runners' holdings,
+`HostRegistryStore.record_retirement` records the host retirement and revokes its token in one transaction;
+`FleetService.retire` then retires each member. `runner_registrations.host_id` is the durable roster for a retry, not a
+separate retirement snapshot. The host-row transactional fence and its competing writers are specified in
+[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md).
 
-The span between the two steps is a real window whose whole loss is accepted and named: a crash inside it leaves a host
-retired with runners under it that are not. The loss is bounded to those runners staying live a while longer, and
-nothing is corrupted — re-running `retire` over the retired host writes no second host fact and runs each runner's
-retire again, which retires any left standing and finishes any interrupted release of their chunks, as a runner's own
-re-run does. A sweep point would arm a span an operator's re-run already closes, so none is registered.
+The span between host retirement and finishing the roster is a real window: a crash leaves a retired host with unretired
+members. Release refuses an unretired member of a retired host with a conflict directing the operator to re-run retire;
+release of a retired member is allowed. Reinstate refuses a runner still under a retired host. Thus a released runner is
+already retired, and reinstating it is an operator rescue a later host-retirement retry does not touch. A retry writes
+no second host retirement fact and retires members still standing, including completing interrupted chunk releases. This
+bounded delay is accepted; no sweep point is registered because the operator's retry closes it.
 
-`HostEnrollmentService.add` with `--adopt` has no window. `HostRegistryStore.add` inserts the host and places every
-adopted runner in one scoped write transaction, and a runner that came to stand under a host first rolls the whole write
-back, so a crash or a refusal loses the host and its adoptions together.
+Adding a host with adoption must insert the host and place its adopted runners in one scoped write transaction: a crash
+or a refused placement loses the host and its adoptions together. Placement and adding a runner under a host must check
+the host under the same transactional fence, so neither can add a member after retirement.
+
+**Implementation status.** This is the operator's binding contract; the concurrent implementation and its complete crash
+and concurrency proof have not been audited here.

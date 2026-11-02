@@ -339,20 +339,21 @@ hermetic, network-free CI tier's reach.
 ## Per-key non-serialization of keyed write locks
 
 `keyed_locks` rows (`bzh:store-exclusive-write`) serialize two ingests of one pointer, or two first mints of one graph
-name, while letting writers of different keys proceed. That per-key property holds only on Postgres. Every tier runs on
-SQLite, whose single writer lock serializes every writer whatever its key, so no tier can observe a writer of a
-different key proceeding, or a concurrent insert of one key losing to an `IntegrityError`.
+name, while letting writers of different keys proceed. That per-key property holds only on Postgres. Unit and component
+tests run on SQLite, whose single writer lock serializes every writer whatever its key, so they cannot observe a writer
+of a different key proceeding, or a concurrent insert of one key losing to an `IntegrityError`. The focused
+`blizzard:postgres-lock-test` exists for admission and decision-lock proofs; it does not yet prove this property.
 
 Standing in for a tier: the per-key structure, asserted at `blizzard:component-test` on what is written — each ingest
 locks only the `keyed_locks` rows of its own pointers — together with the same-key interleaving, which SQLite does
-exercise. Do not add a Postgres tier to close this.
+exercise. Do not expand the focused PostgreSQL lock proof into a general backend matrix.
 
 ## Tenancy's migrations and locks under Postgres
 
-Every tier runs on SQLite, whose single writer lock serializes every writer, and no tier runs a migration or a
-concurrent write against Postgres. The tenancy mechanisms below therefore hold on SQLite by construction and stay
-unverified on Postgres, where each statement of a READ COMMITTED transaction reads its own snapshot and foreign keys are
-enforced:
+The unit and component tiers run on SQLite, whose single writer lock serializes every writer. The focused
+`blizzard:postgres-lock-test` migrates an empty store and proves the current scoped-writer contention baseline on
+Postgres; it does not yet prove the mechanisms below, where each statement of a READ COMMITTED transaction reads its own
+snapshot and foreign keys are enforced:
 
 - **The migration chain.** The tenancy revisions, `20261008_1100_tenants` through
   `20261008_1720_tenant_deletion_closed_at` (`src/blizzard/hub/store/migrations/versions/`), reach head and return to
@@ -378,12 +379,12 @@ enforced:
 Standing in for a tier: each mechanism's interleavings that SQLite can run, at `blizzard:component-test`, and the
 portable SQL `bzh:sql-portable` holds each statement to. The hosted hub runs SQLite (`blizzard-infra`'s
 `deploy/compose.yaml`), so dogfooding exercises none of them on Postgres. The gap stays open, not permanent: it closes
-the day some tier gains a Postgres-backed run, which `packaging/docker/compose.yaml` already makes possible.
+only when focused proofs exercise the stated interleavings and migration/backfill exposure.
 
 ## Projects' migration and writes under Postgres
 
-The projects mechanisms below have the same exposure as tenancy's: every tier runs on SQLite, with one writer lock and
-foreign keys off, so each holds there by construction and stays unverified on Postgres.
+The projects mechanisms below have the same exposure as tenancy's: unit and component tests run on SQLite, with one
+writer lock and foreign keys off. The focused PostgreSQL lock proof does not exercise these mechanisms.
 
 - **The projects revision.** `20261008_1800_projects` (`src/blizzard/hub/store/migrations/versions/`) reaches head and
   returns to base on an empty Postgres store under `blizzard:manual-postgres-migrations`; its backfills over populated
@@ -437,8 +438,8 @@ portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the t
 
 ## The hosts revision under Postgres
 
-The hosts mechanisms below have the same exposure as projects': every tier runs on SQLite, with one writer lock and
-foreign keys off, so each holds there by construction and stays unverified on Postgres.
+The hosts mechanisms below have the same exposure as projects': unit and component tests run on SQLite, with one writer
+lock and foreign keys off. The focused PostgreSQL lock proof does not exercise these mechanisms.
 
 - **The hosts revision.** `20261012_1000_hosts` (`src/blizzard/hub/store/migrations/versions/`) reaches head and returns
   to base on an empty Postgres store under `blizzard:manual-postgres-migrations`. Its `runner_registrations` change is a
