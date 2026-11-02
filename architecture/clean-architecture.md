@@ -339,9 +339,11 @@ sides of the daemon modules that reach it; a `tools` module is no side, and `int
 modules are not judged. The fix moves the module into that daemon's domain, or gives it an allowlist entry with its
 reason, which the check drops once the entry is stale. The check sees whole modules only: a one-sided rule living as a
 name in a shared module is not caught and stays a judgment call. A business rule in `foundation/` that only one daemon
-applies is that daemon's rule placed in the kernel; the fix moves it into that daemon's domain. One both daemons apply
-that takes a repository, clock, or client, or performs I/O, is made pure, with the facts and the instant passed in as
-values.
+applies is that daemon's rule placed in the kernel; the fix moves it into that daemon's domain. Two such names stay by
+decision, and a sweep does not re-raise them: `Flags.fleet_answer` and `Flags.with_fleet_answer`, the two ends of one
+hub→runner exchange kept together as one protocol; and `is_tenant_name`, which restates the wire's `TENANT_NAME_PATTERN`
+and `TENANT_NAME_MAX_LENGTH` and stays beside them. One both daemons apply that takes a repository, clock, or client, or
+performs I/O, is made pure, with the facts and the instant passed in as values.
 
 **Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
 `wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.
