@@ -33,7 +33,8 @@ checks hub unit-of-work lock ordering on Postgres, not a second general test mat
 on the portable SQL surface (`bzh:sql-portable`) and the named gaps.
 
 In Python tiers, stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`), never through ad-hoc
-SQL. Playwright service specs create data through the hub's public surfaces, never by seeding the store.
+SQL. Playwright service specs create data through the hub's public surfaces, never by seeding the store. The harness
+restoring a template its own CLIs built is not a spec seeding the store.
 
 ## The tenant statement guard is on in every tier
 
