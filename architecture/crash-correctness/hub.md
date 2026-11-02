@@ -272,8 +272,8 @@ otherwise split between them. Both of those inserts run on the same connection i
 `WorkItemStore.create_with_chunk` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), through one
 repository adapter, which reaches into the shared `insert_chunk_rows`
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) free function rather than through the chunk-seam adapters'
-own write methods. That seam bypass is deliberate rather than a layering gap: it is what lets a single caller open one
-transaction over both tables at all.
+own write methods. This composite uses an adapter-owned transaction; the tenant unit-of-work seam supports composing
+repository writes without that bypass ([`../repository-access.md`](../repository-access.md) `bzh:unit-of-work`).
 
 One narrower window is named and accepted here: `WorkItemEditService.create` allocates the item's `ref` through
 `WorkItemStore.allocate_ref` before that transaction opens, under the allocator's own already-accepted gap-tolerant
@@ -292,10 +292,9 @@ of them runs on the same connection inside one `engine.begin()` in `WorkItemStor
 (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing the shared free functions `insert_chunk_rows`
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) and `insert_run_context_row`
 (`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape §The item-creation chunk
-mint already takes, widened from one table to three: what lets a single caller open one transaction over all four at
-once. `work_item_runs` is what garden delivery's own read (`blizzard/src/blizzard/hub/domain/garden/run_context.py`)
-resolves a chunk's run identity through; landing it outside this transaction would reopen exactly the window this
-section exists to close.
+mint already takes, with all four tables in one transaction. `work_item_runs` is what garden delivery's own read
+(`blizzard/src/blizzard/hub/domain/garden/run_context.py`) resolves a chunk's run identity through; landing it outside
+this transaction would reopen exactly the window this section exists to close.
 
 The chunk is written with no promote fact and no queue position: it rests `not_ready` until the standalone promote.
 
@@ -311,31 +310,19 @@ recompute.
 
 ## Chunk delete, then hub-item withdrawal
 
-`WorkItemStore.delete_chunk_and_withdraw_hub_items_locked`
-(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the chunk's `chunk_deleted` row and closes every
-open `hub:`-source item it holds as withdrawn, both on the handle's already-locked connection — the same
-single-transaction shape `create_with_chunk` above uses for its own pairing. The `chunk_deleted` insert runs through
-`record_deleted_row` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`), a free function shared the same way
-`insert_chunk_rows` is for the mint side; the `work_items` closures reuse `WorkItemStore._close_conn`, the same
-connection-scoped update `close` itself calls. A `forge:`-sourced pointer on the same chunk is left untouched — only
-`hub:`-source items close.
+`DeleteService.delete` (`blizzard/src/blizzard/hub/domain/operations/delete.py`) records `chunk_deleted`, releases the
+chunk's outgoing dependency edges, and withdraws its open `hub:`-source items through their own repositories in one
+tenant unit of work. A `forge:`-sourced pointer on the same chunk is left untouched — only `hub:`-source items close.
 
-`DeleteService.delete` (`blizzard/src/blizzard/hub/domain/operations/delete.py`) reaches this write from both a direct
-chunk delete and `WorkItemEditService.withdraw`'s own cascade into an unacquired holder, always inside the same locked
-transaction `ClaimService`/`EditService`/`RestartService` share (`bzh:store-exclusive-write`,
-[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md)) — the chunk's row lock is the
-transaction's first statement, ahead of the guard reads and the composite write alike, so a claim cannot land on a chunk
-this write is mid-way through deleting. That row lock closes a cross-process concurrency race — a single-writer lock the
-store itself enforces, not a Python object a second hub process could ever share — not a crash window: the call sequence
-it guards only reads — `handle.facts` and `handle.standing_edges()` — before acting, with no write of its own ahead of
-the one atomic transaction — unlike `create_with_chunk`'s own sibling gap, `allocate_ref` running in its own transaction
-before the insert it feeds, there is no narrower window here to name and accept.
+Both a direct delete and `WorkItemEditService.withdraw`'s cascade use this operation. The scoped tenant opener precedes
+the chunk lock, and the fresh guard reads and writes follow on the same transaction (`bzh:store-exclusive-write`,
+[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md)); a claim cannot land during the delete.
+The transaction seam and participation contract are owned by [`../repository-access.md`](../repository-access.md)
+`bzh:unit-of-work`. There is no partial-write window within this unit to arm; this exemption does not claim a kill-9
+test of the transaction.
 
-The same transaction also releases the deleted chunk's own standing outgoing dependency edges, via
-`release_outgoing_edges_conn` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) called on the
-same `conn` right after `record_deleted_row` — still inside the one `engine.begin()`, so a deleted dependent's own edges
-never survive it. `DeleteService.delete` also holds the residual fleet-wide lock across that transaction — like the row
-lock above, a guard against a concurrent writer rather than a crash;
+`DeleteService.delete` also holds the residual per-tenant lock across that transaction — like the row lock above, a
+guard against a concurrent writer rather than a crash;
 [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt owns who shares it and the race
 it closes.
 
@@ -403,9 +390,8 @@ row folded into the same transaction. The closure row is checked and inserted fi
 nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref` still runs
 in its own transaction before this one opens, so a crash in between still burns one `ref`, never reused.
 
-Two adapters writing one table is deliberate, not a layering gap: only the item's own adapter can enclose the item and
-chunk inserts in the accept-with-mint transaction, so that path could never fold into `GardenProposalClosureStore`
-alone.
+Two adapters currently write the closure table: the accept-with-mint composite encloses its closure, item, and chunk
+inserts in the item adapter's transaction; `GardenProposalClosureStore` handles the standalone closure writes.
 
 Both write paths owe the checker nothing because each is a single-transaction insert (plus, for accept-with-mint, the
 item and chunk inserts), not a derived cross-fact invariant to recompute.
@@ -424,9 +410,9 @@ the transaction observing the read before the write commits.
 locks [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns —
 which each holds, and why. None is a crash guard. `declare_locked`'s guards wrap the same not-a-crash-window shape
 §Chunk delete, then hub-item withdrawal already takes for its own composite write: its own re-derived reads — the
-dependent's status, the prerequisite's ephemerality, the standing set the cycle check walks — all run before its one
-atomic transaction, never protecting against a crash mid-transaction. Those same guards serialize the ephemerality read
-against every writer that can make a prerequisite ephemeral, grouping included, so
+dependent's status, the prerequisite's ephemerality, the standing set the cycle check walks — all run inside the locked
+transaction before the write, guarding against concurrent decisions rather than a crash mid-transaction. Those same
+locks serialize the ephemerality read against every writer that can make a prerequisite ephemeral, grouping included, so
 `NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`) is a
 `bzh:invariant-checker` assertion as a backstop against a regression in that serialization, not a guard against a live
 gap.

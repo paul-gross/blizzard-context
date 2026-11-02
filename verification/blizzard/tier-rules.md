@@ -28,8 +28,9 @@ harness, the work-source seam binds the mock GitHub forge, delivery's `land` act
 per-entry `forge_url` a repository record fills rather than through a seam, and the workspace seam binds mocks or local
 fixtures.
 
-Tests run against sqlite. Postgres is a configuration concern, held by staying inside SQLAlchemy's portable surface
-(`bzh:sql-portable`) rather than by a second test matrix.
+The Python test tiers run against SQLite. The focused `blizzard:postgres-uow-concurrency` command is an exception: it
+checks hub unit-of-work lock ordering on Postgres, not a second general test matrix. Other Postgres behavior still rests
+on the portable SQL surface (`bzh:sql-portable`) and the named gaps.
 
 In Python tiers, stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`), never through ad-hoc
 SQL. Playwright service specs create data through the hub's public surfaces, never by seeding the store.

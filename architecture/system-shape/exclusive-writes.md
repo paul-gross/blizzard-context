@@ -7,13 +7,14 @@ slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 ## An exactly-one-wins decision locks its row before it reads (`bzh:store-exclusive-write`)
 
 **Rule.** A decision the hub commits to exactly once — a claim, or any write another such decision's guard reads consult
-— runs in one write transaction whose first statement locks the write lock of a row already known to exist, before every
-guard read *of that row's own chunk state* the decision rests on, on that same connection. A read that gates admission
-independently of the race itself (a paused runner, checked once before the lock opens) or that resolves a different
-aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs: nothing about the
-exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the lock, without
-reopening anything the lock closes. The one statement allowed ahead of the decision's row lock is the scoped write's own
-opening lock on its tenant's row (`bzh:tenant-scoped-store`), which every write on a tenant's stores issues first — save
+— runs in one write transaction that locks a row before every decision guard read on that same connection. After the
+tenant-row opener, a known row is locked by a no-op update; a keyed lock may first select and conditionally insert its
+lock row under a savepoint before the no-op update. None of these acquisition reads is a decision guard read. A read
+that gates admission independently of the race itself (a paused runner, checked once before the lock opens) or that
+resolves a different aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs:
+nothing about the exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the
+lock, without reopening anything the lock closes. The scoped write's own opening lock on its tenant's row
+(`bzh:tenant-scoped-store`) precedes decision-lock acquisition; every write on a tenant's stores issues it first — save
 the one that creates the tenant, which inserts that row instead.
 
 **Why.** An in-process lock only serializes callers inside one process; the moment a second hub process shares the
@@ -48,29 +49,28 @@ rule, in the keyed-lock form under **Do**.
   which flags any `import threading` under `src/blizzard/hub/**`.
 - A `.with_for_update()` call under `src/blizzard/hub/**` — it renders nothing on SQLite, so the guard read holds no
   writer lock. Mechanically flagged by `contracts/ast-grep/rules/store-no-for-update.yml`.
-- A statement other than the scoped write's tenant-row lock running ahead of the decision's row lock on Postgres, or a
-  write that locks a chunk or keyed row before its tenant's row — two writers taking the same pair in opposite orders
-  deadlock. Not mechanically checkable; judged at review.
+- A decision guard read ahead of its decision lock, an unrelated statement ahead of lock acquisition, or a write that
+  locks a chunk or keyed row before its tenant's row. Opposite lock orders can deadlock. Not mechanically checkable;
+  judged at review.
 - A locked transaction whose row lock targets a row that may not yet exist when two writers race to create it — a no-op
   `UPDATE` locks nothing on an empty table, so the exclusion never engages. Not mechanically checkable; judged at
   review. The remedy is the keyed-lock-row form under **Do**.
 
-**Do.** `lock_chunk_row` (`hub/store/internal/chunk_rows.py`) — a no-op `UPDATE` on the chunk's own row, already minted
-before any claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
+**Do.** `lock_chunk_row` (`hub/store/locking.py`) — a no-op `UPDATE` on the chunk's own row, already minted before any
+claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
 `ScopedConnections.write` (`hub/store/scoped.py`) opens with, with every guard read that follows it on the same
-connection. `IChunkExclusiveWrites.locked` (`hub/domain/chunk/ports/exclusive.py`) is the one place this crosses the
-domain seam: it locks every named chunk id in sorted order (closing cross-writer deadlock on Postgres, where two writers
-naming the same set in different orders could otherwise wait on each other) before yielding `ILockedChunkRead` — a
-domain-facing handle carrying no connection. A sibling write repository's own `*_locked` method takes that same handle
-and recovers the real connection through `conn_of` (`hub/store/internal/chunk_rows.py`), a package-private cast only the
-store layer ever calls — the domain layer never sees a `Connection`.
+connection. `IHubTransactions.begin` opens a tenant unit; its `lock_set` declares the complete set once before any
+repository statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating
+repository (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents
+writers naming the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token,
+not the domain. Existing `IChunkExclusiveWrites` callers still use their own locked handles and `*_locked` methods.
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
-locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/internal/chunk_rows.py`). The table is lock-only:
-it holds no state, nothing reads it as a fact, and its rows are never deleted. For each key, in sorted order, the helper
-inserts the row if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op `UPDATE` on it, so the
-first statements after the tenant-row lock lock a row that exists. The table is keyed `(tenant_id, namespace, key)`, the
-scoped insert stamping the write's tenant, so two tenants locking one graph name each lock their own row
+locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/locking.py`). The table is lock-only: it holds no
+state, nothing reads it as a fact, and its rows are never deleted. For each distinct key, in sorted order, the helper
+first selects the row, inserts it if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op
+`UPDATE` to lock it before any decision guard read. The table is keyed `(tenant_id, namespace, key)`, the scoped insert
+stamping the write's tenant, so two tenants locking one graph name each lock their own row
 (`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
 injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.locked_work_refs` and
 `IWriteGraphRepository.locked_name`, each yielding a handle of its own — never an `ILockedChunkRead`, so a handle that
@@ -157,6 +157,8 @@ Stated so a reviewer need not re-derive them:
 
 - [../crash-correctness/hub.md](../crash-correctness/hub.md) — whether a write this rule's locks wrap has a crash
   window, which no lock here decides.
+- [../repository-access.md](../repository-access.md) — `bzh:unit-of-work` and `bzh:transaction-graduation`, the domain
+  seam for composing repository writes and declaring their locks.
 - [../../standards/persistence.md](../../standards/persistence.md) — `bzh:sql-portable`, which this rule's locked
   statement is itself held to.
 - [../crash-correctness.md](../crash-correctness.md) — `bzh:invariant-checker`'s `hub:one-live-route-per-chunk`, the
