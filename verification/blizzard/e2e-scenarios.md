@@ -2,9 +2,9 @@
 
 The e2e suite is the retiring pytest suite of full-stack scenarios, each self-managing the forge, hub, and runner over a
 disposable git origin and `blizzard-mock` services — every seam real, no tokens or network. It takes no new scenario: a
-new full-stack test is a Playwright spec (`bzh:service-tests-in-playwright`), and the modules left here move there. This
-registry is the single authoritative scenario-by-scenario list for what remains; [`../blizzard.md`](../blizzard.md)
-`## Commands` names the `blizzard:e2e` command itself.
+new full-stack test is a Playwright spec (`bzh:service-tests-in-playwright`). This registry is the single authoritative
+scenario-by-scenario list for what remains; [`../blizzard.md`](../blizzard.md) `## Commands` names the `blizzard:e2e`
+command itself.
 
 The suite runs as `mise run e2e`, which is `BLIZZARD_E2E=1 uv run pytest tests/e2e/`. Heartbeat/stall detection, the
 store-and-forward outbound event buffer, and the epoch fence are proven at the component tier, not by this suite.
@@ -14,8 +14,8 @@ section homed in exactly one spoke — check C of `blizzard-context:/scripts/che
 every spoke and fails a module documented in more than one file, so single-homing is machine-enforced. This hub carries
 no module sections; the routing table below is the routing map and the discovery entry point for the spokes.
 
-| Spoke                                                    | When to read                                                                  |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | The pending delivery flow and repository landing order                        |
-| [board.md](./e2e-scenarios/board.md)                     | Verifying operator interactions with the hub-served web app and its live data |
-| [garden.md](./e2e-scenarios/garden.md)                   | The packaged garden graphs' run paths                                         |
+| Spoke                                                    | When to read                                       |
+| -------------------------------------------------------- | -------------------------------------------------- |
+| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | Finding the coverage for flow migration carry-over |
+| [board.md](./e2e-scenarios/board.md)                     | Finding the board browser scenarios' current tier  |
+| [garden.md](./e2e-scenarios/garden.md)                   | Finding the garden scenarios' current tier         |
