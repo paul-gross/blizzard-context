@@ -35,16 +35,30 @@ The runner surfaces its operationally-significant failures as `event.recorded` f
 already exists. An event riding that buffer inherits exactly-once delivery from the buffer's gapless-sequence invariant
 and the hub's per-runner high-water mark, machinery the sweep and the checker already cover.
 
-`Attempt.fail`'s retry and escalate events are enqueued in the same transaction as the closure they describe, on the
-atomic local-plus-outbound precedent of `record_local_pause` and `record_usage`, so that branch opens no partial-write
-window. The reassign-abandon branch is deliberately non-atomic, its closure sitting one level down in the shared
+`Attempt.fail`'s retry event is enqueued in the same transaction as the closure it describes, on the atomic
+local-plus-outbound precedent of `record_local_pause` and `record_usage`, so that branch opens no partial-write window.
+The reassign-abandon branch is deliberately non-atomic, its closure sitting one level down in the shared
 `Attempt.abandon`, and still needs no armed crash point: at-most-once-per-attempt is structural, since `Attempt.fail`
 runs once per attempt and closes, requeues, or escalates the lease, leaving the next tick a different lease state and no
 need of a durable guard fact. A crash between the abandon closure and its enqueue loses at most one informational,
 append-only event, which the next attempt's failure re-emits.
 
-`Attempt.escalate_owner_unresolvable`'s own `owner-unresolvable` event rides the identical `close` call `Attempt.fail`'s
-branches already do, so it inherits the same atomic guarantee and needs no entry of its own beyond this one.
+Every escalating close runs through one shared close in `Attempt` (`blizzard/src/blizzard/runner/lifecycle/attempt.py`),
+which composes the escalation before it closes. The escalation payload depends only on reads still valid before the
+close, so composing first lets one transaction carry the `ESCALATED` closure, its `event.recorded` row and its
+`escalation.recorded` fact, buffered event-then-escalation in the hub's existing FIFO order. Four sites reach that
+close: the retries-exhausted branch of `Attempt.fail`, `_escalate_owner_unresolvable`, `escalate_no_acceptable_harness`,
+and drain's spend-cap escalation. None of them can leave a closed `ESCALATED` lease with no escalation buffered, or an
+escalation buffered for a lease still open.
+
+`Attempt.escalate_owner_unresolvable`'s own `owner-unresolvable` event rides that same shared close, so it inherits the
+same atomic guarantee and needs no entry of its own beyond this one. Two registry points cover the close's two windows.
+`escalate.after-compose.before-close` sits after the escalation is composed and before the transaction opens; a crash
+there leaves nothing durable, and the next tick's REAP or node entry reaches the same escalation again.
+`escalate.after-close.before-resume-clear` sits after the escalated closure commits and before the local resume intent
+is cleared (`record_resume_clear`); a crash there leaves the escalation already buffered and the lease already closed,
+so recovery only finishes the clear. The other three sites are covered structurally by the shared close, on the same
+precedent as `_CP_AFTER_MINT`'s reuse below.
 
 ## The preamble fingerprint
 
@@ -265,12 +279,12 @@ A crash in that window is recovered by REAP's ordinary orphan sweep (`Reap.run`,
 `blizzard/src/blizzard/runner/loop/steps.py`): any lease with no recorded pid or session is `Attempt.fail`'d regardless
 of why it was minted. This lease's session is `None` (never spawned), so `_owner_block` finds nothing to short-circuit
 the retry check on; its `retries_max` is pinned to `0`, so `retried (0) < retries_max (0)` is false and the retry branch
-never fires; the ordinary exhausted-retries path runs, closing `ESCALATED` and calling `escalate()` — composing no
-takeover, the same "escalated before any worker session existed" shape any other never-spawned lease reaches. A later
-re-entry of the same node — this same `enter_node` call replayed, or a genuine post-recovery retry — costs nothing
-beyond `open_escalation_for_chunk`'s own read: an already-open escalation short-circuits
-`_escalate_unresolvable_resume_owner` before it mints again, and supersession (a later lease minted for the chunk) is
-the only way that escalation ever closes.
+never fires; the ordinary exhausted-retries path runs through the shared escalating close, composing the escalation and
+committing it with the `ESCALATED` closure in one transaction — composing no takeover, the same "escalated before any
+worker session existed" shape any other never-spawned lease reaches. A later re-entry of the same node — this same
+`enter_node` call replayed, or a genuine post-recovery retry — costs nothing beyond `open_escalation_for_chunk`'s own
+read: an already-open escalation short-circuits `_escalate_unresolvable_resume_owner` before it mints again, and
+supersession (a later lease minted for the chunk) is the only way that escalation ever closes.
 
 The synchronous, no-crash path closes this same mint through `escalate_owner_unresolvable` directly rather than through
 `fail`, so it takes that method's own detached/paused precedence (mirroring `fail`'s) instead: a chunk the hub no longer
@@ -288,6 +302,32 @@ account otherwise: the same `_CP_AFTER_MINT` window, the same REAP recovery thro
 (a zero-budget lease with no session composes no takeover, same as any other never-spawned lease), and the same
 `open_escalation_for_chunk` guard ahead of the mint, so a chunk already escalated this way cannot loop a second mint on
 top of the first.
+
+## The answer-delivered mark
+
+`DormantSession.on_answer` (`blizzard/src/blizzard/runner/lifecycle/dormant.py`) wakes a parked session with its answer
+through `_wake`, and records the park's resume in the same transaction as the woken pid (`record_spawn`), so the park
+reads resumed exactly when the woken generation is owned. The points `answer.wake.after-boundary-record.before-launch`,
+`answer.wake.after-launch.before-record` and `answer.wake.after-record` cover that sequence: a crash before the record
+leaves the park open and the trampoline kills the launch, so `ON_ANSWER` re-wakes once; a crash after it leaves an
+ordinary recorded generation that REAP and RESUME own, never a second `ON_ANSWER`.
+
+The `answer.delivered` fact is enqueued only after `confirm_durable`, outside that transaction, which is a real window
+whose loss is accepted. Enqueuing it inside the record transaction would tell the hub "delivered" for a launch the
+trampoline may still kill. A crash between `confirm_durable` and the enqueue loses only the hub board's delivered marker
+on the question; nothing gates a spawn, a claim, or a lease state on it. An operator who needs to know whether the
+answer reached the session reads the runner's `park_resumes` row for the lease and question, or the session's own
+transcript, which carries the answer as its wake message.
+
+## The operator requeue
+
+`record_requeue` (`IWriteRequeueRepository`, `blizzard/src/blizzard/runner/leases/operator_requests.py`) is a
+**no-window** write: one insert into the runner store's `requeues` table, recorded before anything else the requeue
+drives runs, so the hold-clearing fact is durable before claim or spawn reads it. Its consumption writes nothing of its
+own: `_UNCONSUMED_REQUEUE` (`blizzard/src/blizzard/runner/store/internal/requeue_store.py`) derives a mark as consumed
+once a later lease mint for the chunk supersedes it, so there is no second half a crash could separate from the insert.
+A crash before the insert leaves the chunk held and the operator re-runs the requeue; a crash after it is already at the
+intended state.
 
 ## The selftest result
 
