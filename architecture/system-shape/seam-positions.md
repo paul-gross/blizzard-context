@@ -52,7 +52,8 @@ anonymous budget when none — beside the registry and outside its adapter cache
 keeps the budget. The landing seam's role handles and the work-source family share it. The priority is carried by the
 handle, never the adapter, because one adapter serves every caller of its repository: `land` admits as `landing`, the
 garden's commit check as `sweeping`. The work-source family reaches the budget only through its own narrow rate-gate
-Protocol, fixed to `sweeping` and bound where the source is built, so it never imports the forge seam. The rule for
-whether an answer is a rate refusal and when it lifts has one home, `hub/forge/budget.py`, free of any HTTP library.
-[../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md) owns how tests bind the mock
-forge for the land action's path.
+Protocol, fixed to `sweeping` and bound where the source is built, so it never imports the forge seam. Each forge kind's
+rate dialect, chosen by kind, owns how that forge's answers become readings and refusal verdicts. `hub/forge/budget.py`
+owns only the arithmetic over readings, free of any HTTP library. The work-source gate translates each answer by its
+source's forge kind. [../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md) owns how
+tests bind the mock forge for the land action's path.
