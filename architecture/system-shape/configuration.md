@@ -20,10 +20,13 @@ same transaction as each write. A sparse merge leaves an absent field unchanged,
 explicit `null` as clearing a nullable field, refusing it on any other. A retire of a retired record, or an enable of an
 enabled one, writes nothing; an edit of a retired record is legal and leaves it retired.
 
-Implement a configured kind against the shared `ConfiguredRecord` capability and reuse its applicable lifecycle
-mechanics rather than copying them. Projects use the base capability without retirement; project links use their own
-link capability and transitions, with landing positions separate from link revisions. Secrets use their separate
-encryption and revision lifecycle. The defining modules and consumer-level proofs are named in **Do** below.
+Implement configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord` requires
+only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names the
+link-specific capabilities. Reuse the applicable revision, transition, ordered field comparison, change-row, slug-left
+and label-merge mechanics in `blizzard/src/blizzard/hub/domain/config/lifecycle.py`, which uses `ConfigChange.of` in
+`blizzard/src/blizzard/hub/domain/config/changes.py`. Kinds own validation, projection, identity and construction.
+Projects use the base capability without retirement; links use linked polarity and project attribution, and position
+facts are not link revisions. Secrets' encryption and revision exception is outside these helpers.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
@@ -111,16 +114,9 @@ through `model_fields_set` and `UNSET` (`blizzard/src/blizzard/hub/domain/kernel
 refuses an explicit `null` with a 422 rather than reading it as unchanged. Retirement is an appended lifecycle fact, the
 newest row deciding, as `scope_lifecycle_facts` holds it (`bzh:facts-not-status`, [./store-facts.md](./store-facts.md)).
 
-The shared structural capabilities live in `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord`
-requires only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names
-the link-specific capabilities. Shared pure revision, transition, ordered field comparison, change-row, slug-left and
-label-merge mechanics live in `blizzard/src/blizzard/hub/domain/config/lifecycle.py`, using `ConfigChange.of` in
-`blizzard/src/blizzard/hub/domain/config/changes.py`. Kinds own validation, projection, identity and construction;
-projects do not retire, links use linked polarity and project attribution, and position facts are not link revisions.
-Secrets' encryption and revision exception is outside these helpers. Consumer semantics are proven in
-`blizzard/tests/test_configured_record_lifecycle_rules.py`, `blizzard/tests/test_project_model.py`,
-`blizzard/tests/test_project_links.py`, `blizzard/tests/test_scope_domain.py` and
-`blizzard/tests/test_routine_domain.py`.
+Consumer semantics are proven in `blizzard/tests/test_configured_record_lifecycle_rules.py`,
+`blizzard/tests/test_project_model.py`, `blizzard/tests/test_project_links.py`, `blizzard/tests/test_scope_domain.py`
+and `blizzard/tests/test_routine_domain.py`.
 
 **Don't.** An edit request that requires every field and a restated `name` under `PATCH` — two operators changing
 different fields of one record silently revert each other.
