@@ -99,11 +99,6 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   proving the panel host's `flex: 1; min-height: 0` carries the flex chain to a definite height for the composed
   `fleet-kit-master-detail` split and an overflowing artifact nav list genuinely scrolls; proven able to fail by
   deleting that pair from `chunk-artifacts-panel.css`'s `:host`, which leaves the tab's box unbounded.
-- `chunk-facts-alignment.shell-sweep.spec.ts` covers the chunk detail facts/usage table pair — `ChunkFacts` with
-  `ChunkTokenBreakdown` projected as its sibling `<dl class="kv">` — a geometry check that the shared
-  `--kv-label-col`/`--chunk-facts-pad` custom properties keep the tables' columns aligned when a long wrapped Runner
-  value gives them different content widths. A second case proves a standing-edge row (Depends on/Blocks) shares that
-  same grid: with one prerequisite present, its value column's `left` must match the facts table's own Runner row.
 - `hover-tint.shell-sweep.spec.ts` covers the `--tint-hover`/`--tint-selected` tokens where they compose — the fleet
   `ChunkCard`, `ChunkTimeline`'s history rows, and `ChunkArtifacts`'s artifact rows — a computed-style proof: a real
   Playwright pointer (`userEvent.hover`) must distinguish hovered from resting `background-color` and, on the board card
@@ -308,13 +303,6 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   not list (`bzh:frontend-open-vocabulary`), at 1440px and at the narrowest centre column the desktop board renders, as
   `board-list.shell-sweep.spec.ts` frames it: at both, the unknown lane renders headed with the raw status, every lane
   stays equal-width inside the board and the viewport, and the chunk's card sits inside that lane.
-- `delivery-band.shell-sweep.spec.ts` covers the board's Delivery band at its fullest: a lane landing one chunk with a
-  line behind it — one polling, one in a state the build's generated vocabulary does not list
-  (`bzh:frontend-open-vocabulary`) — and a collapsed lane of its last verdict alone. At 1440px and at the narrowest
-  centre column the desktop board renders, as `board-list.shell-sweep.spec.ts` frames it, every lane's title, chunks,
-  and verdict stay inside the band, which never overflows its own width; the collapsed lane folds to one line; and the
-  unknown state reads raw inside its chunk. Proven able to fail by turning off the lane's `flex-wrap`, which pushes the
-  line past the band at the narrow width.
 - `gardening-page.shell-sweep.spec.ts` covers a project's garden page: a bare `/p/{project}/gardening` lands on the
   Proposals tab; the gardening strip wears the kit's sub-strip — 30px tall on `--panel-deep`, its active tab cyan on
   `--overlay-30` with a `--cyan-dim` underline — beneath the app's own strip; the Proposals count turns `--amber-hi`
