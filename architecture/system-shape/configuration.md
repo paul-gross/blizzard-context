@@ -6,10 +6,10 @@ read; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rul
 by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 A **configured record** is a row the hub holds as operator-set configuration and that an operator changes while the hub
-runs: a forge, a work source, a repository, a secret, a project, a scope, a routine. The rules below name the seams and
-tables that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their
-implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code
-these rules do not yet hold.
+runs: a forge, a work source, a repository, a secret, a project, a project source link, a project repository link, a
+scope, or a routine. The rules below name the seams and tables that keep them — `IConfigCodec`, `SecretValue`,
+`ISecretReader`, `config_changes` — by the names their implementations take, so code adding one of them takes the name
+stated here. [Known debt](#known-debt) lists the code these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
@@ -202,10 +202,11 @@ refused when the tenant holds several.
 - A document entry of a kind a project owns that does not take `project` by id or slug, does not act in the tenant's
   only project when it names none, or is not refused when the tenant holds several.
 
-**Do.** `ConfigAuthoring.apply` (`blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan,
-`blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it) is the reference: the plan is pure, the writer
-runs each planned write through the same per-operation bodies the per-record adapters run, and a dry run raises a
-private sentinel after the last write so the store rolls back.
+**Do.** `ConfigAuthoring.apply` in `blizzard/src/blizzard/hub/domain/config/authoring.py` is the reference:
+`blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan and
+`blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it. The plan is pure, the writer runs each planned
+write through the same per-operation bodies the per-record adapters run, and a dry run raises a private sentinel after
+the last write so the store rolls back.
 
 **Don't.** A dry run that checks "would this name collide" with a select of its own — it passes while the real apply
 fails on a check the select did not know to make.
