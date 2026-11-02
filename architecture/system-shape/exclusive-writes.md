@@ -400,12 +400,14 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   are test assertions, not recorded runs or a Postgres outcome proof for ingest versus replace/drop. Other graph-pin
   writers, reverse winner orders, teardown and other visibility writers, stale derivation interleavings and complete
   lock ordering remain open.
-- **Source links and ingest.** `IngestService.ingest` first chooses a project on separate reads, then takes
-  `locked_work_refs` and repeats the chosen project's standing-source-link check through `handle.source_links` on the
-  write connection before `live_holders` and `mint_locked`. `tests/postgres_locks/test_ingest_source_link_race.py` holds
-  a lower-level unlink, optionally relinks, commits or rolls back, and checks the waiting ingest's persisted outcome
-  with and without the ingest's source-link key. The initial project inference and hub-item project reads are outside
-  that lock; the test does not prove their behavior under concurrent changes or every link/import writer.
+- **Source links and ingest.** `IngestService.ingest` chooses a project through `handle.source_links` and
+  `handle.item_projects` on the `locked_work_refs` connection before `live_holders` and `mint_locked`. The API first
+  resolves a project on separate reads and passes that result as a named project, so an inferred project can remain
+  selected even if a concurrent link makes the request ambiguous before the locked decision. The API can also refuse on
+  those earlier reads before the locked decision. `tests/postgres_locks/test_ingest_source_link_race.py` holds a
+  lower-level unlink, optionally relinks, commits or rolls back, and checks the waiting ingest's persisted outcome with
+  and without the ingest's source-link key. It does not prove the API's preliminary inference and refusal behavior under
+  concurrent changes or every link/import writer.
 - **Group and pointer admission.** `GroupService.group` takes the cycle mutex and `locked_dependency_graph` before
   `_group_locked`; its `add_work_refs_locked` and `record_fold_locked` use that handle's connection, so this caller
   holds the graph key before adding refs. `tests/postgres_locks/test_group_pointer_decisions.py` bypasses admission on
@@ -461,13 +463,14 @@ selection to be safe. Closure, open-turn and scheduling guards are read after th
 no flow locks; later guards handle the absent record where applicable. This reasoning does not cover arbitrary SQL, all
 indirect callers, or teardown interleavings independently of tenant admission.
 
-The reconciler discovers submission candidates and resolves resources before locking the chunk, then rechecks the graph
-ID, status, node and epoch under its chunk handle and submits on that transaction. `tests/test_flow_changed_frames.py`
-asserts stop and restart between candidate selection and submission.
+The reconciler discovers submission candidates before locking the chunk, then resolves resources and rechecks the graph
+ID, status, node and epoch under its chunk handle and submits on that transaction. A refusal handler runs after that
+handle is released, so its artifact, event and routing effects do not share the decision transaction.
+`tests/test_flow_changed_frames.py` asserts stop and restart between candidate selection and submission.
 `tests/postgres_locks/test_flow_submit_reconcile.py` asserts waits behind direct stop or restart facts, no submission
 after commit, and stale submission when the reconciler's chunk lock is omitted. The competing movement is direct SQL,
 not the service; resource freshness, other competitors and orders remain open. In the departure pass, the reconciler
-computes withdrawal before calling `close`; the store locks the submission and rechecks for an open turn.
+computes withdrawal under the chunk and flow locks; the store rechecks for an open turn before closure.
 `tests/postgres_locks/test_flow_reconcile.py` asserts a wait behind an uncommitted `take_turn`, no closure after commit,
 and a closure with the submission lock omitted, bypassing tenant admission on both sides. It does not prove freshness of
 the precomputed withdrawal or all departure competitors. These bindings describe assertions, not recorded test runs.
