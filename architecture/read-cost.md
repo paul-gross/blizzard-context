@@ -48,7 +48,8 @@ than widening one seam toward the cap. `blizzard/tests/support.py`'s `count_quer
 count is held flat as the fleet grows. `bzh:page-bounded-read` below — the reads this rule leaves alone, and the bound
 they owe instead. `bzh:newest-per-key-read` below — the row bound a plural form owes when the singular it batches reads
 a newest fact. [`./lanes.md`](./lanes.md) `bzh:probe-gated-pass` — whether a periodic pass runs at all, which this rule
-takes as given.
+takes as given. [`./system-shape/store-facts.md`](./system-shape/store-facts.md) `bzh:fact-families-declared` — the one
+registry a wide or narrowed fact projection narrows, so a plural form cannot drop a family.
 
 ## Bound a read by its page (`bzh:page-bounded-read`)
 

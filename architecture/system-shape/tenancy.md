@@ -129,6 +129,9 @@ membership turns "where can a tenant leak?" into a list a reviewer can read whol
   tenant's rows share;
 - tenant administration — whether a tenant is open, and the open tenants with their names.
 
+The export-status reads (trace export's and fact egress's newest-cursor reads) are members of the second kind, and the
+readers built on `AllTenantStatements` (`bzh:sweep-acts-in-row-tenant`) are members of the first and third.
+
 A read of a global table is an ordinary hub-level read, not a member: memberships and hub administrators are global
 (`bzh:global-tables-closed`), so listing a person's tenants or the hub administrators reads through the identity
 repositories the hub-level services hold. Tenant deletion's own reads are hub-level the same way: the deletions a
@@ -181,7 +184,11 @@ lock `UPDATE` then matches nothing, and its write runs unserialized.
 
 **Rule.** A hub sweep stays one pass per hub (`bzh:steppable-loop`): it reads its corpus through `HubScopedReads`,
 leaving closed tenants out, and makes each write for a row through the stores and services of that row's own tenant. A
-pass never holds one tenant's scope while acting on another tenant's row.
+pass never holds one tenant's scope while acting on another tenant's row. Every hub-scoped corpus or export-status read
+builds its statements through `OpenTenantStatements` (`blizzard/src/blizzard/hub/store/internal/open_tenants.py`), so
+closed tenants are excluded by construction. Its one named opt-out, `AllTenantStatements`, is the only way to see closed
+tenants deliberately, and serves only the probe signatures, credential and invitation resolution, and tenant
+administration reads.
 
 **Why.** One pass per hub keeps the loop's cost and crash points independent of how many tenants exist, and acting
 through the row's own tenant is what keeps a write the pass makes on the same side of the boundary as the row that
@@ -193,9 +200,14 @@ key coverage, key rotation — loops over open tenants and acts through each one
 write nothing into any tenant's store; their rows carry their tenant's id instead. A one-tenant pass is the same pass
 narrowed to one tenant: it reads the same hub-scoped probe and corpus and acts only in that tenant.
 
-**Detect.** No structural gate reaches it: the statement guard sees a scoped write as scoped whichever tenant it was
-opened for. A reviewer asks of each write a pass makes: whose scope is this, and is it the tenant of the row being acted
-on? A sweep's service test seeds two tenants and asserts each write lands in its row's tenant.
+**Detect.** The read half: the ast-grep rule `bzh:sweep-acts-in-row-tenant`
+(`contracts/ast-grep/rules/sweep-acts-in-row-tenant.yml`, run by `blizzard:structural-gate`) refuses a raw SQLAlchemy
+`select`, `exists`, `join`, or `union` constructor in the hub-scoped read modules that is not reached through one of the
+two builders, and the closed-tenant component test `tests/test_sweep_corpus_reads.py` gives a closed tenant a row in
+every table `step_facts_for` reads and fails when any corpus read returns one. The write half has no structural gate:
+the statement guard sees a scoped write as scoped whichever tenant it was opened for. A reviewer asks of each write a
+pass makes: whose scope is this, and is it the tenant of the row being acted on? A sweep's service test seeds two
+tenants and asserts each write lands in its row's tenant.
 
 **Do.** The close drain reads every pending close across open tenants, then for each one opens the services of the
 tenant the close belongs to and issues the close through that tenant's work-source client and event log.
