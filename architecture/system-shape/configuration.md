@@ -20,6 +20,11 @@ present field, and takes an explicit `null` as clearing a nullable field, refusi
 retired record, or an enable of an enabled one, writes nothing; an edit of a retired record is legal and leaves it
 retired.
 
+Implement a configured kind against the shared `ConfiguredRecord` capability and reuse its applicable lifecycle
+mechanics rather than copying them. Projects use the base capability without retirement; project links use their own
+link capability and transitions, with landing positions separate from link revisions. The defining modules and
+consumer-level proofs are named in **Do** below.
+
 | Verb   | Route                           |
 | ------ | ------------------------------- |
 | create | `POST /api/<kind>`              |
