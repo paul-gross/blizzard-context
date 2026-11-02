@@ -556,8 +556,8 @@ cursor, never a corpus it would rescan to find nothing changed.
 
 The store's `runner_identity` row records the runner the host file's `[[runner]] id` names: the name and tenant the hub
 last answered for it. Three callers write it, all through `RunnerIdentityStore.record_runner_identity`
-(`blizzard/src/blizzard/runner/store/internal/identity_store.py`): `runner init`
-(`blizzard/src/blizzard/runner/cli/runtime.py`), `Registration.run`
+(`blizzard/src/blizzard/runner/store/internal/identity_store.py`): `runner init`, through `RunnerIdentityService.record`
+(`blizzard/src/blizzard/runner/hub/identity_service.py`), `Registration.run`
 (`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
 (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). None adopts an id: the store is bound to the configured id
 before anything runs, and the write refuses an identity naming another runner (`RunnerAlreadyBound`). Registration
@@ -574,6 +574,20 @@ inserted when none exists, in one transaction, so a `kill -9` leaves the previou
 never both. The in-process identity holder is updated only after the row commits, and is restart-erased and reseeded
 from the row at boot. This is a **no-window** write: there is no partner write a crash could separate it from, and a
 lost write is made again by the next registration or matching check.
+
+The row is forgotten (`forget_runner_identity`) by two callers, both through the `runner/hub` identity service, so a
+store names no runner the hub retired and no `[[runner]]` configures. `runner retire` forgets it itself only with the
+host stopped, under `store_write_guard`'s hold, after the hub retire and before the `[[runner]]` removal; with a host
+running it writes nothing to the store. The running host's registration step forgets it (`RetiredRunnerWatch`) for a
+runner it judges not held, and only when the runner's own token is refused as `retired` naming that runner: not held
+alone also describes a runner moved to another host and awaiting adoption. The delete is one transaction and idempotent,
+a **no-window** write. Recovery from a crash:
+
+- After the hub retire with the `[[runner]]` still present: the next `retire` finishes, since the hub retire is
+  idempotent; a host start also finishes, since the hub refuses the built runner's token and the tick forgets the row.
+- After the CLI removed the `[[runner]]` and before the host tick forgot the row: the next start meets a store naming a
+  runner no `[[runner]]` configures and halts it as `foreign_store_reason` words it, since a start does not contact the
+  hub. `retire --runner <id>` with the host stopped finishes, resolving the runner from the store's row.
 
 The verdict the row is checked against is held only in the process: `IdentityVerdictHolder`
 (`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
