@@ -85,8 +85,8 @@ Specialized chunk handles add locks before yielding a chunk read interface:
   writers.
 - Chunk mint paths take the queue key to exclude new roster members during a queue decision. Ingest's `locked_work_refs`
   takes config-authoring → queue → dependency graph → optional project-source-links → sorted pointer keys; default graph
-  resolution then takes the graph-name key on that connection. Direct chunk mint takes the queue key. Work-item create,
-  run and proposal acceptance take queue → dependency graph before admission and mint.
+  resolution then takes the graph-name key on that connection. Direct chunk mint takes the queue key. Work-item create
+  and run take queue → dependency graph before mint; proposal acceptance uses `locked_work_refs`.
 - `locked_claim` takes `dependency_graph/standing`, reads the standing edges touching the candidate on that connection,
   locks the candidate and its standing prerequisites in sorted id order, then takes `host-live-name-registry/registry`.
   Claim re-reads edges, prerequisite facts, candidate facts, route and runner registration through the handle before
@@ -234,11 +234,8 @@ These are traced examples, not a complete decision or competitor inventory. Path
 `blizzard/src/blizzard`, except tests, which are relative to the blizzard repository root. A test binding identifies
 what the test exercises, not a recorded passing result.
 
-Work-item withdrawal still reads its live holder before the close transaction. A competing mint can commit a holder
-between that read and close; grouping can also move a pointer before deletion locks the observed holder. A complete
-repair must coordinate withdrawal with pointer admission and deletion in the established lock order, including the case
-where ingest follows withdrawal. Routine-run admission and proposal acceptance also select configuration before their
-mint transactions; their required freshness and competing lifecycle writes remain to be established.
+Withdrawal, proposal graph choice and routine-run admission have the specific bindings below. Their competitor
+inventories, baseline freshness and cross-family ordering remain open; these bindings do not establish a complete audit.
 
 | Decision and observed competitors                                        | Lock and connection ordering                                                                                                                                                                                                                                                                                                                      | Evidence and remaining boundary                                                                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -274,6 +271,31 @@ independence.
 **Additional decision bindings.** These refine the boundaries in the table; they do not certify the full families. Paths
 are relative to `blizzard/src/blizzard` unless they start with `tests/`.
 
+- **Work-item withdrawal.** `DeleteService.withdrawal` holds the cycle mutex and opens `locked_withdrawal`, which takes
+  the dependency-graph key, discovers all chunks naming the pointer, locks those rows in sorted order and resolves the
+  live holder on that connection. `WorkItemEditService.withdraw` reads its facts and dependencies there and either
+  closes the item or deletes the holder and withdraws its hub items on the same transaction. Ingest takes the graph key
+  through `locked_work_refs` and checks withdrawn hub items on that connection before mint; group takes the graph key
+  before moving refs. `tests/test_withdraw_ingest_order.py` asserts sequential outcomes in both orders.
+  `tests/postgres_locks/test_withdrawal_races.py` bypasses tenant admission and races withdrawal against ingest and
+  group in both orders, with graph-key omission controls; the group withdrawal-first omission is skipped because its row
+  lock also serializes that order. The group omission in the other order exposes a holder not included in the waiter's
+  locked rows. These assertions are not recorded runs or an exhaustive pointer-writer, deletion or lock-order proof.
+- **Proposal graph choice.** Minting acceptance allocates a pointer, then opens `locked_work_refs` and resolves the
+  default graph under config admission and the graph-name key on that connection. The closure, item and chunk writes use
+  that transaction. `tests/postgres_locks/test_proposal_default_graph_race.py` holds config-authoring without tenant
+  admission and inserts a retirement fact: acceptance waits and refuses after commit; omitting its config lock permits a
+  closure before commit. The winner is a direct fact, not a lifecycle service. Other graph writers, acceptance paths,
+  reverse orders and cross-family ordering remain open.
+- **Routine-run admission.** The API opens `RoutineRunParticipants` before reading the routine and scope; it takes
+  config-authoring on a scoped write connection and constructs transaction-bound routine, scope, graph, finding-set,
+  work-ref and item participants. `RunService.run` reads retirement, graph, scope linkage and baseline before minting;
+  the admitted item writer takes queue then dependency-graph admission on that connection and writes the item, chunk and
+  run context. Events publish after the transaction exits. `tests/postgres_locks/test_routine_run_admission.py` holds
+  config-authoring without tenant admission and inserts a graph retirement fact; the run waits and refuses after commit,
+  while a config-lock omission permits mint. This is a participant-level test with a direct fact winner, not a proof of
+  every API or authoring race. Finding-set baseline writers and the intended baseline freshness boundary, all config
+  competitors and cross-family lock order remain unresolved.
 - **Config apply.** `ApplyParticipants.open` takes the config-authoring key before constructing readers on the same
   scoped connection, then runs reconciliation and writes on that connection; dry runs roll back the transaction and
   no-op applies still enter it. Graph mint and lifecycle operations take config-authoring before their graph-name key,
