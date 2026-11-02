@@ -277,7 +277,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (`bzh:narrow-viewport-tier-rule`): title, blocked marking, PR links, step row, and cost row stack inside the card; the
   project's swatch leads the step row, the step stays left-aligned with the title, and the id stays in the step row,
   clear of the step and flush right with the cost; a multi-prerequisite count stays unclipped at 320px; and a real
-  pointer reaches the PR link, the fold, and Promote.
+  pointer reaches the PR link and the fold.
 - `chunk-card-tone.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s and `ChunkListRow`'s status colour with the
   design tokens loaded: in every `Tone`, the left edge and the id must resolve to exactly the colour `toneColor` names
   for the view's tone, and a selected card's or row's edge must resolve to the selection cyan.

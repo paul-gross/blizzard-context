@@ -54,9 +54,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
 - `tests/ui/auth/login-session.spec.ts::test_browser_login_dance_and_mid_stream_session_expiry` — on the `ui-auth` hub,
   with the stub IdP's profile lever choosing who the browser resolves to: the signed-out landing shows one provider
   button; an uninvited dance is refused as `invite_only` with no `bz_session`; invited as guest through
-  `POST /api/invitations` and the board's `/invite/<token>` page, the board is read-only with Promote hidden; promoted
-  through `PUT /api/members/{user_id}`, a reload shows Promote; and a second page's logout through `nav-logout` sends
-  the first, still-open page to `/login` with no reload.
+  `POST /api/invitations` and the board's `/invite/<token>` page, a chunk opened in the dock carries no ⋮
+  `chunk-actions-menu`; promoted to contributor through `PUT /api/members/{user_id}`, a reload shows the menu; and a
+  second page's logout through `nav-logout` sends the first, still-open page to `/login` with no reload.
 - `tests/ui/auth/runner-federation.spec.ts::test_multi_daemon_sso_bounce` — two adopted runner hosts under one runner
   name: a sessionless browser visit to A bounces through the hub and the stub IdP into A's own session, with the
   hub-signed token never in a URL. The captured callback token is refused at B (audience-bound), refused on replay at A
@@ -98,12 +98,12 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
 - `tests/ui/board-cost-live.spec.ts` — `test_board_renders_cost_and_updates_live_over_sse`. The board, loaded once and
   never reloaded, over a chunk claimed straight through `POST /api/fleet/routes`, with spend shipped as `usage.recorded`
   facts to `POST /api/fleet/events` as a runner. Proves the card's cost badge, the header's spend-today figure
-  (`GET /api/spend?since=`) and the detail dock's cost with the four token classes inline update live off the event
-  stream; that a row with neither a billed nor an estimated amount flips every figure to its `+`-marked lower bound,
-  never a silently understated exact; and, on a second, subscription-only chunk, that an estimate renders as one
-  `~`-marked figure on the card and the dock, folds into the header's fleet total under both marks, and marks no chunk
-  partial. The partial marking and the per-step inline match are also fenced in `web:unit-test` and
-  `blizzard:component-test`.
+  (`GET /api/spend?since=`) and the detail dock's session-efficiency cost, with the four token classes in its title,
+  update live off the event stream; that a row with neither a billed nor an estimated amount flips every figure to its
+  `+`-marked lower bound, never a silently understated exact; and, on a second, subscription-only chunk, that an
+  estimate renders as one `~`-marked figure on the card and the dock, folds into the header's fleet total under both
+  marks, and marks no chunk partial. The partial marking and the per-step inline match are also fenced in
+  `web:unit-test` and `blizzard:component-test`.
 - `tests/ui/glance-board.spec.ts` —
   `test_the_glance_board_shows_loading_before_rows_and_never_empty_on_a_populated_fleet` and
   `test_the_glance_board_shows_a_cost_estimate_never_a_plain_billed_zero`. The mobile glance board at the narrow
@@ -132,14 +132,14 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   `done`, and the card settles in the Done lane with no live worker line.
 - `tests/ui/board-browser.spec.ts` — `test_board_browser_live_group_reorder_answer_and_pause`. The mission-control board
   over a runner host the test steps, loaded once and never reloaded until its own `?chunk=` URL is mounted fresh.
-  Promotes three chunks from the board and proves decorative grips and no retired controls in the backlog and ready
-  lanes; groups two through `POST /api/chunks/{id}/group` and watches the merged card vanish and the survivor carry both
-  pointers' chips live; drags the survivor's card to the ready lane's top with real pointer moves, and proves the queue
-  and the next claim honour both. The survivor parks on a question, crosses to the waiting lane live, is answered from
-  the dock, and runs to `done`, the dock then rendering its node history and artifacts and linking to the chunk page's
-  Artifacts tab. The runner's hub brake, set and released from the Fleet tab in a second page, holds the remaining ready
-  chunk through four host passes and then lets it be claimed; that chunk is paused from the dock, keeping its claim and
-  naming who paused it, and resumed. The graph ends at review, and the worker's branch and its `LANDED.md` are read back
-  from the runner host's own origin: the host's origins are not the hub forge's repositories, so this entry does not
-  prove landing through the forge — a pull request opened and merged onto `main`. The dock's geometry is held by
-  `web:shell-sweep`.
+  Promotes three chunks through the hub API, watching each land live in Ready, and proves decorative grips and no
+  Promote control on any card in the backlog and ready lanes; groups two through `POST /api/chunks/{id}/group` and
+  watches the merged card vanish and the survivor carry both pointers' chips live; drags the survivor's card to the
+  ready lane's top with real pointer moves, and proves the queue and the next claim honour both. The survivor parks on a
+  question, crosses to the waiting lane live, is answered from the dock, and runs to `done`, the dock then rendering its
+  node history and artifacts and linking to the chunk page's Artifacts tab. The runner's hub brake, set and released
+  from the Fleet tab in a second page, holds the remaining ready chunk through four host passes and then lets it be
+  claimed; that chunk is paused from the dock, keeping its claim and naming who paused it, and resumed. The graph ends
+  at review, and the worker's branch and its `LANDED.md` are read back from the runner host's own origin: the host's
+  origins are not the hub forge's repositories, so this entry does not prove landing through the forge — a pull request
+  opened and merged onto `main`. The dock's geometry is held by `web:shell-sweep`.
