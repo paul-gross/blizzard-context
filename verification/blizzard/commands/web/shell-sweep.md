@@ -317,12 +317,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   Back restores the list's scroll position. A retired scope row carries a `--red` kit label inside the list at 1280px
   and 390px. Proven able to fail by dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits
   in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
-- `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every in-flow control live
-  at once — a routed, pausable, blocked chunk with a long runner identity — at 800px (wider than any real dock share)
-  and at 390px/320px (`bzh:narrow-viewport-tier-rule`): neither Pause nor the `⋯` overflow trigger nor the close button
-  may overflow the header's own right edge — a real CSS flex-wrap layout claim jsdom cannot make. A second case per
-  width opens the trigger's own menu panel — a real CDK overlay attached to `document.body`, not the `.d-actions` flex
-  row — and sweeps that Detach, Complete, and Delete each stay on-viewport. Both cases assert their swept selector list
+- `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every control live at once
+  — a routed, pausable, deletable chunk with a long runner identity — at 800px (wider than any real dock share) and at
+  390px/320px (`bzh:narrow-viewport-tier-rule`): neither the ⋮ `chunk-actions-menu` trigger nor the `detail-close`
+  button may overflow the header's own right edge — a real CSS flex-wrap layout claim jsdom cannot make. A second case
+  per width opens the ⋮ menu's panel — a real CDK overlay attached to `document.body`, not the header's flex row — and
+  sweeps that Pause, Detach, Complete, and Delete each stay on-viewport. Both cases assert their swept selector list
   against an exact count, so a control added to the row or the panel without being added to the list fails the fixture
   rather than passing unmeasured.
 - `chunk-delivery.shell-sweep.spec.ts` mounts the board card, detail dock, and routed General tab with both a PR and a
