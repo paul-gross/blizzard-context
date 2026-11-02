@@ -20,6 +20,8 @@ constraint its role sets ([Roles](#roles)).
 - Mark each class itself: a subclass of a marked class declares its own role, since a role never inherits.
 - Define a data class with a `class` statement. One built by a call — `NamedTuple(...)`, `namedtuple(...)`,
   `make_dataclass(...)`, `dataclass(cls)` — is a violation, because no marker can reach it.
+- Write a class that only stores fields as a `@dataclass`. A hand-written one — no decorator, no base, an `__init__`,
+  and no method or property beyond its constructors — is a violation, marked or not.
 - A marker on a class that is neither a `@dataclass` nor a `NamedTuple`, or on one whose role is inferred, is a
   violation.
 
@@ -159,8 +161,8 @@ orchestration instead and carries no marker.
 
 `tests/test_layering.py` fails the unit tier on each constraint, one check per constraint:
 
-- A data class with no marker or two, a marker on an inferred-role class or a non-data class, or a data class built by a
-  call.
+- A data class with no marker or two, a marker on an inferred-role class or a non-data class, a hand-written class that
+  only stores fields, or a data class built by a call.
 - A `@dto` or a pydantic model outside the [app boundary](#app-boundary), or a `@domain_model` or `@adapter_model`
   inside it.
 - A module outside the boundary, the wire adapters, and the composition roots importing from `blizzard.wire`.
@@ -174,11 +176,11 @@ orchestration instead and carries no marker.
 The same module's planted-tree cases prove each check catches its violation and admits its conforming shape;
 `tests/test_foundation_roles.py` covers the markers themselves.
 
-The gate reads only `@dataclass` and `NamedTuple` classes, so a reviewer asks of a hand-written class that stores fields
-in its `__init__`: is this a data class that left the gate? The fix is to make it a data class with its role. Of an
-`@adapter_model`, a reviewer asks whether a module outside its adapter imports it — then it is a domain model the
-adapter should map to. Of a `@domain_model`, a reviewer asks whether its methods are rules over its own data, or work
-that makes it a `@collaborator`.
+The gate reads a class with no decorator and no base only for the field-only shape, so a reviewer asks of a class with a
+base or a decorator, or with work methods, that stores fields in its `__init__`: is this a data class that left the
+gate? The fix is to make it a data class with its role. Of an `@adapter_model`, a reviewer asks whether a module outside
+its adapter imports it — then it is a domain model the adapter should map to. Of a `@domain_model`, a reviewer asks
+whether its methods are rules over its own data, or work that makes it a `@collaborator`.
 
 ## Do
 
