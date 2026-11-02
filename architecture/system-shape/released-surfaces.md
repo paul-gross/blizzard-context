@@ -7,14 +7,16 @@ This spoke owns what a change may do to a surface a supported release already sh
 ## A change to a released surface is additive, or a break the window admits (`bzh:released-surface-additive`)
 
 **Rule.** A change to any surface the `blizzard` repo's `docs/versioning.md` names — the HTTP API, the hub↔runner wire,
-configuration, the store schema, the trace contract, and the egress contract — is additive to every supported release,
-or it is a break the compatibility window admits, or a break a recorded allowance admits: one exact finding against one
-release line whose consumers survive it, in the `blizzard` repo's `contracts/compat/allowances.toml`, whose README owns
-the entry format and when an entry applies. `docs/versioning.md` owns the window and what counts as breaking;
-`blizzard:compat` ([../../verification/blizzard.md](../../verification/blizzard.md)) decides which a change is. Whether
-a release tolerates a response enum's gained value is read from that release's own document, from the open mark
+configuration, the store schema, the trace contract, the egress contract, the event stream, and the CLI — is additive to
+every supported release, or it is a break the compatibility window admits, or a break a recorded allowance admits: one
+exact finding against one release line whose consumers survive it, in the `blizzard` repo's
+`contracts/compat/allowances.toml`, whose README owns the entry format and when an entry applies. `docs/versioning.md`
+owns the window and what counts as breaking; `blizzard:compat`
+([../../verification/blizzard.md](../../verification/blizzard.md)) decides which a change is. Whether a release
+tolerates a response enum's gained value is read from that release's own document, from the open mark
 `bzh:open-response-vocabulary` puts there. A removed or reshaped surface keeps its old form beside the replacement,
-marked deprecated, until a later change may remove it.
+marked deprecated, until a later change may remove it. `docs/versioning.md` names each surface's deprecation mark. A
+consumer of the event stream ignores a frame kind and a field it does not know.
 
 **Why.** A deployment moves its hub, its runner hosts, and its clients onto a release at their own pace, so a break
 reaches a live consumer with nothing to catch it. Holding the change to supported releases makes the check mean the same
