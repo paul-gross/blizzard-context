@@ -9,12 +9,13 @@ command and the method-id inventory; [`../commands.md`](../commands.md) routes t
 
 ### blizzard:sse-contract
 
-`mise run sse-contract` gates the SSE frame shape against the golden corpus `contracts/sse/`: `manifest.json`,
-`README.md`'s forward-compatibility policy, and one `<kind>.json` per frame kind. The corpus is two self-contained
-scopes — hub at `contracts/sse/`'s top level (`blizzard.hub.events.broker`), runner at `contracts/sse/runner/`
-(`blizzard.runner.events.broker`) — each with its own `manifest.json`, framing constants, and reserved open-of-stream
-comment. Each scope asserts its own closure: the on-disk kind set, the `manifest.json` kind list, that daemon's Python
-`EVENT_TYPES` tuple, and its TS event-type tuple must all be equal.
+`mise run sse-contract` gates the SSE frame shape against the golden corpus `contracts/sse/`: `manifest.json`, the
+`README.md` frame semantics, and one `<kind>.json` per frame kind. Each kind's golden cases carry between them every
+field of its wire model, and every entry in a manifest's optional `deprecated` list resolves to a kind or a field a case
+carries. The corpus is two self-contained scopes — hub at `contracts/sse/`'s top level (`blizzard.hub.events.broker`),
+runner at `contracts/sse/runner/` (`blizzard.runner.events.broker`) — each with its own `manifest.json`, framing
+constants, and reserved open-of-stream comment. Each scope asserts its own closure: the on-disk kind set, the
+`manifest.json` kind list, that daemon's Python `EVENT_TYPES` tuple, and its TS event-type tuple must all be equal.
 
 Both suites read the same physical goldens — no per-side copy — so moving a golden reddens the side that has not caught
 up, and changing a side's shape without moving the golden reddens that side. Each drives both scopes; no runner-only
@@ -57,9 +58,10 @@ deliberate CLI change. A command's raw `.help` is `inspect.cleandoc`'d the same 
 corpus is not the interpreter-version-dependent artifact a docstring literal's compile-time dedent (3.13+) versus its
 absence (earlier) would otherwise make it.
 
-The guard is a pure equality check with no forward-compatibility carve-out — unlike the SSE corpus's consumer-tolerance
-policy, an unknown field or a reordered parameter is exactly the drift this method exists to catch, ahead of the CLI's
-decomposition into by-concept packages: the surface must render identically at every step of that move.
+The guard is a pure equality check: an unknown field or a reordered parameter is exactly the drift this method exists to
+catch. It holds the live tree to the golden, and `blizzard:compat` holds the golden to the supported releases, so
+regenerating the golden clears this guard but not that one. It stands ahead of the CLI's decomposition into by-concept
+packages: the surface must render identically at every step of that move.
 
 ### blizzard:config-contract
 

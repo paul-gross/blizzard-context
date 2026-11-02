@@ -74,8 +74,8 @@ regenerate mode. It needs no sibling checkout, and `blizzard:gate` runs it as on
 ### blizzard:compat
 
 `mise run compat` (`uv run blizzard-compat --commits origin/master..HEAD`) holds HEAD's committed contract documents —
-the OpenAPI documents, `contracts/config/`, `contracts/traces/`, `contracts/egress/`, and `contracts/store/` — to each
-supported release's copy (`bzh:released-surface-additive`,
+the OpenAPI documents, `contracts/config/`, `contracts/traces/`, `contracts/egress/`, `contracts/store/`, both
+`contracts/sse/` scopes, and `contracts/cli/` — to each supported release's copy (`bzh:released-surface-additive`,
 [`../../../architecture/system-shape/released-surfaces.md`](../../../architecture/system-shape/released-surfaces.md)),
 the releases `src/blizzard/wire/window.toml` and the tags select. A finding the base of the range already carried is
 reported as inherited and does not fail. A finding passes only where the window admits a break: deprecated in every
@@ -94,13 +94,13 @@ the tool by hand.
 
 `mise run change-notes` runs two commands. `blizzard-change-notes check` asserts every file under `changes/` is a note
 in the documented format. `blizzard-change-notes owed --against <ref>` asserts the commits in
-`merge-base(HEAD, <ref>)..HEAD` owe no note they do not add: a changed contract document (the compat registry's less the
-store schema, plus the CLI contract) carries an added or edited unreleased note or a reasoned `Change-Note: none —`
-trailer; a `!` commit and a newly breaking note owe each other, the note with an `## Upgrade` section; and a released
-note changes only in its body outside the cut of its own version. Git reads only: the working tree is never consulted.
-CI runs `owed` on pull requests only, against `origin/<base branch>`; a push runs `check` alone. Locally it runs against
-`origin/master`, so fetch first. The OpenAPI documents have no contract-document row of their own: `blizzard:gate`'s
-spec-drift check above and `owed` both hold them.
+`merge-base(HEAD, <ref>)..HEAD` owe no note they do not add: a changed contract document (the compat registry's
+non-store documents) carries an added or edited unreleased note or a reasoned `Change-Note: none —` trailer; a `!`
+commit and a newly breaking note owe each other, the note with an `## Upgrade` section; and a released note changes only
+in its body outside the cut of its own version. Git reads only: the working tree is never consulted. CI runs `owed` on
+pull requests only, against `origin/<base branch>`; a push runs `check` alone. Locally it runs against `origin/master`,
+so fetch first. The OpenAPI documents have no contract-document row of their own: `blizzard:gate`'s spec-drift check
+above and `owed` both hold them.
 
 ### blizzard:wheel
 

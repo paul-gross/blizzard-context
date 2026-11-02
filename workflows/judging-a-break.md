@@ -12,8 +12,9 @@ whether the surface can stay, which no tool decides.
 
 ## Steps
 
-1. **Is the finding real?** Regenerate the contract documents (`mise run export-openapi`, `mise run export-contracts`)
-   and run again. A finding that disappears was a document the change forgot to regenerate.
+1. **Is the finding real?** Regenerate the contract documents (`mise run export-openapi`, `mise run export-contracts`,
+   and `uv run python -m blizzard.tools.cli_surface` for the CLI; the SSE goldens are authored by hand) and run again. A
+   finding that disappears was a document the change forgot to regenerate.
 2. **Can the old surface stay beside its replacement?** That is always preferred, and it makes the finding additive.
 3. **If not, does the window allow the break now?** It does when the surface is deprecated in every supported release
    and `floor` can be raised to a line that deprecates it; or, on a `master` whose window carries `opening`, when the
