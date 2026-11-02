@@ -24,6 +24,11 @@ replayed arrival opens no second decision. This does not impose a graph gate on 
 A decision records whether the graph declared its gate or a named runner's configuration imposed it. A runner declares
 its gate set to the hub, which reports it and never enforces it.
 
+A runner-configured gate covers only the nodes the runner executes. The hub reports a gate that names a hub-executed
+node, or a node no non-retired graph has, as not enforceable, with the reason. The report is derived from the tenant's
+current graphs on every read, so a graph that gains the node as a runner node clears it. It refuses nothing: the runner
+still holds its configured gate set.
+
 ## Resolution
 
 A decision passes through two states, each derived and never stored. It is *waiting* while no resolution references it,
