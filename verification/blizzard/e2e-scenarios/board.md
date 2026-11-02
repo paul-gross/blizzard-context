@@ -18,13 +18,12 @@ without either or without `BLIZZARD_E2E=1`. Every scenario also needs the siblin
 The other board browser scenarios run under `blizzard:ui` in `tests/ui/`; see the
 [UI method](../commands/test-tiers/ui.md) for their roster.
 
-## test_flow_lanes_browser_e2e
+## test_flow_places_browser_e2e
 
-The board's Delivery band and place lines over a real hub landing two chunks on one branch, held in its line by the mock
-forge's `checks_pending` lever. The board is loaded once and never reloaded.
+The board's place lines and a flow's record over a real hub landing two chunks on one branch, held in its line by the
+mock forge's `checks_pending` lever. The board is loaded once and never reloaded.
 
-- `test_the_delivery_band_shows_a_branch_line_and_collapses_live_once_it_lands` — proves the band shows the branch's one
-  lane, with its two chunks landing or in line in arrival order, and each delivering card's place line names the branch
-  as `GET /api/flows?active=true` does. Once the lever clears, both land and the lane collapses live to its last verdict
-  `landed` over the `flow-changed` frame, and the cards drop their place lines. Clicking the lane's title opens the
-  flow's record in the dock (`?flow=`), listing both landings.
+- `test_the_board_shows_each_place_on_a_branch_and_clears_it_live_once_it_lands` — proves each delivering card's place
+  line names the branch as `GET /api/flows?active=true` does, with the two chunks landing or in line in arrival order.
+  Once the lever clears, both land and the cards drop their place lines live over the `flow-changed` frame; the flow's
+  record then opens in the dock through a landed chunk's timeline, listing both landings.

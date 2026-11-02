@@ -72,25 +72,26 @@ may also import `testing`:
 
 `hub`, rooted at `hub/src/app/`, with kernel `core`:
 
-| Unit               | Layer | May import                                                                                                                                                           |
-| ------------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`             | L0    | —                                                                                                                                                                    |
-| `admin`            | L1    | —                                                                                                                                                                    |
-| `board`            | L1    | `runners`                                                                                                                                                            |
-| `demo`             | L1    | —                                                                                                                                                                    |
-| `events`           | L1    | —                                                                                                                                                                    |
-| `graphs`           | L1    | —                                                                                                                                                                    |
-| `login`            | L1    | —                                                                                                                                                                    |
-| `runners`          | L1    | —                                                                                                                                                                    |
-| `garden/core`      | L1    | —                                                                                                                                                                    |
-| `garden/proposals` | L1    | `garden/core`                                                                                                                                                        |
-| `garden/runs`      | L1    | `garden/core`                                                                                                                                                        |
-| `garden/scopes`    | L1    | `garden/core`, `garden/runs`                                                                                                                                         |
-| `garden/findings`  | L1    | `garden/core`, `garden/proposals`                                                                                                                                    |
-| `garden/routines`  | L1    | `garden/core`, `garden/runs`, `graphs`                                                                                                                               |
-| `garden/doorway`   | L1    | `garden/core`, `garden/proposals`, `garden/runs`                                                                                                                     |
-| `garden`           | L1    | `garden/core`, `garden/doorway`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`                                            |
-| `shell`            | L2    | `admin`, `board`, `demo`, `events`, `garden`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`, `graphs`, `login`, `runners` |
+| Unit               | Layer | May import                                                                                                                                                                       |
+| ------------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`             | L0    | —                                                                                                                                                                                |
+| `admin`            | L1    | —                                                                                                                                                                                |
+| `board`            | L1    | `runners`                                                                                                                                                                        |
+| `delivery`         | L1    | —                                                                                                                                                                                |
+| `demo`             | L1    | —                                                                                                                                                                                |
+| `events`           | L1    | —                                                                                                                                                                                |
+| `graphs`           | L1    | —                                                                                                                                                                                |
+| `login`            | L1    | —                                                                                                                                                                                |
+| `runners`          | L1    | —                                                                                                                                                                                |
+| `garden/core`      | L1    | —                                                                                                                                                                                |
+| `garden/proposals` | L1    | `garden/core`                                                                                                                                                                    |
+| `garden/runs`      | L1    | `garden/core`                                                                                                                                                                    |
+| `garden/scopes`    | L1    | `garden/core`, `garden/runs`                                                                                                                                                     |
+| `garden/findings`  | L1    | `garden/core`, `garden/proposals`                                                                                                                                                |
+| `garden/routines`  | L1    | `garden/core`, `garden/runs`, `graphs`                                                                                                                                           |
+| `garden/doorway`   | L1    | `garden/core`, `garden/proposals`, `garden/runs`                                                                                                                                 |
+| `garden`           | L1    | `garden/core`, `garden/doorway`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`                                                        |
+| `shell`            | L2    | `admin`, `board`, `delivery`, `demo`, `events`, `garden`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`, `graphs`, `login`, `runners` |
 
 `runner`, rooted at `runner/src/app/`, with kernel `core`:
 
