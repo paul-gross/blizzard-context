@@ -267,6 +267,13 @@ independence.
 **Additional decision bindings.** These refine the boundaries in the table; they do not certify the full families. Paths
 are relative to `blizzard/src/blizzard` unless they start with `tests/`.
 
+- **Project landing-order authoring.** `ProjectAuthoring.order_repositories` and `position_repository` open a position
+  decision that takes `config-authoring/config` before reading standing repository links, their newest position facts,
+  and slugs on the same connection. They compute and append position facts on that connection, including no-op
+  decisions. Repository link writers and position writes take the same key.
+  `tests/postgres_locks/test_project_landing_order.py` observes the key wait without tenant admission, checks committed
+  position and unlink facts after the wait, and removes the decision lock as a negative control. Config apply plans its
+  position facts before acquiring this key; its stale planning window remains unresolved.
 - **Queue decisions versus pause and mint.** `tests/postgres_locks/test_queue_decision_race.py` holds an unnamed
   candidate's chunk row without tenant admission and inserts a pause fact. Reorder waits and excludes it after commit;
   omitting that row lock lets reorder complete with the stale candidate. The test also holds the queue key without
