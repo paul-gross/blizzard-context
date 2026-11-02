@@ -168,7 +168,9 @@ transaction lets each repository own its own facts without sacrificing atomicity
 implementation, not a pattern for new cross-repository operations.
 
 **Detect.** An adapter imports a sibling adapter or its private write helper to perform another repository's mutation.
-Review the operation and move coordination to the domain seam.
+`bzh:hub-store-adapter-imports` (`blizzard:structural-gate`) gates the import of any `*_store` module under
+`hub/store/internal/`, existing imports carrying a reasoned ignore as recorded debt; whether an import mutates another
+repository's facts is judged by review. Move coordination to the domain seam.
 
 **Do.** `DeleteService.delete` invokes each repository's own write under one transaction.
 
