@@ -187,6 +187,12 @@ starts no mock hub. A directory a verb under test initialized boots through `run
 leaves the directory to its owner. A spec reads a running host's file list, host file, and `.env`, never its store, and
 reads a store's currentness through `blizzard-runner host --check`.
 
+Every hub stack, shared or fresh, and every runner host starts from a per-run template the harness built once with the
+real `init` of each daemon: the hub restores its durable files, and the runner host copies the migrated `data/host.db`
+before its own `blizzard-runner init` runs. A shared hub has no cold option; a spec that needs a cold hub declares
+`fresh-hub` and takes `test.use({ coldInit: true })`, beside `runnerStarted` and `runnerDir`, as does a runner-host spec
+whose subject is what `init` produces. `FreshHub.reset()` always runs `init` cold.
+
 A call made as a worker carries the spawn credential the mock harness recorded — the `BLIZZARD_*` lease token, lease id,
 and runner URL its runner exported — never a token the test mints, which proves a credential no worker holds.
 
