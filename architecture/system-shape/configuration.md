@@ -118,6 +118,11 @@ Consumer semantics are proven in `blizzard/tests/test_configured_record_lifecycl
 `blizzard/tests/test_project_model.py`, `blizzard/tests/test_project_links.py`, `blizzard/tests/test_scope_domain.py`
 and `blizzard/tests/test_routine_domain.py`.
 
+For project editing or link authoring, follow `blizzard/src/blizzard/hub/domain/projects/model.py` and
+`blizzard/src/blizzard/hub/domain/projects/links.py` into the shared records and lifecycle modules above. Reuse their
+applicable mechanics: a project has no retirement capability, while a link's own linked state, composite identity and
+project-attributed history are distinct from repository position facts.
+
 **Don't.** An edit request that requires every field and a restated `name` under `PATCH` — two operators changing
 different fields of one record silently revert each other.
 
