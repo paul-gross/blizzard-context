@@ -101,7 +101,9 @@ joined call on one method, where a twin method or a handle type duplicates it pe
 `connection_in` beside it resolves the optional form. The `IChunkExclusiveWrites` seam,
 `IWriteGraphRepository.locked_name`, their handle types, and the `*_locked` repository methods are the legacy form:
 existing callers keep them, and no new twin or handle type is added. A new chunk-locked decision opens its unit with
-`IHubTransactions.begin` and `lock_chunks` directly, not through `IChunkExclusiveWrites.locked`.
+`IHubTransactions.begin` and `lock_chunks` directly, not through `IChunkExclusiveWrites.locked` — unless the unit must
+also write through a `*_locked` method taking the `ILockedChunkRead` handle only that seam yields; such a unit opens
+through `IChunkExclusiveWrites.locked` and hands the handle's `transaction` to every other participant.
 
 **Detect.** A participant ignores its token, opens a second write, accepts a token from another scope or after its
 lifetime, or resolves a connection in domain code; a new `*_locked` twin or per-area handle type; a method correct only
