@@ -1,8 +1,75 @@
 # Exclusive writes
 
-This spoke owns how an "exactly one wins" decision is enforced once the hub's store, not an in-process lock, is the one
-thing every writer shares; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rule here follows the
-slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+This spoke owns how a hub write keeps true the decision it acts on — an "exactly one wins" decision above all — once the
+hub's store, not an in-process lock, is the one thing every writer shares; the macro-shape hub is
+[../system-shape.md](../system-shape.md). Every rule here follows the slot skeleton owned by
+`winter-canon:/rule-shape.md` (`canon:rule-shape`).
+
+## A decision's write re-establishes its read (`bzh:write-reestablishes-read`)
+
+**Rule.** Make every hub write that acts on a domain decision re-establish, as it lands, the facts the decision read. In
+preference order:
+
+1. **Compare-and-set.** The domain decides from the entity it holds and hands the write the version or monotonic token
+   it read — a revision, an epoch, a high-water seq. The store writes only while that token still holds and otherwise
+   raises a typed conflict, which the domain maps to a refusal or a retry.
+2. **Decide inside the unit.** Where no one token covers what the decision read, the domain service opens the unit,
+   graduates it once (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)), re-reads the
+   guards through repositories with the token, decides in domain code, and writes with the same token.
+
+**Why.** A fact read before the write's transaction can change before the write lands, and a write that re-checks
+nothing commits a decision on state that no longer holds. A conditioned write costs one predicate and holds no lock
+across reads, so it comes first.
+
+**Scope.** The entities the edge resolves (`bzh:domain-takes-objects`) are decision inputs only through one of these two
+forms. An exactly-one-wins decision taking the second form locks in the order `bzh:store-exclusive-write` owns; a
+compare-and-set write needs no lock of its own, its conditional update being the check and the write at once. A create
+whose only race is a duplicate key is no decision here (`bzh:store-exclusive-write`'s Scope).
+
+**Detect.** Not mechanically checkable; judged at review:
+
+- A service or route that reads an entity or fact, decides on it, then calls a write carrying neither the token it read
+  nor a unit graduated before a fresh re-read.
+- A typed conflict caught and dropped, or retried without deciding again on the fresh state.
+- A store method re-evaluating the decision's predicate to make the write safe — a `bzh:store-refuses-stale` violation,
+  not a fix for this one.
+
+**Do.**
+
+- Compare-and-set: `ScopeLifecycle.retire` (`hub/domain/garden/scopes.py`) decides on the scope it was handed and calls
+  `record_lifecycle` with `from_revision=scope.revision`; `ScopeStore.record_lifecycle`
+  (`hub/store/internal/scope_store.py`) moves the revision only from that value, raising `ConfigRevisionConflict`
+  (`hub/domain/config/errors.py`) with the current one otherwise.
+- Inside the unit: `DeleteService.delete` (`hub/domain/operations/delete.py`) takes the chunk its route resolved, locks
+  it, re-reads its facts, standing edges, and record under the locked token, decides with `require_deletable`, and
+  writes with that token.
+
+**Don't.** A service that checks the chunk it was handed is not terminal, then appends a fact on a fresh scoped write —
+a stop committing between the check and the append is silently outlived.
+
+## The store refuses stale writes, never disallowed ones (`bzh:store-refuses-stale`)
+
+**Rule.** Let a hub store method refuse a write only as stale — a version or monotonic token that moved, a uniqueness
+constraint, an insert-if-absent that found its row — never by evaluating a domain predicate (terminal, open, retired,
+closed) to admit or refuse it. The domain decides the predicate, from facts the store reads for it
+(`bzh:write-reestablishes-read`).
+
+**Why.** A predicate restated in the store is a second owner of a business rule (`bzh:domain-orchestration-split`,
+[../clean-architecture.md](../clean-architecture.md)), and it drifts from the domain's own decision without either
+failing. Freshness is a property of the row the store holds; legality is the concept's.
+
+**Scope.** Binds what admits or refuses a write. A read that returns a status-family fact, or filters a projection by
+one, decides no write.
+
+**Detect.** A store write method that reads a status-family fact — `is_terminal`, a closure, a retirement — and returns
+or raises a refusal from it. Judged at review; no mechanical check. The fix returns the fact to the domain and
+conditions the write on a token or moves the decision inside the unit (`bzh:write-reestablishes-read`).
+
+**Do.** `ScopeStore.record_lifecycle` refuses on the revision alone; whether retiring an already-retired scope writes
+anything is `Scope.set_retired`'s decision (`hub/domain/garden/scopes.py`), made before the store is called.
+
+**Don't.** A store `append_answer` that runs the chunk's terminal check in its `WHERE` and returns a terminal refusal —
+the terminal rule now has two owners, and the store's copy keeps refusing after the domain's changes.
 
 ## An exactly-one-wins decision locks its row before it reads (`bzh:store-exclusive-write`)
 
@@ -63,7 +130,8 @@ connection. `IHubTransactions.begin` opens a tenant unit; its `lock_set` declare
 repository statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating
 repository (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents
 writers naming the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token,
-not the domain. Existing `IChunkExclusiveWrites` callers still use their own locked handles and `*_locked` methods.
+not the domain. `IChunkExclusiveWrites` and its `*_locked` methods are this seam's legacy form
+(`bzh:transaction-participation`).
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
 locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/locking.py`). The table is lock-only: it holds no
@@ -72,9 +140,9 @@ first selects the row, inserts it if absent inside a savepoint that swallows `In
 `UPDATE` to lock it before any decision guard read. The table is keyed `(tenant_id, namespace, key)`, the scoped insert
 stamping the write's tenant, so two tenants locking one graph name each lock their own row
 (`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
-injectively, a graph by its name. The domain seam is `IChunkExclusiveWrites.locked_work_refs` and
-`IWriteGraphRepository.locked_name`, each yielding a handle of its own — never an `ILockedChunkRead`, so a handle that
-holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
+injectively, a graph by its name. A new decision graduates its unit with `lock_keys`; the existing ones reach it through
+the legacy handles `IChunkExclusiveWrites.locked_work_refs` and `IWriteGraphRepository.locked_name`, each its own type —
+never an `ILockedChunkRead`, so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, and the ceiling's self-engagement, each take a
@@ -84,7 +152,9 @@ migration, which keeps a rollback to the previous wheel free of any store step.
 
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
 write calls on its own connection after the lock and its replay probe and before its first insert. It reads the terminal
-facts and the newest epoch there, so a stop or restart cannot land between the guard and the write.
+facts and the newest epoch there, so a stop or restart cannot land between the guard and the write. That order is the
+pattern; its terminal judgment is not — a domain predicate decided in the store, legacy under `bzh:store-refuses-stale`
+([Known debt](#known-debt)).
 
 **Don't.** A `threading.Lock` shared by `ClaimService` and `EditService`, serializing their read-then-write CAS in one
 process — correct until a second hub process starts against the same store, at which point the two locks stop
@@ -133,6 +203,11 @@ Stated so a reviewer need not re-derive them:
   - `DependencyService.release` — as its only lock. Without a row lock for cycle safety (Scope above), release is
     ordered against `group`'s edge rewrite by this lock alone, which keeps a fold from reminting an edge released
     between the fold's read of the standing set and its write.
+- **Store-side domain predicates.** Legacy under `bzh:store-refuses-stale`, not to be extended to a new write or a new
+  predicate:
+  - `fence` (`hub/store/internal/chunk_rows.py`) — its terminal check, run inside every epoch-fenced write.
+  - `ChunkEscalationsStore.record_escalation` (`hub/store/internal/chunk_escalations_store.py`) — admits or refuses the
+    escalation by running `fence` in its own write, never returning the facts to the domain.
 - **The export's pass lock.** `EgressSweep.sweep` and `EgressReset.reset` share one hub-wide in-process lock, built in
   `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
   flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
