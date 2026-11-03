@@ -47,6 +47,10 @@ whose only race is a duplicate key is no decision here (`bzh:store-exclusive-wri
 **Don't.** A service that checks the chunk it was handed is not terminal, then appends a fact on a fresh scoped write —
 a stop committing between the check and the append is silently outlived.
 
+**See also.** `blizzard/exemplars/python/exemplar/hub/domain/permits/service.py`
+([../../exemplars/index.md](../../exemplars/index.md)) — compare-and-set as reference code: each verb decides on the
+permit it was handed and writes at that permit's revision, refusing `PermitChanged` with `409`.
+
 ## The store refuses stale writes, never disallowed ones (`bzh:store-refuses-stale`)
 
 **Rule.** Let a hub store method refuse a write only as stale — a version or monotonic token that moved, a uniqueness
@@ -70,6 +74,10 @@ anything is `Scope.set_retired`'s decision (`hub/domain/garden/scopes.py`), made
 
 **Don't.** A store `append_answer` that runs the chunk's terminal check in its `WHERE` and returns a terminal refusal —
 the terminal rule now has two owners, and the store's copy keeps refusing after the domain's changes.
+
+**See also.** `blizzard/exemplars/python/exemplar/hub/store/internal/permit_store.py`
+([../../exemplars/index.md](../../exemplars/index.md)) — `PermitStore.record_fact` refuses on the permit's revision
+alone, raising `PermitChanged`, and judges no permit state.
 
 ## An exactly-one-wins decision locks its row before it reads (`bzh:store-exclusive-write`)
 
