@@ -308,6 +308,11 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   host retirement before insertion. `tests/postgres_locks/test_chunk_usage_retirement_fence.py` tests both retirement
   paths and omission controls without tenant admission. Other fact kinds and request-wide high-water ordering require
   separate audit; the initial ingest check does not hold a lock across the batch.
+- **Host fact batch.** `HostFactIngestService` holds one scoped transaction from its mark read through usage and mark
+  writes. The adapter takes host registry then host high-water, rechecks retirement, and takes usage keys on that same
+  connection. `tests/test_host_fact_lane.py` exercises concurrent pushes, an omission control and batch rollback on
+  SQLite. `tests/postgres_locks/test_host_fact_ingest_decision.py` holds the registry key without admission, proves the
+  ingest waits and reads a committed mark, and checks a registry-lock omission. Cross-family ordering remains open.
 - **Config apply.** `ApplyParticipants.open` takes the config-authoring key before constructing readers on the same
   scoped connection, then runs reconciliation and writes on that connection; dry runs roll back the transaction and
   no-op applies still enter it. Graph mint and lifecycle operations take config-authoring before their graph-name key,
