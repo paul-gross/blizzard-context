@@ -320,6 +320,11 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   key before writing lifecycle facts. `tests/postgres_locks/test_lease_mint_retirement_fence.py` holds that key without
   tenant admission and exercises both retirement paths and lock-omission controls. Other runner fact handlers and their
   lock ordering still require audit.
+- **Secret referrer first.** Work-source and repository insertion lock the destination secret row before checking its
+  lifecycle on the same connection. `tests/postgres_locks/test_secret_decisions.py` exercises each insertion body
+  holding that row without tenant admission while retirement waits; after the referrer commits, retirement refuses.
+  Omitting retirement's secret lock permits it to commit first. Apply, import, removal and multi-record lock ordering
+  still need their own audit and proof.
 - **Host fact batch.** `HostFactIngestService` holds one scoped transaction from its mark read through usage and mark
   writes. The adapter takes host registry then host high-water, rechecks retirement, and takes usage keys on that same
   connection. `tests/test_host_fact_lane.py` exercises concurrent pushes, an omission control and batch rollback on
