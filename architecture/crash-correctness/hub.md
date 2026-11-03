@@ -497,13 +497,17 @@ place, so re-applying it re-writes the row and counts nothing twice. No crash po
 `HostRetirementService.retire` (`blizzard/src/blizzard/hub/domain/execution/host_retirement.py`) decides the refusal in
 the `Host` model over every live runner's holdings before it writes, then writes in two steps. First,
 `HostRegistryStore.record_retirement` appends the host's retire fact and revokes its token in one transaction, so the
-host can add no runner from that instant. Second, `FleetService.retire` runs once per runner under the host.
+host can add no runner from that instant. Second, `FleetService.retire` runs once per runner under the host, read after
+the first step commits.
 
 The span between the two steps is a real window whose whole loss is accepted and named: a crash inside it leaves a host
 retired with runners under it that are not. The loss is bounded to those runners staying live a while longer, and
 nothing is corrupted — re-running `retire` over the retired host writes no second host fact and runs each runner's
 retire again, which retires any left standing and finishes any interrupted release of their chunks, as a runner's own
-re-run does. A sweep point would arm a span an operator's re-run already closes, so none is registered.
+re-run does. A sweep point would arm a span an operator's re-run already closes, so none is registered. The re-run finds
+those runners because `runner_registrations.host_id` stays their durable roster: every write that places a runner under
+a host, releases one, or reinstates one lands only on the host's and the runner's lifecycle versions it was decided on
+(`bzh:write-reestablishes-read`), and `Host.release` refuses an unretired runner from a retired host.
 
 `HostEnrollmentService.add` with `--adopt` has no window. `HostRegistryStore.add` inserts the host and places every
 adopted runner in one scoped write transaction, and a runner that came to stand under a host first rolls the whole write

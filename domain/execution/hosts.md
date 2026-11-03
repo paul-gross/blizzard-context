@@ -40,7 +40,10 @@ as any runner with no host does ([./responsibilities.md](./responsibilities.md))
 **Retiring a host** revokes its credential and retires every runner under it, each as a runner's own retirement does
 ([./retirement.md](./retirement.md)): refused while any of them holds a chunk, unless forced, which releases them.
 Retiring a host is final — a retired host is never enrolled again — and repeating it finishes retiring any runner it
-left unretired.
+left unretired. The runners under a retired host are how a repeat finds them, so until it has retired them that roster
+holds: a retired host gains no live runner — none added, adopted, or reinstated under it — and releases only the runners
+already retired, refusing any other until the retirement is repeated. A retirement takes the runners standing under the
+host when it lands; one moved to another host before then is left alone.
 
 ## Workspaces
 
