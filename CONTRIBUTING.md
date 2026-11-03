@@ -35,6 +35,8 @@ Every rule here follows the canon slot skeleton and stable-id scheme:
   only home — this harness keeps no id registry to re-sync, so an id resolves by grepping the tree for its slug, a
   deliberate trade while the rule count stays greppable and revisited if resolution ever misses. Adding or renaming an
   id updates every citation in the same change.
+- Never name a store migration revision or its colocated test here — a fold deletes it; `bzh:no-revision-citations` in
+  [standards/persistence.md](./standards/persistence.md) owns what to point at instead.
 - Read `winter-canon:/principles.md` before authoring or editing any file here, and follow every principle it states —
   the canon owns that list, so this is a read-trigger rather than a copy to re-sync.
 - A new rule or routing change is a harness change: run the cold-spawn eval it is owed before pushing

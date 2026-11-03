@@ -96,11 +96,9 @@ def check_current(self) -> None:
 
 **Don't.** The same slot calling `self.runner.upgrade()` instead — the daemon migrating the store for itself.
 
-**See also.** `blizzard/exemplars/python/exemplar/hub/store/migrations/versions/20261015_0900_permits.py`
-([../exemplars/index.md](../exemplars/index.md)) — a revision adding two tables, as reference code; its test is
-`blizzard/exemplars/python/exemplar/hub/store/migrations/tests/20261015_0900_permits_test.py`. Where a revision's test
-lives, and when it retires, is `bzh:colocated-migration-tests` in
-[../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
+**See also.** The exemplar's hub migration and its test ([../exemplars/index.md](../exemplars/index.md)) — a revision
+adding two tables, as reference code. Where a revision's test lives, and when it retires, is
+`bzh:colocated-migration-tests` in [../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
 
 ## Frozen revisions (`bzh:frozen-revisions`)
 
@@ -121,15 +119,20 @@ migration tree produces two different schemas on a fresh store depending on when
 frozen literal narrower than `schema.py` declared at that point; a `NoReferencedTableError` fixed by deleting the
 foreign key.
 
-**Do.**
+**Do.** A revision creating `delivery_pr_opened`, whose foreign key names a table it does not create:
 
-- Frozen-literal exemplar: hub migration `20260714_0819_delivery_pr_facts.py`'s `_frozen_metadata` block — a local
-  `MetaData()`, a `chunks` stub carrying just the referenced column, and the frozen `delivery_pr_opened` table whose
-  `sa.ForeignKey("chunks.chunk_id")` resolves against the stub.
-- Read-only-stub exemplar: `20260715_1817_chunk_promoted.py`'s `chunks` table carries only `chunk_id` and `minted_at`,
-  the two columns its back-fill selects.
-- `20260713_1218_walking_skeleton_facts.py` is the original precedent for the frozen-literal idiom, applied to every
-  table it creates.
+```python
+_frozen_metadata = sa.MetaData()
+sa.Table("chunks", _frozen_metadata, sa.Column("chunk_id", sa.String(), primary_key=True))  # stub: the referenced key only
+_delivery_pr_opened = sa.Table(
+    "delivery_pr_opened",
+    _frozen_metadata,
+    sa.Column("id", sa.Integer(), primary_key=True),
+    sa.Column("chunk_id", sa.String(), sa.ForeignKey("chunks.chunk_id"), nullable=False),
+)
+```
+
+A revision that only back-fills from `chunks` freezes the same way, its stub carrying just the columns its select names.
 
 **Don't.** Resolve a `NoReferencedTableError` by deleting the offending `sa.ForeignKey` — that ships a fresh store with
 no constraint where `schema.py` declares one, a silent divergence a reviewer has to catch by hand.
@@ -154,9 +157,10 @@ a table that already holds rows adds it nullable, backfills it in batches of bou
 - **Record it as unverified on Postgres.** The revision joins the Postgres-unverified list of the key it adds —
   [tenancy's](../verification/blizzard/gaps.md#tenancys-migrations-and-locks-under-postgres) for a tenant key,
   [projects'](../verification/blizzard/gaps.md#projects-migration-and-writes-under-postgres) for a project key,
-  [the runner key's](../verification/blizzard/gaps.md#the-runner-key-revision-under-postgres) for a runner key — and
-  [../verification/blizzard/gaps.md](../verification/blizzard/gaps.md) owns that list and what a change owes it. A
-  column the revision adds may close a gap listed there.
+  [the runner store's](../verification/blizzard/gaps.md#the-runner-store-under-postgres) for a runner key — and
+  [../verification/blizzard/gaps.md](../verification/blizzard/gaps.md) owns that list and what a change owes it. The
+  entry describes the revision by the key it adds, never by its id (`bzh:no-revision-citations`). A column the revision
+  adds may close a gap listed there.
 
 **Why.** A required column added in one step to a populated table either fails or writes one unbounded statement, and a
 key nothing backfilled cannot be tightened. Each store's migration chain runs in one transaction, so no revision
@@ -177,10 +181,15 @@ table included. A table the revision itself creates is created tight and needs n
 
 **Do.**
 
-- Hub migration `20261006_1200_runner_minted_ids.py` — a frozen tuple naming every column it rewrites, and its
-  tightening `batch_alter_table` left on the default `recreate="auto"`.
-- `20260907_1000_event_log_runner_id_nullable.py` — the inspection guard (`_is_nullable`) ahead of its table's batch, so
-  a rerun skips the reshape and goes on to the backfill.
+```python
+#: Every column this revision keys, frozen as it runs — never read from schema.metadata.
+_KEYED: tuple[tuple[str, str], ...] = (("chunks", "tenant_id"), ("artifacts", "tenant_id"))
+
+for table, column in _KEYED:
+    if _is_nullable(bind, table, column):  # re-entry guard: skip a table already tight
+        with op.batch_alter_table(table) as batch:  # default recreate="auto"
+            batch.alter_column(column, nullable=False)
+```
 
 **Don't.** `op.add_column("chunks", sa.Column("tenant_id", sa.String(), nullable=False, server_default="ten_…"))` — one
 statement rewrites every row at once, the default outlives the backfill it stood in for, and the foreign key it still
@@ -207,3 +216,41 @@ and `contracts/store/runner.json`.
 in a later change that the window admits.
 
 **Don't.** Rename a column or tighten a constraint on an existing table in one revision.
+
+## No revision named in agent context (`bzh:no-revision-citations`)
+
+**Rule.** Agent context never names a specific store migration revision — by revision id, file stem, or slug — nor a
+colocated migration test's file, whether as an exemplar, a precedent, evidence, or a pointer. State the schema change or
+the idiom itself; where a concrete reference is needed, point at a durable artifact instead:
+
+- the exemplar migration and its test, routed by [../exemplars/index.md](../exemplars/index.md);
+- a test module outside the migration trees, such as one under `blizzard/tests/`;
+- a tool, or a verification method by its id;
+- the store contracts, `blizzard/contracts/store/hub.json` and `runner.json`, for a table's current shape.
+
+**Why.** A fold deletes every revision below its floor together with its colocated test, so a citation to one dangles
+the moment the history is folded, and nothing flags it. The exemplars sit outside every fold
+(`bzh:exemplar-conformance`) and the contracts track the current schema, so a pointer at either ages forward with its
+target.
+
+**Scope.** Binds every agent-facing markdown file — this harness and any other blizzard agent context. Leaves alone what
+the code holds — a revision's `down_revision`, a migration's own docstring — and operator docs and change notes. A
+passage may still describe a revision by the change it makes — *"the revision adding `graph_nodes.action`"* — where the
+passage stands only as long as that revision does, as a `gaps.md` entry its fold closes.
+
+**Detect.**
+
+- A `YYYYMMDD_HHMM_` revision stem anywhere outside the exemplars tree — `grep -rnE '[0-9]{8}_[0-9]{4}_[a-z]'` over the
+  markdown, ignoring hits under a `blizzard/exemplars/` path or in `exemplars/index.md`'s rows.
+- A path into `src/blizzard/{hub,runner}/store/migrations/versions/` or `.../migrations/tests/` that names a file.
+- A revision named by its slug — *"the `flows` revision"* — or a method step whose `--down` target is a literal id
+  rather than a role such as *"the revision's parent"* or `base`.
+
+The fix rewrites the passage to the change itself, or moves the pointer onto one of the durable artifacts above.
+
+**Do.** *"A revision that keys a populated table guards each table on re-entry, as the exemplar's hub migration guards
+each table and index it creates."*
+
+**Don't.** A `Do` slot citing a dated revision file as its idiom's exemplar; a gap entry whose evidence is a list of
+colocated test filenames; a manual method that seeds or downgrades to a named revision — each dangles the day a fold
+absorbs the revision it names.

@@ -196,16 +196,15 @@ disabled (`[transcripts] ship = false`).
 `test_count_by_class_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend every component
 test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
 `ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan.
-`tests/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty-one `chunk_id`-filtered fact tables the
-`20260829_1930_fact_tables_chunk_id_index` revision indexes, extended by the `20260913_1300_hub_store_hot_path_indexes`
-revision's own cases: the three `(chunk_id, epoch)` composites by exact name, the artifacts/graph-choices/transcript-
-segments/chunk-work-refs/close-intents hot-path reads, and each of `activity_facts_since`'s eighteen per-source ordered
-reads. `tests/test_chunk_usage_statements.py` and its `EXPLAIN QUERY PLAN` case over the spend `_stmt` builder assert
-`ix_usage_facts_recorded_at_id` the same way. `tests/test_store_read_index_gate.py`'s scan gate and
-`tests/test_runner_store_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN` shape across every hub and
-runner read method's own table vocabulary, plan-classified through the same sqlite backend. No tier runs any of these
-assertions against postgres, so whether the portable index declarations actually earn an index scan under postgres's own
-planner stays unproven.
+`tests/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty-one `chunk_id`-filtered fact tables'
+indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composites by exact name, the
+artifacts/graph-choices/transcript- segments/chunk-work-refs/close-intents hot-path reads, and each of
+`activity_facts_since`'s eighteen per-source ordered reads. `tests/test_chunk_usage_statements.py` and its
+`EXPLAIN QUERY PLAN` case over the spend `_stmt` builder assert `ix_usage_facts_recorded_at_id` the same way.
+`tests/test_store_read_index_gate.py`'s scan gate and `tests/test_runner_store_indexes.py`'s named-index pins assert the
+same `EXPLAIN QUERY PLAN` shape across every hub and runner read method's own table vocabulary, plan-classified through
+the same sqlite backend. No tier runs any of these assertions against postgres, so whether the portable index
+declarations actually earn an index scan under postgres's own planner stays unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
@@ -355,10 +354,6 @@ The Python tiers run on SQLite, whose single writer lock serializes every writer
 below. The tenancy mechanisms therefore hold on SQLite by construction and stay unverified on Postgres, where each
 statement of a READ COMMITTED transaction reads its own snapshot and foreign keys are enforced:
 
-- **The migration chain.** The tenancy revisions, `20261008_1100_tenants` through
-  `20261008_1720_tenant_deletion_closed_at` (`src/blizzard/hub/store/migrations/versions/`), reach head and return to
-  base on an empty Postgres store under `blizzard:manual-postgres-migrations`. Their backfills over populated rows have
-  run on SQLite only.
 - **A scoped write's closed-tenant check.** A scoped write opens with one statement,
   `UPDATE tenants … WHERE tenant_id = :t AND NOT EXISTS (<the tenant's deletion fact>)` (`_lock_open_tenant`,
   `src/blizzard/hub/store/scoped.py`). On Postgres a write that blocks on a close's lock of that row re-checks, once the
@@ -386,28 +381,16 @@ the day some tier gains a Postgres-backed run, which `packaging/docker/compose.y
 The projects mechanisms below have the same exposure as tenancy's: every tier runs on SQLite, with one writer lock and
 foreign keys off, so each holds there by construction and stays unverified on Postgres.
 
-- **The projects revision.** `20261008_1800_projects` (`src/blizzard/hub/store/migrations/versions/`) reaches head and
-  returns to base on an empty Postgres store under `blizzard:manual-postgres-migrations`; its backfills over populated
-  rows have run on SQLite only. There its eight-table `project_id` addition is a `batch_alter_table` rebuild; on
-  Postgres it becomes native `ALTER`s. Its correlated `UPDATE` stamping each row with its tenant's project, and the new
-  `fk_<table>_projects` keys, have never run where foreign keys are enforced. Nor has the tenant drain over rows those
-  keys bind.
+- **The project keys.** The `fk_<table>_projects` foreign keys, `fk_questions_projects` and `fk_decisions_projects`
+  among them, have never been enforced against a written row, since every tier leaves foreign keys off. Nor has the
+  tenant drain run over rows those keys bind.
 - **The slug move.** A project's slug move (`update_project`, `src/blizzard/hub/store/internal/project_store.py`) runs
   in one transaction. It reads for a current holder of the new slug, deletes the new slug's former-slug row, updates the
   project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two
   concurrent writes touching one slug leave is unverified: a uniqueness refusal in place of `ProjectSlugTaken`, or a
   former-slug row the other write removed.
-- **The project columns revision.** `20261008_1900_project_columns` adds `runner_registrations.projects` and
-  `delivery_repo_landed.repository_name` with native `ADD COLUMN`s, and backfills each runner's `projects` as JSON text
-  naming its tenant's one project, paged along `runner_id`. Neither the added columns nor the JSON text backfill has run
-  on Postgres.
-- **The project color revision.** `20261018_1200_project_color` adds `projects.color` as nullable, fills it per tenant
-  in keyset pages along `project_id`, then tightens it to `NOT NULL` in a `batch_alter_table`. A hand run on Postgres
-  reached head, returned to base, and ran the backfill over populated rows. No tier repeats that run, so a later change
-  to the revision is unverified on Postgres until someone runs it again.
-- **The work-source identity revision.** The revision giving each work source its `wsrc_<ulid>` id, slug, and name, and
-  rekeying every reference to it, has had its backfill run on SQLite only. A work source's slug move takes the project
-  slug move's shape, so it shares that move's race under READ COMMITTED, equally unverified.
+- **A work source's slug move.** It takes the project slug move's shape, so it shares that move's race under READ
+  COMMITTED, equally unverified.
 - **An ingest against a link or unlink.** An ingest takes the `keyed_locks` key of the project it mints into before its
   pointers' keys, and every source link or unlink takes the same project's key (`PROJECT_SOURCE_LINKS_LOCK_NAMESPACE`,
   `src/blizzard/hub/store/internal/project_link_store.py`), so the links an ingest read stand until it commits. That an
@@ -417,12 +400,8 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
   landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
   (`src/blizzard/hub/store/internal/invariants.py`) alone, and its behavior under enforced keys is unverified.
-- **The question and decision project revision.** `20261014_0900_question_decision_project` adds `project_id` to
-  `questions` and `decisions`, filling each from the row's chunk in bounded keyset pages. It reaches head and returns to
-  base under `blizzard:manual-postgres-migrations`; its backfill over populated rows has run on SQLite only. The
-  correlated `UPDATE` and the new `fk_questions_projects` and `fk_decisions_projects` keys have never run where foreign
-  keys are enforced, and a question or decision written while a chunk's row lock is contended is unverified under
-  concurrent writes there.
+- **A question or decision under a contended chunk lock.** A question or decision written while its chunk's row lock is
+  contended is unverified under concurrent writes on Postgres.
 - **The `?project=` read plans.** Every read a `?project=` narrows has its `EXPLAIN QUERY PLAN` shape asserted on SQLite
   only, so whether Postgres's planner uses the project read indexes for it stays unproven, as
   [§The query-plan assertions never run under postgres](#the-query-plan-assertions-never-run-under-postgres) states for
@@ -433,37 +412,24 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   asserted statically, by the lock statement compiled under the Postgres dialect (`tests/test_secret_row_lock.py`), and
   run on SQLite only, where the writer lock serializes the two whatever the row lock.
 
-Standing in for a tier: the revisions' migration and carry-over tests, the slug-move and link tests on SQLite, and the
-portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
+Standing in for a tier: the slug-move and link tests on SQLite, and the portable SQL `bzh:sql-portable` holds each
+statement to. The gap closes as the tenancy one above does.
 
-## The hosts revision under Postgres
+## Hosts under Postgres
 
 The hosts mechanisms below have the same exposure as projects': every tier runs on SQLite, with one writer lock and
 foreign keys off, so each holds there by construction and stays unverified on Postgres.
 
-- **The hosts revision.** `20261012_1000_hosts` (`src/blizzard/hub/store/migrations/versions/`) reaches head and returns
-  to base on an empty Postgres store under `blizzard:manual-postgres-migrations`. Its `runner_registrations` change is a
-  `batch_alter_table` rebuild on SQLite and native `ALTER`s on Postgres, and the new `fk_runner_registrations_hosts` key
-  has never run where foreign keys are enforced. Nor has the tenant drain over rows that key binds.
-- **The runner-bindings revision.** `20261012_1100_runner_bindings` chains after the hosts revision and adds nullable
-  `runner_registrations.bindings` and `subscription` columns, a `batch_alter_table` rebuild on SQLite and native
-  `ALTER`s on Postgres. It reaches head and returns to base under the same `blizzard:manual-postgres-migrations` run;
-  that rebuild over a table the `fk_runner_registrations_hosts` key binds has never run where foreign keys are enforced.
-- **The host fact lane revision.** `20261013_0900_host_fact_lane` chains after the work-source identity revision and
-  creates `host_high_water`, `host_external_usage`, and `host_external_usage_misses`, each tenant-keyed and carrying no
-  key on `host_id`. It reaches head and returns to base under the same `blizzard:manual-postgres-migrations` run; the
-  upserts that refresh a `(host_id, slug)` row in place have only run under SQLite's writer lock.
-- **The runner-version revision.** `20261019_0900_runner_version` chains after the project-color revision and adds
-  nullable `runner_registrations` columns for the reported version, the refusal reason, and when it was judged, a
-  `batch_alter_table` rebuild on SQLite and native `ALTER`s on Postgres. It reaches head and returns to base under the
-  same `blizzard:manual-postgres-migrations` run; that rebuild over a table the `fk_runner_registrations_hosts` key
-  binds has never run where foreign keys are enforced.
-- **The runner-agents and runner-declining revisions.** `20261022_1000_runner_agents` chains after the human-notes
-  revision and adds the nullable `runner_registrations.agents` column; `20261022_1000_runner_declining` chains after it
-  and adds the nullable `runner_registrations.declining` column. Each is a `batch_alter_table` rebuild on SQLite and a
-  native `ALTER` on Postgres. They reach head and return to base under the same `blizzard:manual-postgres-migrations`
-  run; that rebuild over a table the `fk_runner_registrations_hosts` key binds has never run where foreign keys are
-  enforced.
+- **The host key.** The `fk_runner_registrations_hosts` key has never been enforced against a written row, nor has the
+  tenant drain run over rows it binds.
+- **The host fact lane's upserts.** `host_high_water`, `host_external_usage`, and `host_external_usage_misses` are each
+  tenant-keyed and carry no key on `host_id`; the upserts that refresh a `(host_id, slug)` row in place have only run
+  under SQLite's writer lock.
+- **The registration columns added above the baseline.** The revisions adding nullable `runner_registrations` columns —
+  for the reported version, the refusal reason and when it was judged; `agents`; `declining` — are each a
+  `batch_alter_table` rebuild on SQLite and native `ALTER`s on Postgres. They reach head and return to base under
+  `blizzard:manual-postgres-migrations`; those rebuilds over a table the `fk_runner_registrations_hosts` key binds have
+  never run where foreign keys are enforced.
 - **A live host name's uniqueness.** `HostRegistryStore.add` reads the tenant's live host names and inserts under the
   scoped write's tenant-row lock, so two adds of one name queue on that row. That the lock alone keeps a name unique
   among live hosts is unverified on Postgres; SQLite's writer lock serializes every add. A report reads the other live
@@ -472,75 +438,53 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   the write back on a runner that matched no row. That two adoptions of one runner under READ COMMITTED leave it under
   exactly one host is unverified; SQLite's writer lock serializes them.
 
-Standing in for a tier: the revision's own test, the adoption and name tests on SQLite, and the portable SQL
-`bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
+Standing in for a tier: the registration-column revisions' colocated tests, the adoption and name tests on SQLite, and
+the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
 
-## The runner key revision under Postgres
+## The runner store under Postgres
 
 The runner store runs on SQLite or Postgres by configuration (`bzh:sql-portable`), and every tier runs it on SQLite, so
-the runner key holds there by construction. The chain's runner-key revisions and the outbox counter have been executed
-by hand on Postgres under `blizzard:manual-postgres-runner-migrations`; what that run could not reach stays unverified:
+its runner key and counters hold there by construction. `blizzard:store-baseline` builds the runner baseline from an
+empty Postgres store and holds it to `contracts/store/runner.json`; what that proof and the hand runs under
+`blizzard:manual-postgres-runner-migrations` leave unverified:
 
-- **The runner scope revision.** `20261011_1000_runner_scope` (`src/blizzard/runner/store/migrations/versions/`) adds a
-  nullable `runner_id` to every runner-scoped table but `runner_identity`, and backfills it from the store's identity
-  row in bounded batches. On SQLite each addition is a `batch_alter_table` rebuild; on Postgres it is native `ALTER`s.
-  The hand run took a populated store with an identity row down below it and back to head, so its backfill ran, and took
-  the chain's downgrades to base.
-- **The tightening revision.** `20261013_1000_runner_scope_tighten` stamps any row still lacking a runner, makes
-  `runner_id` `NOT NULL`, re-keys the tables and adds the unique constraints. The hand run executed it on Postgres over
-  a populated store with more outbound rows than one batch, compared the migrated schema with the one an empty store at
-  the parent shape migrates to, ran the invariant checker, and ran the down-and-up round trip, whose downgrade restores
-  the parent schema exactly, primary-key names included.
 - **The counter allocation.** `insert_outbox_row` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
   lane under READ COMMITTED. Eight threads racing the first allocation of a new runner's lane were issued `1` through
   `8`, with the counter at `8` and the invariants holding.
-- **The downgrade's probe check.** A store written past the probe's seq refuses the downgrade, naming the pre-migrate
-  backup, and the refusal leaves the schema and the counters unchanged. A store written only up to the probe downgrades,
-  and the restored autoincrement issues a seq above the counter's.
-- **A sequence gap.** The counter seed probes the outbox's own sequence, and a Postgres sequence burns values, so the
-  seed can sit above the highest seq a pending row holds and leave a gap above it. The seed is conservative, and the
-  hub's ingest tolerates a gap. It is accepted.
-- **The host-ingests revision.** `20261015_1000_host_ingests` creates the empty host-scoped `host_ingests` table and its
-  downgrade drops it. It has not been executed on Postgres; it creates one table of portable column types and writes no
-  data.
-- **The usage-limit floor revision.** `20261022_1000_usage_limit_floor` creates the empty `subscription_usage_limits`,
-  `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables and its downgrade drops them. It
-  has not been executed on Postgres; it creates four tables of portable column types and writes no data.
-- **The fact append sequence revision.** `20261026_1000_fact_append_sequence` adds a nullable `seq` to `env_bindings`,
-  `binding_releases`, `pause_parks`, `pause_park_resumes`, `requeues` and `leases`, creates `fact_counters`, and numbers
-  every existing row per runner, openers before closers at a tied instant. The hand run seeded the parent shape with two
-  runners holding same-instant ties across all three closure pairs, upgraded it, and found every held binding, open park
-  and pending requeue unchanged, each counter at its runner's row count, and the invariants holding. It then took the
-  revision down, which restored the parent schema with every row kept, up again to the same schema, and re-ran the
-  upgrade over the numbered store, which changed nothing. Two writers racing the first allocation of a new runner's fact
-  counter were not run on Postgres; the allocation is the outbox counter's, which that run covers.
-- **The takeover entries revision.** `20261029_1000_takeover_entries` creates `takeover_entries`, with a foreign key to
-  `takeovers`, and inserts an entry for every takeover open at that moment; its downgrade drops the table. It has not
-  been hand-run under `blizzard:manual-postgres-runner-migrations`: its colocated test walks it forward, back and
-  forward again on SQLite only, and it uses portable column types and `INSERT … SELECT`. SQLite leaves foreign keys off,
-  so the foreign key is enforced on Postgres alone and no tier exercises it.
-- **The empty-store upgrade.** The runner chain cannot reach head on Postgres from an empty store: the Boolean
-  `server_default` in `20260920_0200_usage_cost_is_share.py` is `0`, which Postgres rejects. The hand run builds the
-  tightening revision's parent shape from `src/blizzard/runner/store/schema.py` as it stood then, so no revision below
-  `20261011_1000_runner_scope` has been upgraded on Postgres; only their downgrades have run. A fix to that revision
-  belongs to a change of its own.
+- **The usage-limit floor tables.** The revision creating the empty `subscription_usage_limits`,
+  `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables, whose downgrade drops them, has
+  not been executed on Postgres; it creates four tables of portable column types and writes no data.
+- **The fact append sequence.** The revision adding a nullable `seq` to `env_bindings`, `binding_releases`,
+  `pause_parks`, `pause_park_resumes`, `requeues` and `leases` creates `fact_counters` and numbers every existing row
+  per runner, openers before closers at a tied instant. The hand run seeded its parent shape with two runners holding
+  same-instant ties across all three closure pairs, upgraded it, and found every held binding, open park and pending
+  requeue unchanged, each counter at its runner's row count, and the invariants holding. It then took the revision down,
+  which restored the parent schema with every row kept, up again to the same schema, and re-ran the upgrade over the
+  numbered store, which changed nothing. Two writers racing the first allocation of a new runner's fact counter were not
+  run on Postgres; the allocation is the outbox counter's, which that run covers.
+- **The takeover entries.** The revision creating `takeover_entries`, with a foreign key to `takeovers`, inserts an
+  entry for every takeover open at that moment; its downgrade drops the table. It has not been hand-run under
+  `blizzard:manual-postgres-runner-migrations`: its colocated test walks it forward, back and forward again on SQLite
+  only, and it uses portable column types and `INSERT … SELECT`. SQLite leaves foreign keys off, so the foreign key is
+  enforced on Postgres alone and no tier exercises it.
+- **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. No run has carried an empty
+  Postgres store from the baseline to head, so a revision above the baseline has run on Postgres only where a bullet
+  above says so.
 
-Standing in for a tier: the revisions' migration tests
-(`src/blizzard/runner/store/migrations/tests/20261011_1000_runner_scope_test.py`,
-`20261013_1000_runner_scope_tighten_test.py`, `20261015_1000_host_ingests_test.py`,
-`20261022_1000_usage_limit_floor_test.py`, `20261026_1000_fact_append_sequence_test.py`) and the seam's component tests
-on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand run is not repeatable from a
-durable script, since the matrix carries the method and no driver. The gap closes as the tenancy one above does.
+Standing in for a tier: `blizzard:store-baseline` for the baseline, the colocated migration tests of the revisions above
+it and the seam's component tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand
+run is not repeatable from a durable script, since the matrix carries the method and no driver. The gap closes as the
+tenancy one above does.
 
-## The hub action revisions under Postgres
+## Hub actions' columns under Postgres
 
-Every tier runs the two hub action revisions on SQLite only, where `20261023_0901_hub_actions` adds `graph_nodes.action`
-and `graph_nodes.action_args` and `20261024_0900_hub_legacy_run` adds `graph_nodes.legacy_run` and carries each stored
-hub row with no action onto one.
+Every tier runs the two hub action revisions on SQLite only: the first adds `graph_nodes.action` and
+`graph_nodes.action_args`, and the second adds `graph_nodes.legacy_run` and carries each stored hub row with no action
+onto one.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, the chain
   reached head, returned to base, and reached head again, with one translatable and one untranslatable hub row seeded at
-  `20261023_0901_hub_actions`: the first came out carrying its script's action, the second keeping its `run:` in
+  the first of the two revisions: the first came out carrying its script's action, the second keeping its `run:` in
   `legacy_run`.
 - **What no tier repeats.** No CI tier runs that pass, so a later change to either revision is unverified on Postgres
   until someone runs it again, and neither revision's backfill has run there over more than those two rows.
@@ -548,14 +492,15 @@ hub row with no action onto one.
 Standing in for a tier: the second revision's colocated migration test and `blizzard:store-contract`, both on SQLite,
 and the portable SQL `bzh:sql-portable` holds each statement to.
 
-## The flows revision under Postgres
+## The flow tables under Postgres
 
-Every tier runs `20261027_0900_flows` on SQLite only. It creates `flows`, `flow_submissions`, `flow_submission_flows`,
-`flow_submission_closures`, `hub_turns`, and `flow_facts`, with their indexes, and writes no row.
+Every tier runs the revision creating the flow tables on SQLite only. It creates `flows`, `flow_submissions`,
+`flow_submission_flows`, `flow_submission_closures`, `hub_turns`, and `flow_facts`, with their indexes, and writes no
+row.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head at the revision, returned to base leaving only `alembic_version`, and reached head again. It then
-  stepped down to `20261025_0900_forges`, which left none of the six tables, and up to head once more.
+  stepped down to the revision's parent, which left none of the six tables, and up to head once more.
 - **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
   someone runs it again. No row was written through the tables there either, so the foreign keys SQLite never enforces
   have not met a submission, a closure, or a turn on Postgres.
@@ -569,9 +514,10 @@ The policy-selection page's capability preconditions follow `hub/domain/config/l
 capability guard in `hub/delivery/flow_turn.py`. Its fast-forward candidate, protected-write and orphan-pruning claims
 follow `hub/delivery/actions/landing/fast_forward.py` and the forge ref calls in `hub/forge/internal/github_landing.py`.
 Its park timeout and human-merge claims follow `hub/delivery/actions/landing/park.py` and the wait cadence in
-`hub/domain/delivery/flows.py`; rollback settlement is enforced in
-`hub/store/migrations/versions/20261030_0900_park_wait.py`. The mock-forge e2e and policy crash sweep reach the
-principal paths, but no tier verifies an operator's push-CI configuration or the manual orphan-branch pruning step.
+`hub/domain/delivery/flows.py`; rollback settlement is enforced by the downgrade of the hub revision adding the park
+wait, which refuses while a repository or an open submission holds a policy other than `merge-on-checks`. The mock-forge
+e2e and policy crash sweep reach the principal paths, but no tier verifies an operator's push-CI configuration or the
+manual orphan-branch pruning step.
 
 ## The runner host's invariant read under Postgres
 
@@ -581,18 +527,17 @@ only the `BEGIN` branch runs there.
 
 - **What the hand run reaches.** `blizzard:manual-postgres-invariants` runs the hub on Postgres, so the hub half's
   `REPEATABLE READ` read runs there, across tenants. It runs the runner host on its default SQLite store.
-- **What no run reaches.** The runner chain cannot reach head on Postgres from an empty store (the Boolean
-  `server_default` in `20260920_0200_usage_cost_is_share.py`, as
-  [§The runner key revision under Postgres](#the-runner-key-revision-under-postgres) states), so no method hosts a
-  runner on Postgres, and the runner route's `REPEATABLE READ` branch is unexercised.
+- **What no run reaches.** No run has carried the runner chain from an empty Postgres store to head
+  ([§The runner store under Postgres](#the-runner-store-under-postgres)), so no method hosts a runner on Postgres, and
+  the runner route's `REPEATABLE READ` branch is unexercised.
 
 Standing in for a tier: the hub half's run of the same opener under `blizzard:manual-postgres-invariants`, and the
-runner half's single-read component tests on SQLite. The gap closes the day the runner chain reaches head on Postgres
-from empty, or some tier gains a Postgres-backed runner run.
+runner half's single-read component tests on SQLite. The gap closes the day a method hosts a runner on Postgres, or some
+tier gains a Postgres-backed runner run.
 
-## The landing policies revision under Postgres
+## Landing policies' columns under Postgres
 
-Every tier runs `20261029_1200_landing_policies` on SQLite only. It adds `repositories.landing_policy` and
+Every tier runs the revision adding landing policies on SQLite only. It adds `repositories.landing_policy` and
 `hub_node_poll.kind`, each added nullable with its server default, filled in bounded pages, and tightened to `NOT NULL`
 keeping that default. It adds nullable `repositories.park_timeout_hours` and `hub_node_poll.last_polled_at`, and creates
 `project_repository_positions` and `flow_submission_terms` empty. On SQLite each tightening is a `batch_alter_table`
@@ -600,10 +545,10 @@ rebuild; on Postgres it is a native `ALTER`.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head, returned to base leaving only `alembic_version`, and reached head again. It then stepped down to
-  `20261029_0900_close_attempt_resume_at`, seeded 2,500 `repositories` rows and 2,500 `hub_node_poll` rows, and came
-  back up to head. Every row read `merge-on-checks` and `pending`, both columns read `NOT NULL` with their defaults, and
-  a row inserted without either column read its default. A second step down kept every seeded row and dropped the four
-  columns and both tables.
+  the revision's parent, seeded 2,500 `repositories` rows and 2,500 `hub_node_poll` rows, and came back up to head.
+  Every row read `merge-on-checks` and `pending`, both columns read `NOT NULL` with their defaults, and a row inserted
+  without either column read its default. A second step down kept every seeded row and dropped the four columns and both
+  tables.
 - **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
   someone runs it again. No row was written through the two new tables there, so their foreign keys onto a link and a
   submission have not been enforced against a row.
