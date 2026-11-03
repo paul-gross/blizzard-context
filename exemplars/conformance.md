@@ -49,9 +49,9 @@ patterned off it.
 ## Do
 
 ```python
-"""Permit use cases — request a permit, then move it through its verbs under the permit's row lock."""
+"""Permit use cases — request a permit, then move it through its verbs by compare-and-set on its revision."""
 
-# exemplar: bzh:domain-orchestration-split, bzh:narrow-seams, bzh:store-exclusive-write.
+# exemplar: bzh:domain-orchestration-split, bzh:narrow-seams, bzh:write-reestablishes-read, bzh:domain-takes-objects.
 ```
 
 ## Don't

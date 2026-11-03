@@ -15,21 +15,22 @@ Parent: [../index.md](../index.md).
 
 Under `blizzard/exemplars/python/exemplar/`.
 
-| Exemplar                                                   | Copy it when you are…                                                                 |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `hub/domain/permits/model.py`                              | Adding a hub concept or changing its rules                                            |
-| `hub/domain/permits/service.py`                            | Adding or changing a hub use case's orchestration                                     |
-| `foundation/permits.py`                                    | Defining a vocabulary type shared across boundaries                                   |
-| `hub/store/internal/permit_store.py`                       | Adding or extending a hub store adapter                                               |
-| `hub/store/schema.py`                                      | Adding or changing a hub table's schema                                               |
-| `hub/store/migrations/versions/20261015_0900_permits.py`   | Writing a hub migration that adds tables                                              |
-| `hub/store/migrations/tests/20261015_0900_permits_test.py` | Testing a hub migration                                                               |
-| `hub/api/permits.py`                                       | Adding or changing a hub HTTP route                                                   |
-| `hub/api/refusals.py`                                      | Turning a domain refusal into an HTTP status                                          |
-| `hub/api/permit_params.py`                                 | Resolving a path id to its loaded object, or a `404`, before a route calls the domain |
-| `wire/permit.py`                                           | Adding or changing a wire model                                                       |
-| `hub/composition.py`                                       | Wiring a new store and service into a tenant's services                               |
-| `hub/graphs/basic-development-workflow/prompts/`           | Writing a worker node's prompt, its judgement, or an edge's addendum                  |
+| Exemplar                                                         | Copy it when you are…                                                                                                                              |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hub/domain/permits/model.py`                                    | Adding a hub concept or changing its rules                                                                                                         |
+| `hub/domain/permits/service.py`                                  | Adding or changing a hub use case's orchestration, or a write conditioned on a version                                                             |
+| `foundation/permits.py`                                          | Defining a vocabulary type shared across boundaries                                                                                                |
+| `hub/store/internal/permit_store.py`                             | Adding or extending a hub store adapter, or one refusing a stale write                                                                             |
+| `hub/store/schema.py`                                            | Adding or changing a hub table's schema                                                                                                            |
+| `hub/store/migrations/versions/20261015_0900_permits.py`         | Writing a hub migration that adds tables                                                                                                           |
+| `hub/store/migrations/versions/20261103_0900_permit_revision.py` | Writing a hub migration that adds a non-key column with a server default to a table holding rows; a key column follows `bzh:keyed-table-migration` |
+| `hub/store/migrations/tests/20261015_0900_permits_test.py`       | Testing a hub migration                                                                                                                            |
+| `hub/api/permits.py`                                             | Adding or changing a hub HTTP route                                                                                                                |
+| `hub/api/refusals.py`                                            | Turning a domain refusal into an HTTP status                                                                                                       |
+| `hub/api/permit_params.py`                                       | Resolving a path id to its loaded object, or a `404`, before a route calls the domain                                                              |
+| `wire/permit.py`                                                 | Adding or changing a wire model                                                                                                                    |
+| `hub/composition.py`                                             | Wiring a new store and service into a tenant's services                                                                                            |
+| `hub/graphs/basic-development-workflow/prompts/`                 | Writing a worker node's prompt, its judgement, or an edge's addendum                                                                               |
 
 ## Runner
 

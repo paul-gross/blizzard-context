@@ -217,6 +217,9 @@ in a later change that the window admits.
 
 **Don't.** Rename a column or tighten a constraint on an existing table in one revision.
 
+**See also.** The exemplar's permit revision migration ([../exemplars/index.md](../exemplars/index.md)) — an expansion
+as reference code: a `NOT NULL` column with a server default added to a table that holds rows.
+
 ## No revision named in agent context (`bzh:no-revision-citations`)
 
 **Rule.** Agent context never names a specific store migration revision — by revision id, file stem, or slug — nor a
