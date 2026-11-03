@@ -76,8 +76,8 @@ forge. Each scenario ends with the flow invariants holding and no turn open.
 
 A store held before repositories carried a landing policy, carried onto them by a real migrate and hub: a HEAD hub is
 seeded through its doors and lands one single-repository chunk while a second waits mid-delivery behind the mock forge's
-`checks_pending` lever; the store walks down to `20261029_0900_close_attempt_resume_at`, where no repository holds a
-policy, no project an order, and no submission its terms, and the HEAD migrate and hub carry it back up.
+`checks_pending` lever; the store walks down to the parent of the revision adding landing policies, where no repository
+holds a policy, no project an order, and no submission its terms, and the HEAD migrate and hub carry it back up.
 `hub:landing-position-on-link`, `hub:submission-terms-standing`, and `hub:repository-references-in-tenant` hold on the
 carried-over store and at the end.
 

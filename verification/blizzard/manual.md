@@ -681,22 +681,8 @@ copy of the live directory's `blizzard-runner.toml` and an empty `data/`.
    the page. This method departs from the page in one place, deliberately: it is a matrix check on scratch copies with
    no hub, so it does not run `blizzard runner host --check`, which resolves each token at a hub. The page is the
    operator's deploy rehearsal and runs it.
-3. Check the copy for duplicate identities, which the tightening revision's unique constraints refuse. The revision
-   stamps a `hub_control` row naming no runner with the newest identity before the constraint applies, so the second
-   query counts such a row as that runner's:
-
-   ```bash
-   sqlite3 <scratch dir>/data/runner.db \
-     'select runner_id, count(*) from runner_identity group by runner_id having count(*) > 1'
-   sqlite3 <scratch dir>/data/runner.db \
-     'select coalesce(runner_id, (select runner_id from runner_identity order by id desc limit 1)) as owner, count(*)
-      from hub_control group by owner having count(*) > 1'
-   ```
-
-   A store below `20261011_1000_runner_scope` has no `hub_control.runner_id`; count its `hub_control` rows instead, more
-   than one being the same finding. Neither may return a row; a row returned is a finding against the live store, and
-   the migration is not attempted until it is understood. Also record the copy's AUTOINCREMENT counters, which a table
-   rebuild can reset: `sqlite3 <scratch dir>/data/runner.db 'select name, seq from sqlite_sequence order by name'`.
+3. Record the copy's AUTOINCREMENT counters, which a table rebuild can reset:
+   `sqlite3 <scratch dir>/data/runner.db 'select name, seq from sqlite_sequence order by name'`.
 4. Migrate the copy from the scratch install: `blizzard runner migrate --dir <scratch dir>`. It adopts `data/runner.db`
    as `data/host.db` and applies the pending revisions.
 5. Check its invariants: `blizzard dev check-invariants --runner-dir <scratch dir>`.
@@ -708,11 +694,10 @@ copy of the live directory's `blizzard-runner.toml` and an empty `data/`.
    their counters in `outbox_counters` instead and have no row. After the round trip, every table recorded is back and
    none is below its recorded value.
 
-**Passes when.** Each migration exits 0, the duplicate check returns no row, both invariant checks exit 0, and no
-`sqlite_sequence` value is below its pre-migrate value, with every write having landed in the scratch directory. A
-refusal naming the missing identity row is a store whose runner never registered, and is reported rather than worked
-around. `blizzard runner host --check` resolves each token at a real hub, which the scratch directory has none of, so it
-stays the deploy's own rehearsal.
+**Passes when.** Each migration exits 0, both invariant checks exit 0, and no `sqlite_sequence` value is below its
+pre-migrate value, with every write having landed in the scratch directory. A refusal naming the missing identity row is
+a store whose runner never registered, and is reported rather than worked around. `blizzard runner host --check`
+resolves each token at a real hub, which the scratch directory has none of, so it stays the deploy's own rehearsal.
 
 ### `blizzard:manual-fleet-read-latency`
 
@@ -773,9 +758,8 @@ produces a file at that path/name, so treat it as an unofficial, undocumented co
 application-consistent one. `PRAGMA integrity_check` passed, and its `usage_facts`/`transcript_segments` row counts
 (3,941 and 21,269) are large enough to exercise the hot-path indexes at realistic scale, which is why it was used here
 in place of the operator-provided copy the method's Setup step asks for first — a fresh copy remains owed if this one's
-provenance is ever disputed. N=282 chunks, migrated to the pre-change head
-(`20260907_1000_event_log_runner_id_nullable`) for Before and to `20260913_1300_hub_store_hot_path_indexes` for After;
-one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
+provenance is ever disputed. N=282 chunks, migrated to the pre-change head for Before and to the revision adding the
+hot-path indexes for After; one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
 
 | Read                                       | Before queries              | Before latency | After queries | After latency |
 | ------------------------------------------ | --------------------------- | -------------- | ------------- | ------------- |
@@ -795,15 +779,15 @@ not substitute for, the N+1 fixes tracked separately — their latency drop refl
 queries. The Bulk-read adoption reading below is what touches those two read paths next — see its own table for how each
 one's count and latency actually move.
 
-Migration duration on the same store (`blizzard hub migrate` / `--down <prior-rev>` / `migrate` again): up to
-`20260913_1300_hub_store_hot_path_indexes` from the prior head, 177.7ms first pass (includes SQLite's index-build cost
-against real data — this store's affected-table row counts range from single digits up to `transcript_segments`'s
-21,269, with `transcript_events` (9,849), `artifacts` (4,953), `usage_facts` (3,941), `lease_facts` (2,277), and
-`transitions` (2,048) the next largest); a subsequent no-op `migrate` at head, 26.7ms; `--down` back to the prior head,
-89.9ms; and back up again, 127.4ms. All comfortably sub-second even at this snapshot's scale, so the revision's own
-pause at deploy is not a concern at the hosted hub's current size, though a future reader scaling this number should
-scale it off `transcript_segments`'s own growth, since it has no retention policy and is this store's largest affected
-table by a wide margin.
+Migration duration on the same store (`blizzard hub migrate` / `--down <prior-rev>` / `migrate` again): up to the
+hot-path index revision from the prior head, 177.7ms first pass (includes SQLite's index-build cost against real data —
+this store's affected-table row counts range from single digits up to `transcript_segments`'s 21,269, with
+`transcript_events` (9,849), `artifacts` (4,953), `usage_facts` (3,941), `lease_facts` (2,277), and `transitions`
+(2,048) the next largest); a subsequent no-op `migrate` at head, 26.7ms; `--down` back to the prior head, 89.9ms; and
+back up again, 127.4ms. All comfortably sub-second even at this snapshot's scale, so the revision's own pause at deploy
+is not a concern at the hosted hub's current size, though a future reader scaling this number should scale it off
+`transcript_segments`'s own growth, since it has no retention policy and is this store's largest affected table by a
+wide margin.
 
 **Write-side cost.** The read-latency readings above say nothing about insert cost on the two tables this migration
 indexes most heavily and that see continuous, append-only writes — `transcript_segments` (4 → 6 indexes) and
@@ -1089,43 +1073,28 @@ unfilled and its column required.
 ### `blizzard:manual-postgres-runner-migrations`
 
 **Surface.** The runner store's migration chain, driven by `blizzard runner migrate --dir` against a throwaway local
-Postgres cluster. Every tier runs the runner store on SQLite; this is the one place its tightening revision, its outbox
-counters, and the downgrade's probe check run where DDL is transactional and a sequence never reuses a value.
+Postgres cluster. Every tier runs the runner store on SQLite; this is the one place the revisions above the runner
+baseline and its outbox counters run where DDL is transactional and a sequence never reuses a value.
 
 **Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on loopback (`initdb -A trust`, `pg_ctl` on a
 private port, `createdb`), and every `blizzard` command run under `uv run --no-sync --with 'psycopg[binary]==3.3.4'`. A
-scratch host directory scaffolded by `Runtime.init`, its `blizzard-host.toml` `db_url` set to the cluster. The chain
-cannot reach head on Postgres from an empty store, because `20260920_0200_usage_cost_is_share.py` sets a Boolean
-`server_default` of `0`, which Postgres rejects. Seed the parent revision's shape instead: create the tables of
-`src/blizzard/runner/store/schema.py` as it stood before the tightening revision was added
-(`git show <commit before it>:src/blizzard/runner/store/schema.py`, its `metadata.create_all` against the cluster), then
-create `alembic_version` with a `VARCHAR(255)` `version_num`, since the revision ids outrun Alembic's default width, and
-stamp it `20261011_1000_runner_scope`.
+scratch host directory scaffolded by `Runtime.init`, its `blizzard-host.toml` `db_url` set to the cluster.
 
 **Steps.**
 
-1. From the seeded parent shape, `blizzard runner migrate --dir <dir>` to head, `--down` to the parent, and `migrate`
-   again. Compare the schema the downgrade leaves with the seeded one, primary-key names included, and the schema after
-   the second `migrate` with the first.
-2. `--down` to the parent, seed a populated store — an identity row, a row naming no runner in every keyed table, and
-   more outbox rows than one batch with the newest pruned — and `migrate`. Read each lane's counter in
-   `outbox_counters`, count rows still naming no runner, compare the schema with step 1's head, and run
-   `blizzard dev check-invariants`.
+1. `blizzard runner migrate --dir <dir>` from the empty store to head, `--down base`, and `migrate` again. Compare the
+   schema after the second `migrate` with the first.
+2. When the change touches a backfill revision, `--down` to that revision's parent, seed a populated store — an identity
+   row and more rows than one batch in each table the revision reads — and `migrate`. Read the backfilled columns and
+   their closing constraints, compare the schema with step 1's head, and run `blizzard dev check-invariants`.
 3. Through the store's own seam, write the next outbox row and expect the seq above the counter. Then race eight threads
    on the first allocation of a second runner's lane and expect `1` through `8`, the counter at `8`, and the invariants
    holding.
-4. Write once more, then `--down` to the parent and expect the refusal naming the pre-migrate backup, with the revision,
-   schema and counters unchanged.
-5. Prune back to the probe's seq, reset the counter to it, and `--down`: it succeeds, and a row inserted through the
-   restored autoincrement gets a seq above the counter. `migrate` again and check the invariants.
-6. `--down` to `20261009_1000_runner_lease_closures_lease_id_index`, below the runner scope revision, and `migrate`: the
-   populated store with its identity row reaches head again, every runner-scoped row naming that runner. Then
-   `--down base`, which leaves no revision.
 
 **Passes when.** Every step behaves as stated, with no cursor, `executemany`, or dependent-object error, and the
-invariant checks return no violation. The method needs a driver that seeds rows through `tests/runner_scope_seeding.py`
-and reads the schema by reflection; the matrix does not carry one, so each run writes its driver from this description,
-and `gaps.md` records what has been covered.
+invariant checks return no violation. The method needs a driver that seeds rows and reads the schema by reflection; the
+matrix does not carry one, so each run writes its driver from this description, and `gaps.md` records what has been
+covered.
 
 ### `blizzard:manual-postgres-invariants`
 
@@ -1139,9 +1108,9 @@ private port with a short `-k` socket directory, `createdb hub`), and every `bli
 `uv run --no-sync --with 'psycopg[binary]==3.3.4'`. Host the hub on the cluster with `--allow-external-db` in auth mode
 `none`, which admits the implicit operator at the hub route. Seed two tenants, each holding chunks with facts and
 records. Beside it, run a runner host on its default SQLite store with one registered runner, and keep that runner's
-token. The runner host stays on SQLite because the runner chain cannot reach head on Postgres from an empty store
-(`gaps.md` records what that leaves unexercised). Stop the cluster with `pg_ctl stop` and remove its directories when
-done.
+token. The runner host stays on SQLite, since no run has yet carried the runner chain from an empty Postgres store to
+head (`gaps.md` records what that leaves unexercised). Stop the cluster with `pg_ctl stop` and remove its directories
+when done.
 
 **Steps.**
 

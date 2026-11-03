@@ -61,10 +61,9 @@ why — so seed once the restarted runner's log shows a `tick end`.
 
 Every row seeded into a runner store is stamped with its runner, as the runner's own writes are
 (`bzh:runner-scoped-store`). A row of a table carrying `runner_id`, `runner_identity` aside, takes the id
-`scenario fleet` pins or a `--dir` host file names, else the id the store's own identity row names. A store whose
-`runner_id` is required refuses a seeded row with none of those; an older store leaves it naming no runner, for the
-tightening revision to stamp. Each outbox row takes its `seq` from the runner's lane in `outbox_counters`, advancing it
-in the same transaction. A hub store's `runner_id` columns are data, never stamped.
+`scenario fleet` pins or a `--dir` host file names, else the id the store's own identity row names; the store's required
+`runner_id` refuses a seeded row with none of those. Each outbox row takes its `seq` from the runner's lane in
+`outbox_counters`, advancing it in the same transaction. A hub store's `runner_id` columns are data, never stamped.
 
 Do not reach for `fixture list` or `fixture apply`: the named, versioned, cross-store scenario surface is still a stub,
 and `scenario board` and `scenario fleet` are the one-command preset surfaces that exist.
