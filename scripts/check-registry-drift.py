@@ -2,7 +2,7 @@
 """Registry-drift check for blizzard-context's verifiability matrix.
 
 Joins the citations in ``verification/**/*.md`` (paths, test files, tier
-attributions, the e2e scenario roster, the shell-sweep spec roster, `mise
+attributions, the shell-sweep spec roster, `mise
 run`/`npm run` task names, and paired command text) against the real
 `blizzard` and `blizzard-mock` checkouts, and sweeps the whole repo for
 dangling ordinal/cardinal scenario or spec identification. Stdlib-only,
@@ -44,9 +44,8 @@ Emits NDJSON findings on stdout, one object per line, following the
 `winter lint` finding contract (`check`, `status` in {pass, warn, fail},
 optional `message`/`file`/`line`/`remediation`). Exits 0 by default; with
 `--gate`, exits 1 on any `fail` finding, on any registry input missing
-(`blizzard.md`, `commands.md` and its `commands/` spokes, `e2e-scenarios.md` and
-its `e2e-scenarios/` spokes, `registry-copies.json`, or an empty `verification/`
-sweep), or on any check that did not actually run to
+(`blizzard.md`, `commands.md` and its `commands/` spokes, `registry-copies.json`,
+or an empty `verification/` sweep), or on any check that did not actually run to
 completion against its full required inputs — an unresolved interpreter, a
 marker whose `pytest --collect-only` failed, a failed or malformed Playwright
 JSON listing, or an unreadable `mise.toml`/
@@ -188,7 +187,7 @@ KNOWN_UNMARKED: dict[str, str] = {}
 
 # The blizzard tier markers check B1/B2/C draw from, in the order the matrix
 # lists them.
-MARKERS = ("unit", "component", "service", "crash_sweep", "rehearsal", "store_baseline", "e2e", "winter_binding")
+MARKERS = ("unit", "component", "service", "crash_sweep", "rehearsal", "store_baseline", "winter_binding")
 
 # ### <method-id> sections in commands.md that are themselves a test tier —
 # check B2's own-tier agreement is scoped to exactly these.
@@ -248,7 +247,7 @@ _PAREN_INT_RE = re.compile(r"\((\d+)\)")
 
 _TIER_WORD_RE = re.compile(r"\b(unit|component|service|crash[ _-]?sweep|journey|rehearsal|store[ _-]?baseline|winter[ _-]?binding)\b", re.IGNORECASE)
 _TIER_MENTION_RE = re.compile(r"\btiers?\b", re.IGNORECASE)
-_METHOD_ID_RE = re.compile(r"blizzard:(unit-test|component-test|service-test|crash-sweep|journey|rehearsal|store-baseline|e2e|ui|winter-binding)")
+_METHOD_ID_RE = re.compile(r"blizzard:(unit-test|component-test|service-test|crash-sweep|journey|rehearsal|store-baseline|ui|winter-binding)")
 
 
 def _normalize_tier_word(word: str) -> str:
@@ -584,8 +583,6 @@ def _named_tiers(window: str) -> set[str]:
     if _TIER_MENTION_RE.search(window):
         for m in _TIER_WORD_RE.finditer(window):
             tiers.add(_normalize_tier_word(m.group(1)))
-    if re.search(r"\be2e\b", window, re.IGNORECASE):
-        tiers.add("e2e")
     for m in _METHOD_ID_RE.finditer(window):
         method = m.group(1)
         if method == "crash-sweep":
@@ -594,7 +591,7 @@ def _named_tiers(window: str) -> set[str]:
             tiers.add("winter_binding")
         elif method == "store-baseline":
             tiers.add("store_baseline")
-        elif method in ("journey", "rehearsal", "e2e"):
+        elif method in ("journey", "rehearsal"):
             tiers.add(method)
         else:
             tiers.add(method.split("-")[0])
@@ -665,129 +662,6 @@ def check_B2(
                         f"Move the citation to its real tier's section, or name the real tier in the sentence.",
                     )
                 )
-    return findings
-
-
-# --------------------------------------------------------------------------
-# Check C — e2e roster completeness
-# --------------------------------------------------------------------------
-
-
-def _module_site(
-    module_sites: dict[str, list[tuple[str, int]]], hub_relfile: str, module: str
-) -> tuple[str, int | None]:
-    """A module's first heading, or the hub when no file homes it at all."""
-    sites = module_sites.get(module)
-    return sites[0] if sites else (hub_relfile, None)
-
-
-def check_C(
-    e2e_files: list[tuple[str, str]],
-    collect_cache: dict[str, list[str] | None],
-) -> list[Finding]:
-    """`e2e_files` is (relfile, text) for the registry hub and every spoke under it —
-    the roster is spread across the spokes, so a module documented in any one of them
-    counts as documented, a module homed in two of them is a finding, and a module
-    missing from all of them is reported at the hub."""
-    findings: list[Finding] = []
-    e2e_nodes = collect_cache.get("e2e")
-    if e2e_nodes is None:
-        return findings
-
-    actual: set[tuple[str, str]] = set()
-    for node in e2e_nodes:
-        path, _, func = node.partition("::")
-        func = func.split("[", 1)[0]
-        module = Path(path).stem
-        actual.add((module, func))
-
-    bullet_re = re.compile(r"^- `(test_[A-Za-z0-9_]+)`", re.MULTILINE)
-    hub_relfile = e2e_files[0][0]
-
-    documented: set[tuple[str, str]] = set()
-    # Every heading each module has, so a finding about it points at the spoke that owns
-    # it rather than at the hub that merely routes to it — and so a module homed twice is
-    # caught: `documented` is a set, so a section copied into a second spoke agrees with
-    # itself and would otherwise pass green.
-    module_sites: dict[str, list[tuple[str, int]]] = {}
-    orphans: list[tuple[str, int, str]] = []
-
-    for relfile, text in e2e_files:
-        all_headings = list(_HEADING_RE.finditer(text))
-        first_start = all_headings[0].start() if all_headings else len(text)
-        for bm in bullet_re.finditer(text[:first_start]):
-            orphans.append((relfile, text.count("\n", 0, bm.start()) + 1, bm.group(1)))
-
-        for i, m in enumerate(all_headings):
-            level = len(m.group(1))
-            heading_text = m.group(2).strip()
-            body_start = m.end()
-            body_end = all_headings[i + 1].start() if i + 1 < len(all_headings) else len(text)
-            body = text[body_start:body_end]
-            if level == 2:
-                module_sites.setdefault(heading_text, []).append((relfile, text.count("\n", 0, m.start()) + 1))
-                for bm in bullet_re.finditer(body):
-                    documented.add((heading_text, bm.group(1)))
-            else:
-                for bm in bullet_re.finditer(body):
-                    line = text.count("\n", 0, body_start + bm.start()) + 1
-                    orphans.append((relfile, line, bm.group(1)))
-
-    documented_modules = {module for module, _func in documented}
-    for module, sites in sorted(module_sites.items()):
-        if module not in documented_modules or len(sites) < 2:
-            continue
-        relfile, line = sites[0]
-        findings.append(
-            Finding(
-                "C",
-                "fail",
-                f"module {module} is documented in more than one file: "
-                + ", ".join(f"{f}:{n}" for f, n in sites),
-                relfile,
-                line,
-                "Keep one home per module and route to it from the others.",
-            )
-        )
-
-    for module, func in sorted(actual - documented):
-        relfile, line = _module_site(module_sites, hub_relfile, module)
-        findings.append(
-            Finding(
-                "C",
-                "fail",
-                f"tests/e2e/{module}.py::{func} is collected but not described under ## {module} in the registry",
-                relfile,
-                line,
-                "Add a bullet naming this function under its module heading, in the spoke that owns the module.",
-            )
-        )
-
-    for module, func in sorted(documented - actual):
-        relfile, line = _module_site(module_sites, hub_relfile, module)
-        findings.append(
-            Finding(
-                "C",
-                "fail",
-                f"registry bullet `{func}` under ## {module} has no matching collected e2e node",
-                relfile,
-                line,
-                "Fix the function/module name or remove the stale bullet.",
-            )
-        )
-
-    for relfile, line, func in orphans:
-        findings.append(
-            Finding(
-                "C",
-                "fail",
-                f"bullet `{func}` cited with no owning ## module heading",
-                relfile,
-                line,
-                "Move the bullet under its module's ## heading.",
-            )
-        )
-
     return findings
 
 
@@ -2031,7 +1905,7 @@ def _collect_playwright(blizzard_root: Path) -> dict[str, set[str]] | None:
 # checks against, so a check dropped by a missing checkout, interpreter, or
 # registry input (rather than run and passing) is caught explicitly instead
 # of inferred from warn text.
-ALL_CHECKS = ("A", "B1", "B2", "C", "C2", "D", "D2", "E", "F", "G", "H")
+ALL_CHECKS = ("A", "B1", "B2", "C2", "D", "D2", "E", "F", "G", "H")
 
 # Check F's swept markdown inside each sibling checkout. This dict instantiates
 # `bzh:one-prose-home` §Scope's Binds list, one glob per bound tree that can hold
@@ -2168,23 +2042,6 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
         registry_input_missing = True
         command_docs = []
 
-    # The e2e roster is a hub plus its spokes: the hub routes and the spokes hold the
-    # scenarios, so check C reads the whole set and a spoke-less hub is a missing input,
-    # not an empty roster reported as every scenario undocumented.
-    e2e_path = verification_dir / "blizzard" / "e2e-scenarios.md"
-    e2e_relfile = _relpath(e2e_path, repo_root)
-    e2e_spokes = _md_files(verification_dir / "blizzard" / "e2e-scenarios")
-    e2e_files: list[tuple[str, str]] = []
-    if e2e_path.is_file() and e2e_spokes:
-        e2e_files.append((e2e_relfile, e2e_path.read_text(errors="replace")))
-        for path in e2e_spokes:
-            e2e_files.append((_relpath(path, repo_root), path.read_text(errors="replace")))
-    else:
-        findings.append(
-            Finding("A", "warn", f"expected registry input not found: {e2e_relfile} and its spokes — check C skipped")
-        )
-        registry_input_missing = True
-
     # Effectiveness, not attempt: a check enters `executed` only when the
     # inputs it draws on were actually present, so a check that ran against
     # an empty/partial `collect_cache` (an unresolved interpreter, or one
@@ -2193,7 +2050,6 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
     markers_ok = {m: collect_cache.get(m) is not None for m in MARKERS}
     all_markers_ok = all(markers_ok.values()) and playwright is not None
     tier_markers_ok = all(markers_ok[m] for m in TIER_METHODS.values() if m in markers_ok) and playwright is not None
-    e2e_marker_ok = markers_ok["e2e"]
 
     findings += check_A(verification_files, checkouts, collect_cache, playwright)
     # Check A's own node-id function-half assert (the `::func` half of a
@@ -2213,10 +2069,6 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
                 findings += check_B2(relfile, text, checkouts["blizzard"], collect_cache, playwright)
             if tier_markers_ok:
                 executed.add("B2")
-        if e2e_files:
-            findings += check_C(e2e_files, collect_cache)
-            if e2e_marker_ok:
-                executed.add("C")
         if command_docs:
             for relfile, text in command_docs:
                 findings += check_C2(relfile, text, checkouts["blizzard"])

@@ -159,7 +159,7 @@ class CheckATests(unittest.TestCase):
     def test_angle_bracket_placeholder_excluded(self):
         # Rooted, so it would be a candidate path (and fail — no such literal
         # file exists) were the placeholder not excluded first.
-        text = "`tests/e2e/<module>.py`"
+        text = "`tests/service/<module>.py`"
         findings = self._run(text)
         self.assertEqual(findings, [])
 
@@ -191,7 +191,7 @@ class CheckB1Tests(unittest.TestCase):
 
     def test_markerless_file_fails(self):
         _write(self.blizzard / "tests" / "test_bare.py", "def test_x(): pass\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": []}
         findings = self._run("`tests/test_bare.py`", collect_cache)
         self.assertEqual(_shape(findings), [("B1", "fail")])
 
@@ -201,7 +201,7 @@ class CheckB1Tests(unittest.TestCase):
         Naming a live entry instead couples this case to the registry's contents, and goes
         red the day that entry is retired without the branch having changed at all."""
         _write(self.blizzard / "tests" / "test_exempt.py", "def test_x(): pass\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": []}
         exemption = {"tests/test_exempt.py": "is tracked by blizzard#000"}
         with mock.patch.dict(drift.KNOWN_UNMARKED, exemption, clear=True):
             findings = self._run("`tests/test_exempt.py`", collect_cache)
@@ -212,26 +212,26 @@ class CheckB1Tests(unittest.TestCase):
         no exemption in force a markerless file is a fail, so the warn above is the entry
         doing the work rather than something about the path itself."""
         _write(self.blizzard / "tests" / "test_exempt.py", "def test_x(): pass\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": []}
         with mock.patch.dict(drift.KNOWN_UNMARKED, {}, clear=True):
             findings = self._run("`tests/test_exempt.py`", collect_cache)
         self.assertEqual(_shape(findings), [("B1", "fail")])
 
     def test_conftest_is_silent(self):
         _write(self.blizzard / "tests" / "conftest.py", "# fixtures\n")
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": []}
         findings = self._run("`tests/conftest.py`", collect_cache)
         self.assertEqual(findings, [])
 
     def test_node_id_citation_path_half_checked(self):
         _write(self.blizzard / "tests" / "test_marked.py", "def test_x(): pass\n")
-        collect_cache = {"unit": ["tests/test_marked.py::test_x"], "component": [], "service": [], "crash_sweep": [], "e2e": []}
+        collect_cache = {"unit": ["tests/test_marked.py::test_x"], "component": [], "service": [], "crash_sweep": []}
         findings = self._run("`tests/test_marked.py::test_x`", collect_cache)
         self.assertEqual(findings, [])
 
     def test_blizzard_mock_scoped_citation_silent(self):
         # File lives only outside the blizzard checkout -> B1 does not resolve it, so it stays silent.
-        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": [], "e2e": []}
+        collect_cache = {"unit": [], "component": [], "service": [], "crash_sweep": []}
         findings = self._run("`test_idp.py`", collect_cache)
         self.assertEqual(findings, [])
 
@@ -326,131 +326,6 @@ class CheckB2Tests(unittest.TestCase):
 
     def test_ui_method_id_names_its_tier(self):
         self.assertEqual(drift._named_tiers("run under blizzard:ui"), {"ui"})
-
-
-# --------------------------------------------------------------------------
-# Check C — e2e roster completeness
-# --------------------------------------------------------------------------
-
-
-class CheckCTests(unittest.TestCase):
-    HUB = "verification/blizzard/e2e-scenarios.md"
-    SPOKE = "verification/blizzard/e2e-scenarios/spoke.md"
-
-    def test_both_directions_and_orphan_bullet(self):
-        hub_text = (
-            "# roster\n\n"
-            "lead paragraph.\n\n"
-            "## Wave-by-wave coverage rollup\n\n"
-            "prose only.\n"
-        )
-        spoke_text = (
-            "# spoke\n\n"
-            "- `test_orphan` — cited before any module heading.\n\n"
-            "## module_a\n\n"
-            "- `test_documented_a` — covers a.\n\n"
-            "## module_b\n\n"
-            "- `test_stale_bullet` — no longer real.\n"
-        )
-        collect_cache = {
-            "e2e": [
-                "tests/e2e/module_a.py::test_documented_a",
-                "tests/e2e/module_a.py::test_undocumented_a",
-                "tests/e2e/module_c.py::test_undocumented_c",
-            ]
-        }
-        findings = drift.check_C([(self.HUB, hub_text), (self.SPOKE, spoke_text)], collect_cache)
-        checks = _shape(findings)
-        self.assertEqual(len(checks), 4)
-        self.assertTrue(all(c == ("C", "fail") for c in checks))
-        messages = " ".join(_messages(findings))
-        self.assertIn("test_undocumented_a", messages)
-        self.assertIn("test_undocumented_c", messages)
-        self.assertIn("test_stale_bullet", messages)
-        self.assertIn("test_orphan", messages)
-        self.assertIn("no owning ## module heading", messages)
-
-    def test_a_module_is_reported_at_the_spoke_that_owns_it(self):
-        """The hub routes and the spokes own, so a finding has to send its reader to the
-        spoke carrying the module — not to the hub every module is missing from."""
-        hub_text = "# roster\n\n## Routing\n\nrouting table.\n"
-        spoke_text = "# spoke\n\n## module_a\n\n- `test_a` — covers a.\n"
-        collect_cache = {
-            "e2e": [
-                "tests/e2e/module_a.py::test_a",
-                "tests/e2e/module_a.py::test_missing",
-                "tests/e2e/module_unhomed.py::test_unhomed",
-            ]
-        }
-        findings = drift.check_C([(self.HUB, hub_text), (self.SPOKE, spoke_text)], collect_cache)
-        by_func = {f.message.split("::")[1].split(" ")[0]: f for f in findings}
-        self.assertEqual(by_func["test_missing"].file, self.SPOKE)
-        self.assertEqual(by_func["test_unhomed"].file, self.HUB)
-
-    def test_a_module_documented_in_any_spoke_is_silent(self):
-        collect_cache = {
-            "e2e": ["tests/e2e/module_a.py::test_a", "tests/e2e/module_b.py::test_b"],
-        }
-        findings = drift.check_C(
-            [
-                (self.HUB, "# roster\n\n## Routing\n\nrouting table.\n"),
-                ("verification/blizzard/e2e-scenarios/one.md", "# one\n\n## module_a\n\n- `test_a` — covers a.\n"),
-                ("verification/blizzard/e2e-scenarios/two.md", "# two\n\n## module_b\n\n- `test_b` — covers b.\n"),
-            ],
-            collect_cache,
-        )
-        self.assertEqual(findings, [])
-
-    def test_a_module_homed_in_two_spokes_fails(self):
-        # `documented` is a set, so a module section copied into a second spoke agrees
-        # with itself: without this check the duplicate reads as green, and the registry's
-        # one-home-per-module rule would rest on nothing.
-        collect_cache = {"e2e": ["tests/e2e/module_a.py::test_a"]}
-        spoke = "# one\n\n## module_a\n\n- `test_a` — covers a.\n"
-        findings = drift.check_C(
-            [
-                (self.HUB, "# roster\n\n## Routing\n\nrouting table.\n"),
-                ("verification/blizzard/e2e-scenarios/one.md", spoke),
-                ("verification/blizzard/e2e-scenarios/two.md", spoke),
-            ],
-            collect_cache,
-        )
-        self.assertEqual(_shape(findings), [("C", "fail")])
-        self.assertIn("more than one file", findings[0].message)
-        self.assertIn("one.md", findings[0].message)
-        self.assertIn("two.md", findings[0].message)
-
-    def test_a_shared_non_module_heading_is_not_a_duplicate_home(self):
-        # Only a heading carrying function bullets homes a module; two spokes may share
-        # an ordinary section heading without that reading as a second home.
-        collect_cache = {"e2e": ["tests/e2e/module_a.py::test_a"]}
-        findings = drift.check_C(
-            [
-                ("verification/blizzard/e2e-scenarios/one.md", "# one\n\n## Setup\n\ntext\n\n## module_a\n\n- `test_a` — a.\n"),
-                ("verification/blizzard/e2e-scenarios/two.md", "# two\n\n## Setup\n\ntext\n"),
-            ],
-            collect_cache,
-        )
-        self.assertEqual(findings, [])
-
-    def test_parametrized_nodes_documented_by_one_bare_bullet_is_silent(self):
-        spoke_text = "## module_a\n\n- `test_param` — covers both cases.\n"
-        collect_cache = {
-            "e2e": [
-                "tests/e2e/module_a.py::test_param[1]",
-                "tests/e2e/module_a.py::test_param[2]",
-            ]
-        }
-        findings = drift.check_C([(self.SPOKE, spoke_text)], collect_cache)
-        self.assertEqual(findings, [])
-
-    def test_parametrized_node_with_no_bullet_names_the_bare_function(self):
-        spoke_text = "## module_a\n\nlead paragraph, no bullets yet.\n"
-        collect_cache = {"e2e": ["tests/e2e/module_a.py::test_param[1]"]}
-        findings = drift.check_C([(self.SPOKE, spoke_text)], collect_cache)
-        self.assertEqual(_shape(findings), [("C", "fail")])
-        self.assertIn("test_param", findings[0].message)
-        self.assertNotIn("test_param[1]", findings[0].message)
 
 
 # --------------------------------------------------------------------------
@@ -580,7 +455,7 @@ class CheckDTests(unittest.TestCase):
         self.assertEqual(self._d2(text), [])
 
     def test_toml_assignment_span_not_paired(self):
-        text = "`mise run e2e` therefore `depends = [\"web-build\"]` — do not skip it."
+        text = "`mise run ui` therefore `depends = [\"web-build\"]` — do not skip it."
         self.assertEqual(self._d2(text), [])
 
     def test_assignments_only_span_not_paired(self):
@@ -600,8 +475,6 @@ class RunRegistryInputAndGateTests(unittest.TestCase):
         self.repo_root = Path(self.tmp.name) / "repo"
         _write(self.repo_root / "verification" / "blizzard.md", "# blizzard\n")
         _write(self.repo_root / "verification" / "blizzard" / "commands.md", "# commands\n")
-        _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios.md", "# e2e\n")
-        _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios" / "loop.md", "# loop\n")
         self.blizzard_mock = Path(self.tmp.name) / "blizzard-mock"
         self.blizzard_mock.mkdir()
         # Never a real checkout — keeps every check gated behind `if "blizzard"
@@ -654,8 +527,6 @@ class RunEffectivenessGateTests(unittest.TestCase):
             self.repo_root / "verification" / "blizzard" / "commands" / "test-tiers.md",
             "### blizzard:unit-test\n\n`uv run pytest -m unit` — the unit tier.\n",
         )
-        _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios.md", "# e2e\n")
-        _write(self.repo_root / "verification" / "blizzard" / "e2e-scenarios" / "loop.md", "# loop\n")
         self.blizzard_mock = Path(self.tmp.name) / "blizzard-mock"
         self.blizzard_mock.mkdir()
         self.blizzard = Path(self.tmp.name) / "blizzard"
@@ -715,10 +586,10 @@ class RunEffectivenessGateTests(unittest.TestCase):
         self.assertTrue(any("no python interpreter resolvable" in (f.message or "") for f in findings))
 
     def test_one_marker_collection_failure_gates_nonzero(self):
-        self._write_stub_interpreter(failing_markers=frozenset({"e2e"}))
+        self._write_stub_interpreter(failing_markers=frozenset({"service"}))
         findings, exit_code = drift.run(self.repo_root, self.blizzard, self.blizzard_mock, gate=True)
         self.assertEqual(exit_code, 1)
-        self.assertTrue(any("collection failed for `-m e2e`" in (f.message or "") for f in findings))
+        self.assertTrue(any("collection failed for `-m service`" in (f.message or "") for f in findings))
         # C3 — a fail derived from that same partial collect_cache is a
         # degraded run inventing registry breakage, never a real finding.
         self.assertEqual([f for f in findings if f.check == "B1" and f.status == "fail"], [])
@@ -976,7 +847,7 @@ class CheckE1Tests(unittest.TestCase):
         self.assertEqual([f for f in findings if f.check == "E1a"], [])
 
     def test_registry_link_silent(self):
-        findings = self._e("read the [registry](./blizzard/e2e-scenarios.md#test_escalation_e2e) entry")
+        findings = self._e("read the [registry](./blizzard/tier-rules.md#test-tiers) entry")
         self.assertEqual([f for f in findings if f.check == "E1a"], [])
 
     def test_five_specs_fails_via_numeral(self):
@@ -1272,7 +1143,7 @@ class CheckFTests(unittest.TestCase):
         _write(
             self.root / "owner.md",
             "# Owner\n\n## Test tiers\n\n| Tier | Method |\n|------|--------|\n"
-            "| Unit | u |\n| Component | c |\n| Service | s |\n| E2E | e |\n",
+            "| Unit | u |\n| Component | c |\n| Service | s |\n| Crash | k |\n",
         )
         self.roots = {"blizzard-context": self.root}
         self.entry = {
