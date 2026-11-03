@@ -308,8 +308,13 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   Complete pointer-writer and lifecycle participation still requires audit.
 - **Runner usage versus retirement.** `ChunkUsageStore.record_usage` takes the host registry key and rechecks runner and
   host retirement before insertion. `tests/postgres_locks/test_chunk_usage_retirement_fence.py` tests both retirement
-  paths and omission controls without tenant admission. Other fact kinds and request-wide high-water ordering require
-  separate audit; the initial ingest check does not hold a lock across the batch.
+  paths and omission controls without tenant admission. `FactIngestService.ingest` reads the runner high-water mark
+  before applying the batch, while each fact and the subsequent mark update commit separately. Two concurrent pushes can
+  both read the old mark and insert the same usage fact; the registry lock serializes the inserts but does not recheck
+  the mark. The mark setter's key protects only its own transaction. This race is distinct from the accepted crash
+  window in [crash correctness](../crash-correctness/hub.md#runner-fact-ingest-the-high-water-mark-persisted-per-fact).
+  Other fact kinds and a transaction-bound repair, its lock order and proof remain open. An outer scoped write cannot
+  wrap the existing independent writes: it would hold the tenant lock while the inner writes wait for it.
 - **Host fact batch.** `HostFactIngestService` holds one scoped transaction from its mark read through usage and mark
   writes. The adapter takes host registry then host high-water, rechecks retirement, and takes usage keys on that same
   connection. `tests/test_host_fact_lane.py` exercises concurrent pushes, an omission control and batch rollback on
