@@ -327,8 +327,10 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   still need their own audit and proof.
 - **Project slug reuse.** `tests/postgres_locks/test_slug_decisions.py` exercises a project move and a competing create
   on the vacated slug through their transaction bodies without tenant admission. The create waits and claims the slug
-  after the move commits, removing the former-slug row; omitting its slug lock yields a premature taken refusal. Other
-  slug kinds and bulk-operation ordering remain open.
+  after the move commits, removing the former-slug row; omitting its slug lock yields a premature taken refusal.
+  `tests/postgres_locks/test_forge_slug_decisions.py`, `test_source_slug_decisions.py` and
+  `test_repository_slug_decisions.py` exercise the same key exclusion and move-versus-create behavior for those record
+  families, with lock-omission controls. Bulk-operation ordering remains open.
 - **Host fact batch.** `HostFactIngestService` holds one scoped transaction from its mark read through usage and mark
   writes. The adapter takes host registry then host high-water, rechecks retirement, and takes usage keys on that same
   connection. `tests/test_host_fact_lane.py` exercises concurrent pushes, an omission control and batch rollback on
