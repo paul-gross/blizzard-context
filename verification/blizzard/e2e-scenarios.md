@@ -14,8 +14,8 @@ section homed in exactly one spoke — check C of `blizzard-context:/scripts/che
 every spoke and fails a module documented in more than one file, so single-homing is machine-enforced. This hub carries
 no module sections; the routing table below is the routing map and the discovery entry point for the spokes.
 
-| Spoke                                                    | When to read                                       |
-| -------------------------------------------------------- | -------------------------------------------------- |
-| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | Finding the coverage for flow migration carry-over |
-| [board.md](./e2e-scenarios/board.md)                     | Finding the board browser scenarios' current tier  |
-| [garden.md](./e2e-scenarios/garden.md)                   | Finding the garden scenarios' current tier         |
+| Spoke                                                    | When to read                                                      |
+| -------------------------------------------------------- | ----------------------------------------------------------------- |
+| [delivery-policy.md](./e2e-scenarios/delivery-policy.md) | Finding delivery-policy, forge, and migration carry-over coverage |
+| [board.md](./e2e-scenarios/board.md)                     | Finding the board browser scenarios' current tier                 |
+| [garden.md](./e2e-scenarios/garden.md)                   | Finding the garden scenarios' current tier                        |
