@@ -147,6 +147,15 @@ then reads. It never waits on a timer for a pass the host would run on its own. 
 live in `tests/service/runner/host-halted-runners.spec.ts`; their foreign-identity and persisted host-fact specimens
 live in `tests/service/runner/store/host-halted-runners.spec.ts`.
 
+For deterministic hub flow turns, use `test.use({ isolation: 'fresh-hub', flowStepped: true })`. The test-only fixture
+holds the hub flow driver and its clock instead of running the driver on a timer. `api.flowStep()` runs one driver pass
+to completion and returns its clock time and outcome counts; `api.flowAdvance(seconds)` advances the fixed clock and
+returns `now` without running a pass. Advance to a pending poll's due time, then step and read the public state. Both
+methods require a fresh hub, and the controls are enabled only by `flowStepped`. For a fleet test, step the runner host
+as well when its work is needed; see `tests/service/fleet/flow-turns.spec.ts`. A stepped hub cannot restart over its
+existing store, because its fixed clock would move backwards; `freshHub.reset()` starts with a new empty store and
+clock.
+
 In a `collectorTest` case, poll `collector.decision(traceId)` for the short trace while the worker is held at its
 checkpoint. Its unmarked trace-specific probe reads the collector's cached sampling decision; only a returned `dropped`
 is a barrier for asserting that later root and command spans were not forwarded. A received span and an empty forwarded
