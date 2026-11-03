@@ -294,8 +294,15 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   run context. Events publish after the transaction exits. `tests/postgres_locks/test_routine_run_admission.py` holds
   config-authoring without tenant admission and inserts a graph retirement fact; the run waits and refuses after commit,
   while a config-lock omission permits mint. This is a participant-level test with a direct fact winner, not a proof of
-  every API or authoring race. Finding-set baseline writers and the intended baseline freshness boundary, all config
-  competitors and cross-family lock order remain unresolved.
+  every API or authoring race. The baseline read takes a tenant-scoped key for the project, routine name and scope slug;
+  direct finding-set creation and garden delivery take the same key before insertion. Delivery takes its chunk row
+  first; the run takes config-authoring before the baseline key and queue and dependency-graph keys afterward.
+  `tests/postgres_locks/test_finding_baseline_contention.py` tests each participant against the key without tenant
+  admission and includes omission controls. End-to-end baseline races, all config competitors and the cross-family lock
+  order remain unresolved.
+- **Standalone chunk mint.** `ChunkRecordStore.mint` admits only pointerless chunks; ingest with pointers uses
+  `mint_locked` under work-ref admission. `tests/test_chunk_record_store_bulk_reads.py` checks the standalone refusal.
+  Complete pointer-writer and lifecycle participation still requires audit.
 - **Config apply.** `ApplyParticipants.open` takes the config-authoring key before constructing readers on the same
   scoped connection, then runs reconciliation and writes on that connection; dry runs roll back the transaction and
   no-op applies still enter it. Graph mint and lifecycle operations take config-authoring before their graph-name key,
