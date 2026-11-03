@@ -61,9 +61,10 @@ into a controller or goes unwritten. On the model it is tested by value, and the
 declared in one place.
 
 **Scope.** A decision on a loaded object's state is a rule. Choosing what to load, ordering writes, the post-write
-re-check that turns a lost race into the domain error, and the store's own guard are orchestration and adapter concerns,
-not the rule restated. The rule binds where a decision is made, not its form: a pure function the service calls already
-complies.
+re-check that turns a lost race into the domain error, and the store's own freshness refusal are orchestration and
+adapter concerns, not the rule restated — a store never judges the rule itself (`bzh:store-refuses-stale`,
+[./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)). The rule binds where a decision is made, not
+its form: a pure function the service calls already complies.
 
 **Detect.** The anemic domain model — types that carry state while services decide for them. Its tells:
 

@@ -35,8 +35,8 @@ them.
 **See also.** `blizzard/exemplars/python/exemplar/hub/domain/permits/model.py`
 ([../exemplars/index.md](../exemplars/index.md)) — a read/write Protocol pair, implemented by the exemplar `PermitStore`
 and bound in the exemplar `composition.py`. [`./system-shape/exclusive-writes.md`](./system-shape/exclusive-writes.md)
-`bzh:store-exclusive-write` — the one seam where a write Protocol splits further than read and write; read it before
-adding or calling a `*_locked` method.
+`bzh:store-exclusive-write` — the one seam where a write Protocol splits further than read and write, a legacy form
+`bzh:transaction-participation` refuses to extend; read it before calling a `*_locked` method.
 
 ## Controllers hold read repositories only (`bzh:controller-read-only`)
 
@@ -70,7 +70,9 @@ together.
 `blizzard/src/blizzard/hub/domain/kernel/transactions.py`. The identity unit has its own seam in
 `blizzard/src/blizzard/hub/auth/identity_transaction.py`; its tenant participation is described in
 [./crash-correctness/hub.md](./crash-correctness/hub.md). A single repository's self-contained write need not open a
-domain unit.
+domain unit. The domain service opens the unit, never the edge; an entity the edge resolved enters its decision only
+through a version-conditioned write or a re-read under the unit's token (`bzh:write-reestablishes-read`,
+[./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)).
 
 **Detect.** A multi-repository atomic operation hidden in one adapter, or a domain service carrying a SQLAlchemy
 connection. Review the transaction boundary and each participant; no general mechanical gate enforces this rule.
@@ -81,27 +83,37 @@ with the resulting token.
 **Don't.** Make the item adapter delete a chunk and release another repository's dependencies to manufacture atomicity.
 
 **See also.** `bzh:transaction-participation`, `bzh:transaction-graduation`, `bzh:short-locked-unit`,
-`bzh:tenant-scoped-store` ([./system-shape/tenancy.md](./system-shape/tenancy.md)).
+`bzh:publish-after-commit`, `bzh:tenant-scoped-store` ([./system-shape/tenancy.md](./system-shape/tenancy.md)).
 
 ## Participate through the supplied transaction (`bzh:transaction-participation`)
 
 **Rule.** A repository participating in a unit of work uses the supplied transaction for every participating read and
-write, without opening or committing an independent transaction.
+write, without opening or committing an independent transaction. A method that may join a unit takes
+`transaction: Transaction | None = None`, joining when one is supplied and opening its own short scoped write when not;
+a method correct only inside a unit takes it required, with no default.
 
-**Why.** A separate connection can miss earlier writes or commit even when the unit rolls back. Validating the token
-keeps its authority confined to its store, tenant, and lifetime.
+**Why.** A separate connection can miss earlier writes or commit even when the unit rolls back, and a token its store
+validates keeps its authority confined to that store, tenant, and lifetime. One parameter keeps the standalone and the
+joined call on one method, where a twin method or a handle type duplicates it per lock shape.
 
-**Scope.** A repository may also offer a standalone call that opens its own transaction when no token is supplied.
-Connections and token resolution stay in the store layer; `connection_for` in
-`blizzard/src/blizzard/hub/store/transactions.py` validates the token and any required lock coverage.
+**Scope.** Connections and token resolution stay in the store layer; `connection_for` in
+`blizzard/src/blizzard/hub/store/transactions.py` validates the token and any required lock coverage, and
+`connection_in` beside it resolves the optional form. The `IChunkExclusiveWrites` seam,
+`IWriteGraphRepository.locked_name`, their handle types, and the `*_locked` repository methods are the legacy form:
+existing callers keep them, and no new twin or handle type is added. A new chunk-locked decision opens its unit with
+`IHubTransactions.begin` and `lock_chunks` directly, not through `IChunkExclusiveWrites.locked`.
 
 **Detect.** A participant ignores its token, opens a second write, accepts a token from another scope or after its
-lifetime, or resolves a connection in domain code. Review the adapter and callers; no general mechanical gate enforces
-this rule.
+lifetime, or resolves a connection in domain code; a new `*_locked` twin or per-area handle type; a method correct only
+inside a unit whose `transaction` defaults to `None`. Review the adapter and callers; no general mechanical gate
+enforces this rule.
 
 **Do.** `WorkItemStore.withdraw_open` joins a supplied transaction or opens its own scoped write when called alone.
+`IWriteChunkRecordRepository.record_deleted` (`blizzard/src/blizzard/hub/domain/chunk/ports/record.py`) takes
+`transaction: LockedTransaction` with no default: a delete is correct only under its chunk's lock.
 
-**Don't.** Call a standalone committing repository method from inside a unit expecting rollback to undo it.
+**Don't.** Call a standalone committing repository method from inside a unit expecting rollback to undo it, or add
+`withdraw_open_locked(handle, …)` beside `withdraw_open` to join a locked decision.
 
 **See also.** `bzh:unit-of-work`, `bzh:transaction-graduation`.
 
@@ -115,8 +127,9 @@ lets adapters verify authority over each resource they mutate.
 
 **Scope.** `lock_chunks`, `lock_keys`, and `lock_set` graduate the unit; the store sorts chunk ids and then
 namespace-key pairs. The original token is superseded, and a graduated token cannot acquire further locks. The scoped
-tenant opener precedes graduation; lock ordering and the remaining legacy seams are owned by
-[./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md) `bzh:store-exclusive-write`.
+tenant opener precedes graduation; lock ordering is owned by
+[./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md) `bzh:store-exclusive-write`, and the legacy
+locked seams by `bzh:transaction-participation`.
 
 **Detect.** A repository statement before graduation, a second graduation, use of the superseded token, or a locked
 mutation without coverage of its resource. `blizzard/tests/test_hub_transactions.py` exercises token lifetime, scope,
@@ -154,7 +167,27 @@ calls inside a unit.
 **Don't.** Hold a chunk lock while waiting for a forge API response, or use teardown's opener to write to a closed
 tenant.
 
-**See also.** `bzh:unit-of-work`, `bzh:transaction-graduation`, `bzh:store-exclusive-write`.
+**See also.** `bzh:unit-of-work`, `bzh:transaction-graduation`, `bzh:publish-after-commit`, `bzh:store-exclusive-write`.
+
+## Publish after the unit commits (`bzh:publish-after-commit`)
+
+**Rule.** Emit an event or broadcast for a unit's writes only after the unit commits; the domain operation returns what
+changed, and its caller publishes from that.
+
+**Why.** An event published inside the unit announces a write that may still roll back, and a subscriber reading the
+store on it sees the state from before that write commits. Publishing from the returned change also keeps the broker out
+of the domain's atomic operation.
+
+**Detect.** A broker or event-port call inside an open unit — within a `with … begin()` block, a locked handle's scope,
+or a store write method. Judged at review; no mechanical check.
+
+**Do.** `delete_chunk` (`blizzard/src/blizzard/hub/api/chunks.py`) publishes the `deleted` frame from the fact id
+`DeleteService.delete` returns, after its unit has committed.
+
+**Don't.** Publish `chunk.deleted` from inside `DeleteService.delete`'s unit before the withdrawals run — a failed
+withdrawal rolls the delete back after subscribers have already dropped the chunk.
+
+**See also.** `bzh:unit-of-work`, `bzh:short-locked-unit`.
 
 ## Keep sibling adapters independent (`bzh:sibling-adapter-independence`)
 
@@ -194,7 +227,9 @@ at its own site with `# ast-grep-ignore: bzh:domain-takes-objects`.
 **Scope.** A layer that holds no entity type for the identifier at all — the runner's chunk-keyed operations, where no
 `Chunk` type exists locally (`bzh:facts-not-status` keeps each per-concept table independent) — still resolves at the
 edge: it mints a typed scope naming exactly the facts the rule reads, rather than loading an aggregate that does not
-exist. The scope is data, not behavior, and never grows into one.
+exist. The scope is data, not behavior, and never grows into one. The edge still resolves the objects, but they are
+decision inputs only through a write conditioned on their version or a re-read inside the unit
+(`bzh:write-reestablishes-read`, [./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)).
 
 **Detect.** A domain signature typed `chunk_id: str` rather than `chunk: Chunk`, or a domain method loading an entity
 from an id it was passed. `bzh:domain-takes-objects` is tooled by `blizzard:structural-gate`'s ast-grep scan
