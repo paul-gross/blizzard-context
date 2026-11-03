@@ -591,8 +591,10 @@ resource keys, omitting arrival where not needed. Admission precedes its chunk r
 all four; submission and turn helpers omit arrival, and withdrawal selects submissions after the chunk and flow-chunk
 locks before taking their resource keys. `lock_keys` sorts keys. `tests/postgres_locks/test_flow_decisions.py` binds
 selected key waits with omission controls, selected competing outcomes with tenant admission bypassed, chunk-before-flow
-for submit and interrupted end, shared-resource turns, and arrival allocation across chunks. It is not a complete
-competitor or deadlock proof, nor a recorded test result here.
+for submit and interrupted end, shared-resource turns, and arrival allocation across chunks.
+`tests/postgres_locks/test_flow_arrival_competitor.py` holds the arrival key without tenant admission and races a real
+submission against a synthetic competing insertion; omitting the submission's key exposes a uniqueness conflict. These
+are not a complete competitor or deadlock proof.
 
 `FlowStore.end_turn_locked` first looks up the open turn's submission chunk on the handle connection and rejects it if
 the handle's `locked_ids` does not contain that chunk, before calling `lock_flow_turn`; a missing or ended turn returns
