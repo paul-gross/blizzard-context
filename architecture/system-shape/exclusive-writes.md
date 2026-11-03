@@ -217,6 +217,12 @@ Stated so a reviewer need not re-derive them:
   - `ChunkEscalationsStore.record_escalation` (`hub/store/internal/chunk_escalations_store.py`) — admits or refuses the
     escalation by running `fence` on its write — its own, or the unit it joins — never returning the facts to the
     domain.
+  - `ChunkQueueStore.record_backlog_positions` (`hub/store/internal/chunk_queue_store.py`) — drops each pair naming a
+    currently promoted chunk. Every caller decides the backlog's order in a unit holding its ranking lock, and promote
+    and demote, which move a chunk between the lists, hold both lists' locks, so the filter drops no pair its caller
+    decided on.
+  - `ChunkQueueStore.record_promote` — writes nothing for a currently promoted chunk rather than leaving that replay to
+    the domain's `promotion_writes` (`hub/domain/operations/promote.py`).
 - **The export's pass lock.** `EgressSweep.sweep` and `EgressReset.reset` share one hub-wide in-process lock, built in
   `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
   flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
