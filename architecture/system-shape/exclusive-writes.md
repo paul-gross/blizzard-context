@@ -315,6 +315,11 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   window in [crash correctness](../crash-correctness/hub.md#runner-fact-ingest-the-high-water-mark-persisted-per-fact).
   Other fact kinds and a transaction-bound repair, its lock order and proof remain open. An outer scoped write cannot
   wrap the existing independent writes: it would hold the tenant lock while the inner writes wait for it.
+- **Lease mint versus retirement.** `ChunkRouteStore.record_lease_minted` takes the chunk row then the host registry key
+  and rechecks runner and host retirement before its epoch admission on that connection. Retirement takes the registry
+  key before writing lifecycle facts. `tests/postgres_locks/test_lease_mint_retirement_fence.py` holds that key without
+  tenant admission and exercises both retirement paths and lock-omission controls. Other runner fact handlers and their
+  lock ordering still require audit.
 - **Host fact batch.** `HostFactIngestService` holds one scoped transaction from its mark read through usage and mark
   writes. The adapter takes host registry then host high-water, rechecks retirement, and takes usage keys on that same
   connection. `tests/test_host_fact_lane.py` exercises concurrent pushes, an omission control and batch rollback on
