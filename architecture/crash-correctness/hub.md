@@ -458,39 +458,30 @@ own `closed_at IS NULL` no-op, and `resolve_for_item` runs again. Its own gate i
 interrupted closure exactly once and a finding a person reopens afterward is never silently re-closed by a later,
 unrelated repeat of the same close.
 
-## Runner fact ingest: the high-water mark, persisted per fact
+## Runner fact ingest: each fact and its high-water mark in one unit
 
 `FactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/execution/facts.py`) walks a runner's pushed batch in seq
-order and, for each fact that applies, writes that fact's own domain row and then, as a second write, advances
-`runner_high_water` to that fact's seq through `set_runner_high_water` — inside the same loop iteration, before moving
-to the next fact, rather than once after the whole batch.
+order. Each fact that applies lands in its own unit, opened through `IHubTransactions.begin`. The unit writes the fact's
+domain row, then advances `runner_high_water` to that fact's seq through `set_runner_high_water`, and both commit
+together before the loop moves to the next fact.
 
-The span between a fact's domain write landing and its own mark-write committing is a real window, and what a crash
-inside it loses is bounded to that one fact: a replay resubmits every seq the runner's own ack never confirmed, the
-replayed seq reads at or below the now-stale mark as not-yet-advanced, and `_apply` runs again against a domain write
-most kinds do not gate on a natural key — `usage.recorded` sums tokens with no dedupe key of its own, for one — so the
-replay double-applies exactly that one fact. Persisting the mark inside the loop rather than after it is what keeps that
-bound at one fact regardless of how many rode in the same batch: a crash after the third fact's mark commits, mid-way
-through a ten-fact push, leaves the ninth and tenth facts simply unapplied, re-submitted and applied cleanly on the next
-push, not double-applied alongside the third.
+No window: a crash ahead of a unit's commit loses the fact's row and its mark advance together. A replay resubmits every
+seq the runner's own ack never confirmed. Seqs at or below the mark answer `already_applied`. The rest, the in-flight
+fact among them, apply once against the mark the crash left. Committing per fact, not once after the whole batch, keeps
+what a push already committed when the crash lands: a crash mid-way through a ten-fact push after the third fact's unit
+commits leaves three facts applied, and the replay applies only the other seven. A rejected fact never advances the
+mark, so its unit commits nothing.
 
-The loss is tolerable because it is bounded to the one fact already in flight when the crash lands, silent only in the
-sense that no dedicated alarm names it, and recoverable by nothing more than the runner's own ordinary retry — the exact
-shape a lost-ack replay already produces for every other fact kind, at the same one-fact cost. A rejected fact never
-advances the mark past it and is excluded from this window, since `_apply` returning false skips the mark-write for that
-seq entirely and the loop moves on to the next one.
+The advance moves the mark only from the seq the push last read or set (`bzh:write-reestablishes-read`), so an
+overlapping push of the same runner's can neither re-apply a seq the other committed nor move the mark back. The write
+owes the checker nothing: `runner_high_water` is a per-runner scalar, not a derived cross-fact invariant to recompute.
 
-This is a real window whose whole loss is accepted and named, not the no-window ground: each `set_runner_high_water`
-call is its own transaction, so a crash can land between it and either the domain write just before it or the next
-fact's domain write just after — a span that exists and can lose a bounded, non-durable amount, not a span with nothing
-left to separate. The write owes the checker nothing beyond what it already carries: `runner_high_water` is a per-runner
-scalar the store already treats as idempotently overwritable, not a derived cross-fact invariant to recompute.
-
-The host's fact lane has the same window and the same accepted one-fact loss. `HostFactIngestService.ingest`
-(`blizzard/src/blizzard/hub/domain/execution/host_facts.py`) writes each fact's usage row, then advances
-`host_high_water` through `HostRegistryStore.set_high_water` inside the same loop iteration. A crash between the two
-replays that one fact, and the replay costs nothing: a sample or miss upsert refreshes its `(host_id, slug)` row in
-place, so re-applying it re-writes the row and counts nothing twice. No crash point is registered for it.
+The host's fact lane writes each fact and its mark in separate transactions, a real window whose one-fact loss is
+accepted. `HostFactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/execution/host_facts.py`) writes each fact's
+usage row, then advances `host_high_water` through `HostRegistryStore.set_high_water` inside the same loop iteration. A
+crash between the two replays that one fact, and the replay costs nothing: a sample or miss upsert refreshes its
+`(host_id, slug)` row in place, so re-applying it re-writes the row and counts nothing twice. No crash point is
+registered for it.
 
 ## Hosts: retire, and add with adopt
 
