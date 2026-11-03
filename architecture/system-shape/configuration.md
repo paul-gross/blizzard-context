@@ -6,19 +6,27 @@ read; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rul
 by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 A **configured record** is a row the hub holds as operator-set configuration and that an operator changes while the hub
-runs: a forge, a work source, a repository, a secret, a project, a scope, a routine. The rules below name the seams and
-tables that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their
-implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code
-these rules do not yet hold.
+runs: a forge, a work source, a repository, a secret, a project, a project source link, a project repository link, a
+scope, or a routine. The rules below name the seams and tables that keep them — `IConfigCodec`, `SecretValue`,
+`ISecretReader`, `config_changes` — by the names their implementations take, so code adding one of them takes the name
+stated here. [Known debt](#known-debt) lists the code these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
-**Rule.** Give every configured record the same verb set — create, list, show, edit, retire, enable — an edit that is a
-sparse merge, a `revision` that every committed write increments, one `config_changes` row appended in the same
-transaction as each write, and retirement in place of deletion. A sparse merge leaves an absent field unchanged, sets a
-present field, and takes an explicit `null` as clearing a nullable field, refusing it on any other. A retire of a
-retired record, or an enable of an enabled one, writes nothing; an edit of a retired record is legal and leaves it
-retired.
+**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable. A project
+has no retire or enable: its source and repository links have their own lifecycle. Give editable records a sparse-merge
+edit, and each record a `revision` that every committed write increments and one `config_changes` row appended in the
+same transaction as each write. A sparse merge leaves an absent field unchanged, sets a present field, and takes an
+explicit `null` as clearing a nullable field, refusing it on any other. A retire of a retired record, or an enable of an
+enabled one, writes nothing; an edit of a retired record is legal and leaves it retired.
+
+Implement configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord` requires
+only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names the
+link-specific capabilities. Reuse the applicable revision, transition, ordered field comparison, change-row, slug-left
+and label-merge mechanics in `blizzard/src/blizzard/hub/domain/config/lifecycle.py`, which uses `ConfigChange.of` in
+`blizzard/src/blizzard/hub/domain/config/changes.py`. Kinds own validation, projection, identity and construction.
+Projects use the base capability without retirement; links use linked polarity and project attribution, and position
+facts are not link revisions. Secrets' encryption and revision exception is outside these helpers.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
@@ -29,7 +37,8 @@ retired.
 | retire | `POST /api/<kind>/{key}/retire` |
 | enable | `POST /api/<kind>/{key}/enable` |
 
-Enable reverses a retirement. Every CLI noun carries the same six verbs, a secret's replace standing in for its edit.
+Enable reverses a retirement. Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its
+edit; projects and links use the verbs described in Scope.
 
 A record that other records reference and an operator renames — a project, a repository, a forge — carries three names,
 each with one job: a hub-minted, immutable `<prefix>_<ulid>` id that every stored reference holds, a **slug** unique
@@ -104,6 +113,15 @@ field from an explicit `null`: every field optional, `extra="forbid"`, and its n
 through `model_fields_set` and `UNSET` (`blizzard/src/blizzard/hub/domain/kernel/unset.py`). A non-nullable field
 refuses an explicit `null` with a 422 rather than reading it as unchanged. Retirement is an appended lifecycle fact, the
 newest row deciding, as `scope_lifecycle_facts` holds it (`bzh:facts-not-status`, [./store-facts.md](./store-facts.md)).
+
+Consumer semantics are proven in `blizzard/tests/test_configured_record_lifecycle_rules.py`,
+`blizzard/tests/test_project_model.py`, `blizzard/tests/test_project_links.py`, `blizzard/tests/test_scope_domain.py`
+and `blizzard/tests/test_routine_domain.py`.
+
+For project editing or link authoring, follow `blizzard/src/blizzard/hub/domain/projects/model.py` and
+`blizzard/src/blizzard/hub/domain/projects/links.py` into the shared records and lifecycle modules above. Reuse their
+applicable mechanics: a project has no retirement capability, while a link's own linked state, composite identity and
+project-attributed history are distinct from repository position facts.
 
 **Don't.** An edit request that requires every field and a restated `name` under `PATCH` — two operators changing
 different fields of one record silently revert each other.
@@ -184,10 +202,11 @@ refused when the tenant holds several.
 - A document entry of a kind a project owns that does not take `project` by id or slug, does not act in the tenant's
   only project when it names none, or is not refused when the tenant holds several.
 
-**Do.** `ConfigAuthoring.apply` (`blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan,
-`blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it) is the reference: the plan is pure, the writer
-runs each planned write through the same per-operation bodies the per-record adapters run, and a dry run raises a
-private sentinel after the last write so the store rolls back.
+**Do.** `ConfigAuthoring.apply` in `blizzard/src/blizzard/hub/domain/config/authoring.py` is the reference:
+`blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan and
+`blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it. The plan is pure, the writer runs each planned
+write through the same per-operation bodies the per-record adapters run, and a dry run raises a private sentinel after
+the last write so the store rolls back.
 
 **Don't.** A dry run that checks "would this name collide" with a select of its own — it passes while the real apply
 fails on a check the select did not know to make.
@@ -288,10 +307,8 @@ cycle.
 Stated so a reviewer need not re-derive them — each is a site the rules above name as a violation and that stands until
 the change that brings it under the rule:
 
-- **Only forges, work sources, repositories, secrets, scopes, and routines are configured records so far.**
-  `config_changes` carries all six, and `ConfigAuthoring` the first four; the hub reads forges, work sources and
-  repositories on use. Graphs are not records under the rule: a graph's mutable flag is a sparse `PATCH` that appends a
-  policy fact, with no `revision` or change row.
+- Graphs are not records under the rule: a graph's mutable flag is a sparse `PATCH` that appends a policy fact, with no
+  `revision` or change row.
 - **A secret's retire and enable move no revision.** Each appends a change row at the secret's unchanged revision,
   because its value is sealed against `(name, revision)` and a revision moved without resealing would leave the value
   undecryptable. A forge's, a work source's, or a repository's retire and enable do move its revision.
