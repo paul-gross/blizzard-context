@@ -33,7 +33,9 @@ worktrees stay held until the process is stopped.
 ## Reinstatement
 
 Reinstatement records the reversal and nothing more. The runner is unenrolled — its token was revoked when it was
-retired — and must be enrolled afresh; enrolling a retired runner is refused, so there is one lever back.
+retired — and must be enrolled afresh; enrolling a retired runner is refused, so there is one lever back. A runner still
+under a retired host is refused reinstatement; released from that host, it can be reinstated, and stands alone
+([./hosts.md](./hosts.md)).
 
 ## Token revocation
 
