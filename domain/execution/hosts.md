@@ -43,7 +43,9 @@ Retiring a host is final — a retired host is never enrolled again — and repe
 left unretired. The runners under a retired host are how a repeat finds them, so until it has retired them that roster
 holds: a retired host gains no live runner — none added, adopted, or reinstated under it — and releases only the runners
 already retired, refusing any other until the retirement is repeated. A retirement takes the runners standing under the
-host when it lands; one moved to another host before then is left alone.
+host when it lands, and leaves alone one moved to another host before then. A runner released and reinstated while the
+retirement works through the others stops it there, refused as a runner's own retirement acting on a reinstated runner
+is ([./retirement.md](./retirement.md) §Holdings); repeating the retirement finishes it without that runner.
 
 ## Workspaces
 
