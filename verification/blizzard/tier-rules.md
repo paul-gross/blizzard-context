@@ -111,8 +111,8 @@ every colocated directory, refuses a misnamed file or a stem with no sibling rev
 (`tests/revision_age.py`, proven by `tests/test_revision_age.py`). No check enforces that a reshaping revision has its
 test.
 
-**Do.** `src/blizzard/hub/store/migrations/tests/20261008_1400_tenant_tighten_test.py` beside
-`versions/20261008_1400_tenant_tighten.py`.
+**Do.** The exemplar's hub migration test, beside its revision under the same stem
+([../../exemplars/index.md](../../exemplars/index.md)).
 
 **Don't.** Name a file for the parent revision it pins, mark a test by hand to retire it, or leave a revision's test in
 `tests/`.

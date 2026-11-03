@@ -47,10 +47,9 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
 
 A failing step names the step, the baseline, and the backend, and attaches both daemons' logs.
 
-Landing-policy carry-over is also covered by the component tier revision test
-`src/blizzard/hub/store/migrations/tests/20261029_1200_landing_policies_test.py` and component tier invariant fixture
+Landing-policy carry-over is also covered by the landing-policy migration's colocated test and component tier invariant fixture
 `tests/test_invariant_checker_carry_over.py`. The rehearsal proves a held delivery and a later delivery land across a
-released-build upgrade; the revision test proves the policy default and schema transition.
+released-build upgrade; the migration test proves the policy default and schema transition.
 
 **Where it runs.** `.github/workflows/rehearsal.yml` is reusable, called by `push.yml` on every `master` push —
 `dev-image` needs it, so `edge` advances only on a commit whose upgrade from every supported release succeeded — and by
@@ -79,11 +78,11 @@ downloads the floor's wheel, so it needs `gh` access (`GH_TOKEN`).
 stamped when they run, so no two runs agree. The baseline mints and stamps those afresh, and the comparison reads them
 as `blizzard.tools.store_fold.seeds.normalize` does: ids up to a consistent renaming, instants by presence.
 
-**The runner on Postgres.** The runner's history cannot reach head on Postgres from an empty store
-(`20260920_0200_usage_cost_is_share` sets a Boolean `server_default` of `0`, which Postgres rejects), so that one leg
-holds the baseline's Postgres store to the floor's committed `contracts/store/runner.json` through the producer
-`blizzard:store-contract` uses, and its rows to the runner history's SQLite rows. This is the one place the proof
-departs from comparing a history's store with the baseline's on the same backend.
+**The runner on Postgres.** The runner's history cannot reach head on Postgres from an empty store (one of its revisions
+sets a Boolean `server_default` of `0`, which Postgres rejects), so that one leg holds the baseline's Postgres store to
+the floor's committed `contracts/store/runner.json` through the producer `blizzard:store-contract` uses, and its rows to
+the runner history's SQLite rows. This is the one place the proof departs from comparing a history's store with the
+baseline's on the same backend.
 
 **One named normalization.** A table the history renamed keeps its old name on its Postgres-generated primary key,
 foreign key and serial sequence, which a baseline creating the table under the new name cannot reproduce. The test names

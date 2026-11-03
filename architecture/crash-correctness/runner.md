@@ -178,8 +178,8 @@ the hub, the lease stays open, the worker is dead, and the operator's retry is a
 the recovery re-runs at the next startup, each half independently harmless — the kill is idempotent and the end a lone
 idempotent insert — so it earns no point.
 
-The `takeover_entries` revision backfills an entry for every takeover open at migration time, so a person's takeover
-opened under a prior release is not ended by the first startup on this one.
+The migration that adds `takeover_entries` backfills an entry for every takeover open at that moment, so a person's
+takeover opened under a prior release is not ended by the first startup on this one.
 
 The window after the entry fact commits and before the HTTP response is the ordinary lost-response case, accepted and
 named: the response is all it loses, the takeover stays open and entered, and the retry is refused naming
@@ -628,20 +628,10 @@ The binding contract belongs to `bzh:runner-scoped-store`'s Scope
 ([../system-shape/runner-scoping.md](../system-shape/runner-scoping.md#adapters-hold-the-bound-seam-bzhrunner-scoped-store)).
 A `kill -9` leaves nothing to reconcile: the binding is reseeded from the host file at the next boot.
 
-The tightening revision (`blizzard/src/blizzard/runner/store/migrations/versions/20261013_1000_runner_scope_tighten.py`)
-makes `runner_id` `NOT NULL` on every runner-scoped table, so a row naming no runner cannot exist. It stamps any row a
-previous release left naming none from the identity row, and refuses a store that holds such rows and no identity row.
-The upgrade is one transaction from its first data write — the backfill, the counter seeding, and every batch rebuild —
-so a stopped run rolls all of it back and leaves the store at the parent revision, the outboxes keyed as they were and
-no counter rows written. Only DDL ahead of the first data write commits alone, so at most an empty `outbox_counters`
-survives, and, in a store with no identity row, the first batch's `CREATE TABLE _alembic_tmp_*` as well: with no row to
-backfill from there is no data write ahead of that batch, so its table copy commits alone. Idempotence covers the rerun
-over that surviving DDL: it creates `outbox_counters` only when absent, stamps only rows still naming no runner, and
-skips a table already tight. `_seed_counters` skips an outbox already keyed `(runner_id, seq)` on the ground that its
-counter was seeded before the rebuild; that holds only because the seeding and the rebuild commit together.
-`_clear_stale_copy` drops a table copy a batch left behind. In a store with no identity row it is required, not
-insurance: the committed `_alembic_tmp_*` would otherwise make the rerun's batch fail on a table that exists. It owes no
-registry point.
+The runner store's baseline revision creates every runner-scoped table with `runner_id` `NOT NULL`, so a row naming no
+runner cannot exist; `blizzard/contracts/store/runner.json` records each column's nullability. A store below the
+baseline is refused rather than keyed in place, so no upgrade stamps a runner onto a row, and the key owes no registry
+point.
 
 ### The host store adoption
 
