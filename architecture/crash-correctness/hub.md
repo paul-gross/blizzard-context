@@ -458,7 +458,7 @@ own `closed_at IS NULL` no-op, and `resolve_for_item` runs again. Its own gate i
 interrupted closure exactly once and a finding a person reopens afterward is never silently re-closed by a later,
 unrelated repeat of the same close.
 
-## Runner fact ingest: each fact and its high-water mark in one unit
+## Runner and host fact ingest: each fact and its high-water mark in one unit
 
 `FactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/execution/facts.py`) walks a runner's pushed batch in seq
 order. Each fact that applies lands in its own unit, opened through `IHubTransactions.begin`. The unit writes the fact's
@@ -476,12 +476,12 @@ The advance moves the mark only from the seq the push last read or set (`bzh:wri
 overlapping push of the same runner's can neither re-apply a seq the other committed nor move the mark back. The write
 owes the checker nothing: `runner_high_water` is a per-runner scalar, not a derived cross-fact invariant to recompute.
 
-The host's fact lane writes each fact and its mark in separate transactions, a real window whose one-fact loss is
-accepted. `HostFactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/execution/host_facts.py`) writes each fact's
-usage row, then advances `host_high_water` through `HostRegistryStore.set_high_water` inside the same loop iteration. A
-crash between the two replays that one fact, and the replay costs nothing: a sample or miss upsert refreshes its
-`(host_id, slug)` row in place, so re-applying it re-writes the row and counts nothing twice. No crash point is
-registered for it.
+The host's fact lane holds the same ground. `HostFactIngestService.ingest`
+(`blizzard/src/blizzard/hub/domain/execution/host_facts.py`) lands each fact that applies in its own unit: the sample or
+miss upsert on its `(host_id, slug)` row, then the advance of `host_high_water` through
+`HostRegistryStore.set_high_water`, conditioned on the seq the push last read or set. A crash ahead of the unit's commit
+loses the upsert and the advance together, and an overlapping push of the same host's can neither overwrite a newer
+sample with an older one nor move the mark back.
 
 ## Hosts: retire, and add with adopt
 
