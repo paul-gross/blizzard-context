@@ -148,9 +148,12 @@ first selects the row, inserts it if absent inside a savepoint that swallows `In
 `UPDATE` to lock it before any decision guard read. The table is keyed `(tenant_id, namespace, key)`, the scoped insert
 stamping the write's tenant, so two tenants locking one graph name each lock their own row
 (`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
-injectively, a graph by its name. A new decision graduates its unit with `lock_keys`; the existing ones reach it through
-the legacy handles `IChunkExclusiveWrites.locked_work_refs` and `IWriteGraphRepository.locked_name`, each its own type —
-never an `ILockedChunkRead`, so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
+injectively, a graph by its name, a queue list's ranking by the list, and a transcript ingest by the calling runner's
+lane (`transcript_lane`) and each chunk its batch names (`transcript_chunk`) — a lane holds no row until its first mark,
+and a record may name a chunk the hub no longer holds. A new decision graduates its unit with `lock_keys`, or `lock_set`
+when it spans namespaces; the existing ones reach it through the legacy handles `IChunkExclusiveWrites.locked_work_refs`
+and `IWriteGraphRepository.locked_name`, each its own type — never an `ILockedChunkRead`, so a handle that holds no
+chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, and the ceiling's self-engagement, each take a

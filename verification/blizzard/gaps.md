@@ -337,15 +337,27 @@ hermetic, network-free CI tier's reach.
 
 ## Per-key non-serialization of keyed write locks
 
-`keyed_locks` rows (`bzh:store-exclusive-write`) serialize two ingests of one pointer, or two first mints of one graph
-name. On Postgres the keyed rows themselves do not exclude writers of different keys, but the current production
+`keyed_locks` rows (`bzh:store-exclusive-write`) serialize two ingests of one pointer, two first mints of one graph
+name, two decisions on one queue list's ranking, and two transcript pushes on one runner's lane or one chunk's
+transcript. On Postgres the keyed rows themselves do not exclude writers of different keys, but the current production
 tenant-open guard serializes ordinary writes within one tenant before they reach those rows. The SQLite tiers cannot
 observe independent key-row locks, or a concurrent insert of one key losing to an `IntegrityError`.
 `blizzard:postgres-uow-concurrency` checks same-key contention and ordering on pre-existing lock rows, not either gap.
 
-Standing in for a tier: the per-key structure, asserted at `blizzard:component-test` on what is written — each ingest
-locks only the `keyed_locks` rows of its own pointers — together with the same-key interleaving, which SQLite does
-exercise. Do not add a Postgres tier to close this.
+Standing in for a tier: the per-key structure, asserted on what each decision declares, together with the same-key
+interleavings, which SQLite does exercise:
+
+- **Work-ref ingest** — at `blizzard:component-test`, each ingest locks only the `keyed_locks` rows of its own pointers.
+- **Queue ranking** — at `blizzard:unit-test`, `tests/test_queue_service.py`'s
+  `test_reposition_locks_both_chunks_and_the_list_ranking_and_returns_the_order_it_leaves` and
+  `test_reorder_names_its_chunks_first_then_the_rest_in_current_order_in_one_locked_unit` assert each move declares its
+  list's ranking lock beside its chunks.
+- **Transcript ingest** — at `blizzard:component-test`, `tests/test_transcript_ingest_service.py`'s
+  `test_an_ingest_locks_its_runners_lane_and_each_chunk_its_batch_names_once` asserts one declaration of the calling
+  runner's `transcript_lane` key and a `transcript_chunk` key per chunk the batch names; the same-key interleavings are
+  `tests/test_transcript_ingest_race.py`.
+
+Do not add a Postgres tier to close this.
 
 ## Tenancy's migrations and locks under Postgres
 
