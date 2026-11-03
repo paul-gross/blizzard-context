@@ -280,7 +280,9 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   `tests/postgres_locks/test_withdrawal_races.py` bypasses tenant admission and races withdrawal against ingest and
   group in both orders, with graph-key omission controls; the group withdrawal-first omission is skipped because its row
   lock also serializes that order. The group omission in the other order exposes a holder not included in the waiter's
-  locked rows. These assertions are not recorded runs or an exhaustive pointer-writer, deletion or lock-order proof.
+  locked rows. `tests/postgres_locks/test_group_pointer_decisions.py` also holds the graph key directly without tenant
+  admission: group waits, while omitting its graph lock permits completion. These assertions are not an exhaustive
+  pointer-writer, deletion or lock-order proof.
 - **Proposal graph choice.** Minting acceptance allocates a pointer, then opens `locked_work_refs` and resolves the
   default graph under config admission and the graph-name key on that connection. The closure, item and chunk writes use
   that transaction. `tests/postgres_locks/test_proposal_default_graph_race.py` holds config-authoring without tenant
