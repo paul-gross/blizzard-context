@@ -313,8 +313,12 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   both read the old mark and insert the same usage fact; the registry lock serializes the inserts but does not recheck
   the mark. The mark setter's key protects only its own transaction. This race is distinct from the accepted crash
   window in [crash correctness](../crash-correctness/hub.md#runner-fact-ingest-the-high-water-mark-persisted-per-fact).
-  Other fact kinds and a transaction-bound repair, its lock order and proof remain open. An outer scoped write cannot
-  wrap the existing independent writes: it would hold the tenant lock while the inner writes wait for it.
+  An outer scoped write cannot wrap the existing independent writes: it would hold the tenant lock while the inner
+  writes wait for it. Lease, escalation and question facts use chunk-fenced paths; usage, events, external usage and
+  local pause have different admission and persistence paths. Lease mint takes chunk before registry; runner external
+  usage takes registry before its usage key. A repair must retain these orders, recheck the runner mark on the fact's
+  connection, and defer publication until commit. It must also preserve earlier committed facts if a later fact fails.
+  The complete lock set, transaction-bound repair and contention proof remain open.
 - **Lease mint versus retirement.** `ChunkRouteStore.record_lease_minted` takes the chunk row then the host registry key
   and rechecks runner and host retirement before its epoch admission on that connection. Retirement takes the registry
   key before writing lifecycle facts. `tests/postgres_locks/test_lease_mint_retirement_fence.py` holds that key without
