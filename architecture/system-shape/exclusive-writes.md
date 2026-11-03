@@ -325,6 +325,10 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   holding that row without tenant admission while retirement waits; after the referrer commits, retirement refuses.
   Omitting retirement's secret lock permits it to commit first. Apply, import, removal and multi-record lock ordering
   still need their own audit and proof.
+- **Project slug reuse.** `tests/postgres_locks/test_slug_decisions.py` exercises a project move and a competing create
+  on the vacated slug through their transaction bodies without tenant admission. The create waits and claims the slug
+  after the move commits, removing the former-slug row; omitting its slug lock yields a premature taken refusal. Other
+  slug kinds and bulk-operation ordering remain open.
 - **Host fact batch.** `HostFactIngestService` holds one scoped transaction from its mark read through usage and mark
   writes. The adapter takes host registry then host high-water, rechecks retirement, and takes usage keys on that same
   connection. `tests/test_host_fact_lane.py` exercises concurrent pushes, an omission control and batch rollback on
