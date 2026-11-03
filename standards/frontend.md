@@ -17,8 +17,8 @@ prettier — any formatting concern that matters is expressed as an eslint rule.
 churning the tree on whichever ran last.
 
 **Scope.** Binds `web/`'s Angular workspace and `blizzard/tests`'s TypeScript. The eslint-and-no-prettier half binds
-both; the single-test-runner half binds the unit/component tier only, and the service and e2e tiers' tooling is the
-matrix's to name — [../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
+both; the single-test-runner half binds the unit/component tier only, and the service tier's tooling is the matrix's to
+name — [../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
 
 **Detect.** A prettier dependency, a `.prettierrc`, or a `format` script in the Angular workspace; a second test runner
 beside vitest in the unit/component tier.

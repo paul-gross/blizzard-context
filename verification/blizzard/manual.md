@@ -191,7 +191,7 @@ name, the switcher, and the no-access screen each behave as stated.
 ### `blizzard:manual-external-usage-probe`
 
 **Surface.** No CI tier can prove a declared subscription's provider's real usage-endpoint response shape: the tier
-rules forbid service and e2e tests from touching the network, and a provider's endpoint is typically undocumented and
+rules forbid service tests from touching the network, and a provider's endpoint is typically undocumented and
 unversioned, so it can drift with no changelog to catch it. Every CI-tier test exercises subscription-usage sampling
 against a stubbed transport, and this probe is what ties that stub back to what the provider actually returns. A runner
 with no `[[subscription]]` declared has exactly one slug to name, the legacy `anthropic` slug (Claude Code); one with
@@ -210,12 +210,12 @@ reports for the same account, within the natural few-second sampling skew.
 ### `blizzard:manual-credential-renewal`
 
 **Surface.** No CI tier can prove `codex app-server`'s `account/read` call actually renews a real OpenAI login: the tier
-rules forbid service and e2e tests from touching the network or a real credential file, and `blizzard:service-test`'s
-own concurrent-writer proof runs against `mock-codex app-server`, never the real binary. This method is what ties that
-proof back to the real vendor CLI. The renewal seam is not accepted until this method has been run and passed at least
-once, on a login whose rotation the operator accepts — forking a copy of a real login into a scratch `CODEX_HOME`
-invalidates that login's own refresh token, so this method is run against a login the operator is prepared to have
-rotated, never a throwaway copy.
+rules forbid service tests from touching the network or a real credential file, and `blizzard:service-test`'s own
+concurrent-writer proof runs against `mock-codex app-server`, never the real binary. This method is what ties that proof
+back to the real vendor CLI. The renewal seam is not accepted until this method has been run and passed at least once,
+on a login whose rotation the operator accepts — forking a copy of a real login into a scratch `CODEX_HOME` invalidates
+that login's own refresh token, so this method is run against a login the operator is prepared to have rotated, never a
+throwaway copy.
 
 **Setup.** A runner with an `openai`-provider `[[subscription]]` declared, whose credential file (`~/.codex/auth.json`
 by default, or the declaration's own `credentials_path`) is inside the renewer's lead window — at or near its own
@@ -872,7 +872,7 @@ not measured.
   `--set service.telemetry.metrics.level=none` — rather than editing the file.
 - A hub traced through it: an env-local hub from a feature env, never the hosted hub, started with
   `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:<port>` and `[tracing] sweep_seconds = 1` / `settle_seconds = 0` so
-  steps export as they close. `blizzard`'s e2e harness (`tests/fleet_launchers.py`'s `run_hub`) is such a hub.
+  steps export as they close.
 
 **Steps.**
 

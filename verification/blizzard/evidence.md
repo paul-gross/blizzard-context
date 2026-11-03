@@ -58,8 +58,8 @@ name — the guard fails on the shared body, and past it the stale-lease behavio
 **Rule.** Pin every production path at a gating tier — a path the gate never drives is unpinned, whatever the upper
 tiers show.
 
-**Why.** `blizzard:e2e` and `blizzard:journey` gate no PR and no push, so a path covered only there can be deleted with
-every merge gate green.
+**Why.** `blizzard:journey` gates no PR and no push, so a path covered only there can be deleted with every merge gate
+green.
 
 **Detect.** A config key read from the operator's toml and dropped before its consumer changes nothing any tier can see.
 `tests/test_config_keys_reach_a_gating_tier.py` is the floor for the config-key half — every key of every

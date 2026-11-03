@@ -160,8 +160,8 @@ Observed on `claude` 2.1.288 to 2.1.289:
 ## Claude Code transcript normalization
 
 `blizzard-mock`'s `ClaudeTranscriptWriter` (`blizzard-mock/src/blizzard_mock/harness/facades/_transcript.py`)
-deliberately mints none of the shapes involved, so no mock-driven `blizzard:service-test` or `blizzard:e2e` exercises
-the normalizer, which could drift from a future Claude Code CLI with every tier green.
+deliberately mints none of the shapes involved, so no mock-driven `blizzard:service-test` exercises the normalizer,
+which could drift from a future Claude Code CLI with every tier green.
 `tests/ui/transcript-tab.spec.ts::test_chunk_transcripts_tab_browser` does not close it either: it seeds hand-authored
 `TurnSegmentView` JSON straight to `POST /api/fleet/transcripts`, so no normalizer output ever reaches it. OpenCode's
 own `opencode.transcript.normalizer` is a separate code path this gap does not reach either way — it is exercised by
@@ -218,8 +218,8 @@ reference compose image already makes possible.
 ## The worker's push to a real forge
 
 The worker, not the runner, pushes its branch before declaring it (`blizzard runner artifact commit`), and
-`blizzard:e2e` and `blizzard:crash-sweep` only ever exercise that push against the `file://` mock origins the fixture
-workspace mints, never against a real forge.
+`blizzard:service-test` and `blizzard:crash-sweep` only ever exercise that push against the `file://` mock origins the
+fixture workspace mints, never against a real forge.
 
 Standing in for a tier: a push failure specific to a real remote — auth, a GitHub branch-protection rule, network — is
 exercised by the dogfood deployment (`workspace:/context/project/singleton-instance.md`), whose build transcripts show
@@ -246,8 +246,8 @@ Standing in for a tier: a live routine run against a real fleet, whose delivered
 and judged against what the axis entry declares — the dogfood deployment
 (`workspace:/context/project/singleton-instance.md`) is where that evidence is produced, and a prompt rewrite owes one
 before its wording is treated as proven. Do not answer this with a tier that scores prompt prose against a rubric, and
-do not read the scripted e2e path as evidence about the model: it asserts the machinery a model's output flows through,
-which is the half that already has a tier.
+do not read the scripted mock-harness path as evidence about the model: it asserts the machinery a model's output flows
+through, which is the half that already has a tier.
 
 ## The review-fail, deliver-conflict, and inherited-CI-failure loops' prompt behavior
 
@@ -528,8 +528,8 @@ follow `hub/delivery/actions/landing/fast_forward.py` and the forge ref calls in
 Its park timeout and human-merge claims follow `hub/delivery/actions/landing/park.py` and the wait cadence in
 `hub/domain/delivery/flows.py`; rollback settlement is enforced by the downgrade of the hub revision adding the park
 wait, which refuses while a repository or an open submission holds a policy other than `merge-on-checks`. The mock-forge
-e2e and policy crash sweep reach the principal paths, but no tier verifies an operator's push-CI configuration or the
-manual orphan-branch pruning step.
+service specs and policy crash sweep reach the principal paths, but no tier verifies an operator's push-CI configuration
+or the manual orphan-branch pruning step.
 
 ## The runner host's invariant read under Postgres
 

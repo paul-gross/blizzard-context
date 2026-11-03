@@ -111,9 +111,9 @@ host. This is the command alone; the node's session overhead is not in it:
 The median is 600s, command only; every run finished under the 1800s default with all scopes `complete`. A change that
 touches only one daemon scope costs one preparation (7 to 10 minutes), and each further daemon scope adds another.
 
-The method cannot see: any tier above `unit` (`blizzard:component-test`, `blizzard:service-test`, `blizzard:e2e`,
-`blizzard:journey`, `blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, the
-paths `[tool.mutmut].do_not_mutate` excludes from every scope, and the body of any decorated function other than a lone
+The method cannot see: any tier above `unit` (`blizzard:component-test`, `blizzard:service-test`, `blizzard:journey`,
+`blizzard:crash-sweep` all stay unmutated), `src/blizzard/tools/`, which no garden scope names, the paths
+`[tool.mutmut].do_not_mutate` excludes from every scope, and the body of any decorated function other than a lone
 `@staticmethod` or `@classmethod` — mutmut's `_skip_node_and_children` skips it because the trampoline copy would repeat
 the decorator's side effects. A property is the case that matters; `bzh:property-delegates` keeps decision logic out of
 it. A survivor is a candidate, not a confirmed gap; `bzh:mutation-survivor-classification` in

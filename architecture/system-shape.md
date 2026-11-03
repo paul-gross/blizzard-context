@@ -53,9 +53,9 @@ in the seam's package imports the loop that consumes it. House each adapter by t
   composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
   `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
 
-**Why.** Seams let tests bind the blizzard-mock fleet in place of the real stack — the entire service and e2e strategy
-runs seams-mocked, spending no tokens and touching no network. An adapter kept apart from the core and its siblings
-stays replaceable: neither changes when it does.
+**Why.** Seams let tests bind the blizzard-mock fleet in place of the real stack — the entire service strategy runs
+seams-mocked, spending no tokens and touching no network. An adapter kept apart from the core and its siblings stays
+replaceable: neither changes when it does.
 
 **Exception.** The runner workspace-provider seam's winter adapter spans `winter_provider.py` and `winter_cli.py`, flat
 beside `basic_provider.py` and the shared `git.py` in `runner/environments/internal/`, selected by

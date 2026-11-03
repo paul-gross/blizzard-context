@@ -13,8 +13,8 @@ The winter-binding spoke of the test-tier hub [`../test-tiers.md`](../test-tiers
 The tier command is `BLIZZARD_WINTER_BINDING=1 uv run pytest -m winter_binding tests/winter/`
 (`mise run winter-binding`) — the winter workspace provider driven against the real `winter` CLI. It runs locally and
 nowhere else, and no CI workflow checks out a winter source. The platform tiers (`blizzard:service-test`,
-`blizzard:e2e`, `blizzard:crash-sweep`) run on the built-in `basic` provider over a winter-free fixture, so this tier is
-the only place the binding is proven.
+`blizzard:crash-sweep`) run on the built-in `basic` provider over a winter-free fixture, so this tier is the only place
+the binding is proven.
 
 It needs the sibling provisioned `blizzard-mock` worktree and a winter source — `$BLIZZARD_MOCK_WINTER_SOURCE`, else the
 walk up from the blizzard root, discovered only in `tests/winter/support.py`. Unset `BLIZZARD_WINTER_BINDING` skips
