@@ -98,7 +98,9 @@ option of `cli` and `events.open`.
 A fleet test that drives delivery passes its `repository()` result to
 `runnerHosts.create({ runnerRepositories: { [repo.name]: repo.origin! } })` before minting the graph: the host then
 clones that mock-forge origin and its `originHead`, `originTree`, `originLog`, `originFile`, and `originMessage` read
-the same bare git truth the forge merges. The default minted toy origins remain for runner-only tests.
+the same bare git truth the forge merges. The default minted toy origins remain for runner-only tests. The `secondForge`
+fixture starts a separate test-owned mock forge, with its own client and bare origins, and stops it when the test ends.
+Register its repositories through the hub API and pass their actual origins to `runnerHosts.create`.
 
 For a pasteable escalation command, call `runnerHost.shell(command, input)`: the handle executes the command as printed,
 feeds the input to stdin, and uses the host's isolated, mock-fenced environment. A spec never spawns it.
@@ -144,6 +146,15 @@ A `runnerHost` boots `stepped`: `step()` and `stepHost()` each resolve once the 
 then reads. It never waits on a timer for a pass the host would run on its own. The halted and multi-runner examples
 live in `tests/service/runner/host-halted-runners.spec.ts`; their foreign-identity and persisted host-fact specimens
 live in `tests/service/runner/store/host-halted-runners.spec.ts`.
+
+For deterministic hub flow turns, use `test.use({ isolation: 'fresh-hub', flowStepped: true })`. The test-only fixture
+holds the hub flow driver and its clock instead of running the driver on a timer. `api.flowStep()` runs one driver pass
+to completion and returns its clock time and outcome counts; `api.flowAdvance(seconds)` advances the fixed clock and
+returns `now` without running a pass. Advance to a pending poll's due time, then step and read the public state. Both
+methods require a fresh hub, and the controls are enabled only by `flowStepped`. For a fleet test, step the runner host
+as well when its work is needed; see `tests/service/fleet/flow-turns.spec.ts`. A stepped hub cannot restart over its
+existing store, because its fixed clock would move backwards; `freshHub.reset()` starts with a new empty store and
+clock.
 
 In a `collectorTest` case, poll `collector.decision(traceId)` for the short trace while the worker is held at its
 checkpoint. Its unmarked trace-specific probe reads the collector's cached sampling decision; only a returned `dropped`

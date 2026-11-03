@@ -24,15 +24,84 @@ hub with no setup; and `fleet/` as `service-fleet`, a real runner host enrolled 
 shared real hub, with a `service-fleet-<profile>` for each subfolder named after a hub profile. One `service-*`
 selection reaches all of them; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python
 half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`) and keeps only the cases
-whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks, forge
-old fields), wire parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk
-findings, transcript segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health,
-credential renewal, runner self-test), and nothing else; their shared launchers live in `tests/mock_fleet_support.py`.
-Both exercise a running daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this
-tier's. The Python half needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts,
-stub IdP, and `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
+whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks), wire
+parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk findings, transcript
+segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health, credential renewal, runner
+self-test), and nothing else; their shared launchers live in `tests/mock_fleet_support.py`. Both exercise a running
+daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this tier's. The Python half
+needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts, stub IdP, and
+`mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
+
+**Old forge fields**
+(`tests/service/hub/forge-old-fields.spec.ts::test_the_old_fields_resolve_to_forges_with_a_warning_at_every_door`) uses
+the real CLI and hub to check three warnings and ordered events, preservation on omitted fields, and `--clear`.
+
+**Forge budget** (`tests/service/fleet/forge-budget.spec.ts`) drives a stepped host and a fresh hub sharing one forge
+budget across annotation, landing and close. `test_a_low_budget_turns_the_sweep_away_while_a_landing_proceeds` proves
+the sweep spends nothing, the landing succeeds, and the close has exactly one deferred attempt at reset, no closure and
+an unretired intent after another drain.
+`test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[rate_limited]` and
+`test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[secondary_rate_limited]` prove each refusal's
+retry and eventual landing. The `blizzard:unit-test` companions are `tests/test_forge_budget.py` and
+`tests/test_github_work_source_rate_gate.py`; the `blizzard:component-test` companions are
+`tests/test_forge_registry.py` and `tests/test_flow_driver.py`.
+
+**Flow turns** (`tests/service/fleet/flow-turns.spec.ts`) uses public submission, turn and landing histories; the
+component checker exercises flow invariants independently.
+
+- `test_two_repositories_land_side_by_side` proves disjoint flows keep turning and land independently.
+- `test_two_chunks_on_one_branch_land_in_arrival_order` proves arrival order survives a hub restart.
+- `test_a_garden_delivery_lands_while_a_chunk_is_held_on_a_branch` proves a zero-flow garden visit can complete.
+- `test_two_chunks_each_landing_both_repositories_both_land` proves two visits share both flows and both land.
+- `test_a_pending_chunk_yields_its_branch_until_its_next_poll` proves a brisk visit takes each slow polling gap.
+- `test_a_chunk_whose_runner_is_gone_lands_and_records_its_findings` proves hub-only landing and finding recording.
+- `test_a_chunk_paused_at_a_hub_node_takes_no_turn_until_resumed` observes the unacknowledged runner completion and
+  proves the paused visit takes no turn before resumption.
+
+**Landing order** (`tests/service/fleet/landing-order.spec.ts`):
+
+- `test_a_library_ranked_first_lands_before_its_consumer` proves ranked order defeats slug order and captures terms.
+- `test_a_second_project_lands_the_same_repositories_in_its_own_order` proves each project's independent ordering.
+- `test_one_ranked_repository_lands_before_two_unranked_in_slug_order` proves ranked then slug order.
+- `test_a_relinked_repository_keeps_its_position` proves unlink and relink retain position and affect landing.
+- `test_an_exhausted_gap_is_renumbered_and_the_order_lands` proves exhausted midpoint gaps are renumbered and land.
+- `test_a_reorder_while_a_chunk_waits_behind_another_reaches_only_later_chunks` proves both queued chunks retain their
+  captured order, while the later chunk takes the new order.
+- `test_an_interrupted_turn_keeps_the_terms_its_first_turn_took` proves captured terms survive a reorder and hub
+  restart.
+- `test_an_exported_document_applies_back_writing_nothing` proves unchanged apply outcomes and positions; the exact
+  no-position-fact-write proof remains in component-tier `tests/test_landing_policy_doors.py`.
+
+**Fast-forward landing** (`tests/service/fleet/fast-forward.spec.ts`) drives a real host against owned forge origins:
+
+- `test_ahead_fast_forward_and_protected_base[False]` and `test_ahead_fast_forward_and_protected_base[True]` prove an
+  ahead branch lands without a PR and protection escalates instead.
+- `test_diverged_base_creates_and_cleans_proven_candidate[diverged]`,
+  `test_diverged_base_creates_and_cleans_proven_candidate[stale-candidate]`, and
+  `test_diverged_base_creates_and_cleans_proven_candidate[protected-landing]` prove candidate creation, cleanup and
+  protected-candidate escalation.
+- `test_fast_forward_stands_when_second_forge_refuses_merge_method` proves the first forge's PR-free landing survives
+  the second forge's refusal.
+- `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` proves missing checks time out without
+  advancing the base.
+
+**Parked landing** (`tests/service/fleet/park.spec.ts`) exercises a real host, hub and mock forge:
+
+- `test_park_waits_past_node_timeout_then_records_human_merge[merge]`,
+  `test_park_waits_past_node_timeout_then_records_human_merge[squash]`, and
+  `test_park_waits_past_node_timeout_then_records_human_merge[rebase]` — the wait outlasts the node timeout and the
+  person's merge records the landed revision.
+- `test_closed_parked_change_escalates_then_requeue_opens_fresh_change[closed]` and
+  `test_closed_parked_change_escalates_then_requeue_opens_fresh_change[closed-requeue]` — a closed change escalates;
+  requeue opens a fresh change.
+- `test_parked_repository_holds_landing_order_until_person_merges[library-parked]` and
+  `test_parked_repository_holds_landing_order_until_person_merges[consumer-parked]` — landing waits for the parked
+  repository in either order.
+- `test_second_parked_repository_has_its_own_review_clock` — the first change's aged marker cannot time out the second.
+- `test_park_timeout_then_person_merge_is_adopted_on_requeue` — timeout escalates, then requeue adopts the person's
+  squash merge.
 
 **Hub action nodes** (`tests/service/fleet/actions/hub-actions.spec.ts` and
 `tests/service/fleet/hub-actions-refusal.spec.ts`) run a real host against a tenant's mock-forge repository. The land
