@@ -120,4 +120,5 @@ an idle fleet pays the whole diff every interval, changed or not.
 **See also.** [`./crash-correctness.md`](./crash-correctness.md) `bzh:steppable-loop` — the pass this rule gates is one
 of its step functions — and `bzh:injected-clock` there, whose clock the floor reads. [`./read-cost.md`](./read-cost.md)
 `bzh:bulk-reconstitution` — what the pass owes per item once it does run. `bzh:lane-contract` above — what a lane owes
-around its body.
+around its body. [`./repository-access.md`](./repository-access.md) `bzh:pass-reads-one-snapshot` — which of the pass's
+reads must come from one snapshot.

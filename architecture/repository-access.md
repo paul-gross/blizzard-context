@@ -189,6 +189,43 @@ withdrawal rolls the delete back after subscribers have already dropped the chun
 
 **See also.** `bzh:unit-of-work`, `bzh:short-locked-unit`.
 
+## Take a pass's deciding reads from one snapshot (`bzh:pass-reads-one-snapshot`)
+
+**Rule.** When a pass derives exported or decided state from several reads, let the domain open one read snapshot and
+take every read the decision relies on inside it or before it opens; never take one after the snapshot opens and outside
+it.
+
+**Why.** Outside a read transaction each statement sees the store at its own moment — pysqlite issues no `BEGIN` before
+a `SELECT`, and Postgres under `READ COMMITTED` takes a snapshot per statement — so two reads can straddle one commit
+and the pass decides on a state that never existed. A read taken before the snapshot opens is contained in it; one taken
+after the snapshot opens, outside it, can see a row the snapshot cannot, and the pass moves its cursor past a row its
+decision never saw.
+
+**Scope.** The form is per Protocol: `IReadTraceSteps.snapshot` and `IReadStepCorpus.snapshot`
+(`blizzard/src/blizzard/hub/domain/observability/tracing/repository.py`) yield the same reads pinned to one
+`HubStoreConnections.read_transaction` (`blizzard/src/blizzard/hub/store/errors.py`), and a snapshot of a snapshot is
+the same transaction. It cannot span repositories: a read through another seam runs on its own connection even inside
+the block, so the pass orders that read before the snapshot opens. A read that only labels or looks up what the
+snapshot's rows already decide — graphs, runner names, project and work-source labels, a tenant's name — may sit outside
+it. A single-statement read is already one moment, and a write decision is governed by `bzh:write-reestablishes-read`
+([./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)), not here.
+
+**Detect.** A pass that reads candidates, facts, or a row set its cursor moves past through separate repository calls
+with no `snapshot()` around them; a read through a sibling seam placed after the snapshot opens; a multi-statement
+corpus read on a bare connection. `blizzard/tests/test_trace_store.py` and `blizzard/tests/test_egress_sweep.py` commit
+a fact between two of a pass's reads and fail on a straddled read; a new pass is judged at review.
+
+**Do.** `EgressSweep._steps_pass` (`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) reads the usage
+page through `IReadEgress`, then opens `IReadTraceSteps.snapshot` and reads the window and the late chunks' facts inside
+it; `read_window` (`blizzard/src/blizzard/hub/domain/observability/tracing/window.py`) reads its candidates and their
+facts in one snapshot.
+
+**Don't.** Open the snapshot for the window, then read the usage page through `IReadEgress` before the late chunks'
+facts: a late usage row committed between the two is read, and the usage cursor passes it, while the facts the step is
+rewritten from lack it, so the step's totals miss it for good.
+
+**See also.** `bzh:unit-of-work`, `bzh:write-reestablishes-read`, `bzh:probe-gated-pass` ([./lanes.md](./lanes.md)).
+
 ## Keep sibling adapters independent (`bzh:sibling-adapter-independence`)
 
 **Rule.** Coordinate distinct repositories through their domain-facing seams, not by importing or invoking a sibling's
