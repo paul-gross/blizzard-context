@@ -71,7 +71,7 @@ outside it, because its wire models mirror a schema they never export, so nothin
 
 Editing one of these docstrings stales `openapi/` and the generated TypeScript client; landing the regenerated pair in
 the same change is `bzh:generated-client` in [`./frontend.md`](./frontend.md) — the same class of owed landing as a wire
-or e2e change, not a fresh obligation of its own.
+change, not a fresh obligation of its own.
 
 ## Detect
 

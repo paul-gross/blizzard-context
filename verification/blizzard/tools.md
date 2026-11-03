@@ -38,7 +38,7 @@ also mints a real Claude-Code-shaped JSONL transcript per run; the mechanism, an
 owned at `src/blizzard_mock/harness/README.md` §"Conversation transcripts". It also answers the runner selftest's prose
 prompts, keyed on the selftest's lease identity; the contract is owned at `src/blizzard_mock/harness/README.md` §"Runner
 selftest". A scenario can therefore assert `GET /runners/{runner_id}/api/leases/{lease_id}/transcript` serves turns from
-a mock-produced file — at `blizzard:service-test`, which reaches the runner's local HTTP API without `blizzard:e2e`'s
+a mock-produced file — at `blizzard:service-test`, which reaches the runner's local HTTP API without the
 delivery/browser machinery.
 
 The stub OAuth IdP (blizzard-mock-idp) login-dances the hub's `hub/auth/oauth/` seam over a real wire with no tokens or
@@ -49,7 +49,7 @@ a code for the levered profile), and a `/_levers` identity-scripting plane; cont
 ### tool:fixture-workspace
 
 The blizzard-mock-fixture scaffold: mints bare `file://` origins and an empty `workspace/` — winter-free by default, the
-environment the service tier, e2e tier, and sweep run against on the basic provider. With `--winter-source` (or
+environment the service tier and sweep run against on the basic provider. With `--winter-source` (or
 `$BLIZZARD_MOCK_WINTER_SOURCE`) it also clones a winter framework and initializes a real disposable winter workspace
 over the origins, for `blizzard:winter-binding`; no winter source is ever discovered implicitly.
 

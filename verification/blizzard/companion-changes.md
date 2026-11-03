@@ -4,27 +4,6 @@ A surface can land on one side of a boundary and go silently unserved on the oth
 in the same commit for that not to happen. Across the repo boundary, the domain statement an author-facing surface owes
 is the companion that `bzh:owed-claims-landed` in [./evidence.md](./evidence.md) requires of a `blizzard` change.
 
-## An e2e change updates the registry (`bzh:e2e-change-extends-registry`)
-
-**Rule.** Renaming, deleting, or porting a `tests/e2e/` test lands its matching registry change in the same change —
-never as a follow-up. The tier takes no new test (`bzh:service-tests-in-playwright`). A scenario's entry lives in the
-spoke under [`./e2e-scenarios/`](./e2e-scenarios/) that owns the reader question it answers; the registry hub
-[`./e2e-scenarios.md`](./e2e-scenarios.md) routes to it and carries no entries itself.
-
-**Why.** The registry is what the drift check reads, so a renamed or removed scenario left behind in it turns that check
-red for every change behind it, and the fix ends up written by an author who never touched the scenario.
-
-**Detect.** `blizzard-context:registry-drift` is the mechanical companion that catches a stale registry entry.
-
-**Don't.** A `blizzard` commit that ports an e2e scenario to a `tests/service/fleet/` spec with this message, and no
-companion `blizzard-context` change under `verification/blizzard/e2e-scenarios/`:
-
-```text
-test(fleet): port the landing-order scenario
-
-Registry entry to drop once the port settles.
-```
-
 ## A wire change extends the mock (`bzh:wire-change-extends-mock`)
 
 **Rule.** A hub-to-runner wire change extends the mock counterpart — `blizzard-mock`'s mock hub and mock runner — and

@@ -14,7 +14,6 @@ short command form and the inventory of method ids are in `../blizzard.md`.
 | [`./commands/rehearsal.md`](./commands/rehearsal.md)             | You are running the published-release checks or the focused Postgres unit-of-work concurrency proof                                                          |
 | [`./commands/mutation.md`](./commands/mutation.md)               | You are running or reading a mutation-testing scope                                                                                                          |
 | [`./commands/mock.md`](./commands/mock.md)                       | You are verifying `blizzard-mock` itself                                                                                                                     |
-| [`./e2e-scenarios.md`](./e2e-scenarios.md)                       | You need `blizzard:e2e` — the one row with no section in these spokes, its scenarios registered there instead                                                |
 
 Each method's detail lives in exactly one `### <method-id>` section in a leaf file, which a group spoke may reach
 through its own routing table — a reader holding only the id finds it by that heading.

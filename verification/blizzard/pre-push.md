@@ -11,7 +11,7 @@ through `blizzard:gate-full`, while a fleet runner reproduces a red job narrowed
 what the node it is on instructs — linter-class checks plus the targeted tests — never the full `gate` or `gate-full`.
 
 **Why.** `blizzard:gate` is the shared `gate` job alone; the upper tiers are the only readers of surfaces nothing else
-type-checks — board `data-testid` and `data-*` attributes in `tests/e2e/`, wire field names off a live API response in
+type-checks — board `data-testid` and `data-*` attributes in `tests/ui/`, wire field names off a live API response in
 `tests/service/`, the kiosk demo mode (`?demo=true`) — and every pull request runs them, so renaming one and pushing on
 a green `blizzard:gate` buys a red pull request. The full gate is an hour and more of serial tiers, past any fleet
 session's shell cap, so CI — which every fleet delivery opens a pull request into — is where a fleet change's full suite
@@ -32,7 +32,6 @@ run `mise run rehearsal`. From a fleet node: the linter-class rows over what cha
 | `gate / …` (every gate job)                                      | `mise run gate`                      |
 | `upper-tiers / service tier (blizzard:service-test)`             | `mise run service-test`              |
 | `upper-tiers / kill-9 crash sweep (blizzard:crash-sweep)`        | `mise run crash-sweep`               |
-| `upper-tiers / e2e acceptance loop (blizzard:e2e)`               | `mise run e2e`                       |
 | `upper-tiers / ui (blizzard:ui)`                                 | `mise run ui`                        |
 | `upper-tiers / acceptance journey (blizzard:journey)`            | `mise run journey`                   |
 | `upper-tiers / hub image smoke (blizzard:image-smoke)`           | `mise run image-smoke`               |
@@ -44,12 +43,12 @@ run `mise run rehearsal`. From a fleet node: the linter-class rows over what cha
 The sweep for a rename, before the tiers: grep the surfaces only they read.
 
 ```bash
-grep -rn --exclude-dir=node_modules '<old-testid>\|<old-field>' tests/e2e/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
+grep -rn --exclude-dir=node_modules '<old-testid>\|<old-field>' tests/ui/ tests/service/ tests/journey/ tests/crash/ web/projects/hub/src/app/demo/
 ```
 
-**Don't.** Rename a `data-testid` and push on a green `blizzard:gate` — the e2e scenario reading the old handle fails
-the pull request's `e2e` check. From a fleet node, answer a red `gate / …` job with `mise run gate` — the table's row,
-which runs the whole pytest suite.
+**Don't.** Rename a `data-testid` and push on a green `blizzard:gate` — the UI scenario reading the old handle fails the
+pull request's `ui` check. From a fleet node, answer a red `gate / …` job with `mise run gate` — the table's row, which
+runs the whole pytest suite.
 
 ## Board test handles
 
@@ -70,10 +69,10 @@ synthesized as `` `${testid()}-key` ``, so it carries a named spec —
 ## The browser tiers run the built bundle
 
 The browser scenarios drive the built bundle `blizzard hub host` serves out of `src/blizzard/static/`, never the
-sources, so `mise run e2e` and `mise run ui` carry `depends = ["web-build"]` and must not be reached past with a bare
-`pytest tests/e2e/` or `npx playwright test --project='ui*'`. The hazard is not an unbuilt tree, which fails loudly
-before the first assertion, but a bundle present and stale, which fails quietly: the scenario exercises the previous UI
-and can go green against a layout that no longer exists.
+sources, so `mise run ui` carries `depends = ["web-build"]` and must not be reached past with a bare
+`npx playwright test --project='ui*'`. The hazard is not an unbuilt tree, which fails loudly before the first assertion,
+but a bundle present and stale, which fails quietly: the scenario exercises the previous UI and can go green against a
+layout that no longer exists.
 
 ## A red drift check means stage the output (`bzh:drift-stage-not-route-around`)
 

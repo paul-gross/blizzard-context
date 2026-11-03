@@ -1946,7 +1946,7 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
             Finding(
                 "A",
                 "warn",
-                f"blizzard checkout not found at {blizzard_root} — checks A, B1, B2, C, C2, D, D2 skipped for blizzard-scoped citations",
+                f"blizzard checkout not found at {blizzard_root} — checks A, B1, B2, C2, D, D2 skipped for blizzard-scoped citations",
             )
         )
     if blizzard_mock_root.is_dir():
@@ -1969,7 +1969,7 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
         interpreter = _resolve_interpreter(checkouts["blizzard"])
         if interpreter is None:
             findings.append(
-                Finding("B1", "warn", "no python interpreter resolvable (.venv or uv) — checks B1, B2, C skipped")
+                Finding("B1", "warn", "no python interpreter resolvable (.venv or uv) — checks B1, B2 skipped")
             )
         else:
             for marker in MARKERS:
