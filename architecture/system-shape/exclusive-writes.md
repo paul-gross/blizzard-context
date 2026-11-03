@@ -295,12 +295,12 @@ are relative to `blizzard/src/blizzard` unless they start with `tests/`.
   config-authoring without tenant admission and inserts a graph retirement fact; the run waits and refuses after commit,
   while a config-lock omission permits mint. This is a participant-level test with a direct fact winner, not a proof of
   every API or authoring race. The baseline read takes a tenant-scoped key for the project, routine name and scope slug;
-  direct finding-set creation and garden delivery take the same key before insertion. Delivery takes its chunk row
-  first; the run takes config-authoring before the baseline key and queue and dependency-graph keys afterward.
-  `tests/postgres_locks/test_finding_baseline_contention.py` tests each participant against the key without tenant
-  admission and includes omission controls. `test_routine_baseline_decision.py` races an admitted routine run against
-  direct set creation in both orders, with omission controls; delivery against a complete run, all config competitors
-  and the cross-family lock order remain unresolved.
+  direct finding-set creation and garden delivery take the same key before insertion. Delivery takes the baseline key
+  before its chunk row; the run takes config-authoring before the baseline key and queue and dependency-graph keys
+  afterward. `tests/postgres_locks/test_finding_baseline_contention.py` tests each participant against the key without
+  tenant admission and includes omission controls. `test_routine_baseline_decision.py` races an admitted routine run
+  against direct set creation in both orders, with omission controls; delivery against a complete run, all config
+  competitors and the cross-family lock order remain unresolved.
 - **Standalone chunk mint.** `ChunkRecordStore.mint` admits only pointerless chunks; ingest with pointers uses
   `mint_locked` under work-ref admission. `tests/test_chunk_record_store_bulk_reads.py` checks the standalone refusal.
   Complete pointer-writer and lifecycle participation still requires audit.
