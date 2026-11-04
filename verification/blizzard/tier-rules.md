@@ -126,10 +126,10 @@ test.
 from the folder, never from a marker.
 
 - `tests/unit/` and `tests/component/` mirror `src/blizzard/`: a test of `src/blizzard/runner/harness/opencode/paths.py`
-  is `tests/unit/runner/harness/opencode/test_paths.py`. A folder under a tier folder is named for a package, a
-  directory holding an `__init__.py`, under `src/blizzard/`; a file may sit directly in the tier folder when it spans
-  hub and runner. A component test of a route that seeds through a store adapter mirrors the route
-  (`tests/component/hub/api/`), not the adapter.
+  is a test module named for it in the matching `runner/harness/opencode/` folder of `tests/unit/`. A folder under a
+  tier folder is named for a package, a directory holding an `__init__.py`, under `src/blizzard/`; a file may sit
+  directly in the tier folder when it spans hub and runner. A component test of a route that seeds through a store
+  adapter mirrors the route (the `hub/api/` folder of `tests/component/`), not the adapter.
 - `tests/guards/` holds the unit-tier tests that scan the repository's files, such as a workflow file, a contract or the
   source tree. Its sub-folders mirror nothing.
 - Every folder under a tier folder is a package.
@@ -148,8 +148,8 @@ hand-written marker or be forgotten.
 without an `__init__.py` and a new module at the `tests/` root with a usage error naming the file. The placement
 judgements are in `tests/tier_layout.py`, proven by `tests/guards/test_tier_layout.py`.
 
-**Do.** `tests/unit/hub/domain/` for a unit test of a hub domain module, with no marker. The exemplar's tests show each
-placement ([../../exemplars/index.md](../../exemplars/index.md)).
+**Do.** The `hub/domain/` folder of `tests/unit/` for a unit test of a hub domain module, with no marker. The exemplar's
+tests show each placement ([../../exemplars/index.md](../../exemplars/index.md)).
 
 **Don't.** Add a flat `tests/test_<thing>.py`, mark a test by hand to give it a tier, or put a component test of a route
 in the folder of the adapter it seeds through.
