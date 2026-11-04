@@ -232,6 +232,33 @@ dir logs to `daemon.log` beside its store, and the mock fleet's dirless daemons 
 **Don't.** `subprocess.Popen([...], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)` for a daemon the test then waits
 on — the guard fails the unit tier, and past it the daemon wedges once its log fills the pipe.
 
+## A spawned daemon binds port 0 and says where (`bzh:daemon-binds-port-zero`)
+
+**Rule.** A daemon a test spawns binds `--port 0` and publishes where it landed with `--listening-file`; the test reads
+the daemon's URL from that file, never picks the port itself.
+
+**Why.** A port picked test-side — bound to `0`, read, released, then handed to the daemon — is free only until someone
+else binds it. Under xdist someone else does: another worker's daemon or the kernel's next ephemeral bind takes the port
+in the gap, and the daemon fails to bind, or a client reaches the wrong daemon. Only the process that binds can know the
+port is its own.
+
+**Detect.** `tests/test_daemon_port_zero.py` fails the unit tier on a test-side port chooser in `tests/**/*.py` or
+`tests/harness/**/*.ts` — a function named for one, or a bind on `0` that returns the port after closing its socket.
+
+**Do.** Start every hub, runner host, and mock daemon on `--port 0 --listening-file <path>`, deleting `<path>` first —
+the daemon never removes it on stop — and read the URL from it once it appears; a startup failure publishes no file, so
+fail on the process exiting with its log tail. Thread the URL, not a port, through every helper. A restart pins the port
+the former start published, as `--port` beside `--listening-file`, so peers already holding the URL reach it again; a
+runner host's host file keeps `port = 0`. An in-process server binds a socket on `0`, holds it, and hands it to uvicorn
+as `sockets=`. An address nothing may answer comes from the `refused_url` fixture, a socket bound without listening — a
+connect is refused and no daemon can take the port.
+
+**Don't.** `free_port()` or a bind-probe-close helper handing a port to a daemon. Two exceptions stand, each the only
+way to start what it starts: otelcol's receiver and health ports in `tests/harness/collector.ts`, since otelcol takes
+its ports from config and publishes none; and `tests/rehearsal/installation.py`'s `baseline_daemon_port`, for a daemon's
+first start under a baseline release older than `--listening-file` — that exception lasts until every supported release
+ships the flag.
+
 ## A visual change is proved by a real render (`bzh:visual-change-needs-a-render`)
 
 **Rule.** Verify a change whose observable effect is visual — layout, styling, what a component renders — by at least
