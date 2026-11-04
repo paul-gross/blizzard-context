@@ -196,10 +196,10 @@ disabled (`[transcripts] ship = false`).
 `test_count_by_class_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend every component
 test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
 `ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan.
-`tests/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty-one `chunk_id`-filtered fact tables'
-indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composites by exact name, the
-artifacts/graph-choices/transcript- segments/chunk-work-refs/close-intents hot-path reads, and each of
-`activity_facts_since`'s eighteen per-source ordered reads. `tests/test_chunk_usage_statements.py` and its
+`tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty-one
+`chunk_id`-filtered fact tables' indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composites
+by exact name, the artifacts/graph-choices/transcript- segments/chunk-work-refs/close-intents hot-path reads, and each
+of `activity_facts_since`'s eighteen per-source ordered reads. `tests/test_chunk_usage_statements.py` and its
 `EXPLAIN QUERY PLAN` case over the spend `_stmt` builder assert `ix_usage_facts_recorded_at_id` the same way.
 `tests/test_store_read_index_gate.py`'s scan gate and `tests/component/runner/store/test_store_indexes.py`'s named-index
 pins assert the same `EXPLAIN QUERY PLAN` shape across every hub and runner read method's own table vocabulary,
