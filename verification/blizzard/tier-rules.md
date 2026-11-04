@@ -19,6 +19,9 @@ Playwright Test spec (`bzh:service-tests-in-playwright`). The mocks the upper ti
 | **UI**             | `blizzard:ui`             | The built board a test's hub serves, in a real Chromium page at a stated viewport, against the real hub on a hub profile, with real runner hosts behind it where the scenario needs them.                                                                | Playwright Test + Chromium; the viewport fixtures in `tests/harness/ui.ts` |
 | **Winter binding** | `blizzard:winter-binding` | The winter workspace provider against the real winter CLI, plus one chunk landed over `provider="winter"`. Local-only, never in CI; the platform tiers run on the basic provider instead.                                                                | pytest, gated on `BLIZZARD_WINTER_BINDING=1`                               |
 
+Each pytest tier is a folder: `unit/` and `guards/` give the unit tier, `component/` the component tier
+(`bzh:mirrored-test-layout`). Service, UI and winter-binding tests sit where their own rules place them.
+
 ## Hermetic by construction
 
 Service and UI tests never spend a real token and never touch the network: the harness seam binds a mock coding harness,
@@ -71,8 +74,9 @@ runner.
 testing that behavior. Migration tests still need the replay to prove the revisions themselves.
 
 **Detect.** The head-replay guard installed by `tests/suite_plugin.py` refuses a direct `upgrade("head")` from an
-unmigrated store in a non-migration `test_*.py` module, naming that module and the helper to use. Upgrades from a pinned
-older revision and production initialization pass.
+unmigrated store in a non-migration `test_*.py` module at the root of `tests/` or under its `unit/`, `component/` or
+`guards/` folder, naming that module and the helper to use. Upgrades from a pinned older revision and production
+initialization pass.
 
 **Do.** `migrated_hub_at(db_url)` before opening a hub store for an adapter test.
 
@@ -115,6 +119,42 @@ test.
 `tests/`.
 
 **See also.** `./gaps.md`; `../../exemplars/index.md` for the exemplar's migration test.
+
+## A pytest test sits in the folder that mirrors what it tests (`bzh:mirrored-test-layout`)
+
+**Rule.** A unit or component test sits in a folder of `blizzard/tests/` whose name gives its tier, and takes that tier
+from the folder, never from a marker.
+
+- `tests/unit/` and `tests/component/` mirror `src/blizzard/`: a test of `src/blizzard/runner/harness/opencode/paths.py`
+  is a test module named for it in the matching `runner/harness/opencode/` folder of `tests/unit/`. A folder under a
+  tier folder is named for a package, a directory holding an `__init__.py`, under `src/blizzard/`; a file may sit
+  directly in the tier folder when it spans hub and runner. A component test of a route that seeds through a store
+  adapter mirrors the route (the `hub/api/` folder of `tests/component/`), not the adapter.
+- `tests/guards/` holds the unit-tier tests that scan the repository's files, such as a workflow file, a contract or the
+  source tree. Its sub-folders mirror nothing.
+- Every folder under a tier folder is a package.
+- A test declares no `unit` or `component` marker under a tier folder.
+- A new `test_*.py` module is never added directly under `tests/`: the modules already there are a shrinking list in
+  `tests/root_test_modules.py`, each leaving it as it moves into a tier folder.
+- The exemplar tree follows the same rule with `exemplar/` in place of `src/blizzard/` and an empty root list. Its tier
+  folders are packages, and `exemplars/python/tests/` itself is not, so pytest imports them as top-level packages.
+- Service, crash, UI, rehearsal and winter-binding tests keep the folders their own rules name.
+
+**Why.** A test is found by the path of the code it proves, and a tier read from a folder cannot drift from a
+hand-written marker or be forgotten.
+
+**Detect.** The collection hook in `tests/suite_plugin.py` adds the folder's marker before `-m` selects, so
+`pytest -m <tier>` sees the folder tier, and refuses a declared tier marker, a folder naming no package, a folder
+without an `__init__.py` and a new module at the `tests/` root with a usage error naming the file. The placement
+judgements are in `tests/tier_layout.py`, proven by `tests/guards/test_tier_layout.py`.
+
+**Do.** The `hub/domain/` folder of `tests/unit/` for a unit test of a hub domain module, with no marker. The exemplar's
+tests show each placement ([../../exemplars/index.md](../../exemplars/index.md)).
+
+**Don't.** Add a flat `tests/test_<thing>.py`, mark a test by hand to give it a tier, or put a component test of a route
+in the folder of the adapter it seeds through.
+
+**See also.** `../../exemplars/conformance.md` for the exemplar tree.
 
 ## Two tenants on one hub: the isolation scenario
 

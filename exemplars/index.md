@@ -62,12 +62,12 @@ Playwright service spec also follows the [service-test rulebook](../verification
 | --------------------------------------------------------- | ---------------------------------------------------------------- |
 | `blizzard/tests/service/hub/analytics-events.spec.ts`     | Writing a Playwright service spec                                |
 | `blizzard/tests/harness/checks/runner/round-trip.spec.ts` | Writing a runner-side Playwright service spec, on a stepped host |
-| `test_permit_rules.py`                                    | Testing a domain model's rules                                   |
-| `test_permit_service.py`                                  | Testing a use-case service                                       |
-| `test_permit_store.py`                                    | Testing a hub store adapter                                      |
-| `test_permit_api.py`                                      | Testing a route's HTTP contract                                  |
-| `test_disk_floor.py`                                      | Testing a runner loop step across the moves it makes             |
-| `test_injected_clock.py`                                  | Writing an architectural gate as a test                          |
+| `unit/hub/domain/permits/test_model.py`                   | Testing a domain model's rules                                   |
+| `unit/hub/domain/permits/test_service.py`                 | Testing a use-case service                                       |
+| `component/hub/store/internal/test_permit_store.py`       | Testing a hub store adapter                                      |
+| `component/hub/api/test_permits.py`                       | Testing a route's HTTP contract                                  |
+| `component/runner/disk/test_floor.py`                     | Testing a runner loop step across the moves it makes             |
+| `guards/test_injected_clock.py`                           | Writing an architectural gate as a test                          |
 
 ## Keeping them true
 
