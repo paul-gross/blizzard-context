@@ -133,14 +133,15 @@ that only the expected behavior would emit before asserting its absence.
 
 **Why.** A sleep encodes machine speed; immediate absence proves only that the system has not acted yet.
 
-**Detect.** `tests/eslint.config.mjs` rejects `waitForTimeout`, `setTimeout`, `setInterval`, and `node:timers`; review
-absence assertions with no causal barrier.
+**Detect.** `tests/eslint.config.mjs` rejects `waitForTimeout`, `setTimeout`, `setInterval`, and `node:timers`, and
+under `tests/service/` and `tests/ui/` rejects `Date.now()` and a zero-argument `new Date()`; review absence assertions
+with no causal barrier, and review each reasoned disable for whether its subject really is elapsed time.
 
-**Do.** Await the event stream or poll the client for the state the case can name. A wait whose subject is wall-clock
-expiry, such as a trailing spend window, polls the runner read that names the expiry, with a deadline covering the
-configured window; it never counts host passes or sleeps.
+**Do.** Await the event stream or poll the client for the state the case can name. A wait whose subject is a window
+ageing out asks for `clockMode: 'controlled'`, advances the stack's clock past the window with `clock.advance`, steps
+the pass that judges it, and reads the state. Every instant a spec builds comes from `clock.now()`.
 
-**Don't.** Sleep before asserting that no event was emitted.
+**Don't.** Sleep before asserting that no event was emitted. Poll with a deadline wide enough to cover a window.
 
 Hold a mock worker's turn open at `workerCheckpoint`, not a sleep. Change a sample by `vendorUsage.set` on a credential
 the spec minted, followed by `stepHost()`.
