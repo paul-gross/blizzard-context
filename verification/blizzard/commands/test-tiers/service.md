@@ -193,7 +193,8 @@ failing a shaping the domain applies but the wire does not surface; its componen
 **The acceptance loop** (`tests/service/fleet/acceptance-loop.spec.ts`) runs a real hub and stepped runner against a
 test-owned mock-forge origin. Its build, review, and land steps finish under both mock harnesses; a trace-only companion
 checks the hub roots, runner invocations, platform request chain and planted-secret containment. At the component tier,
-`tests/test_completion_assembly_attachments.py` pins route-token containment at span and artifact assembly.
+`tests/component/runner/operator/test_completion_assembly_attachments.py` pins route-token containment at span and
+artifact assembly.
 
 - `test_acceptance_loop_one_chunk_ingest_to_landed` — verifies `done`, a merged PR naming the issue and chunk, and a
   committed file and merge reference in the bare origin's `main`.
@@ -251,8 +252,8 @@ browser assertion belongs to [`blizzard:ui`](./ui.md#blizzardui).
 and an OpenCode review, with a stopped-and-restarted host at the build-judge boundary and another restart during the
 review's held worker checkpoint. Runner lease reads establish session/model/effort/version and declaration continuity;
 hub usage and derived analytics agree per node, and each committed file lands exactly once. The trace companion checks
-both invocation identities. At the component tier, `tests/test_runner_restart_resume.py` pins resume-intent persistence
-and clearing.
+both invocation identities. At the unit tier, `tests/unit/runner/loop/test_restart_resume.py` pins resume-intent
+persistence and clearing.
 
 - `test_mixed_lineage_crosses_a_harness_boundary_and_survives_two_operator_restarts` — one traversal crosses the two
   harnesses and survives both operator restarts without retrying the OpenCode lease or duplicating either origin commit.
