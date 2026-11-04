@@ -96,8 +96,8 @@ the rows into one per name — a node keyed `<graph>/<node>` — and never sums 
 
 These bodies bound what counts as a gap:
 
-- The product's epic registry is the record of what is already planned. A capability, use, or saving the registry
-  already commits to is not a gap this axis reports; it is intent already on its way.
+- The product's plans are the record of what is already planned. A capability, use, or saving a plan already commits to
+  is not a gap this axis reports; it is intent already on its way.
 - Code that violates a constraint [`../architecture/`](../architecture/index.md) declares is out of range for every
   scope, `architecture` included: that drift is the [`architecture`](./architecture.md) axis's finding. What
   `architecture` holds is the opposite reading of the same ground — whether the constraints themselves, and the
