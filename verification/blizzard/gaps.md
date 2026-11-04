@@ -351,7 +351,7 @@ Standing in for a tier: the per-key structure, asserted on what each decision de
 interleavings, which SQLite does exercise:
 
 - **Work-ref ingest** — at `blizzard:component-test`, each ingest locks only the `keyed_locks` rows of its own pointers.
-- **Queue ranking** — at `blizzard:unit-test`, `tests/test_queue_service.py`'s
+- **Queue ranking** — at `blizzard:unit-test`, `tests/unit/hub/domain/operations/test_queue_service.py`'s
   `test_reposition_locks_both_chunks_and_the_list_ranking_and_returns_the_order_it_leaves` and
   `test_reorder_names_its_chunks_first_then_the_rest_in_current_order_in_one_locked_unit` assert each move declares its
   list's ranking lock beside its chunks.
