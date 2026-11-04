@@ -149,7 +149,7 @@ owes: an entry reaching no terminal → blizzard-context:/domain/graphs/edges.md
       second arm; pinned by tests/unit/hub/domain/graph/test_validation.py::test_entry_reaching_no_terminal_is_a_warning_not_an_error
 owes: hub-node key `poll_jitter:` omitted → blizzard-context:/standards/hub-nodes/outcome-protocol.md, the delegate
       spoke that states the other polling defaults; nodes.md gains no hunk; pinned by a case in
-      tests/test_hub_command_node.py asserting the delegate default applies
+      tests/unit/hub/test_command_node.py asserting the delegate default applies
 ```
 
 **Don't.** A `blizzard` commit that parses, stores, serves, and tests a new node key, with this message and no companion

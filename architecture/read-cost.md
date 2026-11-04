@@ -72,12 +72,12 @@ rows it reads per key: a read inside the page fetching each key's whole fact his
 `bzh:newest-per-key-read`'s.
 
 **Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
-as `blizzard/tests/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do, and a count that
-grows between the sizes is the finding. Row volume is judged by reading: a `list_all()` or `load_all_*` call in a
-handler, a page sliced in Python from an every-id read, or a per-request fan-out whose row count no `limit` bounds, with
-no reason beside it or in the handler's docstring stating why the page's ids would not do; a drain that calls a
-`limit`-accepting store read with no `limit`. The fix is the page's own ids through `bzh:bulk-reconstitution`'s plural
-form, a `limit` on the drain, or the reason written at the site.
+as `blizzard/tests/component/hub/api/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do,
+and a count that grows between the sizes is the finding. Row volume is judged by reading: a `list_all()` or `load_all_*`
+call in a handler, a page sliced in Python from an every-id read, or a per-request fan-out whose row count no `limit`
+bounds, with no reason beside it or in the handler's docstring stating why the page's ids would not do; a drain that
+calls a `limit`-accepting store read with no `limit`. The fix is the page's own ids through `bzh:bulk-reconstitution`'s
+plural form, a `limit` on the drain, or the reason written at the site.
 
 **Do.** `blizzard/src/blizzard/hub/api/chunks.py`'s `list_chunks` is keyset-paged and its statement count is flat across
 fixture sizes; its `load_all_facts()` and `record.list_all()` fleet reads carry their reason — in the handler's
@@ -109,9 +109,10 @@ track the live fleet, not the deployment's age.
 such as a done prerequisite, is resolved by id through `bzh:bulk-reconstitution`'s plural form, not by widening the live
 read. A periodic pass's corpus read stays [`./lanes.md`](./lanes.md) `bzh:probe-gated-pass`'s.
 
-**Detect.** Measured: `blizzard/tests/test_live_set_read.py` builds two fixtures that differ only in terminal-chunk
-count and asserts `count_queries` and `count_rows_read` from `blizzard/tests/support.py` are flat and the response
-identical. By reading: a `TERMINAL_STATUSES` filter applied in Python to an every-chunk status read on such a path.
+**Detect.** Measured: `blizzard/tests/component/hub/test_live_set_read.py` builds two fixtures that differ only in
+terminal-chunk count and asserts `count_queries` and `count_rows_read` from `blizzard/tests/support.py` are flat and the
+response identical. By reading: a `TERMINAL_STATUSES` filter applied in Python to an every-chunk status read on such a
+path.
 
 **Do.** `ChunkFactsStore.load_live_statuses` excludes stopped, completed, PR-closed, and newest-movement-is-done chunks
 in its query; the queue reads bound their position and record lookups by the live candidates it names.
@@ -142,13 +143,13 @@ set or every key a filter leaves, the whole table included. A read whose consume
 — a fact projection reconstituted for the domain to derive from — is outside it: the history is that read's answer.
 
 **Detect.** Measured: `blizzard/tests/support.py`'s `count_rows_read` over the same keys at two history depths, as
-`blizzard/tests/test_newest_fact_reads.py` does — a row count above the key count, or one that grows with the depth, is
-the finding, and a statement count cannot show it. By reading: a select ordered ascending by `id` with no `limit`, whose
-rows a loop folds into a dict keyed by the key column so that later rows overwrite earlier ones; a comment excusing that
-fold as newest-fact-wins; a `[-1]` or `[0]` taken from a whole-history select fetched for nothing else; a whole-history
-select fetched only to test whether any row is newer than a bound. The fix is the form the rule names, batched through
-`id_batches` when the keys are caller-supplied; for the newer-row test, an `EXISTS` in the statement that needs the
-answer.
+`blizzard/tests/component/hub/test_newest_fact_reads.py` does — a row count above the key count, or one that grows with
+the depth, is the finding, and a statement count cannot show it. By reading: a select ordered ascending by `id` with no
+`limit`, whose rows a loop folds into a dict keyed by the key column so that later rows overwrite earlier ones; a
+comment excusing that fold as newest-fact-wins; a `[-1]` or `[0]` taken from a whole-history select fetched for nothing
+else; a whole-history select fetched only to test whether any row is newer than a bound. The fix is the form the rule
+names, batched through `id_batches` when the keys are caller-supplied; for the newer-row test, an `EXISTS` in the
+statement that needs the answer.
 
 **Do.** `blizzard/src/blizzard/hub/store/internal/newest_fact.py`'s `newest_fact_select` joins a fact table to a
 `max(id) ... GROUP BY key` subquery over the keys asked for, and the stores' plural newest reads share it.
