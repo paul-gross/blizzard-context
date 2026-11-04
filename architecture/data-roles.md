@@ -159,7 +159,7 @@ orchestration instead and carries no marker.
 
 ## Detect
 
-`tests/test_layering.py` fails the unit tier on each constraint, one check per constraint:
+`tests/guards/test_layering.py` fails the unit tier on each constraint, one check per constraint:
 
 - A data class with no marker or two, a marker on an inferred-role class or a non-data class, a hand-written class that
   only stores fields, or a data class built by a call.

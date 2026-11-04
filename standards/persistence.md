@@ -41,15 +41,15 @@ contract exposes the gap.
   whose `seq` the hub de-duplicates against a mark of its own, so a reissued `seq` would read as already seen. Postgres
   needs no equivalent: its `autoincrement=True` compiles to a sequence-backed `SERIAL`, which never reuses a value. The
   runner outboxes (`outbound_buffer`, `transcript_outbound_buffer`) are not in this list — their `seq` comes from
-  `outbox_counters`. `test_dialect_table_options_are_all_admitted` in `tests/test_layering.py` fails a table that sets a
-  dialect-specific option without being named here.
+  `outbox_counters`. `test_dialect_table_options_are_all_admitted` in `tests/guards/test_layering.py` fails a table that
+  sets a dialect-specific option without being named here.
 
 **Detect.** A dialect-specific column type, function, or `text()` SQL; a test asserting behavior only one backend gives;
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit
 total `order_by`; streaming (`yield_per`/`stream_results`) set on a connection rather than on one statement's execution
 — mechanically flagged by `contracts/ast-grep/rules/statement-scoped-streaming.yml`. An insert into `outbound_buffer` or
 `transcript_outbound_buffer` that goes around `insert_outbox_row` — `test_every_outbox_row_is_inserted_through_the_seam`
-in `tests/test_layering.py` fails it.
+in `tests/guards/test_layering.py` fails it.
 
 **Do.** `ChunkFactsStore.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
 because the fact projection it reconstitutes carries the chunk's pause history and a consumer indexes that list's tail.

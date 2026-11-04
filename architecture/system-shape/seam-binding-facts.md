@@ -32,8 +32,8 @@ adapter's declaration loads on the catalog's first call. A third harness costs t
 its own package:
 
 - its declaration and section kind in the catalog (`harness/wiring.py`);
-- its own row in `_RUNNER_PACKAGE_LAYERS` in `blizzard/tests/test_layering.py`, whose edges the unused-edge check holds
-  to what the binding's imports walk — a binding package without a row fails the undeclared-node check;
+- its own row in `_RUNNER_PACKAGE_LAYERS` in `blizzard/tests/guards/test_layering.py`, whose edges the unused-edge check
+  holds to what the binding's imports walk — a binding package without a row fails the undeclared-node check;
 - its id in the ast-grep rule's id lists and binding-module `ignores`, held to the catalog by a unit test in the same
   module.
 

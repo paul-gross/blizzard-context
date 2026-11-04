@@ -86,8 +86,8 @@ only in `runner/store/scoped.py`, the guard, the exempt member's module, and run
 mark. `blizzard/src/blizzard/runner/store/internal/invariants.py` reaches the store through the `runner_audit` member it
 is handed, never by spelling the mark.
 
-**Detect.** The host-store check in `blizzard/tests/test_layering.py` fails the unit tier on a runner adapter naming a
-host-scoped table, a host adapter naming a runner-scoped one outside the admitted cross-kind write, and the
+**Detect.** The host-store check in `blizzard/tests/guards/test_layering.py` fails the unit tier on a runner adapter
+naming a host-scoped table, a host adapter naming a runner-scoped one outside the admitted cross-kind write, and the
 runner-unscoped mark spelled anywhere outside its admitted modules; the same module's planted-tree cases prove it
 catches each form. By eye: a second exempt member, or a member added for a read a bound adapter could serve.
 

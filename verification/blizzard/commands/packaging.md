@@ -139,7 +139,7 @@ written into the postgres volume before the restart is still readable. `upper-ti
 request and tag, like `blizzard:image-smoke`. The docker-free static compose contract (every durable path a named
 volume, the postgres health dependency, `trusted_proxies` matching the declared network subnet, the hub naming a
 postgres `BZ_HUB_DB_URL`, and — `test_hub_has_no_published_ports_only_reachable_through_the_proxy` — the hub publishing
-no port of its own) is pinned at `blizzard:unit-test` in `tests/test_compose_deployment.py`.
+no port of its own) is pinned at `blizzard:unit-test` in `tests/guards/test_compose_deployment.py`.
 
 ### blizzard:collector-config
 

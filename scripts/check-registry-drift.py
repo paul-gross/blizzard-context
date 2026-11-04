@@ -36,7 +36,7 @@ same shape check A's missing-checkout case uses.
 Check H compares each frontend layer table in the docs
 (`architecture/frontend-structure/placement.md`) against the data its gate holds
 (`web/scripts/structural-gate.js`): the same units and the same edges per unit. The Python
-layer data has one home, `tests/test_layering.py`, which the docs point at. A missing table or gate name is a fail, since the comparison cannot be made
+layer data has one home, `tests/guards/test_layering.py`, which the docs point at. A missing table or gate name is a fail, since the comparison cannot be made
 without it. An absent blizzard checkout is a skip for H, the caller's, the same shape as A
 and G.
 

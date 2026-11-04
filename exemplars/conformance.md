@@ -35,7 +35,7 @@ patterned off it.
 ## Detect
 
 - blizzard's own gates failing over `blizzard/exemplars/`. The Python half rides `blizzard:lint`, `blizzard:format`,
-  `blizzard:typecheck`, and the pytest tiers, where `blizzard/tests/test_layering.py` also holds it to the
+  `blizzard:typecheck`, and the pytest tiers, where `blizzard/tests/guards/test_layering.py` also holds it to the
   `bzh:prose-budget` caps and the `bzh:data-roles`, `bzh:domain-core`, and `bzh:internal-visibility` scans;
   `blizzard:exemplar-check` runs the strict Angular type-check, eslint, the specs, and `web:structural-gate` over the
   web half, and fails when the committed client stand-in differs from the one generated from the exemplar router.

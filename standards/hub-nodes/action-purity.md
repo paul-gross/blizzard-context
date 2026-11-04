@@ -41,7 +41,7 @@ an HTTP client, or a `blizzard.foundation` module not named above; an attribute 
 opens a connection; an allowlisted module that reaches a process or the network, or any of `os` but `os.urandom`, behind
 it; a `Visit` holding a `list`, `dict`, `set`, `bytearray`, a mapping that is not a `MappingProxyType`, or a dataclass
 that is not frozen; an action whose constructor takes an argument; a delivery marker whose content departs from the
-shapes above. `blizzard/tests/test_layering.py` fails the unit tier on each import and the transitive reach, and
+shapes above. `blizzard/tests/guards/test_layering.py` fails the unit tier on each import and the transitive reach, and
 `blizzard/tests/unit/hub/delivery/test_action_registry.py` on the visit's runtime values and the constructions; planted
 cases in both prove each check fires. The allowlist is the test's own literal: a later change that widens it names the
 module in its own spec.

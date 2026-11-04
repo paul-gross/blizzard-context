@@ -47,8 +47,8 @@ kept passing — leaving the claim vacuous for the case it was meant to cover.
 **Why.** A test whose body matches a sibling's asserts only what the sibling already asserts, so its name is a claim
 nothing observes, and the behavior that name promises goes unpinned while both cases read as covered.
 
-**Detect.** `tests/test_no_duplicate_test_bodies.py` fails on any two cases sharing a body; a deliberate cross-tier
-re-run is declared in that file rather than tolerated.
+**Detect.** `tests/guards/test_no_duplicate_test_bodies.py` fails on any two cases sharing a body; a deliberate
+cross-tier re-run is declared in that file rather than tolerated.
 
 **Don't.** `test_reap_expires_a_stale_lease` written by copying `test_reap_skips_a_fresh_lease` and changing only the
 name — the guard fails on the shared body, and past it the stale-lease behavior the name promises stays unobserved.
@@ -62,7 +62,7 @@ tiers show.
 green.
 
 **Detect.** A config key read from the operator's toml and dropped before its consumer changes nothing any tier can see.
-`tests/test_config_keys_reach_a_gating_tier.py` is the floor for the config-key half — every key of every
+`tests/guards/test_config_keys_reach_a_gating_tier.py` is the floor for the config-key half — every key of every
 operator-written config dataclass, nested blocks included, must be named by a gating-tier test, and the guard's own
 inventory is at [`./commands.md`](./commands/test-tiers/unit.md#blizzardunit-test). Naming a key is weaker than pinning
 its threading, which `tests/unit/runner/test_loop_build.py` does case by case for the keys it covers.

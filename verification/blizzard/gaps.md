@@ -25,9 +25,9 @@ score prose without reading the code.
 
 ## Per-block prose caps
 
-`bzh:prose-budget`'s caps are checked by `blizzard/tests/test_layering.py` on `blizzard/exemplars/python` only. No
-command checks `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, or `blizzard-mock/tests`, where a large backlog of
-over-cap blocks stands.
+`bzh:prose-budget`'s caps are checked by `blizzard/tests/guards/test_layering.py` on `blizzard/exemplars/python` only.
+No command checks `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, or `blizzard-mock/tests`, where a large backlog
+of over-cap blocks stands.
 
 Standing in for a tier: a change shows that no block it added or edited is over cap, counting with
 `blizzard/scripts/prose_caps.py`. Gating the whole tree is not the fix, because it fails on prose the change never

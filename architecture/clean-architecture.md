@@ -20,16 +20,16 @@ filesystem, or network — with frameworks, stores, and transports outside it, d
 swap untouched.
 
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
-app. `tests/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module, importing
-fastapi, starlette, sqlalchemy, click, httpx2, os, shutil, subprocess, or tempfile. A harness binding package
+app. `tests/guards/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module,
+importing fastapi, starlette, sqlalchemy, click, httpx2, os, shutil, subprocess, or tempfile. A harness binding package
 (`runner/harness/claude_code/`, `runner/harness/opencode/`, `runner/harness/opencode_v2/`) is an adapter, not a concept
 package: it may bind a process or the filesystem, so it is exempt from the `os`, `shutil`, `subprocess`, and `tempfile`
 half of the check and still held to the framework five. The binding set is named explicitly, so a new binding fails the
 gate until it is named. Any other module's stdlib-driver import needs a reasoned entry in the per-module exemption map
-in `tests/test_layering.py`, which admits only the packages it names; an entry whose module no longer imports a package
-it admits is stale and fails the gate. Pure path arithmetic (`posixpath`, `PurePosixPath`) needs no exemption, and the
-import check cannot see pathlib I/O (`Path.read_text`, `Path.mkdir`). A runner domain-core module is any module of a
-`bzh:domain-package-layers` runner node outside an `internal/` package (`_runner_domain_core_files`): a concept
+in `tests/guards/test_layering.py`, which admits only the packages it names; an entry whose module no longer imports a
+package it admits is stale and fails the gate. Pure path arithmetic (`posixpath`, `PurePosixPath`) needs no exemption,
+and the import check cannot see pathlib I/O (`Path.read_text`, `Path.mkdir`). A runner domain-core module is any module
+of a `bzh:domain-package-layers` runner node outside an `internal/` package (`_runner_domain_core_files`): a concept
 package's public surface holds its models, ports, and the services carrying its rules, and the adapter binding a
 framework or driver sits in its `internal/`. The layer gate already keeps every such module off `blizzard.runner.store`
 and `blizzard.runner.api`, which no row lists. The same layer walker fails a `hub/domain/` module importing
@@ -143,7 +143,7 @@ substitute a fake store, a virtual clock, and a mock forge without patching modu
 **Scope.** The injected clock (`bzh:injected-clock`) is a member of this rule, not an exception to it.
 
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
-singleton read directly. `tests/test_layering.py` fails the unit tier on any of:
+singleton read directly. `tests/guards/test_layering.py` fails the unit tier on any of:
 
 - `blizzard.runner.composition` imported, in any form, anywhere outside the composition roots named below — fail-closed,
   with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
@@ -194,9 +194,9 @@ harness-bundle builders, which only `runtime.py` — a composition root — may 
 carrier extended with the child-process launcher and the loopback transport from `runner/cli/children.py`, so it reads
 its clocks and launcher from one carrier and a test hands HTTP and launcher fakes in one `obj`.
 
-This prose rule is wider than the mechanical roster: `tests/test_layering.py::_COMPOSITION_ROOTS` stays the narrower set
-of modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a CLI module
-outside it is not a violation.
+This prose rule is wider than the mechanical roster: `tests/guards/test_layering.py::_COMPOSITION_ROOTS` stays the
+narrower set of modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a
+CLI module outside it is not a violation.
 
 The same reasoning extends to a helper a command's own root calls into rather than repeating, provided the root passes
 in whatever varies:
@@ -253,7 +253,8 @@ fails any caller that supplies less and any member the collaborator starts readi
 they act as their own roots.
 
 **Detect.** A step or domain service typed by a bundle while its body reads a handful of the bundle's members.
-`tests/test_layering.py` fails the unit tier on each of these, and plants a temporary tree to prove each check fires:
+`tests/guards/test_layering.py` fails the unit tier on each of these, and plants a temporary tree to prove each check
+fires:
 
 - `LoopContext` named, in any form, under `blizzard/src/blizzard/` outside the loop driver and the composition roots.
 - A store-bundle name under `runner/` outside `stores.py`, the loop driver, the composition roots, `runner/api/`, and
@@ -305,7 +306,7 @@ instead of the package's public surface, so the adapter can no longer change wit
 `bzh:dependency-injection` names; there is no per-import exemption — a crossing is fixed, or its importer is a root.
 
 **Detect.** A module outside `<pkg>/` importing a module under `<pkg>/internal/`, by absolute, relative, or
-`from <pkg> import internal` form. `tests/test_layering.py`'s generic check fails the unit tier on it, over every
+`from <pkg> import internal` form. `tests/guards/test_layering.py`'s generic check fails the unit tier on it, over every
 `internal/` under `blizzard/src/blizzard/`, naming the owner.
 
 **Do.** `blizzard/src/blizzard/foundation/store/batching.py` is the public home of the id-batching both daemons' stores
@@ -334,17 +335,17 @@ runner modules and the runner loads hub modules through it. The wire stops being
 a second copy of an enum — or of a predicate both daemons apply — drifts unseen until the runner accepts what the hub
 refuses.
 
-**Detect.** `tests/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard package, on
-any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and on a hub or
-runner composition root loading the other daemon. The same module fails an import of a kernel vocabulary name through
-any module but its defining `foundation/` module. The ast-grep rule `bzh:shared-kernel` fails a vocabulary defined under
-`wire/`: an enum class, or a `Literal` of two or more values, whether an annotation or an alias. A closed vocabulary
-typed as plain `str` is not seen and stays a judgment call. The layering test also fails a `foundation/` or `auth_core/`
-module that no `wire/` module reaches and that only one daemon does. Reach follows imports through the kernel, and a
-`cli` module counts as the sides of the daemon modules that reach it; a `tools` module is no side, and `internal/` and
-docstring-only `__init__` modules are not judged. The fix moves the module into that daemon's domain, or gives it an
-allowlist entry with its reason, which the check drops once the entry is stale. The check sees whole modules only: a
-one-sided rule living as a name in a shared module is not caught and stays a judgment call. A business rule in
+**Detect.** `tests/guards/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard
+package, on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and on
+a hub or runner composition root loading the other daemon. The same module fails an import of a kernel vocabulary name
+through any module but its defining `foundation/` module. The ast-grep rule `bzh:shared-kernel` fails a vocabulary
+defined under `wire/`: an enum class, or a `Literal` of two or more values, whether an annotation or an alias. A closed
+vocabulary typed as plain `str` is not seen and stays a judgment call. The layering test also fails a `foundation/` or
+`auth_core/` module that no `wire/` module reaches and that only one daemon does. Reach follows imports through the
+kernel, and a `cli` module counts as the sides of the daemon modules that reach it; a `tools` module is no side, and
+`internal/` and docstring-only `__init__` modules are not judged. The fix moves the module into that daemon's domain, or
+gives it an allowlist entry with its reason, which the check drops once the entry is stale. The check sees whole modules
+only: a one-sided rule living as a name in a shared module is not caught and stays a judgment call. A business rule in
 `foundation/` that only one daemon applies is that daemon's rule placed in the kernel; the fix moves it into that
 daemon's domain. Two such names stay by decision, and a sweep does not re-raise them: `Flags.fleet_answer` and
 `Flags.with_fleet_answer`, the two ends of one hub→runner exchange kept together as one protocol; and `is_tenant_name`,
@@ -393,7 +394,7 @@ every runner module outside the edges in one of the runner's nodes; import anoth
 table row allows it. Every hub package may also import `kernel`.
 
 The data lives in the code, not here: the hub domain's table is `_DOMAIN_PACKAGE_LAYERS` and the runner's is
-`_RUNNER_PACKAGE_LAYERS`, both in `blizzard/tests/test_layering.py`, each mapping a node to the nodes its row may
+`_RUNNER_PACKAGE_LAYERS`, both in `blizzard/tests/guards/test_layering.py`, each mapping a node to the nodes its row may
 import. Every hub package may also import `kernel`; the runner has no shared node. In the runner, each harness binding
 package and `harness/wiring` are nodes of their own (the binding ids come from the harness catalog); any other
 `runner/<first segment>` is that segment, so `config_table.py` and `stores.py` are the two top-level modules in the
@@ -414,19 +415,19 @@ moved type leaves no second spelling behind.
 package are free. Adapters — `hub/api/`, `hub/store/`, the composition roots, tests — depend inward on any package
 (`bzh:domain-core`), but they too take each name from the module that defines it. The runner table governs imports of
 `blizzard.runner.*` made by modules of its nodes; imports inside one node are free. `runner/api/`, `runner/cli/`,
-`runner/store/`, the top-level modules `_RUNNER_EDGE_MODULES` names in `blizzard/tests/test_layering.py`, and tests are
-edges: they depend inward on any node, and no node imports them — a concept package takes config values by injection (a
-settings object or a structural Protocol), never `RunnerConfig`.
+`runner/store/`, the top-level modules `_RUNNER_EDGE_MODULES` names in `blizzard/tests/guards/test_layering.py`, and
+tests are edges: they depend inward on any node, and no node imports them — a concept package takes config values by
+injection (a settings object or a structural Protocol), never `RunnerConfig`.
 
 **Detect.** A domain module importing a package its row does not list — at module level, inside a function, under
 `TYPE_CHECKING`, or by relative import — or importing the bare `blizzard.hub.domain` umbrella; a `.py` directly under
 `hub/domain/` other than `__init__.py`, or a package directory the table does not declare; a package `__init__.py` that
 imports a name to re-export it; any module under `src/` or `tests/` importing a name from a domain module that only
-imports it; a declared edge no import walks. `tests/test_layering.py` fails the unit tier on all of them, for the hub
-domain and the runner alike: one checker walks each tree for the crossings, the unused edges, the undeclared packages
-and modules, and the second spellings, and a cycle check holds each dict acyclic with every node declared. Both trees'
-package `__init__.py` files are held to a docstring and the `__future__` import. Planted-tree cases in the same module
-prove each check fires on both tree shapes. On a runner crossing, any import of an edge module or the bare
+imports it; a declared edge no import walks. `tests/guards/test_layering.py` fails the unit tier on all of them, for the
+hub domain and the runner alike: one checker walks each tree for the crossings, the unused edges, the undeclared
+packages and modules, and the second spellings, and a cycle check holds each dict acyclic with every node declared. Both
+trees' package `__init__.py` files are held to a docstring and the `__future__` import. Planted-tree cases in the same
+module prove each check fires on both tree shapes. On a runner crossing, any import of an edge module or the bare
 `blizzard.runner` package fails too. The fix moves the shared type down into the lower package, or the dependent code
 up; a new edge is a change to its dict, made only when an import needs it and only when the dict stays acyclic, and an
 edge whose last import is removed leaves it.

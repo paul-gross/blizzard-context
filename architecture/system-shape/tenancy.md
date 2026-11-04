@@ -96,8 +96,8 @@ test suite switches on in every tier that opens a hub store, and production leav
 delete naming a tenant-owned table without a `tenant_id` equality in its `WHERE` or join `ON`, and an insert whose
 values lack `tenant_id`, raising `UnscopedTenantStatement`. Raw SQL is never walked. Only statements marked hub-scoped
 are exempt: `HubScopedReads` (`bzh:hub-scoped-reads-confined`), the invariant checker's hub half, and migrations.
-`tests/test_layering.py` confines the exemption by name: `HUB_SCOPED_OPTION`, or the `blizzard_hub_scoped` string it
-stands for — spelled as an import, a name, an attribute, a keyword argument, or a string — appears only in
+`tests/guards/test_layering.py` confines the exemption by name: `HUB_SCOPED_OPTION`, or the `blizzard_hub_scoped` string
+it stands for — spelled as an import, a name, an attribute, a keyword argument, or a string — appears only in
 `hub/tenancy.py`, `hub/store/tenant_guard.py`, the `hub/store/internal/hub_scoped_*.py` modules,
 `hub/store/internal/invariants.py`, and `hub/store/migrations/`; the same test fails a `ScopedConnections` constructed
 outside `hub/store/` and an import of the guard outside `hub/store/` and `hub/app.py`, which installs it. By eye: an
@@ -150,9 +150,9 @@ run by `blizzard:structural-gate`) refuses any naming of the seam — `HubScoped
 or factory, or the `HubCore` field — whether as an import, an annotation, an attribute, or a string spelled for
 `importlib` or `getattr`; its `ignores` are the allowlist. The member groups live in
 `hub/store/internal/hub_scoped_<kind>.py` and are taken whole, through `build_hub_scoped_reads`:
-`tests/test_layering.py` fails an import of one member group anywhere outside those modules. By eye: a member added for
-a read a tenant-scoped repository could serve; a member that writes; an allowlist entry added for a route under a
-tenant's own family.
+`tests/guards/test_layering.py` fails an import of one member group anywhere outside those modules. By eye: a member
+added for a read a tenant-scoped repository could serve; a member that writes; an allowlist entry added for a route
+under a tenant's own family.
 
 **Do.** A runner's or a host's bearer token resolves through a `HubScopedReads` member to its registration and that
 registration's tenant; the request then opens that tenant's stores and does everything else through them.
