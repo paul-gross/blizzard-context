@@ -72,7 +72,7 @@ rows it reads per key: a read inside the page fetching each key's whole fact his
 `bzh:newest-per-key-read`'s.
 
 **Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
-as `blizzard/tests/component/hub/api/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do,
+as `blizzard/tests/component/hub/api/test_list_chunks_bulk_reads.py` and `blizzard/tests/component/hub/api/test_matched_queue_peek.py` do,
 and a count that grows between the sizes is the finding. Row volume is judged by reading: a `list_all()` or `load_all_*`
 call in a handler, a page sliced in Python from an every-id read, or a per-request fan-out whose row count no `limit`
 bounds, with no reason beside it or in the handler's docstring stating why the page's ids would not do; a drain that

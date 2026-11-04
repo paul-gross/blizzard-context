@@ -39,8 +39,8 @@ and a docker daemon with compose v2.
 
 ### blizzard:process-ref-lint
 
-`mise run process-ref-lint` (`vale --output=line .`, then `tests/test_route_clause_rule.py` with Vale required) from the
-repo root — `styles/Blizzard/ProcessReference.yml`, `styles/Blizzard/ChangeHistory.yml`,
+`mise run process-ref-lint` (`vale --output=line .`, then `tests/component/test_route_clause_rule.py` with Vale
+required) from the repo root — `styles/Blizzard/ProcessReference.yml`, `styles/Blizzard/ChangeHistory.yml`,
 `styles/Blizzard/VariantHolder.yml`, `styles/Blizzard/ShortFormPointer.yml`, and `styles/Blizzard/RouteClause.yml`
 against `.vale.ini`'s `[*.md]`, `[{src,tests,scripts}/**/*.py]`, `[src/**/*.{yaml,yml}]`, and
 `[web/projects/**/*.{ts,css}]` sections. A process reference (tracker, issue or PR number, review/finding id, phase, or
@@ -127,7 +127,7 @@ non-root uid, `git` on `PATH`, `import psycopg` succeeding, the store migrated t
 startup), and a live `GET /api/health` `200` plus `GET /api/ready` `ready: true`. `upper-tiers.yml` runs it as a job on
 every pull request and tag; the multi-arch GHCR publish is not booted. The docker-free static image contract (`USER`,
 the `git` install, the migrate-before-host ordering, the `ENV` defaults, the documented mount path) is pinned at
-`blizzard:unit-test` in `tests/test_container_image.py` — packaging rot fails the default gate with no docker.
+`blizzard:unit-test` in `tests/guards/test_container_image.py` — packaging rot fails the default gate with no docker.
 
 ### blizzard:compose-smoke
 

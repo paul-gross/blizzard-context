@@ -96,9 +96,9 @@ the reflected-only column. Delete the revision afterwards.
 
 ### blizzard:trace-contract
 
-`uv run pytest tests/test_trace_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the span shape the
-hub assembles for a step, and a runner for a lease, against the corpus `contracts/traces/`: `dictionary.json`, authored
-by hand, and one `golden/<scenario>.json` per seeded scenario, written only by regeneration —
+`uv run pytest tests/guards/test_trace_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the span
+shape the hub assembles for a step, and a runner for a lease, against the corpus `contracts/traces/`: `dictionary.json`,
+authored by hand, and one `golden/<scenario>.json` per seeded scenario, written only by regeneration —
 `BLIZZARD_REGEN_TRACE_CONTRACT=1` on the same command, which rewrites the golden and never the dictionary. The seeds are
 built from `tests/trace_fixtures.py` and `tests/runner_trace_fixtures.py` with no store and no OpenTelemetry import.
 

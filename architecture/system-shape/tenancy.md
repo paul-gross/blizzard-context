@@ -33,7 +33,7 @@ which a hub-scoped read resolves before any tenant is known.
 (`tests/unit/hub/store/test_schema_tenant_gate.py`) — fails a table outside the global list whose `tenant_id` is
 missing, nullable, or without its foreign key, or that has no index led by `tenant_id`. The test-suite statement guard
 (`bzh:tenant-scoped-store`'s Detect) fails an insert into a tenant-owned table whose values lack `tenant_id`. The
-read-index gate (`tests/test_store_read_index_gate.py`, a `blizzard:component-test`) reads a plan that seeks only the
+read-index gate (`tests/component/test_store_read_index_gate.py`, a `blizzard:component-test`) reads a plan that seeks only the
 tenant prefix, or walks a whole named index in order, as reading the table whole, beside a bare scan and an automatic
 index; a read that walks by design names its reason in an `IndexWalkAllowance` (`tests/store_scan_allowlist.py`), scoped
 to that one read. By eye: a `tenant_id` field on a domain dataclass, a request body, or a wire model that a write path

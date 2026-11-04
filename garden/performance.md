@@ -42,7 +42,7 @@ shape.
 | A loop-invariant value re-read per iteration; a payload decoded to answer what its bytes already answer | No rule — judged by reading; a finding cites the weed's own bullet above and carries no `bzh:` id |
 
 Index coverage is out of range: it belongs to its gate, [`blizzard:component-test`](../verification/blizzard.md)
-(`blizzard/tests/test_store_read_index_gate.py`), which judges every change rather than every run of this axis
+(`blizzard/tests/component/test_store_read_index_gate.py`), which judges every change rather than every run of this axis
 (`winter-canon:/enforcement-channels.md`). What that gate cannot see stays in range — a perfectly indexed read is still
 a finding here when a call site issues it once per item.
 

@@ -76,8 +76,8 @@ server can omit it misleads the client, and marking one required where a request
 **Why.** A field the server always sends but the schema types as optional invites the frontend to guard it with a
 fallback, and the fallback re-derives a judgment the wire already made (`bzh:frontend-wire-conformist`).
 
-**Detect.** The `blizzard:unit-test` guard `tests/test_wire_sent_is_required.py` derives the response-only schemas from
-both built apps and fails when one lists an optional property, or when an exclude-flagged model shows up split.
+**Detect.** The `blizzard:unit-test` guard `tests/unit/wire/test_sent_is_required.py` derives the response-only schemas
+from both built apps and fails when one lists an optional property, or when an exclude-flagged model shows up split.
 `blizzard:compat` reports a split that slips past it as a deleted component schema.
 
 **Do.**
