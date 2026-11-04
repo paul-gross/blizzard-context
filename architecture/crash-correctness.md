@@ -45,10 +45,17 @@ default — reintroduces wall-clock non-determinism the sweep cannot control.
 store, domain, or model code; a timestamp written from anything but the injected clock.
 
 **Do.** The clock is injected; timestamps come from `clock.now()`, and column values are set by the writing code from
-that clock — not by a database default.
+that clock — not by a database default. A serving daemon's composition root chooses its clock once, at boot, by calling
+`resolve_clock` in `blizzard/src/blizzard/foundation/clock.py`; it never reads `BLIZZARD_CLOCK` itself. The resolver
+returns a `ControlledClock` (same module) only for `BLIZZARD_CLOCK=controlled` beside `BLIZZARD_CLOCK_FENCE=1`, and the
+`SystemClock` otherwise. Only domain time moves under a controlled clock: the instants the product reasons about —
+leases, floors, windows, sessions, and stamps — are read through `IClock`. Mechanical deadlines stay on real time,
+through `IMonotonicClock`: a subprocess's timeout, an HTTP client's timeout, a retry's backoff, a readiness wait, and a
+sweep's or the flow driver's timer. Span timestamps stay real too.
 
 **Don't.** `created_at = Column(DateTime, default=datetime.utcnow)` — the store now stamps wall-clock time the virtual
-clock can't move.
+clock can't move. Don't put a timeout, backoff, or readiness wait on `IClock`, where a moved clock would stall or fire
+it; and don't read `BLIZZARD_CLOCK` outside the resolver.
 
 ## A crash-point registry (`bzh:crash-point-registry`)
 
