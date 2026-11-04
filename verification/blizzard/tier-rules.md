@@ -59,9 +59,9 @@ run.
 
 Only the value `1` switches the guard on. `bzh:runner-scoped-store`'s Detect
 ([../../architecture/system-shape/runner-scoping.md](../../architecture/system-shape/runner-scoping.md#adapters-hold-the-bound-seam-bzhrunner-scoped-store))
-owns what the guard refuses and its exemption. `tests/test_runner_store_isolation.py`, at `blizzard:component-test`,
-seeds the same shapes for two runner ids in one store. It proves that one runner's adapters neither read nor change the
-other's rows, holding its coverage of the read and write census by reflection.
+owns what the guard refuses and its exemption. `tests/component/runner/store/test_isolation.py`, at
+`blizzard:component-test`, seeds the same shapes for two runner ids in one store. It proves that one runner's adapters
+neither read nor change the other's rows, holding its coverage of the read and write census by reflection.
 
 ## Head-migrated test stores come from prototypes (`bzh:head-store-prototypes`)
 

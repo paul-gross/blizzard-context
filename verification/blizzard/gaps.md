@@ -177,11 +177,11 @@ neither hermetic nor reproducible.
 
 The position codec, the shared batch budget, and the past-EOF clamps inside `ClaudeCodeTranscriptSource.turns_since` are
 pinned at no tier at all. Every component-tier test of the transcript lane binds a scriptable `FakeTranscriptSource`
-(`blizzard/tests/runner_fakes.py`), so `tests/test_transcript_pump.py` and `tests/test_transcript_backfill.py` reach the
-pump's and the backfill's own decisions and never those three pieces. `OpenCodeTranscriptSource` is a distinct
-implementer this gap does not name: its own export-identity cursor, bound token, and `not_found`/`unreadable` split are
-pinned at `blizzard:unit-test` — "OpenCode transcript reads never distinguish `not_found`" above covers what that tier
-does not.
+(`blizzard/tests/runner_fakes.py`), so `tests/component/runner/transcripts/test_transcript_pump.py` and
+`tests/component/runner/transcripts/test_transcript_backfill.py` reach the pump's and the backfill's own decisions and
+never those three pieces. `OpenCodeTranscriptSource` is a distinct implementer this gap does not name: its own
+export-identity cursor, bound token, and `not_found`/`unreadable` split are pinned at `blizzard:unit-test` — "OpenCode
+transcript reads never distinguish `not_found`" above covers what that tier does not.
 
 Standing in for a tier: `blizzard runner transcript reship` and `blizzard runner transcript backfill` drive
 `TranscriptPump.drain_segment` with `deadline=None` over a complete historical file from offset 0 until the source

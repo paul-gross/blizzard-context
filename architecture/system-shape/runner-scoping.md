@@ -12,8 +12,8 @@ workspace prompt, the graph-artifact mirror, the token replay cache, daemon live
 registered host's own identity at its hub (`host_identity`), its own fact lane (`host_outbound_buffer`), the mark its
 hub last answered on that lane (`host_high_water_seen`), and the runners it took in from other stores (`host_ingests`) —
 and carries no runner key. Each host table also declares how a runner transfer treats its rows
-(`info={"transfer": ...}`), which `blizzard/tests/test_runner_store_schema_declarations.py` holds every host table to.
-How a table gains the key over rows it already holds is `bzh:keyed-table-migration`'s, in
+(`info={"transfer": ...}`), which `blizzard/tests/unit/runner/store/test_schema_declarations.py` holds every host table
+to. How a table gains the key over rows it already holds is `bzh:keyed-table-migration`'s, in
 [../../standards/persistence.md](../../standards/persistence.md).
 
 ## Adapters hold the bound seam (`bzh:runner-scoped-store`)
@@ -43,12 +43,13 @@ rather than a list of its own. How the binding survives a crash is
 off — fails a select, update, or delete naming a runner-scoped table without a `runner_id` equality, and an insert into
 one whose values lack `runner_id`, raising `UnscopedRunnerStatement`. Raw SQL is never walked. Only statements marked
 runner-unscoped are exempt, and `bzh:host-stores-confined` confines the mark. A refusal is the finding, never something
-to switch off: a test outside `blizzard/tests/test_runner_statement_guard.py` that borrows its `no_runner_guard` fixture
-or unsets `BLIZZARD_RUNNER_GUARD` is itself the violation.
+to switch off: a test outside `blizzard/tests/unit/runner/store/test_statement_guard.py` that borrows its
+`no_runner_guard` fixture or unsets `BLIZZARD_RUNNER_GUARD` is itself the violation.
 [The tier rules](../../verification/blizzard/tier-rules.md#the-runner-statement-guard-is-on-in-every-tier) own how the
-test processes and spawned daemons install the guard. `blizzard/tests/test_runner_store_isolation.py` proves that runner
-A's adapters read and change none of runner B's rows in one store. By eye: an adapter constructor typed `Engine`; an
-adapter method taking a `runner_id` parameter; a raw `sa.select(table)` on a runner-scoped table inside an adapter.
+test processes and spawned daemons install the guard. `blizzard/tests/component/runner/store/test_isolation.py` proves
+that runner A's adapters read and change none of runner B's rows in one store. By eye: an adapter constructor typed
+`Engine`; an adapter method taking a `runner_id` parameter; a raw `sa.select(table)` on a runner-scoped table inside an
+adapter.
 
 **Do.** An adapter's read is `self._store.select(env_bindings, ...)`, and its insert is `self._store.insert(leases)`;
 neither line names a runner, and both carry the bound one.
