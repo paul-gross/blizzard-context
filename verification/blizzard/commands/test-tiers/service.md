@@ -489,8 +489,8 @@ two-provider hub lists both from `GET /api/auth/providers`, `POST /api/auth/logo
 `login_failed` over the wire. A fresh hub also checks the configured superuser's first verified sign-in: an
 authoritative provider claims the bootstrap, while a non-authoritative one refuses it. Invitations are issued through
 `POST /api/invitations`, and provider listings include the profile's `stub` beside `github` when configured. The
-component-tier `test_auth_login_api.py` drives the same routes against an in-repo fake provider — covering bad `state`,
-the `login_failed` fact, the linking rule, and the no-token-cookie shape; only the service method exercises a real HTTP
+component-tier `test_auth_login.py` drives the same routes against an in-repo fake provider — covering bad `state`, the
+`login_failed` fact, the linking rule, and the no-token-cookie shape; only the service method exercises a real HTTP
 authorize/token/userinfo exchange.
 
 **CLI login** (`cli-login.spec.ts`) proves the `blizzard hub login` PKCE code exchange only at this tier: the hub's
@@ -500,7 +500,7 @@ it with its verifier at `POST /api/auth/cli/token` for a hub-minted session toke
 bearer client — the CLI's own shape — authenticates `GET /api/me` off that token alone, and `POST /api/auth/logout` with
 the same bearer revokes it server-side so a byte-identical retry 401s; the CLI never contacts the stub IdP, only the
 hub's own routes. The exchange's rejection matrix — wrong or missing verifier, unregistered redirect form, replayed
-code, and expired code — is pinned by the component-tier `test_cli_login_api.py`; the loopback listener and paste-code
+code, and expired code — is pinned by the component-tier `test_idp_cli_login.py`; the loopback listener and paste-code
 mechanics sit with the unit-tier `tests/unit/hub/cli/test_login_mechanics.py` and `tests/unit/hub/cli/test_login.py`.
 
 **Joining a runner with `blizzard runner init`** (`tests/service/fleet/runner-init.spec.ts`) is proven over the real
