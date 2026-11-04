@@ -309,7 +309,7 @@ stance), so nothing mechanical can diff the two rosters. A member added on one s
 drifts silently: a new `blizzard-mock` lever goes untested by `blizzard`'s diagnostic cases, or a stale `blizzard` kwarg
 targets a retired lever name and fails loudly only when `mock-opencode emit` rejects it at runtime.
 
-The same gap holds for OpenCode 2: `opencode2_surface.levers.Lever` and `_LEVERS`
+The same gap holds for OpenCode 2: `opencode2_core.levers.Lever` and `_LEVERS`
 (`tests/service/harnesses/test_opencode2_compatibility_service.py`), with its `len(_LEVERS)` pin as the trip-wire.
 
 Standing in for a tier: `_fake_binary`'s own `len(lever_flags)` assertion pins the count as a trip-wire, and
