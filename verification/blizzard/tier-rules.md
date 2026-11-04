@@ -167,7 +167,7 @@ rows; a route token acts in its chunk's tenant only; the packaged system artifac
 export routes refuse a tenant member; and every sweep acts in each open tenant and opens no closed one.
 `tests/component/hub/store/test_tenant_isolation_adapters.py` proves the same at the store: every row a tenant wrote
 carries its id, and each tenant's adapters read back none of the other's records. `tests/pass_isolation.py` is the
-poisoned-tenant fixture beside it: it runs each hub-wide pass, and each one-tenant pass interleaved with it, with and
+shared poisoned-tenant fixture: it runs each hub-wide pass, and each one-tenant pass interleaved with it, with and
 without one failing or bursting tenant and fails when any other tenant's calls differ (`bzh:pass-isolates-tenants`).
 
 The scenario's route table names every live tenant route beside the probe that proves its isolation, and

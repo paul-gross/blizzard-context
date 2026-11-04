@@ -287,10 +287,10 @@ that quietly skips a method the delta touches passes the same as an honest one u
 `adv-dwf`'s `mutation.md`, `mutation.judgement.md`, and `review.from-mutation.md`, and the survivor bullet in
 `build.from-review.md`, carry the delivery-time mutation report's whole method: run the project's declared diff-scoped
 method from each repo's newest declared tip, publish a report that always exists, sort survivors under the project's
-classification, and answer a real survivor with the killing assertion or a recorded equivalence. The byte bars, the edge
-and addendum pins in `tests/unit/hub/graphs/test_packaged_graph_sessions.py`, and the delta mode's own unit cases reach
-the mechanical half. That a worker uses the declared tip rather than its worktree's reset HEAD, states the reason where
-no method is declared, carries a prior report forward only when the change's functions did not move, and raises each
+classification, and answer a real survivor with the killing assertion or a recorded equivalence. The byte bars, the
+session pins in `tests/unit/hub/graphs/test_packaged_graph_sessions.py`, and the delta mode's own unit cases reach the
+mechanical half. That a worker uses the declared tip rather than its worktree's reset HEAD, states the reason where no
+method is declared, carries a prior report forward only when the change's functions did not move, and raises each
 survivor as `should-fix` rather than `blocking` is proven for one path by `blizzard:manual-live-node`; the
 `build.from-review.md` bullet is reachable only on a review-`fail` round, which that run does not force, and is asserted
 by nothing.
