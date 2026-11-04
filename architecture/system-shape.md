@@ -49,6 +49,10 @@ in the seam's package imports the loop that consumes it. House each adapter by t
 
 - An adapter of several modules gets a package of its own, named only by the seam's wiring module and the composition
   roots — the harness seam's `harness/claude_code/` and `harness/opencode/`, named by `harness/wiring.py`.
+- When the harness binary's major version needs a separate implementation, that binding is a package of its own beside
+  the package its harness id names, held to the same isolation. Until the seam's wiring module selects between majors it
+  is named only by a composition root — `harness/opencode_v2/` binds OpenCode 2 and is named only by the compatibility
+  diagnostic's CLI; `harness/wiring.py` does not name it.
 - An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
   composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
   `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
@@ -66,9 +70,10 @@ store rather than through an injected seam Protocol; or a test that cannot run w
 seam exists to bind a mock to. For the harness seam, the adapter-isolation check in `blizzard/tests/test_layering.py`
 fails the unit tier, resolving relative imports, on each breach:
 
-- a harness-core module importing `harness/claude_code/` or `harness/opencode/`;
-- one adapter importing the other;
-- any module but `harness/wiring.py` and a composition root importing either adapter;
+- a harness-core module importing an adapter package — `harness/claude_code/`, `harness/opencode/`, or
+  `harness/opencode_v2/`;
+- one adapter importing another, including one major version's binding importing the other's;
+- any module but `harness/wiring.py` and a composition root importing an adapter;
 - a harness module other than `harness/wiring.py` importing `wiring.py`, which reaches every adapter through it;
 - a module under `harness/` importing `runner/loop/` or the loop's composition root, `runner/loop_wiring.py`.
 

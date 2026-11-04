@@ -288,24 +288,32 @@ request or commit that claims this method — rather than in this file, which ho
 
 ### `blizzard:manual-opencode-compatibility`
 
-**Surface.** The live CLI/provider compatibility surface for an OpenCode version inside the runner's admitted range
-(currently `>=1.18.25,<2.0`) with ChatGPT `5.6 Luna` (`openai/gpt-5.6-luna`) at `max`, covering the diagnostic's:
+**Surface.** The live CLI/provider compatibility surface for an OpenCode version inside either major version's admitted
+range. The diagnostic reads the binary's version and runs that major version's proof:
 
-- `fresh_turn`, `resume`, `process_control`, `judgement`, `root_hook`, `permission`, and `model_variant`
-- `usage_cost`, `takeover`, `transcript_read`, `transcript_cursor`, `child_sessions`, and `configuration_isolation`
+- OpenCode 1 (`>=1.18.25,<2.0`), with ChatGPT `5.6 Luna` (`openai/gpt-5.6-luna`) at `max`: `fresh_turn`, `resume`,
+  `process_control`, `judgement`, `root_hook`, `permission`, `model_variant`, `usage_cost`, `takeover`,
+  `transcript_read`, `transcript_cursor`, `child_sessions`, and `configuration_isolation`.
+- OpenCode 2 (`>=2.0,<3.0`), against the operator's own managed service: every row of the 2.x contract (the closed
+  `ProofRow` roster), with `store_migration` seeded by an OpenCode 1 binary.
 
 **Procedure.** Follow the public operator procedure at `blizzard/docs/deployment/opencode-compatibility.md` for
 prerequisites, invocation, live opt-in, credential and evidence handling, failure conditions, and interpretation. That
 page's own "Admitting a candidate version" section owns the separate procedure for admitting a candidate version — the
 gates a candidate owes before this diagnostic applies to it, and when a new corpus or a widened range is owed.
 
-**Retained evidence.** Retain the diagnostic output and the sanitized `report.json` and `runtime.json` files from the
-evidence directory.
+For OpenCode 2, follow that page's "OpenCode 2" section. Start the operator's service first and leave it idle so the
+proof may restart it once. Pass `--opencode1-binary` and `--opencode1-model` so `store_migration` is observed rather
+than ambiguous. The run commits nothing: a corpus for a newly admitted version is the evidence directory, landed under
+`src/blizzard/runner/harness/contracts/opencode/<version>/`.
 
-**Passes when.** The command exits zero, the output reports an OpenCode version inside the runner's admitted range
-(currently `>=1.18.25,<2.0`) and ends with `compatibility: supported` or `compatibility: degraded`, and `report.json`
-records `complete: true` and `admissible: true`. This diagnostic result is not production adapter availability or a
-harness-selection decision.
+**Retained evidence.** Retain the diagnostic output and the sanitized evidence directory: `report.json` and
+`runtime.json` for OpenCode 1; for OpenCode 2, `report.json`, `manifest.json`, and the fixtures.
+
+**Passes when.** The command exits zero, the output reports an OpenCode version inside the admitted range of its major
+version and ends with `compatibility: supported` or `compatibility: degraded`, and `report.json` records
+`admissible: true` — and, for OpenCode 1, `complete: true`. This diagnostic result is not production adapter
+availability or a harness-selection decision.
 
 ### `blizzard:manual-opencode-operator-bundle`
 
@@ -374,7 +382,9 @@ this method proves a page.
 
 **Procedure.** Against a provisioned feature env, follow the page's stated rehearsal steps in order and no others: emit
 the artifact with the documented `mock-opencode` verb, then invoke the diagnostic with `--binary` pointed at the emitted
-path.
+path. Then walk the page's "OpenCode 2 offline rehearsal" the same way: emit with `mock-opencode-2`, start the
+artifact's service with an isolated `HOME` and `XDG_*` directories exported, run the invocation against it, and stop the
+service.
 
 **Passes when.** The page's steps are sufficient on their own — no undocumented flag, path, or prerequisite is needed —
 and the run ends the way the page says it will.
