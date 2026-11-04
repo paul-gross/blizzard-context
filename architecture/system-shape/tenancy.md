@@ -29,15 +29,15 @@ index that a tenant-led lookup index makes redundant is dropped. Two kinds stay 
 a pass that pages across tenants in cursor order, kept beside the tenant-led one, and a credential's `token_hash` index,
 which a hub-scoped read resolves before any tenant is known.
 
-**Detect.** The tenant schema gate — a `blizzard:unit-test` over `schema.metadata` (`tests/test_tenant_schema_gate.py`)
-— fails a table outside the global list whose `tenant_id` is missing, nullable, or without its foreign key, or that has
-no index led by `tenant_id`. The test-suite statement guard (`bzh:tenant-scoped-store`'s Detect) fails an insert into a
-tenant-owned table whose values lack `tenant_id`. The read-index gate (`tests/test_store_read_index_gate.py`, a
-`blizzard:component-test`) reads a plan that seeks only the tenant prefix, or walks a whole named index in order, as
-reading the table whole, beside a bare scan and an automatic index; a read that walks by design names its reason in an
-`IndexWalkAllowance` (`tests/store_scan_allowlist.py`), scoped to that one read. By eye: a `tenant_id` field on a domain
-dataclass, a request body, or a wire model that a write path reads; an adapter passing `tenant_id=` into `.values(...)`
-itself.
+**Detect.** The tenant schema gate — a `blizzard:unit-test` over `schema.metadata`
+(`tests/unit/hub/store/test_schema_tenant_gate.py`) — fails a table outside the global list whose `tenant_id` is
+missing, nullable, or without its foreign key, or that has no index led by `tenant_id`. The test-suite statement guard
+(`bzh:tenant-scoped-store`'s Detect) fails an insert into a tenant-owned table whose values lack `tenant_id`. The
+read-index gate (`tests/test_store_read_index_gate.py`, a `blizzard:component-test`) reads a plan that seeks only the
+tenant prefix, or walks a whole named index in order, as reading the table whole, beside a bare scan and an automatic
+index; a read that walks by design names its reason in an `IndexWalkAllowance` (`tests/store_scan_allowlist.py`), scoped
+to that one read. By eye: a `tenant_id` field on a domain dataclass, a request body, or a wire model that a write path
+reads; an adapter passing `tenant_id=` into `.values(...)` itself.
 
 **Do.** A fact table under a chunk carries `tenant_id` beside `chunk_id`, stamped by the scoped `insert` the adapter
 built; the domain call that wrote it passed only the fact.
@@ -103,7 +103,7 @@ stands for — spelled as an import, a name, an attribute, a keyword argument, o
 outside `hub/store/` and an import of the guard outside `hub/store/` and `hub/app.py`, which installs it. By eye: an
 adapter constructor typed `HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a raw
 `sa.select(table)` on a tenant-owned table inside an adapter. A guard refusal is the finding, never something to switch
-off: a test outside `tests/test_tenant_guard.py` that borrows its `no_hub_guard` fixture or unsets
+off: a test outside `tests/unit/hub/store/test_tenant_guard.py` that borrows its `no_hub_guard` fixture or unsets
 `BLIZZARD_TENANT_GUARD` is itself the violation.
 [The tier rules](../../verification/blizzard/tier-rules.md#the-tenant-statement-guard-is-on-in-every-tier) own how the
 test processes and spawned daemons install the guard.
