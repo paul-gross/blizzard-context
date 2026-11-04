@@ -150,23 +150,16 @@ then reads. It never waits on a timer for a pass the host would run on its own. 
 live in `tests/service/runner/host-halted-runners.spec.ts`; their foreign-identity and persisted host-fact specimens
 live in `tests/service/runner/store/host-halted-runners.spec.ts`.
 
-For deterministic hub flow turns, use `test.use({ isolation: 'fresh-hub', flowStepped: true })`. The test-only fixture
-holds the hub flow driver and its clock instead of running the driver on a timer. `api.flowStep()` runs one driver pass
-to completion and returns its clock time and outcome counts; `api.flowAdvance(seconds)` advances the fixed clock and
-returns `now` without running a pass. Advance to a pending poll's due time, then step and read the public state. Both
-methods require a fresh hub, and the controls are enabled only by `flowStepped`. For a fleet test, step the runner host
-as well when its work is needed; see `tests/service/fleet/flow-turns.spec.ts`. A stepped hub cannot restart over its
-existing store, because its fixed clock would move backwards; `freshHub.reset()` starts with a new empty store and
-clock.
-
 A test that needs time to move asks for a controlled stack with `test.use({ clockMode: 'controlled' })`; every other
 test runs on the system clock, whose `clock.advance` and `clock.set` refuse. Only a `fresh-hub` test, a block that holds
 its stack, or a runner-world test may ask: a controlled stack moves every daemon's clock, and a shared hub's belongs to
-other tests. It pairs only with stepped daemons, so a timed sweep, a `runnerLoop: 'timed'` host, and `flowStepped`
-beside it are refused before any daemon starts. `clock.now()` is every spec's source of an instant, controlled or not; a
-spec never reads the machine's clock itself. `clock.advance(seconds)` and `clock.set(instant)` move the hub or mock hub,
-the runner hosts, the mock runners and forge, and the browser together, and resolve once all have answered. On a
-controlled hub, `api.flowStep()` runs one flow-driver pass at `clock.now()`.
+other tests. It pairs only with stepped daemons, so a timed sweep and a `runnerLoop: 'timed'` host are refused before
+any daemon starts. `clock.now()` is every spec's source of an instant, controlled or not; a spec never reads the
+machine's clock itself. `clock.advance(seconds)` and `clock.set(instant)` move the hub or mock hub, the runner hosts,
+the mock runners and forge, and the browser together, and resolve once all have answered. On a controlled hub,
+`api.flowStep()` runs one flow-driver pass at `clock.now()`; it is refused on a system stack. To drive a pending poll,
+advance to its due time, then step and read the public state. The fleet test that steps the hub and the runner host is
+`tests/service/fleet/flow-turns.spec.ts`.
 
 In a `collectorTest` case, poll `collector.decision(traceId)` for the short trace while the worker is held at its
 checkpoint. Its unmarked trace-specific probe reads the collector's cached sampling decision; only a returned `dropped`
