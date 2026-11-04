@@ -145,7 +145,7 @@ entry carries only the unchanged banner, plus the newly minted lease id in its f
 `test_resumed_node_entry_announces_a_replaced_workspace_prompt` observes the intervening review lease, replaces the
 workspace prompt through the live host-workspace API before build re-enters, and proves the next spawn leads with the
 update notice and new policy while the old policy disappears and layer 1 remains collapsed. The component tier's
-`test_worker_preamble.py` pins the rendering independently of delivery to a real harness process.
+`tests/unit/runner/harness/test_preamble.py` pins the rendering independently of delivery to a real harness process.
 
 **Review findings at delivery**
 (`tests/service/fleet/review-findings-delivery.spec.ts::test_review_finding_delta_mints_exactly_its_deferred_entry_at_landing`)

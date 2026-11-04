@@ -55,8 +55,8 @@ and no timeout, because an interactive child must keep the terminal's foreground
 **Detect.** `bzh:runner-child-launch` is tooled by `blizzard:structural-gate`'s ast-grep scan
 (`contracts/ast-grep/rules/runner-child-launch.yml`), which refuses `import subprocess`, `from subprocess import …`, and
 `import pty` outside `runner/process/**`, the hub's sanctioned site, and the colocated migration tests
-(`bzh:colocated-migration-tests`). `tests/test_tick_subprocess_timeouts.py` (`blizzard:unit-test`) pins that the seam's
-run-to-completion timeout is required and non-optional.
+(`bzh:colocated-migration-tests`). `tests/unit/runner/process/test_tick_subprocess_timeouts.py` (`blizzard:unit-test`)
+pins that the seam's run-to-completion timeout is required and non-optional.
 
 **Do.** Take `IChildProcesses` by injection, bound in the runner composition roots, and its driver
 (`src/blizzard/runner/process/internal/subprocess_child_processes.py`) is the only module that imports `subprocess` and
