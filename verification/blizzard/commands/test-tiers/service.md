@@ -370,14 +370,14 @@ seq — a pushed `estimated_cost_usd` reads back on both the per-step row and th
 `cost_partial` flags a row only when it carries neither amount.
 
 **The forge-status projection** (`tests/service/fleet/forge-status.spec.ts::test_forge_status_projection_e2e`) runs on a
-fresh hub of its own with `annotation_interval_seconds = 1` and a real runner host, every `forge_status` pass stepped.
-The hub spec `tests/service/hub/forge-status.spec.ts` proves only an opted-in source's issues are labelled. The case
-proves ingest shows `blizzard:ingested`, a worker held at a checkpoint shows `blizzard:in-progress`, and done clears
-both. A chunk stopped before any runner claims it has its marker cleared on the next pass. A hand-deleted label comes
-back only once the full-pass floor (five intervals) elapses, because the hub holds only in-memory probe state. A forge
-outage, stood in by the forge's own `unreachable` lever, since a process kill would wipe the forge's issue and label
-state, records one `forge-status-source-skipped` event naming the source id in `GET /api/events`, leaves chunk reads
-served, and the label is intact once the lever clears.
+fresh hub of its own on a controlled clock and a real runner host, every `forge_status` pass stepped. The hub spec
+`tests/service/hub/forge-status.spec.ts` proves only an opted-in source's issues are labelled. The case proves ingest
+shows `blizzard:ingested`, a worker held at a checkpoint shows `blizzard:in-progress`, and done clears both. A chunk
+stopped before any runner claims it has its marker cleared on the next pass. A hand-deleted label comes back only once
+the stack's clock has been advanced past the default full-pass floor (five intervals, 600 seconds), because the hub
+holds only in-memory probe state. A forge outage, stood in by the forge's own `unreachable` lever, since a process kill
+would wipe the forge's issue and label state, records one `forge-status-source-skipped` event naming the source id in
+`GET /api/events`, leaves chunk reads served, and the label is intact once the lever clears.
 
 **The exported events**
 (`tests/service/fleet/egress-events.spec.ts::test_the_exported_events_agree_with_the_hubs_own_counts`) runs on a fresh
@@ -413,8 +413,8 @@ exports it live again as Parquet into a second directory after the real `blizzar
   live newest copies, excluding `exported_at`.
 - `test_recipes_agree_with_the_hubs_analytics` — the docs' cost recipe matches
   `blizzard hub analytics summary spend-nodes` over the same window per station, in both formats, and the
-  slowest-station recipe names the station built to be slowest on its own graph, held at a checkpoint across a clock
-  poll.
+  slowest-station recipe names the station built to be slowest on its own graph, held at a checkpoint while the stack's
+  clock advances.
 - `test_cost_by_node_splits_a_shared_node_name_by_graph` — the cost recipe keeps `build` and `deliver` as a distinct
   station on each graph that names them.
 - `test_published_newest_views_return_the_newest_copies` — the dictionary's published newest-copy views return the
