@@ -65,9 +65,10 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   `test_kill9_at_migrate_crash_point_landing_on_a_hub_node` drives a migration onto a hub-executed node, where the route
   is retained, not released: the replay returns `HUB_NODE_TAKEN`, the holding runner keeps its envs, and its ADVANCE
   poll drives the landed hub node to `done` instead of the chunk wedging at `delivering`. The per-chunk intended
-  migration is swept on the same point by `test_kill9_at_migrate_crash_point_for_an_intended_migration`; its component-
-  and unit-tier coverage is `tests/test_intended_migration_apply.py`, `tests/test_chunk_edit_api.py`, and
-  `tests/test_hub_cli_chunk.py`, since the fleet service migration exercises only the authored-choice route.
+  migration is swept on the same point by `test_kill9_at_migrate_crash_point_for_an_intended_migration`; its unit-tier
+  coverage is `tests/test_hub_cli_chunk.py` and its component-tier coverage is
+  `tests/component/hub/api/test_intended_migration_apply.py` and `tests/test_chunk_edit_api.py`, since the fleet service
+  migration exercises only the authored-choice route.
 - `attach.`, the worker artifact-attach durability window armed on the runner, is swept by
   `test_kill9_at_attach_crash_point`: the runner's local `POST /runners/{runner_id}/api/leases/{id}/attachments` records
   the attachment in one committed txn, the kill lands in the after-record-before-response window, and the durable row
