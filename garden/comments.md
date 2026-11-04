@@ -42,15 +42,15 @@ Those files own every rule this axis judges by and are the only home for their p
 Where a command already judges the same prose, it owns that judgement and this axis does not
 (`winter-canon:/enforcement-channels.md`):
 
-- `bzh:prose-budget` is out of range on `blizzard/exemplars/python`, where `blizzard/tests/test_layering.py` holds every
-  block to its cap. On every other tree it binds no command checks the caps, so this axis is the pruning pass for that
-  backlog.
+- `bzh:prose-budget` is out of range on `blizzard/exemplars/python`, where `blizzard/tests/guards/test_layering.py`
+  holds every block to its cap. On every other tree it binds no command checks the caps, so this axis is the pruning
+  pass for that backlog.
 - `bzh:one-prose-home` is in range only for a fact absent from `blizzard:restatement-sweep`'s census. A registered fact
   belongs to that sweep, which sees every site declaring it; a fact nobody registered is invisible to it and visible
   here.
 - `bzh:comment-locality`'s generated-docstring clause is out of range for the three shapes
-  `blizzard/tests/test_openapi_descriptions.py` scans the committed specs for, except a lowercase dotted path, which
-  that scan cannot tell from a wire event name.
+  `blizzard/tests/guards/test_openapi_descriptions.py` scans the committed specs for, except a lowercase dotted path,
+  which that scan cannot tell from a wire event name.
 - `bzh:comment-locality`'s process-reference clause is out of range in a `.py`, `.ts`, `.css`, or `.md` file: the shared
   Vale rule judges every such file, and the clause's own Detect entry names the shapes that rule matches and the method
   that runs it on each tree. A template's `.html` comment carries the same shapes but Vale cannot see it there, so it

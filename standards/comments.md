@@ -92,8 +92,8 @@ change, not a fresh obligation of its own.
   catch mechanically in a `.py`, `.ts`, `.css`, or `.md` file: `blizzard-context:markdown-prose-lint` in this repo's own
   `*.md`, `blizzard:process-ref-lint` and `blizzard-mock:process-ref-lint` for those repos' configured language surface.
   A template's `.html` comment carries the same shapes but Vale cannot see it there, so it stays grep-detected.
-- An unresolvable reference in a generated description. `blizzard/tests/test_openapi_descriptions.py` fails the unit
-  tier on those three shapes, scanning the committed specs and the `wire/` models no spec reaches.
+- An unresolvable reference in a generated description. `blizzard/tests/guards/test_openapi_descriptions.py` fails the
+  unit tier on those three shapes, scanning the committed specs and the `wire/` models no spec reaches.
 
 ## Do
 

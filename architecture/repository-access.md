@@ -48,7 +48,7 @@ repositories belong to the domain layer alone.
 **Scope.** A controller answering a query straight from a read model is fine: reads bypass no invariant.
 
 **Detect.** A router or CLI handler injecting a write repository, or a mutation performed in an edge handler instead of
-delegated. `tests/test_layering.py` fails the unit tier on `IWriteSessionStore` named anywhere other than
+delegated. `tests/guards/test_layering.py` fails the unit tier on `IWriteSessionStore` named anywhere other than
 `foundation/operator_sessions/` (the Protocol's own package) and the composition roots — `login`/`logout` take the
 `SessionService` application service instead, never the raw seam.
 
@@ -275,8 +275,8 @@ decision inputs only through a write conditioned on their version or a re-read i
 from an id it was passed. `bzh:domain-takes-objects` is tooled by `blizzard:structural-gate`'s ast-grep scan
 ([`../verification/blizzard.md`](../verification/blizzard.md)), scoped to `hub/domain/` and the runner's domain core
 (`bzh:domain-core`): one glob per top-level `bzh:domain-package-layers` runner node, with `**/internal/**` ignored.
-`blizzard/tests/test_layering.py` holds those globs equal to the runner layer table, so a new node is in scope with no
-edit to the rule.
+`blizzard/tests/guards/test_layering.py` holds those globs equal to the runner layer table, so a new node is in scope
+with no edit to the rule.
 
 **Do.** `blizzard/src/blizzard/hub/domain/operations/complete.py` declares `complete(self, chunk: Chunk, *, by: str)`;
 the controller resolves that chunk through a read repository first. Where no aggregate exists,

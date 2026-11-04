@@ -19,9 +19,9 @@ stays elastic; the cap turns pruning from a judgment call into a trigger.
 
 Binds `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, `blizzard-mock/tests`, and `blizzard/exemplars/python`; no
 other tree: `blizzard/web/projects`, which `bzh:comment-locality` binds, carries no cap. The structural test
-`blizzard/tests/test_layering.py` holds every exemplar block to the caps outright. On the other trees a change is held
-to the caps on every block it adds or edits, judged at review, while the pre-existing surface is worked down by pruning
-passes, never blocking an incidentally-touched file. The distinction is per block: a new class in an old module
+`blizzard/tests/guards/test_layering.py` holds every exemplar block to the caps outright. On the other trees a change is
+held to the caps on every block it adds or edits, judged at review, while the pre-existing surface is worked down by
+pruning passes, never blocking an incidentally-touched file. The distinction is per block: a new class in an old module
 qualifies, a fuller docstring on an untouched one does not.
 [../verification/blizzard/gaps.md](../verification/blizzard/gaps.md) owns the gap.
 
@@ -42,8 +42,8 @@ regime.
 
 ## Detect
 
-- `blizzard/tests/test_layering.py` for the exemplars, and `blizzard/scripts/prose_caps.py`'s `over_cap_blocks`, which
-  names each over-cap block as `file:line`, for any other tree.
+- `blizzard/tests/guards/test_layering.py` for the exemplars, and `blizzard/scripts/prose_caps.py`'s `over_cap_blocks`,
+  which names each over-cap block as `file:line`, for any other tree.
 - A parameter-by-parameter docstring, one paragraph per field.
 - A prune that tightens wording to keep every fact: under-cap is reached by dropping content, not compressing it.
 

@@ -179,7 +179,7 @@ class LintReferencesTest(unittest.TestCase):
         self.fails("detect-cites-modules")
 
     def test_test_names_outside_detect_or_architecture_pass(self) -> None:
-        self.arch("**Detect.** `blizzard/tests/test_layering.py` fails the unit tier.\n\n**Do.** See `test_a_thing_holds`.\n")
+        self.arch("**Detect.** `blizzard/tests/guards/test_layering.py` fails the unit tier.\n\n**Do.** See `test_a_thing_holds`.\n")
         self.assertEqual(self.lint(), [])
         self.write({"rules/one.md": CLEAN["rules/one.md"] + "\n**Detect.** `test_a_thing_holds`\n"})
         self.assertEqual(self.lint(), [])

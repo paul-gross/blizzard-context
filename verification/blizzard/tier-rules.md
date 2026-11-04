@@ -109,8 +109,8 @@ the filename alone says when it expires.
 
 **Detect.** The collection hook in `tests/suite_plugin.py`, registered by the repo-root `conftest.py` so it reaches
 every colocated directory, refuses a misnamed file or a stem with no sibling revision with a usage error naming the file
-(`tests/revision_age.py`, proven by `tests/test_revision_age.py`). No check enforces that a reshaping revision has its
-test.
+(`tests/revision_age.py`, proven by `tests/guards/test_revision_age.py`). No check enforces that a reshaping revision
+has its test.
 
 **Do.** The exemplar's hub migration test, beside its revision under the same stem
 ([../../exemplars/index.md](../../exemplars/index.md)).
@@ -261,9 +261,9 @@ owned by [`../../architecture/crash-correctness.md`](../../architecture/crash-co
 fills the ~64 KiB pipe buffer, then blocks in `write` forever. A pipe-wedged daemon never dies — `poll()` still reports
 it alive and its port still answers `connect`, but it stops serving mid-tick and every wait against it times out.
 
-**Detect.** `tests/test_daemon_spawn_sink.py` fails the unit tier on any newly introduced `stdout=subprocess.PIPE`. Log
-volume is what arms the wedge, so a change that adds daemon logging can wedge a suite that was passing and the symptom
-lands far from the cause — suspect the wedge before the test.
+**Detect.** `tests/guards/test_daemon_spawn_sink.py` fails the unit tier on any newly introduced
+`stdout=subprocess.PIPE`. Log volume is what arms the wedge, so a change that adds daemon logging can wedge a suite that
+was passing and the symptom lands far from the cause — suspect the wedge before the test.
 
 **Do.** The tiers that spawn real daemons with `subprocess.Popen` — `blizzard:crash-sweep`, `blizzard:service-test`, and
 `blizzard:rehearsal` — spawn through `tests/support.py`'s `daemon_log_sink`, which is that file: a daemon with a runtime
@@ -308,8 +308,8 @@ support module — a module under `tests/` whose name does not start with `test_
 files to where they sit: a module cannot move, split, or be renamed without chasing every importer. An imported test
 function is also collected a second time, under the importer's node id, and runs twice.
 
-**Detect.** `tests/test_layering.py` fails the unit tier on any import of a module whose last component starts with
-`test_`, from any `test_*.py` under `tests/` at any depth. It reads the AST, so `from tests.test_x import …`,
+**Detect.** `tests/guards/test_layering.py` fails the unit tier on any import of a module whose last component starts
+with `test_`, from any `test_*.py` under `tests/` at any depth. It reads the AST, so `from tests.test_x import …`,
 `import tests.test_x`, `from tests import test_x`, relative imports, and function-local imports all count.
 
 **Do.** Move the shared name — with the private module-level names it needs — into a support module named for what it

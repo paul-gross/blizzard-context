@@ -62,7 +62,7 @@ request.
 
 ### blizzard:store-baseline
 
-`BLIZZARD_STORE_BASELINE=1 uv run --extra postgres pytest -m store_baseline tests/test_store_baseline.py`
+`BLIZZARD_STORE_BASELINE=1 uv run --extra postgres pytest -m store_baseline tests/store_baseline/test_store_baseline.py`
 (`mise run store-baseline`) — the proof that a fold replaced a store's migration history without changing the store it
 builds. For each tree, the baseline alone is applied to an empty store, the floor release's own published wheel builds
 its history's store from empty with its own `migrate` verbs, and the two are compared on the same backend: every table's

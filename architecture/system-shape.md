@@ -68,8 +68,8 @@ beside `basic_provider.py` and the shared `git.py` in `runner/environments/inter
 
 **Detect.** A vendor SDK, the GitHub API, or a claude/harness binary invoked directly from a loop step, the domain, or a
 store rather than through an injected seam Protocol; or a test that cannot run without a real external system because no
-seam exists to bind a mock to. For the harness seam, the adapter-isolation check in `blizzard/tests/test_layering.py`
-fails the unit tier, resolving relative imports, on each breach:
+seam exists to bind a mock to. For the harness seam, the adapter-isolation check in
+`blizzard/tests/guards/test_layering.py` fails the unit tier, resolving relative imports, on each breach:
 
 - a harness-core module importing an adapter package — `harness/claude_code/`, `harness/opencode/`, or
   `harness/opencode_v2/`;
