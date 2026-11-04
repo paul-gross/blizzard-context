@@ -66,7 +66,7 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   is retained, not released: the replay returns `HUB_NODE_TAKEN`, the holding runner keeps its envs, and its ADVANCE
   poll drives the landed hub node to `done` instead of the chunk wedging at `delivering`. The per-chunk intended
   migration is swept on the same point by `test_kill9_at_migrate_crash_point_for_an_intended_migration`; its unit-tier
-  coverage is `tests/test_hub_cli_chunk.py` and its component-tier coverage is
+  coverage is `tests/unit/hub/cli/test_chunk.py` and its component-tier coverage is
   `tests/component/hub/api/test_intended_migration_apply.py` and `tests/test_chunk_edit_api.py`, since the fleet service
   migration exercises only the authored-choice route.
 - `attach.`, the worker artifact-attach durability window armed on the runner, is swept by

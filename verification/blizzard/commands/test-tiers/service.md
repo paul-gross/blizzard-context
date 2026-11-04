@@ -44,9 +44,9 @@ the sweep spends nothing, the landing succeeds, and the close has exactly one de
 an unretired intent after another drain.
 `test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[rate_limited]` and
 `test_a_rate_refused_landing_pends_until_the_refusal_lifts_then_lands[secondary_rate_limited]` prove each refusal's
-retry and eventual landing. The `blizzard:unit-test` companions are `tests/test_forge_budget.py` and
-`tests/test_github_work_source_rate_gate.py`; the `blizzard:component-test` companions are
-`tests/test_forge_registry.py` and `tests/test_flow_driver.py`.
+retry and eventual landing. The `blizzard:unit-test` companions are `tests/unit/hub/forge/test_budget.py` and
+`tests/unit/hub/work_sources/internal/test_github_work_source_rate_gate.py`; the `blizzard:component-test` companions
+are `tests/component/hub/forge/test_registry.py` and `tests/component/hub/delivery/test_flow_driver.py`.
 
 **Flow turns** (`tests/service/fleet/flow-turns.spec.ts`) uses public submission, turn and landing histories; the
 component checker exercises flow invariants independently.
@@ -123,8 +123,8 @@ host through `build` and the hub's `land` action. A repository-scoped `checks_pe
 `deliver` while its branch's flow has one open submission, read through the chunk's flow-submissions API. Clearing the
 lever lets the same submission close `landed` as the chunk reaches `done` and `landed`. The component-tier
 `tests/component/tools/test_invariants.py` covers the no-open-turn close-out and flow invariants; the component-tier
-`tests/test_flow_driver.py::test_a_store_carried_across_the_flows_revision_boots_pending_visits_in_entry_order` covers
-the migration-boundary boot order of pending visits.
+`tests/component/hub/delivery/test_flow_driver.py::test_a_store_carried_across_the_flows_revision_boots_pending_visits_in_entry_order`
+covers the migration-boundary boot order of pending visits.
 
 **Node session modes** (`tests/service/fleet/session-modes.spec.ts`) run a real host through a
 `build → review → build → review → deliver` fail-cycle, with every node entry observed through the runner's
@@ -323,9 +323,10 @@ an authored graph with the shipped choices, a brisk poll cadence, and conflict a
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` pends
   with no check and bounces `poll-timeout`, with nothing merged.
 
-The component-tier `tests/test_github_landing.py` covers conditional forge lookup behavior; the component-tier
-`tests/test_land_action.py::test_pending_landing_polls_use_only_conditional_forge_reads_after_the_first_pass` covers the
-pending landing's ten-poll read budget and filtered lookup count.
+The component-tier `tests/component/hub/forge/internal/test_github_landing.py` covers conditional forge lookup behavior;
+the component-tier
+`tests/component/hub/delivery/actions/test_land.py::test_pending_landing_polls_use_only_conditional_forge_reads_after_the_first_pass`
+covers the pending landing's ten-poll read budget and filtered lookup count.
 
 **Authored post-merge edge**
 (`tests/service/fleet/post-merge-node.spec.ts::test_authored_landed_edge_runs_a_post_merge_node_after_landing`) lands a
@@ -500,7 +501,7 @@ bearer client — the CLI's own shape — authenticates `GET /api/me` off that t
 the same bearer revokes it server-side so a byte-identical retry 401s; the CLI never contacts the stub IdP, only the
 hub's own routes. The exchange's rejection matrix — wrong or missing verifier, unregistered redirect form, replayed
 code, and expired code — is pinned by the component-tier `test_cli_login_api.py`; the loopback listener and paste-code
-mechanics sit with the unit-tier `test_cli_login_mechanics.py` and `test_hub_cli_login.py`.
+mechanics sit with the unit-tier `tests/unit/hub/cli/test_login_mechanics.py` and `tests/unit/hub/cli/test_login.py`.
 
 **Joining a runner with `blizzard runner init`** (`tests/service/fleet/runner-init.spec.ts`) is proven over the real
 wire only at this tier: init runs in its own process against a real hub on `auth.mode = "none"`, adds the runner through

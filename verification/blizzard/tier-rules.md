@@ -317,8 +317,8 @@ holds, and import it from there in the definer and every importer. A name that k
 `# pyright: ignore[reportPrivateUsage]` at each import, and its definition carries
 `# pyright: ignore[reportUnusedFunction]` when nothing in the support module calls it.
 
-**Don't.** `from tests.test_land_action import _forge` — the guard fails the unit tier. Re-import a test function to run
-it from another test; extract what it asserts into a support helper both tests call.
+**Don't.** `from tests.component.hub.delivery.actions.test_land import _forge` — the guard fails the unit tier.
+Re-import a test function to run it from another test; extract what it asserts into a support helper both tests call.
 
 ## A visual change is proved by a real render (`bzh:visual-change-needs-a-render`)
 

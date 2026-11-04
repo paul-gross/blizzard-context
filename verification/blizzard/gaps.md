@@ -277,11 +277,11 @@ skipping the merge-state read) is silent until a live chunk exposes it.
 
 `adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-push.md` addenda, scope a second or later visit to the
 delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method covers
-pass without a re-run. The byte bars and `tests/test_adw_docket.py`'s pointer census hold the prompts' mechanics; that a
-re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix, scopes by the change's
-own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the prior report records
-as failed, and records the scoping decision in the new report is asserted by nothing — a scoping that quietly skips a
-method the delta touches passes the same as an honest one until a live chunk exposes it.
+pass without a re-run. The byte bars and `tests/unit/hub/graphs/test_adw_docket.py`'s pointer census hold the prompts'
+mechanics; that a re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix,
+scopes by the change's own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the
+prior report records as failed, and records the scoping decision in the new report is asserted by nothing — a scoping
+that quietly skips a method the delta touches passes the same as an honest one until a live chunk exposes it.
 
 `adv-dwf`'s `mutation.md`, `mutation.judgement.md`, and `review.from-mutation.md`, and the survivor bullet in
 `build.from-review.md`, carry the delivery-time mutation report's whole method: run the project's declared diff-scoped
