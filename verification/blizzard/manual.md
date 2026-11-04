@@ -22,12 +22,13 @@ unique fixture names that do not overwrite existing files, and record the candid
 
 1. Add Python files at the repository root and in a fresh arbitrary owned directory. In each, introduce a strict typing
    violation and a forbidden bare `# type: ignore` suppression on separate lines, so the suppression cannot hide the
-   typing violation. Run `uv run pyright` and `uv run ast-grep scan --error=unused-suppression .` separately; record
-   each exit and diagnostic and require each command to name both injected files.
+   typing violation. Include a file under `nested/build/`, which `.gitignore` hides but pyright owns. Run
+   `uv run pyright` and `mise run structural-gate` separately; record each exit and diagnostic and require each command
+   to name every injected file.
 2. Remove those owned fixtures, then put equivalent files under each declared excluded dependency, cache, dot-directory
-   and generated build path, including root `mutants/`. Add an equivalent file in owned source adjacent to an excluded
-   output path. Run both commands again. The adjacent file must be named by both gates; no excluded fixture may be
-   named.
+   and generated build path, including root `mutants/`, a nested dot-directory and a dot-named Python file. Run both
+   commands and require neither to name an excluded fixture. Then add an equivalent file in owned source adjacent to an
+   excluded output path and rerun: both gates must name the adjacent file and neither may name an excluded fixture.
 3. Remove every injected fixture and rerun both commands against the clean candidate copy. Record their exits and
    output. Remove the disposable copy after retaining the evidence.
 
