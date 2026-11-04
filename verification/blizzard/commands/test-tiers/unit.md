@@ -35,13 +35,14 @@ The tier's other named coverage:
   `runner/lifecycle/judgement/produces.py`) over one scenario matrix, asserting both return the same, and the expected,
   verdict — the anti-drift guard on the shared `foundation.completion_gates.Coverage` predicate. Neither side's own
   tests can see such a disagreement — `test_produces_auth.py` sees only the hub, the component-tier
-  `test_runner_nudge.py` only the runner — and the expected-verdict assertions also catch identical re-forks.
+  `tests/component/runner/test_nudge.py` only the runner — and the expected-verdict assertions also catch identical
+  re-forks.
 - `test_artifacts_storage.py` — with the git-commit coverage in `tests/unit/runner/loop/test_loop.py` and
-  `test_runner_gates.py`, pins the worker-declares/runner-verifies split: a fake `IWorktreeGit.verify` drives ADVANCE's
-  collection, and `GitCommitArtifact`/`StoredArtifact` round-trip losslessly with `forge` carried. A verified
-  declaration becomes a `GIT_COMMIT` `SubmittedArtifact` carrying its manifest-named origin; an unverified one is
-  dropped and reported as a `command-failed` the worker can act on — reported deliberately, since a silent drop lets a
-  chunk reach `done` having delivered nothing.
+  `tests/unit/runner/loop/test_gates.py`, pins the worker-declares/runner-verifies split: a fake `IWorktreeGit.verify`
+  drives ADVANCE's collection, and `GitCommitArtifact`/`StoredArtifact` round-trip losslessly with `forge` carried. A
+  verified declaration becomes a `GIT_COMMIT` `SubmittedArtifact` carrying its manifest-named origin; an unverified one
+  is dropped and reported as a `command-failed` the worker can act on — reported deliberately, since a silent drop lets
+  a chunk reach `done` having delivered nothing.
 - `test_packaged_prompts_attach.py` — in every packaged graph (`src/blizzard/hub/graphs/*/graph.yaml`), a runner node
   declaring `produces:` must have its inlined prompt name the kind-appropriate verb —
   `blizzard runner artifact create --name <that-exact-name>` for an `asset` entry, `blizzard runner artifact commit` for

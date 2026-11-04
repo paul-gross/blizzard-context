@@ -131,8 +131,9 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   two registered hosts, the moving runner adopted under the destination. After the kill the copy is whole and the source
   keeps every row; an unarmed re-run completes the ingest to the end state an uninterrupted one leaves, and the
   invariants are green on both stores. The bounded-CI representative is `ingest.after-config.before-removal`. The
-  refusal of a re-run after the source ran in between is pinned at the component tier by `test_runner_ingest.py`.
-  `blizzard-context/architecture/crash-correctness/runner.md` owns the windows' ground.
+  refusal of a re-run after the source ran in between is pinned at the component tier by
+  `tests/component/runner/test_ingest.py`. `blizzard-context/architecture/crash-correctness/runner.md` owns the windows'
+  ground.
 - `preempt.`, the operator-restart teardown window armed on the runner, is swept by `test_kill9_at_preempt_crash_point`:
   an operator restarts a running chunk and the runner dies between killing the displaced worker and recording the
   `preempted` closure; recovery re-derives the same preempt off the hub's still-standing fence — the lease closes
