@@ -13,10 +13,10 @@ method's [command detail](./commands/test-tiers/service.md) for the paired task 
 ## Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
 **Rule.** Name the fixtures a test needs — tenant, project, clients, people, event stream, the `blizzard` CLI, a fresh
-hub's stop, kill, start, and data-reset lifecycle, the OTLP sink, a real runner host (`runnerHost` and `runnerHosts`),
-and a mock worker's checkpoint (`workerCheckpoint`) — and import only `tests/harness/fixtures.ts`. A runner-only test
-takes `runnerTest`'s own `mockHub` and `authStub` instead of any shared-hub fixture. Do not use Playwright's built-in
-`request` or set shared state in `test.beforeAll`.
+hub's stop, kill, start, and data-reset lifecycle, the OTLP sink, a real runner host (`runnerHost` and `runnerHosts`), a
+mock worker's checkpoint (`workerCheckpoint`), and the clock (`clock`) — and import only `tests/harness/fixtures.ts`. A
+runner-only test takes `runnerTest`'s own `mockHub` and `authStub` instead of any shared-hub fixture. Do not use
+Playwright's built-in `request` or set shared state in `test.beforeAll`.
 
 Each folder takes one world. `service/hub/` and `service/fleet/` take `test`; `service/runner/` takes `runnerTest`,
 which has no `isolation` option, so a runner spec declares none: its mock hub and host belong to that test alone. A
@@ -158,6 +158,15 @@ methods require a fresh hub, and the controls are enabled only by `flowStepped`.
 as well when its work is needed; see `tests/service/fleet/flow-turns.spec.ts`. A stepped hub cannot restart over its
 existing store, because its fixed clock would move backwards; `freshHub.reset()` starts with a new empty store and
 clock.
+
+A test that needs time to move asks for a controlled stack with `test.use({ clockMode: 'controlled' })`; every other
+test runs on the system clock, whose `clock.advance` and `clock.set` refuse. Only a `fresh-hub` test, a block that holds
+its stack, or a runner-world test may ask: a controlled stack moves every daemon's clock, and a shared hub's belongs to
+other tests. It pairs only with stepped daemons, so a timed sweep, a `runnerLoop: 'timed'` host, and `flowStepped`
+beside it are refused before any daemon starts. `clock.now()` is every spec's source of an instant, controlled or not; a
+spec never reads the machine's clock itself. `clock.advance(seconds)` and `clock.set(instant)` move the hub or mock hub,
+the runner hosts, the mock runners and forge, and the browser together, and resolve once all have answered. On a
+controlled hub, `api.flowStep()` runs one flow-driver pass at `clock.now()`.
 
 In a `collectorTest` case, poll `collector.decision(traceId)` for the short trace while the worker is held at its
 checkpoint. Its unmarked trace-specific probe reads the collector's cached sampling decision; only a returned `dropped`
