@@ -585,9 +585,9 @@ parses can be absent from both documents: the incompatible-claim `409` (`RouteCl
 parses those bodies with open vocabularies (`bzh:open-response-vocabulary`), which keeps a gained value from failing it,
 but nothing holds the body's shape to a supported release.
 
-Standing in for a tier: the open-vocabulary gate test (`tests/test_open_response_vocabulary.py`) takes the classes the
-runner's client modules parse as well as the documents' response components, so every vocabulary such a body carries is
-open or declared closed; a change to one of those bodies owes the by-hand judgement
+Standing in for a tier: the open-vocabulary gate test (`tests/guards/test_open_response_vocabulary.py`) takes the
+classes the runner's client modules parse as well as the documents' response components, so every vocabulary such a body
+carries is open or declared closed; a change to one of those bodies owes the by-hand judgement
 [../../workflows/judging-a-break.md](../../workflows/judging-a-break.md) describes. The gap closes when the tool reads
 the refusal bodies a route declares.
 
@@ -598,6 +598,6 @@ each release's daemons onto the candidate but stages no gained value, and a live
 own build knows every value it can write. That an open field tolerates an unknown value is proven only inside the tree.
 
 Standing in for a tier: the unit and component tests that feed an unknown value through the parse, the runner's
-lifecycle decisions, the drain, and a proxy route (`tests/test_open_response_vocabulary_paths.py`,
-`tests/test_runner_unknown_vocabulary_rules.py`), and the open mark a release's document carries for each position its
-clients tolerate.
+lifecycle decisions, the drain, and a proxy route (`tests/unit/wire/test_open_response_vocabulary_paths.py`,
+`tests/component/runner/test_open_response_vocabulary_paths.py`, `tests/test_runner_unknown_vocabulary_rules.py`), and
+the open mark a release's document carries for each position its clients tolerate.

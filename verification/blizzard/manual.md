@@ -646,10 +646,10 @@ only on a host with none, and remove it afterward.
 ### `blizzard:manual-rollback-drill`
 
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
-`docs/install.md`. `blizzard:unit-test`'s `tests/test_store_migrations.py::test_migrate_up_and_down` already proves
-every shipped revision has a working `downgrade()`; the drill wraps the operator-facing procedure around that guarantee,
-by hand because no CI tier stands up a real compose deployment. Run it at least once per DISTRIB slice landing, and
-re-run it whenever `docs/rollback.md`'s commands change.
+`docs/install.md`. `blizzard:unit-test`'s `tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down`
+already proves every shipped revision has a working `downgrade()`; the drill wraps the operator-facing procedure around
+that guarantee, by hand because no CI tier stands up a real compose deployment. Run it at least once per DISTRIB slice
+landing, and re-run it whenever `docs/rollback.md`'s commands change.
 
 **Setup.** A running compose stack (`docker compose up -d`, `packaging/docker/compose.yaml`) on at least two published
 or locally-built image tags, so a real previous tag exists to roll back to.
@@ -1361,7 +1361,7 @@ the implementation under exercise.
    file.
 3. Read each tree through Alembic's `ScriptDirectory`: one base, the baseline, and the first kept revision's
    `down_revision` resolves to it.
-4. `uv run pytest tests/test_store_migrations.py::test_migrate_up_and_down tests/test_baseline_floor.py`.
+4. `uv run pytest tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down tests/test_baseline_floor.py`.
 5. Stamp a scratch hub store (`blizzard hub init`) at an absorbed revision id, then `blizzard hub migrate --dir` on it.
 6. `blizzard:typecheck` and `blizzard:structural-gate` on the clone.
 7. Run the tool a second time.
