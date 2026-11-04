@@ -14,9 +14,9 @@ The component spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md).
 
 - The colocated migration tests under `src/blizzard/{hub,runner}/store/migrations/tests/` — each checks its revision's
   schema, rerun, and downgrade behavior, and any carry-over or refusal it makes (`bzh:colocated-migration-tests`).
-- `tests/test_flow_driver.py::test_a_store_carried_across_the_flows_revision_boots_pending_visits_in_entry_order` —
-  checks that pending visits survive a downgrade/upgrade across the flow tables and boot in node-entry order, even when
-  chunk ids reverse it.
+- `tests/component/hub/delivery/test_flow_driver.py::test_a_store_carried_across_the_flows_revision_boots_pending_visits_in_entry_order`
+  — checks that pending visits survive a downgrade/upgrade across the flow tables and boot in node-entry order, even
+  when chunk ids reverse it.
 - `tests/component/test_checks_gate_agreement.py` — applies the produces-coverage guard's anti-drift shape to the
   `requires_checks` gate: both real decision sites — the runner's local gate at worker exit and the hub's completion
   backstop — must reach the same, and the expected, accept/reject verdict over one scenario matrix — a cross-graph

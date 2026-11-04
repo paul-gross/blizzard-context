@@ -29,7 +29,7 @@ weaker fallback, and a multi-name node relying on the alias loses per-name prove
 
 **Detect.** A produces asset name with no `artifact create --name <that name>` string anywhere in the prompt text; a
 multi-asset prompt expecting one declaration to cover every name. A standing unit-tier guard,
-`tests/test_packaged_prompts_attach.py` (cited in `blizzard:unit-test`,
+`tests/unit/hub/graphs/test_packaged_prompts_attach.py` (cited in `blizzard:unit-test`,
 [../../verification/blizzard.md](../../verification/blizzard.md)), holds every packaged graph's produces-declaring
 prompt to the kind-appropriate current verb, deprecated aliases included.
 

@@ -43,16 +43,17 @@ The tier's other named coverage:
   verified declaration becomes a `GIT_COMMIT` `SubmittedArtifact` carrying its manifest-named origin; an unverified one
   is dropped and reported as a `command-failed` the worker can act on — reported deliberately, since a silent drop lets
   a chunk reach `done` having delivered nothing.
-- `test_packaged_prompts_attach.py` — in every packaged graph (`src/blizzard/hub/graphs/*/graph.yaml`), a runner node
-  declaring `produces:` must have its inlined prompt name the kind-appropriate verb —
-  `blizzard runner artifact create --name <that-exact-name>` for an `asset` entry, `blizzard runner artifact commit` for
-  a `git_commit` entry — and no packaged prompt may name the deprecated `blizzard runner attach` alias. A prompt is
-  opaque prose to the parser, so a dropped or mistyped instruction fails no graph-load or validation test.
-- `test_adw_docket.py` — the same packaged-graph surface's graph-scope half: the adv-dwf `graph.yaml` declares its
-  `docket` under the top-level `artifacts:` map, not as a node facet, and every prompt restating a slice of the
-  findings-docket format also names `blizzard runner artifact get docket --scope graph` (the `PACKAGED` loader bakes the
-  referenced file's text into the doc verbatim). The guard's prompt set is a vocabulary match on raw prompt text, not an
-  authored list — a prompt growing docket vocabulary without the pointer goes red — and, distinct from that firing
-  condition, `test_the_docket_vocabulary_census_is_exactly_six_files` pins the matched set by name: the guard on the
-  guard against a pattern silently ceasing to match. No docket assertion reaches content agreement: editing the docket
-  format means re-checking each restatement against `docket.md` by hand.
+- `tests/unit/hub/graphs/test_packaged_prompts_attach.py` — in every packaged graph
+  (`src/blizzard/hub/graphs/*/graph.yaml`), a runner node declaring `produces:` must have its inlined prompt name the
+  kind-appropriate verb — `blizzard runner artifact create --name <that-exact-name>` for an `asset` entry,
+  `blizzard runner artifact commit` for a `git_commit` entry — and no packaged prompt may name the deprecated
+  `blizzard runner attach` alias. A prompt is opaque prose to the parser, so a dropped or mistyped instruction fails no
+  graph-load or validation test.
+- `tests/unit/hub/graphs/test_adw_docket.py` — the same packaged-graph surface's graph-scope half: the adv-dwf
+  `graph.yaml` declares its `docket` under the top-level `artifacts:` map, not as a node facet, and every prompt
+  restating a slice of the findings-docket format also names `blizzard runner artifact get docket --scope graph` (the
+  `PACKAGED` loader bakes the referenced file's text into the doc verbatim). The guard's prompt set is a vocabulary
+  match on raw prompt text, not an authored list — a prompt growing docket vocabulary without the pointer goes red —
+  and, distinct from that firing condition, `test_the_docket_vocabulary_census_is_exactly_six_files` pins the matched
+  set by name: the guard on the guard against a pattern silently ceasing to match. No docket assertion reaches content
+  agreement: editing the docket format means re-checking each restatement against `docket.md` by hand.
