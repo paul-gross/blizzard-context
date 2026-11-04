@@ -52,7 +52,8 @@ in the seam's package imports the loop that consumes it. House each adapter by t
 - When the harness binary's major version needs a separate implementation, that binding is a package of its own beside
   the package its harness id names, held to the same isolation. Until the seam's wiring module selects between majors it
   is named only by a composition root — `harness/opencode_v2/` binds OpenCode 2 and is named only by the runner's
-  `opencode` CLI group, home to the compatibility diagnostic and the turn driver; `harness/wiring.py` does not name it.
+  `opencode` CLI group, home to the compatibility diagnostic, the turn driver, and takeover; `harness/wiring.py` does
+  not name it.
 - An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
   composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
   `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
