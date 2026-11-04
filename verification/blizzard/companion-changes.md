@@ -13,12 +13,12 @@ wire-visible `IHubClient` or `IHubGateway` method.
 **Why.** A wire surface that lands on the real daemon but not on its mock leaves the counterpart silently unserved, so
 the service tier that exists to catch a wire regression tests nothing new.
 
-**Detect.** `blizzard`'s `tests/service/test_parity_guard.py` mechanically diffs `IHubClient` against the mock hub's
-served routes, and `blizzard-mock`'s `tests/test_wire_parity.py` covers the shape half from the other side by reading
-the sibling `blizzard` worktree — its detail is at [`./commands.md`](./commands/mock.md#blizzard-mockunit-test). The
-mock PR and master-push gates use the matching blizzard branch (falling back to the target line); a scheduled gate uses
-blizzard's master, and the parity check is among the mock's required checks. The other direction has no such check: the
-mock runner's `/_drive/*` plane is checked only against a hardcoded declared-set snapshot flagging a grown or shrunk
+**Detect.** `blizzard`'s `tests/service/wire/test_parity_guard.py` mechanically diffs `IHubClient` against the mock
+hub's served routes, and `blizzard-mock`'s `tests/test_wire_parity.py` covers the shape half from the other side by
+reading the sibling `blizzard` worktree — its detail is at [`./commands.md`](./commands/mock.md#blizzard-mockunit-test).
+The mock PR and master-push gates use the matching blizzard branch (falling back to the target line); a scheduled gate
+uses blizzard's master, and the parity check is among the mock's required checks. The other direction has no such check:
+the mock runner's `/_drive/*` plane is checked only against a hardcoded declared-set snapshot flagging a grown or shrunk
 verb, `IHubGateway` is never independently diffed against a real contract, and that direction therefore rests on this
 rule rather than on anything mechanical. `blizzard:compat` (`bzh:released-surface-additive`) is a different axis on the
 same surface — additive-vs-breaking across the hub↔runner skew window — and does not stand in for extending the mock: a
@@ -31,12 +31,12 @@ the new route `404`.
 ## An OpenCode lever roster change extends both sides (`bzh:opencode-lever-roster-extends-both-sides`)
 
 **Rule.** A change to `blizzard-mock`'s `opencode_surface.levers.Lever`/`CATALOG` — adding, renaming, or removing a
-member — lands `blizzard`'s `_fake_binary` (`tests/service/test_opencode_compatibility_service.py`) kwarg and
+member — lands `blizzard`'s `_fake_binary` (`tests/service/harnesses/test_opencode_compatibility_service.py`) kwarg and
 name-mapping in the same change, kept 1:1 with the enum, and updates `_fake_binary`'s `len(lever_flags)` pin to match.
 OpenCode 2's roster is held the same way: a change to `opencode2_surface.levers.Lever`/`CATALOG` lands the matching
-`_LEVERS` entry (`tests/service/test_opencode2_compatibility_service.py`), its `len(_LEVERS)` pin, and a service-tier
-case that arms it. The OpenCode 2 proof's prompts are held the same way: a change to a prompt in `blizzard`'s
-`runner/harness/opencode_v2/compatibility/script.py` lands the matching recognition in `blizzard-mock`'s
+`_LEVERS` entry (`tests/service/harnesses/test_opencode2_compatibility_service.py`), its `len(_LEVERS)` pin, and a
+service-tier case that arms it. The OpenCode 2 proof's prompts are held the same way: a change to a prompt in
+`blizzard`'s `runner/harness/opencode_v2/compatibility/script.py` lands the matching recognition in `blizzard-mock`'s
 `opencode2_surface/domain/script.py`, whose `needs_blizzard` test plans every prompt when both checkouts are present.
 
 **Why.** A member landed on one side alone drifts silently: a lever no service-tier case arms, or a kwarg naming a
