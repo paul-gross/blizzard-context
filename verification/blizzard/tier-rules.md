@@ -299,6 +299,27 @@ its ports from config and publishes none; and `tests/rehearsal/installation.py`'
 first start under a baseline release older than `--listening-file` — that exception lasts until every supported release
 ships the flag.
 
+## A test module imports no other test module (`bzh:test-imports-support-only`)
+
+**Rule.** A `test_*.py` module imports nothing from another `test_*.py` module. Code two test modules share lives in a
+support module — a module under `tests/` whose name does not start with `test_` — and both import it from there.
+
+**Why.** Importing from a test module makes the importer depend on a file whose job is to hold tests, and ties both
+files to where they sit: a module cannot move, split, or be renamed without chasing every importer. An imported test
+function is also collected a second time, under the importer's node id, and runs twice.
+
+**Detect.** `tests/test_layering.py` fails the unit tier on any import of a module whose last component starts with
+`test_`, from any `test_*.py` under `tests/` at any depth. It reads the AST, so `from tests.test_x import …`,
+`import tests.test_x`, `from tests import test_x`, relative imports, and function-local imports all count.
+
+**Do.** Move the shared name — with the private module-level names it needs — into a support module named for what it
+holds, and import it from there in the definer and every importer. A name that keeps its leading underscore carries
+`# pyright: ignore[reportPrivateUsage]` at each import, and its definition carries
+`# pyright: ignore[reportUnusedFunction]` when nothing in the support module calls it.
+
+**Don't.** `from tests.test_land_action import _forge` — the guard fails the unit tier. Re-import a test function to run
+it from another test; extract what it asserts into a support helper both tests call.
+
 ## A visual change is proved by a real render (`bzh:visual-change-needs-a-render`)
 
 **Rule.** Verify a change whose observable effect is visual — layout, styling, what a component renders — by at least
