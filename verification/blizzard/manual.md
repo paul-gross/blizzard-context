@@ -7,6 +7,37 @@ Full detail for the `blizzard:` manual methods named in [`../blizzard.md`](../bl
 section per row, in that table's order. The `web:` methods live in [`./manual-web.md`](./manual-web.md) and the
 `blizzard-mock:` methods in [`./manual-mock.md`](./manual-mock.md).
 
+### `blizzard:manual-strict-types`
+
+**Surface.** Repository-wide Python discovery by pyright and applicability of the ast-grep suppression rule, including
+the boundary between owned source and excluded dependency, cache, dot-directory and generated output. This
+developer-gate exercise does not start a hub or runner.
+
+**Setup.** From the candidate `blizzard` worktree, make a disposable copy under `BLIZZARD_TMPDIR` with the candidate's
+configuration and its installed tools available. Run all commands below from the copy, never injecting fixtures into the
+worktree. Preserve the candidate's ignore files: discovery must exercise their interaction with both gates. Choose
+unique fixture names that do not overwrite existing files, and record the candidate revision and copy location.
+
+**Steps.**
+
+1. Add Python files at the repository root and in a fresh arbitrary owned directory. In each, introduce a strict typing
+   violation and a forbidden bare `# type: ignore` suppression on separate lines, so the suppression cannot hide the
+   typing violation. Run `uv run pyright` and `uv run ast-grep scan --error=unused-suppression .` separately; record
+   each exit and diagnostic and require each command to name both injected files.
+2. Remove those owned fixtures, then put equivalent files under each declared excluded dependency, cache, dot-directory
+   and generated build path, including root `mutants/`. Add an equivalent file in owned source adjacent to an excluded
+   output path. Run both commands again. The adjacent file must be named by both gates; no excluded fixture may be
+   named.
+3. Remove every injected fixture and rerun both commands against the clean candidate copy. Record their exits and
+   output. Remove the disposable copy after retaining the evidence.
+
+**Evidence.** Keep the revision, fixture paths and contents, commands, exits and file-specific diagnostics for each run
+with the change under verification. Record any pre-existing gate failures separately; they do not establish fixture
+discovery.
+
+**Passes when.** Both gates fail and name each owned fixture, neither names any excluded fixture, and the adjacent owned
+fixture is still detected. Both clean reruns exit zero, and the disposable copy is removed.
+
 ### `blizzard:manual-hub`
 
 **Surface.** A running hub driven by hand from outside the process — its HTTP API under `/api/`, and the operator CLI
