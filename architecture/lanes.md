@@ -34,10 +34,10 @@ follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sh
    so a stalled sink never holds a tick. On the hub, every lane is a `SweepRoster` entry, stepped by a `Sweep` when
    timed and by the sweep routes on request, except one. `FlowDriver`
    (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) is the one hub lane that is not a `Sweep` or a `SweepRoster`
-   entry: its own coroutine, started in the hub's lifespan beside the sweeps' tasks and awaited before the action loop
-   stops, steps its `tick` through `asyncio.to_thread`. It runs turn tasks under the `flow.` crash-point family: each
-   tick's writes are store transactions with no external effect, and each turn's task drives a pass whose effect writes
-   keep the `action.` family.
+   entry: in timed mode its own coroutine, started in the hub's lifespan beside the sweeps' tasks and awaited before the
+   action loop stops, steps its `tick` through `asyncio.to_thread`. It runs turn tasks under the `flow.` crash-point
+   family: each tick's writes are store transactions with no external effect, and each turn's task drives a pass whose
+   effect writes keep the `action.` family.
 
 The failure shapes, by sink class:
 
