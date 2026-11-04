@@ -309,6 +309,9 @@ so nothing mechanical can diff the two rosters. A member added on one side with 
 silently: a new `blizzard-mock` lever goes untested by `blizzard`'s diagnostic cases, or a stale `blizzard` kwarg
 targets a retired lever name and fails loudly only when `mock-opencode emit` rejects it at runtime.
 
+The same gap holds for OpenCode 2: `opencode2_surface.levers.Lever` and `_LEVERS`
+(`tests/service/test_opencode2_compatibility_service.py`), with its `len(_LEVERS)` pin as the trip-wire.
+
 Standing in for a tier: `_fake_binary`'s own `len(lever_flags)` assertion pins the count as a trip-wire, and
 `bzh:opencode-lever-roster-extends-both-sides` in [`./companion-changes.md`](./companion-changes.md) obligates a roster
 change to land both sides in the same commit family. Neither closes the gap mechanically — the count can hold while a

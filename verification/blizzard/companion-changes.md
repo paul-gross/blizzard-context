@@ -33,6 +33,11 @@ the new route `404`.
 **Rule.** A change to `blizzard-mock`'s `opencode_surface.levers.Lever`/`CATALOG` — adding, renaming, or removing a
 member — lands `blizzard`'s `_fake_binary` (`tests/service/test_opencode_compatibility_service.py`) kwarg and
 name-mapping in the same change, kept 1:1 with the enum, and updates `_fake_binary`'s `len(lever_flags)` pin to match.
+OpenCode 2's roster is held the same way: a change to `opencode2_surface.levers.Lever`/`CATALOG` lands the matching
+`_LEVERS` entry (`tests/service/test_opencode2_compatibility_service.py`), its `len(_LEVERS)` pin, and a service-tier
+case that arms it. The OpenCode 2 proof's prompts are held the same way: a change to a prompt in `blizzard`'s
+`runner/harness/opencode_v2/compatibility/script.py` lands the matching recognition in `blizzard-mock`'s
+`opencode2_surface/domain/script.py`, whose `needs_blizzard` test plans every prompt when both checkouts are present.
 
 **Why.** A member landed on one side alone drifts silently: a lever no service-tier case arms, or a kwarg naming a
 retired lever. [`./gaps.md`](./gaps.md#the-cross-repo-opencode-lever-roster) owns why nothing mechanical diffs the two
