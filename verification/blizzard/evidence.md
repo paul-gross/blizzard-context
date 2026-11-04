@@ -144,7 +144,7 @@ owes: `retries:` omitted → blizzard-context:/domain/graphs/nodes.md's retries 
       applies; pinned by
       tests/unit/runner/loop/test_loop.py::test_fill_spawns_a_node_with_no_authored_retry_budget_at_the_configured_default
       and,
-      for the default's own value, tests/test_pin_runner_loop.py::test_default_retries_max_is_two
+      for the default's own value, tests/unit/runner/test_pin_runner_loop.py::test_default_retries_max_is_two
 owes: an entry reaching no terminal → blizzard-context:/domain/graphs/edges.md's reachability warning states the
       second arm; pinned by tests/test_graph_validation.py::test_entry_reaching_no_terminal_is_a_warning_not_an_error
 owes: hub-node key `poll_jitter:` omitted → blizzard-context:/standards/hub-nodes/outcome-protocol.md, the delegate

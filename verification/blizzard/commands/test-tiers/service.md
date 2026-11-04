@@ -284,7 +284,8 @@ the promoted default chunk with its project id and slug.
 `pass` bounces and the second build lands;
 `tests/service/fleet/checks-gate.spec.ts::test_a_red_check_through_a_non_gated_fail_routes_normally` proves an ungated
 `fail` records a normal history transition before the green pass lands. Both assert two builds on main. The
-component-tier `test_checks_gate_agreement.py` checks the runner gate and hub backstop against a decision matrix.
+component-tier `tests/component/test_checks_gate_agreement.py` checks the runner gate and hub backstop against a
+decision matrix.
 
 **PR and CI delivery policy.** `tests/service/fleet/delivery-pr-ci.spec.ts` drives the generic hub `land` action through
 an authored graph with the shipped choices, a brisk poll cadence, and conflict and failure edges back to `build`:
@@ -516,7 +517,7 @@ tier: two host directories hold one runner each under one host the mock hub know
 outbound and transcript `seq`s, a `route_tokens` chunk id, a `graph_artifacts` key, and the workspace id. A real
 `blizzard-runner ingest --workspace-id` moves one runner into the other's host, which then starts: both runners resume
 every lease, and the hub applies every backlog fact above each runner's mark. Its refusals, resume, and collisions are
-pinned at the component tier by `test_runner_ingest.py`.
+pinned at the component tier by `tests/component/runner/test_ingest.py`.
 
 **Runner SSO federation's JWT/JWKS wire leg**
 (`tests/service/fleet/auth/idp-federation.spec.ts::test_the_wire_leg_ends_in_an_unlocked_runner_route`) is the
@@ -530,4 +531,4 @@ third, on a hub with two providers, hands the unauthenticated bounce to the `/lo
 authorize request through the second provider
 (`tests/service/fleet/auth/idp-federation.spec.ts::test_a_two_provider_bounce_resumes_through_the_login_chooser`). The
 runner's three-lane gating split — human-lane 401, worker-hook and socket ungated — is pinned at the unit-tier and
-component-tier by `test_runner_route_gating.py` and `test_runner_federation.py`.
+component-tier by `tests/unit/runner/api/test_route_gating.py` and `tests/component/runner/api/test_federation.py`.
