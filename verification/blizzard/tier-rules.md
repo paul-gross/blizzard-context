@@ -158,17 +158,17 @@ in the folder of the adapter it seeds through.
 
 ## Two tenants on one hub: the isolation scenario
 
-`tests/test_tenant_isolation.py`, at `blizzard:component-test`, stands two tenants up on one hub, seeds both with the
-same shape of records under names that never repeat across them, and proves through the API that neither reaches the
-other. A listing in either names none of the other's records; naming the other's record, by path or in a body, answers
-as for a record never minted and changes nothing there; a write in one leaves every read of the other byte for byte as
-before; each tenant's live stream replays its own events only; a runner-minted id posted in both is two rows; a route
-token acts in its chunk's tenant only; the packaged system artifacts read alike from either; the hub-level export routes
-refuse a tenant member; and every sweep acts in each open tenant and opens no closed one.
-`tests/test_tenant_isolation_adapters.py` proves the same at the store: every row a tenant wrote carries its id, and
-each tenant's adapters read back none of the other's records. `tests/pass_isolation.py` is the poisoned-tenant fixture
-beside it: it runs each hub-wide pass, and each one-tenant pass interleaved with it, with and without one failing or
-bursting tenant and fails when any other tenant's calls differ (`bzh:pass-isolates-tenants`).
+`tests/component/hub/api/test_tenant_isolation.py`, at `blizzard:component-test`, stands two tenants up on one hub,
+seeds both with the same shape of records under names that never repeat across them, and proves through the API that
+neither reaches the other. A listing in either names none of the other's records; naming the other's record, by path or
+in a body, answers as for a record never minted and changes nothing there; a write in one leaves every read of the other
+byte for byte as before; each tenant's live stream replays its own events only; a runner-minted id posted in both is two
+rows; a route token acts in its chunk's tenant only; the packaged system artifacts read alike from either; the hub-level
+export routes refuse a tenant member; and every sweep acts in each open tenant and opens no closed one.
+`tests/component/hub/store/test_tenant_isolation_adapters.py` proves the same at the store: every row a tenant wrote
+carries its id, and each tenant's adapters read back none of the other's records. `tests/pass_isolation.py` is the
+shared poisoned-tenant fixture: it runs each hub-wide pass, and each one-tenant pass interleaved with it, with and
+without one failing or bursting tenant and fails when any other tenant's calls differ (`bzh:pass-isolates-tenants`).
 
 The scenario's route table names every live tenant route beside the probe that proves its isolation, and
 `test_the_table_names_every_live_tenant_route_and_nothing_else` checks the table against the live app both ways, so a

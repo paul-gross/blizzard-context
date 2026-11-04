@@ -255,12 +255,12 @@ through, which is the half that already has a tier.
 `bas-hwf`'s `iterate` and `pre-push` prompts, together with `build.md`/`review.md`/`review.judgement.md`/
 `retrospective.md`, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and their
 retiering off the frontier tier `build` alone still runs on. The declared methods reach the mechanical half only —
-`blizzard:unit-test`'s packaged-prompt byte bars and `tests/test_basic_harness_workflow_graph.py`'s mint-validation and
-routing pins, and `blizzard:component-test`'s graph mint and choice-edge resolution. That `iterate` actually answers
-review's findings as a cold read rather than assuming `build`'s own reasoning, that `pre-push`'s severity triage lands
-correctly, or that `retrospective` can reconstruct the journey from the chunk's asset trail alone — with no lineage
-memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-push` — is asserted by nothing: a prompt is an input to a model
-no tier runs.
+`blizzard:unit-test`'s packaged-prompt byte bars and `tests/unit/hub/graphs/test_basic_harness_workflow_graph.py`'s
+mint-validation and routing pins, and `blizzard:component-test`'s graph mint and choice-edge resolution. That `iterate`
+actually answers review's findings as a cold read rather than assuming `build`'s own reasoning, that `pre-push`'s
+severity triage lands correctly, or that `retrospective` can reconstruct the journey from the chunk's asset trail alone
+— with no lineage memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-push` — is asserted by nothing: a prompt is an
+input to a model no tier runs.
 
 The same residue covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and `bas-hwf`'s
 `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through on every lane
@@ -287,12 +287,13 @@ that quietly skips a method the delta touches passes the same as an honest one u
 `adv-dwf`'s `mutation.md`, `mutation.judgement.md`, and `review.from-mutation.md`, and the survivor bullet in
 `build.from-review.md`, carry the delivery-time mutation report's whole method: run the project's declared diff-scoped
 method from each repo's newest declared tip, publish a report that always exists, sort survivors under the project's
-classification, and answer a real survivor with the killing assertion or a recorded equivalence. The byte bars, the edge
-and addendum pins in `tests/test_packaged_graph_sessions.py`, and the delta mode's own unit cases reach the mechanical
-half. That a worker uses the declared tip rather than its worktree's reset HEAD, states the reason where no method is
-declared, carries a prior report forward only when the change's functions did not move, and raises each survivor as
-`should-fix` rather than `blocking` is proven for one path by `blizzard:manual-live-node`; the `build.from-review.md`
-bullet is reachable only on a review-`fail` round, which that run does not force, and is asserted by nothing.
+classification, and answer a real survivor with the killing assertion or a recorded equivalence. The byte bars, the
+session pins in `tests/unit/hub/graphs/test_packaged_graph_sessions.py`, and the delta mode's own unit cases reach the
+mechanical half. That a worker uses the declared tip rather than its worktree's reset HEAD, states the reason where no
+method is declared, carries a prior report forward only when the change's functions did not move, and raises each
+survivor as `should-fix` rather than `blocking` is proven for one path by `blizzard:manual-live-node`; the
+`build.from-review.md` bullet is reachable only on a review-`fail` round, which that run does not force, and is asserted
+by nothing.
 
 Standing in for a tier: a live chunk run through each lane on the dogfood deployment
 (`workspace:/context/project/singleton-instance.md`), whose transitions, bounces, and retrospective are read back and
@@ -426,8 +427,9 @@ foreign keys off, so each holds there by construction and stays unverified on Po
 - **The secret-row lock.** Secret retire and every work-source or repository write naming a secret lock that secret's
   row (`lock_secret_row`, `src/blizzard/hub/store/internal/secret_store.py`) before their guard reads. That the lock,
   not the tenant-row lock ahead of it, makes a retire and a referrer's enable exclude each other under READ COMMITTED is
-  asserted statically, by the lock statement compiled under the Postgres dialect (`tests/test_secret_row_lock.py`), and
-  run on SQLite only, where the writer lock serializes the two whatever the row lock.
+  asserted statically, by the lock statement compiled under the Postgres dialect
+  (`tests/unit/hub/store/test_secret_row_lock.py`), and run on SQLite only, where the writer lock serializes the two
+  whatever the row lock.
 
 Standing in for a tier: the slug-move and link tests on SQLite, and the portable SQL `bzh:sql-portable` holds each
 statement to. The gap closes as the tenancy one above does.
