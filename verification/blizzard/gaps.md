@@ -264,8 +264,8 @@ no tier runs.
 The same residue covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and `bas-hwf`'s
 `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through on every lane
 — and each lane's `pre-push.md` rebase-to-empty qualifier. The `land` action's own classification is proven by
-`blizzard:unit-test`'s `land` action cases over a scripted forge and `tests/test_graph_authoring.py`'s per-lane
-edge/addendum pins; that a worker reads the addendum's repair charge correctly, or applies the loop bound's
+`blizzard:unit-test`'s `land` action cases over a scripted forge and `tests/unit/hub/domain/graph/test_authoring.py`'s
+per-lane edge/addendum pins; that a worker reads the addendum's repair charge correctly, or applies the loop bound's
 chunk-history check rather than repeating the repair a second time, is not. Nor is whether a `failure` bounce's
 own-defect case is actually triaged `significant` rather than treated as a plain rebase, or whether a repair worker
 reads `delivery-findings` at all. No tier asserts that a repair worker reads a foreign-advance `failure` correctly,
@@ -355,7 +355,8 @@ interleavings, which SQLite does exercise:
   `test_reposition_locks_both_chunks_and_the_list_ranking_and_returns_the_order_it_leaves` and
   `test_reorder_names_its_chunks_first_then_the_rest_in_current_order_in_one_locked_unit` assert each move declares its
   list's ranking lock beside its chunks.
-- **Transcript ingest** — at `blizzard:component-test`, `tests/test_transcript_ingest_service.py`'s
+- **Transcript ingest** — at `blizzard:component-test`,
+  `tests/component/hub/domain/observability/test_transcript_ingest_service.py`'s
   `test_an_ingest_locks_its_runners_lane_and_each_chunk_its_batch_names_once` asserts one declaration of the calling
   runner's `transcript_lane` key and a `transcript_chunk` key per chunk the batch names; the same-key interleavings are
   `tests/test_transcript_ingest_race.py`.

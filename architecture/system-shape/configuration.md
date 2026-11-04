@@ -114,9 +114,9 @@ through `model_fields_set` and `UNSET` (`blizzard/src/blizzard/hub/domain/kernel
 refuses an explicit `null` with a 422 rather than reading it as unchanged. Retirement is an appended lifecycle fact, the
 newest row deciding, as `scope_lifecycle_facts` holds it (`bzh:facts-not-status`, [./store-facts.md](./store-facts.md)).
 
-Consumer semantics are proven in `blizzard/tests/test_configured_record_lifecycle_rules.py`,
-`blizzard/tests/test_project_model.py`, `blizzard/tests/test_project_links.py`, `blizzard/tests/test_scope_domain.py`
-and `blizzard/tests/test_routine_domain.py`.
+Consumer semantics are proven in `blizzard/tests/unit/hub/domain/config/test_configured_record_lifecycle_rules.py`,
+`blizzard/tests/unit/hub/domain/projects/test_model.py`, `blizzard/tests/unit/hub/domain/projects/test_links.py`,
+`blizzard/tests/unit/hub/domain/garden/test_scopes.py` and `blizzard/tests/unit/hub/domain/garden/test_routines.py`.
 
 For project editing or link authoring, follow `blizzard/src/blizzard/hub/domain/projects/model.py` and
 `blizzard/src/blizzard/hub/domain/projects/links.py` into the shared records and lifecycle modules above. Reuse their
