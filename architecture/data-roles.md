@@ -174,7 +174,7 @@ orchestration instead and carries no marker.
   marker.
 
 The same module's planted-tree cases prove each check catches its violation and admits its conforming shape;
-`tests/test_foundation_roles.py` covers the markers themselves.
+`tests/unit/foundation/test_roles.py` covers the markers themselves.
 
 The gate reads a class with no decorator and no base only for the field-only shape, so a reviewer asks of a class with a
 base or a decorator, or with work methods, that stores fields in its `__init__`: is this a data class that left the

@@ -15,8 +15,8 @@ local time, so a UTC-5 browser reads it five hours in the future.
 ## Detect
 
 A raw `.isoformat()` at an API edge; a `DateTime` column not typed `UtcDateTime`; a `datetime.fromisoformat` result not
-coerced before a comparison or a store write. The rule's fitness test is `tests/test_wire_timestamps.py`, run under
-[./python.md](./python.md)'s toolchain like any unit test.
+coerced before a comparison or a store write. The rule's fitness test is `tests/guards/test_wire_timestamps.py`, run
+under [./python.md](./python.md)'s toolchain like any unit test.
 
 ## Do
 

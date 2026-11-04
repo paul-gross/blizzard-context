@@ -122,7 +122,7 @@ after the run without relying on a replay tail.
 host through `build` and the hub's `land` action. A repository-scoped `checks_pending` lever holds the chunk at
 `deliver` while its branch's flow has one open submission, read through the chunk's flow-submissions API. Clearing the
 lever lets the same submission close `landed` as the chunk reaches `done` and `landed`. The component-tier
-`tests/test_invariant_checker.py` covers the no-open-turn close-out and flow invariants; the component-tier
+`tests/component/tools/test_invariants.py` covers the no-open-turn close-out and flow invariants; the component-tier
 `tests/test_flow_driver.py::test_a_store_carried_across_the_flows_revision_boots_pending_visits_in_entry_order` covers
 the migration-boundary boot order of pending visits.
 
@@ -458,9 +458,9 @@ The runner route's restart clamp — a stale `Last-Event-ID` against a fresh bro
 here:
 
 - Live resumption, component tier:
-  `tests/test_runner_events_stream.py::test_runner_stream_resumes_live_after_a_restart_reset_the_broker_ids`.
+  `tests/component/runner/api/test_events_stream.py::test_runner_stream_resumes_live_after_a_restart_reset_the_broker_ids`.
 - Buffered replay, component tier:
-  `tests/test_runner_events_stream.py::test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor`.
+  `tests/component/runner/api/test_events_stream.py::test_runner_stream_replays_a_restarted_brokers_buffered_tail_past_a_stale_cursor`.
 
 `blizzard:ui`'s `tests/ui/runner-panel-live.spec.ts::test_runner_panel_updates_live_over_sse_with_no_reload`
 ([`ui.md`](./ui.md)) carries the fan-out one tier further — a real `blizzard-runner host` observed through a real

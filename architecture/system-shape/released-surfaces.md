@@ -66,7 +66,7 @@ which positions that release's clients tolerate. The carve-out is for a request 
 declared reading in the server; a field whose unknown value needs a refusal stays closed. The tolerated field's schema
 stays `string` because a request property moving from `string` to an enum reads as narrowed to every older client.
 
-**Detect.** The gate test `tests/test_open_response_vocabulary.py` fails a response-only vocabulary field that is
+**Detect.** The gate test `tests/guards/test_open_response_vocabulary.py` fails a response-only vocabulary field that is
 neither open nor declared closed, and an open field on any class outside the response-only set. The response-only set is
 the response-role components of both committed OpenAPI documents, plus every model class the runner's client-side
 modules parse, with every model those reach, less every request-role component of either document; the second source

@@ -53,8 +53,8 @@ Where a command already judges the same agreement, it owns that judgement and th
 - A domain fact restated in code prose is `bzh:one-prose-home`'s, and `blizzard:restatement-sweep` judges it for every
   fact its census carries.
 - [`../domain/operations.md`](../domain/operations.md) §Event kinds's membership against
-  `blizzard.foundation.event_log.EventLogKind` is `blizzard:unit-test`'s `tests/test_event_log_kind_census.py`'s —
-  `registry-drift` proves cardinality, never membership, and this is the check that does.
+  `blizzard.foundation.event_log.EventLogKind` is `blizzard:unit-test`'s `tests/guards/test_event_log_kind_census.py`'s
+  — `registry-drift` proves cardinality, never membership, and this is the check that does.
 
 ## Measurement
 

@@ -21,9 +21,9 @@ Both suites read the same physical goldens — no per-side copy — so moving a 
 up, and changing a side's shape without moving the golden reddens that side. Each drives both scopes; no runner-only
 test module or spec basename exists — the method's surface is exactly these two files:
 
-- The Python half, `tests/test_sse_contract.py` (`blizzard:component-test`), drives the real `EventBroker.publish_*`
-  helper per case and asserts `json.loads(event.data) == payload`, then validates the same golden against its
-  `blizzard.wire.sse` model (`extra="forbid"`) and round-trips it losslessly.
+- The Python half, `tests/component/wire/test_sse_contract.py` (`blizzard:component-test`), drives the real
+  `EventBroker.publish_*` helper per case and asserts `json.loads(event.data) == payload`, then validates the same
+  golden against its `blizzard.wire.sse` model (`extra="forbid"`) and round-trips it losslessly.
 - The board half, `web/projects/fleet/src/lib/sse/sse-contract.spec.ts` (`web:unit-test`), feeds every golden — framed
   exactly as its owning daemon frames it — through a stubbed `fetch` into the real `SseService`/`FetchEventSource`
   byte-stream reader and asserts on what reaches `SseHandle.events`.
@@ -45,10 +45,10 @@ key-set check alone cannot tell one from another and the case name would pin not
 
 ### blizzard:cli-contract
 
-`uv run pytest tests/test_cli_surface_contract.py` gates the `blizzard hub` and `blizzard runner` command trees against
-the golden corpus `contracts/cli/`: one `<root>.json` per root group, each holding every command node recursively
-reached from it — its full path, help text, short help, and its parameters' spellings, kinds, types, and required/hidden
-flags, and each option's `help=` text, in declaration order.
+`uv run pytest tests/guards/test_cli_surface_contract.py` gates the `blizzard hub` and `blizzard runner` command trees
+against the golden corpus `contracts/cli/`: one `<root>.json` per root group, each holding every command node
+recursively reached from it — its full path, help text, short help, and its parameters' spellings, kinds, types, and
+required/hidden flags, and each option's `help=` text, in declaration order.
 
 Both the corpus and the live tree the test diffs it against are built by the same walker, `blizzard.tools.cli_surface`,
 over plain `click` introspection (`click.Group.commands`, `click.Command.params`) — no invocation, no I/O. `build()`
@@ -65,8 +65,8 @@ packages: the surface must render identically at every step of that move.
 
 ### blizzard:config-contract
 
-`uv run pytest tests/test_config_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) holds each daemon's
-config document, `contracts/config/hub.json` and `host.json`, to the registry that renders it
+`uv run pytest tests/guards/test_config_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) holds each
+daemon's config document, `contracts/config/hub.json` and `host.json`, to the registry that renders it
 (`blizzard.hub.config_keys`, `blizzard.runner.config_keys`) through `blizzard.tools.config_contract`. It fails when a
 document is missing, when a registry changed without a regenerated document, when `flags` is anything but one open
 table, and when a `replaced_by` names an undeclared key. `blizzard:gate`'s drift step holds the exporter's output to the
@@ -78,14 +78,14 @@ Falsify it by adding a `ConfigKey` to a registry and regenerating nothing: the t
 
 ### blizzard:store-contract
 
-`uv run pytest tests/test_store_contract.py` (`blizzard:component-test`, so inside `blizzard:gate`) gates each store's
-schema document, `contracts/store/hub.json` and `runner.json`, against a head-migrated store. The document is built from
-`schema.py` and the tree's head revision by `blizzard-export-contracts`, whose output `blizzard:gate`'s drift step holds
-to the committed files; the test reflects a store taken from `tests/support.py::migrated_hub_at` or
-`tests/runner_fakes.py::migrated_store_at` through `blizzard.tools.store_contract.document_from_engine` and requires
-equality, `deprecated` marks excepted since reflection cannot see them, with the applied revision standing for
-`head_revision`. The two checks close a pair: a `schema.py` change without regenerating reddens the drift step, and
-regenerating without a revision reddens this test.
+`uv run pytest tests/component/tools/test_store_contract.py` (`blizzard:component-test`, so inside `blizzard:gate`)
+gates each store's schema document, `contracts/store/hub.json` and `runner.json`, against a head-migrated store. The
+document is built from `schema.py` and the tree's head revision by `blizzard-export-contracts`, whose output
+`blizzard:gate`'s drift step holds to the committed files; the test reflects a store taken from
+`tests/support.py::migrated_hub_at` or `tests/runner_fakes.py::migrated_store_at` through
+`blizzard.tools.store_contract.document_from_engine` and requires equality, `deprecated` marks excepted since reflection
+cannot see them, with the applied revision standing for `head_revision`. The two checks close a pair: a `schema.py`
+change without regenerating reddens the drift step, and regenerating without a revision reddens this test.
 
 Its reach is SQLite only. Server defaults compare by presence, constraints by columns and referents, check constraints
 by name, and indexes and column order not at all. The Postgres comparison, an empty hub store migrated to head and
