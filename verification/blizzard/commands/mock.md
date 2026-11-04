@@ -15,7 +15,7 @@ and its own lever roster, the mock-data CLI, and the stub OAuth IdP (`test_idp.p
 github surfaces plus its `/_levers` control plane). `.github/workflows/{pr,push}.yml` run this same method, minus the
 `needs_blizzard`-marked wire-parity and real-runner tests (`mise run test -- -m "not needs_blizzard"`, check name
 `gate / pytest (sans needs_blizzard)`). The separate `gate / wire parity (needs_blizzard)` job checks out the resolved
-blizzard commit and runs both marked modules. The bare local command stays unmarked and fail-closed.
+blizzard commit and runs every `needs_blizzard`-marked module. The bare local command stays unmarked and fail-closed.
 
 The wire-parity guard (`tests/test_wire_parity.py`), the mock side of `bzh:wire-change-extends-mock`, maps every
 mock-hub response model to the hub schema it mirrors and diffs field sets against the committed
