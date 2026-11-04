@@ -42,9 +42,9 @@ opens a connection; an allowlisted module that reaches a process or the network,
 it; a `Visit` holding a `list`, `dict`, `set`, `bytearray`, a mapping that is not a `MappingProxyType`, or a dataclass
 that is not frozen; an action whose constructor takes an argument; a delivery marker whose content departs from the
 shapes above. `blizzard/tests/test_layering.py` fails the unit tier on each import and the transitive reach, and
-`blizzard/tests/test_hub_actions.py` on the visit's runtime values and the constructions; planted cases in both prove
-each check fires. The allowlist is the test's own literal: a later change that widens it names the module in its own
-spec.
+`blizzard/tests/unit/hub/delivery/test_action_registry.py` on the visit's runtime values and the constructions; planted
+cases in both prove each check fires. The allowlist is the test's own literal: a later change that widens it names the
+module in its own spec.
 
 **Do.** `garden-deliver` (`hub/delivery/actions/garden_deliver.py`) reads its `delta` and `proposals` from the visit's
 node arguments, hands a `RecordGardenDelivery` to the sink, and answers from the `EffectResult` it gets back; the
