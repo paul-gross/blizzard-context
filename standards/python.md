@@ -29,21 +29,20 @@ noqa instead.
 
 ## Strict types (`bzh:strict-types`)
 
-**Rule.** Shipping code type-checks under strict pyright, and a suppression waives one named rule at one line, with its
-reason beside it.
+**Rule.** All Python in `blizzard` — shipping code and the tests — type-checks under strict pyright, and a suppression
+waives one named rule at one line, with its reason beside it.
 
 **Why.** A signature is the first thing an agent meeting a module reads, and it builds on what the signature says.
 Strict mode keeps that promise honest: it rejects an untyped parameter and a value whose type it cannot infer. A bare
 `# type: ignore` silences every rule on its line whatever its brackets name, so one copied from module to module hides
 real errors behind a comment that looks deliberate.
 
-**Scope.** `pyproject.toml`'s `[tool.pyright]` `strict` names `src` and `exemplars/python`; the store migration tests
-colocated under `src` are held to it with the shipping code, and the tests under `tests/` stay `standard` until they are
-typed.
+**Scope.** `pyproject.toml`'s `[tool.pyright]` sets `typeCheckingMode = "strict"` over `src`, `tests`, and
+`exemplars/python`; the store migration tests colocated under `src` are held to it with the rest.
 
-**Detect.** `blizzard:typecheck` reports every strict error. The structural gate's `bzh:strict-types` rule
-(`blizzard:structural-gate`) flags a `type: ignore` comment and a `# pyright: basic` or `# pyright: standard` header
-anywhere under `src` and `exemplars/python`, the store migration tests included.
+**Detect.** `blizzard:typecheck` alone is the type gate and reports every strict error. The structural gate's
+`bzh:strict-types` rule (`blizzard:structural-gate`) flags a `type: ignore` comment and a `# pyright: basic` or
+`# pyright: standard` header anywhere under `src`, `tests`, and `exemplars/python`, the store migration tests included.
 
 **Do.** `# pyright: ignore[reportMissingTypeStubs]  # ships no py.typed` on the import of a library that ships no type
 information, as `src/blizzard/foundation/platform_tracing/internal/pipeline.py` does; a JSON payload typed where it is

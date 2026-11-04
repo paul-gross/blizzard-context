@@ -25,7 +25,6 @@ swept whether or not it found anything:
    - `blizzard-context:registry-drift`
    - `blizzard:wheel` — `mise run build`, which also runs the web build
    - `web:shell-sweep`
-   - `dprint check` in `blizzard`, over `docs/` and the rest of its markdown
 6. **Stale baselines.** A committed baseline or census that no longer matches the tree it measures —
    `blizzard/scripts/restated-invariants.json` is the shape.
 
@@ -56,10 +55,6 @@ finding before the build says anything, because the build's own warning fires on
 What a pull-request gate enforces is out of range: a red gate is an unfinished change, not drift. A red **ungated**
 method is the opposite case and stays in range — it is what item 5 exists to catch — so a run does not treat one as a
 gate to halt on.
-
-`dprint check` in `blizzard` has no row in [`../verification/blizzard.md`](../verification/blizzard.md) yet; its
-configuration is `blizzard/dprint.json`. Until a row exists the check runs from that configuration, and declaring the
-method is the first finding this item files.
 
 A finding on this axis cites the checklist item it answers and the budget, method id, or tool it concerns; no item here
 carries a `bzh:` id.
