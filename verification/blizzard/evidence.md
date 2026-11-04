@@ -65,7 +65,7 @@ green.
 `tests/test_config_keys_reach_a_gating_tier.py` is the floor for the config-key half — every key of every
 operator-written config dataclass, nested blocks included, must be named by a gating-tier test, and the guard's own
 inventory is at [`./commands.md`](./commands/test-tiers/unit.md#blizzardunit-test). Naming a key is weaker than pinning
-its threading, which `tests/test_runner_loop_build.py` does case by case for the keys it covers.
+its threading, which `tests/unit/runner/test_loop_build.py` does case by case for the keys it covers.
 
 **Do.** Where production takes one route and the gating tests drive a test-convenient other route, extend a gating case
 onto the production route rather than trusting the upper tier.
@@ -142,7 +142,8 @@ planned rather than remembered:
 ```text
 owes: `retries:` omitted → blizzard-context:/domain/graphs/nodes.md's retries facet states the runner's own default
       applies; pinned by
-      tests/test_runner_loop.py::test_fill_spawns_a_node_with_no_authored_retry_budget_at_the_configured_default and,
+      tests/unit/runner/loop/test_loop.py::test_fill_spawns_a_node_with_no_authored_retry_budget_at_the_configured_default
+      and,
       for the default's own value, tests/test_pin_runner_loop.py::test_default_retries_max_is_two
 owes: an entry reaching no terminal → blizzard-context:/domain/graphs/edges.md's reachability warning states the
       second arm; pinned by tests/test_graph_validation.py::test_entry_reaching_no_terminal_is_a_warning_not_an_error

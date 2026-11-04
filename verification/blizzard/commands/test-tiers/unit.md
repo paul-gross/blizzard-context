@@ -19,7 +19,7 @@ The four sweep guards, each the mechanical signature of a defect class otherwise
 - `test_config_keys_reach_a_gating_tier.py` — fails on any key of an operator-written config dataclass — `HostConfig`
   and its `[[workspace]]`/`[[runner]]` entries, `HubConfig`, and the nested blocks an `[[auth.oauth.provider]]` binds —
   that no gating-tier test names (`bzh:gating-tier-pins-production-paths`). A floor only, since
-  `test_runner_loop_build.py` pins the actual threading of the keys it covers.
+  `tests/unit/runner/test_loop_build.py` pins the actual threading of the keys it covers.
 - `test_no_duplicate_test_bodies.py` — fails on two cases sharing a body, module constants folded into the key so two
   files reading their own same-named constant are not duplicates (`bzh:case-pins-its-own-name`).
 - `test_openapi_descriptions.py` — scans both committed specs, and the `wire/` models no spec reaches, for prose an
@@ -36,12 +36,12 @@ The tier's other named coverage:
   verdict — the anti-drift guard on the shared `foundation.completion_gates.Coverage` predicate. Neither side's own
   tests can see such a disagreement — `test_produces_auth.py` sees only the hub, the component-tier
   `test_runner_nudge.py` only the runner — and the expected-verdict assertions also catch identical re-forks.
-- `test_artifacts_storage.py` — with the git-commit coverage in `test_runner_loop.py` and `test_runner_gates.py`, pins
-  the worker-declares/runner-verifies split: a fake `IWorktreeGit.verify` drives ADVANCE's collection, and
-  `GitCommitArtifact`/`StoredArtifact` round-trip losslessly with `forge` carried. A verified declaration becomes a
-  `GIT_COMMIT` `SubmittedArtifact` carrying its manifest-named origin; an unverified one is dropped and reported as a
-  `command-failed` the worker can act on — reported deliberately, since a silent drop lets a chunk reach `done` having
-  delivered nothing.
+- `test_artifacts_storage.py` — with the git-commit coverage in `tests/unit/runner/loop/test_loop.py` and
+  `test_runner_gates.py`, pins the worker-declares/runner-verifies split: a fake `IWorktreeGit.verify` drives ADVANCE's
+  collection, and `GitCommitArtifact`/`StoredArtifact` round-trip losslessly with `forge` carried. A verified
+  declaration becomes a `GIT_COMMIT` `SubmittedArtifact` carrying its manifest-named origin; an unverified one is
+  dropped and reported as a `command-failed` the worker can act on — reported deliberately, since a silent drop lets a
+  chunk reach `done` having delivered nothing.
 - `test_packaged_prompts_attach.py` — in every packaged graph (`src/blizzard/hub/graphs/*/graph.yaml`), a runner node
   declaring `produces:` must have its inlined prompt name the kind-appropriate verb —
   `blizzard runner artifact create --name <that-exact-name>` for an `asset` entry, `blizzard runner artifact commit` for
