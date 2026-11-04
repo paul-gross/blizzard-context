@@ -37,12 +37,13 @@ Strict mode keeps that promise honest: it rejects an untyped parameter and a val
 `# type: ignore` silences every rule on its line whatever its brackets name, so one copied from module to module hides
 real errors behind a comment that looks deliberate.
 
-**Scope.** `pyproject.toml`'s `[tool.pyright]` sets `typeCheckingMode = "strict"` over `src`, `tests`, and
-`exemplars/python`; the store migration tests colocated under `src` are held to it with the rest.
+**Scope.** `pyproject.toml`'s `[tool.pyright]` sets `typeCheckingMode = "strict"` over repository-owned Python,
+including root scripts, tests, exemplars, and colocated store migration tests. Dependency, cache, dot-directory, and
+generated build output are excluded.
 
 **Detect.** `blizzard:typecheck` alone is the type gate and reports every strict error. The structural gate's
 `bzh:strict-types` rule (`blizzard:structural-gate`) flags a `type: ignore` comment and a `# pyright: basic` or
-`# pyright: standard` header anywhere under `src`, `tests`, and `exemplars/python`, the store migration tests included.
+`# pyright: standard` header across the same owned Python scope.
 
 **Do.** `# pyright: ignore[reportMissingTypeStubs]  # ships no py.typed` on the import of a library that ships no type
 information, as `src/blizzard/foundation/platform_tracing/internal/pipeline.py` does; a JSON payload typed where it is
