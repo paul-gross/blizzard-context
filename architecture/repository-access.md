@@ -214,8 +214,9 @@ it. A single-statement read is already one moment, and a write decision is gover
 
 **Detect.** A pass that reads candidates, facts, or a row set its cursor moves past through separate repository calls
 with no `snapshot()` around them; a read through a sibling seam placed after the snapshot opens; a multi-statement
-corpus read on a bare connection. `blizzard/tests/test_trace_store.py` and `blizzard/tests/test_egress_sweep.py` commit
-a fact between two of a pass's reads and fail on a straddled read; a new pass is judged at review.
+corpus read on a bare connection. `blizzard/tests/test_trace_store.py` and
+`blizzard/tests/component/hub/domain/observability/egress/test_sweep.py` commit a fact between two of a pass's reads and
+fail on a straddled read; a new pass is judged at review.
 
 **Do.** `EgressSweep._steps_pass` (`blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) reads the usage
 page through `IReadEgress`, then opens `IReadTraceSteps.snapshot` and reads the window and the late chunks' facts inside

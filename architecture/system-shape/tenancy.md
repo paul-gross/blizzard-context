@@ -209,11 +209,11 @@ narrowed to one tenant: it reads the same hub-scoped probe and corpus and acts o
 **Detect.** The read half: the ast-grep rule `bzh:sweep-acts-in-row-tenant`
 (`contracts/ast-grep/rules/sweep-acts-in-row-tenant.yml`, run by `blizzard:structural-gate`) refuses a raw SQLAlchemy
 `select`, `exists`, `join`, or `union` constructor in the hub-scoped read modules that is not reached through one of the
-two builders, and the closed-tenant component test `tests/test_sweep_corpus_reads.py` gives a closed tenant a row in
-every table `step_facts_for` reads and fails when any corpus read returns one. The write half has no structural gate:
-the statement guard sees a scoped write as scoped whichever tenant it was opened for. A reviewer asks of each write a
-pass makes: whose scope is this, and is it the tenant of the row being acted on? A sweep's service test seeds two
-tenants and asserts each write lands in its row's tenant.
+two builders, and the closed-tenant component test `tests/component/hub/store/internal/test_hub_scoped_corpus.py` gives
+a closed tenant a row in every table `step_facts_for` reads and fails when any corpus read returns one. The write half
+has no structural gate: the statement guard sees a scoped write as scoped whichever tenant it was opened for. A reviewer
+asks of each write a pass makes: whose scope is this, and is it the tenant of the row being acted on? A sweep's service
+test seeds two tenants and asserts each write lands in its row's tenant.
 
 **Do.** The close drain reads every pending close across open tenants, then for each one opens the services of the
 tenant the close belongs to and issues the close through that tenant's work-source client and event log.
