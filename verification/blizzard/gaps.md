@@ -201,11 +201,11 @@ test runs against — that `list_for`'s routine+scope read and `count_by_class`'
 by exact name, the artifacts/graph-choices/transcript- segments/chunk-work-refs/close-intents hot-path reads, and each
 of `activity_facts_since`'s eighteen per-source ordered reads.
 `tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over the spend `_stmt`
-builder asserts `ix_usage_facts_recorded_at_id` the same way. `tests/test_store_read_index_gate.py`'s scan gate and
-`tests/component/runner/store/test_store_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN` shape
-across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend. No tier
-runs any of these assertions against postgres, so whether the portable index declarations actually earn an index scan
-under postgres's own planner stays unproven.
+builder asserts `ix_usage_facts_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s scan
+gate and `tests/component/runner/store/test_store_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN`
+shape across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend.
+No tier runs any of these assertions against postgres, so whether the portable index declarations actually earn an index
+scan under postgres's own planner stays unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
@@ -235,8 +235,8 @@ same gap holds for the packaged `ideation` graph's prompts: its `survey`/`reconc
 resolution and proposal-classing behavior that replaces `garden-routine`'s standard-judged method — resolving the
 target's own charter rather than a standard, and classing a proposal as `direction`/`tweak`/`retire` rather than citing
 findings a fix answers. The declared methods reach the mechanical half only — `blizzard:unit-test`'s packaged-prompt
-byte bars (`blizzard/tests/test_prompt_byte_bars.py`) and its `blizzard hub` verb guard, `blizzard:component-test`'s
-graph mint and choice-edge resolution, and `blizzard:service-test`'s
+byte bars (`blizzard/tests/guards/test_prompt_byte_bars.py`) and its `blizzard hub` verb guard,
+`blizzard:component-test`'s graph mint and choice-edge resolution, and `blizzard:service-test`'s
 `test_garden_routine_runs_end_to_end_on_all_six_paths` and `test_ideation_runs_end_to_end_on_all_authored_paths`, whose
 scripted node bodies deliberately exercise no model at all. That `survey` actually resolves its axis from the target's
 registry rather than improvising a yardstick, that `propose` actually cites the refs its own run just minted, or that
@@ -603,5 +603,5 @@ own build knows every value it can write. That an open field tolerates an unknow
 
 Standing in for a tier: the unit and component tests that feed an unknown value through the parse, the runner's
 lifecycle decisions, the drain, and a proxy route (`tests/unit/wire/test_open_response_vocabulary_paths.py`,
-`tests/component/runner/test_open_response_vocabulary_paths.py`, `tests/test_runner_unknown_vocabulary_rules.py`), and
-the open mark a release's document carries for each position its clients tolerate.
+`tests/component/runner/test_open_response_vocabulary_paths.py`, `tests/unit/runner/test_unknown_vocabulary_rules.py`),
+and the open mark a release's document carries for each position its clients tolerate.

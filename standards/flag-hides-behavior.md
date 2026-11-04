@@ -19,7 +19,7 @@ broken the morning the flag turned on.
 A flag-guarded surface that is missing while its flag is off: a route that is unregistered or absent from the OpenAPI
 document, a field or key that is undeclared, a CLI verb or option that is absent from `--help`. Also a migration
 conditional on a flag, and a flag read hand-rolled inside a controller instead of through a seam below.
-`tests/test_flag_registry.py` ties every guard in source to the registry file.
+`tests/unit/test_flag_registry.py` ties every guard in source to the registry file.
 
 ## Do
 

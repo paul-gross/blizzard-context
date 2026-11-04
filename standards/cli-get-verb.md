@@ -20,7 +20,7 @@ Verbs that read a collection or a facet (`list`, `history`, `work-items`, `statu
 
 ## Detect
 
-`tests/test_cli_get_verb.py`, run under `blizzard:unit-test`, walks both roots. It fails on a command registered as
+`tests/unit/cli/test_get_verb.py`, run under `blizzard:unit-test`, walks both roots. It fails on a command registered as
 `show`, `read`, `view`, `describe`, or `inspect`; on a group with a `get` that does not resolve `show` and `read` to
 that same command; and on an alias listed in a group's commands or `--help`. Detection is by name, so a read-one verb
 under any other name (`info`, say) is judged by reading.

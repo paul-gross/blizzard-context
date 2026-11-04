@@ -1393,7 +1393,7 @@ the implementation under exercise.
    file.
 3. Read each tree through Alembic's `ScriptDirectory`: one base, the baseline, and the first kept revision's
    `down_revision` resolves to it.
-4. `uv run pytest tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down tests/test_baseline_floor.py`.
+4. `uv run pytest tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down tests/unit/foundation/store/test_baseline_floor.py`.
 5. Stamp a scratch hub store (`blizzard hub init`) at an absorbed revision id, then `blizzard hub migrate --dir` on it.
 6. `blizzard:typecheck` and `blizzard:structural-gate` on the clone.
 7. Run the tool a second time.

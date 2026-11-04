@@ -72,7 +72,7 @@ component checker exercises flow invariants independently.
 - `test_an_interrupted_turn_keeps_the_terms_its_first_turn_took` proves captured terms survive a reorder and hub
   restart.
 - `test_an_exported_document_applies_back_writing_nothing` proves unchanged apply outcomes and positions; the exact
-  no-position-fact-write proof remains in component-tier `tests/test_landing_policy_doors.py`.
+  no-position-fact-write proof remains in component-tier `tests/component/hub/api/test_landing_policy_doors.py`.
 
 **Fast-forward landing** (`tests/service/fleet/fast-forward.spec.ts`) drives a real host against owned forge origins:
 
@@ -188,7 +188,7 @@ agreement (unit-tier sibling `test_produces_coverage_agreement.py`): a name cove
 `attached=False` and is accepted. `test_queue_shaping_group_and_reorder_reflected_in_peek` drives
 `POST /api/chunks/{id}/group` and `PUT /api/queue` against the running hub and reads the result off `GET /api/queue`,
 failing a shaping the domain applies but the wire does not surface; its component-tier sibling
-`tests/test_queue_shaping.py` asserts the same shaping without the wire.
+`tests/component/hub/api/test_queue_shaping.py` asserts the same shaping without the wire.
 
 **The acceptance loop** (`tests/service/fleet/acceptance-loop.spec.ts`) runs a real hub and stepped runner against a
 test-owned mock-forge origin. Its build, review, and land steps finish under both mock harnesses; a trace-only companion

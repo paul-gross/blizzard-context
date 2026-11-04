@@ -72,12 +72,13 @@ rows it reads per key: a read inside the page fetching each key's whole fact his
 `bzh:newest-per-key-read`'s.
 
 **Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
-as `blizzard/tests/component/hub/api/test_list_chunks_bulk_reads.py` and `blizzard/tests/test_matched_queue_peek.py` do,
-and a count that grows between the sizes is the finding. Row volume is judged by reading: a `list_all()` or `load_all_*`
-call in a handler, a page sliced in Python from an every-id read, or a per-request fan-out whose row count no `limit`
-bounds, with no reason beside it or in the handler's docstring stating why the page's ids would not do; a drain that
-calls a `limit`-accepting store read with no `limit`. The fix is the page's own ids through `bzh:bulk-reconstitution`'s
-plural form, a `limit` on the drain, or the reason written at the site.
+as `blizzard/tests/component/hub/api/test_list_chunks_bulk_reads.py` and
+`blizzard/tests/component/hub/api/test_matched_queue_peek.py` do, and a count that grows between the sizes is the
+finding. Row volume is judged by reading: a `list_all()` or `load_all_*` call in a handler, a page sliced in Python from
+an every-id read, or a per-request fan-out whose row count no `limit` bounds, with no reason beside it or in the
+handler's docstring stating why the page's ids would not do; a drain that calls a `limit`-accepting store read with no
+`limit`. The fix is the page's own ids through `bzh:bulk-reconstitution`'s plural form, a `limit` on the drain, or the
+reason written at the site.
 
 **Do.** `blizzard/src/blizzard/hub/api/chunks.py`'s `list_chunks` is keyset-paged and its statement count is flat across
 fixture sizes; its `load_all_facts()` and `record.list_all()` fleet reads carry their reason — in the handler's

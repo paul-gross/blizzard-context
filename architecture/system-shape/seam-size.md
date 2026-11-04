@@ -23,11 +23,11 @@ hand each other their context, so it is the union of what either reads.
 generalizes here to the whole population) — a coding-harness adapter or a hub client is gated exactly as a repository
 seam is.
 
-**Detect.** `tests/test_seam_size.py`'s AST scan: a class declaring `Protocol` among its own bases with more than twelve
-own (non-underscore) methods, unless its name is in that test's `_ACCEPTED_VIOLATIONS` set — a name-only membership
-test; a reason for the entry is a review obligation, not something the gate itself checks. A Protocol base nothing else
-names counts toward each Protocol composing it, so a split made only to clear the ceiling still fails; a stale entry
-fails too.
+**Detect.** `tests/guards/test_seam_size.py`'s AST scan: a class declaring `Protocol` among its own bases with more than
+twelve own (non-underscore) methods, unless its name is in that test's `_ACCEPTED_VIOLATIONS` set — a name-only
+membership test; a reason for the entry is a review obligation, not something the gate itself checks. A Protocol base
+nothing else names counts toward each Protocol composing it, so a split made only to clear the ceiling still fails; a
+stale entry fails too.
 
 **Do.** The runner's harness seam splits `IHarnessAdapter`'s methods into narrower Protocols along its consumers' own
 lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, usage accounting, usage-limit

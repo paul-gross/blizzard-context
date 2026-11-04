@@ -20,7 +20,7 @@ the check then says when the next one is owed.
    Never guard a migration, and never leave surface unregistered.
 5. **Prove the on path**: tests that build their `Flags` with the flag on, living with the change, beside the off-path
    tests the default gate already runs (`lifecycle.md` §Testing both sides).
-6. **Prove it** with `uv run pytest tests/test_flag_registry.py` and `mise run flag-lifecycle`
+6. **Prove it** with `uv run pytest tests/unit/test_flag_registry.py` and `mise run flag-lifecycle`
    (`blizzard:flag-lifecycle`, [../verification/blizzard.md](../verification/blizzard.md)), then `blizzard:compat`.
 
 ## Turning a flag on
@@ -40,5 +40,5 @@ the check then says when the next one is owed.
    guard and markers, and the off-path tests. What the flag guarded stays exactly as it was released.
 3. **Move the name** from `[flag.<name>]` to `[retired]`, keeping its scope. Never reuse the name. A retirement owes no
    change note.
-4. **Prove it** with `uv run pytest tests/test_flag_registry.py` (no code names the flag, the file holds no unread live
-   flag) and `mise run flag-lifecycle` (`cut` mode fails a due flag still live, and a tombstone removed too early).
+4. **Prove it** with `uv run pytest tests/unit/test_flag_registry.py` (no code names the flag, the file holds no unread
+   live flag) and `mise run flag-lifecycle` (`cut` mode fails a due flag still live, and a tombstone removed too early).
