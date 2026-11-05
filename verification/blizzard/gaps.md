@@ -622,6 +622,26 @@ characters.
   dropped the four tables, and came back up to head. A hosted hub app over that store created a cadence with a chore,
   edited the chore keeping its id, refused a stale `If-Match` with `409`, retired and re-enabled the cadence, refused a
   second cadence of the same slug, and wrote one change row for each write.
+
+## Forge references required under Postgres
+
+Every tier runs the revision that keys repositories and work sources on their forge on SQLite only. It refuses, before
+any write, a record whose `forge_id` is null, names no forge, or names another tenant's forge. It then drops
+`repositories.forge_api_url` and `work_sources.api_base` and `web_base`, tightens both `forge_id` columns to `NOT NULL`
+under a foreign key onto `forges`, and rekeys `uq_repositories_tenant_coordinate` and
+`uq_work_sources_tenant_provider_locator` on the forge. Its downgrade refuses a tenant holding one locator on two
+forges, then refills the address columns from each record's forge and restores the address-keyed constraints. On SQLite
+each table is one `batch_alter_table` rebuild; on Postgres the same batch is native `ALTER`s.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
+  store reached head, returned to base leaving only `alembic_version`, and reached head again. It then stepped down to
+  the revision's parent, seeded 1,200 repositories and 1,200 work sources split across two forges, one of them retired,
+  with half of each record kind retired, and came back up to head. Every record kept its `forge_id`, both columns read
+  `NOT NULL`, both foreign keys and both rekeyed constraints stood, and the address columns were gone. At head, a second
+  work source of an already-held locator on the other forge made the step down refuse, naming the tenant and both
+  sources, with nothing written. Once the locator was changed by hand, the step down refilled every address from its
+  forge, a null `web_base` included, read `forge_api_url` `NOT NULL` again, and restored both address-keyed constraints
+  with the foreign keys dropped. A work source set back to no forge at the parent made the step up refuse, naming it.
 - **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
   someone runs it again.
 
