@@ -31,7 +31,9 @@ and runner exporters to its one test-owned `traceSink`, and runs the companion's
 behavioral case on its shared hub, without trace assertions; the companion asserts only trace facts, not a second copy
 of the behavioral assertions. After finishing the scenario, poll `traceSink.spans()` until both the hub step root and
 runner invocation for that chunk have arrived, then apply the dictionary-driven trace oracle. A completed host step
-alone is not an export barrier for both daemons.
+alone is not an export barrier for both daemons. A companion on a controlled stack exports on a stepped hub sweep
+instead: the fixture opens the export before the test can move the clock, and `flushTraces(host)` returns once the sink
+holds every span, so the test reads `traceSink.spans()` once rather than polling.
 
 Before a negative leak scan of the full export, stop the companion's `runnerHost` and `freshHub` in that order, then
 read `traceSink.spans()` again. Their shutdown flushes close the worker-command and hub-export windows; the earlier
