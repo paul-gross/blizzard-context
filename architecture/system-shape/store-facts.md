@@ -35,8 +35,7 @@ Stated so a reviewer need not re-derive them:
   re-derived by the standing sweep.
 - `work_items.closed_at` and `work_items.closure` are a plain nullable column pair, unset while the item is open and set
   together once on close — conforming because `work_items` is a mutable entity (title, body, and `edited_at` change in
-  place), not a fact log, so closure is recorded state no query over other rows can produce, the same terminal-instant
-  shape `hub_exec_slot.released_at` uses.
+  place), not a fact log, so closure is recorded state no query over other rows can produce.
 - `garden_proposals` is a mutable entity row while open — title, class, body, and its `garden_proposal_findings` links
   all change in place, of either origin — but unlike `work_items`, its closure is never a column pair on the proposal
   row itself: `garden_proposal_closures` holds it as its own immutable, at-most-one-per-proposal fact row (enforced by
