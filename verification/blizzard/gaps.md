@@ -671,19 +671,16 @@ The board's project lens narrows what a view reads, and a call naming no project
 decided by the tenant alone. Nothing proves a person sees only a project's records, because nothing restricts them to
 one — a stated non-goal, not a missing check.
 
-## Response bodies `blizzard:compat` does not read
+## Refusals absent from a supported release's document
 
-`blizzard:compat` judges only the `2xx` response schemas of the committed OpenAPI documents. A refusal body the runner
-parses can be absent from both documents: the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, carrying
-`ClaimDenialReason`) is in neither, so a value its vocabulary gains, or a field it loses, reaches no finding. The runner
-parses those bodies with open vocabularies (`bzh:open-response-vocabulary`), which keeps a gained value from failing it,
-but nothing holds the body's shape to a supported release.
+`blizzard:compat` compares declared refusal status, media and schemas on the selected wire and API surfaces, but a
+supported release's OpenAPI document can omit a refusal its runner parses. An absent declaration supplies no baseline
+shape for comparison; it is not evidence that the refusal is compatible.
 
-Standing in for a tier: the open-vocabulary gate test (`tests/guards/test_open_response_vocabulary.py`) takes the
-classes the runner's client modules parse as well as the documents' response components, so every vocabulary such a body
-carries is open or declared closed; a change to one of those bodies owes the by-hand judgement
-[../../workflows/judging-a-break.md](../../workflows/judging-a-break.md) describes. The gap closes when the tool reads
-the refusal bodies a route declares.
+Standing in for a tier: the open-vocabulary gate (`tests/guards/test_open_response_vocabulary.py`) checks parsed
+vocabularies, and `blizzard:rehearsal` exercises released clients against candidate refusals as described in
+[commands/rehearsal.md](./commands/rehearsal.md). Other undeclared historical refusal paths still owe the by-hand
+judgement [../../workflows/judging-a-break.md](../../workflows/judging-a-break.md) describes.
 
 ## An older client reading a newer response value
 

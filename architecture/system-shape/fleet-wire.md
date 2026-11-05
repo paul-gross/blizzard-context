@@ -16,9 +16,8 @@ when a break is admitted). A removed route or field keeps its old form beside th
 the fleet wedges.
 
 **Detect.** `blizzard:compat` ([../../verification/blizzard.md](../../verification/blizzard.md)) is the mechanical check
-— it holds the wire selection of `openapi/hub.openapi.json` to each supported release. Its declared surface already
-covers the 17 `HubProxy` forwards under `src/blizzard/runner/api/`, since every one targets an `/api/fleet/...` path; a
-runner call reaching the hub outside that surface selection is invisible to it.
+— it holds the wire selection of `openapi/hub.openapi.json` to each supported release. A runner call reaching the hub
+outside that surface selection is invisible to it.
 
 **Do.** A new optional response field; a new route kept beside its replacement; and, when a new runner→hub call reaches
 outside the declared surface, extending the wire selection in the same change. Naming the runner's tenant took the first
@@ -41,3 +40,27 @@ break covers.
 
 **See also.** `bzh:shared-kernel` ([../clean-architecture.md](../clean-architecture.md)): where a vocabulary type the
 wire carries is defined.
+
+## Protect runner-reached refusals (`bzh:fleet-wire-protected-refusals`)
+
+**Rule.** Preserve the supported runner's interpretation of deliberate hub refusals, including released fields, their
+types and meanings, and meaningful absence, when changing any runner-reached HTTP operation or its dependencies. Declare
+refusal variants in OpenAPI and extend the wire selection when a runner reaches outside it. The developer contract in
+`blizzard/docs/versioning.md` owns the problem representation and migration exceptions.
+
+**Why.** A refusal drives runner lifecycle decisions just as a success drives work; a parseable but differently
+classified refusal can strand or misroute a live runner during version skew.
+
+**Scope.** Include non-fleet bootstrap, authentication, federation, proxy and archive calls, and refusals from shared
+dependencies and delegated handlers. Framework validation and unrelated operations are not deliberate runner refusals.
+
+**Detect.** Compare runner call sites and their refusal producers with declared operation/status/media/model variants;
+check `blizzard:compat` and the runner-reach guards in `blizzard/tests/guards/`. A missing field, a changed type, or a
+field emitted as null where the release omits it can break an older client even when a new client parses the body.
+
+**Do.** A nonterminal claim refusal adds a problem type while still omitting `status`.
+
+**Don't.** A host bootstrap refusal loses its released discriminator because its operation is outside `/api/fleet`.
+
+**See also.** `bzh:fleet-wire-additive` above owns supported-release compatibility; `bzh:matrix-gaps`
+([../../verification/blizzard/gaps.md](../../verification/blizzard/gaps.md)) records the baseline evidence limit.

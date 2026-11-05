@@ -38,6 +38,11 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
   unchanged in every field the baseline's document carried.
 - The baseline runner host, untouched, is admitted by the candidate hub's handshake, lands a fresh chunk, and finishes
   the chunk it left delivering — read back as landed through the hub's API.
+- The release's installed client classifies terminal, not-ready, dependency, incompatible, conflict and paused claim
+  refusals, and an unknown-tenant host bootstrap refusal. The run records historical route availability in
+  `release-refusal-routes.json`.
+- A real baseline runner encounters a paused claim in flight, records the denial and mirrors the pause without a route;
+  after resume it lands the waiting chunk.
 - The candidate runner host, migrated, resumes its runners and lands one more chunk.
 - The walk down to each store's baseline head revision, read from the baseline tag's `contracts/store/*.json`, loses no
   seeded row: every table holds at least its seeded count, the seeded views match their fingerprints, and the baseline
