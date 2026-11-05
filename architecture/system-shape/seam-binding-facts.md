@@ -25,10 +25,11 @@ many environments it may hold (`capacity`), and its environment pool (`pool`), i
 `RunnerConfig`. Harnesses are iterated, never named: `blizzard/src/blizzard/runner/harness/wiring.py` holds the cached
 `harness_catalog()` of `IHarnessDeclaration`s and its walks (`declared`, `enabled`, `declared_normalizer_versions`,
 `declared_telemetry_names`, `combined_telemetry_plan`), `declared` and `enabled` pairing each declaration with its
-`HarnessSection` (both in `harness/declaration.py`). A binding's own telemetry — the names it arrives under and what the
-runner does with each exporter — is answered by its declaration (`telemetry_names`, `telemetry_plan`), never named by
-the composition root or the tracing receiver. Importing `wiring.py` loads only each adapter's section module; an
-adapter's declaration loads on the catalog's first call. A third harness costs three things, and nothing else outside
+`HarnessSection` (both in `harness/declaration.py`); each walk takes the `BindingSelection` that picks one declaration
+per harness id, its mechanism owned by `bzh:pluggable-seams`. A binding's own telemetry — the names it arrives under and
+what the runner does with each exporter — is answered by its declaration (`telemetry_names`, `telemetry_plan`), never
+named by the composition root or the tracing receiver. Importing `wiring.py` loads only each adapter's section module;
+an adapter's declaration loads on the catalog's first call. A third harness costs three things, and nothing else outside
 its own package:
 
 - its declaration and section kind in the catalog (`harness/wiring.py`);
@@ -38,7 +39,9 @@ its own package:
   module.
 
 Every other roster derives from the catalog (`HARNESS_SECTION_KINDS`): the layer gate's binding nodes, the adapter
-packages, and the runner-home keys a host file refuses at the top level. Not a new branch in a consumer.
+packages, and the runner-home keys a host file refuses at the top level. The one exception is a second major version's
+binding package under an existing id, which the layer gate lists by hand (`_VERSION_BINDING_PACKAGES`) beside its own
+row. Not a new branch in a consumer.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.

@@ -50,10 +50,12 @@ in the seam's package imports the loop that consumes it. House each adapter by t
 - An adapter of several modules gets a package of its own, named only by the seam's wiring module and the composition
   roots — the harness seam's `harness/claude_code/` and `harness/opencode/`, named by `harness/wiring.py`.
 - When the harness binary's major version needs a separate implementation, that binding is a package of its own beside
-  the package its harness id names, held to the same isolation. Until the seam's wiring module selects between majors it
-  is named only by a composition root — `harness/opencode_v2/` binds OpenCode 2 and is named only by the runner's
-  `opencode` CLI group, home to the compatibility diagnostic, the turn driver, and takeover; `harness/wiring.py` does
-  not name it.
+  the package its harness id names, held to the same isolation, with a declaration of its own — `harness/opencode_v2/`
+  binds OpenCode 2. Configuration still selects the harness; the binary's version selects among the harness id's
+  declarations, which the catalog lists together, the first the default. `harness/binding_selection.py` runs the
+  configured binary's `--version` once as a runner is composed, names no adapter, and chooses the declaration whose
+  admitted range holds it, else the first, whose health then refuses the version. The choice is threaded to everything
+  composing that runner — publish, registry, health — and never swapped while it runs.
 - An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
   composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
   `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
@@ -84,8 +86,8 @@ adapter imports a sibling, or has grown a second module of its own while still f
 **Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
 basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while
 tests bind the blizzard-mock fleet. The hub reaches its external systems through `IWorkSource` and its capability family
-and `IOAuthProvider`. `blizzard/src/blizzard/runner/harness/wiring.py` is the one module naming both harness adapters;
-the harness core reaches them only through `IHarnessDeclaration` and `HarnessSection`.
+and `IOAuthProvider`. `blizzard/src/blizzard/runner/harness/wiring.py` is the one module naming the harness adapter
+packages; the harness core reaches them only through `IHarnessDeclaration` and `HarnessSection`.
 
 **Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
 mock harness. Nor a harness-core module importing an adapter's constant — a denied-tool list, a section kind — so the
