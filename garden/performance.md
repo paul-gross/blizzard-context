@@ -51,6 +51,7 @@ a finding here when a call site issues it once per item.
 Every run records, findings or none:
 
 - Findings opened, per scope swept.
-- Statements issued per representative operation, for each hot path the run measured — `blizzard/tests/support.py`'s
-  `count_queries` over the real adapters is the instrument. A scope's trend is then a number rather than an impression,
-  and a path already measured by an earlier run is re-measured rather than re-judged.
+- Statements issued per representative operation, for each hot path the run measured —
+  `blizzard/tests/support/scaffolding.py`'s `count_queries` over the real adapters is the instrument. A scope's trend is
+  then a number rather than an impression, and a path already measured by an earlier run is re-measured rather than
+  re-judged.

@@ -82,7 +82,7 @@ Falsify it by adding a `ConfigKey` to a registry and regenerating nothing: the t
 gates each store's schema document, `contracts/store/hub.json` and `runner.json`, against a head-migrated store. The
 document is built from `schema.py` and the tree's head revision by `blizzard-export-contracts`, whose output
 `blizzard:gate`'s drift step holds to the committed files; the test reflects a store taken from
-`tests/support.py::migrated_hub_at` or `tests/runner_fakes.py::migrated_store_at` through
+`tests/support/scaffolding.py::migrated_hub_at` or `tests/support/runner_fakes.py::migrated_store_at` through
 `blizzard.tools.store_contract.document_from_engine` and requires equality, `deprecated` marks excepted since reflection
 cannot see them, with the applied revision standing for `head_revision`. The two checks close a pair: a `schema.py`
 change without regenerating reddens the drift step, and regenerating without a revision reddens this test.
@@ -100,7 +100,8 @@ the reflected-only column. Delete the revision afterwards.
 shape the hub assembles for a step, and a runner for a lease, against the corpus `contracts/traces/`: `dictionary.json`,
 authored by hand, and one `golden/<scenario>.json` per seeded scenario, written only by regeneration —
 `BLIZZARD_REGEN_TRACE_CONTRACT=1` on the same command, which rewrites the golden and never the dictionary. The seeds are
-built from `tests/trace_fixtures.py` and `tests/runner_trace_fixtures.py` with no store and no OpenTelemetry import.
+built from `tests/support/trace_fixtures.py` and `tests/support/runner_trace_fixtures.py` with no store and no
+OpenTelemetry import.
 
 The dictionary binds to the code and to the docs from both sides: its attribute names equal the declared sets of
 `blizzard.hub.domain.observability.tracing.attributes` and `blizzard.runner.tracing.attributes` plus the resource keys;

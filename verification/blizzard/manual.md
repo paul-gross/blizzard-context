@@ -758,8 +758,8 @@ there, never a dev surface pointed at it (`workspace:/context/project/hub-data-m
 
 **Setup.** A fleet-scale hub store that is not the live fleet — `workspace:/context/project/hub-data-modes.md`'s mode 2
 (a migrated snapshot copy) or mode 3 (seeded synthetic) — or, for a reading taken mid-change before a fresh store
-exists, a scratch `tests.support.build_hub` instance seeded to the same chunk count via a throwaway script, as the
-recorded reading below used.
+exists, a scratch `tests.support.scaffolding.build_hub` instance seeded to the same chunk count via a throwaway script,
+as the recorded reading below used.
 
 **Steps.**
 
@@ -848,8 +848,8 @@ single-writer WAL/`busy_timeout` posture means the risk this reading answers is 
 and neither moved measurably.
 
 **Bulk-read adoption reading.** Store: a scratch `build_hub` sqlite store seeded via a throwaway script — N=225 chunks:
-200 raw-seeded (`tests.support.seed_chunk`) across 20 minted graphs of 6 real nodes each, every one holding a
-`default`-source work ref (`ChunkWorkRefsStore.add_work_refs`) so pointer-liveness fan-out spans every graph; 15
+200 raw-seeded (`tests.support.scaffolding.seed_chunk`) across 20 minted graphs of 6 real nodes each, every one holding
+a `default`-source work ref (`ChunkWorkRefsStore.add_work_refs`) so pointer-liveness fan-out spans every graph; 15
 promoted `default`-source ingests and 10 hub-issued work items, both landing on the hub's own auto-minted default graph
 — 21 distinct graphs total. No hub-store migration lands between the two commits (`git diff` over
 `src/blizzard/hub/store` is empty apart from the internal adapters below), so one seeded `hub.db` copy served both
@@ -875,8 +875,8 @@ pointer with one candidate holder — this reading's own isolated `find_live_hol
 win shows up instead in `live_work_refs` and in `GET /api/chunks`'s own bulk `live_holders` resolution above.
 
 **Derive-once read-sweep reading.** Store: a scratch `build_hub` sqlite store seeded via a throwaway script — N=173
-chunks, each ingested and promoted to ready (`tests.support.ingest`). One warm rep then 5 timed reps, mean wall-clock
-and total SQL query count per call, both sides on the same seeded store:
+chunks, each ingested and promoted to ready (`tests.support.scaffolding.ingest`). One warm rep then 5 timed reps, mean
+wall-clock and total SQL query count per call, both sides on the same seeded store:
 
 | Read               | Before queries (`3c96c0d4`) | Before latency | After queries (`8fdb7577`) | After latency |
 | ------------------ | --------------------------- | -------------- | -------------------------- | ------------- |
@@ -1027,16 +1027,16 @@ and corpus shape, before and after the code change. The hosted reading is separa
 line, read by an operator once a release carrying the change is deployed there, never a dev surface pointed at the
 hosted hub (`workspace:/context/project/hub-data-modes.md` owns why).
 
-**Setup.** A scratch `tests.support.build_hub` store seeded to the production shape — ≈2,500 visible segments, ≈27,500
-records, content sized to ≈175 MB compressed — through a throwaway script, then swept once (untimed) so the store
-reaches steady state (every segment carries a current marker) before the timed pass.
+**Setup.** A scratch `tests.support.scaffolding.build_hub` store seeded to the production shape — ≈2,500 visible
+segments, ≈27,500 records, content sized to ≈175 MB compressed — through a throwaway script, then swept once (untimed)
+so the store reaches steady state (every segment carries a current marker) before the timed pass.
 
 **Steps.**
 
 1. Seed the scratch store to the shape above.
 2. Sweep once, untimed, so the store converges.
-3. Sweep once more, timed: wall-clock elapsed, total SQL statement count (`tests.support.count_queries`'s technique),
-   and bytes `zlib.decompress` returns across the pass (a wrapped `zlib.decompress` counts them).
+3. Sweep once more, timed: wall-clock elapsed, total SQL statement count (`tests.support.scaffolding.count_queries`'s
+   technique), and bytes `zlib.decompress` returns across the pass (a wrapped `zlib.decompress` counts them).
 4. Repeat step 3 on the other side of the code change, against the same store shape.
 
 **Passes when.** Both readings are recorded together, against the same corpus shape.

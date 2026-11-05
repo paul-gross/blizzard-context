@@ -44,12 +44,13 @@ Protocol declaring no `load_facts_for` for that comprehension to collapse into.
 expensive enough to need a plural form. [`../standards/persistence.md`](../standards/persistence.md) `bzh:sql-portable`
 — the surface a plural form's batched `IN` stays inside. [`./system-shape/seam-size.md`](./system-shape/seam-size.md)
 `bzh:seam-size-ceiling` — a narrowed plural is preferred partly because it lets a seam split along consumer lines rather
-than widening one seam toward the cap. `blizzard/tests/support.py`'s `count_queries` is how a call site's statement
-count is held flat as the fleet grows. `bzh:page-bounded-read` below — the reads this rule leaves alone, and the bound
-they owe instead. `bzh:newest-per-key-read` below — the row bound a plural form owes when the singular it batches reads
-a newest fact. [`./lanes.md`](./lanes.md) `bzh:probe-gated-pass` — whether a periodic pass runs at all, which this rule
-takes as given. [`./system-shape/store-facts.md`](./system-shape/store-facts.md) `bzh:fact-families-declared` — the one
-registry a wide or narrowed fact projection narrows, so a plural form cannot drop a family.
+than widening one seam toward the cap. `blizzard/tests/support/scaffolding.py`'s `count_queries` is how a call site's
+statement count is held flat as the fleet grows. `bzh:page-bounded-read` below — the reads this rule leaves alone, and
+the bound they owe instead. `bzh:newest-per-key-read` below — the row bound a plural form owes when the singular it
+batches reads a newest fact. [`./lanes.md`](./lanes.md) `bzh:probe-gated-pass` — whether a periodic pass runs at all,
+which this rule takes as given. [`./system-shape/store-facts.md`](./system-shape/store-facts.md)
+`bzh:fact-families-declared` — the one registry a wide or narrowed fact projection narrows, so a plural form cannot drop
+a family.
 
 ## Bound a read by its page (`bzh:page-bounded-read`)
 
@@ -71,8 +72,8 @@ periodic pass's corpus read is outside it too: the pass has no page to bound it 
 rows it reads per key: a read inside the page fetching each key's whole fact history to answer with the newest fact is
 `bzh:newest-per-key-read`'s.
 
-**Detect.** Statement count is measured, not read: `blizzard/tests/support.py`'s `count_queries` at two fixture sizes,
-as `blizzard/tests/component/hub/api/test_list_chunks_bulk_reads.py` and
+**Detect.** Statement count is measured, not read: `blizzard/tests/support/scaffolding.py`'s `count_queries` at two
+fixture sizes, as `blizzard/tests/component/hub/api/test_list_chunks_bulk_reads.py` and
 `blizzard/tests/component/hub/api/test_matched_queue_peek.py` do, and a count that grows between the sizes is the
 finding. Row volume is judged by reading: a `list_all()` or `load_all_*` call in a handler, a page sliced in Python from
 an every-id read, or a per-request fan-out whose row count no `limit` bounds, with no reason beside it or in the
@@ -111,9 +112,9 @@ such as a done prerequisite, is resolved by id through `bzh:bulk-reconstitution`
 read. A periodic pass's corpus read stays [`./lanes.md`](./lanes.md) `bzh:probe-gated-pass`'s.
 
 **Detect.** Measured: `blizzard/tests/component/hub/test_live_set_read.py` builds two fixtures that differ only in
-terminal-chunk count and asserts `count_queries` and `count_rows_read` from `blizzard/tests/support.py` are flat and the
-response identical. By reading: a `TERMINAL_STATUSES` filter applied in Python to an every-chunk status read on such a
-path.
+terminal-chunk count and asserts `count_queries` and `count_rows_read` from `blizzard/tests/support/scaffolding.py` are
+flat and the response identical. By reading: a `TERMINAL_STATUSES` filter applied in Python to an every-chunk status
+read on such a path.
 
 **Do.** `ChunkFactsStore.load_live_statuses` excludes stopped, completed, PR-closed, and newest-movement-is-done chunks
 in its query; the queue reads bound their position and record lookups by the live candidates it names.
@@ -143,13 +144,13 @@ fetches the history charges every past write on a key to every future call, behi
 set or every key a filter leaves, the whole table included. A read whose consumer derives from more than the newest fact
 — a fact projection reconstituted for the domain to derive from — is outside it: the history is that read's answer.
 
-**Detect.** Measured: `blizzard/tests/support.py`'s `count_rows_read` over the same keys at two history depths, as
-`blizzard/tests/component/hub/test_newest_fact_reads.py` does — a row count above the key count, or one that grows with
-the depth, is the finding, and a statement count cannot show it. By reading: a select ordered ascending by `id` with no
-`limit`, whose rows a loop folds into a dict keyed by the key column so that later rows overwrite earlier ones; a
-comment excusing that fold as newest-fact-wins; a `[-1]` or `[0]` taken from a whole-history select fetched for nothing
-else; a whole-history select fetched only to test whether any row is newer than a bound. The fix is the form the rule
-names, batched through `id_batches` when the keys are caller-supplied; for the newer-row test, an `EXISTS` in the
+**Detect.** Measured: `blizzard/tests/support/scaffolding.py`'s `count_rows_read` over the same keys at two history
+depths, as `blizzard/tests/component/hub/test_newest_fact_reads.py` does — a row count above the key count, or one that
+grows with the depth, is the finding, and a statement count cannot show it. By reading: a select ordered ascending by
+`id` with no `limit`, whose rows a loop folds into a dict keyed by the key column so that later rows overwrite earlier
+ones; a comment excusing that fold as newest-fact-wins; a `[-1]` or `[0]` taken from a whole-history select fetched for
+nothing else; a whole-history select fetched only to test whether any row is newer than a bound. The fix is the form the
+rule names, batched through `id_batches` when the keys are caller-supplied; for the newer-row test, an `EXISTS` in the
 statement that needs the answer.
 
 **Do.** `blizzard/src/blizzard/hub/store/internal/newest_fact.py`'s `newest_fact_select` joins a fact table to a
