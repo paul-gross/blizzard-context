@@ -260,14 +260,16 @@ persistence and clearing.
 
 **A finding's exits and a routine's trend** (`finding-exits.spec.ts`) is the tier's only two-edge finding proof:
 findings are minted the way a routine mints them — a real routine run, promoted, then the mock runner submitting the
-run's `delta` artifact over the wire, then the hub's own `POST /api/chunks/{id}/garden-delivery` — and every exit verb
-plus `reopen` is then driven twice, once as raw HTTP and once through the real `blizzard hub finding` binary against the
-running daemon. It pins what an in-process client cannot: the note requirement refusing at both edges (a blank note is
-422 on the wire and a non-zero exit in the CLI), one call exiting many ids, a later delta op naming an exited finding
-rejected while a `gone`-flagged one is still a live target, the `GET /api/routines/trend` per-period created/exit counts
-with their outflow-vs-withdrawn roll-ups and introduced-age cut rendered identically by `blizzard hub routine trend`,
-and delivery-triggered closure end to end — an accepted garden proposal's minted item, landed by a `merged/` marker,
-closing that proposal's findings to `delivered` through one requested pass of the daemon's close-intent drain.
+run's `delta` artifact over the wire and walking the run to its `deliver` node, whose `garden-deliver` action the hub
+takes on its own — and every exit verb plus `reopen` is then driven twice, once as raw HTTP and once through the real
+`blizzard hub finding` binary against the running daemon. It pins what an in-process client cannot: the note requirement
+refusing at both edges (a blank note is 422 on the wire and a non-zero exit in the CLI), one call exiting many ids, a
+later delta op naming an exited finding answered `invalid` while a `gone`-flagged one is still a live target, and the
+`GET /api/routines/trend` per-period created/exit counts with their outflow-vs-withdrawn roll-ups and introduced-age cut
+rendered identically by `blizzard hub routine trend`. Delivery-triggered closure needs a real commit to land, so
+`tests/service/fleet/finding-exits.spec.ts` owns it end to end: an accepted garden proposal's minted item, landed by a
+real host's commit through the `land` action, closing that proposal's findings to `delivered` through one requested pass
+of the daemon's close-intent drain.
 
 **Runner against mock hub.** `unreachable` buffers, `drop_ack` proves idempotency, and a `stale_envelope` is tolerated —
 the chunk lands because the runner fences on its own lease epoch, not the envelope
