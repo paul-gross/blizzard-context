@@ -228,7 +228,7 @@ the worker pushing to real GitHub. Do not add a real-forge CI tier.
 
 ## A garden node prompt's wording
 
-The packaged `garden-routine` prompts carry the routine's whole method: `survey.md` resolves the routine's name as an
+The packaged `garden-routine` prompts carry the routine's whole method: `survey.md` resolves the routine's slug as an
 axis against the target project's gardening-axes registry, follows that entry's Criteria pointer, and records its
 declared Measurement, and `propose.md` rules what a proposal's `findings` may cite and how its `class` is spelled. The
 same gap holds for the packaged `ideation` graph's prompts: its `survey`/`reconcile`/`propose` carry the charter
@@ -585,6 +585,26 @@ rebuild; on Postgres it is a native `ALTER`.
 - **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
   someone runs it again. No row was written through the two new tables there, so their foreign keys onto a link and a
   submission have not been enforced against a row.
+
+Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
+portable SQL `bzh:sql-portable` holds each statement to.
+
+## Routines' slug under Postgres
+
+Every tier runs the revision adding a routine's slug on SQLite only. It adds `routines.slug` nullable with a server
+default, fills it from `name` in bounded pages, and tightens it to `NOT NULL` keeping that default. It replaces
+`uq_routines_project_name` with `uq_routines_project_slug` and rebuilds the tenant-wide handle index on the slug. On
+SQLite the tightening and the constraint swap are one `batch_alter_table` rebuild; on Postgres they are native `ALTER`s.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
+  store reached head, returned to base leaving only `alembic_version`, and reached head again. It then stepped down to
+  the revision's parent, seeded 2,500 `routines` rows, half with a non-slug name, and a finding keyed by one of them,
+  and came back up to head. Every slug read its row's name, the column read `NOT NULL` with its default, the slug
+  constraint and index stood in place of the name's, the finding row was unchanged, and a second routine of an
+  already-held slug was refused by the constraint. A step down after one routine was renamed restored the name
+  constraint and index, dropped the column, and read every name as its slug, so the rename was the only loss.
+- **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
+  someone runs it again.
 
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
