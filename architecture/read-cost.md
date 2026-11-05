@@ -156,7 +156,7 @@ statement that needs the answer.
 **Do.** `blizzard/src/blizzard/hub/store/internal/newest_fact.py`'s `newest_fact_select` joins a fact table to a
 `max(id) ... GROUP BY key` subquery over the keys asked for, and the stores' plural newest reads share it.
 `blizzard/src/blizzard/hub/store/internal/finding_store.py`'s `FindingStore.newest_by_scope_for_routine` is the same
-join over every scope one routine has run against — the keys a `where` on the routine name leaves, not a supplied set.
+join over every scope one routine has run against — the keys a `where` on the routine slug leaves, not a supplied set.
 Beside it, `newer_row_exists` builds the scoped "a newer row exists" `EXISTS` over a competing alias, in the order the
 caller names compared as one row value; negated, it keeps the newest row per partition. The competing row carries the
 same filter as the outer one, and its subquery is scoped like any other (`bzh:tenant-scoped-store`).

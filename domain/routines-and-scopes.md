@@ -7,8 +7,8 @@ letters, digits, and hyphens, at least one character and nothing else; whatever 
 [domain model](./index.md).
 
 Every scope and routine belongs to one project ([projects.md](./projects.md)), fixed at its mint. A scope's slug and a
-routine's name are unique within its project, so two projects may each hold a scope of one slug or a routine of one
-name, and they are different records. Finding a scope or routine by its name, or minting one, is a call that needs a
+routine's slug are unique within its project, so two projects may each hold a scope of one slug or a routine of one
+slug, and they are different records. Finding a scope or routine by its slug, or minting one, is a call that needs a
 project, and a listing naming none reads the whole tenant — [projects.md](./projects.md) §A call that needs a project.
 
 ## Mint-on-name
@@ -26,11 +26,14 @@ project's own scope. The description at mint depends on what names the scope:
 - A review round's mint is in the reviewed chunk's project, and carries a hub-written description naming its chunk, an
   operator's to edit later. It is recorded in the change log like every other mint.
 
-## The name is a routine's lineage
+## The slug is a routine's lineage
 
-A routine's name, not its id, is what a run, a finding, or a proposal is understood to belong to across the routine's
-whole life. The name is fixed at mint and never changes; editing a routine may change which graph it points at, its
-default scope, or its run preferences, but never what it is named.
+A routine's slug, not its id, is what a run, a finding, or a proposal is understood to belong to across the routine's
+whole life. The slug is fixed at mint and never changes; editing a routine may change which graph it points at, its
+default scope, its run preferences, or its display name, but never its slug. A routine's name is a free display name:
+operator-editable, not unique, and never what anything belongs to. A mint states a slug, a name, or both, and the one
+left out takes the other's value. A slug a mint states has the scope slug's shape; a slug taken from a name only is not
+shape-checked, so a name that was a valid handle before the slug existed stays one.
 
 ## The retired brake
 
@@ -78,15 +81,16 @@ turns a run away is [What refuses](#what-refuses).
 
 Each of these is refused wherever the act is offered, and refused outright — never quietly absorbed into something
 already recorded, never quietly re-addressed at something else: a slug is not normalized, a routine mint does not hand
-back the routine already holding the name, a management verb does not create what it failed to find, and a run is not
+back the routine already holding the slug, a management verb does not create what it failed to find, and a run is not
 sent to another scope or another graph.
 
 - **A slug outside its shape** — empty, or carrying anything but lowercase letters, digits, and hyphens — wherever a
   scope is named: minting or editing one, a routine's default, a run's override, either verb over a routine's declared
   set.
-- **A routine name already taken in its project** — at mint. A routine's name is claimed once, where a scope's slug is
-  not ([Mint-on-name](#mint-on-name)): a second routine under a name already held is refused, never merged into the
-  routine holding it.
+- **A routine slug already taken in its project** — at mint, a retired routine's included. A routine's slug is claimed
+  once, where a scope's slug is not ([Mint-on-name](#mint-on-name)): a second routine under a slug already held is
+  refused, never merged into the routine holding it.
+- **A routine slug outside the scope-slug shape** — at mint, when the mint states the slug.
 - **A scope that does not exist** — when a routine's declared set names one, grown or shrunk; the growing verb mints
   nothing of its own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 - **A scope of another project** — as a routine's default or in its declared set, at mint, at an edit, or from a
@@ -108,7 +112,7 @@ sent to another scope or another graph.
 - **A retired routine** — when a run is addressed at it, checked before the effective scope is even resolved.
 
 Two more refusals guard a field of an existing routine rather than any act above, and are stated where that field is: a
-routine's name never changes ([The name is a routine's lineage](#the-name-is-a-routines-lineage)), and its default scope
+routine's slug never changes ([The slug is a routine's lineage](#the-slug-is-a-routines-lineage)), and its default scope
 is never unlinked from its declared set
 ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 
