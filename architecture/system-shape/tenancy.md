@@ -36,8 +36,8 @@ missing, nullable, or without its foreign key, or that has no index led by `tena
 read-index gate (`tests/component/test_store_read_index_gate.py`, a `blizzard:component-test`) reads a plan that seeks
 only the tenant prefix, or walks a whole named index in order, as reading the table whole, beside a bare scan and an
 automatic index; a read that walks by design names its reason in an `IndexWalkAllowance`
-(`tests/store_scan_allowlist.py`), scoped to that one read. By eye: a `tenant_id` field on a domain dataclass, a request
-body, or a wire model that a write path reads; an adapter passing `tenant_id=` into `.values(...)` itself.
+(`tests/support/store_scan_allowlist.py`), scoped to that one read. By eye: a `tenant_id` field on a domain dataclass, a
+request body, or a wire model that a write path reads; an adapter passing `tenant_id=` into `.values(...)` itself.
 
 **Do.** A fact table under a chunk carries `tenant_id` beside `chunk_id`, stamped by the scoped `insert` the adapter
 built; the domain call that wrote it passed only the fact.
@@ -240,12 +240,12 @@ one statement (`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus read
 pass reads and writes only its own tenant's convergence entry, never rebinding or pruning state across tenants, and
 leaves the close drain's rotation unmoved.
 
-**Detect.** The poisoned-tenant fixture, `tests/pass_isolation.py`, is a `blizzard:component-test`: it runs a pass twice
-on the virtual clock, once with a tenant whose units raise, report unconverged, or hold a burst of due work, and once
-without that tenant, and fails when any other tenant's recorded calls differ. It also interleaves a poisoned tenant's
-one-tenant passes with timed passes and fails the same way. Every pass this rule binds uses it. By eye: a convergence
-flag folded across tenants, one probe value for the hub, a budget sliced from one ordered list, or a catch around a
-pass's whole tenant loop rather than inside it.
+**Detect.** The poisoned-tenant fixture, `tests/support/pass_isolation.py`, is a `blizzard:component-test`: it runs a
+pass twice on the virtual clock, once with a tenant whose units raise, report unconverged, or hold a burst of due work,
+and once without that tenant, and fails when any other tenant's recorded calls differ. It also interleaves a poisoned
+tenant's one-tenant passes with timed passes and fails the same way. Every pass this rule binds uses it. By eye: a
+convergence flag folded across tenants, one probe value for the hub, a budget sliced from one ordered list, or a catch
+around a pass's whole tenant loop rather than inside it.
 
 **Do.** The close drain groups due intents by tenant and takes one in turn from each, starting at a rotating tenant,
 until it reaches its pass limit, so a tenant with a burst never takes another's slots.

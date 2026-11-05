@@ -28,5 +28,5 @@ The component spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md).
   rejected 422.
 - `test_store_read_index_gate.py` — drives every read method of every hub and runner `IRead*` Protocol against a real,
   migrated-to-head sqlite store and fails if any plans an unindexed scan, or an sqlite automatic covering index, over a
-  table not declared in `tests/store_scan_allowlist.py`; extend or fix its coverage or allowances there and in
-  `tests/store_read_census.py`, not in this file.
+  table not declared in `tests/support/store_scan_allowlist.py`; extend or fix its coverage or allowances there and in
+  `tests/support/store_read_census.py`, not in this file.

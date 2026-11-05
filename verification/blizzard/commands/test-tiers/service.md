@@ -27,7 +27,7 @@ half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run s
 whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks), wire
 parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk findings, transcript
 segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health, credential renewal, runner
-self-test), and nothing else; their shared launchers live in `tests/mock_fleet_support.py`. Both exercise a running
+self-test), and nothing else; their shared launchers live in `tests/support/mock_fleet.py`. Both exercise a running
 daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this tier's. The Python half
 needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts, stub IdP, and
 `mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
@@ -511,7 +511,7 @@ runner, init refuses, names `blizzard hub runner reinstate <id>`, and leaves the
 the hub's data, init refuses without `--allow-readd`, naming the hub URL it asked, adding nothing, and leaving the held
 tokens unchanged; with the flag it adds a fresh runner and replaces the token. The cases whose list reads are
 whole-tenant run at `fresh-tenant`; the hub-data reset runs at `fresh-hub`. Every in-process `runner init` at the unit
-and component tiers joins the suite-wide fake hub in `tests/runner_init_fakes.py` instead.
+and component tiers joins the suite-wide fake hub in `tests/support/runner_init_fakes.py` instead.
 
 **Ingesting a colliding runner into a host** (`test_host_ingest_service.py`) is proven over the real wire only at this
 tier: two host directories hold one runner each under one host the mock hub knows, their stores colliding on the

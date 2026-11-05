@@ -39,9 +39,9 @@ restoring a template its own CLIs built is not a spec seeding the store.
 ## The tenant statement guard is on in every tier
 
 Every daemon any tier spawns runs with the tenant statement guard on, whether the suite is Python or Playwright. The
-Python suite plugin's (`tests/suite_plugin.py`) `pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs the guard
-(`src/blizzard/hub/store/tenant_guard.py`) in the test process, and every hub a service or crash test spawns inherits
-the variable and installs the guard as it opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`). The
+Python suite plugin's (`tests/support/suite_plugin.py`) `pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs
+the guard (`src/blizzard/hub/store/tenant_guard.py`) in the test process, and every hub a service or crash test spawns
+inherits the variable and installs the guard as it opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`). The
 Playwright harness sets it through `tests/daemon-env.json`; its daemon-log refusal check fails the request's test, or
 the run when no request owns the refusal. Only the value `1` switches the guard on. Fixture SQL a test writes raw is
 outside the guard's reach, so it names the tenant itself. `bzh:tenant-scoped-store`'s Detect
@@ -66,15 +66,15 @@ neither read nor change the other's rows, holding its coverage of the read and w
 ## Head-migrated test stores come from prototypes (`bzh:head-store-prototypes`)
 
 **Rule.** Copy a per-process migrated prototype when a test needs an empty store at head; reserve from-empty migration
-chain replay for tests whose subject is the chain. Use `tests/support.py::migrate_to(tmp_path, "head")` or
-`tests/support.py::migrated_hub_at(db_url)` for the hub, and `tests/runner_fakes.py::migrated_store_at(db_url)` for the
-runner.
+chain replay for tests whose subject is the chain. Use `tests/support/scaffolding.py::migrate_to(tmp_path, "head")` or
+`tests/support/scaffolding.py::migrated_hub_at(db_url)` for the hub, and
+`tests/support/runner_fakes.py::migrated_store_at(db_url)` for the runner.
 
 **Why.** A store test exercises its store behavior, while replaying the chain in every case consumes time without
 testing that behavior. Migration tests still need the replay to prove the revisions themselves.
 
-**Detect.** The head-replay guard installed by `tests/suite_plugin.py` refuses a direct `upgrade("head")` from an
-unmigrated store in a non-migration `test_*.py` module at the root of `tests/` or under its `unit/`, `component/` or
+**Detect.** The head-replay guard installed by `tests/support/suite_plugin.py` refuses a direct `upgrade("head")` from
+an unmigrated store in a non-migration `test_*.py` module at the root of `tests/` or under its `unit/`, `component/` or
 `guards/` folder, naming that module and the helper to use. Upgrades from a pinned older revision and production
 initialization pass.
 
@@ -89,7 +89,8 @@ initialization pass.
 the revision the test upgrades into, not the parent it pins, and is the only thing tying test to revision. A revision
 that reshapes or backfills rows ships with its colocated test in the same change. A test covering several revisions
 takes the newest stem it pins. A test that only puts a store behind head, so that current behavior is its subject, stays
-in `tests/` and is never retired.
+in `tests/` and is never retired. Its helpers live in `tests/support/migrations/`, beside the other shared helpers
+(`bzh:mirrored-test-layout`).
 
 - A colocated test skips automatically once its revision is more than 30 days old, by the date in the stem.
   `BLIZZARD_RUN_RETIRED_MIGRATION_TESTS=1` runs them all, for example to vet an Alembic or SQLAlchemy upgrade.
@@ -107,10 +108,10 @@ in `tests/` and is never retired.
 nothing the chain's head-equivalence checks do not. Beside the revision, the test is found with the file it proves, and
 the filename alone says when it expires.
 
-**Detect.** The collection hook in `tests/suite_plugin.py`, registered by the repo-root `conftest.py` so it reaches
-every colocated directory, refuses a misnamed file or a stem with no sibling revision with a usage error naming the file
-(`tests/revision_age.py`, proven by `tests/guards/test_revision_age.py`). No check enforces that a reshaping revision
-has its test.
+**Detect.** The collection hook in `tests/support/suite_plugin.py`, registered by the repo-root `conftest.py` so it
+reaches every colocated directory, refuses a misnamed file or a stem with no sibling revision with a usage error naming
+the file (`tests/support/revision_age.py`, proven by `tests/guards/test_revision_age.py`). No check enforces that a
+reshaping revision has its test.
 
 **Do.** The exemplar's hub migration test, beside its revision under the same stem
 ([../../exemplars/index.md](../../exemplars/index.md)).
@@ -135,18 +136,22 @@ from the folder, never from a marker.
 - Every folder under a tier folder is a package.
 - A test declares no `unit` or `component` marker under a tier folder.
 - A new `test_*.py` module is never added directly under `tests/`: the modules already there are a shrinking list in
-  `tests/root_test_modules.py`, each leaving it as it moves into a tier folder.
+  `tests/support/root_test_modules.py`, each leaving it as it moves into a tier folder.
 - The exemplar tree follows the same rule with `exemplar/` in place of `src/blizzard/` and an empty root list. Its tier
   folders are packages, and `exemplars/python/tests/` itself is not, so pytest imports them as top-level packages.
 - Service, crash, UI, rehearsal and winter-binding tests keep the folders their own rules name.
+- Shared helpers live in `tests/support/`, and migration helpers in `tests/support/migrations/`. The `tests/` root holds
+  no module but `conftest.py`, `__init__.py` and the listed `test_*.py` modules. A folder-own helper stays in its kind
+  folder.
 
 **Why.** A test is found by the path of the code it proves, and a tier read from a folder cannot drift from a
 hand-written marker or be forgotten.
 
-**Detect.** The collection hook in `tests/suite_plugin.py` adds the folder's marker before `-m` selects, so
+**Detect.** The collection hook in `tests/support/suite_plugin.py` adds the folder's marker before `-m` selects, so
 `pytest -m <tier>` sees the folder tier, and refuses a declared tier marker, a folder naming no package, a folder
 without an `__init__.py` and a new module at the `tests/` root with a usage error naming the file. The placement
-judgements are in `tests/tier_layout.py`, proven by `tests/guards/test_tier_layout.py`.
+judgements are in `tests/support/tier_layout.py`, proven by `tests/guards/test_tier_layout.py`, whose root-helper guard
+fails the unit tier on any other module directly under `tests/`.
 
 **Do.** The `hub/domain/` folder of `tests/unit/` for a unit test of a hub domain module, with no marker. The exemplar's
 tests show each placement ([../../exemplars/index.md](../../exemplars/index.md)).
@@ -166,8 +171,8 @@ byte for byte as before; each tenant's live stream replays its own events only; 
 rows; a route token acts in its chunk's tenant only; the packaged system artifacts read alike from either; the hub-level
 export routes refuse a tenant member; and every sweep acts in each open tenant and opens no closed one.
 `tests/component/hub/store/test_tenant_isolation_adapters.py` proves the same at the store: every row a tenant wrote
-carries its id, and each tenant's adapters read back none of the other's records. `tests/pass_isolation.py` is the
-shared poisoned-tenant fixture: it runs each hub-wide pass, and each one-tenant pass interleaved with it, with and
+carries its id, and each tenant's adapters read back none of the other's records. `tests/support/pass_isolation.py` is
+the shared poisoned-tenant fixture: it runs each hub-wide pass, and each one-tenant pass interleaved with it, with and
 without one failing or bursting tenant and fails when any other tenant's calls differ (`bzh:pass-isolates-tenants`).
 
 The scenario's route table names every live tenant route beside the probe that proves its isolation, and
@@ -266,8 +271,9 @@ it alive and its port still answers `connect`, but it stops serving mid-tick and
 was passing and the symptom lands far from the cause — suspect the wedge before the test.
 
 **Do.** The tiers that spawn real daemons with `subprocess.Popen` — `blizzard:crash-sweep`, `blizzard:service-test`, and
-`blizzard:rehearsal` — spawn through `tests/support.py`'s `daemon_log_sink`, which is that file: a daemon with a runtime
-dir logs to `daemon.log` beside its store, and the mock fleet's dirless daemons log to `shared_daemon_log_dir()`.
+`blizzard:rehearsal` — spawn through `tests/support/scaffolding.py`'s `daemon_log_sink`, which is that file: a daemon
+with a runtime dir logs to `daemon.log` beside its store, and the mock fleet's dirless daemons log to
+`shared_daemon_log_dir()`.
 
 **Don't.** `subprocess.Popen([...], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)` for a daemon the test then waits
 on — the guard fails the unit tier, and past it the daemon wedges once its log fills the pipe.
@@ -302,7 +308,8 @@ ships the flag.
 ## A test module imports no other test module (`bzh:test-imports-support-only`)
 
 **Rule.** A `test_*.py` module imports nothing from another `test_*.py` module. Code two test modules share lives in a
-support module — a module under `tests/` whose name does not start with `test_` — and both import it from there.
+support module — a helper under `tests/support/`, or a test folder's own helper — and both import it from there; the
+layout rule above owns where helpers live.
 
 **Why.** Importing from a test module makes the importer depend on a file whose job is to hold tests, and ties both
 files to where they sit: a module cannot move, split, or be renamed without chasing every importer. An imported test
