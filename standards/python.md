@@ -29,21 +29,24 @@ noqa instead.
 
 ## Strict types (`bzh:strict-types`)
 
-**Rule.** All Python in `blizzard` — shipping code and the tests — type-checks under strict pyright, and a suppression
-waives one named rule at one line, with its reason beside it.
+**Rule.** All Python in `blizzard` and `blizzard-mock` — shipping code and the tests — type-checks under strict pyright,
+and a suppression waives one named rule at one line, with its reason beside it.
 
 **Why.** A signature is the first thing an agent meeting a module reads, and it builds on what the signature says.
 Strict mode keeps that promise honest: it rejects an untyped parameter and a value whose type it cannot infer. A bare
 `# type: ignore` silences every rule on its line whatever its brackets name, so one copied from module to module hides
 real errors behind a comment that looks deliberate.
 
-**Scope.** `pyproject.toml`'s `[tool.pyright]` sets `typeCheckingMode = "strict"` over repository-owned Python,
-including root scripts, tests, exemplars, and colocated store migration tests. Dependency, cache, dot-directory, and
-generated build output are excluded.
+**Scope.** Each repo's `pyproject.toml` `[tool.pyright]` sets `typeCheckingMode = "strict"` over repository-owned
+Python, including root scripts and tests; in `blizzard` that also covers exemplars and colocated store migration tests.
+Dependency, cache, dot-directory, and generated build output are excluded; `blizzard-mock` also sets
+`enableTypeIgnoreComments = false`, so a `type: ignore` comment suppresses nothing.
 
 **Detect.** `blizzard:typecheck` alone is the type gate and reports every strict error. The structural gate's
 `bzh:strict-types` rule (`blizzard:structural-gate`) flags a `type: ignore` comment and a `# pyright: basic` or
-`# pyright: standard` header across the same owned Python scope.
+`# pyright: standard` header across the same owned Python scope. `blizzard-mock` has no structural gate:
+`blizzard-mock:typecheck` is its type gate, and a guard test under `tests/` fails on a `type: ignore` comment or a
+`# pyright: basic` or `# pyright: standard` header in any repo-owned `.py`, riding `blizzard-mock:unit-test`.
 
 **Do.** `# pyright: ignore[reportMissingTypeStubs]  # ships no py.typed` on the import of a library that ships no type
 information, as `src/blizzard/foundation/platform_tracing/internal/pipeline.py` does; a JSON payload typed where it is
