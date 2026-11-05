@@ -527,6 +527,20 @@ row.
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
 
+## The hub-execution slot's drop under Postgres
+
+Every tier runs the revision dropping the hub-execution slot table on SQLite only. It drops the table, its tenant index
+and its rows; its downgrade recreates the table empty, with its index and both foreign keys.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
+  store reached head at the revision with no slot table, stepped down to the revision's parent leaving the table empty
+  with its primary key, its tenant index, and both foreign keys, and reached head again with the table gone.
+- **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
+  someone runs it again. No slot row was seeded there, so the drop of a populated table has not met Postgres.
+
+Standing in for a tier: the revision's colocated migration test, which seeds a row, and `blizzard:store-contract`, both
+on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to.
+
 ## Landing-policy operator guidance
 
 The policy-selection page's capability preconditions follow `hub/domain/config/landing_policies.py` and the runtime
