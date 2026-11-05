@@ -7,9 +7,9 @@ by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 A **configured record** is a row the hub holds as operator-set configuration and that an operator changes while the hub
 runs: a forge, a work source, a repository, a secret, a project, a project source link, a project repository link, a
-scope, or a routine. The rules below name the seams and tables that keep them — `IConfigCodec`, `SecretValue`,
-`ISecretReader`, `config_changes` — by the names their implementations take, so code adding one of them takes the name
-stated here. [Known debt](#known-debt) lists the code these rules do not yet hold.
+scope, a routine, or a cadence. The rules below name the seams and tables that keep them — `IConfigCodec`,
+`SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so code adding one of them
+takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
