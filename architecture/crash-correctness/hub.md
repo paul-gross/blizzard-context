@@ -320,10 +320,11 @@ position, landed at the tail through the queue's own landing, so a run minted pr
 the composite owes the checker nothing for the same reason.
 
 The one window is the routine-run mint's own: the run's `ref` is allocated through `prepare_mint` before the transaction
-opens, so a crash between them burns that one `ref`, never reused. Planning refuses before anything is allocated. The
-crash-point registry gains no point. A crash after the commit loses only the board's push, which the board's next read
-recovers, and a hub restarted mid-pass judges every errand again on its first pass: a minted errand's live run keeps it
-from being due (`bzh:errand-one-live-run`).
+opens, so a crash between them burns that one `ref`, never reused. A mint that loses its re-read inside the transaction,
+the errand's last run moved since the pass judged it, writes nothing and burns its `ref` the same way. Planning refuses
+before anything is allocated. The crash-point registry gains no point. A crash after the commit loses only the board's
+push, which the board's next read recovers, and a hub restarted mid-pass judges every errand again on its first pass: a
+minted errand's live run keeps it from being due (`bzh:errand-one-live-run`).
 
 ## Chunk delete, then hub-item withdrawal
 
