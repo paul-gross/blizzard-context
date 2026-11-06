@@ -195,12 +195,12 @@ disabled (`[transcripts] ship = false`).
 `tests/component/hub/store/internal/test_finding_store.py`'s `test_list_for_query_plans_as_an_index_search` and
 `test_count_by_class_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend every component
 test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
-`ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan.
+`ix_findings_tenant_project_routine_scope`/`ix_findings_tenant_project_routine_class` rather than a table scan.
 `tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty
 `chunk_id`-filtered fact tables' indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composite
 searches, the artifacts/graph-choices/transcript-segments/chunk-work-refs/close-intents hot-path reads, and each of
 `activity_facts_since`'s eighteen per-source ordered reads.
-`tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over the spend `_stmt`
+`tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over `usage_total_stmt`
 builder asserts `ix_usage_facts_tenant_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s
 scan gate classifies its hub and runner census recipes, with non-SQL methods exempted, and
 `tests/component/runner/store/test_indexes.py` pins selected named indexes on the same sqlite backend. No tier
