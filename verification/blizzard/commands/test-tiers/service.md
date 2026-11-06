@@ -39,6 +39,11 @@ The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`b
 applies a version-2 export kept from a hub that still took the forge address fields to a real hub, unrefused and
 unwarned, and checks it exports back as itself.
 
+When lease scratch is too long for Unix sockets, set `TMPDIR="$BLIZZARD_TMPDIR"` and `BLIZZARD_TEST_HOST_RUNTIME` to a
+unique private short directory for the Playwright host and scratch-host runtime directories. Keep logs, homes, fixture
+workspaces and test output in lease scratch; remove the runtime directory after the command. The pytest half's
+`short_host_runtime` fixture owns and removes its own private socket-only directories.
+
 **Forge budget** (`tests/service/fleet/forge-budget.spec.ts`) drives a stepped host and a fresh hub sharing one forge
 budget across annotation, landing and close. `test_a_low_budget_turns_the_sweep_away_while_a_landing_proceeds` proves
 the sweep spends nothing, the landing succeeds, and the close has exactly one deferred attempt at reset, no closure and
