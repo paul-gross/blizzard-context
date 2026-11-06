@@ -623,6 +623,23 @@ characters.
   edited the chore keeping its id, refused a stale `If-Match` with `409`, retired and re-enabled the cadence, refused a
   second cadence of the same slug, and wrote one change row for each write.
 
+## Errand marks under Postgres
+
+Every tier runs the revision adding the errand marks on SQLite only. It adds nullable `cadence_id` and `chore_id` to
+`work_item_runs` with a tenant-led index over its tenant, chore, and scope, and a nullable `linked_at` to
+`routine_scopes`, and backfills nothing: a run minted by hand and a link made before the stamp both read null. Its
+upgrade is native `ADD COLUMN`s on either backend; its downgrade is a `batch_alter_table` rebuild of each table on
+SQLite and native `ALTER`s on Postgres.
+
+- **What a hand run reached.** None yet: `blizzard:manual-postgres-migrations` has not been run over this revision, so
+  head, base, and head again, and a step from its parent with seeded `work_item_runs` and `routine_scopes` rows, are
+  each unverified on Postgres.
+- **What no tier repeats.** No CI tier runs that pass, so the revision stays unverified on Postgres until someone runs
+  it.
+
+Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
+portable SQL `bzh:sql-portable` holds each statement to.
+
 ## Forge references required under Postgres
 
 Every tier runs the revision that keys repositories and work sources on their forge on SQLite only. It refuses, before

@@ -23,6 +23,38 @@ chore over listed scopes holds one for each listed scope, and a chore naming no 
 default scope. Linking a scope to the routine, or retiring one, changes which errands an all-scopes chore holds, with no
 edit to the cadence.
 
+## When an errand is due
+
+An errand's runs are the runs minted for it, and its last run is the newest of them, whatever became of the work that
+first held it. A run started by hand, or minted by another chore, is none of its runs. A last run is settled once it is
+finished, stopped, or withdrawn; a run waiting on a person is not settled, so a failure is never quietly retried.
+
+A settled errand is due by its cadence's rhythm. Under a spacing, it is eligible once the spacing has passed since the
+last run's chosen moment, and at once when it has never run. Under a schedule, it is due once a moment has fallen since
+its last run was minted, or, for an errand that has never run, since it joined its chore — when the chore last set its
+scopes or, for an all-scopes chore, when the scope was linked to the routine, whichever is later. Under both, it is due
+once a moment has fallen since then and the spacing has passed. Nothing is kept about when an errand is next due: it is
+worked out each time it is asked.
+
+A moment the hub did not see is not lost. The errand is owed one run, minted the first time the hub looks after that
+moment, however late, and never one run for each moment it missed.
+
+Each due errand's run is minted as a hand-started run is, meeting the same refusals. A chore that admits its work to the
+queue admits its run as it is minted; any other chore's run rests behind the promote gate.
+
+## One live run per errand (`bzh:errand-one-live-run`)
+
+**Rule.** An errand whose last run is not settled is never due, whatever its rhythm says; this is judged before any
+moment or spacing is read, and judged again as the run is minted.
+
+**Why.** A fleet behind on its queue would otherwise pile up a run for every moment it fell behind; holding one run per
+errand keeps a slow fleet and a run waiting on a person to one outstanding run each.
+
+**Do.** An errand whose evening run is still waiting on a person at the next evening's moment mints nothing; once that
+run is stopped, the errand is due again and mints one run.
+
+**Don't.** Mint a second run of an errand because a moment fell while its first run was still being worked.
+
 ## Linked by slug
 
 A chore names its routine and its scopes by slug, never by anything minted for them, and those names are resolved each

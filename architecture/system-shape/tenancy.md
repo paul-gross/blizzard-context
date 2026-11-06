@@ -232,13 +232,13 @@ tenant, logged naming it, and counted as that tenant unconverged or failed, and 
 which one tenant's broken source or burst of work changes what the pass does for another — the wall
 ([../../domain/tenancy.md](../../domain/tenancy.md)) holding for the store and not for the hub's own loops.
 
-**Scope.** It binds the forge-status and event-derivation reconcilers, the close drain, and tenant teardown. Trace
-export and fact egress are outside it: each advances one cursor in fact order, which is the order their sink receives,
-so each holds the cursor on any fact it cannot place; isolating them needs a cursor per tenant, which is a separate
-change. Boot loops and key rotation fail fast by design and are not periodic passes. The probe read stays hub-wide and
-one statement (`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due. A one-tenant
-pass reads and writes only its own tenant's convergence entry, never rebinding or pruning state across tenants, and
-leaves the close drain's rotation unmoved.
+**Scope.** It binds the forge-status and event-derivation reconcilers, the close drain, the cadence sweep, and tenant
+teardown. Trace export and fact egress are outside it: each advances one cursor in fact order, which is the order their
+sink receives, so each holds the cursor on any fact it cannot place; isolating them needs a cursor per tenant, which is
+a separate change. Boot loops and key rotation fail fast by design and are not periodic passes. The probe read stays
+hub-wide and one statement (`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due. A
+one-tenant pass reads and writes only its own tenant's convergence entry, never rebinding or pruning state across
+tenants, and leaves the close drain's and the cadence sweep's rotations unmoved.
 
 **Detect.** The poisoned-tenant fixture, `tests/support/pass_isolation.py`, is a `blizzard:component-test`: it runs a
 pass twice on the virtual clock, once with a tenant whose units raise, report unconverged, or hold a burst of due work,

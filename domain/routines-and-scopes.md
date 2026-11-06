@@ -72,10 +72,11 @@ one, and naming a scope that does not exist is refused ([What refuses](#what-ref
 `blizzard hub routine run <name>` mints and ingests a work item in one act, addressed at the routine and an effective
 scope — the routine's own default, or an explicit override, which must already belong to the routine's own declared set
 ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)); a run never mints a scope of
-its own, and its chunk rests behind the ordinary promote gate rather than entering the ready queue. Mode settles the
-baseline, never admission: a `full` run needs no baseline, while a `delta` run runs against the routine/scope pair's own
-recorded revision, and downgrades to `full` — on the record, never refused — when the pair has recorded none yet. What
-turns a run away is [What refuses](#what-refuses).
+its own, and its chunk rests behind the ordinary promote gate rather than entering the ready queue — unless a cadence
+chore that promotes minted it, which admits it to the ready queue as it is minted
+([cadences.md](./cadences.md#when-an-errand-is-due)). Mode settles the baseline, never admission: a `full` run needs no
+baseline, while a `delta` run runs against the routine/scope pair's own recorded revision, and downgrades to `full` — on
+the record, never refused — when the pair has recorded none yet. What turns a run away is [What refuses](#what-refuses).
 
 ## What refuses
 
