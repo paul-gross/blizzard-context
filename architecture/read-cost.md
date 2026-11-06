@@ -82,9 +82,8 @@ handler's docstring stating why the page's ids would not do; a drain that calls 
 reason written at the site.
 
 **Do.** `blizzard/src/blizzard/hub/api/chunks.py`'s `list_chunks` is keyset-paged and its statement count is flat across
-fixture sizes; its `load_all_facts()` and `record.list_all()` fleet reads carry their reason — in the handler's
-docstring and in the comment beside `list_all()` — that a pointer this page renders can be held live by a chunk outside
-it.
+fixture sizes. Its batched reads resolve off-page prerequisites by id and narrow live holders to the page's pointers.
+The comment beside `newest_done` explains the fleet-sized walk needed for the board window's done floor.
 
 **Don't.** A handler that takes `limit` and `cursor`, calls `record.list_all()`, slices the page out of the result, and
 loads each page row's facts through the singular getter — bounded in rows returned, fleet-sized in rows read, and

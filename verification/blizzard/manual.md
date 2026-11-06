@@ -209,10 +209,11 @@ running env's own service stack serves everything unauthenticated until this set
    email with the `invitation_email_mismatch` text, the invitation staying live. Change the person's role from the
    members page and reload on the same session cookie: the dock's ⋮ actions menu appears for `contributor`.
 5. Create a second tenant with `uv run blizzard hub tenant create <name> --admin <user_id>` for the second person. A
-   person holding one membership never sees a choice. With two, a fresh tab renders the tenant picker outside the shell;
-   the chosen tenant's name shows in the header, the profile menu's switcher moves the tab to the other, and a reload
-   keeps the tab in its tenant. A signed-in person with no membership renders the no-access screen outside the shell —
-   no header, no nav.
+   person holding one membership never sees a choice. With two, a fresh tab reuses a valid remembered tenant. To
+   exercise the picker, remove `blizzard.tenant` from that tab's session storage and `blizzard.tenant.last` from the hub
+   origin's local storage, then reload: the tenant picker renders outside the shell. The chosen tenant's name shows in
+   the header, the profile menu's switcher moves the tab to the other, and a reload keeps the tab in its tenant. A
+   signed-in person with no membership renders the no-access screen outside the shell — no header, no nav.
 6. Delete a tenant with `uv run blizzard hub tenant delete <tenant_id> --yes` and reload a member's tab: the deleted
    tenant is gone from the picker and the switcher.
 
