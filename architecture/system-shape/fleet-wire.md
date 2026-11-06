@@ -58,7 +58,7 @@ dependencies and delegated handlers. Framework validation and unrelated operatio
 check `blizzard:compat` and the runner-reach guards in `blizzard/tests/guards/`. A missing field, a changed type, or a
 field emitted as null where the release omits it can break an older client even when a new client parses the body.
 
-**Do.** A nonterminal claim refusal adds a problem type while still omitting `status`.
+**Do.** A dependency claim refusal adds a problem type while still omitting `status`.
 
 **Don't.** A host bootstrap refusal loses its released discriminator because its operation is outside `/api/fleet`.
 
