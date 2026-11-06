@@ -1,19 +1,7 @@
 # The markers a matrix row carries (`bzh:matrix-markers`)
 
-The `P3`–`P7` and **Gap** annotations the [matrix](../blizzard.md) rows and the spokes beside this one carry — what each
-names, and when to write one.
-
-## Phase markers
-
-A phase marker dates the row against blizzard's bootstrap:
-
-- **P3** — the service manifests.
-- **P4** — the `blizzard-mock` fleet.
-- **P5** — the `blizzard` scaffold.
-- **P6** — the walking-skeleton acceptance loop.
-- **P7** — the feature build: engine completeness (review + fail cycle, escalation, heartbeats, store-and-forward,
-  fencing), the board and fleet ops, then the running-daemon service tier and the kill-9 crash sweep — all real as of
-  wave 4.
+The **Gap** annotation the [matrix](../blizzard.md) rows and the spokes beside this one carry — what it names, and when
+to write one.
 
 ## Gap markers
 

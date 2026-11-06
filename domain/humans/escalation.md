@@ -11,7 +11,11 @@ runner can resume that exact session, so nothing substitutes a different harness
 acceptable harness can serve a mint: a fresh mint exhausts harness selection, or a retry's failed owner is outside the
 current acceptable set, so requeue refuses to switch owners. The hub itself escalates when a migrating choice's target
 graph fails to resolve, when a node's bounce cap is crossed, or when a worker takes a choice targeting the reserved
-`escalate` ([../graphs/edges.md](../graphs/edges.md) §Escalation choices).
+`escalate` ([../graphs/edges.md](../graphs/edges.md) §Escalation choices), when a step is stuck, when a hub node names
+no action its hub knows, or when a node's outcome has no edge its graph authors. It also escalates when delivery's
+action is refused by its forge or landing: the repository's credential is rejected, its repository is unknown to that
+credential, the forge lacks a capability the landing needs, a parked change is closed or times out, branch protection
+refuses the branch operation, or the forge refuses the merge method.
 
 ## Why it escalated
 
@@ -27,6 +31,15 @@ Every escalation records its cause, from a closed vocabulary, and a one-line det
 | a migrating choice's target graph fails to resolve (hub-authored)               | `migration-target-unresolvable` |
 | a worker takes a choice whose target is the reserved `escalate`                 | `escalate-choice`               |
 | a hub step's last three turns were all cut off at their deadline (hub-authored) | `hub-action-stuck`              |
+| a hub node names no action its hub knows (hub-authored)                         | `hub-action-missing`            |
+| a hub node's outcome has no edge its graph authors (hub-authored)               | `unroutable-outcome`            |
+| a repository's forge rejects its credential (hub-authored)                      | `forge-auth`                    |
+| a repository is unknown to its credential's forge (hub-authored)                | `forge-config`                  |
+| the forge lacks a capability a landing needs (hub-authored)                     | `forge-capability-missing`      |
+| a parked change was closed without merging (hub-authored)                       | `change-closed`                 |
+| a parked change exceeded its review timeout (hub-authored)                      | `park-timeout`                  |
+| branch protection refused the required branch operation (hub-authored)          | `branch-protected`              |
+| the forge refused the required merge method (hub-authored)                      | `merge-method-refused`          |
 
 A missing cause means the cause was not recorded, never that the escalation had none. A worker's ask is never an
 escalation: it parks the chunk waiting on a human through a question, so no cause names it.

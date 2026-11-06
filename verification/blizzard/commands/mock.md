@@ -36,8 +36,8 @@ logs the selected ref and commit, and checkout pins that commit.
 
 ### blizzard-mock:e2e
 
-`uv run pytest -m e2e` — the fleet acceptance proof and the **P4 exit criterion**: a scripted prompt lands a commit the
-mock forge merges to bare `main`.
+`uv run pytest -m e2e` — the fleet acceptance proof: a scripted prompt lands a commit the mock forge merges to bare
+`main`.
 
 ### blizzard-mock:gate
 
