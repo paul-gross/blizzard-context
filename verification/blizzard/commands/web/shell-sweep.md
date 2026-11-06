@@ -161,6 +161,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   action must both be present, the panel's own `scrollWidth` must stay within its `clientWidth`, and the
   related-routines list's must too — the long name breaks inside the list rather than widening the panel — with no page
   error. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `cadence-panel.shell-sweep.spec.ts` covers the gardening tab's cadence panel (`FleetCadencePanel`), stood up alone
+  with `canEdit` on and a chore whose routine slug and scope list are long. At 1280px and 390px the facts, the attention
+  list, and each chore must genuinely stack — distinct `top`s — with all five next moments listed, no horizontal
+  overflow of the panel, a chore, or the attention list, each errands table kept inside the panel, the Retire action on
+  screen, and no page error. Gardening sits in the hub's mobile bottom tab bar, so the narrow width binds
+  (`bzh:narrow-viewport-tier-rule`).
 - `admin-config.shell-sweep.spec.ts` covers the Admin config surfaces' two layouts, mounting the presentational
   `ConfigRecordPanel` and `ConfigMaster` directly with the inputs each layout receives. At 1280px the detail must carry
   its write controls and no CLI command, and the list must offer New. At 390px and 320px the detail must render none of
@@ -308,15 +314,16 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `--overlay-30` with a `--cyan-dim` underline — beneath the app's own strip; the Proposals count turns `--amber-hi`
   while any proposal waits and stays plain at zero; and at a phone width the strip scrolls inside itself rather than
   widening the page, its active tab still on screen.
-- `gardening-page-grids.shell-sweep.spec.ts` covers the three gardening sub-tabs that arrived with the five-way tab
-  split and share one claim rather than each carrying its own file — Scopes, Runs, and Findings — each composing the
-  same `fleet-kit-master-detail` split and mobile route-driven drill-down. Table-driven over the three pages: at 1280px
-  the list and detail sit side by side; at 740px, 700px, 390px, and 320px the bare route shows only the list, while a
-  selected route shows only the detail and its Back control, with no horizontal overflow. A separate long-list case
-  proves detail opens at its own top with Back visible above the detail panel, the list stays mounted but hidden, and
-  Back restores the list's scroll position. A retired scope row carries a `--red` kit label inside the list at 1280px
-  and 390px. Proven able to fail by dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits
-  in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `gardening-page-grids.shell-sweep.spec.ts` covers the gardening sub-tabs that share one claim rather than each
+  carrying its own file — Scopes, Cadences, Runs, and Findings — each composing the same `fleet-kit-master-detail` split
+  and mobile route-driven drill-down. Table-driven over those pages: at 1280px the list and detail sit side by side; at
+  740px, 700px, 390px, and 320px the bare route shows only the list, while a selected route shows only the detail and
+  its Back control, with no horizontal overflow. A separate long-list case proves detail opens at its own top with Back
+  visible above the detail panel, the list stays mounted but hidden, and Back restores the list's scroll position. A
+  retired scope row carries a `--red` kit label inside the list at 1280px and 390px. On Cadences the flag-off line and a
+  long-named cadence stay inside the list at 1280px, 390px, and 320px, and the list renders loading, then empty, at
+  1280px and 390px. Proven able to fail by dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening
+  sits in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `chunk-detail-header.shell-sweep.spec.ts` covers the dock header's action row, mounted with every control live at once
   — a routed, pausable, deletable chunk with a long runner identity — at 800px (wider than any real dock share) and at
   390px/320px (`bzh:narrow-viewport-tier-rule`): neither the ⋮ `chunk-actions-menu` trigger nor the `detail-close`
