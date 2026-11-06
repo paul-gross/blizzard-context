@@ -128,21 +128,25 @@ from the folder, never from a marker.
 
 - `tests/unit/` and `tests/component/` mirror `src/blizzard/`: a test of `src/blizzard/runner/harness/opencode/paths.py`
   is a test module named for it in the matching `runner/harness/opencode/` folder of `tests/unit/`. A folder under a
-  tier folder is named for a package, a directory holding an `__init__.py`, under `src/blizzard/`; a file may sit
-  directly in the tier folder when it spans hub and runner. A component test of a route that seeds through a store
-  adapter mirrors the route (the `hub/api/` folder of `tests/component/`), not the adapter.
-- `tests/guards/` holds the unit-tier tests that scan the repository's files, such as a workflow file, a contract or the
-  source tree. Its sub-folders mirror nothing.
+  tier folder is named for a package, a directory holding an `__init__.py`, under `src/blizzard/`. A test spanning
+  packages sits at their deepest common package, so one spanning two top-level packages (hub and runner, or `cli` or
+  `wire` with either) sits directly in the tier folder. The packages a test spans are those whose code it proves, not
+  every package it imports: a collaborator it seeds through or reads back by, such as a store adapter or another
+  domain's service, places nothing. A component test of a route that seeds through a store adapter mirrors the route
+  (the `hub/api/` folder of `tests/component/`), not the adapter.
+- A test whose subject is the repository rather than `src/blizzard/` — its files (a workflow file, a contract, the
+  source tree), a script under `scripts/`, or the suite's own code in `tests/support/` — sits in `tests/guards/` at the
+  unit tier and directly in `tests/component/` at the component tier. The sub-folders of `tests/guards/` mirror nothing.
 - Every folder under a tier folder is a package.
 - A test declares no `unit` or `component` marker under a tier folder.
-- A new `test_*.py` module is never added directly under `tests/`: the modules already there are a shrinking list in
-  `tests/support/root_test_modules.py`, each leaving it as it moves into a tier folder.
+- A `test_*.py` module is never added directly under `tests/`; the root list in `tests/support/root_test_modules.py`
+  that held the modules predating the layout is empty.
 - The exemplar tree follows the same rule with `exemplar/` in place of `src/blizzard/` and an empty root list. Its tier
   folders are packages, and `exemplars/python/tests/` itself is not, so pytest imports them as top-level packages.
 - Service, crash, UI, rehearsal and winter-binding tests keep the folders their own rules name.
-- Shared helpers live in `tests/support/`, and migration helpers in `tests/support/migrations/`. The `tests/` root holds
-  no module but `conftest.py`, `__init__.py` and the listed `test_*.py` modules. A folder-own helper stays in its kind
-  folder.
+- Shared helpers live in `tests/support/`, and migration helpers in `tests/support/migrations/`, even a helper only one
+  folder uses. The `tests/` root holds no module but `conftest.py` and `__init__.py`, and a tier folder none but
+  `__init__.py`, `conftest.py` and test modules. A folder-own helper stays in its kind folder.
 
 **Why.** A test is found by the path of the code it proves, and a tier read from a folder cannot drift from a
 hand-written marker or be forgotten.
@@ -151,7 +155,8 @@ hand-written marker or be forgotten.
 `pytest -m <tier>` sees the folder tier, and refuses a declared tier marker, a folder naming no package, a folder
 without an `__init__.py` and a new module at the `tests/` root with a usage error naming the file. The placement
 judgements are in `tests/support/tier_layout.py`, proven by `tests/guards/test_tier_layout.py`, whose root-helper guard
-fails the unit tier on any other module directly under `tests/`.
+fails the unit tier on any other module directly under `tests/`, and whose tier-folder guard fails it on a non-test
+module inside a tier folder of either tree.
 
 **Do.** The `hub/domain/` folder of `tests/unit/` for a unit test of a hub domain module, with no marker. The exemplar's
 tests show each placement ([../../exemplars/index.md](../../exemplars/index.md)).
@@ -288,8 +293,8 @@ else binds it. Under xdist someone else does: another worker's daemon or the ker
 in the gap, and the daemon fails to bind, or a client reaches the wrong daemon. Only the process that binds can know the
 port is its own.
 
-**Detect.** `tests/test_daemon_port_zero.py` fails the unit tier on a test-side port chooser in `tests/**/*.py` or
-`tests/harness/**/*.ts` — a function named for one, or a bind on `0` that returns the port after closing its socket.
+**Detect.** `tests/guards/test_daemon_port_zero.py` fails the unit tier on a test-side port chooser in `tests/**/*.py`
+or `tests/harness/**/*.ts` — a function named for one, or a bind on `0` that returns the port after closing its socket.
 
 **Do.** Start every hub, runner host, and mock daemon on `--port 0 --listening-file <path>`, deleting `<path>` first —
 the daemon never removes it on stop — and read the URL from it once it appears; a startup failure publishes no file, so

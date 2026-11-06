@@ -134,8 +134,8 @@ tenant opener precedes graduation; lock ordering is owned by
 locked seams by `bzh:transaction-participation`.
 
 **Detect.** A repository statement before graduation, a second graduation, use of the superseded token, or a locked
-mutation without coverage of its resource. `blizzard/tests/test_hub_transactions.py` exercises token lifetime, scope,
-graduation, and coverage.
+mutation without coverage of its resource. `blizzard/tests/component/hub/store/test_transactions.py` exercises token
+lifetime, scope, graduation, and coverage.
 
 **Do.** `DeleteService.delete` calls `transaction.lock_chunks` before reading fresh facts and passes the locked token to
 the repositories.

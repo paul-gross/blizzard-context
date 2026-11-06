@@ -78,9 +78,9 @@ that registry rather than listing tables of its own.
 **Why.** Status is derived from facts (`bzh:facts-not-status`), so a family missing from one projection silently drops
 that history from everything the projection feeds — a status that is untruthful without any error to say so.
 
-**Detect.** The completeness test `tests/test_fact_families.py` fails when a chunk-keyed table is neither registered nor
-named in the closed `EXCLUDED` map, or is in both, and when any projection's mapper keys differ from its narrowing of
-the registry.
+**Detect.** The completeness test `tests/unit/hub/store/internal/test_fact_families.py` fails when a chunk-keyed table
+is neither registered nor named in the closed `EXCLUDED` map, or is in both, and when any projection's mapper keys
+differ from its narrowing of the registry.
 
 **Do.** Add a fact family by adding one registry entry; each projection that narrows to it picks it up.
 
