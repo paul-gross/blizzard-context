@@ -10,8 +10,8 @@ the [domain model](./index.md).
 
 Every read, write, queue operation, and live stream acts within one tenant. A record of another tenant cannot be reached
 by any means, its id included: asking for it answers as if it did not exist, never that it is forbidden. What a tenant
-chooses a name for — a graph, a project, a source, a repository, a secret, a scope, a routine — is unique within that
-tenant only, so two tenants never collide on a name neither knows the other holds.
+chooses a name for — a graph, a project, a source, a repository, a secret, a scope, a routine, a cadence — is unique
+within that tenant only, so two tenants never collide on a name neither knows the other holds.
 
 A project is not a second wall inside the tenant: it is a lens over the tenant's state ([projects.md](./projects.md)).
 The tenant is the only boundary.

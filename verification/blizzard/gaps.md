@@ -609,6 +609,20 @@ SQLite the tightening and the constraint swap are one `batch_alter_table` rebuil
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
 
+## Cadences under Postgres
+
+Every tier runs the revision adding the cadence tables on SQLite only. It creates `cadences`, `cadence_chores`,
+`cadence_chore_scopes`, and `cadence_lifecycle_facts`, each tenant-keyed with its foreign keys and a tenant-led index,
+and backfills nothing. On Postgres, foreign keys are enforced, DDL is transactional, and identifiers stop at 63
+characters.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
+  store reached head with the four tables and their primary, unique, and foreign-key constraints, returned to base
+  leaving only `alembic_version`, empty, and reached head again. It then stepped down to the revision's parent, which
+  dropped the four tables, and came back up to head. A hosted hub app over that store created a cadence with a chore,
+  edited the chore keeping its id, refused a stale `If-Match` with `409`, retired and re-enabled the cadence, refused a
+  second cadence of the same slug, and wrote one change row for each write.
+
 ## Forge references required under Postgres
 
 Every tier runs the revision that keys repositories and work sources on their forge on SQLite only. It refuses, before

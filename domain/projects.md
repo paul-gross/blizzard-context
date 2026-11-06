@@ -55,8 +55,8 @@ A project, once created, stays: there is no retiring one.
 
 ## What a project owns, and what it links
 
-A project owns its scopes, routines, findings, and garden proposals, so a scope's slug and a routine's slug are unique
-within its project, and two projects never collide on the name of a sweep
+A project owns its scopes, routines, cadences, findings, and garden proposals, so a scope's slug, a routine's slug, and
+a cadence's slug are unique within its project, and two projects never collide on the name of a sweep
 ([routines-and-scopes.md](./routines-and-scopes.md)). A routine's scopes are its own project's, whatever slug it names
 ([routines-and-scopes.md](./routines-and-scopes.md#what-refuses)), and a run's work is ingested into the routine's
 project.
