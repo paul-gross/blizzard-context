@@ -150,7 +150,7 @@ standing layers carry padded sentinel prose, so elision is a measurable saving r
 entry carries only the unchanged banner, plus the newly minted lease id in its facts table instead of the prior id.
 `test_resumed_node_entry_announces_a_replaced_workspace_prompt` observes the intervening review lease, replaces the
 workspace prompt through the live host-workspace API before build re-enters, and proves the next spawn leads with the
-update notice and new policy while the old policy disappears and layer 1 remains collapsed. The component tier's
+update notice and new policy while the old policy disappears and layer 1 remains collapsed. The unit tier's
 `tests/unit/runner/harness/test_preamble.py` pins the rendering independently of delivery to a real harness process.
 
 **Review findings at delivery**
@@ -351,9 +351,9 @@ or `merged/` marker, a closed work item, no forge PR, and unchanged bare `main` 
 (`tests/service/fleet/basic-workspace.spec.ts::test_basic_workspace_chunk_lands_without_winter`) builds, reviews and
 delivers a chunk to the forge's bare `main` through the built-in folder provider. The hub derives `done`, the workspace
 contains the worktree and project clone but no `.winter`, and a trapped winter CLI is never invoked. The mock harness
-creates the feature branch on the provider's detached worktree.
-`test_advance_harvests_git_commits_from_every_bound_environment` pins that the harvest spans every bound environment —
-the loss a `bindings[0]` read makes silent.
+creates the feature branch on the provider's detached worktree. The unit-tier test
+`tests/unit/runner/loop/test_loop.py::test_advance_harvests_git_commits_from_every_bound_environment` pins that the
+harvest spans every bound environment — the loss a `bindings[0]` read makes silent.
 `tests/service/runner/runner.spec.ts::test_graph_scoped_artifact_reads_from_the_runners_own_pin_with_the_hub_unreachable`
 is the first service-tier exercise of a lease-token-authorized worker-lane read route: a `--scope graph` read resolves
 from the runner's own mint-time mirror with the mock hub down while the same lease's node-scope read still 503s (the

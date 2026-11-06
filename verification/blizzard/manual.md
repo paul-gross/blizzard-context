@@ -316,7 +316,7 @@ a failure to report, not something the pass removes on its way through.
 **Evidence.** Record the revision, the search expression, the total hit count, and one line per occurrence giving its
 path, line, phrase, class, and the reason that class was reached. Keep it with the change under review — the pull
 request or commit that claims this method — rather than in this file, which holds no per-run readings
-(`../standards/prose-budget.md`).
+(`../../standards/prose-budget.md`).
 
 **Passes when.** Every occurrence classifies as out-of-surface or retained, and none classifies as deleted.
 
