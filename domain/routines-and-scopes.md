@@ -69,7 +69,7 @@ one, and naming a scope that does not exist is refused ([What refuses](#what-ref
 
 ## A run is an act of the pair
 
-`blizzard hub routine run <name>` mints and ingests a work item in one act, addressed at the routine and an effective
+`blizzard hub routine run <slug>` mints and ingests a work item in one act, addressed at the routine and an effective
 scope — the routine's own default, or an explicit override, which must already belong to the routine's own declared set
 ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)); a run never mints a scope of
 its own, and its chunk rests behind the ordinary promote gate rather than entering the ready queue — unless a cadence

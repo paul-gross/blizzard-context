@@ -111,12 +111,11 @@ version for dev builds and tag releases.
 
 ### blizzard:wheel-smoke
 
-The P5 exit criterion: the serve smoke on the built wheel in a node-free venv. `blizzard hub init <dir>` (idempotent,
-store migrated to head), then `blizzard hub host --dir <dir> --port <p>` serves the embedded board — `GET /` returns the
-Angular `index.html`, deep routes falling back to it — and `GET /api/health` returns `200`. Then, with that hub still
-serving, likewise `blizzard runner init <dir> --hub http://127.0.0.1:<p>`/`host`: init adds the runner at that hub,
-which the scaffold's `auth.mode = "none"` lets it do with no sign-in, and exits non-zero, adding nothing, when no hub
-answers.
+The serve smoke on the built wheel in a node-free venv. `blizzard hub init <dir>` (idempotent, store migrated to head),
+then `blizzard hub host --dir <dir> --port <p>` serves the embedded board — `GET /` returns the Angular `index.html`,
+deep routes falling back to it — and `GET /api/health` returns `200`. Then, with that hub still serving, likewise
+`blizzard runner init <dir> --hub http://127.0.0.1:<p>`/`host`: init adds the runner at that hub, which the scaffold's
+`auth.mode = "none"` lets it do with no sign-in, and exits non-zero, adding nothing, when no hub answers.
 
 ### blizzard:image-smoke
 

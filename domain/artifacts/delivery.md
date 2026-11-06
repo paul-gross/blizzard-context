@@ -59,7 +59,8 @@ worker node's judgement ([edges](../graphs/edges.md)).
   The graph still decides where landing happens, by declaring its action in `deliver`;
   [feature delivery](../../workflows/feature-delivery.md) describes the shipped graph. Each commit pointer is resolved
   to its own repository record, which names the forge record it lands on, so a chunk may mix forges, owners, base
-  branches and credentials.
+  branches and credentials. A landing refuses a visit where one `owner/repo` resolves to two repository records, since
+  both would write the one merged marker.
 - **Landing follows the project's order.** A multi-repository visit steps every unlanded repository's policy, then lands
   them in its project's landing order ([../projects.md](../projects.md) §Where a chunk may land). The order and each
   repository's policy are the visit's terms, taken at its first turn and kept through every retry and restart, so an
