@@ -34,9 +34,10 @@ needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
-**Old forge fields**
-(`tests/service/hub/forge-old-fields.spec.ts::test_the_old_fields_resolve_to_forges_with_a_warning_at_every_door`) uses
-the real CLI and hub to check three warnings and ordered events, preservation on omitted fields, and `--clear`.
+**Kept transition-era export**
+(`tests/service/hub/config-kept-export.spec.ts::test_a_kept_transition_era_export_applies_cleanly_and_exports_back_as_itself`)
+applies a version-2 export kept from a hub that still took the forge address fields to a real hub, unrefused and
+unwarned, and checks it exports back as itself.
 
 **Forge budget** (`tests/service/fleet/forge-budget.spec.ts`) drives a stepped host and a fresh hub sharing one forge
 budget across annotation, landing and close. `test_a_low_budget_turns_the_sweep_away_while_a_landing_proceeds` proves
