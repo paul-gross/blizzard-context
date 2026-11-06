@@ -139,10 +139,9 @@ from the folder, never from a marker.
   unit tier and directly in `tests/component/` at the component tier. The sub-folders of `tests/guards/` mirror nothing.
 - Every folder under a tier folder is a package.
 - A test declares no `unit` or `component` marker under a tier folder.
-- A `test_*.py` module is never added directly under `tests/`; the root list in `tests/support/root_test_modules.py`
-  that held the modules predating the layout is empty.
-- The exemplar tree follows the same rule with `exemplar/` in place of `src/blizzard/` and an empty root list. Its tier
-  folders are packages, and `exemplars/python/tests/` itself is not, so pytest imports them as top-level packages.
+- No `test_*.py` module sits directly under `tests/`.
+- The exemplar tree follows the same rule with `exemplar/` in place of `src/blizzard/`. Its tier folders are packages,
+  and `exemplars/python/tests/` itself is not, so pytest imports them as top-level packages.
 - Service, crash, UI, rehearsal and winter-binding tests keep the folders their own rules name.
 - Shared helpers live in `tests/support/`, and migration helpers in `tests/support/migrations/`, even a helper only one
   folder uses. The `tests/` root holds no module but `conftest.py` and `__init__.py`, and a tier folder none but
@@ -153,10 +152,10 @@ hand-written marker or be forgotten.
 
 **Detect.** The collection hook in `tests/support/suite_plugin.py` adds the folder's marker before `-m` selects, so
 `pytest -m <tier>` sees the folder tier, and refuses a declared tier marker, a folder naming no package, a folder
-without an `__init__.py` and a new module at the `tests/` root with a usage error naming the file. The placement
-judgements are in `tests/support/tier_layout.py`, proven by `tests/guards/test_tier_layout.py`, whose root-helper guard
-fails the unit tier on any other module directly under `tests/`, and whose tier-folder guard fails it on a non-test
-module inside a tier folder of either tree.
+without an `__init__.py` and every test module directly under a tests root with a usage error naming the file and this
+rule. The placement judgements are in `tests/support/tier_layout.py`, proven by `tests/guards/test_tier_layout.py`,
+whose root guard fails the unit tier on any other module directly under `tests/`, and whose tier-folder guard fails it
+on a non-test module inside a tier folder of either tree.
 
 **Do.** The `hub/domain/` folder of `tests/unit/` for a unit test of a hub domain module, with no marker. The exemplar's
 tests show each placement ([../../exemplars/index.md](../../exemplars/index.md)).
