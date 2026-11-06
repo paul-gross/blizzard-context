@@ -308,6 +308,24 @@ resolves it to an already-existing, already-related `Scope` — a read, refusing
 The composite owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
 
+## The cadence mint
+
+The cadence sweep mints a due errand's run through `CadenceMint.mint`
+(`blizzard/src/blizzard/hub/domain/cadence/mint.py`), a domain unit of work over `IHubTransactions.begin()`. It writes
+the same four tables §The routine-run mint writes, through the same `WorkItemStore.create_run_with_chunk`, here joining
+the unit's locked transaction rather than opening a write of its own, and the run's identity row carries the errand's
+mark in that same write. For a promoting chore the unit also writes the promote fact and the chunk's ready-list
+position, landed at the tail through the queue's own landing, so a run minted promoted is never seen resting
+`not_ready`. Every write commits or none does: the same single-transaction exemption §The routine-run mint takes, and
+the composite owes the checker nothing for the same reason.
+
+The one window is the routine-run mint's own: the run's `ref` is allocated through `prepare_mint` before the transaction
+opens, so a crash between them burns that one `ref`, never reused. A mint that loses its re-read inside the transaction,
+the errand's last run moved since the pass judged it, writes nothing and burns its `ref` the same way. Planning refuses
+before anything is allocated. The crash-point registry gains no point. A crash after the commit loses only the board's
+push, which the board's next read recovers, and a hub restarted mid-pass judges every errand again on its first pass: a
+minted errand's live run keeps it from being due (`bzh:errand-one-live-run`).
+
 ## Chunk delete, then hub-item withdrawal
 
 `DeleteService.delete` (`blizzard/src/blizzard/hub/domain/operations/delete.py`) records `chunk_deleted`, releases the

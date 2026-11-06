@@ -5,7 +5,9 @@ What each status means, and the condition a chunk in that state derives it from.
 A chunk has exactly one status at a time — a derived condition, checked in fixed precedence, never stored. The exact
 fact vocabulary and derivation queries live in the code.
 
-- **`not_ready`** — minted and resting: visible on the board, never claimed; an explicit promote moves it to `ready`.
+- **`not_ready`** — minted and resting: visible on the board, never claimed; an explicit promote moves it to `ready`. A
+  run a cadence chore that promotes mints never rests here: it is admitted to `ready` as it is minted
+  ([../cadences.md](../cadences.md#when-an-errand-is-due)).
 - **`ready`** — ingested and unclaimed: in the hub's queue with no live route. The only claimable status: a claim on any
   other is refused — `not_ready`, an unclaimed `paused` chunk, and a human-gated or `delivering` chunk with no live
   route included.

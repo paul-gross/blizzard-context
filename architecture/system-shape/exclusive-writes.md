@@ -150,10 +150,14 @@ stamping the write's tenant, so two tenants locking one graph name each lock the
 (`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
 injectively, a graph by its name, a queue list's ranking by the list, and a transcript ingest by the calling runner's
 lane (`transcript_lane`) and each chunk its batch names (`transcript_chunk`) — a lane holds no row until its first mark,
-and a record may name a chunk the hub no longer holds. A new decision graduates its unit with `lock_keys`, or `lock_set`
-when it spans namespaces; the existing ones reach it through the legacy handles `IChunkExclusiveWrites.locked_work_refs`
-and `IWriteGraphRepository.locked_name`, each its own type — never an `ILockedChunkRead`, so a handle that holds no
-chunk-row lock cannot satisfy a chunk-row `*_locked` write.
+and a record may name a chunk the hub no longer holds. A cadence mint keys its errand by chore and scope, encoded
+injectively (`cadence_errand`), in one `lock_set` beside, for a promoting chore, both ranking locks and the fresh
+chunk's id, which names no row yet and so contends with nothing. The canonical sort takes chunk ids first, then keys by
+namespace, so `cadence_errand` is taken ahead of the ranking locks, and an operator's promote, which takes its chunk and
+then the ranking locks, waits on the mint at the ranking locks rather than deadlocking with it. A new decision graduates
+its unit with `lock_keys`, or `lock_set` when it spans namespaces; the existing ones reach it through the legacy handles
+`IChunkExclusiveWrites.locked_work_refs` and `IWriteGraphRepository.locked_name`, each its own type — never an
+`ILockedChunkRead`, so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, and the ceiling's self-engagement, each take a
