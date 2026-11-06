@@ -259,12 +259,14 @@ test's `hubEnv` cannot name either variable.
 
 A harness a spec runs on is enabled through `test.use({ runnerConfig })`, as `runner[].opencode` with
 `${mockBin}/mock-opencode`, never in a `runner.toml`, which binds every spec in its folder. The host always holds a
-synthetic OpenCode login at its private data home, as it holds a Claude one. A published harness bundle is given with
-the `runnerBundle` option, whose files the fixture writes into a test-owned directory before the host boots and which a
-profile names as `${bundle}`, as in `runner[].harness.config_dir`; the case then reads what a worker received of it off
-the lease's transcript. A worker's PATH stub is given with `runnerStubs` (executable scripts the profile names as
-`${stubs}`, as in `runner[].worker.path_prepend`); a stub or a bundle hook appends to `${logs}/<name>`, which the case
-reads back with `runnerHost.workerLog(name)`.
+synthetic OpenCode login at its private data home, as it holds a Claude one. A spec that moves a runner between OpenCode
+releases names `${opencode}` instead: a host-owned path holding the `runnerOpencode` release when the host is built,
+which `runnerHost.installOpencode()` replaces in place, as an operator's upgrade does. A published harness bundle is
+given with the `runnerBundle` option, whose files the fixture writes into a test-owned directory before the host boots
+and which a profile names as `${bundle}`, as in `runner[].harness.config_dir`; the case then reads what a worker
+received of it off the lease's transcript. A worker's PATH stub is given with `runnerStubs` (executable scripts the
+profile names as `${stubs}`, as in `runner[].worker.path_prepend`); a stub or a bundle hook appends to `${logs}/<name>`,
+which the case reads back with `runnerHost.workerLog(name)`.
 
 A runner host's configuration rides a profile the same way. `runner.toml` beside the spec, or
 `test.use({ runnerConfig })` over it, is a host-file overlay checked against `contracts/config/host.json` before any
