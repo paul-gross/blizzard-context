@@ -202,10 +202,10 @@ by exact name, the artifacts/graph-choices/transcript- segments/chunk-work-refs/
 of `activity_facts_since`'s eighteen per-source ordered reads.
 `tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over the spend `_stmt`
 builder asserts `ix_usage_facts_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s scan
-gate and `tests/component/runner/store/test_store_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN`
-shape across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend.
-No tier runs any of these assertions against postgres, so whether the portable index declarations actually earn an index
-scan under postgres's own planner stays unproven.
+gate and `tests/component/runner/store/test_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN` shape
+across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend. No tier
+runs any of these assertions against postgres, so whether the portable index declarations actually earn an index scan
+under postgres's own planner stays unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
@@ -361,7 +361,7 @@ interleavings, which SQLite does exercise:
   `tests/component/hub/domain/observability/test_transcript_ingest_service.py`'s
   `test_an_ingest_locks_its_runners_lane_and_each_chunk_its_batch_names_once` asserts one declaration of the calling
   runner's `transcript_lane` key and a `transcript_chunk` key per chunk the batch names; the same-key interleavings are
-  `tests/test_transcript_ingest_race.py`.
+  `tests/component/hub/domain/observability/test_transcript_ingest_race.py`.
 
 Do not add a Postgres tier to close this.
 

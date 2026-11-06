@@ -124,10 +124,10 @@ red, then reverting (`bzh:case-pins-its-own-name`). The change policy lives in `
 
 ### blizzard:egress-contract
 
-`uv run pytest tests/unit/hub/egress/test_egress_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates
-the `steps`, `invocations` and `events` datasets the hub exports against the corpus `contracts/egress/`:
-`dictionary.json` and the view `.sql` files each dataset declares (`<dataset>_newest`, and for `events` `events_current`
-and `events_by_version`), authored by hand, and the generated `_schema/*.v1.json` and `golden/<scenario>/` —
+`uv run pytest tests/unit/hub/egress/test_contract.py` (`blizzard:unit-test`, so inside `blizzard:gate`) gates the
+`steps`, `invocations` and `events` datasets the hub exports against the corpus `contracts/egress/`: `dictionary.json`
+and the view `.sql` files each dataset declares (`<dataset>_newest`, and for `events` `events_current` and
+`events_by_version`), authored by hand, and the generated `_schema/*.v1.json` and `golden/<scenario>/` —
 `BLIZZARD_REGEN_EGRESS_CONTRACT=1` on the same command rewrites those and the generated dictionary block of
 `docs/deployment/egress.md`, never the dictionary or the views. The contract is authoritative and the code is checked
 against it: the `DatasetSchema` built from the dictionary must equal `STEPS_SCHEMA`, `INVOCATIONS_SCHEMA` and

@@ -48,8 +48,8 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
 A failing step names the step, the baseline, and the backend, and attaches both daemons' logs.
 
 Landing-policy carry-over is also covered by the landing-policy migration's colocated test and component tier invariant
-fixture `tests/test_invariant_checker_carry_over.py`. The rehearsal proves a held delivery and a later delivery land
-across a released-build upgrade; the migration test proves the policy default and schema transition.
+fixture `tests/component/tools/test_invariant_checker_carry_over.py`. The rehearsal proves a held delivery and a later
+delivery land across a released-build upgrade; the migration test proves the policy default and schema transition.
 
 **Where it runs.** `.github/workflows/rehearsal.yml` is reusable, called by `push.yml` on every `master` push —
 `dev-image` needs it, so `edge` advances only on a commit whose upgrade from every supported release succeeded — and by
