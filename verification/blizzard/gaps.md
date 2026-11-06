@@ -203,9 +203,9 @@ searches, the artifacts/graph-choices/transcript-segments/chunk-work-refs/close-
 `tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over `usage_total_stmt`
 builder asserts `ix_usage_facts_tenant_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s
 scan gate classifies its hub and runner census recipes, with non-SQL methods exempted, and
-`tests/component/runner/store/test_indexes.py` pins selected named indexes on the same sqlite backend. No tier
-runs any of these assertions against postgres, so whether the portable index declarations actually earn an index scan
-under postgres's own planner stays unproven.
+`tests/component/runner/store/test_indexes.py` pins selected named indexes on the same sqlite backend. No tier runs any
+of these assertions against postgres, so whether the portable index declarations actually earn an index scan under
+postgres's own planner stays unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
