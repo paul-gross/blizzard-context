@@ -182,15 +182,16 @@ a human or a `frontend-verifier` agent can point a real browser at in a provisio
 no automated tier drives a real browser against a standing, out-of-fixture process pair, and giving the UI tier a
 persistent-process mode it does not otherwise need costs more than the surface is worth.
 
-**Setup.** Start the stub IdP standing per `blizzard-mock/src/blizzard_mock/idp/README.md` §"Standing instance" —
-`blizzard-mock-idp --host 127.0.0.1 --port <idp-port>`, confirmed with `GET /healthz`. Run `mise run web-build` so the
-hub serves the built board. Give the hub a runtime dir — a scratch dir, or a provisioned env's own `$BZ_HUB_RUNTIME` if
-that env's hub is meant to run in `oauth` mode — carrying `[auth] mode = "oauth"`, an `[auth] superuser` naming the
-email the IdP's first profile reports, and one `[[auth.oauth.provider]] type = "oidc"` entry whose `issuer` points at
-the standing IdP and that sets `emails_authoritative = true`, which an invitation's acceptance needs. The auth mode
-value is `"oauth"`, not `"oidc"`; `oidc` is the provider `type` (`hub/config.py`'s `AUTH_MODE_OAUTH`).
-`auth.mode = "none"` is the default a `winter service up <env>`-started hub scaffolds via `blizzard hub init`, so a
-running env's own service stack serves everything unauthenticated until this setup is applied to it.
+**Setup.** Start the stub IdP standing per `blizzard-mock/src/blizzard_mock/idp/README.md` §"Standing instance — a
+running hub, a real browser, outside a test's lifetime" — `blizzard-mock-idp --host 127.0.0.1 --port <idp-port>`,
+confirmed with `GET /healthz`. Run `mise run web-build` so the hub serves the built board. Give the hub a runtime dir —
+a scratch dir, or a provisioned env's own `$BZ_HUB_RUNTIME` if that env's hub is meant to run in `oauth` mode — carrying
+`[auth] mode = "oauth"`, an `[auth] superuser` naming the email the IdP's first profile reports, and one
+`[[auth.oauth.provider]] type = "oidc"` entry whose `issuer` points at the standing IdP and that sets
+`emails_authoritative = true`, which an invitation's acceptance needs. The auth mode value is `"oauth"`, not `"oidc"`;
+`oidc` is the provider `type` (`hub/config.py`'s `AUTH_MODE_OAUTH`). `auth.mode = "none"` is the default a
+`winter service up <env>`-started hub scaffolds via `blizzard hub init`, so a running env's own service stack serves
+everything unauthenticated until this setup is applied to it.
 
 **Steps.**
 
