@@ -201,7 +201,7 @@ test runs against — that `list_for`'s routine+scope read and `count_by_class`'
 by exact name, the artifacts/graph-choices/transcript- segments/chunk-work-refs/close-intents hot-path reads, and each
 of `activity_facts_since`'s eighteen per-source ordered reads.
 `tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over the spend `_stmt`
-builder asserts `ix_usage_facts_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s scan
+builder asserts `ix_usage_facts_tenant_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s scan
 gate and `tests/component/runner/store/test_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN` shape
 across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend. No tier
 runs any of these assertions against postgres, so whether the portable index declarations actually earn an index scan

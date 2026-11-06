@@ -1,7 +1,7 @@
 # Blizzard test-tier command detail (`bzh:matrix-command-tiers`)
 
-The per-tier detail for the pytest tiers among the [`../../blizzard.md`](../../blizzard.md) Commands rows marked
-*(more)* — what each tier runs, what its named guards assert, and what it cannot see. Read
+The per-tier detail for the test tiers among the [`../../blizzard.md`](../../blizzard.md) Commands rows marked *(more)*
+— what each tier runs, what its named guards assert, and what it cannot see. Read
 [`../../blizzard.md`](../../blizzard.md) first for the short command and the method-id inventory;
 [`../commands.md`](../commands.md) routes to the other methods' detail. Which marker a test carries, and why, is
 [`../tier-rules.md`](../tier-rules.md#test-tiers).
