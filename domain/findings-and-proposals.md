@@ -142,6 +142,11 @@ item is visible and deletable while a real commission that silently mints nothin
 An accept's reason is optional, and a blank one is stored as none; a body override on an accept that mints nothing is
 refused. On a closed proposal every verb, pass included, is refused as closed before any other refusal.
 
+A chunk answers the union of the findings behind every work item it carries whose accepting proposal minted that item
+([Grouping](work/chunk.md#grouping) is how a chunk comes to carry several). Each finding counts once, however many of
+those proposals cite it. A chunk carrying no such item answers *nothing* — distinct from a garden-minted chunk whose
+proposal names no findings, which answers an empty set.
+
 Acceptance does not promote the item it mints — it rests behind the ordinary promote gate a person still has to open —
 and it does not move the findings behind the proposal: work being under way is not an observation that the ground
 changed. The item landing is. When the item an accepted proposal minted is delivered, the proposal's findings that are
