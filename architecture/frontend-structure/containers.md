@@ -60,8 +60,9 @@ the container's own class.
 `.reduce`, `.sort`, `.slice`, `.find`, `.some`, and their kin, plus `Array.from` and `Object.entries`, `.keys`,
 `.values`, and `.fromEntries`) anywhere in a container's `computed()` callback, nested arrows and followed
 `this.<member>()` calls included. The sweep has no exemption list. The fix keeps the `computed()` field, its name, and
-its type, and replaces only its body with a call into the model, so specs keep reaching the same field. Outside the
-sweep, review asks:
+its type, and replaces only its body with a call into the model, so specs keep reaching the same field. `web:lint`'s
+`no-restricted-imports` rule refuses any `*.model.ts` import from `@angular/*` or `@tanstack/*`, a type-only import
+included, proven by `web/scripts/model-imports-lint-probe.js`. Outside the sweep, review asks:
 
 - Does an event-handler method no `computed()` reaches derive what a model should own?
 - Does a query-option lambda (`injectFooQuery(() => x()?.id ?? null)`) carry more than a null guard?

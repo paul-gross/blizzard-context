@@ -42,6 +42,16 @@ exhaustiveness check, so a `switch` naming every declared value defaults to `fle
 an `openLookup` table or such a `switch` missing a value fails to compile while the complete forms compile
 (`node web/scripts/open-lookup-type-probe.js` from the app repo root) — `web:unit-test` never type-checks.
 
+A `@typescript-eslint/no-restricted-imports` rule over `**/*.model.ts` refuses any import from the `@angular/*` or
+`@tanstack/*` family, `import type` included
+([`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
+`bzh:frontend-containers-compose`: a model is pure). It lives once in the root `web/eslint.config.js`, and no project
+config restates it, since flat config replaces a rule's options per matching block.
+`web/scripts/model-imports-lint-probe.js` lints under each of the hub, runner, and fleet configs, as `ng lint` does, and
+checks a runtime or type-only import from `@angular/core`, `@angular/cdk/drag-drop`, or
+`@tanstack/angular-query-experimental` is refused in a model while a pure model and a non-model file importing Angular
+pass (`node web/scripts/model-imports-lint-probe.js` from the app repo root).
+
 ### web:typecheck
 
 `npm run build` in `web/` — a real AOT compile of both Angular apps, the type check `web:unit-test`'s esbuild-based
