@@ -1,7 +1,7 @@
 # Blizzard test-tier command detail (`bzh:matrix-command-tiers`)
 
-The per-tier detail for the pytest tiers among the [`../../blizzard.md`](../../blizzard.md) Commands rows marked
-*(more)* — what each tier runs, what its named guards assert, and what it cannot see. Read
+The per-tier detail for the test tiers among the [`../../blizzard.md`](../../blizzard.md) Commands rows marked *(more)*
+— what each tier runs, what its named guards assert, and what it cannot see. Read
 [`../../blizzard.md`](../../blizzard.md) first for the short command and the method-id inventory;
 [`../commands.md`](../commands.md) routes to the other methods' detail. Which marker a test carries, and why, is
 [`../tier-rules.md`](../tier-rules.md#test-tiers).
@@ -15,7 +15,7 @@ is linked from the others, never restated.
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | [`unit.md`](./test-tiers/unit.md)                     | …you are running or reading `blizzard:unit-test` — one class or function in isolation, and the sweep guards that ride the tier.   |
 | [`component.md`](./test-tiers/component.md)           | …you are running or reading `blizzard:component-test` — a domain slice with real internal collaborators.                          |
-| [`service.md`](./test-tiers/service.md)               | …you are running or reading `blizzard:service-test` — a running daemon's HTTP API against a mock counterpart.                     |
+| [`service.md`](./test-tiers/service.md)               | …you are running or reading `blizzard:service-test` — real daemons, store files, and external-tool bindings.                      |
 | [`ui.md`](./test-tiers/ui.md)                         | …you are running or reading `blizzard:ui` — the Playwright `ui*` projects, a Chromium page against the board a test's hub serves. |
 | [`crash-sweep.md`](./test-tiers/crash-sweep.md)       | …you are running or reading `blizzard:crash-sweep` — the kill-9 sweep arming the crash-point registry against real subprocesses.  |
 | [`winter-binding.md`](./test-tiers/winter-binding.md) | …you are running or reading `blizzard:winter-binding` — the winter workspace provider against the real winter CLI, local-only.    |

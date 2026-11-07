@@ -195,17 +195,17 @@ disabled (`[transcripts] ship = false`).
 `tests/component/hub/store/internal/test_finding_store.py`'s `test_list_for_query_plans_as_an_index_search` and
 `test_count_by_class_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend every component
 test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
-`ix_findings_routine_scope`/`ix_findings_routine_class` rather than a table scan.
-`tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty-one
-`chunk_id`-filtered fact tables' indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composites
-by exact name, the artifacts/graph-choices/transcript- segments/chunk-work-refs/close-intents hot-path reads, and each
-of `activity_facts_since`'s eighteen per-source ordered reads.
-`tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over the spend `_stmt`
-builder asserts `ix_usage_facts_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s scan
-gate and `tests/component/runner/store/test_indexes.py`'s named-index pins assert the same `EXPLAIN QUERY PLAN` shape
-across every hub and runner read method's own table vocabulary, plan-classified through the same sqlite backend. No tier
-runs any of these assertions against postgres, so whether the portable index declarations actually earn an index scan
-under postgres's own planner stays unproven.
+`ix_findings_tenant_project_routine_scope`/`ix_findings_tenant_project_routine_class` rather than a table scan.
+`tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty
+`chunk_id`-filtered fact tables' indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composite
+searches, the artifacts/graph-choices/transcript-segments/chunk-work-refs/close-intents hot-path reads, and each of
+`activity_facts_since`'s eighteen per-source ordered reads.
+`tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over `usage_total_stmt`
+builder asserts `ix_usage_facts_tenant_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s
+scan gate classifies its hub and runner census recipes, with non-SQL methods exempted, and
+`tests/component/runner/store/test_indexes.py` pins selected named indexes on the same sqlite backend. No tier runs any
+of these assertions against postgres, so whether the portable index declarations actually earn an index scan under
+postgres's own planner stays unproven.
 
 Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
 sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
@@ -671,19 +671,16 @@ The board's project lens narrows what a view reads, and a call naming no project
 decided by the tenant alone. Nothing proves a person sees only a project's records, because nothing restricts them to
 one — a stated non-goal, not a missing check.
 
-## Response bodies `blizzard:compat` does not read
+## Refusals absent from a supported release's document
 
-`blizzard:compat` judges only the `2xx` response schemas of the committed OpenAPI documents. A refusal body the runner
-parses can be absent from both documents: the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, carrying
-`ClaimDenialReason`) is in neither, so a value its vocabulary gains, or a field it loses, reaches no finding. The runner
-parses those bodies with open vocabularies (`bzh:open-response-vocabulary`), which keeps a gained value from failing it,
-but nothing holds the body's shape to a supported release.
+`blizzard:compat` compares declared refusal status, media and schemas on the selected wire and API surfaces, but a
+supported release's OpenAPI document can omit a refusal its runner parses. An absent declaration supplies no baseline
+shape for comparison; it is not evidence that the refusal is compatible.
 
-Standing in for a tier: the open-vocabulary gate test (`tests/guards/test_open_response_vocabulary.py`) takes the
-classes the runner's client modules parse as well as the documents' response components, so every vocabulary such a body
-carries is open or declared closed; a change to one of those bodies owes the by-hand judgement
-[../../workflows/judging-a-break.md](../../workflows/judging-a-break.md) describes. The gap closes when the tool reads
-the refusal bodies a route declares.
+Standing in for a tier: the open-vocabulary gate (`tests/guards/test_open_response_vocabulary.py`) checks parsed
+vocabularies, and `blizzard:rehearsal` exercises released clients against candidate refusals as described in
+[commands/rehearsal.md](./commands/rehearsal.md). Other undeclared historical refusal paths still owe the by-hand
+judgement [../../workflows/judging-a-break.md](../../workflows/judging-a-break.md) describes.
 
 ## An older client reading a newer response value
 

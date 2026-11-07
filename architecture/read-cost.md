@@ -82,9 +82,8 @@ handler's docstring stating why the page's ids would not do; a drain that calls 
 reason written at the site.
 
 **Do.** `blizzard/src/blizzard/hub/api/chunks.py`'s `list_chunks` is keyset-paged and its statement count is flat across
-fixture sizes; its `load_all_facts()` and `record.list_all()` fleet reads carry their reason — in the handler's
-docstring and in the comment beside `list_all()` — that a pointer this page renders can be held live by a chunk outside
-it.
+fixture sizes. Its batched reads resolve off-page prerequisites by id and narrow live holders to the page's pointers.
+The comment beside `newest_done` explains the fleet-sized walk needed for the board window's done floor.
 
 **Don't.** A handler that takes `limit` and `cursor`, calls `record.list_all()`, slices the page out of the result, and
 loads each page row's facts through the singular getter — bounded in rows returned, fleet-sized in rows read, and
@@ -155,7 +154,7 @@ statement that needs the answer.
 
 **Do.** `blizzard/src/blizzard/hub/store/internal/newest_fact.py`'s `newest_fact_select` joins a fact table to a
 `max(id) ... GROUP BY key` subquery over the keys asked for, and the stores' plural newest reads share it.
-`blizzard/src/blizzard/hub/store/internal/finding_store.py`'s `FindingStore.newest_by_scope_for_routine` is the same
+`blizzard/src/blizzard/hub/store/internal/finding_store.py`'s `FindingSetStore.newest_by_scope_for_routine` is the same
 join over every scope one routine has run against — the keys a `where` on the routine slug leaves, not a supplied set.
 Beside it, `newer_row_exists` builds the scoped "a newer row exists" `EXISTS` over a competing alias, in the order the
 caller names compared as one row value; negated, it keeps the newest row per partition. The competing row carries the

@@ -26,7 +26,7 @@ The component spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md).
   every chunk, excluding facts recorded before `since` — distinct from a chunk's own derived total — with a row carrying
   neither a billed nor an estimated amount giving a lower bound flagged `cost_partial`, and a malformed `since`
   rejected 422.
-- `test_store_read_index_gate.py` — drives every read method of every hub and runner `IRead*` Protocol against a real,
-  migrated-to-head sqlite store and fails if any plans an unindexed scan, or an sqlite automatic covering index, over a
-  table not declared in `tests/support/store_scan_allowlist.py`; extend or fix its coverage or allowances there and in
-  `tests/support/store_read_census.py`, not in this file.
+- `test_store_read_index_gate.py` — accounts for every hub and runner `IRead*` method in its census or exemptions, and
+  drives the census against a real, migrated-to-head sqlite store. It fails if any plans an unindexed scan, or an sqlite
+  automatic covering index, over a table not declared in `tests/support/store_scan_allowlist.py`; extend or fix its
+  coverage or allowances there and in `tests/support/store_read_census.py`, not in this file.

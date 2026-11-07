@@ -25,7 +25,8 @@ tables contain only the guard and locking columns; this is not a migration, tear
 `scripts/rehearsal.sh` (`mise run rehearsal`) — the upgrade an operator performs, rehearsed for real: each supported
 release's own published wheel seeds a hub and a runner host, the hub is upgraded first to the candidate, the baseline
 runner keeps working against it, then the runner is upgraded too, and both stores are walked down to the baseline and
-forward again. It is skipped without `BLIZZARD_REHEARSAL=1`, and a tree with no supported release skips it and says so.
+forward again. The wrapper sets `BLIZZARD_REHEARSAL=1`; direct pytest runs skip without it. A tree with no supported
+release skips the rehearsal and says so.
 
 **Inputs.** Each leg holds two isolated virtualenvs, every daemon and verb a subprocess: the baseline is the release's
 published wheel from its GitHub Release, and the candidate is the wheel built from HEAD. `blizzard-mock` is checked out
@@ -38,6 +39,11 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
   unchanged in every field the baseline's document carried.
 - The baseline runner host, untouched, is admitted by the candidate hub's handshake, lands a fresh chunk, and finishes
   the chunk it left delivering — read back as landed through the hub's API.
+- The release's installed client classifies terminal, not-ready, dependency, incompatible, conflict and paused claim
+  refusals, and an unknown-tenant host bootstrap refusal. The run records historical route availability in
+  `release-refusal-routes.json`.
+- A real baseline runner encounters a paused claim in flight, records the denial and mirrors the pause without a route;
+  after resume it lands the waiting chunk.
 - The candidate runner host, migrated, resumes its runners and lands one more chunk.
 - The walk down to each store's baseline head revision, read from the baseline tag's `contracts/store/*.json`, loses no
   seeded row: every table holds at least its seeded count, the seeded views match their fingerprints, and the baseline

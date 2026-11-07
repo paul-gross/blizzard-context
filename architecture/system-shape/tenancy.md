@@ -240,7 +240,7 @@ hub-wide and one statement (`bzh:sweep-acts-in-row-tenant`), and a pass skips it
 one-tenant pass reads and writes only its own tenant's convergence entry, never rebinding or pruning state across
 tenants, and leaves the close drain's and the cadence sweep's rotations unmoved.
 
-**Detect.** The poisoned-tenant fixture, `tests/support/pass_isolation.py`, is a `blizzard:component-test`: it runs a
+**Detect.** The poisoned-tenant fixture, `tests/support/pass_isolation.py`, is used by a `blizzard:unit-test`: it runs a
 pass twice on the virtual clock, once with a tenant whose units raise, report unconverged, or hold a burst of due work,
 and once without that tenant, and fails when any other tenant's recorded calls differ. It also interleaves a poisoned
 tenant's one-tenant passes with timed passes and fails the same way. Every pass this rule binds uses it. By eye: a
