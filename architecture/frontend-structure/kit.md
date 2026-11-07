@@ -6,8 +6,8 @@ follow the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-sha
 ## Chrome comes from the kit (`bzh:frontend-kit-floor`)
 
 **Rule.** Every presentational component builds its chrome — panel shell, async loading/error/empty state, tone badges,
-action buttons, choice chips, single-select dropdowns, tab strips and their counts, inline mutation-error lines — from
-`fleet/lib/kit/`, never a re-typed copy.
+action buttons, close controls, choice chips, single-select dropdowns, tab strips and their counts, count-tile strips,
+section headings, inline mutation-error lines — from `fleet/lib/kit/`, never a re-typed copy.
 
 **Why.** A shared floor makes "no duplicated chrome" structural rather than a review habit, and a chrome fix (a token, a
 state message) lands once.
@@ -21,9 +21,10 @@ dependency graph; nothing in it may depend upward on a feature.
 element-level ESLint suppression; the shared kit remains the only general exemption. The ESLint AST probe in
 `web/scripts/kit-control-lint-probe.js` pins forbidden tags, kit controls, comments, and the exception form.
 
-A new component's sibling `.css` declaring the retired chrome classes `.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl` (plus
-`KitAsyncState`'s own hand-rolled precursors `.none`/`.hint`/`.rest`) outside `fleet/lib/kit/`, or a sibling `.html`
-hand-rolling `KitFactList`'s own `<dl class="kv">` grid — both tooled by `web:structural-gate`'s kit-floor sweep
+A new component's sibling `.css` declaring the retired chrome classes
+`.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl`/`.s-head` (plus `KitAsyncState`'s own hand-rolled precursors
+`.none`/`.hint`/`.rest`) outside `fleet/lib/kit/`, or a sibling `.html` hand-rolling `KitFactList`'s own
+`<dl class="kv">` grid — both tooled by `web:structural-gate`'s kit-floor sweep
 ([`../../verification/blizzard.md`](../../verification/blizzard.md)), with a reasoned exemption list for a site that
 genuinely should not convert; a kit component (`fleet/lib/kit/*`) importing a query, mutation, or the generated API
 client — this half stays a review question.
