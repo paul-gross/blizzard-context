@@ -3,13 +3,16 @@
 Reference implementations in the `blizzard` repo. **Before writing or extending code or tests, read the row matching
 what you are building.** When adapting an exemplar into production, read [conformance.md](./conformance.md).
 
-A new concept package owes one thing no exemplar can show: its row in the layer table of the tree it joins —
-`bzh:domain-package-layers` in [../architecture/clean-architecture.md](../architecture/clean-architecture.md) for a
-hub-domain or runner package, and the hub app's unit table in
-[../architecture/frontend-structure/placement.md](../architecture/frontend-structure/placement.md) for an Angular
-feature folder.
-
 Parent: [../index.md](../index.md).
+
+## Placing a new package
+
+These rows point at where a new package's place is recorded; they carry no obligation of their own.
+
+| Doc                                                                                                                           | Read when                                     |
+| ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| [../architecture/clean-architecture.md](../architecture/clean-architecture.md#domain-package-layers-bzhdomain-package-layers) | Adding a hub-domain or runner concept package |
+| [../architecture/frontend-structure/placement.md](../architecture/frontend-structure/placement.md)                            | Adding an Angular feature folder              |
 
 ## Hub
 

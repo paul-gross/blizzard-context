@@ -32,7 +32,7 @@ The facets:
   that overruns its bound is a red check, never an error — so a hung check reads as red to a `requires_checks` choice
   ([./edges.md](./edges.md) §Failure, not judgement) instead of wedging the exit. Authoring `checks:` makes a graph
   application-specific by design — checks are necessarily toolchain commands (`bzh:app-agnostic-graphs` in
-  [../../architecture/system-shape.md](../../architecture/system-shape.md)).
+  [../../architecture/system-shape/graphs.md](../../architecture/system-shape/graphs.md)).
 - **`produces`** — names the artifacts the node must submit ([../artifacts.md](../artifacts.md)); a worker node's prompt
   must instruct submitting each by name
   ([../../standards/worker-nodes/declarations.md](../../standards/worker-nodes/declarations.md)).

@@ -104,8 +104,9 @@ reach into the `blizzard/` and `blizzard-mock/` trees no method covers and this 
 
 **Gap.** No check reaching into the sibling trees has a trigger where its sites live — check F's census declares sites
 in `blizzard/` and `blizzard-mock/`, and check C2's spec roster is bidirectional against `blizzard/`, so a spec added
-there owes an edit here. Neither sibling repo runs the check, so those sites are swept only when blizzard-context itself
-changes.
+there owes an edit here, and check I holds `domain/humans/escalation.md`'s cause table against blizzard's
+`EscalationCause`, so a cause added there owes an edit here too. Neither sibling repo runs the check, so those sites are
+swept only when blizzard-context itself changes.
 
 ### `blizzard-context:manual-cold-eval`
 

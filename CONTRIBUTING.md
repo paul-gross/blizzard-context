@@ -49,11 +49,8 @@ pass criteria; what belongs here is only *which* a change owes:
 
 - `blizzard-context:registry-drift` and `blizzard-context:registry-drift-tests` — every change.
 - `blizzard-context:markdown-format`, `blizzard-context:markdown-lint`, and `blizzard-context:markdown-prose-lint` —
-  every change: the mechanical style gates every markdown file here is held to. They also run through `winter lint`:
-  this extension contributes the check (`winter-ext.toml`'s `lint` field), so a routine env lint catches the same drift;
-  `blizzard-context:lint-script-tests` covers the contribution itself.
-- `blizzard-context:reference-lint` and `blizzard-context:reference-lint-tests` — every change. The lint also runs
-  through `winter lint`.
+  every change: the mechanical style gates every markdown file here is held to.
+- `blizzard-context:reference-lint` and `blizzard-context:reference-lint-tests` — every change.
 - A change to a standard an exemplar instantiates owes its companion change to `blizzard/exemplars/`
   (`bzh:exemplar-conformance`), proven there by blizzard's own gates.
 - `blizzard-context:manual-reference-check` — every change: the by-hand pass covering what no tool here runs.

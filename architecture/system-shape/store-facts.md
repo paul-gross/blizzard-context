@@ -85,3 +85,8 @@ differ from its narrowing of the registry.
 **Do.** Add a fact family by adding one registry entry; each projection that narrows to it picks it up.
 
 **Don't.** A projection carrying its own list of fact tables — the next family added to the registry never reaches it.
+
+## See also
+
+- [../../standards/persistence.md](../../standards/persistence.md) owns `bzh:sql-portable`, the portable-SQL rule the
+  facts-only stores are held to.

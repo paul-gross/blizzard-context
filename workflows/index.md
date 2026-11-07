@@ -1,11 +1,7 @@
 # Workflows
 
-The procedures a fleet agent follows end to end — how a feature reaches `master`, judging whether a change breaks a
-supported release, landing work behind a flag, and the code-restructuring procedures such as splitting a concept's
-domain and orchestration — the harness's workflows routing hub. Each workflow document owns choreography and landing
-roles; the facts a step acts on stay with their owners, pointed to. The passes only an operator drives — cutting and
-deploying a release, the findings sweep, marshalling, the store fold — are the workspace's
-(`workspace:/context/project/workflows/index.md`). Parent hub: [../index.md](../index.md).
+The procedures a fleet agent follows end to end, routed by the reader's task. Parent hub: [../index.md](../index.md).
+The passes only an operator drives are the workspace's: `workspace:/context/project/workflows/index.md`.
 
 | File                                                             | When to read                                                                                                                                          |
 | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |

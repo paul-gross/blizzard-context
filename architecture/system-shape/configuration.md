@@ -146,8 +146,8 @@ a second model validating a kind that already has a wire model; a binding that v
 `bzh:config-codec` ast-grep rule fails a PyYAML import anywhere under `blizzard/src/blizzard/` outside the YAML binding.
 
 **Do.** A new format is a new `IConfigCodec` binding selected by `Content-Type` on the API and by file extension in the
-CLI (`bzh:pluggable-seams`, [../system-shape.md](../system-shape.md)); the YAML binding loads strictly — booleans are
-`true` and `false` only, a duplicate key is an error.
+CLI (`bzh:pluggable-seams`, [./pluggable-seams.md](./pluggable-seams.md)); the YAML binding loads strictly — booleans
+are `true` and `false` only, a duplicate key is an error.
 
 **Don't.** A CLI verb that reads its file with `yaml.safe_load` and posts the result — the document it accepts is no
 longer the document the API accepts.

@@ -1,11 +1,12 @@
 # System shape
 
-Blizzard's macro-shape architecture invariants: this file states the two rules every other macro-shape rule rests on and
-routes the rest to spoke files by the reader's task. The parent hub is [./index.md](./index.md). Every rule here follows
-the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+Routes blizzard's macro-shape architecture invariants to their spokes by the reader's task. Parent hub:
+[./index.md](./index.md).
 
 | Spoke                                                                                  | Read when…                                                                                                                                                                                                                                                               |
 | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [system-shape/deterministic-shell.md](./system-shape/deterministic-shell.md)           | Placing a model call, prompt, or LLM client anywhere in coordination — a runner loop step, the hub coordinator, a workflow transition, or a store method                                                                                                                 |
+| [system-shape/pluggable-seams.md](./system-shape/pluggable-seams.md)                   | Reaching an external system from blizzard code, or housing, adding, or importing an adapter behind a seam                                                                                                                                                                |
 | [system-shape/store-facts.md](./system-shape/store-facts.md)                           | Designing a store schema — what may be persisted, and what closes an open fact — or adding a chunk fact table or a projection over them                                                                                                                                  |
 | [system-shape/worker-boundary.md](./system-shape/worker-boundary.md)                   | Changing what crosses the runner–worker seam — every child the runner launches, its environment, and git mutation                                                                                                                                                        |
 | [system-shape/graphs.md](./system-shape/graphs.md)                                     | Authoring or minting a workflow graph — what it may know, and where its declarations are read from                                                                                                                                                                       |
@@ -16,90 +17,8 @@ the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 | [system-shape/seam-positions.md](./system-shape/seam-positions.md)                     | Deciding whether a reach into an external system — the forge above all — must go through a configured seam, or why the hub work source and editor are always seated                                                                                                      |
 | [system-shape/subscription-credentials.md](./system-shape/subscription-credentials.md) | Reading, sampling, or renewing a subscription credential file                                                                                                                                                                                                            |
 | [system-shape/fleet-wire.md](./system-shape/fleet-wire.md)                             | Changing a runner-reached hub route, schema, enum, dependency, or delegated refusal handler — what a hub change may do across the skew window                                                                                                                            |
-| [system-shape/released-surfaces.md](./system-shape/released-surfaces.md)               | Changing any surface a supported release ships — the HTTP API, wire, configuration, store, trace, or egress, or event-stream contract, or the CLI — and deciding whether it is additive or a break, or typing a vocabulary field on a response model                     |
+| [system-shape/released-surfaces.md](./system-shape/released-surfaces.md)               | Changing a surface a supported release ships and judging whether the change is additive or a break, or typing a vocabulary field on a response model                                                                                                                     |
 | [system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md)                 | Adding or reviewing a write that acts on a decision made from state read before it — an exactly-one-wins decision above all — a write such a decision's guard reads consult, a store method that refuses a write, or a runner's draw from a workspace's environment pool |
 | [system-shape/configuration.md](./system-shape/configuration.md)                       | Adding or changing anything an operator configures on a running hub — a configured record, its routes or CLI verbs, a document the hub ingests or applies, a secret, or a read of configuration                                                                          |
 | [system-shape/tenancy.md](./system-shape/tenancy.md)                                   | Adding or changing a hub table, a store adapter or its statements, a uniqueness rule, or a read or pass that spans tenants — what keeps every row inside its tenant                                                                                                      |
 | [system-shape/runner-scoping.md](./system-shape/runner-scoping.md)                     | Adding or changing a runner store table, a runner store adapter or its statements, or a read or write that reaches the host-scoped tables or spans runners — what keeps every row inside its runner                                                                      |
-
-## Deterministic shell (`bzh:deterministic-shell`)
-
-**Rule.** Coordination — the runner tick, the hub coordinator, workflow transitions, and store reads and writes — is
-deterministic code with no model calls; intelligent work is confined to the leaf where a worker runs, behind the harness
-seam.
-
-**Why.** Crash correctness depends on the loop being a pure function of store, clock, and seams — a deterministic shell
-is replayable, unit-testable without tokens, and crash-recoverable, while model judgement in the coordinator would break
-replay and spend tokens on control flow.
-
-**Detect.** A model call, prompt, or LLM client inside a runner loop step, the hub coordinator, a transition, or a store
-method; or orchestration logic branching on freshly generated model output rather than on a parsed verdict fact.
-
-**Do.** The worker produces a verdict; the coordinator reads the parsed verdict fact from the store and picks the
-workflow edge deterministically.
-
-**Don't.** A coordinator that prompts a model to choose the next node — it cannot be replayed under the crash sweep.
-
-## Pluggable seams (`bzh:pluggable-seams`)
-
-**Rule.** Every external system is reached only through a seam — a Protocol interface — whose concrete bindings are
-swappable adapters selected by configuration. A seam is the external-system application of dependency inversion
-(`bzh:dependency-inversion`). The seam's core never imports an adapter, one adapter never imports another, and nothing
-in the seam's package imports the loop that consumes it. House each adapter by the modules that belong to it alone:
-
-- An adapter of several modules gets a package of its own, named only by the seam's wiring module and the composition
-  roots — the harness seam's `harness/claude_code/` and `harness/opencode/`, named by `harness/wiring.py`.
-- When the harness binary's major version needs a separate implementation, that binding is a package of its own beside
-  the package its harness id names, held to the same isolation, with a declaration of its own — `harness/opencode_v2/`
-  binds OpenCode 2. Configuration still selects the harness; the binary's version selects among the harness id's
-  declarations, which the catalog lists together, the first the default. `harness/binding_selection.py` runs the
-  configured binary's `--version` once as a runner is composed, names no adapter, and chooses the declaration whose
-  admitted range holds it, else the first, whose health then refuses the version. The choice is threaded to everything
-  composing that runner — publish, registry, health, runtime init's scaffold — and never swapped while it runs. No walk
-  defaults the selection; a caller composing no runner names `first_bindings()` itself.
-- An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
-  composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
-  `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
-
-**Why.** Seams let tests bind the blizzard-mock fleet in place of the real stack — the entire service strategy runs
-seams-mocked, spending no tokens and touching no network. An adapter kept apart from the core and its siblings stays
-replaceable: neither changes when it does.
-
-**Exception.** The runner workspace-provider seam's winter adapter spans `winter_provider.py` and `winter_cli.py`, flat
-beside `basic_provider.py` and the shared `git.py` in `runner/environments/internal/`, selected by
-`environments/factory.py` rather than held in a package of its own.
-
-**Detect.** A vendor SDK, the GitHub API, or a claude/harness binary invoked directly from a loop step, the domain, or a
-store rather than through an injected seam Protocol; or a test that cannot run without a real external system because no
-seam exists to bind a mock to. For the harness seam, the adapter-isolation check in
-`blizzard/tests/guards/test_layering.py` fails the unit tier, resolving relative imports, on each breach:
-
-- a harness-core module importing an adapter package — `harness/claude_code/`, `harness/opencode/`, or
-  `harness/opencode_v2/`;
-- one adapter importing another, including one major version's binding importing the other's;
-- any module but `harness/wiring.py` and a composition root importing an adapter;
-- a harness module other than `harness/wiring.py` importing `wiring.py`, which reaches every adapter through it;
-- a module under `harness/` importing `runner/loop/` or the loop's composition root, `runner/loop_wiring.py`.
-
-The same module's planted-tree cases prove the check catches each form. On every other seam a reviewer asks whether an
-adapter imports a sibling, or has grown a second module of its own while still flat in `internal/`.
-
-**Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
-basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while
-tests bind the blizzard-mock fleet. The hub reaches its external systems through `IWorkSource` and its capability family
-and `IOAuthProvider`. `blizzard/src/blizzard/runner/harness/wiring.py` is the one module naming the harness adapter
-packages; the harness core reaches them only through `IHarnessDeclaration` and `HarnessSection`.
-
-**Don't.** A FILL step that shells out to the `claude` binary directly — the loop can no longer be exercised against the
-mock harness. Nor a harness-core module importing an adapter's constant — a denied-tool list, a section kind — so the
-core changes whenever that adapter does.
-
-**See also.** [./system-shape/seam-positions.md](./system-shape/seam-positions.md) owns this rule's recorded positions —
-the always-seated hub work source and editor, and every path that reaches the forge.
-
-## See also
-
-- [./crash-correctness.md](./crash-correctness.md) owns the daemon-loop requirements built on `bzh:deterministic-shell`
-  and `bzh:facts-not-status`.
-- [../standards/persistence.md](../standards/persistence.md) owns `bzh:sql-portable`, the portable-SQL rule the
-  facts-only stores are held to.

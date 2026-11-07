@@ -172,9 +172,9 @@ chunk looking landed while an invariant is silently violated.
 
 ## See also
 
-- [./system-shape.md](./system-shape.md) — `bzh:deterministic-shell`, and, through its
-  [store-facts spoke](./system-shape/store-facts.md), `bzh:facts-not-status` — the invariants these requirements rest
-  on.
+- [./system-shape/deterministic-shell.md](./system-shape/deterministic-shell.md) — `bzh:deterministic-shell`, and
+  [./system-shape/store-facts.md](./system-shape/store-facts.md) — `bzh:facts-not-status` — the invariants these
+  requirements rest on.
 - [../verification/blizzard.md](../verification/blizzard.md) — `blizzard:crash-sweep`, the method that composes the four
   requirements into the criterion-4 proof, and the division of labor with the unit and component tiers.
 - [./lanes.md](./lanes.md) — the contract around periodic passes and store-and-forward lanes.

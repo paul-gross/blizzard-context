@@ -28,40 +28,31 @@ also the file installed into every blizzard agent context, so an agent working o
 - **Addressed by path notation.** Files here are cited as `blizzard-context:/architecture/repository-access.md`,
   resolved against wherever the extension happens to be installed — the local directory name varies, the notation does
   not.
-- **Cited by stable id.** Every rule carries a `bzh:<slug>` id in its heading, and non-rule leaves carry one in their
-  title. That id is the handle a plan, a review finding, a cross-reference, or a source comment uses, which keeps a
-  convention and the code obeying it linked in both directions. Ids are stable: renaming or removing one is a breaking
-  change.
+- **Cited by stable id.** Every rule is cited by a stable `bzh:` id — the handle a plan, a review finding, a
+  cross-reference, or a source comment uses. [`CONTRIBUTING.md`](./CONTRIBUTING.md) §Authoring conventions owns the
+  scheme.
 
 ## Layout
 
-| Directory                                  | What it holds                                                                                            |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| [`domain/`](./domain/index.md)             | The domain model — what blizzard's concepts are and how they behave, with no technical detail.           |
-| [`architecture/`](./architecture/index.md) | Structural invariants and design positions a change must honor.                                          |
-| [`standards/`](./standards/index.md)       | The toolchains and code-quality conventions finished code is held to.                                    |
-| [`verification/`](./verification/index.md) | Blizzard's verifiability matrix — how a change to the application is proven.                             |
-| [`workflows/`](./workflows/index.md)       | How work reaches `master`, judging a break, and the code-restructuring procedures a fleet agent follows. |
-| [`tooling/`](./tooling/index.md)           | Driving an external tool beyond the winter CLI.                                                          |
-| [`garden/`](./garden/index.md)             | The named axes blizzard is recurringly evaluated along, and what each judges by.                         |
-| [`exemplars/`](./exemplars/index.md)       | The router to the reference implementations in `blizzard/exemplars/`, and what they are held to.         |
+| Directory                                  | What it holds                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| [`domain/`](./domain/index.md)             | The domain model — what blizzard's concepts are and how they behave, with no technical detail.   |
+| [`architecture/`](./architecture/index.md) | Structural invariants and design positions a change must honor.                                  |
+| [`standards/`](./standards/index.md)       | The toolchains and code-quality conventions finished code is held to.                            |
+| [`verification/`](./verification/index.md) | Blizzard's verifiability matrix — how a change to the application is proven.                     |
+| [`workflows/`](./workflows/index.md)       | The procedures a fleet agent follows end to end.                                                 |
+| [`tooling/`](./tooling/index.md)           | Driving an external tool beyond the winter CLI.                                                  |
+| [`garden/`](./garden/index.md)             | The named axes blizzard is recurringly evaluated along, and what each judges by.                 |
+| [`exemplars/`](./exemplars/index.md)       | The router to the reference implementations in `blizzard/exemplars/`, and what they are held to. |
 
 Alongside them sit [`review-criteria.md`](./review-criteria.md), the entry a review of a blizzard change reads to find
-which domain judges each of its axes, and this repo's own: [`CONTRIBUTING.md`](./CONTRIBUTING.md) for commit format,
-authoring conventions, and delivery, and [`verifiability.md`](./verifiability.md) for how a change *here* is verified.
+which domain judges each of its axes, and this repo's own: [`CONTRIBUTING.md`](./CONTRIBUTING.md) for contributing here,
+and [`verifiability.md`](./verifiability.md) for how a change *here* is verified.
 
 ## A harness held to its own standard
 
 Convention repos rot quietly — a rule drifts from the code it governs and nothing fails. So this one ships gates of its
-own, run before every push and declared as methods, each command with its pin, in
-[`verifiability.md`](./verifiability.md) §Commands.
-
-The drift check is the interesting one: it reads a committed census and fails when a registry's stated shape and its
-actual enumeration disagree — including at sites in the sibling `blizzard` and `blizzard-mock` checkouts, which is why
-it wants them present. The markdown gates also run through `winter lint`, since this extension contributes the check —
-`blizzard-context:lint-script-tests` is that check's own test against stubbed binaries. A second check, the reference
-lint, fails on a dangling `bzh:` id, a broken link or anchor, a leaf its hub does not route, or a path notation that
-reaches nothing.
+own, run before every push; [`verifiability.md`](./verifiability.md) owns what each one checks and how it runs.
 
 Beyond the mechanical passes, a rule addition or a routing change owes a **cold-spawn eval** — put the change in front
 of a fresh agent context and see whether it actually routes there. `winter-canon:/evaluating-harness-changes.md` owns
@@ -77,7 +68,7 @@ looks like.
 ## Contributing
 
 Issues and ideas are welcome. Changes target a convention file directly — read [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-first for the commit format, the canon slot skeleton every rule is written in, and the pre-push expectations above.
+first.
 
 ## License
 
