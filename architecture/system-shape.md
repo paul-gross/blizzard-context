@@ -55,7 +55,8 @@ in the seam's package imports the loop that consumes it. House each adapter by t
   declarations, which the catalog lists together, the first the default. `harness/binding_selection.py` runs the
   configured binary's `--version` once as a runner is composed, names no adapter, and chooses the declaration whose
   admitted range holds it, else the first, whose health then refuses the version. The choice is threaded to everything
-  composing that runner — publish, registry, health — and never swapped while it runs.
+  composing that runner — publish, registry, health, runtime init's scaffold — and never swapped while it runs. No walk
+  defaults the selection; a caller composing no runner names `first_bindings()` itself.
 - An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
   composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
   `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
