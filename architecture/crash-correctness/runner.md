@@ -127,11 +127,14 @@ exactly as it was before the statement or exactly as it would be after — never
 is owed.
 
 None of the store prunes can delete a row a live reader still depends on. The outbound prune's pending-floor check keeps
-every row a still-open fact might need; the heartbeat and usage-sample prunes keep each lease's or slug's newest row
-unconditionally, which is the only row `latest_heartbeat` and `last_external_usage_attempt_at` ever read — so a crash
-losing the retried prune's effect costs nothing beyond a few more rows lingering until the next pass, never a wrong
-answer from either read. `Retention.run` also isolates each lane's own prune in its own `try`/`except`, so one lane
-raising costs that lane's pass, not the other three, and it retries at the next floor.
+every row a still-open fact might need, and it also keeps an acked `completion.submitted` or `decision.submitted` row
+whose lease has no closure: declaration admission reads such a row as "the outcome is settled", so a runner restarted
+after the retention window would otherwise reopen an acked-but-unclosed lease to declarations nothing would carry; the
+heartbeat and usage-sample prunes keep each lease's or slug's newest row unconditionally, which is the only row
+`latest_heartbeat` and `last_external_usage_attempt_at` ever read — so a crash losing the retried prune's effect costs
+nothing beyond a few more rows lingering until the next pass, never a wrong answer from either read. `Retention.run`
+also isolates each lane's own prune in its own `try`/`except`, so one lane raising costs that lane's pass, not the other
+three, and it retries at the next floor.
 
 ## The lease mint
 
