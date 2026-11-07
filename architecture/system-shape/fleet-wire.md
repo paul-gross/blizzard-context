@@ -64,3 +64,25 @@ field emitted as null where the release omits it can break an older client even 
 
 **See also.** `bzh:fleet-wire-additive` above owns supported-release compatibility; `bzh:matrix-gaps`
 ([../../verification/blizzard/gaps.md](../../verification/blizzard/gaps.md)) records the baseline evidence limit.
+
+## Read refusals by type (`bzh:clients-read-problem-types`)
+
+**Rule.** A hub client — the hub CLI, the runner CLI, the runner's hub proxy, the board — reads a refusal through its
+language's one problem-details reader and dispatches on `type`. It shows the operator the refusal's `detail`, or its
+`title` when there is none. It never derives a refusal from the HTTP status or from prose. A hub refusal that any client
+reads is a declared, registered problem; `blizzard/docs/versioning.md` owns the representation and the legacy fields.
+
+**Why.** A client that matches status or text breaks when the hub rewords a refusal or reuses a status for a second
+meaning, and cannot tell an unknown refusal from a known one.
+
+**Scope.** Refusals the CLI verbs, the proxy and the board read. A response outcome that is not a refusal (`202`, `410`
+on a deletion) keeps its status. A refusal whose `type` is absent comes from a hub before problem details; the reader
+falls back to the legacy `detail.code` for that case only.
+
+**Detect.** `cli-refusal-body-confined` (`blizzard:structural-gate`) fails a CLI-tree read of `resp.json()["detail"]`;
+search the client trees for a status map or any other read of the refusal body outside the reader; compare each
+client-read refusal with the operation's declared problem variants and its observation test.
+
+**Do.** A verb that acts on one refusal compares the reader's `type` with the registered URN.
+
+**Don't.** A verb keeps an `on_status` map, or tests whether `detail` contains a phrase.

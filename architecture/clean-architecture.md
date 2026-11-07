@@ -154,12 +154,14 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
 - `build_stores`, `build_production_harness_registry`, or `HarnessHealthCache` called anywhere under
   `blizzard/src/blizzard/` other than `runner/composition.py` — a second copy of the runner's process graph.
 
-Two ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
+Three ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 
 - `cli-httpx-confined` fails any httpx2 import under the three CLI trees (`cli/`, `hub/cli/`, `runner/cli/`) other than
   `blizzard/src/blizzard/cli/collaborators.py`.
 - `cli-patch-not-seam` fails any test `setattr` whose first argument is a string naming a `blizzard.` path with a `cli`
   segment.
+- `cli-refusal-body-confined` fails a CLI-tree read of a refusal's `detail` outside
+  `blizzard/src/blizzard/cli/refusal.py` ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
 
 **Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
