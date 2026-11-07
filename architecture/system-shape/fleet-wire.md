@@ -79,7 +79,7 @@ meaning, and cannot tell an unknown refusal from a known one.
 on a deletion) keeps its status. A refusal whose `type` is absent comes from a hub before problem details; the reader
 falls back to the legacy `detail.code` for that case only.
 
-**Detect.** `bzh:cli-refusal-body-confined` (`blizzard:structural-gate`) fails a CLI-tree read of `resp.json()["detail"]`;
+**Detect.** `cli-refusal-body-confined` (`blizzard:structural-gate`) fails a CLI-tree read of `resp.json()["detail"]`;
 search the client trees for a status map or any other read of the refusal body outside the reader; compare each
 client-read refusal with the operation's declared problem variants and its observation test.
 

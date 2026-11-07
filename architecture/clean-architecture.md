@@ -160,8 +160,8 @@ Three ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP
   `blizzard/src/blizzard/cli/collaborators.py`.
 - `cli-patch-not-seam` fails any test `setattr` whose first argument is a string naming a `blizzard.` path with a `cli`
   segment.
-- `cli-refusal-body-confined` fails a CLI-tree read of a refusal's `detail` outside `blizzard/src/blizzard/cli/refusal.py`
-  ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
+- `cli-refusal-body-confined` fails a CLI-tree read of a refusal's `detail` outside
+  `blizzard/src/blizzard/cli/refusal.py` ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
 
 **Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
