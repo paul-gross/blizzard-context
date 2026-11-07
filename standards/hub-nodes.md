@@ -8,9 +8,9 @@ action or a new hub node is held to. Each rule in this tree follows the slot ske
 
 Parent: [./index.md](./index.md).
 
-| Spoke                                                  | When to read                                                                            |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [action-shape.md](./hub-nodes/action-shape.md)         | The node declares its work as one catalogued `action:`                                  |
-| [outcome-protocol.md](./hub-nodes/outcome-protocol.md) | An action's pass must answer a routed choice, poll, or bounce the chunk                 |
-| [step-idempotence.md](./hub-nodes/step-idempotence.md) | An action's pass must be safe to re-run after a crash                                   |
-| [action-purity.md](./hub-nodes/action-purity.md)       | The node names an action — writing or changing a hub action, or what its pass is handed |
+| Spoke                                                  | When to read                                                                              |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| [action-shape.md](./hub-nodes/action-shape.md)         | Declaring a hub node's `action:` in graph YAML                                            |
+| [outcome-protocol.md](./hub-nodes/outcome-protocol.md) | An action's pass must answer a routed choice, poll, or bounce the chunk                   |
+| [step-idempotence.md](./hub-nodes/step-idempotence.md) | An action's pass must be safe to re-run after a crash                                     |
+| [action-purity.md](./hub-nodes/action-purity.md)       | Writing or changing a hub action's own code — what it imports and what its pass is handed |

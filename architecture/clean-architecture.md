@@ -240,8 +240,9 @@ step something new to read — a probe, a config value, a store — takes three 
 3. Keep a sentinel for that Protocol in `runner/loop/context.py`: the assignment
    `_<name>_conforms: type[<Protocol>] = LoopContext`.
 
-A pluggable seam such as a probe (`bzh:pluggable-seams` in [./system-shape.md](./system-shape.md)) is one member the
-step's Protocol declares; it never stands in for that Protocol.
+A pluggable seam such as a probe (`bzh:pluggable-seams` in
+[./system-shape/pluggable-seams.md](./system-shape/pluggable-seams.md)) is one member the step's Protocol declares; it
+never stands in for that Protocol.
 
 **Why.** A bundle parameter hides what a collaborator touches: a test must build the whole bundle, and a reviewer cannot
 tell from the signature which state a change can reach. A narrow seam states the dependency in the type, so pyright

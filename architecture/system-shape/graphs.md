@@ -51,7 +51,7 @@ forks per application, which is the violation the rule exists to prevent. And do
 cost tokens on every spawn and freeze assumptions the surrounding prose hedges, like a literal `origin/master` beside
 "unless the repo records another".
 
-**See also.** `bzh:pluggable-seams`, one level up — a reusable graph depends on the abstraction "this node verifies its
-work", never on a concrete verification command. `bzh:graph-scope-reads-local` and `bzh:system-scope-reads-live` in
-[./artifact-scopes.md](./artifact-scopes.md) own what a graph-scope read costs against a system-scope read's opposite
-liveness rule.
+**See also.** `bzh:pluggable-seams` in [./pluggable-seams.md](./pluggable-seams.md) — a reusable graph depends on the
+abstraction "this node verifies its work", never on a concrete verification command. `bzh:graph-scope-reads-local` and
+`bzh:system-scope-reads-live` in [./artifact-scopes.md](./artifact-scopes.md) own what a graph-scope read costs against
+a system-scope read's opposite liveness rule.

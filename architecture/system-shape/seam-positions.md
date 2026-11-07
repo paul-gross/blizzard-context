@@ -2,8 +2,8 @@
 
 This spoke owns the recorded positions under `bzh:pluggable-seams` — which external-system reaches are exempt from a
 configured seam, structural rather than opt-in, or absent as a single Protocol, and why; the macro-shape hub is
-[../system-shape.md](../system-shape.md), which owns the rule itself. Each position is stated so a reviewer need not
-re-derive it.
+[../system-shape.md](../system-shape.md), and [./pluggable-seams.md](./pluggable-seams.md) owns the rule itself. Each
+position is stated so a reviewer need not re-derive it.
 
 ## The hub work source is always seated
 

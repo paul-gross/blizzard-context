@@ -40,6 +40,18 @@ layer data has one home, `tests/guards/test_layering.py`, which the docs point a
 without it. An absent blizzard checkout is a skip for H, the caller's, the same shape as A
 and G.
 
+Check I compares the Cause column of the first table under `## Why it escalated` in
+`domain/humans/escalation.md` against the string-literal members of class `EscalationCause`
+in blizzard's `src/blizzard/foundation/escalation_causes.py`, read with `ast.parse` and
+never imported: the same set of causes on both sides. Input the comparison cannot use with
+the checkout present — a missing doc, section, table, or Cause column; a Cause cell that is
+not exactly one backticked value; a missing or unparsable enum file or a missing class; a
+class member whose value is not a string literal; zero values on either side — is a fail
+naming that input. An absent blizzard checkout is a skip for I, the caller's, as for H.
+Like every sibling-reaching check, I runs only where `blizzard-context:registry-drift` is
+run by hand: CI runs the fixture tests alone, so a cause added in blizzard is seen only by
+a local run.
+
 Emits NDJSON findings on stdout, one object per line, following the
 `winter lint` finding contract (`check`, `status` in {pass, warn, fail},
 optional `message`/`file`/`line`/`remediation`). Exits 0 by default; with
@@ -1833,6 +1845,122 @@ def check_H(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
 
 
 # --------------------------------------------------------------------------
+# Check I — escalation causes against their enum
+# --------------------------------------------------------------------------
+
+# The doc's closed cause vocabulary mirrors blizzard's enum: where the table lives, the
+# section it opens, the column holding the causes, and the enum file and class.
+ESCALATION_DOC = "domain/humans/escalation.md"
+ESCALATION_SECTION = "## Why it escalated"
+ESCALATION_COLUMN = "Cause"
+ESCALATION_ENUM_PY = "src/blizzard/foundation/escalation_causes.py"
+ESCALATION_ENUM_CLASS = "EscalationCause"
+
+
+def _doc_escalation_causes(text: str) -> tuple[int | None, set[str] | str]:
+    """(table line, causes) from the first table under ``ESCALATION_SECTION``, or
+    (line or None, the reason the table cannot be read)."""
+    lines = text.splitlines()
+    start = next((i for i, ln in enumerate(lines) if ln.strip() == ESCALATION_SECTION), None)
+    if start is None:
+        return None, f"no `{ESCALATION_SECTION}` section"
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    first = next((i for i in range(start + 1, end) if lines[i].startswith("|")), None)
+    if first is None:
+        return None, f"no table under `{ESCALATION_SECTION}`"
+    rows = []
+    i = first
+    while i < end and lines[i].startswith("|"):
+        rows.append((i + 1, [c.strip() for c in lines[i].strip().strip("|").split("|")]))
+        i += 1
+    header = rows[0][1]
+    if ESCALATION_COLUMN not in header:
+        return first + 1, f"the table under `{ESCALATION_SECTION}` has no {ESCALATION_COLUMN} column"
+    col = header.index(ESCALATION_COLUMN)
+    causes: set[str] = set()
+    for line, cells in rows[2:]:
+        cell = cells[col] if col < len(cells) else ""
+        match = re.fullmatch(r"`([^`]+)`", cell)
+        if match is None:
+            return line, f"{ESCALATION_COLUMN} cell on line {line} is not exactly one backticked value: {cell!r}"
+        causes.add(match.group(1))
+    if not causes:
+        return first + 1, f"the table under `{ESCALATION_SECTION}` lists no causes"
+    return first + 1, causes
+
+
+def _enum_escalation_causes(path: Path) -> set[str] | str:
+    """The string-literal members of ``ESCALATION_ENUM_CLASS``, or the reason they cannot be read."""
+    if not path.is_file():
+        return "file not found"
+    try:
+        tree = ast.parse(path.read_text(errors="replace"))
+    except SyntaxError as exc:
+        return f"unparsable: {exc.msg} (line {exc.lineno})"
+    cls = next(
+        (n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == ESCALATION_ENUM_CLASS),
+        None,
+    )
+    if cls is None:
+        return f"no class {ESCALATION_ENUM_CLASS}"
+    values: set[str] = set()
+    for node in cls.body:
+        if isinstance(node, ast.Assign):
+            names, value = [t.id for t in node.targets if isinstance(t, ast.Name)], node.value
+        elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
+            names, value = [node.target.id], node.value
+        else:
+            continue
+        if not (isinstance(value, ast.Constant) and isinstance(value.value, str)):
+            return f"member {', '.join(names) or '?'} of {ESCALATION_ENUM_CLASS} is not a string literal"
+        values.add(value.value)
+    if not values:
+        return f"class {ESCALATION_ENUM_CLASS} has no members"
+    return values
+
+
+def check_I(repo_root: Path, checkouts: dict[str, Path]) -> list[Finding]:
+    """The doc's escalation-cause table and blizzard's ``EscalationCause`` must hold the same
+    causes; input the comparison cannot use is a fail naming it. An absent blizzard checkout
+    is the caller's skip."""
+    doc_path = repo_root / ESCALATION_DOC
+    if not doc_path.is_file():
+        return [Finding("I", "fail", f"escalation doc not found: {ESCALATION_DOC}", ESCALATION_DOC, None, "Restore the doc, or update ESCALATION_DOC if it moved.")]
+    line, doc = _doc_escalation_causes(doc_path.read_text(errors="replace"))
+    if isinstance(doc, str):
+        return [Finding("I", "fail", f"{ESCALATION_DOC}: {doc}", ESCALATION_DOC, line, "Restore the cause table, one backticked cause per row.")]
+    enum = _enum_escalation_causes(checkouts["blizzard"] / ESCALATION_ENUM_PY)
+    if isinstance(enum, str):
+        return [
+            Finding(
+                "I",
+                "fail",
+                f"blizzard {ESCALATION_ENUM_PY}: {enum}",
+                ESCALATION_DOC,
+                line,
+                f"Restore {ESCALATION_ENUM_CLASS} as string-literal members, or update ESCALATION_ENUM_PY if it moved.",
+            )
+        ]
+    problems = []
+    if doc - enum:
+        problems.append(f"only in the doc table: {', '.join(sorted(doc - enum))}")
+    if enum - doc:
+        problems.append(f"only in {ESCALATION_ENUM_CLASS}: {', '.join(sorted(enum - doc))}")
+    if problems:
+        return [
+            Finding(
+                "I",
+                "fail",
+                f"escalation causes drifted from {ESCALATION_ENUM_CLASS} in blizzard {ESCALATION_ENUM_PY}: " + "; ".join(problems),
+                ESCALATION_DOC,
+                line,
+                f"Change the doc table and {ESCALATION_ENUM_CLASS} together so they list the same causes.",
+            )
+        ]
+    return [Finding("I", "pass", f"{ESCALATION_ENUM_CLASS} matches its doc table ({len(doc)} causes)")]
+
+
+# --------------------------------------------------------------------------
 # Interpreter / collection
 # --------------------------------------------------------------------------
 
@@ -1905,7 +2033,7 @@ def _collect_playwright(blizzard_root: Path) -> dict[str, set[str]] | None:
 # checks against, so a check dropped by a missing checkout, interpreter, or
 # registry input (rather than run and passing) is caught explicitly instead
 # of inferred from warn text.
-ALL_CHECKS = ("A", "B1", "B2", "C2", "D", "D2", "E", "F", "G", "H")
+ALL_CHECKS = ("A", "B1", "B2", "C2", "D", "D2", "E", "F", "G", "H", "I")
 
 # Check F's swept markdown inside each sibling checkout. This dict instantiates
 # `bzh:one-prose-home` §Scope's Binds list, one glob per bound tree that can hold
@@ -2134,6 +2262,8 @@ def run(repo_root: Path, blizzard_root: Path, blizzard_mock_root: Path, gate: bo
     if "blizzard" in checkouts:
         findings += check_H(repo_root, checkouts)
         executed.add("H")
+        findings += check_I(repo_root, checkouts)
+        executed.add("I")
 
     fail_count = sum(1 for f in findings if f.status == "fail")
     skipped = set(ALL_CHECKS) - executed

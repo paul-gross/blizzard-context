@@ -498,6 +498,15 @@ class RunRegistryInputAndGateTests(unittest.TestCase):
         _, exit_code = drift.run(self.repo_root, self.missing_blizzard, self.blizzard_mock, gate=True)
         self.assertEqual(exit_code, 1)
 
+    def test_an_absent_blizzard_checkout_skips_check_i_and_gates_nonzero(self):
+        _write_escalation_fixture(self.repo_root, Path(self.tmp.name) / "unused-blizzard")
+        findings, exit_code = drift.run(self.repo_root, self.missing_blizzard, self.blizzard_mock, gate=True)
+        self.assertEqual(exit_code, 1)
+        self.assertEqual([f for f in findings if f.check == "I"], [])
+        skipped = [f for f in findings if f.check == "skipped"]
+        self.assertEqual(len(skipped), 1)
+        self.assertIn("I", skipped[0].message.split(": ")[1].split(", "))
+
     def test_plain_run_stays_exit_0_with_the_same_skipped_check(self):
         _, exit_code = drift.run(self.repo_root, self.missing_blizzard, self.blizzard_mock, gate=False)
         self.assertEqual(exit_code, 0)
@@ -533,6 +542,8 @@ class RunEffectivenessGateTests(unittest.TestCase):
         (self.blizzard / "tests").mkdir(parents=True)
         # Check H's inputs: the layer tables and the gate data they mirror.
         _write_layer_fixture(self.repo_root, self.blizzard)
+        # Check I's inputs: the escalation-cause table and the enum it mirrors.
+        _write_escalation_fixture(self.repo_root, self.blizzard)
         _write(self.blizzard / "mise.toml", '[tasks.gate]\nrun = "./scripts/ci-gate.sh"\n\n[tools]\nvale = "3.22.0"\n')
         _write(self.blizzard / "web" / "package.json", '{"scripts": {}}')
         # Check G's inputs: the shared rule, byte-identical, plus an agreeing vale pin —
@@ -1364,6 +1375,131 @@ class CheckHTests(unittest.TestCase):
         fails = [f for f in self._run() if f.status == "fail"]
         self.assertEqual(len(fails), 3)
         self.assertTrue(all("no layer table" in f.message for f in fails))
+
+
+ESCALATION_DOC = """# Escalation
+
+## Why it escalated
+
+Every escalation records its cause:
+
+| Origin                  | Cause         |
+| ----------------------- | ------------- |
+| retries ran out         | `retries`     |
+| the spend cap is hit    | `spend-cap`   |
+
+A missing cause means the cause was not recorded.
+
+## Next
+
+| Origin | Cause     |
+| ------ | --------- |
+| later  | `ignored` |
+"""
+
+ESCALATION_ENUM = """from enum import StrEnum
+
+
+class EscalationCause(StrEnum):
+    RETRIES = "retries"
+    SPEND_CAP = "spend-cap"
+
+    def describe(self) -> str:
+        return self.value
+"""
+
+
+def _write_escalation_fixture(context: Path, blizzard: Path) -> None:
+    _write(context / "domain" / "humans" / "escalation.md", ESCALATION_DOC)
+    _write(blizzard / "src" / "blizzard" / "foundation" / "escalation_causes.py", ESCALATION_ENUM)
+
+
+class CheckITests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.context = Path(self.tmp.name) / "blizzard-context"
+        self.blizzard = Path(self.tmp.name) / "blizzard"
+        _write_escalation_fixture(self.context, self.blizzard)
+        self.doc = self.context / "domain" / "humans" / "escalation.md"
+        self.enum = self.blizzard / "src" / "blizzard" / "foundation" / "escalation_causes.py"
+
+    def _run(self):
+        return drift.check_I(self.context, {"blizzard": self.blizzard})
+
+    def _only_fail(self):
+        findings = self._run()
+        self.assertEqual(_shape(findings), [("I", "fail")])
+        return findings[0]
+
+    def test_equal_sets_pass_with_the_count(self):
+        findings = self._run()
+        self.assertEqual(_shape(findings), [("I", "pass")])
+        self.assertIn("(2 causes)", findings[0].message)
+
+    def test_a_cause_added_to_the_enum_fails(self):
+        _write(self.enum, ESCALATION_ENUM.replace('    SPEND_CAP', '    EXTRA = "extra"\n    SPEND_CAP'))
+        fail = self._only_fail()
+        self.assertIn("only in EscalationCause: extra", fail.message)
+        self.assertEqual((fail.file, fail.line), ("domain/humans/escalation.md", 7))
+
+    def test_a_cause_removed_from_the_enum_fails(self):
+        _write(self.enum, ESCALATION_ENUM.replace('    SPEND_CAP = "spend-cap"\n', ""))
+        self.assertIn("only in the doc table: spend-cap", self._only_fail().message)
+
+    def test_a_cause_added_to_the_doc_fails(self):
+        _write(self.doc, ESCALATION_DOC.replace("| `spend-cap`   |\n", "| `spend-cap`   |\n| new | `extra` |\n", 1))
+        self.assertIn("only in the doc table: extra", self._only_fail().message)
+
+    def test_a_cause_removed_from_the_doc_fails(self):
+        _write(self.doc, ESCALATION_DOC.replace("| the spend cap is hit    | `spend-cap`   |\n", ""))
+        self.assertIn("only in EscalationCause: spend-cap", self._only_fail().message)
+
+    def test_a_missing_doc_fails(self):
+        self.doc.unlink()
+        self.assertIn("escalation doc not found", self._only_fail().message)
+
+    def test_a_missing_section_fails(self):
+        _write(self.doc, ESCALATION_DOC.replace("## Why it escalated", "## Why"))
+        self.assertIn("no `## Why it escalated` section", self._only_fail().message)
+
+    def test_a_section_without_a_table_fails(self):
+        _write(self.doc, "## Why it escalated\n\nProse only.\n\n## Next\n\n| Cause |\n| - |\n| `x` |\n")
+        self.assertIn("no table", self._only_fail().message)
+
+    def test_a_table_without_a_cause_column_fails(self):
+        _write(self.doc, ESCALATION_DOC.replace("| Cause         |", "| Reason        |", 1))
+        self.assertIn("no Cause column", self._only_fail().message)
+
+    def test_a_cell_not_exactly_one_backticked_value_fails(self):
+        for cell in ("spend-cap  ", "`a` `b`    ", "`a`, more  "):
+            with self.subTest(cell=cell):
+                _write(self.doc, ESCALATION_DOC.replace("`spend-cap`  ", cell, 1))
+                self.assertIn("not exactly one backticked value", self._only_fail().message)
+
+    def test_an_empty_table_fails(self):
+        _write(self.doc, "## Why it escalated\n\n| Origin | Cause |\n| - | - |\n")
+        self.assertIn("lists no causes", self._only_fail().message)
+
+    def test_a_missing_enum_file_fails(self):
+        self.enum.unlink()
+        self.assertIn("file not found", self._only_fail().message)
+
+    def test_an_unparsable_enum_file_fails(self):
+        _write(self.enum, "class EscalationCause(:\n")
+        self.assertIn("unparsable", self._only_fail().message)
+
+    def test_a_missing_class_fails(self):
+        _write(self.enum, ESCALATION_ENUM.replace("class EscalationCause", "class Other"))
+        self.assertIn("no class EscalationCause", self._only_fail().message)
+
+    def test_a_non_literal_member_fails(self):
+        _write(self.enum, ESCALATION_ENUM.replace('"spend-cap"', '"spend" + "-cap"'))
+        self.assertIn("SPEND_CAP of EscalationCause is not a string literal", self._only_fail().message)
+
+    def test_an_empty_class_fails(self):
+        _write(self.enum, "class EscalationCause:\n    pass\n")
+        self.assertIn("has no members", self._only_fail().message)
 
 
 class CheckGTests(unittest.TestCase):

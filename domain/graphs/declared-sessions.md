@@ -26,7 +26,7 @@ The model preference is an ordered list of opaque strings — namespaced capabil
 substitutes downward — so the list is the only fallback and every degradation is author-written. The graph states a
 preference, never a model the fleet must have: tier-to-model mapping is runner configuration, keeping a graph
 harness-agnostic (`bzh:app-agnostic-graphs` in
-[../../architecture/system-shape.md](../../architecture/system-shape.md)).
+[../../architecture/system-shape/graphs.md](../../architecture/system-shape/graphs.md)).
 
 Model resolution is left-to-right; an unresolvable entry is skipped. With a harness set in effect — authored, or
 inherited as [Harness set](#harness-set) states — a wholly unresolvable native-name-only list can fall back to the
