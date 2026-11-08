@@ -106,7 +106,9 @@ runner claiming it already knows the one workspace its work will happen in; the 
   unaffected. The hub checks again against what the host last described: it offers no work through a binding whose
   workspace the host has not described, and none at all to a runner whose subscription is outside the host's roster. The
   hub flags such a binding rather than refusing it — the runner keeps registering — and flags nothing while the host has
-  never described itself.
+  never described itself. A claim is judged the same way, against the host as it stands at the claim: one made through a
+  flagged binding, under a subscription outside the roster, or through a workspace other than the one the runner binds
+  the chunk's project to is refused, while a route already held keeps the workspace it was claimed with.
 
 ## Subscriptions
 
