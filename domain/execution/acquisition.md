@@ -29,10 +29,13 @@ or has since been retired is refused as such, never on the chunk. Then it is ref
 chunk has ended (`stopped` or `done`), its route is held, it is not `ready`
 ([../work/statuses.md](../work/statuses.md)), or a prerequisite is unmet — of any project, since a chunk may wait on
 another project's chunk ([../projects.md](../projects.md)); then when the runner does not serve the chunk's project —
-the claim rechecks what the peek offered, and the refusal names the project; and last when the runner's capabilities do
-not fit the chunk. A runner reporting no capabilities fits no chunk: it is eligible for nothing, so the matched peek
-hands it no entry and a claim by it is refused, the same answer at both places. Rekeying a route token is refused once
-the chunk has ended, as a claim on it is.
+the claim rechecks what the peek offered, and the refusal names the project; then when the runner serves the project but
+not through the workspace it claims with — that binding is flagged against the host's latest report, is another
+workspace's, or the runner's subscription is outside its host's roster — the claim judges this against the host as it
+stands now, not as the peek saw it, and the refusal names the workspace; and last when the runner's capabilities do not
+fit the chunk. A runner reporting no capabilities fits no chunk: it is eligible for nothing, so the matched peek hands
+it no entry and a claim by it is refused, the same answer at both places. Rekeying a route token is refused once the
+chunk has ended, as a claim on it is.
 
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 
