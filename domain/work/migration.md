@@ -116,8 +116,9 @@ Every landing resolves a node by name on the target graph (`bzh:ids-exact-names-
 executor then governs, exactly as for an ordinary transition ([../graphs/nodes.md](../graphs/nodes.md)), and status
 after landing keys on that executor, never the node's name — a delivery node is one hub-executed instance, not a special
 case. Landed off a transition-borne trigger, a hub-executed node derives `delivering` — the chunk stays in the hub's
-hands — while a runner node re-queues `ready`; how an eager restart's landing re-enters its node is
-[./restart.md](./restart.md)'s own.
+hands — while a runner node re-queues — `ready`, unless its landing opens a human wait, below; how an eager restart's
+landing re-enters its node is [./restart.md](./restart.md)'s own.
 
-A landing on a human-judged runner node opens that visit's decision and waits on the human; the decision is part of the
-landing write ([../humans/gates.md](../humans/gates.md)).
+A landing on a human-judged runner node opens that visit's decision and waits on the human, re-queued with no live claim
+and claimable again only once the decision resolves; the decision is part of the landing write
+([../humans/gates.md](../humans/gates.md)).
