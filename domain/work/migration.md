@@ -94,10 +94,16 @@ for, and falling through would defer it forever on exactly the graph that change
 Follow-latest only moves forward: it moves a chunk only to an enabled mint strictly newer than its pin, so a chunk on
 the newest mint, or with every newer mint retired, is left alone — no error, no fact. Retirement of the chunk's own mint
 stops nothing: with a newer enabled mint of the name the chunk drifts onto it, and when the newest enabled mint is older
-than the retired pin, the never-backwards rule is what leaves the chunk alone rather than rewinding it onto that mint.
-It never follows a transition to the terminal: a finished chunk has no next node-step to govern, and following would
-restart the workflow instead of completing it. A chunk carrying a standing intended migration is never moved by
-follow-latest — even when that auto intent fell through for want of a name match.
+than the retired pin, the never-backwards rule is what leaves the chunk alone rather than rewinding it onto that mint. A
+hub-executed node's ordinary exit is such a transition: success, failure, a refusal before its pass, a poll timeout, and
+a delivery bounce each consult the policy when they resolve to a nonterminal destination in the same graph, and a
+bounce's record rides on the migration. A wait or poll, an escalation — including a bounce crossing its cap, which
+escalates instead of drifting — an answer no edge routes, an authored target the graph lacks, and an authored
+cross-graph choice (which keeps its own anchor) are not follow-latest opportunities. A standing intent of any kind
+leaves the chunk parked at such an exit as at any other transition. It never follows a transition to the terminal: a
+finished chunk has no next node-step to govern, and following would restart the workflow instead of completing it. A
+chunk carrying a standing intended migration is never moved by follow-latest — even when that auto intent fell through
+for want of a name match.
 
 ### Eager restart
 
