@@ -46,10 +46,10 @@ append-only event, which the next attempt's failure re-emits.
 Every escalating close runs through one shared close in `Attempt` (`blizzard/src/blizzard/runner/lifecycle/attempt.py`),
 which composes the escalation before it closes. The escalation payload depends only on reads still valid before the
 close, so composing first lets one transaction carry the `ESCALATED` closure, its `event.recorded` row and its
-`escalation.recorded` fact, buffered event-then-escalation in the hub's existing FIFO order. Four sites reach that
+`escalation.recorded` fact, buffered event-then-escalation in the hub's existing FIFO order. Five sites reach that
 close: the retries-exhausted branch of `Attempt.fail`, `_escalate_owner_unresolvable`, `escalate_no_acceptable_harness`,
-and drain's spend-cap escalation. None of them can leave a closed `ESCALATED` lease with no escalation buffered, or an
-escalation buffered for a lease still open.
+`_escalate_harness_version_refused`, and drain's spend-cap escalation. None of them can leave a closed `ESCALATED` lease
+with no escalation buffered, or an escalation buffered for a lease still open.
 
 `Attempt.escalate_owner_unresolvable`'s own `owner-unresolvable` event rides that same shared close, so it inherits the
 same atomic guarantee and needs no entry of its own beyond this one. Two registry points cover the close's two windows.
@@ -57,7 +57,7 @@ same atomic guarantee and needs no entry of its own beyond this one. Two registr
 there leaves nothing durable, and the next tick's REAP or node entry reaches the same escalation again.
 `escalate.after-close.before-resume-clear` sits after the escalated closure commits and before the local resume intent
 is cleared (`record_resume_clear`); a crash there leaves the escalation already buffered and the lease already closed,
-so recovery only finishes the clear. The other three sites are covered structurally by the shared close, on the same
+so recovery only finishes the clear. The other four sites are covered structurally by the shared close, on the same
 precedent as `_CP_AFTER_MINT`'s reuse below.
 
 ## The preamble fingerprint
@@ -357,6 +357,18 @@ account otherwise: the same `_CP_AFTER_MINT` window, the same REAP recovery thro
 (a zero-budget lease with no session composes no takeover, same as any other never-spawned lease), and the same
 `open_escalation_for_chunk` guard ahead of the mint, so a chunk already escalated this way cannot loop a second mint on
 top of the first.
+
+## The version-refused launch escalation
+
+`Spawner.launching` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) relaunches a launch the harness refused for a
+changed version once, and raises `LaunchVersionRefusedError` when the relaunch is refused too; each launch entry point
+then closes the lease through `Attempt.escalate_harness_version_refused`
+(`blizzard/src/blizzard/runner/lifecycle/attempt.py`), under the unspent `harness-version-refused` reason. No durable
+write sits between the refusal and that close — the refusal precedes the request write and the launch — and the close is
+the shared escalating close the `escalate.*` family already arms, so the window earns no crash point of its own. A
+`kill -9` in it leaves one of two states. A fresh spawn leaves the minted, never-spawned lease REAP's ordinary orphan
+sweep already recovers; that costs a retry, the only residue that does, and the relaunch after the reap is refused and
+escalates. A resume or judgement leaves its pending state unchanged, and the next tick drives it again and escalates.
 
 ## The answer-delivered mark
 

@@ -9,13 +9,14 @@ A runner escalates when a worker's retries are exhausted, when it dies without a
 spend cap is reached, or when an existing session's recorded harness owner is unknown or unavailable to it — no other
 runner can resume that exact session, so nothing substitutes a different harness for it. It also escalates when no
 acceptable harness can serve a mint: a fresh mint exhausts harness selection, or a retry's failed owner is outside the
-current acceptable set, so requeue refuses to switch owners. The hub itself escalates when a migrating choice's target
-graph fails to resolve, when a node's bounce cap is crossed, or when a worker takes a choice targeting the reserved
-`escalate` ([../graphs/edges.md](../graphs/edges.md) §Escalation choices), when a step is stuck, when a hub node names
-no action its hub knows, or when a node's outcome has no edge its graph authors. It also escalates when delivery's
-action is refused by its forge or landing: the repository's credential is rejected, its repository is unknown to that
-credential, the forge lacks a capability the landing needs, a parked change is closed or times out, branch protection
-refuses the branch operation, or the forge refuses the merge method.
+current acceptable set, so requeue refuses to switch owners. It also escalates when a changed harness version refuses a
+launch and its one relaunch, spending no retry, since no launch can succeed until the runner restarts. The hub itself
+escalates when a migrating choice's target graph fails to resolve, when a node's bounce cap is crossed, or when a worker
+takes a choice targeting the reserved `escalate` ([../graphs/edges.md](../graphs/edges.md) §Escalation choices), when a
+step is stuck, when a hub node names no action its hub knows, or when a node's outcome has no edge its graph authors. It
+also escalates when delivery's action is refused by its forge or landing: the repository's credential is rejected, its
+repository is unknown to that credential, the forge lacks a capability the landing needs, a parked change is closed or
+times out, branch protection refuses the branch operation, or the forge refuses the merge method.
 
 ## Why it escalated
 
@@ -26,6 +27,7 @@ Every escalation records its cause, from a closed vocabulary, and a one-line det
 | a worker's retries exhausted, or death without a verdict past the cap           | `retries-exhausted`             |
 | an existing session's recorded harness owner is unknown or unavailable          | `owner-unresolvable`            |
 | no acceptable harness can serve a mint                                          | `no-acceptable-harness`         |
+| a changed harness version refused a launch and its one relaunch                 | `harness-version-changed`       |
 | the chunk's spend cap is reached                                                | `spend-cap`                     |
 | a node's bounce cap is crossed (hub-authored)                                   | `bounce-cap`                    |
 | a migrating choice's target graph fails to resolve (hub-authored)               | `migration-target-unresolvable` |
@@ -74,6 +76,10 @@ session predating that record gets a bare command rather than a guessed one.
   whether it is unknown or merely unavailable ([../operations.md](../operations.md)).
 - **No acceptable harness can serve the mint** — the lease was never spawned and has no owner, so the escalation carries
   neither command; the accompanying `no-acceptable-harness` event records the selection or retry refusal
+  ([../operations.md](../operations.md)).
+- **A changed harness version refused the launch** — a refused fresh spawn has no session, so its escalation carries
+  neither command; a refused resume or judgement composes its session's takeover as any runner-composed escalation does.
+  The accompanying `harness-version-changed` event names the harness and the refusal
   ([../operations.md](../operations.md)).
 - **Bounce cap crossed** — the escalation carries neither command but never releases the runner's hold on the chunk, so
   any existing session carries over unchanged, and that prior state, not the escalation, decides whether takeover is

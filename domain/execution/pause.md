@@ -14,11 +14,12 @@ sets it. Effective paused is the OR of the two brakes, each cleared only where i
 The fleet's brake stops new claims and nothing else: a chunk already in flight runs to completion. The runner's own
 brake also starts no process at all — no next attempt, no judgement, no resume of a dormant session — so an in-flight
 chunk halts at its next step boundary, and neither a stalled worker's reap nor an exhausted attempt's escalation fires
-until it lifts. Two things still happen under it. A lease minted but never spawned is reaped: it is crash residue with
-no live work behind it. And an operator restart that fences out a worker is honored at once, unless a per-chunk pause
-holds the chunk ([Per-chunk pause](#per-chunk-pause)): the displaced worker, already at a stale epoch, is killed and its
-attempt closed, and only the re-entry into the moved node waits for the brake to lift — as does a restart-resume after
-downtime, which preempts a fenced-out session rather than waking it.
+until it lifts; nor does a refused launch's version escalation, since under that brake no launch is attempted to be
+refused. Two things still happen under it. A lease minted but never spawned is reaped: it is crash residue with no live
+work behind it. And an operator restart that fences out a worker is honored at once, unless a per-chunk pause holds the
+chunk ([Per-chunk pause](#per-chunk-pause)): the displaced worker, already at a stale epoch, is killed and its attempt
+closed, and only the re-entry into the moved node waits for the brake to lift — as does a restart-resume after downtime,
+which preempts a fenced-out session rather than waking it.
 
 The hub refuses a registry-paused runner's claim outright — a distinct `403` denial, not the `409` of a lost
 exactly-once claim race — enforced hub-side whether or not the runner has mirrored the flag.
