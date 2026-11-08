@@ -13,8 +13,9 @@ The UI spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md). Read
 `mise run ui` (`npx playwright test --project='ui*'`) builds the board through `web-build` and runs the Playwright
 package's `ui` projects: a real Chromium page against the board the test's hub serves out of
 `src/blizzard/static/{hub,runner}`. It depends on `web-build` because the projects drive the built bundle, never the
-sources (see [`../../pre-push.md`](../../pre-push.md#the-browser-tiers-run-the-built-bundle)). Chromium comes from
-`npx playwright install chromium` in `tests/`.
+sources (see
+[`../../pre-push.md`](../../pre-push.md#the-browser-tiers-run-the-built-bundle-bzhbrowser-tiers-run-the-built-bundle)).
+Chromium comes from `npx playwright install chromium` in `tests/`.
 
 The projects are generated beside the service projects. `ui` rides the default hub profile's shared hub, and a
 `ui-<profile>` project exists for each `tests/ui/` subfolder named after a hub profile, riding that profile's hub with

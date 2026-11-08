@@ -118,9 +118,6 @@ next free port without a word. No seed is needed, since a story carries its own 
 **Passes when.** Every changed state renders as intended at every width it is claimed at, every control drives the part
 without breaking it, and the console stays clean.
 
-**The workshop while building.** The method is also how frontend work is done. An agent build that changes anything a
-person sees on the board or the panel opens the workshop before it writes a part. It looks first for a part that already
-does what it needs, and reuses it before inventing another. It shapes its change against the part's stories as it
-builds, and before it calls the work done, it performs this method over every part it touched. A change that adds or
-reshapes a part brings that part's stories in the same change (`bzh:frontend-kit-stories`), so the next build finds
-them.
+A frontend build also works here as it goes: `bzh:frontend-workshop-first` in
+[`../../architecture/frontend-structure/kit.md`](../../architecture/frontend-structure/kit.md) owns when a build opens
+the workshop and performs this method before the work is called done.

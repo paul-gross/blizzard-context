@@ -22,19 +22,41 @@ Playwright Test spec (`bzh:service-tests-in-playwright`). The mocks the upper ti
 Each pytest tier is a folder: `unit/` and `guards/` give the unit tier, `component/` the component tier
 (`bzh:mirrored-test-layout`). Service, UI and winter-binding tests sit where their own rules place them.
 
-## Hermetic by construction
+## Hermetic by construction (`bzh:hermetic-by-construction`)
 
-Service and UI tests never spend a real token and never touch the network: the harness seam binds a mock coding harness,
-the work-source seam binds the mock GitHub forge, delivery's `land` action reaches the mock forge through the per-entry
-`forge_url` a repository record fills rather than through a seam, and the workspace seam binds mocks or local fixtures.
+**Rule.** A service or UI test never spends a real token and never touches the network: every seam a daemon under test
+reaches binds a mock or a local fixture, and a test's edge cases come from a mock's levers, never from contriving the
+real daemon or the real external tool into a rare state.
 
-The Python test tiers run against SQLite. The focused `blizzard:postgres-uow-concurrency` command is an exception: it
-checks hub unit-of-work lock ordering on Postgres, not a second general test matrix. Other Postgres behavior still rests
-on the portable SQL surface (`bzh:sql-portable`) and the named gaps.
+**Why.** A mock's lever makes a rare state reproducible on demand and free of charge, where a real tool reaches it by
+chance and bills for the attempt; a test that reaches a real vendor or forge also fails with that service's weather
+rather than with the change under test.
 
-In Python tiers, stand test data up through the mock-data CLI and its fixtures (`tool:mock-data`), never through ad-hoc
-SQL. Playwright service specs create data through the hub's public surfaces, never by seeding the store. The harness
-restoring a template its own CLIs built is not a spec seeding the store.
+**Scope.** Which seams bind what:
+
+- The harness seam binds a mock coding harness, the work-source seam binds the mock GitHub forge, delivery's `land`
+  action reaches the mock forge through the per-entry `forge_url` a repository record fills rather than through a seam,
+  and the workspace seam binds mocks or local fixtures.
+- A service spec lands in the `tests/service/` folder its subject names; [service-tests.md](./service-tests.md) owns
+  each folder's project, fixtures and profiles. `hub/` and `runner/` are one-sided: the daemon under test drives its
+  mock counterpart — a runner spec against the test's own mock hub, a hub spec against the mock runner. `fleet/` is
+  two-sided: a real runner host enrolled in the test's own tenant on a real hub, its harness and work-source seams bound
+  to the mock coding harness and the mock forge.
+- A diagnostic driving a real external tool runs against the mock fleet's own CLI-surface artifact instead.
+- The Python test tiers run against SQLite. The focused `blizzard:postgres-uow-concurrency` command is an exception: it
+  checks hub unit-of-work lock ordering on Postgres, not a second general test matrix. Other Postgres behavior still
+  rests on the portable SQL surface (`bzh:sql-portable`) and the named gaps.
+- Test data: in Python tiers, stand it up through the mock-data CLI and its fixtures (`tool:mock-data`), never through
+  ad-hoc SQL; a Playwright service spec creates it through the hub's public surfaces (`bzh:service-public-surfaces`),
+  never by seeding the store. The harness restoring a template its own CLIs built is not a spec seeding the store.
+
+**Detect.** Review a service or UI test or fixture that reaches a non-loopback host or carries a real vendor or forge
+credential, a case that reaches a rare state through the real daemon or the real external tool where a mock's lever
+exists, and raw SQL standing data up in a Python tier.
+
+**Do.** Arm the mock forge's `merge_conflict` lever on the test's own repository to drive a delivery bounce.
+
+**Don't.** Push a conflicting commit to a real repository, or run the real `claude` binary, to produce the same bounce.
 
 ## The tenant statement guard is on in every tier
 
@@ -182,21 +204,6 @@ without one failing or bursting tenant and fails when any other tenant's calls d
 The scenario's route table names every live tenant route beside the probe that proves its isolation, and
 `test_the_table_names_every_live_tenant_route_and_nothing_else` checks the table against the live app both ways, so a
 change adding a tenant route fails the tier until it adds the route's row and probe.
-
-## Service tests: one daemon, or the fleet
-
-A service spec lands in the `tests/service/` folder its subject names; [service-tests.md](./service-tests.md) owns each
-folder's project, fixtures and profiles.
-
-- `hub/` and `runner/` are one-sided: the daemon under test drives its mock counterpart — a runner spec against the
-  test's own mock hub, a hub spec against the mock runner.
-- `fleet/` is two-sided: a real runner host enrolled in the test's own tenant on a real hub, its harness and work-source
-  seams bound to the mock coding harness and the mock forge. A scenario that needs hub and runner together — an issue
-  ingested, its chunk run and landed — is a fleet spec.
-
-A diagnostic driving a real external tool runs against the mock fleet's own CLI-surface artifact instead. Either way, a
-test's edge cases come from driving a mock's levers, never from contriving the real daemon or the real external tool
-into a rare state.
 
 ## New black-box tests use Playwright (`bzh:service-tests-in-playwright`)
 
