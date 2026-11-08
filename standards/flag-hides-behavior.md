@@ -6,7 +6,7 @@ Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-r
 
 A feature flag changes what the software does with a surface, never whether the surface exists: surface a release
 carries is held to `docs/versioning.md` whether or not its flag is on, and each surface kind answers an off flag the one
-way the table below gives.
+way [Off behavior by surface](#off-behavior-by-surface) gives, through a seam [Guard seams](#guard-seams) names.
 
 ## Why
 
@@ -14,16 +14,9 @@ Every compatibility check compares the surface a release carries and reads no fl
 off could be reshaped after it had shipped, and an operator holding a client written against the off route would find it
 broken the morning the flag turned on.
 
-## Detect
+## Off behavior by surface
 
-A flag-guarded surface that is missing while its flag is off: a route that is unregistered or absent from the OpenAPI
-document, a field or key that is undeclared, a CLI verb or option that is absent from `--help`. Also a migration
-conditional on a flag, and a flag read hand-rolled inside a controller instead of through a seam below.
-`tests/unit/test_flag_registry.py` ties every guard in source to the registry file.
-
-## Do
-
-Each surface while its flag is off.
+Each surface while its flag is off:
 
 | Surface                       | While the flag is off                                                                                                                             |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -37,6 +30,8 @@ Each surface while its flag is off.
 | Fact kind, event type         | Declared when it lands; written only while on, and read by any reader whatever its own flag                                                       |
 | Board screen or control       | Absent; the board is behavior, not surface                                                                                                        |
 
+## Guard seams
+
 The seams that do it, so a change declares a guard and never writes one:
 
 - **Route** — `flag_guard("name")` in `blizzard/src/blizzard/hub/api/flag_guard.py` or
@@ -48,6 +43,23 @@ The seams that do it, so a change declares a guard and never writes one:
   `runner_flag_command` / `runner_flag_option` in `blizzard/src/blizzard/runner/cli/flag_gate.py`.
 - **Configuration key** — `flag="name"` on the key's `ConfigKey` declaration; a hub key takes a `hub` or `fleet` flag, a
   host key a `runner` flag.
+
+## Detect
+
+A flag-guarded surface that is missing while its flag is off: a route that is unregistered or absent from the OpenAPI
+document, a field or key that is undeclared, a CLI verb or option that is absent from `--help`. Also a migration
+conditional on a flag, and a flag read hand-rolled inside a controller instead of through one of the
+[guard seams](#guard-seams). `tests/unit/test_flag_registry.py` ties every guard in source to the registry file.
+
+## Do
+
+```python
+@router.get("/chunks/{chunk}/forecast", **flag_guard("forecast"))
+def forecast(request: Request) -> Forecast: ...
+```
+
+The route is registered and in the OpenAPI document whether or not `forecast` is on; the guard adds the dependency that
+refuses while it is off and the `404` entry the route's `responses` list.
 
 ## Don't
 

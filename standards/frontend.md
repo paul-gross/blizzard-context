@@ -63,7 +63,9 @@ const { data, error } = await healthApiHealthGet({ throwOnError: false });
 ## Formatters have one owner (`bzh:frontend-formatters`)
 
 **Rule.** A component never re-derives its own absolute or relative time string, ticking-clock signal, id-shortening
-scheme, or status-to-color ladder; each resolves through its single owner in fleet.
+scheme, or status-to-color ladder; each resolves through its single owner in fleet. A display reads the clock from one
+of two sources, `injectNowSignal` for a self-advancing display and `FLEET_CLOCK` for a one-shot reading, and every time
+helper takes `now` from one of them; none defaults it.
 
 **Why.** A display concern with more than one implementation — a second time formatter, id-shortening style, or
 status-color table — turns one formatting fix into an edit spanning every file with its own copy.
@@ -82,7 +84,7 @@ ladder.
 - **Self-advancing display** — `injectNowSignal` (`fleet/lib/core/now-signal/`) owns any display that must advance on
   its own rather than only when fresh data arrives.
 - **Single clock reading** — `FLEET_CLOCK` (`fleet/lib/core/now-signal/`) owns a one-shot reading — an event stamp, a
-  query window cut once. Every time helper takes `now` from `injectNowSignal` or `FLEET_CLOCK`; none defaults it.
+  query window cut once.
 - **Id shortening** — `compactRef` (`fleet/lib/core/compact-ref.ts`) owns every id shortening; a raw `id.slice(0, N)` is
   a violation.
 - **Status to color** — the shared Tone vocabulary (`fleet/lib/kit/tone.ts`), reached through

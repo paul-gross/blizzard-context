@@ -49,7 +49,8 @@
         "file": "architecture/crash-correctness.md",
         "level": 2,
         "exclude": [
-          "See also"
+          "See also",
+          "A durable write the sweep does not arm records its exemption"
         ]
       },
       "sites": [

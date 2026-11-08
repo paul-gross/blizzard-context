@@ -13,20 +13,12 @@ takes the name stated here. [Known debt](#known-debt) lists the code these rules
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
-**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable. A project
-has no retire or enable: its source and repository links have their own lifecycle. Give editable records a sparse-merge
-edit, and each record a `revision` that every committed write increments and one `config_changes` row appended in the
-same transaction as each write. A sparse merge leaves an absent field unchanged, sets a present field, and takes an
-explicit `null` as clearing a nullable field, refusing it on any other. A retire of a retired record, or an enable of an
-enabled one, writes nothing; an edit of a retired record is legal and leaves it retired.
-
-Implement configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord` requires
-only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names the
-link-specific capabilities. Reuse the applicable revision, transition, ordered field comparison, change-row, slug-left
-and label-merge mechanics in `blizzard/src/blizzard/hub/domain/config/lifecycle.py`, which uses `ConfigChange.of` in
-`blizzard/src/blizzard/hub/domain/config/changes.py`. Kinds own validation, projection, identity and construction.
-Projects use the base capability without retirement; links use linked polarity and project attribution, and position
-facts are not link revisions. Secrets' encryption and revision exception is outside these helpers.
+**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable; the kinds
+listed below depart from it only as stated there. Give editable records a sparse-merge edit, and each record a
+`revision` that every committed write increments and one `config_changes` row appended in the same transaction as each
+write. A sparse merge leaves an absent field unchanged, sets a present field, and takes an explicit `null` as clearing a
+nullable field, refusing it on any other. A retire of a retired record, or an enable of an enabled one, writes nothing;
+an edit of a retired record is legal and leaves it retired. Enable reverses a retirement.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
@@ -37,54 +29,57 @@ facts are not link revisions. Secrets' encryption and revision exception is outs
 | retire | `POST /api/<kind>/{key}/retire` |
 | enable | `POST /api/<kind>/{key}/enable` |
 
-Enable reverses a retirement. Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its
-edit; projects and links use the verbs described in Scope.
+Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its edit. The kinds that depart
+from the six, and the surface each carries:
 
-A record that other records reference and an operator renames — a project, a repository, a forge — carries three names,
-each with one job: a hub-minted, immutable `<prefix>_<ulid>` id that every stored reference holds, a **slug** unique
-within its tenant that is the handle people type, and a free display **name** that nothing resolves. A route's `{key}`
-for such a record is its id or its slug, resolved once at the edge to the record by the shared id-or-slug resolution
-(`blizzard/src/blizzard/hub/domain/kernel/id_or_slug.py`) — an id never as a slug, a current slug before a former one —
-and nothing past the edge holds a slug. A slug the record leaves keeps resolving to it until another record claims it,
-by one former-slug claim and release shared across kinds (`blizzard/src/blizzard/hub/store/internal/former_slugs.py`).
-The record's change rows are keyed by its id and report its current slug as a label. The slug grammar is one for every
-such kind: 1 to 64 lowercase letters, digits and single inner hyphens. A kind's own reserved slugs stay that kind's
-refusal.
+- **A project** takes create, list, show, and edit but no retire or enable: a project, once created, stays
+  ([../../domain/projects.md](../../domain/projects.md)). Its links to sources and repositories carry the lifecycle in
+  its place, each its own revisioned record whose change rows reuse the verbs — `create` for a link, `retire` for an
+  unlink, `enable` for a relink — each beside its link fact.
+- **A project's link** is named into being by `PUT /api/projects/{project}/source-links/{source}` (or
+  `repository-links/{repository}`), which links or relinks and leaves a standing link as it is, and unlinked by that
+  path's `POST …/retire`; on the CLI, `blizzard hub project link` and `unlink`.
+- **A project's landing order** is written on its repository links, never on the repository:
+  `PUT /api/projects/{project}/landing-order` sets the whole order and
+  `POST /api/projects/{project}/landing-order/position` moves one repository — on the CLI, `blizzard hub project order`
+  and `position` — each appending a position fact only for a link whose position changes, and refusing a repository the
+  project does not link with `422 repository_not_linked`.
+- **A repository** carries its landing policy as two fields: `landing_policy`, required and never null, which a request
+  takes from the closed policy set and a response reports as an open string, and `park_timeout_hours`, the one
+  repository field an explicit `null` clears. A repository write whose policy needs a capability its forge does not
+  offer is refused `forge_capability_missing` on `landing_policy`, naming each missing capability, the policy, and the
+  forge — on create, on a policy or forge edit, and on every repository write a document apply plans.
+- **A record a project owns** — a scope, a routine, or a kind added beside them — is created in the project the call
+  names — `--project` on the CLI, by id or slug — and a call naming none falls back or is refused as
+  [../../domain/projects.md](../../domain/projects.md) §A call that needs a project states, the refusal
+  `422 project_required` listing the tenant's projects; its list, and the change log, take `?project=` to narrow to one
+  project and read the whole tenant without it. A change row of a project, a project's link, or a record a project owns
+  names that record's project, since its key means something only inside its project; one of a tenant-wide record — a
+  forge, a work source, a repository, a secret — names none.
+- **A graph** is an immutable mint, so its definition takes no patch — an edit is a new mint — and only its mutable
+  flags take the sparse `PATCH`, beside its retire and enable, each of which appends a fact even when it repeats the
+  standing value ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)).
+- **A work item** is work, not configuration: its patch carries the sparse-merge meaning, and it takes no revision, no
+  change row, and keeps its `DELETE`.
+- **A secret** takes replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on the
+  CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision and
+  appends its change row.
+
+Implement configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord` requires
+only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names the
+link-specific capabilities. Reuse the applicable revision, transition, ordered field comparison, change-row, slug-left
+and label-merge mechanics in `blizzard/src/blizzard/hub/domain/config/lifecycle.py`, which uses `ConfigChange.of` in
+`blizzard/src/blizzard/hub/domain/config/changes.py`. Kinds own validation, projection, identity and construction.
+Projects use the base capability without retirement; links use linked polarity and project attribution, and position
+facts are not link revisions. Secrets' encryption and revision exception is outside these helpers.
 
 **Why.** Sparse merge is the only patch meaning under which two writers editing different fields do not overwrite each
 other, and the only one a declarative apply's per-field difference maps onto without restating the record. One verb set
 and one change log across kinds mean every door — API, CLI, board, document — changes a record the same way and leaves
 the same trace.
 
-**Scope.** Binds the kinds named above and any kind added beside them. A project, a repository, a work source, and a
-forge take the three names above; a secret is keyed by its name. A project takes create, list, show, and edit but no
-retire or enable: a project, once created, stays ([../../domain/projects.md](../../domain/projects.md)). Its links to
-sources and repositories carry the lifecycle in its place, each its own revisioned record whose change rows reuse the
-verbs — `create` for a link, `retire` for an unlink, `enable` for a relink — each beside its link fact. A link is named
-into being by `PUT /api/projects/{project}/source-links/{source}` (or `repository-links/{repository}`), which links or
-relinks and leaves a standing link as it is, and unlinked by that path's `POST …/retire`; on the CLI,
-`blizzard hub project link` and `unlink`. A project's landing order is written on its repository links, never on the
-repository: `PUT /api/projects/{project}/landing-order` sets the whole order and
-`POST /api/projects/{project}/landing-order/position` moves one repository — on the CLI, `blizzard hub project order`
-and `position` — each appending a position fact only for a link whose position changes, and refusing a repository the
-project does not link with `422 repository_not_linked`. A repository carries its landing policy as two fields:
-`landing_policy`, required and never null, which a request takes from the closed policy set and a response reports as an
-open string, and `park_timeout_hours`, the one repository field an explicit `null` clears. A repository write whose
-policy needs a capability its forge does not offer is refused `forge_capability_missing` on `landing_policy`, naming
-each missing capability, the policy, and the forge — on create, on a policy or forge edit, and on every repository write
-a document apply plans. A record a project owns is created in the project the call names — `--project` on the CLI, by id
-or slug — and a call naming none falls back or is refused as [../../domain/projects.md](../../domain/projects.md) §A
-call that needs a project states, the refusal `422 project_required` listing the tenant's projects; its list, and the
-change log, take `?project=` to narrow to one project and read the whole tenant without it. A change row of a project, a
-project's link, or a record of any kind a project owns — a scope, a routine, or a kind added beside them — names that
-record's project, since its key means something only inside its project; one of a tenant-wide record — a forge, a work
-source, a repository, a secret — names none. A graph is an immutable mint, so its definition takes no patch — an edit is
-a new mint — and only its mutable flags take the sparse `PATCH`, beside its retire and enable, each of which appends a
-fact even when it repeats the standing value ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)). A
-work item is work, not configuration: its patch carries the sparse-merge meaning, and it takes no revision, no change
-row, and keeps its `DELETE`. A secret takes replace in place of edit: its value is replaced whole by
-`PUT /api/secrets/{name}/value` — on the CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the
-replace still increments the revision and appends its change row.
+**Scope.** Binds the kinds named above and any kind added beside them; a secret is keyed by its name. How a record that
+other records reference is identified and resolved is `bzh:configured-record-names` below.
 
 **Detect.**
 
@@ -102,11 +97,6 @@ replace still increments the revision and appends its change row.
 - A list of a kind a project owns, or the change log, that does not take `?project=` to narrow to one project or does
   not read the whole tenant without it.
 - A patch handler that cannot tell an omitted field from an explicit `null`.
-- A record that others reference and that is renamed, keyed in a reference, a change row or a route by its slug or its
-  display name instead of its id; or a route's `{key}` that resolves an id and a slug by separate code instead of the
-  shared id-or-slug resolution.
-- A slug a record leaves that stops resolving while no other record holds it, or one that keeps resolving after another
-  record claims it.
 
 **Do.** `WorkItemPatchRequest` (`blizzard/src/blizzard/wire/work_source.py`) is the reference for telling an omitted
 field from an explicit `null`: every field optional, `extra="forbid"`, and its nullable `stated_priority` told apart
@@ -126,9 +116,43 @@ project-attributed history are distinct from repository position facts.
 **Don't.** An edit request that requires every field and a restated `name` under `PATCH` — two operators changing
 different fields of one record silently revert each other.
 
-**See also.** `bzh:fleet-wire-additive` ([./fleet-wire.md](./fleet-wire.md)) governs a configured route a runner
-reaches; `bzh:controller-read-only` ([../repository-access.md](../repository-access.md)) keeps the write behind a domain
-service.
+**See also.** `bzh:configured-record-names` below owns the id, slug and display name of a record other records
+reference; `bzh:fleet-wire-additive` ([./fleet-wire.md](./fleet-wire.md)) governs a configured route a runner reaches;
+`bzh:controller-read-only` ([../repository-access.md](../repository-access.md)) keeps the write behind a domain service.
+
+## A record other records reference carries three names (`bzh:configured-record-names`)
+
+**Rule.** A record that other records reference and an operator renames carries three names, each with one job: a
+hub-minted, immutable `<prefix>_<ulid>` id that every stored reference holds, a **slug** unique within its tenant that
+is the handle people type, and a free display **name** that nothing resolves. A route's `{key}` for such a record is its
+id or its slug, resolved once at the edge to the record by the shared id-or-slug resolution
+(`blizzard/src/blizzard/hub/domain/kernel/id_or_slug.py`) — an id never as a slug, a current slug before a former one —
+and nothing past the edge holds a slug. A slug the record leaves keeps resolving to it until another record claims it,
+by one former-slug claim and release shared across kinds (`blizzard/src/blizzard/hub/store/internal/former_slugs.py`).
+The record's change rows are keyed by its id and report its current slug as a label. The slug grammar is one for every
+such kind: 1 to 64 lowercase letters, digits and single inner hyphens.
+
+**Why.** A reference that held a slug would break on the next rename, and a slug resolved past the edge would resolve
+differently at each door; one immutable id for references and one resolution for handles keep a rename a label change.
+
+**Scope.** A project, a repository, a work source, and a forge take the three names; a secret is keyed by its name. A
+kind's own reserved slugs stay that kind's refusal.
+
+**Detect.**
+
+- A record that others reference and that is renamed, keyed in a reference, a change row or a route by its slug or its
+  display name instead of its id; or a route's `{key}` that resolves an id and a slug by separate code instead of the
+  shared id-or-slug resolution.
+- A slug a record leaves that stops resolving while no other record holds it, or one that keeps resolving after another
+  record claims it.
+
+**Do.** A route handler resolves `{key}` once through the shared id-or-slug resolution and hands the service the record;
+the change row the write appends is keyed by the record's id and labeled with its current slug.
+
+**Don't.** A `config_changes` row keyed by a project's slug — the row loses its subject on the next rename.
+
+**See also.** [../../domain/projects.md](../../domain/projects.md) §Former slugs — what a person sees when a slug is
+reused or refused.
 
 ## Every ingested document decodes through the codec seam (`bzh:config-codec`)
 
@@ -173,11 +197,11 @@ request resolved, in that tenant's one transaction; a document never reaches a s
 another write — seeding a tenant at its creation — either joins `TenantAdministration.create`'s unit of work through
 `ScopedConnections.founding` (`blizzard/src/blizzard/hub/store/scoped.py`), as
 [../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant creation, one identity unit of work describes, or
-names the window between its commits in that file, owing what [../crash-correctness.md](../crash-correctness.md)
-§Recorded exemptions — durable state the sweep does not arm sets for an entry on that ground. A document's `projects`
-section reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind added beside them — may
-name a project the same document declares. The apply itself resolves no project: the package that owns projects plans
-the section and the project each entry acts in, and hands both to it planned
+names the window between its commits in that file, owing what `bzh:recorded-crash-exemption`
+([../crash-correctness.md](../crash-correctness.md)) sets for an entry on that ground. A document's `projects` section
+reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind added beside them — may name a
+project the same document declares. The apply itself resolves no project: the package that owns projects plans the
+section and the project each entry acts in, and hands both to it planned
 (`blizzard/src/blizzard/hub/domain/projects/declarations.py`). A project entry's stated `sources` or `repositories` list
 is that project's whole set, so a name the list leaves out is unlinked — the one write an omission drives, retiring a
 link and never a record; a list the entry omits leaves the stored links. A project entry's `landing_order` lists the

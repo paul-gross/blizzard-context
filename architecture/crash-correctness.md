@@ -4,8 +4,9 @@ MVP acceptance criterion 4 promises that `kill -9` at every step boundary is **a
 promise imposes four requirements on daemon code — built in from the first commit, because each is cheap on day one and
 expensive to retrofit. Crash correctness is an orthogonal dimension, not a fifth test tier
 ([../verification/blizzard.md](../verification/blizzard.md)): the requirements below are *architecture*; the kill-9
-sweep that exercises them is a verification method (`blizzard:crash-sweep`) in the matrix. Each rule follows the slot
-skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+sweep that exercises them is a verification method (`blizzard:crash-sweep`) in the matrix. Beside the four stands one
+recording rule, `bzh:recorded-crash-exemption`, for the durable writes the sweep does not arm. Each rule follows the
+slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## A steppable loop (`bzh:steppable-loop`)
 
@@ -35,23 +36,27 @@ before it rescans; a phase that reacts within a tick, as each of REAP, PULL, FIL
 
 **Rule.** All time flows through a clock abstraction wired at the composition root (`bzh:dependency-injection`); no
 direct `time.time()` / `datetime.now()` appears in loop, store, or domain code — **including SQLAlchemy column
-defaults**.
+defaults**. A serving daemon's composition root chooses its clock once, at boot, by calling `resolve_clock` in
+`blizzard/src/blizzard/foundation/clock.py`, which returns a `ControlledClock` (same module) only for
+`BLIZZARD_CLOCK=controlled` beside `BLIZZARD_CLOCK_FENCE=1` and the `SystemClock` otherwise; nothing else reads
+`BLIZZARD_CLOCK`.
 
 **Why.** An injected clock lets tests advance time virtually, so lease TTLs, reap staleness thresholds, and an
 "overnight" wait pass in milliseconds and deterministically; a direct `datetime.now()` anywhere — especially a column
 default — reintroduces wall-clock non-determinism the sweep cannot control.
 
-**Detect.** `datetime.now()`, `datetime.utcnow()`, `time.time()`, or `func.now()` / `server_default=func.now()` in loop,
-store, domain, or model code; a timestamp written from anything but the injected clock.
-
-**Do.** The clock is injected; timestamps come from `clock.now()`, and column values are set by the writing code from
-that clock — not by a database default. A serving daemon's composition root chooses its clock once, at boot, by calling
-`resolve_clock` in `blizzard/src/blizzard/foundation/clock.py`; it never reads `BLIZZARD_CLOCK` itself. The resolver
-returns a `ControlledClock` (same module) only for `BLIZZARD_CLOCK=controlled` beside `BLIZZARD_CLOCK_FENCE=1`, and the
-`SystemClock` otherwise. Only domain time moves under a controlled clock: the instants the product reasons about —
-leases, floors, windows, sessions, and stamps — are read through `IClock`. Mechanical deadlines stay on real time,
+**Scope.** Domain time — the instants the product reasons about: leases, floors, windows, sessions, and stamps — is read
+through `IClock`, and is the only time that moves under a controlled clock. Mechanical deadlines stay on real time,
 through `IMonotonicClock`: a subprocess's timeout, an HTTP client's timeout, a retry's backoff, a readiness wait, and a
 sweep's or the flow driver's timer. Span timestamps stay real too.
+
+**Detect.** `datetime.now()`, `datetime.utcnow()`, `time.time()`, or `func.now()` / `server_default=func.now()` in loop,
+store, domain, or model code; a timestamp written from anything but the injected clock; a `BLIZZARD_CLOCK` read outside
+the resolver; a timeout, backoff, or readiness wait taken from `IClock`.
+
+**Do.** The clock is injected; timestamps come from `clock.now()`, and column values are set by the writing code from
+that clock — not by a database default. A subprocess's deadline comes from `IMonotonicClock`, so advancing a controlled
+`IClock` by a day neither stalls nor fires it.
 
 **Don't.** `created_at = Column(DateTime, default=datetime.utcnow)` — the store now stamps wall-clock time the virtual
 clock can't move. Don't put a timeout, backoff, or readiness wait on `IClock`, where a moved clock would stall or fire
@@ -88,11 +93,10 @@ fence is set.
 Prefix a new point `pull.after-pause-interrupt.before-park` because that's where its `.reached()` call sits, instead of
 `pause.after-interrupt.before-park` for the scenario whose window it actually guards.
 
-### Recorded exemptions — durable state the sweep does not arm
+## A durable write the sweep does not arm records its exemption (`bzh:recorded-crash-exemption`)
 
-Not every durable write earns a point in this registry, and which reason applies must be a *stated* position rather than
-an implicit one (the "Don't" above bars asserting a window *safe without arming it*; these are the distinct cases of a
-window that need not be armed). Two grounds are admitted:
+**Rule.** When a change adds durable state a reviewer would otherwise expect a sweep point for, record the decision in
+the file Scope names for the writer, on one of two admitted grounds:
 
 - **No window at all.** The write has no unsafe partial-write span — it is one transaction, or its halves are
   independently harmless — so there is nothing for the sweep to arm.
@@ -102,23 +106,34 @@ window that need not be armed). Two grounds are admitted:
 
 Either way the write earns no `bzh:crash-point-registry` entry, and earns a new `bzh:invariant-checker` assertion only
 when it introduces a derived cross-fact invariant; a constraint the engine enforces, or a single-transaction insert, is
-not one. Record the decision in the file below that owns the writer when a change adds durable state a reviewer would
-otherwise expect a sweep point for.
-
-A recorded exemption is a standing statement about the write as it currently stands — the writer, the shape of its
-transaction, and the ground claimed, with whatever that ground owes — and carries no provenance for the change that
+not one. A recorded exemption is a standing statement about the write as it currently stands — the writer, the shape of
+its transaction, and the ground claimed, with whatever that ground owes — and carries no provenance for the change that
 added or reshaped it (`canon:no-process-refs`, `canon:no-retro`). An exemption whose claimed window no longer exists in
 code leaves with the window, whether the write went with it or only changed shape: deleted rather than kept to say it
 was retired.
 
-The transcript lane is recorded apart from both daemon files: a runner-side or hub-side write that belongs to it is
-recorded in `transcripts.md`, not in the daemon's own register.
+**Why.** Not every durable write earns a point in the registry, and which reason applies must be a stated position
+rather than an implicit one. `bzh:crash-point-registry`'s Don't bars asserting a window safe without arming it; these
+are the distinct cases of a window that need not be armed.
+
+**Scope.** Each daemon's writes are recorded in its own file, and the transcript lane apart from both: a runner-side or
+hub-side write that belongs to it is recorded in `transcripts.md`, not in the daemon's own register.
 
 | File                                                                     | Read when the write you are judging is…            |
 | ------------------------------------------------------------------------ | -------------------------------------------------- |
 | [`crash-correctness/runner.md`](./crash-correctness/runner.md)           | …the runner's own, outside the transcript lane     |
 | [`crash-correctness/hub.md`](./crash-correctness/hub.md)                 | …the hub's own, outside the transcript lane        |
 | [`crash-correctness/transcripts.md`](./crash-correctness/transcripts.md) | …anywhere in the transcript lane, on either daemon |
+
+**Detect.** Durable state added with neither a registry point nor an entry in its owning file; an entry on the second
+ground that omits the loss, why it is tolerable, or how an operator reaches it; an entry carrying provenance for the
+change that added it; an entry whose claimed window no longer exists in code.
+
+**Do.** A new fact table written by a single-transaction insert gets an entry on the first ground in its daemon's file,
+naming the writer and the one transaction.
+
+**Don't.** A durable write asserted safe in a code comment alone; an exemption kept after its window closed, rewritten
+to say so.
 
 ## A facts-level invariant checker (`bzh:invariant-checker`)
 

@@ -32,14 +32,13 @@ project keeps the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, `src
 a `reason` (`ClaimDenialReason`, `capability` by default) and a `detail` naming the project, so a previous-minor runner
 reads it as the refusal it already handles.
 
-Whether a response enum gaining a value is additive is decided per supported release by `bzh:open-response-vocabulary`
-([./released-surfaces.md](./released-surfaces.md)), which owns how an open field and a declared-closed one behave.
-
 **Don't.** A response enum gaining a value that `bzh:open-response-vocabulary` does not make additive and no admitted
 break covers.
 
-**See also.** `bzh:shared-kernel` ([../clean-architecture.md](../clean-architecture.md)): where a vocabulary type the
-wire carries is defined.
+**See also.** `bzh:open-response-vocabulary` ([./released-surfaces.md](./released-surfaces.md)) decides, per supported
+release, whether a response enum gaining a value is additive — it owns how an open field and a declared-closed one
+behave. `bzh:shared-kernel` ([../clean-architecture.md](../clean-architecture.md)): where a vocabulary type the wire
+carries is defined.
 
 ## Protect runner-reached refusals (`bzh:fleet-wire-protected-refusals`)
 

@@ -16,7 +16,9 @@ corrupt it mid-refresh. An in-process refresh that rotates the refresh token can
 just renewed.
 
 **Detect.** A `.write_text(`, `.write_bytes(`, or write-mode `open(` under `runner/subscriptions/`; a renewer binding
-that parses a refresh response and stores its tokens itself.
+that parses a refresh response and stores its tokens itself. `bzh:subscriptions-no-write` is tooled by
+`blizzard:structural-gate`'s ast-grep scan ([../../verification/blizzard.md](../../verification/blizzard.md)), scoped to
+`runner/subscriptions/`; no exemption stands.
 
 **Do.** The OpenAI renewer reads the credential's expiry to answer whether a renewal is due, a read-only check that
 writes nothing. When asked to renew, it drives `codex app-server` over a one-shot subprocess seam and reports `renewed`,
@@ -25,7 +27,3 @@ calls, so the renewal pass records its claim between them.
 
 **Don't.** A renewer that calls the provider's token endpoint and rewrites `auth.json` — blizzard owns a write it cannot
 coordinate with the vendor's lock.
-
-`bzh:subscriptions-no-write` is tooled by `blizzard:structural-gate`'s ast-grep scan
-([../../verification/blizzard.md](../../verification/blizzard.md)), scoped to `runner/subscriptions/`; no exemption
-stands.

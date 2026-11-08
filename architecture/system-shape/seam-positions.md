@@ -3,7 +3,8 @@
 This spoke owns the recorded positions under `bzh:pluggable-seams` — which external-system reaches are exempt from a
 configured seam, structural rather than opt-in, or absent as a single Protocol, and why; the macro-shape hub is
 [../system-shape.md](../system-shape.md), and [./pluggable-seams.md](./pluggable-seams.md) owns the rule itself. Each
-position is stated so a reviewer need not re-derive it.
+position is stated so a reviewer need not re-derive it; a rule stated here follows the slot skeleton owned by
+`winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## The hub work source is always seated
 
@@ -49,11 +50,30 @@ endpoint through its config entry.
 
 Each tenant holds one rate budget per forge key — a forge record and the secret its calls go out under, or that forge's
 anonymous budget when none — beside the registry and outside its adapter cache, so an edit that rebuilds an adapter
-keeps the budget. The landing seam's role handles and the work-source family share it. The priority is carried by the
-handle, never the adapter, because one adapter serves every caller of its repository: `land` admits as `landing`, the
-garden's commit check as `sweeping`. The work-source family reaches the budget only through its own narrow rate-gate
-Protocol, fixed to `sweeping` and bound where the source is built, so it never imports the forge seam. Each forge kind's
-rate dialect, chosen by kind, owns how that forge's answers become readings and refusal verdicts. `hub/forge/budget.py`
-owns only the arithmetic over readings, free of any HTTP library. The work-source gate translates each answer by its
-source's forge kind. [../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md) owns how
-tests bind the mock forge for the land action's path.
+keeps the budget. The landing seam's role handles and the work-source family share it, reaching it as
+`bzh:forge-rate-budget` below states.
+[../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md) owns how tests bind the mock
+forge for the land action's path.
+
+## The rate budget is reached by handle, in the forge kind's dialect (`bzh:forge-rate-budget`)
+
+**Rule.** Carry a forge call's priority on the handle it goes out through, never on the adapter: `land` admits as
+`landing`, the garden's commit check as `sweeping`. The work-source family reaches the budget only through its own
+narrow rate-gate Protocol, fixed to `sweeping` and bound where the source is built, so it never imports the forge seam.
+Each forge kind's rate dialect, chosen by kind, owns how that forge's answers become readings and refusal verdicts — the
+work-source gate translates each answer by its source's forge kind — and `hub/forge/budget.py` owns only the arithmetic
+over readings, free of any HTTP library.
+
+**Why.** One adapter serves every caller of its repository, so a priority on the adapter would be every caller's. A
+budget that spoke HTTP would carry one forge's dialect into arithmetic every forge kind shares.
+
+**Detect.** A priority argument or attribute on a forge adapter rather than on its handle; an import of the forge seam
+(`hub/forge/landing.py`) from the work-source family; an HTTP library imported in `hub/forge/budget.py`; a forge's
+answer turned into a reading anywhere but in its forge kind's dialect.
+
+**Do.** The `land` action takes a `landing` handle and the garden's commit check a `sweeping` one, both over the one
+adapter the registry built for the repository; a work source is built with its `sweeping` rate gate
+(`hub/work_sources/rate_gate.py`) and reads the budget through nothing else.
+
+**Don't.** A work-source binding importing `hub/forge/landing.py` to ask the budget directly; a forge's rate headers
+parsed in `budget.py` rather than in that forge kind's dialect.

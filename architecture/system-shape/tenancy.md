@@ -120,12 +120,12 @@ supplying the wrong value reads another tenant's chunks.
 list, and nothing outside the hub-level modules it serves may hold it. A member exists only for a read that must happen
 before a tenant is known, or that by its nature covers every tenant.
 
-The one exception is the invariant audit: the hub half of the invariant checker
-(`blizzard/src/blizzard/hub/store/internal/invariants.py`) is an admin-only read, every check of which is a `SELECT`, on
-a connection it marks hub-scoped itself, and it never holds `HubScopedReads`.
-
 **Why.** Every cross-tenant read is a hole in the boundary by design; keeping them on one named seam with a fixed
 membership turns "where can a tenant leak?" into a list a reviewer can read whole.
+
+**Exception.** The invariant audit: the hub half of the invariant checker
+(`blizzard/src/blizzard/hub/store/internal/invariants.py`) is an admin-only read, every check of which is a `SELECT`, on
+a connection it marks hub-scoped itself, and it never holds `HubScopedReads`.
 
 **Scope.** The members are of these kinds and no others:
 

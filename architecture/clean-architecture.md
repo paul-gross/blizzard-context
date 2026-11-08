@@ -19,21 +19,24 @@ filesystem, or network — with frameworks, stores, and transports outside it, d
 **Why.** A domain core free of outward dependencies is unit-testable with no store or server, and survives a framework
 swap untouched.
 
+**Exception.** A harness binding package (`runner/harness/claude_code/`, `runner/harness/opencode/`,
+`runner/harness/opencode_v2/`) is an adapter, not a concept package: it may bind a process or the filesystem, so it is
+exempt from the `os`, `shutil`, `subprocess`, and `tempfile` half of the check and still held to the framework five. The
+binding set is named explicitly, so a new binding fails the gate until it is named. Any other module's stdlib-driver
+import needs a reasoned entry in the per-module exemption map in `tests/guards/test_layering.py`, which admits only the
+packages it names; an entry whose module no longer imports a package it admits is stale and fails the gate. Pure path
+arithmetic (`posixpath`, `PurePosixPath`) needs no exemption.
+
+**Scope.** A runner domain-core module is any module of a `bzh:domain-package-layers` runner node outside an `internal/`
+package (`_runner_domain_core_files`): a concept package's public surface holds its models, ports, and the services
+carrying its rules, and the adapter binding a framework or driver sits in its `internal/`.
+
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
 app. `tests/guards/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module,
-importing fastapi, starlette, sqlalchemy, click, httpx2, os, shutil, subprocess, or tempfile. A harness binding package
-(`runner/harness/claude_code/`, `runner/harness/opencode/`, `runner/harness/opencode_v2/`) is an adapter, not a concept
-package: it may bind a process or the filesystem, so it is exempt from the `os`, `shutil`, `subprocess`, and `tempfile`
-half of the check and still held to the framework five. The binding set is named explicitly, so a new binding fails the
-gate until it is named. Any other module's stdlib-driver import needs a reasoned entry in the per-module exemption map
-in `tests/guards/test_layering.py`, which admits only the packages it names; an entry whose module no longer imports a
-package it admits is stale and fails the gate. Pure path arithmetic (`posixpath`, `PurePosixPath`) needs no exemption,
-and the import check cannot see pathlib I/O (`Path.read_text`, `Path.mkdir`). A runner domain-core module is any module
-of a `bzh:domain-package-layers` runner node outside an `internal/` package (`_runner_domain_core_files`): a concept
-package's public surface holds its models, ports, and the services carrying its rules, and the adapter binding a
-framework or driver sits in its `internal/`. The layer gate already keeps every such module off `blizzard.runner.store`
-and `blizzard.runner.api`, which no row lists. The same layer walker fails a `hub/domain/` module importing
-`blizzard.hub.config` or `blizzard.hub.delivery`, in any import form.
+importing fastapi, starlette, sqlalchemy, click, httpx2, os, shutil, subprocess, or tempfile; the import check cannot
+see pathlib I/O (`Path.read_text`, `Path.mkdir`). The layer gate already keeps every such module off
+`blizzard.runner.store` and `blizzard.runner.api`, which no row lists. The same layer walker fails a `hub/domain/`
+module importing `blizzard.hub.config` or `blizzard.hub.delivery`, in any import form.
 
 **Do.** `blizzard/src/blizzard/hub/domain/` and the runner's concept packages (`runner/leases/`, `runner/lifecycle/`,
 `runner/tracing/`, …) import no web, ORM, or CLI package; `hub/api/`, `hub/store/`, `runner/api/`, and `runner/store/`
@@ -137,10 +140,26 @@ it when building a repository.
 composition graph: process-scoped collaborators are built once and injected into both its served app and its driver.
 Short-lived CLI commands have their own roots.
 
+Every click command body under a `*/cli/` directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is
+such a root: it wires collaborators once, inline, at the top, without joining the hosted process graph, resolves what a
+test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one when the invoker handed none; a test
+hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test patches is not a seam. The shared
+carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one httpx2 import: every
+command builds its HTTP client through the carrier's `client_factory` and takes httpx2's types (`Client`, `Response`,
+the error classes) from that module, never from httpx2. `runner/cli/runtime.py`'s `init` resolves its own hub-clients
+carrier the same way, keeping the HTTP default out of the `runner` group so a worker verb never loads a daemon's stack;
+the carrier also holds the `host` verb's process and harness-bundle builders, which only `runtime.py` — a composition
+root — may import. A runner verb resolves the shared carrier extended with the child-process launcher, the loopback
+transport, and the OpenCode 2 service transport from `runner/cli/children.py`.
+
 **Why.** One process graph prevents independently wired app and driver collaborators from diverging, and lets tests
 substitute a fake store, a virtual clock, and a mock forge without patching module globals.
 
-**Scope.** The injected clock (`bzh:injected-clock`) is a member of this rule, not an exception to it.
+**Scope.** The injected clock (`bzh:injected-clock`) is a member of this rule, not an exception to it. The CLI-root half
+reaches a helper a command's own root calls into rather than repeating, provided the root passes in whatever varies, and
+it is wider than the mechanical roster: `tests/guards/test_layering.py::_COMPOSITION_ROOTS` stays the narrower set of
+modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a CLI module
+outside it is not a violation.
 
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
 singleton read directly. `tests/guards/test_layering.py` fails the unit tier on any of:
@@ -186,27 +205,10 @@ the same process graph with explicit lifetimes:
   are host-scoped and built once per host; each `RunnerProcess` holds only runner-bound collaborators plus its attempt
   handle, the one runner-scoped external-usage write
 
-Every click command body under a `*/cli/` directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is a
-short-lived root: it wires collaborators once, inline, at the top, without joining the hosted process graph. A root
-resolves what a test may swap from `ctx.find_object(<carrier>)` and defaults to the production one when the invoker
-handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test patches is not a
-seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one
-httpx2 import: every command builds its HTTP client through the carrier's `client_factory` and takes httpx2's types
-(`Client`, `Response`, the error classes) from that module, never from httpx2. The root groups resolve the carrier and
-pass it into `OperatorTrace` and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory.
-`runner/cli/runtime.py`'s `init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the
-`runner` group so a worker verb never loads a daemon's stack; the carrier also holds the `host` verb's process and
-harness-bundle builders, which only `runtime.py` — a composition root — may import. A runner verb resolves the shared
-carrier extended with the child-process launcher, the loopback transport, and the OpenCode 2 service transport from
-`runner/cli/children.py`, so it reads its clocks, launcher, and transports from one carrier and a test hands HTTP,
-launcher, and transport fakes in one `obj`.
-
-This prose rule is wider than the mechanical roster: `tests/guards/test_layering.py::_COMPOSITION_ROOTS` stays the
-narrower set of modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a
-CLI module outside it is not a violation.
-
-The same reasoning extends to a helper a command's own root calls into rather than repeating, provided the root passes
-in whatever varies:
+The CLI roots in that shape: the root groups resolve the carrier and pass it into `OperatorTrace` and `WorkerSession` as
+required arguments, and a hub verb's `CliContext` holds its factory. A runner verb reads its clocks, launcher, and
+transports from the one extended carrier `runner/cli/children.py` builds, so a test hands HTTP, launcher, and transport
+fakes in one `obj`. Helpers a root calls into rather than repeating:
 
 - `blizzard/src/blizzard/runner/cli/daemon.py`'s `Door.uds_client` builds the local UDS client, through the carrier's
   factory, that both `RunnerDaemon.reach` and `daemon_holding` need, shared rather than duplicated; each caller passes
@@ -343,6 +345,11 @@ runner modules and the runner loads hub modules through it. The wire stops being
 a second copy of an enum — or of a predicate both daemons apply — drifts unseen until the runner accepts what the hub
 refuses.
 
+**Exception.** Two one-sided names stay in the kernel by decision, and a sweep does not re-raise them:
+`Flags.fleet_answer` and `Flags.with_fleet_answer`, the two ends of one hub→runner exchange kept together as one
+protocol; and `is_tenant_name`, which restates the wire's `TENANT_NAME_PATTERN` and `TENANT_NAME_MAX_LENGTH` and stays
+beside them.
+
 **Detect.** `tests/guards/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard
 package, on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and on
 a hub or runner composition root loading the other daemon. The same module fails an import of a kernel vocabulary name
@@ -355,11 +362,8 @@ kernel, and a `cli` module counts as the sides of the daemon modules that reach 
 gives it an allowlist entry with its reason, which the check drops once the entry is stale. The check sees whole modules
 only: a one-sided rule living as a name in a shared module is not caught and stays a judgment call. A business rule in
 `foundation/` that only one daemon applies is that daemon's rule placed in the kernel; the fix moves it into that
-daemon's domain. Two such names stay by decision, and a sweep does not re-raise them: `Flags.fleet_answer` and
-`Flags.with_fleet_answer`, the two ends of one hub→runner exchange kept together as one protocol; and `is_tenant_name`,
-which restates the wire's `TENANT_NAME_PATTERN` and `TENANT_NAME_MAX_LENGTH` and stays beside them. One both daemons
-apply that takes a repository, clock, or client, or performs I/O, is made pure, with the facts and the instant passed in
-as values.
+daemon's domain. One both daemons apply that takes a repository, clock, or client, or performs I/O, is made pure, with
+the facts and the instant passed in as values.
 
 **Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
 `wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.
