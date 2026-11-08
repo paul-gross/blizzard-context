@@ -21,5 +21,6 @@ bare path is rejected rather than baked.
 ## Order
 
 An entry's authored map position is the order a worker reads the declarations back in, struck afresh at each mint.
-Re-ordering the map alone mints nothing — reconciliation compares parsed definitions, and a map equals itself however
-ordered — so the order in force stays the current mint's.
+Re-ordering the map alone mints nothing — reconciliation compares parsed definitions, as [./identity.md](./identity.md)
+§Comparison at reconciliation owns, and a map equals itself however ordered — so the order in force stays the current
+mint's. Changed content is a different definition.
