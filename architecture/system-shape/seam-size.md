@@ -33,9 +33,12 @@ stale entry fails too.
 lines — worker lifecycle, model/effort/compaction resolution, verdict and output parsing, usage accounting, usage-limit
 classification, and provider-overload classification (`src/blizzard/runner/harness/adapter.py`). A consumer never
 resolves the full adapter: the registry exposes one accessor per consumer role, each declared to return exactly the
-slice that role calls — `lifecycle`, `lifecycle_and_verdict`, `self_test`, `model_resolution`, `usage_accounting`,
-`usage_limits`, `provider_overload` (`IHarnessRegistry` in `src/blizzard/runner/harness/registry.py`). The domain
-services (`lifecycle/takeover.py`, `status/view.py`) take `IHarnessLifecycleRegistry`, which declares only `lifecycle`.
+slice that role calls — `known_harnesses`, `lifecycle`, `lifecycle_and_verdict`, `self_test`, `model_resolution`,
+`usage_accounting`, `usage_limits`, `provider_overload`, `transcript_source` — and `registry.py` declares one role
+Protocol per accessor (`IHarnessLifecycleRegistry`, `IHarnessModelResolutionRegistry`, and so on). Every consumer
+outside the composition roots, the driver, and the edges takes the slice(s) it calls; a consumer reading several
+composes them in a Protocol in its own module, and a context redeclares `harnesses` only when its bases declare
+different slices or it reads a role they lack. `IHarnessRegistry` is the composition of every slice.
 `LoopContext.harnesses` stays the composed `IHarnessRegistry`, a pass-through every loop step reads its role accessor
 from. The selftest canary's widened roster — lifecycle, verdict parsing, usage accounting, plus `transcript_source` —
 takes its own `IHarnessSelfTestSeam`. The full `IHarnessAdapter` lives only in `HarnessBinding` (`harness/registry.py`)
