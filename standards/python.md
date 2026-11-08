@@ -23,9 +23,8 @@ is a second opinion fighting the one ruff already is.
 - `uv run pytest` — the unit and component tiers; [./frontend.md](./frontend.md) and
   [../verification/blizzard.md](../verification/blizzard.md) own the browser tiers.
 
-**Don't.** A `# noqa: S10x` directive — `pyproject.toml`'s `[tool.ruff.lint]` `select` enables exactly `E`, `F`, `I`,
-`UP`, `B`, `C4`, `SIM`, `RUF`, not bandit's `S` family, so it silences a rule ruff never runs and fails as an unused
-noqa instead.
+**Don't.** A `# noqa: S10x` directive — `pyproject.toml`'s `[tool.ruff.lint]` `select` lists the enabled families and
+omits bandit's `S` family, so it silences a rule ruff never runs and fails as an unused noqa instead.
 
 ## Strict types (`bzh:strict-types`)
 
