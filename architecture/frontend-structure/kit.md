@@ -54,12 +54,12 @@ and asserts nothing: no `play`, no `expect`.
 **Why.** The workshop is only a whole picture of the kit while every part is in it, and a part nobody can see alone is
 judged through whichever page shows it.
 
+**Exception.** A kit part that genuinely cannot be shown alone, named with its reason on the kit-stories sweep's
+exemption list (`KIT_STORIES_EXEMPT` in `blizzard/web/scripts/structural-gate.js`).
+
 **Scope.** The kit is held by the build. A presentational piece in `fleet`'s `shell/` or `core/` is held by review. The
 expectation reaches no further: a piece in one of `fleet`'s feature folders, such as `chunk/`, `transcripts/`, or
 `host/`, or in an app of its own, may have stories, but nothing asks for them.
-
-**Exception.** A kit part that genuinely cannot be shown alone, named with its reason on the kit-stories sweep's
-exemption list (`KIT_STORIES_EXEMPT` in `blizzard/web/scripts/structural-gate.js`).
 
 **Detect.** `web:structural-gate`'s kit-stories sweep, and `web:story-render` for a story that has stopped compiling or
 rendering.
