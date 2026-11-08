@@ -1,8 +1,8 @@
 # Take fixtures, don't build them (`bzh:service-fixtures-only`)
 
 Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-rule granularity. The sections after the
-skeleton — the worlds, the traced companion, and its export barrier — are the contract the Rule slot requires, not
-skeleton drift.
+skeleton — the worlds, a stack held across a describe block, the traced companion, and its export barrier — are the
+contract the Rule slot requires, not skeleton drift.
 
 ## Rule
 
@@ -39,6 +39,15 @@ which has no `isolation` option, so a runner spec declares none: its mock hub an
 `service/fleet/` spec declares `fresh-tenant` at least, because a host enrolls only in a tenant of the test's own, and
 `fresh-hub` when its subject is hub-wide. The fleet world's `runnerHost`, `runnerHosts`, `runnerHostClient` and
 `runnerStream` are the runner world's, defined once and bound to the test's hub.
+
+## A held stack
+
+`test.use({ held: '<name>' })` on one describe block, run in order on one worker
+(`test.describe.configure({ mode: 'default' })`), gives its tests one fresh hub and one runner host instead of one each,
+built by the first test and stopped when the worker ends; `once(name, produce)` runs `produce` for the first test to ask
+and hands every later one its result, so a night too long to repeat runs once under as many titled proofs as it earns. A
+worker that restarts after a failure builds the stack and the night again. A test outside the block holds no stack, and
+`once` refuses it.
 
 ## The traced companion
 

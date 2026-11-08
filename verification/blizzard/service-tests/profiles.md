@@ -72,8 +72,9 @@ class.
 A layout no verb produces after first boot is a `reconfigure` of the stopped host, never a write to its store. For an
 initialized, stopped host, `prepareStopped` can replace a runner's documented-file subscription, id, or token, and the
 host token in `.env`, before `restart()` boots it. Token values come from enrollment; the seam never mints one. It
-refuses edits while the host runs. A store specimen is `bzh:service-public-surfaces`'s to admit
-([`./surfaces.md`](./surfaces.md) §Stopped-store specimens), not a `prepareStopped` edit.
+refuses edits while the host runs. A store specimen opens `data/host.db` only before boot or after stop, by the table
+and column names `contracts/store/runner.json` declares (`bzh:service-public-surfaces`'s Rule,
+[`./surfaces.md`](./surfaces.md) §Rule).
 
 ## Subscription samples
 

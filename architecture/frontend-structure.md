@@ -1,8 +1,9 @@
 # Frontend structure
 
-The Angular suite's where-does-it-go and what-depends-on-what map, and the sole owner of the container/presentational
-split (`canon:one-owner`) — [`../standards/frontend.md`](../standards/frontend.md) cites the rules in this tree rather
-than restating them. Each spoke's rules use the slot skeleton `winter-canon:/rule-shape.md` owns (`canon:rule-shape`).
+The Angular suite's where-does-it-go and what-depends-on-what map, with how a change a person sees is built against the
+workshop, and the sole owner of the container/presentational split (`canon:one-owner`) —
+[`../standards/frontend.md`](../standards/frontend.md) cites the rules in this tree rather than restating them. Each
+spoke's rules use the slot skeleton `winter-canon:/rule-shape.md` owns (`canon:rule-shape`).
 
 | File                                                                               | When to read                                                                                                                                                                                                                          |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

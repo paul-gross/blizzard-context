@@ -34,10 +34,11 @@ Insert rows directly into a shared hub's store to prepare an HTTP assertion.
 
 ## A runner spec reads routes, not its host's directory
 
-Outside `service/runner/store/`, a runner spec never reads the host's own directory: not the worker stdout files, not
-the harness-config snapshot, not the host's store. What a worker did is read from a route of the runner, or from the
-world the mock fleet wrote into, through a reader on `runnerHost`. A value no route serves is added to the runner's
-local API in the change that ports the test that needs it.
+A runner spec never reads the host's own directory — not the worker stdout files, not the harness-config snapshot, not
+the host's store — beyond what the Rule and §Stopped-store specimens admit a `service/runner/store/` spec: a running
+host's file list, host file, and `.env`, and a stopped host's store. What a worker did is read from a route of the
+runner, or from the world the mock fleet wrote into, through a reader on `runnerHost`. A value no route serves is added
+to the runner's local API in the change that ports the test that needs it.
 
 ## Stopped-store specimens
 

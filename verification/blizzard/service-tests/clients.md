@@ -32,21 +32,26 @@ Assemble `http://localhost:${port}/api/...` in a spec.
 The `federation` client drives a sign-in bounce from a browser at a runner host to the hub and back, holding the
 runner's cookies and the hub's in separate contexts, since both answer on `127.0.0.1` and cookies ignore the port. To
 act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and
-`events.open`.
+`events.open`; a call made as a worker carries the credential [`./surfaces.md`](./surfaces.md) §A worker's credential
+names.
 
 ## A runner host's handle
 
-A `runnerHost` also runs the real `blizzard-runner` on its directory with `cli(args)` (a non-zero exit is a result, not
-a throw), edits its stopped directory through `reconfigure`, `clearHubTokens`, `renameRunner` and `removeStore` (never a
-file by hand), exports its telemetry to a test-owned sink under the `runnerOtlp` option (`host.otlp`, which reads spans,
-sum data points, and log records), and answers its shared routes (`health`, `exportTelemetry`) over its Unix socket as
-well through `socketApi`, so a spec loops over both transports without importing `node:http` or `node:net`.
-`runnerWinterTrap` puts a `winter` that records its invocation first on every host's `PATH` (a `runnerEnv.PATH` beside
-it is refused), and `winterInvoked()` reports it. A host reads what the mock fleet wrote into the world the fixture
-minted with `mockSessions()` (the mock harness's session records in the workspace) and `opencodeExports()` (the
-`mock-opencode` export documents under the host's own transcripts root). A runner's client names each route a spec reads
-(`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`, `heartbeat`), so a spec reaches no route
-through `raw`.
+Beyond its clients, a `runnerHost` carries:
+
+- `cli(args)` — runs the real `blizzard-runner` on its directory; a non-zero exit is a result, not a throw.
+- `reconfigure`, `clearHubTokens`, `renameRunner` and `removeStore` — edit its stopped directory, never a file by hand.
+- The `runnerOtlp` option and `host.otlp` — the option exports its telemetry to a test-owned sink, and `host.otlp` reads
+  its spans, sum data points, and log records.
+- `socketApi` — answers its shared routes (`health`, `exportTelemetry`) over its Unix socket as well, so a spec loops
+  over both transports without importing `node:http` or `node:net`.
+- The `runnerWinterTrap` option and `winterInvoked()` — the option puts a `winter` that records its invocation first on
+  every host's `PATH`, a `runnerEnv.PATH` beside it refused, and `winterInvoked()` reports it.
+- `mockSessions()` and `opencodeExports()` — read what the mock fleet wrote into the world the fixture minted: the mock
+  harness's session records in the workspace, and the `mock-opencode` export documents under the host's own transcripts
+  root.
+- A runner's client — names each route a spec reads (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`,
+  `dashboard`, `heartbeat`), so a spec reaches no route through `raw`.
 
 ## Origins, and what a worker pushed
 
@@ -67,25 +72,21 @@ Register its repositories through the hub API and pass their actual origins to `
 ## The egress fixture
 
 A `fresh-hub` test whose `hubConfig` names `${egress}` as `egress.directory` reads the files the hub exports, in the
-format `egress.format` names (NDJSON by default), through the `egress` fixture's `query` and `recipe`, which run the
-docs' own DuckDB load and the dictionary's views once a manifest names the dataset: `steps` and `invocations` through
-`<dataset>_newest`, `events` through `events_current` and `events_by_version`. `exports(dataset)` asks once whether a
-manifest names it, `rowTexts(dataset)` renders every copy of every row as text, and `documents()` gives the text of the
-manifests and schemas, so a scan that a value never left needs no file read of its own. `copies` renders every copy of
-every `steps` or `invocations` row in the shape both formats share, so a test picks the newest copy itself and compares
-NDJSON with Parquet; a read may bind the dataset to the live passes' files or to a backfill's alone, and
-`at(directory, format)` reads another directory, such as a restart's second export. `freshHub.start(overlay)` hosts the
-stopped hub again with a configuration merged over its file and checked as `hubConfig` is, so one hub's record is
-exported under a second format; an unsound overlay is refused before anything is written.
+format `egress.format` names (NDJSON by default), through the `egress` fixture:
 
-## A held stack
+- `query` and `recipe` — run the docs' own DuckDB load and the dictionary's views once a manifest names the dataset:
+  `steps` and `invocations` through `<dataset>_newest`, `events` through `events_current` and `events_by_version`.
+- `exports(dataset)` — asks once whether a manifest names the dataset.
+- `rowTexts(dataset)` and `documents()` — render every copy of every row as text, and give the text of the manifests and
+  schemas, so a scan that a value never left needs no file read of its own.
+- `copies` — renders every copy of every `steps` or `invocations` row in the shape both formats share, so a test picks
+  the newest copy itself and compares NDJSON with Parquet; a read may bind the dataset to the live passes' files or to a
+  backfill's alone.
+- `at(directory, format)` — reads another directory, such as a restart's second export.
 
-`test.use({ held: '<name>' })` on one describe block, run in order on one worker
-(`test.describe.configure({ mode: 'default' })`), gives its tests one fresh hub and one runner host instead of one each,
-built by the first test and stopped when the worker ends; `once(name, produce)` runs `produce` for the first test to ask
-and hands every later one its result, so a night too long to repeat runs once under as many titled proofs as it earns. A
-worker that restarts after a failure builds the stack and the night again. A test outside the block holds no stack, and
-`once` refuses it.
+`freshHub.start(overlay)` hosts the stopped hub again with a configuration merged over its file and checked as
+`hubConfig` is, so one hub's record is exported under a second format; an unsound overlay is refused before anything is
+written.
 
 ## A pasteable command
 

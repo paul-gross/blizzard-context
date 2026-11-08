@@ -44,14 +44,14 @@ made of.
 
 A test that needs time to move asks for a controlled stack with `test.use({ clockMode: 'controlled' })`; every other
 test runs on the system clock, whose `clock.advance` and `clock.set` refuse. Only a `fresh-hub` test, a block that holds
-its stack, or a runner-world test may ask: a controlled stack moves every daemon's clock, and a shared hub's belongs to
-other tests. It pairs only with stepped daemons, so a timed sweep and a `runnerLoop: 'timed'` host are refused before
-any daemon starts. `clock.now()` is every spec's source of an instant, controlled or not; a spec never reads the
-machine's clock itself. `clock.advance(seconds)` and `clock.set(instant)` move the hub or mock hub, the runner hosts,
-the mock runners and forge, and the browser together, and resolve once all have answered. On a controlled hub,
-`api.flowStep()` runs one flow-driver pass at `clock.now()`; it is refused on a system stack. To drive a pending poll,
-advance to its due time, then step and read the public state. The fleet test that steps the hub and the runner host is
-`tests/service/fleet/flow-turns.spec.ts`.
+its stack ([`./fixtures.md`](./fixtures.md) §A held stack), or a runner-world test may ask: a controlled stack moves
+every daemon's clock, and a shared hub's belongs to other tests. It pairs only with stepped daemons, so a timed sweep
+and a `runnerLoop: 'timed'` host are refused before any daemon starts. `clock.now()` is every spec's source of an
+instant, controlled or not; a spec never reads the machine's clock itself. `clock.advance(seconds)` and
+`clock.set(instant)` move the hub or mock hub, the runner hosts, the mock runners and forge, and the browser together,
+and resolve once all have answered. On a controlled hub, `api.flowStep()` runs one flow-driver pass at `clock.now()`; it
+is refused on a system stack. To drive a pending poll, advance to its due time, then step and read the public state. The
+fleet test that steps the hub and the runner host is `tests/service/fleet/flow-turns.spec.ts`.
 
 ## The collector's decision barrier
 

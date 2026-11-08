@@ -12,13 +12,13 @@ method's [command detail](./commands/test-tiers/service.md) for the paired task 
 
 Each spoke owns one contract a spec author meets; descend to the one the question names.
 
-| Spoke                                                        | Read when…                                                                                                                                    |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`./service-tests/fixtures.md`](./service-tests/fixtures.md) | Declaring what a spec takes from the harness — which world its folder gets — or asserting on the traces a fleet scenario exports              |
-| [`./service-tests/clients.md`](./service-tests/clients.md)   | Reaching a daemon, a runner host, a forge origin, or an export from a spec, or running a pasteable command a worker printed                   |
-| [`./service-tests/state.md`](./service-tests/state.md)       | Choosing an isolation level, pulling a mock-fleet lever, or calling a fleet route that needs a registered runner                              |
-| [`./service-tests/time.md`](./service-tests/time.md)         | A spec has to wait for something, move time, step a host, or prove that something did not happen                                              |
-| [`./service-tests/surfaces.md`](./service-tests/surfaces.md) | Building or reading state, and whether a store, a host directory, or a cold `init` may be touched, and when                                   |
-| [`./service-tests/profiles.md`](./service-tests/profiles.md) | A spec needs a hub or host configured differently — a setting, an environment variable, a harness, a bundle or stub, or a subscription sample |
+| Spoke                                                        | Read when…                                                                                                                                                                  |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`./service-tests/fixtures.md`](./service-tests/fixtures.md) | Declaring what a spec takes from the harness — which world its folder gets, or one stack held across a describe block — or asserting on the traces a fleet scenario exports |
+| [`./service-tests/clients.md`](./service-tests/clients.md)   | Reaching a daemon, a runner host, a forge origin, or an export from a spec, or running a pasteable command a worker printed                                                 |
+| [`./service-tests/state.md`](./service-tests/state.md)       | Choosing an isolation level, pulling a mock-fleet lever, or calling a fleet route that needs a registered runner                                                            |
+| [`./service-tests/time.md`](./service-tests/time.md)         | A spec has to wait for something, move time, step a host, or prove that something did not happen                                                                            |
+| [`./service-tests/surfaces.md`](./service-tests/surfaces.md) | Building or reading state, and whether a store, a host directory, or a cold `init` may be touched, and when, or which credential a call made as a worker carries            |
+| [`./service-tests/profiles.md`](./service-tests/profiles.md) | A spec needs a hub or host configured differently — a setting, an environment variable, a harness, a bundle or stub, or a subscription sample                               |
 
 Grow this rulebook when a port settles a practice a capable service-test author would not discover independently.

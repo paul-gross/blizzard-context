@@ -24,8 +24,8 @@ Each pytest tier is a folder: `unit/` and `guards/` give the unit tier, `compone
 
 ## Hermetic by construction (`bzh:hermetic-by-construction`)
 
-**Rule.** Bind every seam a daemon under test reaches to the mock fleet, so that a service or UI test never spends a
-real token and never touches the network, and take a test's edge cases from a mock's levers, never from contriving the
+**Rule.** A service or UI test never spends a real token and never touches the network: every seam a daemon under test
+reaches binds a mock or a local fixture, and a test's edge cases come from a mock's levers, never from contriving the
 real daemon or the real external tool into a rare state.
 
 **Why.** A mock's lever makes a rare state reproducible on demand and free of charge, where a real tool reaches it by
@@ -50,9 +50,9 @@ rather than with the change under test.
   ad-hoc SQL; a Playwright service spec creates it through the hub's public surfaces (`bzh:service-public-surfaces`),
   never by seeding the store. The harness restoring a template its own CLIs built is not a spec seeding the store.
 
-**Detect.** Review a test or fixture that names a host other than loopback or a credential other than the mock fleet's,
-a case that reaches a rare state through the real daemon or the real external tool where a mock's lever exists, and raw
-SQL standing data up in a Python tier.
+**Detect.** Review a service or UI test or fixture that reaches a non-loopback host or carries a real vendor or forge
+credential, a case that reaches a rare state through the real daemon or the real external tool where a mock's lever
+exists, and raw SQL standing data up in a Python tier.
 
 **Do.** Arm the mock forge's `merge_conflict` lever on the test's own repository to drive a delivery bounce.
 
