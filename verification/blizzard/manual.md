@@ -746,9 +746,9 @@ resolves each token at a real hub, which the scratch directory has none of, so i
 ### `blizzard:manual-fleet-read-latency`
 
 **Surface.** A named hub read path's wall-clock latency at fleet scale, before and after a change to its read path —
-`GET /api/chunks` for the recorded readings below, any other hub read path for a change that touches it instead. No CI
-tier measures wall-clock time at all — `blizzard:component-test`'s query-count assertions pin the *shape* of the cost,
-not its duration — so a read-path change reports this by hand.
+`GET /api/chunks`, `GET /api/queue`, or any other hub read path a change touches. No CI tier measures wall-clock time at
+all — `blizzard:component-test`'s query-count assertions pin the *shape* of the cost, not its duration — so a read-path
+change reports this by hand.
 
 **Blind spot.** A local sqlite store shares the hosted hub's own backend
 ([`./gaps.md`](./gaps.md#the-query-plan-assertions-never-run-under-postgres) owns which one, and why) but not its
@@ -760,8 +760,7 @@ there, never a dev surface pointed at it (`workspace:/context/project/hub-data-m
 
 **Setup.** A fleet-scale hub store that is not the live fleet — `workspace:/context/project/hub-data-modes.md`'s mode 2
 (a migrated snapshot copy) or mode 3 (seeded synthetic) — or, for a reading taken mid-change before a fresh store
-exists, a scratch `tests.support.scaffolding.build_hub` instance seeded to the same chunk count via a throwaway script,
-as the recorded reading below used.
+exists, a scratch `tests.support.scaffolding.build_hub` instance seeded to the same chunk count via a throwaway script.
 
 **Steps.**
 
@@ -774,122 +773,6 @@ as the recorded reading below used.
    read-path change it enables.
 
 **Passes when.** Both readings are recorded together, against the same store and the same `N`.
-
-**Recorded reading** (scratch `build_hub` store, N=173, 5 warmed reps, mean wall-clock and total SQL query count for one
-`GET /api/chunks`):
-
-| Reading                                                                  | Queries | Mean latency |
-| ------------------------------------------------------------------------ | ------- | ------------ |
-| Before (`73db0967`)                                                      | 5026    | 339.2ms      |
-| After (`load_all_facts`/`load_all_routes` list read, fact-table indexes) | 40      | 10.4ms       |
-
-A ~125x query-count reduction and ~33x latency reduction on the same local sqlite store. The hosted reading is owed
-separately, by an operator, once a release containing the measured bulk-read change is deployed there.
-
-**Queue-peek reading** (same method, `GET /api/queue`; scratch `build_hub` store, N=173 promoted chunks, 5 warmed reps):
-
-| Reading                                            | Queries | Mean latency |
-| -------------------------------------------------- | ------- | ------------ |
-| Before (per-chunk `_status` over `list_all`)       | 4677    | 312.7ms      |
-| After (`load_all_facts` bulk read in `list_ready`) | 34      | 8.9ms        |
-
-`GET /api/backlog` and the runner's own `GET /api/fleet/queue/peek` share `list_ready`/`list_not_ready`, so the same
-reading covers all three. The hosted reading is owed separately, as above.
-
-**Hot-path indexes and spend-fold reading.** Store: an on-disk copy found at `xps`'s
-`~/projects/blizzard-blizzard/backups/hub-20260905T175650Z.db`, of unverified provenance — nothing in `blizzard-infra`
-produces a file at that path/name, so treat it as an unofficial, undocumented copy rather than a guaranteed
-application-consistent one. `PRAGMA integrity_check` passed, and its `usage_facts`/`transcript_segments` row counts
-(3,941 and 21,269) are large enough to exercise the hot-path indexes at realistic scale, which is why it was used here
-in place of the operator-provided copy the method's Setup step asks for first — a fresh copy remains owed if this one's
-provenance is ever disputed. N=282 chunks, migrated to the pre-change head for Before and to the revision adding the
-hot-path indexes for After; one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
-
-| Read                                       | Before queries              | Before latency | After queries | After latency |
-| ------------------------------------------ | --------------------------- | -------------- | ------------- | ------------- |
-| `GET /api/spend` (all-time)                | 1 (3,941 rows materialized) | 21.5ms         | 1             | 0.95ms        |
-| `GET /api/spend` (30-day)                  | 1 (partial materialization) | 4.5ms          | 1             | 0.60ms        |
-| `load_artifacts` (artifacts by chunk)      | 1                           | 0.53ms         | 1             | 0.28ms        |
-| `GraphStore.list_all`                      | 969                         | 132.0ms        | 969           | 98.9ms        |
-| `TranscriptEventStore.visible_segment_ids` | 1                           | 8.4ms          | 1             | 2.6ms         |
-| `activity_facts_since`                     | 18                          | 10.2ms         | 18            | 9.9ms         |
-| `pending_close_intents`                    | 3                           | 0.27ms         | 3             | 0.24ms        |
-| `find_live_holder`                         | 30                          | 2.8ms          | 30            | 2.6ms         |
-
-The spend fold is the standout: ~23x latency reduction on the all-time window, with query count unchanged at 1 (the
-before reading already issued one query — the win is materializing zero `UsageFact` objects instead of 3,941).
-`GraphStore.list_all`'s and `find_live_holder`'s query counts are unchanged by design — these indexes complement, and do
-not substitute for, the N+1 fixes tracked separately — their latency drop reflects a cheaper per-query scan, not fewer
-queries. The Bulk-read adoption reading below is what touches those two read paths next — see its own table for how each
-one's count and latency actually move.
-
-Migration duration on the same store (`blizzard hub migrate` / `--down <prior-rev>` / `migrate` again): up to the
-hot-path index revision from the prior head, 177.7ms first pass (includes SQLite's index-build cost against real data —
-this store's affected-table row counts range from single digits up to `transcript_segments`'s 21,269, with
-`transcript_events` (9,849), `artifacts` (4,953), `usage_facts` (3,941), `lease_facts` (2,277), and `transitions`
-(2,048) the next largest); a subsequent no-op `migrate` at head, 26.7ms; `--down` back to the prior head, 89.9ms; and
-back up again, 127.4ms. All comfortably sub-second even at this snapshot's scale, so the revision's own pause at deploy
-is not a concern at the hosted hub's current size, though a future reader scaling this number should scale it off
-`transcript_segments`'s own growth, since it has no retention policy and is this store's largest affected table by a
-wide margin.
-
-**Write-side cost.** The read-latency readings above say nothing about insert cost on the two tables this migration
-indexes most heavily and that see continuous, append-only writes — `transcript_segments` (4 → 6 indexes) and
-`usage_facts` (1 → 3 indexes). On the same before/after store copies (`transcript_segments` 21,269 rows, `usage_facts`
-3,941 rows before either bench run), 200 warmup inserts then a timed mean of 2,000 more, one row at a time, each in its
-own transaction:
-
-| Insert                    | Before  | After   | Delta |
-| ------------------------- | ------- | ------- | ----- |
-| `usage_facts` row         | 0.094ms | 0.096ms | +2.8% |
-| `transcript_segments` row | 0.141ms | 0.140ms | -1.3% |
-
-Both deltas are within this measurement's own noise band — sqlite's per-row index-maintenance cost for two or three
-small non-unique B-tree indexes on tables already carrying one is not observable at this row count. The store's
-single-writer WAL/`busy_timeout` posture means the risk this reading answers is contention duration, not per-row cost,
-and neither moved measurably.
-
-**Bulk-read adoption reading.** Store: a scratch `build_hub` sqlite store seeded via a throwaway script — N=225 chunks:
-200 raw-seeded (`tests.support.scaffolding.seed_chunk`) across 20 minted graphs of 6 real nodes each, every one holding
-a `default`-source work ref (`ChunkWorkRefsStore.add_work_refs`) so pointer-liveness fan-out spans every graph; 15
-promoted `default`-source ingests and 10 hub-issued work items, both landing on the hub's own auto-minted default graph
-— 21 distinct graphs total. No hub-store migration lands between the two commits (`git diff` over
-`src/blizzard/hub/store` is empty apart from the internal adapters below), so one seeded `hub.db` copy served both
-sides: Before at `096b1c49` (the commit immediately before this bulk-read adoption began), After at `284ece8c` (this
-bulk-read adoption's tip; the later repair commit `8b2c3449` touches no store read, so the measured counts still hold);
-one warm rep then 5 timed reps, mean wall-clock and total SQL query count per call:
-
-| Read                  | Before queries | Before latency | After queries | After latency |
-| --------------------- | -------------- | -------------- | ------------- | ------------- |
-| `GET /api/chunks`     | 561            | 161.0ms        | 37            | 21.2ms        |
-| `GET /api/graphs`     | 207            | 45.2ms         | 2             | 5.2ms         |
-| `GraphStore.list_all` | 206            | 30.9ms         | 106           | 28.2ms        |
-| `find_live_holder`    | 30             | 4.8ms          | 30            | 6.6ms         |
-| `live_work_refs`      | 6078           | 1431.8ms       | 24            | 12.0ms        |
-
-`GET /api/chunks`, `GET /api/graphs`, and `live_work_refs` see the query-count win this bulk-read adoption was built for
-— ~15x, ~104x, and ~253x fewer statements respectively, tracked by roughly matching latency drops (~7.6x, ~8.7x, ~119x).
-`GraphStore.list_all`'s own count nearly halves (206 → 106) from batching per-node choices inside `_reify`, but stays
-proportional to graph count rather than bounded — `list_all`'s own per-graph reification loop is untouched — so its
-latency drop is correspondingly modest (~1.1x). `find_live_holder`'s query count is unchanged (30 → 30) and its latency
-is flat within this measurement's noise: this call's win lives in `live_holders`' cross-pointer batching, which a single
-pointer with one candidate holder — this reading's own isolated `find_live_holder` call — never exercises; the fan-out
-win shows up instead in `live_work_refs` and in `GET /api/chunks`'s own bulk `live_holders` resolution above.
-
-**Derive-once read-sweep reading.** Store: a scratch `build_hub` sqlite store seeded via a throwaway script — N=173
-chunks, each ingested and promoted to ready (`tests.support.scaffolding.ingest`). One warm rep then 5 timed reps, mean
-wall-clock and total SQL query count per call, both sides on the same seeded store:
-
-| Read               | Before queries (`3c96c0d4`) | Before latency | After queries (`8fdb7577`) | After latency |
-| ------------------ | --------------------------- | -------------- | -------------------------- | ------------- |
-| `GET /api/queue`   | 56                          | 10.5ms         | 28                         | 7.8ms         |
-| `GET /api/backlog` | 56                          | 9.2ms          | 28                         | 6.9ms         |
-
-A 2x query-count reduction on both routes, tracked by a roughly proportional latency drop: dropping the per-request
-`load_all_facts` bulk read once `ChunkRecordStore`/`QueueService` take an already-derived `statuses` map instead of
-deriving it from facts internally removes that read's own statement cost entirely, not just its per-chunk shape — the
-count was already flat in fleet size at `3c96c0d4`, per the queue-peek reading above. The hosted reading is owed
-separately, by an operator, once a release containing `8fdb7577` is deployed there.
 
 ### `blizzard:manual-trace-backends`
 
@@ -965,8 +848,7 @@ reads is not measured.
 - The directory: `mise run playwright -- --project=service-fleet tests/service/fleet/egress-night.spec.ts`, then the
   `egress-parquet` directory beside the hub's `egress` under the held stack's `fresh/` directory in the run's
   `tests/.run/<run>/`. A run keeps it; the next run's `.run` directory is a new one.
-- MinIO (`cgr.dev/chainguard/minio`, as `minio/minio` is no longer pulled from Docker Hub) with a throwaway root key,
-  and `rclone/rclone` for the copy.
+- MinIO (`cgr.dev/chainguard/minio`) with a throwaway root key, and `rclone/rclone` for the copy.
 - `clickhouse/clickhouse-server` and `grafana/grafana` with `GF_INSTALL_PLUGINS=grafana-clickhouse-datasource`, the
   official ClickHouse data source.
 
@@ -1042,23 +924,6 @@ so the store reaches steady state (every segment carries a current marker) befor
 4. Repeat step 3 on the other side of the code change, against the same store shape.
 
 **Passes when.** Both readings are recorded together, against the same corpus shape.
-
-**Recorded reading** (scratch store, 2,500 segments / 27,500 rows, one steady-state pass). The before and after rows are
-two independent seedings of the same corpus shape — row and segment counts match, but each seeding draws its own random
-row content, so the two compressed-byte totals differ while the shape stays fixed:
-
-| Reading                                                  | Statements | Wall time | Bytes decompressed                        |
-| -------------------------------------------------------- | ---------- | --------- | ----------------------------------------- |
-| Before (`f75916df`, 175.9 MB compressed)                 | 5003       | 2.81s     | 301.4 MB (27,500 `zlib.decompress` calls) |
-| After (`330ae7c4`, 119.6 MB compressed), same reconciler | 1          | 0.002s    | 0                                         |
-| After (`330ae7c4`), fresh reconciler (restart shape)     | 4          | 0.07s     | 0                                         |
-
-A steady-state pass at `f75916df` re-decodes every visible segment's content in full to compare fingerprints. With the
-digest-based candidacy read and the derivation change probe, a repeated pass over an unchanged store costs one statement
-— the probe's own aggregate read — and decodes nothing. A fresh reconciler's first pass, which never consults the
-in-memory probe (the shape a process restart or crash recovery sees), still runs the real candidacy read: four
-statements, no content decoded, well under the 60s interval either way. The hosted reading is owed separately, by an
-operator, once a release containing `330ae7c4` is deployed there.
 
 ### `blizzard:manual-branch-protection`
 
