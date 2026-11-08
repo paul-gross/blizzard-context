@@ -416,21 +416,21 @@ item and chunk inserts), not a derived cross-fact invariant to recompute.
 
 ## Dependency edge declare and release
 
-`ChunkDependenciesStore.declare_locked`/`.release`
-(`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) each write `chunk_dependencies` in one
-transaction — `declare_locked` a single insert of the fresh edge row, on the connection `IChunkExclusiveWrites.locked`
-already opened and row-locked; `release` a read of the standing row followed by its `released_at`/`released_by` update
-on the same connection, inside its own `store.write` transaction. Neither has a partial-write span for a crash to land
-inside: `declare_locked`'s insert either lands whole or not at all, and `release`'s read-then-write has nothing outside
-the transaction observing the read before the write commits.
+`ChunkDependenciesStore.declare`/`.release` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`)
+each write `chunk_dependencies` in one transaction — `declare` a single insert of the fresh edge row, on the connection
+of the locked unit `DependencyService` opens through `IChunkExclusiveWrites.locked` and hands over as the handle's
+`transaction`; `release` a read of the standing row followed by its `released_at`/`released_by` update on the same
+connection, inside its own `store.write` transaction. Neither has a partial-write span for a crash to land inside:
+`declare`'s insert either lands whole or not at all, and `release`'s read-then-write has nothing outside the transaction
+observing the read before the write commits.
 
-`DependencyService` (`blizzard/src/blizzard/hub/domain/chunk/dependencies.py`) runs `declare_locked` and `release` under
-locks [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns —
-which each holds, and why. None is a crash guard. `declare_locked`'s guards wrap the same not-a-crash-window shape
-§Chunk delete, then hub-item withdrawal already takes for its own composite write: its own re-derived reads — the
-dependent's status, the prerequisite's ephemerality, the standing set the cycle check walks — all run inside the locked
-transaction before the write, guarding against concurrent decisions rather than a crash mid-transaction. Those same
-locks serialize the ephemerality read against every writer that can make a prerequisite ephemeral, grouping included, so
+`DependencyService` (`blizzard/src/blizzard/hub/domain/chunk/dependencies.py`) runs `declare` and `release` under locks
+[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns — which
+each holds, and why. None is a crash guard. `declare`'s guards wrap the same not-a-crash-window shape §Chunk delete,
+then hub-item withdrawal already takes for its own composite write: its own re-derived reads — the dependent's status,
+the prerequisite's ephemerality, the standing set the cycle check walks — all run inside the locked transaction before
+the write, guarding against concurrent decisions rather than a crash mid-transaction. Those same locks serialize the
+ephemerality read against every writer that can make a prerequisite ephemeral, grouping included, so
 `NoStandingDependencyOntoEphemeralChunk` (`hub:no-standing-dependency-onto-ephemeral-chunk`) is a
 `bzh:invariant-checker` assertion as a backstop against a regression in that serialization, not a guard against a live
 gap.
