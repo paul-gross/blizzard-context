@@ -7,7 +7,8 @@ A node-scope artifact accumulates as an append-only, versioned series per node a
 
 - **Committed with the step, atomically** — a worker step's artifacts land in the same fenced write as the movement they
   belong to (its transition, its gate decision, or the migration recorded in place of a transition when the step takes
-  the chunk off its graph), so a rejected step's artifacts never exist.
+  the chunk off its graph, or the `escalate-choice` escalation recorded in place of a transition), so a rejected step's
+  artifacts never exist.
 - **Append, never overwrite** — re-running a node adds new entries under the new attempt, and earlier entries remain as
   history.
 - **Reads resolve to the newest entry** — later nodes fetching a node-scope artifact by name get the latest attempt's
