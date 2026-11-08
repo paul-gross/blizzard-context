@@ -38,10 +38,10 @@ worktrees stay held until the process is stopped.
 
 Reinstatement finishes the retirement it reverses, then records the reversal: a chunk the retirement left held — one a
 retirement stopped before its releases left behind — is released first, as the retirement would have, and re-derives
-`ready`. A reinstatement decided on a retirement since reversed or repeated is refused. The runner is unenrolled — its
-token was revoked when it was retired — and must be enrolled afresh; enrolling a retired runner is refused, so there is
-one lever back. A runner still under a retired host is refused reinstatement; released from that host, it can be
-reinstated, and stands alone ([./hosts.md](./hosts.md)).
+`ready`. A reinstatement decided on a retirement since reversed or repeated is refused. The runner is unenrolled —
+reinstating revokes any token it still carries, in the same step as the reversal — and must be enrolled afresh;
+enrolling a retired runner is refused, so there is one lever back. A runner still under a retired host is refused
+reinstatement; released from that host, it can be reinstated, and stands alone ([./hosts.md](./hosts.md)).
 
 ## Token revocation
 
@@ -51,4 +51,5 @@ its token the same way: the token it replaces is recorded revoked, the one minte
 a rotated-out token is refused too; two rotations at once still leave every replaced token revoked. A retired runner
 still carrying a token — an enrollment that raced its retirement — can have that token revoked the same way; a runner
 holding no token has nothing to revoke. A revocation decided on a runner since retired or reinstated is refused, and
-revokes nothing.
+revokes nothing; so is an enrollment decided on a runner since retired or reinstated, which mints and revokes nothing.
+Enrolling afresh after reinstatement stays legal.
