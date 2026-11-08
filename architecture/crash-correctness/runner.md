@@ -367,12 +367,12 @@ reads resumed exactly when the woken generation is owned. The points `answer.wak
 leaves the park open and the trampoline kills the launch, so `ON_ANSWER` re-wakes once; a crash after it leaves an
 ordinary recorded generation that REAP and RESUME own, never a second `ON_ANSWER`.
 
-The `answer.delivered` fact is enqueued only after `confirm_durable`, outside that transaction, which is a real window
-whose loss is accepted. Enqueuing it inside the record transaction would tell the hub "delivered" for a launch the
-trampoline may still kill. A crash between `confirm_durable` and the enqueue loses only the hub board's delivered marker
-on the question; nothing gates a spawn, a claim, or a lease state on it. An operator who needs to know whether the
-answer reached the session reads the runner's `park_resumes` row for the lease and question, or the session's own
-transcript, which carries the answer as its wake message.
+The `answer.delivered` receipt rides the same `record_spawn` transaction: the park resume and the receipt travel as one
+value, so the receipt is buffered exactly when the woken generation is owned, and a wake that resumes no park carries
+none. It is published to the event stream only after the commit and after `confirm_durable`. A crash at
+`answer.wake.after-record` leaves the receipt durable for a generation that REAP and RESUME own, and the trampoline
+kills the launch that was not yet disarmed; the answer stays readable to later sessions. "Delivered" therefore means the
+runner durably recorded the resume carrying the answer, not that the launch survived; the launch is not exactly-once.
 
 ## The operator requeue
 
