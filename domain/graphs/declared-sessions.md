@@ -36,8 +36,9 @@ selection fails. Only an empty effective harness set — none authored and none 
 chooses its default harness, whose model resolution falls back to its default even for an entirely unresolvable tier
 list.
 
-A native name is satisfiable on a harness only where that runner declares it supported — each runner binding states the
-native names it accepts, as exact names or patterns — and a tier only by a mapping. A pattern never satisfies a tier.
+A non-tier entry resolves first by an exact runner-declared alias — whose key need not itself be among the supported
+native names — and then as a native name satisfiable only where that runner declares it supported, as exact names or
+patterns; a tier only by a mapping. A pattern never satisfies a tier.
 
 A session's model is resolved once, where a pool starts the session, and is that session's model for its whole lineage;
 a resume never re-resolves it. Model changes therefore take effect only where a pool starts a session: a mid-chunk edit
@@ -85,11 +86,14 @@ default harness set ([../work/chunk.md](../work/chunk.md) §Model, effort, and h
 inherited set exactly as it walks an authored one; an empty inherited set is the one case that bypasses selection
 ([Model preference](#model-preference)). Resolution is harness-primary, model-secondary: a fresh mint walks the set in
 declared order, and only for whichever harness can serve does its own model preference resolve, never the reverse — a
-later harness's earlier-preferred model still loses to an earlier harness's later one. A within-node retry is the one
-fresh mint that walks nothing: it stays on the failed lease's harness, and when that harness has since left the node's
-acceptable set the retry escalates rather than switching owners ([../humans/escalation.md](../humans/escalation.md)
-§What raises an escalation). A member the fleet doesn't hold is still valid authored policy: which harnesses a runner
-actually binds is a runner-time fact, never a mint-validation concern, so authoring an id no runner yet binds mints
-cleanly. A single-harness set follows [Model preference](#model-preference), including its authored-tier resolution
-requirement; a multi-harness set requires strict per-harness resolution for any nonempty model preference list — a
-harness resolving none of it is skipped rather than falling back within it.
+later harness's earlier-preferred model still loses to an earlier harness's later one. Two fresh native-session mints
+walk nothing: a within-node retry, and the recovery of an interrupted claim at the same node or at a restart entry (an
+adopted claim, a resumed requeue, a reclaimed claim). Each stays on the prior lease's harness while the envelope now in
+hand still admits it — an empty set admits any — and when that harness has left the set it escalates rather than
+switching owners ([../humans/escalation.md](../humans/escalation.md) §What raises an escalation). A chunk with no prior
+owner selects as any fresh mint does. Neither is a continuation, which resumes its recorded session, or a node entry,
+which resolves its session and harness afresh. A member the fleet doesn't hold is still valid authored policy: which
+harnesses a runner actually binds is a runner-time fact, never a mint-validation concern, so authoring an id no runner
+yet binds mints cleanly. A single-harness set follows [Model preference](#model-preference), including its authored-tier
+resolution requirement; a multi-harness set requires strict per-harness resolution for any nonempty model preference
+list — a harness resolving none of it is skipped rather than falling back within it.
