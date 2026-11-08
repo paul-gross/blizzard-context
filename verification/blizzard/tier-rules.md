@@ -58,6 +58,29 @@ exists, and raw SQL standing data up in a Python tier.
 
 **Don't.** Push a conflicting commit to a real repository, or run the real `claude` binary, to produce the same bounce.
 
+## Test resources end with their owner (`bzh:test-resource-ownership`)
+
+**Rule.** A test-created engine belongs to its creating test or fixture scope and is disposed after its users and their
+finalizers finish, before its temporary store is removed. Close checked-out connections as well: disposing an engine
+alone does not close connections still held by a user. Shared test helpers participate in suite-owned cleanup without
+requiring each caller to dispose an engine. Preserve wider fixture lifetimes, borrowed resources, and deliberate
+process-lifetime migration prototypes; a copied test store is not a prototype. Do not use a hosted app's owned engine
+after its lifespan ends; make a separately owned engine for later store inspection.
+
+**Why.** An open SQLite connection can retain a deleted temporary file, while disposing a borrowed or wider-scoped
+engine early breaks its owner.
+
+**Detect.** Exercise lifecycle and finalizer ordering at `blizzard:unit-test` and `blizzard:component-test`.
+[`blizzard:sqlite-test-engine-leaks`](./commands/test-tiers/sqlite-test-engine-leaks.md) specifies the parallel-suite
+proof.
+
+**Do.** Keep a module-scoped store usable until its fixture ends, then release its engine before removing its store.
+
+**Don't.** Add per-caller disposal boilerplate to a shared store helper, or dispose a caller-owned engine on behalf of
+its borrower.
+
+**See also.** `bzh:head-store-prototypes` below for migrated prototype use.
+
 ## The tenant statement guard is on in every tier
 
 Every daemon any tier spawns runs with the tenant statement guard on, whether the suite is Python or Playwright. The
