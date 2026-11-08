@@ -18,6 +18,10 @@ An exit the harness's own provider itself reports as overloaded is neither reape
 session in place after a bounded, growing wait, spending no retry — until a bounded streak of consecutive overloads on
 the one lease is reached, at which point it falls through to an ordinary judged exit.
 
+A launch the harness refuses because its version changed since the runner advertised it is not left for reap: nothing
+was started, so it is relaunched once on the version just observed, and a refused relaunch escalates the chunk
+([../humans/escalation.md](../humans/escalation.md)), spending no retry.
+
 ## Requeue
 
 Requeue names two operations. The hub's supersedes the escalation and releases the route. A chunk requeued at a runner
