@@ -59,8 +59,7 @@ that clock — not by a database default. A subprocess's deadline comes from `IM
 `IClock` by a day neither stalls nor fires it.
 
 **Don't.** `created_at = Column(DateTime, default=datetime.utcnow)` — the store now stamps wall-clock time the virtual
-clock can't move. Don't put a timeout, backoff, or readiness wait on `IClock`, where a moved clock would stall or fire
-it; and don't read `BLIZZARD_CLOCK` outside the resolver.
+clock can't move.
 
 ## A crash-point registry (`bzh:crash-point-registry`)
 
@@ -125,9 +124,10 @@ hub-side write that belongs to it is recorded in `transcripts.md`, not in the da
 | [`crash-correctness/hub.md`](./crash-correctness/hub.md)                 | …the hub's own, outside the transcript lane        |
 | [`crash-correctness/transcripts.md`](./crash-correctness/transcripts.md) | …anywhere in the transcript lane, on either daemon |
 
-**Detect.** Durable state added with neither a registry point nor an entry in its owning file; an entry on the second
-ground that omits the loss, why it is tolerable, or how an operator reaches it; an entry carrying provenance for the
-change that added it; an entry whose claimed window no longer exists in code.
+**Detect.** Durable state a reviewer would otherwise expect a sweep point for, added with neither a registry point nor
+an entry in its owning file; an entry on the second ground that omits the loss, why it is tolerable, or how an operator
+reaches it; an entry carrying provenance for the change that added it; an entry whose claimed window no longer exists in
+code.
 
 **Do.** A new fact table written by a single-transaction insert gets an entry on the first ground in its daemon's file,
 naming the writer and the one transaction.

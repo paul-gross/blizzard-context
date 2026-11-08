@@ -13,8 +13,8 @@ takes the name stated here. [Known debt](#known-debt) lists the code these rules
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
-**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable; the kinds
-listed below depart from it only as stated there. Give editable records a sparse-merge edit, and each record a
+**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable; a kind
+listed below departs from it only as its entry states. Give editable records a sparse-merge edit, and each record a
 `revision` that every committed write increments and one `config_changes` row appended in the same transaction as each
 write. A sparse merge leaves an absent field unchanged, sets a present field, and takes an explicit `null` as clearing a
 nullable field, refusing it on any other. A retire of a retired record, or an enable of an enabled one, writes nothing;
@@ -29,8 +29,9 @@ an edit of a retired record is legal and leaves it retired. Enable reverses a re
 | retire | `POST /api/<kind>/{key}/retire` |
 | enable | `POST /api/<kind>/{key}/enable` |
 
-Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its edit. The kinds that depart
-from the six, and the surface each carries:
+Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its edit. Each entry below states
+a kind's own surface beside the six; only the entries for a project, a project's link, a graph, a work item, and a
+secret depart from the verb set itself:
 
 - **A project** takes create, list, show, and edit but no retire or enable: a project, once created, stays
   ([../../domain/projects.md](../../domain/projects.md)). Its links to sources and repositories carry the lifecycle in
@@ -78,8 +79,8 @@ other, and the only one a declarative apply's per-field difference maps onto wit
 and one change log across kinds mean every door — API, CLI, board, document — changes a record the same way and leaves
 the same trace.
 
-**Scope.** Binds the kinds named above and any kind added beside them; a secret is keyed by its name. How a record that
-other records reference is identified and resolved is `bzh:configured-record-names` below.
+**Scope.** Binds the kinds named above and any kind added beside them. How a record that other records reference is
+identified and resolved is `bzh:configured-record-names` below.
 
 **Detect.**
 
@@ -146,8 +147,8 @@ kind's own reserved slugs stay that kind's refusal.
 - A slug a record leaves that stops resolving while no other record holds it, or one that keeps resolving after another
   record claims it.
 
-**Do.** A route handler resolves `{key}` once through the shared id-or-slug resolution and hands the service the record;
-the change row the write appends is keyed by the record's id and labeled with its current slug.
+**Do.** The `config_changes` row a project rename appends: `record_kind="project"`, `record_key="prj_01M5…"`, the
+project's id, the same before and after the rename.
 
 **Don't.** A `config_changes` row keyed by a project's slug — the row loses its subject on the next rename.
 

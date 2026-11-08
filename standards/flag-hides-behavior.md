@@ -6,7 +6,8 @@ Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-r
 
 A feature flag changes what the software does with a surface, never whether the surface exists: surface a release
 carries is held to `docs/versioning.md` whether or not its flag is on, and each surface kind answers an off flag the one
-way [Off behavior by surface](#off-behavior-by-surface) gives, through a seam [Guard seams](#guard-seams) names.
+way [Off behavior by surface](#off-behavior-by-surface) gives — a route, field, CLI verb or option, or configuration key
+answering through the seam [Guard seams](#guard-seams) names for it.
 
 ## Why
 

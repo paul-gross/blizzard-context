@@ -21,11 +21,12 @@ swap untouched.
 
 **Exception.** A harness binding package (`runner/harness/claude_code/`, `runner/harness/opencode/`,
 `runner/harness/opencode_v2/`) is an adapter, not a concept package: it may bind a process or the filesystem, so it is
-exempt from the `os`, `shutil`, `subprocess`, and `tempfile` half of the check and still held to the framework five. The
-binding set is named explicitly, so a new binding fails the gate until it is named. Any other module's stdlib-driver
-import needs a reasoned entry in the per-module exemption map in `tests/guards/test_layering.py`, which admits only the
-packages it names; an entry whose module no longer imports a package it admits is stale and fails the gate. Pure path
-arithmetic (`posixpath`, `PurePosixPath`) needs no exemption.
+exempt from `tests/guards/test_layering.py`'s check on the `os`, `shutil`, `subprocess`, and `tempfile` imports and
+still held to its check on the framework packages — fastapi, starlette, sqlalchemy, click, and httpx2. The binding set
+is named explicitly, so a new binding fails that check until it is named. Any other module's stdlib-driver import needs
+a reasoned entry in the per-module exemption map in `tests/guards/test_layering.py`, which admits only the packages it
+names; an entry whose module no longer imports a package it admits is stale and fails the check. Pure path arithmetic
+(`posixpath`, `PurePosixPath`) needs no exemption.
 
 **Scope.** A runner domain-core module is any module of a `bzh:domain-package-layers` runner node outside an `internal/`
 package (`_runner_domain_core_files`): a concept package's public surface holds its models, ports, and the services
@@ -146,11 +147,14 @@ test may swap from `ctx.find_object(<carrier>)`, and defaults to the production 
 hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test patches is not a seam. The shared
 carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one httpx2 import: every
 command builds its HTTP client through the carrier's `client_factory` and takes httpx2's types (`Client`, `Response`,
-the error classes) from that module, never from httpx2. `runner/cli/runtime.py`'s `init` resolves its own hub-clients
-carrier the same way, keeping the HTTP default out of the `runner` group so a worker verb never loads a daemon's stack;
-the carrier also holds the `host` verb's process and harness-bundle builders, which only `runtime.py` — a composition
-root — may import. A runner verb resolves the shared carrier extended with the child-process launcher, the loopback
-transport, and the OpenCode 2 service transport from `runner/cli/children.py`.
+the error classes) from that module, never from httpx2. The root groups pass the resolved carrier into `OperatorTrace`
+and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory. `runner/cli/runtime.py`'s
+`init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the `runner` group so a worker
+verb never loads a daemon's stack; the carrier also holds the `host` verb's process and harness-bundle builders, which
+only `runtime.py` — a composition root — may import. A runner verb resolves the shared carrier extended with the
+child-process launcher, the loopback transport, and the OpenCode 2 service transport from `runner/cli/children.py`, and
+reads its clocks, launcher, and transports from that one carrier, so a test hands HTTP, launcher, and transport fakes in
+one `obj`.
 
 **Why.** One process graph prevents independently wired app and driver collaborators from diverging, and lets tests
 substitute a fake store, a virtual clock, and a mock forge without patching module globals.
@@ -205,10 +209,7 @@ the same process graph with explicit lifetimes:
   are host-scoped and built once per host; each `RunnerProcess` holds only runner-bound collaborators plus its attempt
   handle, the one runner-scoped external-usage write
 
-The CLI roots in that shape: the root groups resolve the carrier and pass it into `OperatorTrace` and `WorkerSession` as
-required arguments, and a hub verb's `CliContext` holds its factory. A runner verb reads its clocks, launcher, and
-transports from the one extended carrier `runner/cli/children.py` builds, so a test hands HTTP, launcher, and transport
-fakes in one `obj`. Helpers a root calls into rather than repeating:
+Helpers a CLI root calls into rather than repeating:
 
 - `blizzard/src/blizzard/runner/cli/daemon.py`'s `Door.uds_client` builds the local UDS client, through the carrier's
   factory, that both `RunnerDaemon.reach` and `daemon_holding` need, shared rather than duplicated; each caller passes

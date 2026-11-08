@@ -1,9 +1,10 @@
 # Seam positions
 
 This spoke owns the recorded positions under `bzh:pluggable-seams` — which external-system reaches are exempt from a
-configured seam, structural rather than opt-in, or absent as a single Protocol, and why; the macro-shape hub is
-[../system-shape.md](../system-shape.md), and [./pluggable-seams.md](./pluggable-seams.md) owns the rule itself. Each
-position is stated so a reviewer need not re-derive it; a rule stated here follows the slot skeleton owned by
+configured seam, structural rather than opt-in, or absent as a single Protocol, and why — and `bzh:forge-rate-budget`,
+the rule for how forge calls reach their shared rate budget; the macro-shape hub is
+[../system-shape.md](../system-shape.md), and [./pluggable-seams.md](./pluggable-seams.md) owns the seam rule itself.
+Each position is stated so a reviewer need not re-derive it; a rule stated here follows the slot skeleton owned by
 `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## The hub work source is always seated
@@ -67,13 +68,13 @@ over readings, free of any HTTP library.
 **Why.** One adapter serves every caller of its repository, so a priority on the adapter would be every caller's. A
 budget that spoke HTTP would carry one forge's dialect into arithmetic every forge kind shares.
 
-**Detect.** A priority argument or attribute on a forge adapter rather than on its handle; an import of the forge seam
-(`hub/forge/landing.py`) from the work-source family; an HTTP library imported in `hub/forge/budget.py`; a forge's
-answer turned into a reading anywhere but in its forge kind's dialect.
+**Detect.** A priority argument or attribute on a forge adapter rather than on its handle; an import of any module of
+the forge package (`hub/forge/`) from the work-source family (`hub/work_sources/`); an HTTP library imported in
+`hub/forge/budget.py`; a forge's answer turned into a reading anywhere but in its forge kind's dialect.
 
 **Do.** The `land` action takes a `landing` handle and the garden's commit check a `sweeping` one, both over the one
 adapter the registry built for the repository; a work source is built with its `sweeping` rate gate
 (`hub/work_sources/rate_gate.py`) and reads the budget through nothing else.
 
-**Don't.** A work-source binding importing `hub/forge/landing.py` to ask the budget directly; a forge's rate headers
-parsed in `budget.py` rather than in that forge kind's dialect.
+**Don't.** A work-source binding importing `hub/forge/budget.py` to ask its forge key's budget directly; a forge's rate
+headers parsed in `budget.py` rather than in that forge kind's dialect.

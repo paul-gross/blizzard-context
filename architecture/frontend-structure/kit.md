@@ -15,7 +15,7 @@ state message) lands once.
 
 **Exception.** A genuinely distinct native interaction, under a reasoned element-level ESLint suppression on that
 element; and a site that genuinely should not convert, on the kit-floor sweep's reasoned exemption list. The shared kit
-(`fleet/lib/kit/`) itself remains the only general exemption.
+(`fleet/src/lib/kit/`) itself remains the only general exemption.
 
 **Scope.** The kit depends only on `@angular/core`, `@angular/cdk`, and the token CSS (`core/design/tokens.css`) — no
 query, mutation, or client injection — keeping it presentational, testable by plain inputs, and at the bottom of the
@@ -58,11 +58,15 @@ judged through whichever page shows it.
 expectation reaches no further: a piece in one of `fleet`'s feature folders, such as `chunk/`, `transcripts/`, or
 `host/`, or in an app of its own, may have stories, but nothing asks for them.
 
-**Detect.** `web:structural-gate`'s kit-stories sweep, with its reasoned exemption list, and `web:story-render` for a
-story that has stopped compiling or rendering.
+**Exception.** A kit part that genuinely cannot be shown alone, named with its reason on the kit-stories sweep's
+exemption list (`KIT_STORIES_EXEMPT` in `blizzard/web/scripts/structural-gate.js`).
 
-**Do.** `kit-badge.stories.ts` beside `kit-badge.ts`: a meta titled `Kit/Badge` with `component: KitBadge`, and one
-`StoryObj` export per variant and per tone, each a literal `args` object and nothing more.
+**Detect.** `web:structural-gate`'s kit-stories sweep, and `web:story-render` for a story that has stopped compiling or
+rendering.
+
+**Do.** `kit-badge.stories.ts` beside `kit-badge.ts`: a meta titled `Kit/Badge` with `component: KitBadge` and a
+`render` template projecting the badge's label, and one `StoryObj` export per variant and per tone, each a literal
+`args` object, the overflowing `LongLabel` adding its own `render` for a longer label.
 
 **Don't.** Wrap a container in fake providers so that it will render.
 
