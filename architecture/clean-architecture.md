@@ -163,6 +163,10 @@ Three ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP
 - `cli-refusal-body-confined` fails a CLI-tree read of a refusal's `detail` outside
   `blizzard/src/blizzard/cli/refusal.py` ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
 
+One Ruff rule beside them holds the OpenCode 2 service seam: `TID251` bans `UrllibServiceTransport` in every
+`runner/cli/` module except `runner/cli/children.py`, which builds the production one. It is scoped to that one concrete
+adapter, not to transports in general.
+
 **Do.** Blizzard has no DI container. Its long-lived processes each own one graph, handing process-scoped collaborators
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
 the same process graph with explicit lifetimes:
@@ -193,8 +197,9 @@ pass it into `OperatorTrace` and `WorkerSession` as required arguments, and a hu
 `runner/cli/runtime.py`'s `init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the
 `runner` group so a worker verb never loads a daemon's stack; the carrier also holds the `host` verb's process and
 harness-bundle builders, which only `runtime.py` — a composition root — may import. A runner verb resolves the shared
-carrier extended with the child-process launcher and the loopback transport from `runner/cli/children.py`, so it reads
-its clocks and launcher from one carrier and a test hands HTTP and launcher fakes in one `obj`.
+carrier extended with the child-process launcher, the loopback transport, and the OpenCode 2 service transport from
+`runner/cli/children.py`, so it reads its clocks, launcher, and transports from one carrier and a test hands HTTP,
+launcher, and transport fakes in one `obj`.
 
 This prose rule is wider than the mechanical roster: `tests/guards/test_layering.py::_COMPOSITION_ROOTS` stays the
 narrower set of modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a
