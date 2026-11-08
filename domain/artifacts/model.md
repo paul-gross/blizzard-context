@@ -17,8 +17,12 @@ refused at delivery, never chosen between. The branch behind a pointer is pushed
 submitted, so the pointer never dangles. The hash is authoritative: branches move, so the hash pins the state actually
 verified, and the branch name serves only to detect work committed ahead of it. The hash stays authoritative through
 delivery: the lander may advance a delivery's head past it only by merging the base branch into it, and any other
-advance refuses the landing and bounces the chunk. There is deliberately no fencing at the branch ref — a zombie
-clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing`, [fencing](../execution/fencing.md)).
+advance refuses the landing and bounces the chunk. That rule binds the hub's automatic landings. A park delegates merge
+authority to the forge's merge controls: a person's merge of the identified parked change finishes its repository at the
+revision the merge actually produced, whatever the change's final head. A head that differs from the submitted commit is
+recorded as changed-head evidence, not as proof of who changed it. There is deliberately no fencing at the branch ref —
+a zombie clobbering a branch can lose work, never land wrong work (`bzh:epoch-fencing`,
+[fencing](../execution/fencing.md)).
 
 A worker node's asset is normally submitted by explicit worker declaration per the node's `produces:` list
 ([declarations](../../standards/worker-nodes/declarations.md)). A declared asset's content is never empty. A declaration

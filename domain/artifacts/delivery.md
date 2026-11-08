@@ -40,8 +40,11 @@ worker node's judgement ([edges](../graphs/edges.md)).
   only when its submitted commit is proven contained in the intended base and its current branch and head are safe; an
   unreadable or refused comparison is not proof. Its durable no-code evidence matches the current declaration, so replay
   skips that work but a changed declaration does not. Resolved repositories need no flow resource and count as finished
-  for reconciliation, not as landings. A PR reference for a no-code resolution is history, not an open landing wait.
-  Mixed delivery records landing facts, revisions, events, and traces only for repositories actually merged.
+  for reconciliation, not as landings. Fast-forward containment resolves the same way: nothing advances, so nothing
+  lands. A park applies this proof to fresh work only where its forge offers the reads the proof needs; otherwise it
+  opens its change and waits as usual. An already-merged change associated with a park is recovered before no-code is
+  considered. A PR reference for a no-code resolution is history, not an open landing wait. Mixed delivery records
+  landing facts, revisions, events, and traces only for repositories actually merged.
 - **Conflict is a judged, authored outcome**, not an engine special case: a dirty repository is one of the action's own
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
@@ -54,7 +57,7 @@ worker node's judgement ([edges](../graphs/edges.md)).
   | ----------------- | ----------------------------------------------------------------------------------------------------- |
   | `merge-on-checks` | Default; opens a change, updates it from the base, and merges when checks are green.                  |
   | `fast-forward`    | Checks the work revision, or a proven merge candidate when the base diverged, then advances the base. |
-  | `park`            | Opens a change for a person to merge and observes its outcome.                                        |
+  | `park`            | Opens a change for a person to merge; their merge is authoritative, at its actual revision.           |
 
   The graph still decides where landing happens, by declaring its action in `deliver`;
   [feature delivery](../../workflows/feature-delivery.md) describes the shipped graph. Each commit pointer is resolved
