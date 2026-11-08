@@ -15,10 +15,11 @@ worker, judge, or resume child takes the worker profile, which adds the per-spaw
 carry into every child, where a still-untrusted harness prompt, transcript, or check command can leak them. An allowlist
 makes a credential's absence structural rather than something a filter must remember to strip.
 
+**Exception.** Takeover's foreground child (`src/blizzard/runner/cli/control.py`): it runs in the operator's terminal,
+so its base is the operator's shell layered with the takeover env.
+
 **Scope.** Governs child-environment construction for every child the runner launches, on the runner side of the harness
 seam (`bzh:pluggable-seams`); it does not bound what a harness binary may read from its own environment once launched.
-The one exception is takeover's foreground child (`src/blizzard/runner/cli/control.py`): it runs in the operator's
-terminal, so its base is the operator's shell layered with the takeover env.
 
 **Detect.** `os.environ`, `env=None`, or an omitted `env=` (all inherit the parent) reaching a child launch instead of
 an `AllowlistedEnv` profile; the launch seam's `env` parameter takes only a profile value and has no default, so pyright
@@ -47,10 +48,12 @@ shell — and a child holding inherited stdin can block on the daemon's terminal
 (`bzh:deterministic-shell`). One seam makes the group, the kill, and the closed stdin structural rather than a
 per-call-site flag to remember.
 
+**Exception.** Takeover's foreground child is exempt from the group and the timeout: it still goes through the seam's
+foreground entry, but runs with no new group and no timeout, because an interactive child must keep the terminal's
+foreground group.
+
 **Scope.** Governs every `subprocess` and `pty` launch under `src/blizzard/runner/**` and `src/blizzard/foundation/**`;
-the hub has no sanctioned launch site, and `hub/**` launches no process at all. Takeover's foreground child is the one
-exception to the group and the timeout: it still goes through the seam's foreground entry, but runs with no new group
-and no timeout, because an interactive child must keep the terminal's foreground group.
+the hub has no sanctioned launch site, and `hub/**` launches no process at all.
 
 **Detect.** `bzh:runner-child-launch` is tooled by `blizzard:structural-gate`'s ast-grep scan
 (`contracts/ast-grep/rules/runner-child-launch.yml`), which refuses `import subprocess`, `from subprocess import …`, and

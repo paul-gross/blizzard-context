@@ -74,17 +74,18 @@ module:
 its exemptions a list a reviewer reads whole, turns "where can one runner's rows leak?" into a question with a short
 answer.
 
-**Scope.** Two cross-kind writes are admitted. `record_external_usage_attempt` (`host_external_usage_store.py`) writes a
-usage sample, a host row, and its outbound report, a runner row, in one transaction. Its host statement is authored in
-that host module and its outbound row is built through the runner builders, so the outbound row is stamped like any
-other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
+**Exception.** Two cross-kind writes are admitted. `record_external_usage_attempt` (`host_external_usage_store.py`)
+writes a usage sample, a host row, and its outbound report, a runner row, in one transaction. Its host statement is
+authored in that host module and its outbound row is built through the runner builders, so the outbound row is stamped
+like any other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
 transaction, through one handle that carries no `Connection` to the domain: the runner half is built by the transfer
 adapter's binding, and the host half by the `host_ingests` member (`host_ingest_store.py`), which merges the host rows
-by each table's declared treatment and records an ingest; neither module names the other kind's tables. The
-runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it stands for — appears
-only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations. `scoped.py` declares the
-mark. `blizzard/src/blizzard/runner/store/internal/invariants.py` reaches the store through the `runner_audit` member it
-is handed, never by spelling the mark.
+by each table's declared treatment and records an ingest; neither module names the other kind's tables.
+
+**Scope.** The runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it
+stands for — appears only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations.
+`scoped.py` declares the mark. `blizzard/src/blizzard/runner/store/internal/invariants.py` reaches the store through the
+`runner_audit` member it is handed, never by spelling the mark.
 
 **Detect.** The host-store check in `blizzard/tests/guards/test_layering.py` fails the unit tier on a runner adapter
 naming a host-scoped table, a host adapter naming a runner-scoped one outside the admitted cross-kind write, and the
