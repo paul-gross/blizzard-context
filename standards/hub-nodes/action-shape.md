@@ -28,9 +28,10 @@ single step invoking a recognized packaged script module: the step reads as that
 action's `with:` arguments, the step's `name` and `produces` are dropped, each packaged landing script reads as `land`,
 and an empty `run:` reads as `pass`. A `run:` outside that — several steps, an unrecognized module, a flag the action
 does not declare — is not translated: its stored command is retained as the node's `legacy_run` for diagnosis, and a
-chunk standing at the node escalates `hub-action-missing` rather than running anything. This carry-over is the one
-same-id representation change [../../domain/graphs/identity.md](../../domain/graphs/identity.md) §Representation under
-one identity admits, and it is bounded there, not here.
+chunk standing at the node escalates `hub-action-missing` rather than running anything. This spoke owns what the
+carry-over translates, drops, and retains, and that escalation;
+[../../domain/graphs/identity.md](../../domain/graphs/identity.md) §The admitted legacy carry-over owns why it is
+admitted under the same ids, and that it proves no preservation.
 
 **Detect.** `action:` or `with:` authored on a node whose `executor` is not `hub`; a hub node naming no `action:`, an
 uncatalogued one, or `run:`; a `with:` key the action does not declare, or a required one missing; a hub node also

@@ -2,9 +2,9 @@
 
 A graph pairs an immutable definition with mutable operational metadata; every edit creates a new graph rather than
 changing an existing one, so anything pinned to one can trust it forever. Definitional — a taxonomy of a graph's
-identity, what that identity freezes, the one representation change admitted under it, and its mutable operational
-surfaces (`canon:rule-shape` §File kinds); the definition's content is routed from [../graphs.md](../graphs.md). Part of
-the [domain model](../index.md).
+identity, what that identity freezes, the bound on any same-id representation change, the one legacy carry-over admitted
+outside that bound, and its mutable operational surfaces (`canon:rule-shape` §File kinds); the definition's content is
+routed from [../graphs.md](../graphs.md). Part of the [domain model](../index.md).
 
 ## Standalone graphs
 
@@ -29,28 +29,32 @@ edit in place.
 
 ## Representation under one identity
 
-A conversion that changes how a stored definition is represented while keeping its ids is admissible only when it
-demonstrably preserves the authored meaning, every graph, node, and choice identity and the history that references
-them, the original authoring evidence, and every supported consumer — the release, skew, upgrade, and downgrade
-contracts in force included. Recognizing a command name, parser equality, or the translation's own mapping tests does
-not discharge that condition. This bounds a conversion and authorizes none: it licenses no rewrite of history, no
-widened normalizer, and no change to what an argument means, and it calls for no equivalence engine, approval registry,
-or version tree. A conversion that cannot establish preservation returns a concrete decision — a new mint, a refusal, an
-escalation — rather than labeling semantic loss normalization.
+Beyond the legacy carry-over [§The admitted legacy carry-over](#the-admitted-legacy-carry-over) admits, any conversion
+that changes how a stored definition is represented while keeping its ids is admissible only when it demonstrably
+preserves the authored meaning, every graph, node, and choice identity and the history that references them, the
+original authoring evidence, and every supported consumer — the release, skew, upgrade, and downgrade contracts in force
+included. Recognizing a command name, parser equality, or the conversion's own mapping tests does not discharge that
+condition. This bounds a conversion and authorizes none: it licenses no rewrite of history, no widened normalizer, and
+no change to what an argument means, and it calls for no equivalence engine, approval registry, or version tree. A
+conversion that cannot establish preservation returns a concrete decision — a new mint, a refusal, an escalation —
+rather than labeling semantic loss normalization.
 
-### The admitted legacy carry-over
+## The admitted legacy carry-over
 
-One bounded carry-over is admitted: a stored hub node naming no action, whose retired `run:` is empty or a single
-recognized packaged command, reads as the action that command named, with its graph, node, and choice ids and its
-chunks' history unchanged. Its original definition text stays the authoring record and may still spell `run:` while the
-executable view reads `action:`; that spelling difference under one identity is legal, and pins and recorded history
+One existing carry-over is admitted under the same ids as a legacy category of its own: it is not held to the
+preservation condition [§Representation under one identity](#representation-under-one-identity) sets, and it is not
+claimed to meet it. A stored hub node naming no action, whose retired `run:` is a single recognized packaged command,
+reads as the action that command named, or as `pass` when its `run:` is empty, with its graph, node, and choice ids and
+its chunks' history unchanged. Its original definition text stays the authoring record and may still spell `run:` while
+the executable view reads `action:`; that spelling difference under one identity is legal, and pins and recorded history
 survive it. The carry-over is a recognized-command lookup, not a preservation proof: it reads only the commands it
 recognizes, discards step metadata that has no home on an action, and is not certified lossless here. A `run:` it does
 not recognize stays untranslated for comparison, and its stored command is retained beside the node for diagnosis and
 human escalation, never executed — an old custom script does not run, and a packaged set naming only actions does not
-show the carry-over to be unused. A new graph naming `run:` on a hub node is refused regardless.
-[../../standards/hub-nodes/action-shape.md](../../standards/hub-nodes/action-shape.md) owns the authoring contract, what
-the translation covers and drops, and the escalation a node it cannot carry takes.
+show the carry-over to be unused. A new graph naming `run:` on a hub node is refused regardless. This section owns why
+the carry-over is admitted under the same ids and that it proves no preservation;
+[../../standards/hub-nodes/action-shape.md](../../standards/hub-nodes/action-shape.md) owns what it translates, drops,
+and retains, and the escalation a node it cannot carry takes.
 
 ## Comparison at reconciliation
 
