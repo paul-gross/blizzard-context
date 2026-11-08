@@ -55,8 +55,9 @@ store, domain, or model code; a timestamp written from anything but the injected
 the resolver; a timeout, backoff, or readiness wait taken from `IClock`.
 
 **Do.** The clock is injected; timestamps come from `clock.now()`, and column values are set by the writing code from
-that clock — not by a database default. A subprocess's deadline comes from `IMonotonicClock`, so advancing a controlled
-`IClock` by a day neither stalls nor fires it.
+that clock — not by a database default. The runner's hub proxy measures its retry budget on `IMonotonicClock`
+(`blizzard/src/blizzard/runner/api/hub_proxy.py`), so advancing a controlled `IClock` by a day neither stalls nor fires
+it.
 
 **Don't.** `created_at = Column(DateTime, default=datetime.utcnow)` — the store now stamps wall-clock time the virtual
 clock can't move.

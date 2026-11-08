@@ -65,8 +65,9 @@ exemption list (`KIT_STORIES_EXEMPT` in `blizzard/web/scripts/structural-gate.js
 rendering.
 
 **Do.** `kit-badge.stories.ts` beside `kit-badge.ts`: a meta titled `Kit/Badge` with `component: KitBadge` and a
-`render` template projecting the badge's label, and one `StoryObj` export per variant and per tone, each a literal
-`args` object, the overflowing `LongLabel` adding its own `render` for a longer label.
+`render` template projecting the badge's label, and one `StoryObj` export per variant and per tone, with a few
+combinations such as `SoftNeeds`, each setting its `args` by literal, the overflowing `LongLabel` adding its own
+`render` for a longer label.
 
 **Don't.** Wrap a container in fake providers so that it will render.
 

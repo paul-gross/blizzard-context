@@ -147,7 +147,7 @@ kind's own reserved slugs stay that kind's refusal.
 - A slug a record leaves that stops resolving while no other record holds it, or one that keeps resolving after another
   record claims it.
 
-**Do.** The `config_changes` row a project rename appends: `record_kind="project"`, `record_key="prj_01M5…"`, the
+**Do.** The `config_changes` row a project rename appends: `record_kind="project"`, `record_key="proj_01M5…"`, the
 project's id, the same before and after the rename.
 
 **Don't.** A `config_changes` row keyed by a project's slug — the row loses its subject on the next rename.

@@ -23,10 +23,10 @@ swap untouched.
 `runner/harness/opencode_v2/`) is an adapter, not a concept package: it may bind a process or the filesystem, so it is
 exempt from `tests/guards/test_layering.py`'s check on the `os`, `shutil`, `subprocess`, and `tempfile` imports and
 still held to its check on the framework packages — fastapi, starlette, sqlalchemy, click, and httpx2. The binding set
-is named explicitly, so a new binding fails that check until it is named. Any other module's stdlib-driver import needs
-a reasoned entry in the per-module exemption map in `tests/guards/test_layering.py`, which admits only the packages it
-names; an entry whose module no longer imports a package it admits is stale and fails the check. Pure path arithmetic
-(`posixpath`, `PurePosixPath`) needs no exemption.
+is named explicitly, so a new binding fails `tests/guards/test_layering.py` until it is named. Any other module's
+stdlib-driver import needs a reasoned entry in the per-module exemption map in `tests/guards/test_layering.py`, which
+admits only the packages it names; an entry whose module no longer imports a package it admits is stale and fails the
+check. Pure path arithmetic (`posixpath`, `PurePosixPath`) needs no exemption.
 
 **Scope.** A runner domain-core module is any module of a `bzh:domain-package-layers` runner node outside an `internal/`
 package (`_runner_domain_core_files`): a concept package's public surface holds its models, ports, and the services
