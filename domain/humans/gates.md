@@ -21,6 +21,12 @@ Each arrival at a human-judged node opens one decision for that visit's epoch, w
 operator restart landed it, including a restart back onto the same node. The arrival and decision commit together; a
 replayed arrival opens no second decision. This does not impose a graph gate on a worker-judged runner node.
 
+A decision belongs to its node visit, not to the claim or lease that opened it. A visit's lifetime does not make the
+decision's stamp equal the arrival's: a graph gate's decision is stamped at the arrival's epoch, and a runner-configured
+gate's at its producing attempt's exit, which can be later. A visit holds at most one unconsumed decision: a fresh gate
+submission while the visit already holds one is refused and appends nothing — no decision, no artifacts. A visit found
+holding more than one refuses every exit and gate, naming them, rather than choosing between them.
+
 A decision records whether the graph declared its gate or a named runner's configuration imposed it. A runner declares
 its gate set to the hub, which reports it and never enforces it.
 
@@ -36,16 +42,17 @@ and the chunk derives `waiting_on_human` from a waiting one; the wait ends at th
 once a fact consumes it, which can come later than the resolution. Resolution is recorded once — first write wins, like
 an answer ([./asks.md](./asks.md)) — and the holding runner then writes the ordinary transition
 ([../work/transitions.md](../work/transitions.md)) referencing the decision: the runner still advances the chunk. Until
-a closing fact references a runner-configured gate, the runner's plain completion out of that node-step — one naming no
-decision — is refused, whether the gate is still waiting or already resolved: only the transition naming the decision
-moves on, and only to the resolved choice of a decision from the current node arrival's epoch. A claim may reserve a
-newer epoch without moving the chunk; its completion must clear the current lease fence, while the gate decision still
-belongs to the same visit. A return to the gate through another transition, migration, or restart is a new visit, and
-the earlier visit's decision cannot authorize it. A resolution to a `requires_checks` choice over a red check is
-accepted — a human's judgement is not bound by the gate that binds an agent — and is recorded as an override with the
-resolution. The resolution records who chose what, and may carry the resolver's note
-([./asks.md#a-persons-note](./asks.md#a-persons-note)); a losing resolution's note is dropped with its choice. A
-decision closes by one of:
+a closing fact references a runner-configured gate, a plain completion out of that node visit — one naming no decision —
+is refused, whether the gate is still waiting or already resolved: only the transition naming the decision moves on, and
+only to the resolved choice of the current visit's decision. The current holder carries that decision at its own fence —
+the same claim at a later lease, or a new claimant after a detach or release: its completion must clear the current
+lease fence, while the decision still belongs to the visit. A new claimant consumes a resolved decision with that
+transition rather than rerunning the worker. Approval is the visit's, never the claim's. A return to the gate through
+another transition, migration, or restart is a new visit, and the earlier visit's decision cannot authorize it. A
+resolution to a `requires_checks` choice over a red check is accepted — a human's judgement is not bound by the gate
+that binds an agent — and is recorded as an override with the resolution. The resolution records who chose what, and may
+carry the resolver's note ([./asks.md#a-persons-note](./asks.md#a-persons-note)); a losing resolution's note is dropped
+with its choice. A decision closes by one of:
 
 - the holding runner's transition — the ordinary case;
 - a migration record, when the chosen choice migrates cross-graph — a migration writes no transition
