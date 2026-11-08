@@ -8,11 +8,22 @@ What follows binds the evidence a verification claim rests on, not the inner loo
 checks or defer a gate entirely, so long as the full declared method runs green before the work is called verified, and
 a narrowed run is a convenience rather than claim evidence.
 
-## An assertion is worth only what it observes
+## An assertion is worth only what it observes (`bzh:assertion-observes-its-claim`)
 
-A negative assertion is worth only the window it is made over: a fixed sleep shorter than the subject's own cadence
-proves nothing. A write that looks idempotent from the code alone is only provably idempotent once the suite performs it
-twice and re-reads the resulting state.
+**Rule.** Claim from an assertion only what its body observed: a negative assertion proves absence only over the window
+it watched, so a fixed sleep shorter than the subject's own cadence proves nothing, and a write that looks idempotent
+from the code alone is provably idempotent only once the suite performs it twice and re-reads the resulting state.
+
+**Why.** A green assertion is evidence of the observation it made, not of the property its author had in mind, and the
+distance between the two is where a regression stays green.
+
+**Detect.** A negative assertion whose only barrier is a delay shorter than the subject's cadence, or none; an
+idempotency, convergence, or no-duplicate claim whose case performs the operation once. Whether a service spec's wait is
+a barrier at all is `bzh:service-waits-on-the-system`'s ([`./service-tests/time.md`](./service-tests/time.md)).
+
+**Do.** Perform the land twice against the same chunk, then read the forge's merge list and assert one entry.
+
+**Don't.** Sleep 100 ms, then assert that no second merge was recorded, on a lane whose pass runs every second.
 
 ## Choosing a mutation, and when its claim is admissible (`bzh:mutation-review-selection`)
 

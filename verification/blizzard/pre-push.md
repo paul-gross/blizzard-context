@@ -50,29 +50,46 @@ grep -rn --exclude-dir=node_modules '<old-testid>\|<old-field>' tests/ui/ tests/
 pull request's `ui` check. From a fleet node, answer a red `gate / …` job with `mise run gate` — the table's row, which
 runs the whole pytest suite.
 
-## Board test handles
+## A board test handle has one renderer (`bzh:unique-test-handle`)
 
-Check a new handle is unique before adding it, expecting exactly one component:
+**Rule.** Give a new `data-testid` a name exactly one component renders, and check that before adding it; a new
+component rendering a concept an existing one already renders gets its own prefixed handles.
+
+**Why.** A `data-testid` is a usable locator only while exactly one component renders it, so a duplicate name makes
+every `get_by_test_id` for it ambiguous and the scenario dies on `strict mode violation: … resolved to 2 elements`.
+
+**Detect.** The sweep, expecting exactly one component:
 
 ```bash
 grep -rn 'data-testid="<new-testid>"' web/projects/
 ```
 
-A `data-testid` is a usable locator only while exactly one component renders it, so a duplicate name makes every
-`get_by_test_id` for it ambiguous and the scenario dies on `strict mode violation: … resolved to 2 elements`; a new
-component rendering a concept an existing one already renders gets its own prefixed handles.
-
 `artifacts-tab-artifact-key` is unreachable by grep from the component side, where it is never a literal but only
 synthesized as `` `${testid()}-key` ``, so it carries a named spec —
 `web/projects/fleet/src/lib/chunk/chunk-page/chunk-page-artifacts-tab.spec.ts` — rather than a sweep.
 
-## The browser tiers run the built bundle
+**Do.** A second tile rendering a chunk's cost beside the existing one takes `queue-chunk-cost`, not the `chunk-cost`
+the first already renders.
 
-The browser scenarios drive the built bundle `blizzard hub host` serves out of `src/blizzard/static/`, never the
-sources, so `mise run ui` carries `depends = ["web-build"]` and must not be reached past with a bare
-`npx playwright test --project='ui*'`. The hazard is not an unbuilt tree, which fails loudly before the first assertion,
-but a bundle present and stale, which fails quietly: the scenario exercises the previous UI and can go green against a
-layout that no longer exists.
+**Don't.** Reuse `chunk-cost` on the new tile because it renders the same concept.
+
+## The browser tiers run the built bundle (`bzh:browser-tiers-run-the-built-bundle`)
+
+**Rule.** Run a browser tier through its task — `mise run ui` — never past it with a bare
+`npx playwright test --project='ui*'`.
+
+**Why.** The browser scenarios drive the built bundle `blizzard hub host` serves out of `src/blizzard/static/`, never
+the sources, so the task carries `depends = ["web-build"]`. An unbuilt tree fails loudly before the first assertion, but
+a bundle present and stale fails quietly: the scenario exercises the previous UI and can go green against a layout that
+no longer exists.
+
+**Detect.** A `blizzard:ui` claim resting on a bare `npx playwright test` invocation, or on a run with no `web-build`
+ahead of it.
+
+**Do.** *"`blizzard:ui` green via `mise run ui`, the bundle rebuilt in the same run."*
+
+**Don't.** `npx playwright test --project='ui*'` after editing a template, reading a green off the bundle the last build
+wrote.
 
 ## A red drift check means stage the output (`bzh:drift-stage-not-route-around`)
 

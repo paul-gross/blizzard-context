@@ -60,3 +60,32 @@ projected content renders through a `render` template. A story builds its data f
 renders, reaches no network, and asserts nothing: no `play`, no `expect`.
 
 **Don't.** Wrap a container in fake providers so that it will render.
+
+## A visible change is built in the workshop (`bzh:frontend-workshop-first`)
+
+**Rule.** Open the workshop before writing a part when a change alters anything a person sees on the board or the panel:
+look first for a part that already does what the change needs and reuse it before inventing another, shape the change
+against the part's stories as it is built, and before calling the work done perform `web:manual-workshop` over every
+part touched.
+
+**Why.** The workshop shows a part alone in every state its stories carry, so a change shaped there is seen in each
+state as it is made, rather than through whichever page happens to compose the part.
+
+**Detect.** A frontend change whose verification claim names no workshop pass over the parts it touched, or that adds a
+part doing what one already in the kit or a shared piece does.
+
+**Do.** *"workshop: `Kit/Badge`, error and disabled stories, `phone` and `desktop`"* — the pass named in the claim, with
+the stories it covered.
+
+**Don't.** A new status chip beside the kit's badge, written against the page that needed it and called done on a jsdom
+green.
+
+**See also.**
+
+- `web:manual-workshop` in [`../../verification/blizzard/manual-web.md`](../../verification/blizzard/manual-web.md) —
+  the method's setup, steps, and pass condition; this rule names when a build performs it, not how.
+- `bzh:frontend-kit-stories` above — the stories a part added or reshaped brings in the same change, so the next build
+  finds them.
+- `bzh:visual-change-needs-a-render` in
+  [`../../verification/blizzard/tier-rules.md`](../../verification/blizzard/tier-rules.md) — the render artifact a
+  visual change owes, which a workshop screenshot can be.
