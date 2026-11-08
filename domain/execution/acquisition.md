@@ -53,6 +53,12 @@ claim fences the old runner out; what the chunk derives then rests on its remain
 release supersedes any of them. What detach, the requeue, and the release each are is owned by
 [./recovery.md](./recovery.md), which also distinguishes the hub's requeue from the holding runner's own.
 
+One gate wait gives tenure back rather than keeping it: a transition-born cross-graph migration landing on a
+human-judged runner node releases the departing claim and opens the destination visit's decision in the same write, so
+the chunk waits `waiting_on_human` with no live claim. It is not claimable until the decision resolves, and then takes a
+fresh claim; meanwhile it reserves no runner or environment, and the release promises no filesystem cleanup. Every other
+gate wait keeps the claim. Which decision the next claimant carries is [../humans/gates.md](../humans/gates.md)'s.
+
 Stop releases the route terminally — no next claim to fence — and a hub node landing the chunk's terminal releases it
 too.
 
