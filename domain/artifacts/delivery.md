@@ -43,8 +43,8 @@ worker node's judgement ([edges](../graphs/edges.md)).
   for reconciliation, not as landings. Fast-forward containment resolves the same way: nothing advances, so nothing
   lands. A park applies this proof to fresh work only where its forge offers the reads the proof needs; otherwise it
   opens its change and waits as usual. An already-merged change associated with a park is recovered before no-code is
-  considered. A PR reference for a no-code resolution is history, not an open landing wait.
-  Mixed delivery records landing facts, revisions, events, and traces only for repositories actually merged.
+  considered. A PR reference for a no-code resolution is history, not an open landing wait. Mixed delivery records
+  landing facts, revisions, events, and traces only for repositories actually merged.
 - **Conflict is a judged, authored outcome**, not an engine special case: a dirty repository is one of the action's own
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
