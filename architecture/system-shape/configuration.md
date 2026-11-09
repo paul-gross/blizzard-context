@@ -7,9 +7,10 @@ by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 A **configured record** is a row the hub holds as operator-set configuration and that an operator changes while the hub
 runs: a forge, a work source, a repository, a secret, a project, a project source link, a project repository link, a
-scope, a routine, or a cadence. The rules below name the seams and tables that keep them — `IConfigCodec`,
-`SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so code adding one of them
-takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet hold.
+scope, a routine, a cadence, an urgency, or the tenant's settings. The rules below name the seams and tables that keep
+them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so
+code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet
+hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
@@ -30,8 +31,8 @@ an edit of a retired record is legal and leaves it retired. Enable reverses a re
 | enable | `POST /api/<kind>/{key}/enable` |
 
 Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its edit. Each entry below states
-a kind's own surface beside the six; only the entries for a project, a project's link, a graph, a work item, and a
-secret depart from the verb set itself:
+a kind's own surface beside the six; only the entries for a project, a project's link, a graph, a work item, a secret,
+an urgency, and the tenant's settings depart from the verb set itself:
 
 - **A project** takes create, list, show, and edit but no retire or enable: a project, once created, stays
   ([../../domain/projects.md](../../domain/projects.md)). Its links to sources and repositories carry the lifecycle in
@@ -65,6 +66,22 @@ secret depart from the verb set itself:
 - **A secret** takes replace in place of edit: its value is replaced whole by `PUT /api/secrets/{name}/value` — on the
   CLI, `blizzard hub secret set NAME`, reading the value from stdin — and the replace still increments the revision and
   appends its change row.
+- **An urgency** ([../../domain/work/urgency.md](../../domain/work/urgency.md)) is tenant-wide, so its change rows name
+  no project, and its slug is fixed at create, so it keeps no former slugs and an edit naming `slug` is refused. Its set
+  has an order, written as position facts: `PUT /api/urgencies/order` sets the whole live order and is refused
+  `422 urgency_order_incomplete` when it leaves a live urgency out, names a retired one, or names one twice;
+  `POST /api/urgencies/order/position` moves one urgency to just after another, or first under `after: null`. A reorder
+  that moves anything appends one change row of kind `urgency_order`, keyed by the tenant id, whose revision is the
+  order's sequence; one that moves nothing appends neither a fact nor a row. Its retire takes a body naming `move_to`,
+  and is refused in order `409 urgency_is_default`, `409 urgency_in_use` when open chunks carry it and no `move_to` is
+  named, then `422 urgency_unknown`, `422 urgency_retired`, or `422 urgency_move_to_self` on `move_to`; a retire that
+  moves open work needs `chunk:control` beside `config:edit`. The model, the order, and the refusal ladder live in
+  `blizzard/src/blizzard/hub/domain/urgency/`.
+- **The tenant's settings** are a keyless singleton, one per tenant, taking show and edit only: `GET /api/settings` and
+  `PATCH /api/settings`, with no `{key}`, since the tenant the request resolved is the key, and no create, retire, or
+  enable, since a tenant always holds its settings. Its change rows, of kind `tenant_settings`, are keyed by the tenant
+  id and name no project. Its `default_urgency` refuses an explicit `null`, and an urgency the tenant does not hold or
+  has retired with `422 urgency_unknown` or `422 urgency_retired`.
 
 Implement configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord` requires
 only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names the
@@ -136,8 +153,9 @@ such kind: 1 to 64 lowercase letters, digits and single inner hyphens.
 **Why.** A reference that held a slug would break on the next rename, and a slug resolved past the edge would resolve
 differently at each door; one immutable id for references and one resolution for handles keep a rename a label change.
 
-**Scope.** A project, a repository, a work source, and a forge take the three names; a secret is keyed by its name. A
-kind's own reserved slugs stay that kind's refusal.
+**Scope.** A project, a repository, a work source, a forge, and an urgency take the three names; a secret is keyed by
+its name. An urgency's slug never changes, so it holds no former slug and takes no part in the former-slug claim and
+release. A kind's own reserved slugs stay that kind's refusal.
 
 **Detect.**
 
@@ -208,12 +226,16 @@ is that project's whole set, so a name the list leaves out is unlinked — the o
 link and never a record; a list the entry omits leaves the stored links. A project entry's `landing_order` lists the
 repositories it ranks, first to land first, leaves every other linked repository unranked, and is planned after the
 entry's links; an entry that omits it leaves the order as it stands, and export writes it only for a project that ranks
-a repository. A project entry naming a former slug is refused rather than taking the slug back
-([../../domain/projects.md](../../domain/projects.md) §Former slugs), and an entry of any kind a project owns acts in
-the project its `project` names, by id or slug, resolved as [../../domain/projects.md](../../domain/projects.md) §A call
-that needs a project states. Export writes each project by its slug, the `projects` section first, so applying an export
-back writes nothing. A legacy import links the sources and repositories it writes to the tenant's only project, and is
-refused when the tenant holds several.
+a repository. The `urgencies`, `urgency_order`, and `settings` sections reconcile after `projects` and before the
+routines and cadences that may name an urgency, in that order, planned by the package that owns urgencies
+(`blizzard/src/blizzard/hub/domain/urgency/`). An `urgencies` entry naming a retired urgency is refused
+`urgency_retired` rather than enabled — the one kind an apply never revives, since reviving an urgency is an act an
+operator takes on purpose — and so is any reference to a retired urgency anywhere in the document. A project entry
+naming a former slug is refused rather than taking the slug back ([../../domain/projects.md](../../domain/projects.md)
+§Former slugs), and an entry of any kind a project owns acts in the project its `project` names, by id or slug, resolved
+as [../../domain/projects.md](../../domain/projects.md) §A call that needs a project states. Export writes each project
+by its slug, the `projects` section first, so applying an export back writes nothing. A legacy import links the sources
+and repositories it writes to the tenant's only project, and is refused when the tenant holds several.
 
 **Detect.**
 
@@ -224,6 +246,7 @@ refused when the tenant holds several.
 - An `apply` door value read from a request header or body.
 - An apply that plans the `projects` section or resolves an entry's project itself, rather than taking both planned from
   the package that owns projects.
+- An apply that enables a retired urgency, or reconciles a routine or cadence before the urgency sections it may name.
 - A document entry of a kind a project owns that does not take `project` by id or slug, does not act in the tenant's
   only project when it names none, or is not refused when the tenant holds several.
 

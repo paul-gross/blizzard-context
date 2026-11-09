@@ -154,8 +154,16 @@ and a record may name a chunk the hub no longer holds. A cadence mint keys its e
 injectively (`cadence_errand`), in one `lock_set` beside, for a promoting chore, both ranking locks and the fresh
 chunk's id, which names no row yet and so contends with nothing. The canonical sort takes chunk ids first, then keys by
 namespace, so `cadence_errand` is taken ahead of the ranking locks, and an operator's promote, which takes its chunk and
-then the ranking locks, waits on the mint at the ranking locks rather than deadlocking with it. A new decision graduates
-its unit with `lock_keys`, or `lock_set` when it spans namespaces; the existing ones reach it through the legacy handles
+then the ranking locks, waits on the mint at the ranking locks rather than deadlocking with it. The urgency's three
+namespaces (`blizzard/src/blizzard/hub/domain/urgency/ports.py`) are `urgency`, keyed by urgency id, and `urgency_order`
+and `tenant_settings`, each on one fixed key; they sort after `queue_ranking` and before `work_ref`, `cadence_errand`
+ahead of them all. A retire takes the settings lock, the retiring urgency's, and `move_to`'s, and re-reads the default
+and the open chunks under them; a settings edit takes the settings lock and the named urgency's; a mint takes the
+settings lock and the urgency a read ahead of its unit found as the default, re-reads the default under them, and mints
+with the re-read value. Every change of the default and every retire takes the settings lock, so a mint's re-read
+default is live, and a retire never runs beside a write taking up the urgency it retires; chunk rows take no lock for
+it. Create and both reorders take the `urgency_order` lock, re-reading the order under it. A new decision graduates its
+unit with `lock_keys`, or `lock_set` when it spans namespaces; the existing ones reach it through the legacy handles
 `IChunkExclusiveWrites.locked_work_refs` and `IWriteGraphRepository.locked_name`, each its own type — never an
 `ILockedChunkRead`, so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
