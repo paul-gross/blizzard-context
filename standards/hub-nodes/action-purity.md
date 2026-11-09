@@ -12,9 +12,11 @@ waiting for it to be durable. An action that needs more declares it as an input 
 before the pass begins; it never reaches for it inside the pass. Every module under `hub/delivery/actions/` imports only
 the allowlist: from the standard library, the pure modules that reach neither the environment, a process, nor a socket
 (`asyncio` without its subprocess and connection functions, `dataclasses`, `json`, `re`, `typing`, `urllib.parse`, and
-their kind); from `blizzard.foundation`, only `roles`, `escalation_causes`, `findings`, `garden_proposals`, and
-`repo_ref`; and of blizzard's own, only `hub/domain/actions/`, `hub/domain/graph/actions.py`,
-`hub/domain/config/repositories.py`, `hub/domain/config/capabilities.py`, `hub/forge/landing.py`, and its own package.
+their kind); from `blizzard.foundation`, only `roles`, `escalation_causes`, `findings`, `garden_proposals`,
+`landing_policy`, and `repo_ref`; and of blizzard's own, only `hub/domain/actions/`, `hub/domain/graph/actions.py`,
+`hub/domain/artifact/model.py`, `hub/domain/chunk/pr_markers.py`, `hub/domain/kernel/garden_delivery_fault.py`,
+`hub/domain/config/repositories.py`, `hub/domain/config/capabilities.py`, `hub/domain/config/landing_policies.py`,
+`hub/forge/landing.py`, and its own package.
 Every blizzard module an action reaches, directly or through another, imports nothing that reaches a process or the
 network, and touches no part of `os` but `os.urandom`. Each `Visit` is immutable all the way down, and each action is
 constructed with no arguments.
