@@ -13,7 +13,7 @@ Full detail lives under `./blizzard/`, one file per reader question.
 
 | Spoke                                                         | Read when…                                                                                                                                                                                                                    |
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`tier-rules.md`](./blizzard/tier-rules.md)                   | Choosing the proof a change owes, placing or writing a test at a tier, or diagnosing a test's isolation-guard refusal                                                                                                         |
+| [`tier-rules.md`](./blizzard/tier-rules.md)                   | Choosing the proof a change owes, writing a test or store helper, managing test resources, or diagnosing a test guard refusal                                                                                                 |
 | [`service-tests.md`](./blizzard/service-tests.md)             | Writing or reviewing a Playwright service spec — fixtures, clients, isolation, waits, state, and profiles                                                                                                                     |
 | [`markers.md`](./blizzard/markers.md)                         | A row carries a **Gap** marker, or its method does not exist yet                                                                                                                                                              |
 | [`evidence.md`](./blizzard/evidence.md)                       | Judging whether a green run actually pins the behavior its name claims, or planning the claims a change falsifies or newly owes                                                                                               |
@@ -25,7 +25,7 @@ Full detail lives under `./blizzard/`, one file per reader question.
 
 ## Commands
 
-A command method passes when its command exits 0.
+A command method passes when its command exits 0, except where its row states additional evidence requirements.
 
 | Method                           | Command                                                                                                                                                                                                                                                                         |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -89,9 +89,14 @@ A command method passes when its command exits 0.
 | `blizzard-mock:ci`               | `gh run watch --repo paul-gross/blizzard-mock <run-id> --exit-status` — the authoritative remote gate *(more)*                                                                                                                                                                  |
 | `blizzard-mock:ci-workflows`     | `mise x actionlint@1.7.12 -- actionlint`                                                                                                                                                                                                                                        |
 
-| Method                              | Command                                                                                                                        |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `blizzard:postgres-uow-concurrency` | `uv run --extra postgres python scripts/check_hub_uow_postgres.py` — focused Postgres lock-order and contention proof *(more)* |
+<!-- vale Blizzard.ProcessReference = NO -->
+
+| Method                              | Command                                                                                                                                       |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard:sqlite-test-engine-leaks` | `uv run pytest -n auto` — Linux parallel suite SQLite test-engine and deleted-file handle proof; exit 0 and worker evidence required *(more)* |
+| `blizzard:postgres-uow-concurrency` | `uv run --extra postgres python scripts/check_hub_uow_postgres.py` — focused Postgres lock-order and contention proof *(more)*                |
+
+<!-- vale Blizzard.ProcessReference = YES -->
 
 The lint, format, and typecheck rows of the `blizzard` and `blizzard-mock` scopes are governed by
 [`../standards/python.md`](../standards/python.md), and `web:lint` and `web:unit-test` by
