@@ -37,6 +37,11 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
 
 - The seeded baseline hub, migrated by the candidate, starts, answers `/api/ready`, and serves the seeded chunks' views
   unchanged in every field the baseline's document carried.
+- `tests/rehearsal/release_chunks.py`, invoked by `tests/rehearsal/test_upgrade_rehearsal.py` under the installed
+  release's Python, walks candidate chunk pages through the release CLI's continuation logic, both unfiltered and
+  windowed. With a page limit of one it requires at least two pages, checks each cursor follows the preceding page and
+  the last is null, and checks the returned rows match the pages. Each unfiltered page's policy is null; each windowed
+  page's policy is an object carrying `window_seconds`, `floor`, and `done_since`.
 - The baseline runner host, untouched, is admitted by the candidate hub's handshake, lands a fresh chunk, and finishes
   the chunk it left delivering — read back as landed through the hub's API.
 - The release's installed client classifies terminal, not-ready, dependency, incompatible, conflict and paused claim
