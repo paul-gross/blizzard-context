@@ -16,10 +16,9 @@ their kind); from `blizzard.foundation`, only `roles`, `escalation_causes`, `fin
 `landing_policy`, and `repo_ref`; and of blizzard's own, only `hub/domain/actions/`, `hub/domain/graph/actions.py`,
 `hub/domain/artifact/model.py`, `hub/domain/chunk/pr_markers.py`, `hub/domain/kernel/garden_delivery_fault.py`,
 `hub/domain/config/repositories.py`, `hub/domain/config/capabilities.py`, `hub/domain/config/landing_policies.py`,
-`hub/forge/landing.py`, and its own package.
-Every blizzard module an action reaches, directly or through another, imports nothing that reaches a process or the
-network, and touches no part of `os` but `os.urandom`. Each `Visit` is immutable all the way down, and each action is
-constructed with no arguments.
+`hub/forge/landing.py`, and its own package. Every blizzard module an action reaches, directly or through another,
+imports nothing that reaches a process or the network, and touches no part of `os` but `os.urandom`. Each `Visit` is
+immutable all the way down, and each action is constructed with no arguments.
 
 A delivery marker a pass records takes the one `content` shape its name fixes: a PR reference,
 `delivery-pr/<repo>/<number>` or the bare `delivery-pr/<repo>`, carries the JSON object
