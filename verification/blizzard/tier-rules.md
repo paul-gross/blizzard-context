@@ -304,9 +304,9 @@ it alive and its port still answers `connect`, but it stops serving mid-tick and
 `stdout=subprocess.PIPE`. Log volume is what arms the wedge, so a change that adds daemon logging can wedge a suite that
 was passing and the symptom lands far from the cause — suspect the wedge before the test.
 
-**Do.** The tiers that spawn real daemons with `subprocess.Popen` — `blizzard:crash-sweep`, `blizzard:service-test`, and
-`blizzard:rehearsal` — spawn through `tests/support/scaffolding.py`'s `daemon_log_sink`, which is that file: a daemon
-with a runtime dir logs to `daemon.log` beside its store, and the mock fleet's dirless daemons log to
+**Do.** The tiers that spawn real daemons — `blizzard:crash-sweep`, `blizzard:service-test`, and `blizzard:rehearsal` —
+use `tests/support/scaffolding.py`'s `spawn_daemon`, which closes the parent's log handle after spawning, including on
+failure. A daemon with a runtime dir logs to `daemon.log` beside its store; the mock fleet's dirless daemons log to
 `shared_daemon_log_dir()`.
 
 **Don't.** `subprocess.Popen([...], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)` for a daemon the test then waits
