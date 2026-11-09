@@ -26,12 +26,13 @@ a zombie clobbering a branch can lose work, never land wrong work (`bzh:epoch-fe
 
 A worker node's asset is normally submitted by explicit worker declaration per the node's `produces:` list
 ([declarations](../../standards/worker-nodes/declarations.md)). A declared asset's content is never empty. A declaration
-whose name a delivery step of its graph validates is refused when its content fails that step's format; the earlier
-declaration stands, and delivery still judges. Declaring stays open after the worker exits — while its exit is judged —
-and the latest content under a name wins until the node-step's outcome is settled. A declaration, asset or commit
-pointer, arriving once the outcome is settled is refused: nothing would submit it. The one door past that point is a
-takeover's closed reference lease, where a commit pointer is accepted but rides no completion
-([takeover](../humans/takeover.md) §Entering).
+whose name a delivery step of the chunk's pinned graph validates is refused when its content fails that step's format;
+the earlier declaration stands. When no verdict can be had, the declaration is saved unchecked. Saving is never
+acceptance: delivery still judges. Declaring stays open after the worker exits — while its exit is judged — and the
+latest content under a name wins until the node-step's outcome is settled. A declaration, asset or commit pointer,
+arriving once the outcome is settled is refused: nothing would submit it. The one door past that point is a takeover's
+closed reference lease, where a commit pointer is accepted but rides no completion ([takeover](../humans/takeover.md)
+§Entering).
 
 ## Scopes
 
