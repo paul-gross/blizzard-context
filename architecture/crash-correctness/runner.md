@@ -526,20 +526,25 @@ the credential file it describes.
 ahead of every resume and fresh spawn respectively, and `Attempt.close`
 (`blizzard/src/blizzard/runner/lifecycle/attempt.py`) calls `remove` after `record_closure` commits, never before.
 
-Both halves are independently harmless. `ensure` is idempotent — recreating an already-present directory is a no-op — so
-a crash between it and the spawn it precedes leaves nothing to reconcile; the next `ensure` on the same lease id
-recomputes the identical path. `remove` runs only once the closure is already durable, so a crash between the two leaves
-an orphan directory behind a lease that is already closed, never a still-active lease with its directory gone.
-`LoopWiring.context`'s own one-shot sweep (`blizzard/src/blizzard/runner/loop_wiring.py`), run only from
-`PeriodicDriver`'s daemon-start build, ahead of its first tick, removes exactly that kind of orphan — anything under
-this runner's own `worker-tmp/<runner-id>/` subtree whose name is not a currently active lease id. A host serves several
-runners from one runtime root, so the sweep never reads past its own subtree. A pre-upgrade entry directly under
-`worker-tmp/` is removed only when this runner's own lease store holds that lease id and the lease is no longer active;
-any other top-level entry may be another runner's and is left alone. The sweep is not a candidate for
-`bzh:probe-gated-pass` or `Retention`, since it runs once at daemon start rather than on a recurring cadence.
+Compact path components are allocation keys, not identity evidence. The adapter records full runner and lease ownership
+outside the payload, under root-local synchronization, and publishes ownership records atomically. A reservation gives
+`path` a stable answer before payload creation; a crash during creation leaves either no published ownership or a
+recoverable reservation, and a retry uses that reservation rather than recomputing a suffix. Unknown, malformed, and
+foreign entries are not adopted or deleted, and symlinks are not followed.
 
-The write earns **no window at all**: neither half has a partner write to be separated from, and the worst either
-ordering leaves a crash to interrupt is one orphan directory, collected at the next restart.
+`remove` runs only after closure is durable and retains ownership until payload deletion finishes. A crash during
+deletion therefore leaves a closed allocation whose remaining payload and record can be retried, never an active lease
+stripped of its scratch or an unowned payload mistaken for another lease's. Startup reconciliation precedes served,
+manual, and periodic ticks; it uses runner-scoped active identities and recorded full ownership to preserve active
+compact paths and remove owned orphans. Both legacy `worker-tmp/<runner-id>/<lease-id>/` and flat
+`worker-tmp/<lease-id>/` payloads for active leases are reused; legacy cleanup requires positive ownership and
+closed-lease evidence. Unknown entries and other runners' data survive.
+
+The effective-root binding under the host's `data/` is also published atomically. A changed root is refused while leases
+are active; after drain, reconciliation of the previous root precedes publishing the replacement. An interruption leaves
+the previous binding available for another reconciliation or the new binding in place after reconciliation. These
+ordered, recoverable operations earn **no window at all** for scratch ownership; they introduce no new cross-store
+invariant. The startup sweep is not a candidate for `bzh:probe-gated-pass` or `Retention`.
 
 ## The trace export sweep
 
