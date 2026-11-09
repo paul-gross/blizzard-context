@@ -184,7 +184,8 @@ Three ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP
 - `cli-patch-not-seam` fails any test `setattr` whose first argument is a string naming a `blizzard.` path with a `cli`
   segment.
 - `cli-refusal-body-confined` fails a CLI-tree read of a refusal's `detail` outside
-  `blizzard/src/blizzard/cli/refusal.py` ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
+  `blizzard/src/blizzard/cli/refusal.py`, and a status read or raw `resp.json()` re-read beside a `refusal_of` call
+  ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
 
 One Ruff rule beside them holds the OpenCode 2 service seam: `TID251` bans `UrllibServiceTransport` in every
 `runner/cli/` module except `runner/cli/children.py`, which builds the production one. It is scoped to that one concrete
