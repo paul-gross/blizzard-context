@@ -174,8 +174,8 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
   the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
 - A `blizzard.*` class constructed more than once across the hub's composition-root files (`hub/app.py`,
   `hub/composition.py`, `hub/store/internal/chunk_store_factory.py`) — a second copy of a process-scoped collaborator.
-- `build_stores`, `build_production_harness_registry`, or `HarnessHealthCache` called anywhere under
-  `blizzard/src/blizzard/` other than `runner/composition.py` — a second copy of the runner's process graph.
+- `build_stores`, `build_production_harnesses`, or `HarnessHealthCache` called anywhere under `blizzard/src/blizzard/`
+  other than `runner/composition.py` — a second copy of the runner's process graph.
 
 Three ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 
