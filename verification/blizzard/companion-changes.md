@@ -24,6 +24,9 @@ rule rather than on anything mechanical. `blizzard:compat` (`bzh:released-surfac
 same surface — additive-vs-breaking across the hub↔runner skew window — and does not stand in for extending the mock: a
 new route can be perfectly additive and still leave the mock counterpart unserved.
 
+**Do.** One change family adds the `IHubClient` method `report_widget` and its `/api/fleet/widgets` route in `blizzard`,
+the same route on `blizzard-mock`'s mock hub, and a service-tier case that drives a runner through it.
+
 **Don't.** A new `/api/fleet/...` route the runner calls outside `IHubClient`, landing in `blizzard` alone — the guard
 diffs only the protocol's methods, so it stays green while the service tier drives a runner against a mock that answers
 the new route `404`.

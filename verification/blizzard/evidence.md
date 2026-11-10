@@ -61,6 +61,9 @@ nothing observes, and the behavior that name promises goes unpinned while both c
 **Detect.** `tests/guards/test_no_duplicate_test_bodies.py` fails on any two cases sharing a body; a deliberate
 cross-tier re-run is declared in that file rather than tolerated.
 
+**Do.** `test_reap_expires_a_stale_lease` ages its lease past the timeout, runs the reap, and asserts that lease is
+gone, beside a `test_reap_skips_a_fresh_lease` that asserts a fresh lease still stands.
+
 **Don't.** `test_reap_expires_a_stale_lease` written by copying `test_reap_skips_a_fresh_lease` and changing only the
 name — the guard fails on the shared body, and past it the stale-lease behavior the name promises stays unobserved.
 
@@ -93,6 +96,9 @@ first.
 **Why.** A plan's surface inventory answers which files a change touches, a different question from which existing
 claims the change makes false — a doc statement, a comment, a field name, or a test's premise can go stale in a file the
 change never opens.
+
+**Detect.** A plan whose inventory lists files and no claim, or a change to a default, a name, or a behavior whose plan
+carries no grep for the phrasing it retires.
 
 **Do.** Sweep the app side, then the harness side, whose path resolves via the workspace's `# Winter Extensions` block:
 
