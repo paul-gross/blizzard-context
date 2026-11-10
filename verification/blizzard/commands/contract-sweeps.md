@@ -60,8 +60,8 @@ absence (earlier) would otherwise make it.
 
 The guard is a pure equality check: an unknown field or a reordered parameter is exactly the drift this method exists to
 catch. It holds the live tree to the golden, and `blizzard:compat` holds the golden to the supported releases, so
-regenerating the golden clears this guard but not that one. It stands ahead of the CLI's decomposition into by-concept
-packages: the surface must render identically at every step of that move.
+regenerating the golden clears this guard but not that one. The golden pins the rendered CLI surface across internal
+restructuring.
 
 ### blizzard:config-contract
 

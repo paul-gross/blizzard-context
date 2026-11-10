@@ -14,11 +14,10 @@ gate, and the bundle-composition check — under the Angular workspace hub, [`..
 `npm run lint` in `web/` (`ng lint`, eslint over all four Angular projects). Carries a `max-lines` ceiling — the
 ~400-line cap, `skipBlankLines`/`skipComments` both off — over every `.ts` file each project's own config reads (spec
 files at an 800-line ceiling instead, a runaway guard rather than design pressure). No architecture doc declares the
-number itself; in practice the files it has caught were also
+number itself. An oversized component can signal merged container/presentational concerns
 [`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
-`bzh:frontend-container-presentational` splits, since an oversized component is often evidence of merged
-container/presentational concerns, but the ceiling now reaches every `.ts` file this config reads, not only components.
-Also carries a `no-restricted-syntax` rule over `ExportAllDeclaration` in `projects/*/src/lib/*/index.ts` —
+(`bzh:frontend-container-presentational`). Also carries a `no-restricted-syntax` rule over `ExportAllDeclaration` in
+`projects/*/src/lib/*/index.ts` —
 [`../../../../architecture/frontend-structure/disjoint-diffs.md`](../../../../architecture/frontend-structure/disjoint-diffs.md)
 `bzh:frontend-disjoint-diffs`'s ban on a sub-barrel `export *`, scoped so fleet's own `public-api.ts` stays legal. The
 same rule bans a zero-arg `new Date()` and `Date.now()` in non-spec `projects/**/*.ts`
@@ -36,11 +35,11 @@ The `default-case` rule fails a TypeScript `switch` with no `default` branch
 `bzh:frontend-open-vocabulary`): a newer server may send a value the generated client does not list. Lint is not
 type-aware, so the rule holds every switch, a local union's included. `web/scripts/default-case-lint-probe.js` checks a
 bare switch is refused and a defaulted one passes, in an app file and a `fleet` file
-(`node web/scripts/default-case-lint-probe.js` from the app repo root). A `default` would silence the compiler's own
-exhaustiveness check, so a `switch` naming every declared value defaults to `fleet`'s `unlisted`, typed `never`;
-`web/scripts/open-lookup-type-probe.js` compiles fixtures against the real helper under `web/tsconfig.json` and checks
-an `openLookup` table or such a `switch` missing a value fails to compile while the complete forms compile
-(`node web/scripts/open-lookup-type-probe.js` from the app repo root) — `web:unit-test` never type-checks.
+(`node web/scripts/default-case-lint-probe.js` from the app repo root). `web/scripts/open-lookup-type-probe.js` compiles
+fixtures against the real helpers under `web/tsconfig.json` and checks an `openLookup` table or a `switch` defaulting to
+`unlisted` fails to compile when missing a declared value while the complete forms compile, proving
+`bzh:frontend-open-vocabulary`'s exhaustiveness requirement (`node web/scripts/open-lookup-type-probe.js` from the app
+repo root) — `web:unit-test` never type-checks.
 
 A `@typescript-eslint/no-restricted-imports` rule over `**/*.model.ts` refuses any import from the `@angular/*` or
 `@tanstack/*` family, `import type` included
