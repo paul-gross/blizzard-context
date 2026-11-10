@@ -160,10 +160,11 @@ its unit with `lock_keys`, or `lock_set` when it spans namespaces; the existing 
 `ILockedChunkRead`, so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
-lock-a-row-known-to-exist form by analogy. The operator's pause and lift, and the ceiling's self-engagement, each take a
-no-op `UPDATE` on their own runner's `runner_identity` row before reading the brake on that same transaction
-(`runner/store/internal/pause_store.py`); a runner holding no identity row yet has no neighbour to race. This needs no
-migration, which keeps a rollback to the previous wheel free of any store step.
+lock-a-row-known-to-exist form by analogy. The operator's pause and lift, the ceiling's self-engagement, and the
+takeover open each take a no-op `UPDATE` on their own runner's `runner_identity` row before reading their guard on that
+same transaction (`runner/store/internal/pause_store.py`, `runner/store/internal/takeover_store.py`); a runner holding
+no identity row yet has no neighbour to race. This needs no migration, which keeps a rollback to the previous wheel free
+of any store step.
 
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
 write calls on its own connection after the lock and its replay probe and before its first insert. It reads the terminal
