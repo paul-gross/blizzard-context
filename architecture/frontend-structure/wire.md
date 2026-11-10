@@ -9,13 +9,15 @@ each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`can
 **Rule.** Take every backend vocabulary, classification, and wire shape from the generated client
 (`fleet/src/lib/api/{hub,runner}/`), and never restate one by hand in TypeScript. A gap in what the wire carries is
 closed on the wire — the backend adds the enum, field, or schema component and the client is regenerated — never filled
-in by a frontend copy. Generated client functions are called only from data-access files (`*.query.ts`,
-`*.mutations.ts`); generated types may be imported anywhere.
+in by a frontend copy. Presentation of what a view already carries is the frontend's own; an answer that is a backend
+judgment is read off a view field, never computed in the frontend (Scope draws the line). Generated client functions are
+called only from data-access files (`*.query.ts`, `*.mutations.ts`); generated types may be imported anywhere.
 
 **Why.** A hand-written copy compiles against the wire as it was when the copy was written: when the backend adds a
 value or moves a judgment, the regenerated types change under every conforming consumer while the copy keeps rendering
-the old answer with nothing to flag it. Data-access files own each resource's query keys and invalidations, so a client
-call made anywhere else bypasses the cache plane the views read from.
+the old answer with nothing to flag it. A judgment computed in the frontend is the same copy in another form: every
+other consumer of the wire has to compute it again, and the copies drift apart. Data-access files own each resource's
+query keys and invalidations, so a client call made anywhere else bypasses the cache plane the views read from.
 
 **Exception.** A pending override's predicted outcome (`bzh:frontend-pending-override`) states what an in-flight
 mutation will change before the wire reports it; it is a prediction over a request, not a copy of a classification, and
@@ -32,6 +34,19 @@ falls back to disabled-and-pending wherever it is not total.
 - **Backend citation** — a comment or string naming a backend Python module as the authority, by `.py` path or by dotted
   `blizzard.…` module path; cite the generated type, the wire field, or a `bzh:` id instead.
 
+Where presentation stops and a backend judgment begins:
+
+- **Presentation**, the frontend's own — formatting, ordering, grouping, and filtering rows by a field each carries, and
+  wording or toning a value a view already carries, including choosing the wording by branching on a value of a
+  generated vocabulary (`bzh:frontend-open-vocabulary`).
+- **Backend judgment**, a field on the view — any answer that joins records the wire serves separately by a domain rule,
+  that previews a predicate the backend enforces on a write, or that the domain model names
+  ([`../../domain/index.md`](../../domain/index.md)).
+
+The test between them: would a second consumer — the CLI, another page — have to reimplement the computation to give the
+same answer? If so it is a judgment, and it belongs on the wire. Two pages that word or sort one value differently
+disagree about nothing; two that join or gate differently give different answers.
+
 **Detect.** Tooled by `web:structural-gate`, neither sweep with an exemption list: its backend-citation sweep
 (`assertBackendCitationDetectorWorks`) fails a backend module citation in hand-written TypeScript, and its client-call
 placement sweep (`assertClientCallPlacementDetectorWorks`) fails a generated client function named outside `*.query.ts`
@@ -42,9 +57,10 @@ owns each sweep's scope, report, and self-test.
 `web:client-drift` fails a generated client that no longer matches the exported specs, so a wire fix lands with its
 regenerated types. A hand-written vocabulary, classification, or shape is a review question, not tooled: does this
 literal set, interface, or status predicate duplicate what a generated type carries, or what a view field should carry?
-The fix is the generated enum or model when the wire has it, and a backend change when it does not — a vocabulary or
-off-route shape registers in `src/blizzard/wire/components.py` so the spec carries it, and a classification becomes a
-field on the view that already carries the raw value.
+So is a computed answer: does this join, capability check, or derived fact pass Scope's second-consumer test? The fix is
+the generated enum or model when the wire has it, and a backend change when it does not — a vocabulary or off-route
+shape registers in `src/blizzard/wire/components.py` so the spec carries it, and a classification, a join, or a write's
+predicate becomes a field on the view of the record the answer is about.
 
 **Do.**
 
@@ -52,6 +68,14 @@ field on the view that already carries the raw value.
 - `Object.values(FindingSeverity)` populates a severity filter from the generated `const`.
 - A container injects a query hook from `garden/core/finding.query.ts`, which alone imports
   `listFindingsApiFindingsGet`.
+- Presentation: `runs.sort((a, b) => Date.parse(b.minted_at) - Date.parse(a.minted_at))` orders `RunRowView` rows newest
+  first by a field each row carries.
+- Presentation: `openLookup<AttentionReason, string>({ routine_retired: 'its routine is retired', … }, (raw) => raw)`
+  words a generated vocabulary's values.
+- Backend judgment: `[disabled]="!member.revocable"` — `MemberView.revocable` previews the refusal the revoke write
+  enforces.
+- Backend judgment: `run.cadence?.cadence_name` — `RunRowView.cadence` carries the cadence that minted the run, so
+  nothing joins runs to cadences.
 
 **Don't.**
 
@@ -59,6 +83,16 @@ field on the view that already carries the raw value.
   a hand-written status list.
 - `type Severity = 'blocking' | 'should-fix';` beside the generated `FindingSeverity`.
 - A component importing `listFindingsApiFindingsGet` and awaiting it in `ngOnInit`.
+- Presentation: asking the wire for a display string beside `ChoreView.mode` — wording a `RunMode` value is the
+  frontend's own, and a label on the wire fixes one surface's wording for every consumer.
+- Presentation: sorting `CadenceView.attention` by a hand-written ranking of which `AttentionReason` is worse — the
+  ordering is display, the ranking is a classification.
+- Backend judgment: `cadence.chores.filter((chore) => chore.routine === routine.slug)` over each `CadenceView` with
+  `!cadence.retired && cadence.project_id === routine.project_id` — joins cadences to a `RoutineView` by the domain's
+  kept-by rule (`bzh:routine-kept-by`, [`../../domain/cadences.md`](../../domain/cadences.md)), which the CLI would have
+  to write again.
+- Backend judgment: `[disabled]="member.role !== Role.CONTRIBUTOR"` on Revoke — a guess at the predicate the write
+  enforces, where `MemberView.revocable` states it.
 
 **See also.** `bzh:generated-client` ([`../../standards/frontend.md`](../../standards/frontend.md)) forbids hand-written
 request code; `bzh:fleet-wire-additive` ([`../system-shape/fleet-wire.md`](../system-shape/fleet-wire.md)) governs what
