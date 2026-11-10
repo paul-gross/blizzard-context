@@ -60,6 +60,12 @@ is cleared (`record_resume_clear`); a crash there leaves the escalation already 
 so recovery only finishes the clear. The other four sites are covered structurally by the shared close, on the same
 precedent as `_CP_AFTER_MINT`'s reuse below.
 
+## SSE announcement after commit
+
+The detached record-then-announce shape used by `park_on_ask` and `_wake` commits the durable write first, then calls
+`publish_*`. A crash after commit can lose all live SSE announcements not yet published for that transaction: the next
+read derives from durable state. That bounded loss is accepted, so this shape needs no sweep point.
+
 ## The preamble fingerprint
 
 The runner store's `session_preamble_facts` table (`blizzard/src/blizzard/runner/store/schema.py`) holds, per harness
@@ -143,7 +149,7 @@ three, and it retries at the next floor.
 capability token, and the `lease.minted` outbound row. `LeaseRecordStore.record_mint` commits all four in one
 transaction, with the payload and token hash rendered before it opens, so a lease never exists without the owner, token
 and fence fact a retry or the hub's completion check relies on. The `lease.minted` row goes through `insert_outbox_row`;
-SSE publishes follow the commit.
+SSE publishes follow the commit ([§SSE announcement after commit](#sse-announcement-after-commit)).
 
 With no intermediate state to cross, the mint needs no point of its own. The boundary after the transaction is the armed
 `spawn.after-lease-mint.before-spawn`, where a lease is minted and no worker is spawned. REAP's orphan sweep recovers
@@ -180,9 +186,6 @@ the crashed request, so no person holds the session. Ending gives the state of "
 the hub, the lease stays open, the worker is dead, and the operator's retry is admitted as a fresh entry. A crash during
 the recovery re-runs at the next startup, each half independently harmless — the kill is idempotent and the end a lone
 idempotent insert — so it earns no point.
-
-The migration that adds `takeover_entries` backfills an entry for every takeover open at that moment, so a person's
-takeover opened under a prior release is not ended by the first startup on this one.
 
 The window after the entry fact commits and before the HTTP response is the ordinary lost-response case, accepted and
 named: the response is all it loses, the takeover stays open and entered, and the retry is refused naming
@@ -433,10 +436,9 @@ separate closing write. A lease that closes without ever recording a later gener
 fact a second way (`bzh:open-facts-declare-closure`): `OverloadStore.open_overload_facts` anti-joins `lease_closures`
 directly, the same shape `ask_store.py` already uses, rather than leaning on every caller scoping its own read to
 `list_active_leases()`. A crash between `record_overload` committing and the caller's own
-`publish_lease_changed(cause="dormant")` — the same detached record-then-announce shape `park_on_ask`'s and `_wake`'s
-own publishes already use, covered by this file's "Event emission" section — costs at most one missed live SSE
-announcement; the next read of `backing_off_facts` (or `LeaseActivity.state`) derives `"backing-off"` from the durable
-row regardless, so no operator-visible state is ever lost, only delayed to the next poll.
+`publish_lease_changed(cause="dormant")` takes the accepted loss in
+[§SSE announcement after commit](#sse-announcement-after-commit): the next read of `backing_off_facts` (or
+`LeaseActivity.state`) derives `"backing-off"` from the durable row.
 
 The write owes the invariant checker nothing: `backing_off_facts`'s own closure is an identity comparison over
 append-only rows and existing repository reads (`lease_generations`, `in_flight_elicitations`), never a derived
@@ -653,7 +655,16 @@ runner cannot exist; `blizzard/contracts/store/runner.json` records each column'
 baseline is refused rather than keyed in place, so no upgrade stamps a runner onto a row, and the key owes no registry
 point.
 
-### The host store adoption
+## The `init` id write
+
+`runner init` writes the joined runner's id into the host file between the token and the identity row
+(`write_runner_id`, `blizzard/src/blizzard/runner/host_file.py`). Each file write is atomic: the token's `.env` and the
+host file are each written whole to a temporary file and renamed over the original, so a crash leaves the old file or
+the new one. A crash between any two steps leaves a state running `init` again completes, keeping the runner the token
+names; a stale configured id is rewritten only under `--allow-readd`, with a store that is fresh or names only that
+runner, and any other mismatch is refused with nothing written. This is a **no-window** write.
+
+## The host store adoption
 
 `blizzard runner migrate` adopts a pre-host `data/runner.db` as `data/host.db` (`Runtime._upgrade`,
 `blizzard/src/blizzard/runner/runtime.py`) under the directory's lock: it folds the write-ahead log into the database
@@ -669,16 +680,7 @@ state: `_upgrade` refuses it, naming both files, and touches nothing, because on
 the runner's store. `store reset` and `migrate --down` refuse a directory whose `host.db` is absent while `runner.db`
 exists, so neither can create the second file.
 
-### The `init` id write
-
-`runner init` writes the joined runner's id into the host file between the token and the identity row
-(`write_runner_id`, `blizzard/src/blizzard/runner/host_file.py`). Each file write is atomic: the token's `.env` and the
-host file are each written whole to a temporary file and renamed over the original, so a crash leaves the old file or
-the new one. A crash between any two steps leaves a state running `init` again completes, keeping the runner the token
-names; a stale configured id is rewritten only under `--allow-readd`, with a store that is fresh or names only that
-runner, and any other mismatch is refused with nothing written. This is a **no-window** write.
-
-### The outbox counter advance
+## The outbox counter advance
 
 Every outbox `seq` is allocated by the one seam, `insert_outbox_row`
 (`blizzard/src/blizzard/runner/store/internal/base.py`), which advances the bound runner's lane in `outbox_counters` in
@@ -686,7 +688,7 @@ the same transaction as the row. This is a **no-window** write: a crash leaves b
 so a rolled-back `seq` is returned and a counter that never moves backwards never reissues a pruned row's. The invariant
 checker's `runner:outbox-counter-above-seq` asserts that no retained row sits above its counter.
 
-### Held-binding completion
+## Held-binding completion
 
 `CompleteHeldBindings` (`blizzard/src/blizzard/runner/loop/steps.py`), a step ahead of FILL that runs
 `HeldBindingCompletion` (`blizzard/src/blizzard/runner/lifecycle/held_binding_completion.py`), gives each held
