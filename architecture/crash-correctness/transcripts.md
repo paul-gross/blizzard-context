@@ -78,14 +78,8 @@ one transaction, and an unfinalized segment is a legal, resumable state rather t
 ## The hub's event-derivation sweep
 
 `EventDerivationReconciler` (`blizzard/src/blizzard/hub/domain/observability/analytics/derivation.py`) is not a loop
-step any sweep family reaches. It holds one piece of process-local state between passes — the last pass's
-`DerivationSignature`, a cheap aggregate of `transcript_segments` row count, max `id`, max `received_at`, and `chunks`
-row count — purely to decide whether to skip a pass. That state is never persisted and is lost on every process restart,
-which is harmless: a fresh reconciler always runs its first pass in full (this is also what covers an
-`EXTRACTOR_VERSION` bump, since that changes derivation markers, not this signature), and a forced floor runs a full
-pass at least every ten minutes by the injected clock regardless of what the signature reports. The probe is an
-optimization only; correctness rests on that floor, so a same-instant rewrite the signature happens to miss is still
-picked up within one floor period. Whenever a full pass does run, it re-derives its candidates from
+step any sweep family reaches. Its probe state is memory-only, so the first pass after a restart runs in full
+(`bzh:probe-gated-pass`, [../lanes.md](../lanes.md)). Whenever a full pass runs, it re-derives its candidates from
 `EventDerivationService.candidacy()` — one bulk read of the visible segment set's stored `content_digest`s against each
 segment's current-version marker, with no content byte read. A segment's digest is written by the same
 `transcript_segments` INSERT/UPDATE that writes its `(turn_range_start, rejected, content)`, so it opens no write window
