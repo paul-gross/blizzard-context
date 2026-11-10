@@ -41,8 +41,9 @@ the table then needs a stubbed client even when only row markup changed.
 in a pure `*.model.ts` beside the feature: it takes plain values (a `now: number`, never a clock), imports no Angular,
 query, or `inject`, and is pinned by a sibling `*.model.spec.ts` that needs no `TestBed`. A structural query-handle
 interface the model declares or imports, such as `AsyncStateQuery` or `WorkItemsQuery`, counts as a plain value: the
-container passes its live query, and the spec passes a literal. A derivation that is really a backend classification
-goes onto the wire instead, per `bzh:frontend-wire-conformist`.
+container passes its live query, and the spec passes a literal. A derivation that is really a backend judgment — a
+classification, a join by a domain rule, or a write's predicate — goes onto the wire instead, per
+`bzh:frontend-wire-conformist`.
 
 **Why.** A branch inside a container's `computed()` is reachable only through a component fixture with stubbed queries,
 so it goes untested or gets tested through markup; a pure function over plain values is tested case by case, and a
@@ -66,7 +67,7 @@ included, proven by `web/scripts/model-imports-lint-probe.js`. Outside the sweep
 
 - Does an event-handler method no `computed()` reaches derive what a model should own?
 - Does a query-option lambda (`injectFooQuery(() => x()?.id ?? null)`) carry more than a null guard?
-- Does a moved derivation restate a backend classification?
+- Does a moved derivation compute a backend judgment (`bzh:frontend-wire-conformist` Scope)?
 
 **Do.** `board-page.ts` declares
 `boardChunks = computed(() => withPendingBoardChanges(this.chunks(), this.pendingPromotes(), this.pendingDeletes()))`;

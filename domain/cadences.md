@@ -93,3 +93,21 @@ routine, a routine whose graph no longer resolves, a scope unknown, retired, or 
 no scopes left to run over, and a cadence with no chores are each accepted. Each is shown as attention the cadence
 needs, naming the chore and, where it stops one errand only, the scope — the refusals a hand-started run would meet,
 shown before the cadence fires. Attention is read as things stand, never kept. A retired cadence needs none.
+
+## What keeps a routine (`bzh:routine-kept-by`)
+
+A routine is **kept** by every chore that names the routine's slug on a cadence of the routine's own project that is not
+retired. A routine no chore keeps runs only when someone starts it. These cases settle what the sentence leaves open:
+
+- **A retired cadence.** A chore on a retired cadence keeps nothing, and keeps its routine again once the cadence is
+  re-enabled ([The retired brake](#the-retired-brake)).
+- **Another project's cadence.** A chore names a routine of its own cadence's project, so a chore naming the same slug
+  on another project's cadence keeps that project's routine, never this one.
+- **A cadence that needs attention.** It still keeps what its chores name. Attention says why an errand will not run,
+  not that the chore stopped naming the routine ([Needs attention, never invalid](#needs-attention-never-invalid)).
+- **A retired routine.** It is still kept by every chore the first sentence names: the link is by slug and holds while
+  the routine is retired ([Linked by slug](#linked-by-slug)), and the cadence's attention names the chore whose routine
+  is retired.
+
+Kept is a fact about a routine and the chores naming it. Which cadence minted a given run is a fact about that run
+([When an errand is due](#when-an-errand-is-due)), and a routine's being kept says nothing of it.
