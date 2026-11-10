@@ -72,9 +72,8 @@ script (`npm run test`) actually runs, failing any `setTimeout`/`setInterval` wh
 — a literal delay is a real second spent inside the merge gate, and a window guessed rather than chosen. A delay held in
 a variable or expression is outside the pattern; `setTimeout(…, 0)` is the macrotask-flush idiom, deliberately
 unmatched; and `*.shell-sweep.spec.ts` specs are out of scope — a real-Chromium frame wait is `web:shell-sweep`'s
-method. A genuinely time-driven spec is named with its reason in `REAL_TIMER_EXEMPT_FILES` — today only
-`demo-director.spec.ts`, whose waits poll a real router harness at the kiosk tour's measured cadence. Because the tree
-is clean of the real-timer shape today, the gate first runs a fixture self-test — `assertRealTimerDetectorWorks`,
+method. A genuinely time-driven spec is named with its reason in `REAL_TIMER_EXEMPT_FILES`, empty today. Because the
+tree is clean of the real-timer shape today, the gate first runs a fixture self-test — `assertRealTimerDetectorWorks`,
 must-catch and must-pass shapes — and refuses to run if the detector stops classifying (rule
 `bzh:case-pins-its-own-name`).
 
