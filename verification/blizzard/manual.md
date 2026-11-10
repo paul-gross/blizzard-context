@@ -446,9 +446,13 @@ For the separate `blizzard:manual-runner` check on a provisioned feature env, ke
 untouched. From `<env>/blizzard`, source `winter env <env>` and run
 `uv run python scripts/probe_opencode_bundle_runner.py --chunk-id <disposable-ready-chunk-id>`. The script starts a
 disposable bundle-backed runner against that env's hub, waits for an active mock OpenCode lease, records a heartbeat,
-confirms its timestamp after a later tick via the runner API and CLI, then stops the runner and detaches the test chunk
-back to ready. Its local hub gateway admits only the selected chunk at queue peek and claim, regardless of other ready
-chunks' positions. The caller must supply a disposable chunk that is ready before the run.
+confirms its timestamp after a later tick via the runner API and CLI, then publishes a changed bundle from the probe's
+own process so `current` moves, and asserts that every recorded worker launch's `OPENCODE_CONFIG` and
+`OPENCODE_CONFIG_DIR` still name the snapshot the runner started on. It gives the disposable runner a scratch
+`XDG_DATA_HOME`, so the operator's own OpenCode store, once migrated to OpenCode 2, cannot withdraw the OpenCode 1
+binding it claims through. It then stops the runner and detaches the test chunk back to ready. Its local hub gateway
+admits only the selected chunk at queue peek and claim, regardless of other ready chunks' positions. The caller must
+supply a disposable chunk that is ready before the run.
 
 **Retained evidence.** Keep sanitized resolved-config output, the effective file's path and hash, CLI/tool events,
 plugin instrumentation and per-invocation heartbeat counts alongside the change under verification.
