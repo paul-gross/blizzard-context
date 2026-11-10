@@ -66,8 +66,6 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   completed work — which stays ordered vertically; a card's work ref and short id share its head line at opposite ends,
   its long title clamps to two lines, its node and runner hold one meta line without running into its cost or past its
   edge, and the board has no horizontal overflow or page error.
-- `events-scroll.shell-sweep.spec.ts` checks that a long events feed scrolls within its bounded rows at desktop and
-  phone widths.
 - `chunk-page-layout.shell-sweep.spec.ts` covers the hub chunk detail page, reached from the mobile board — the General
   tab, whose `@media (min-width: 720px)` grid puts work item and issues in a shared left column with node history beside
   them, and the Transcripts tab — routed for real via `RouterTestingHarness` under a height-capped stand-in for the app
@@ -190,11 +188,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   1280px, 390px, and 320px a retired and a blocked routine row each carry a `--red` kit label. Proven able to fail by
   dropping the `.kmd-pane--hidden` rule from `kit-master-detail.css`. Gardening sits in the hub's mobile bottom tab bar,
   so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
-- `graph-detail.shell-sweep.spec.ts` covers the graphs container/presentational split's `GraphDetailLifecycle`, mounted
-  directly with plain inputs. Its action-error line and entry line — blocks that were direct children of `.body`'s own
-  `flex-direction: column; gap: 10px` (`graph-detail.css`) before the split — must genuinely stack with a real gap,
-  proving `graph-detail-lifecycle.css`'s own `:host` flex column reproduces that spacing now that the container hands
-  them only one flex slot; proven able to fail by setting that `:host`'s `gap` to `0`.
+- `graph-detail.shell-sweep.spec.ts` covers `GraphDetailLifecycle`, mounted directly with plain inputs. Its action-error
+  line and entry line must genuinely stack with a real gap, proving `graph-detail-lifecycle.css`'s `:host` flex column
+  supplies spacing within the container's single flex slot; proven able to fail by setting that `:host`'s `gap` to `0`.
 - `board-dock.shell-sweep.spec.ts` covers the board page's chunk dock, `BoardPage` mounted on stubbed reads in a
   height-bounded column. With nothing selected the dock is mounted but takes no box and the board runs the column's full
   height; selecting a chunk opens the dock beneath the board, which keeps its left, top and width and shortens;
@@ -357,8 +353,7 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   list's own right edge — a real layout claim, since both levels render their content projected into another component's
   button rather than into a box this stylesheet owns.
 - `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline, mounted through the
-  composed `FleetFindingPanel` rather than standalone (the timeline is never reached bare in the real app, and mounting
-  it in isolation left its own `.fp-timeline` heading's missing CSS rule undetected): at 390px and 320px a genuinely
+  composed `FleetFindingPanel` because the timeline is never reached bare in the app: at 390px and 320px a genuinely
   unbroken long note (an ordinary-prose fixture wraps at word boundaries regardless of `overflow-wrap: anywhere` and
   proves nothing) must wrap inside its row with no horizontal overflow — gardening sits in the hub's mobile bottom tab
   bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
