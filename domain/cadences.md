@@ -97,7 +97,7 @@ shown before the cadence fires. Attention is read as things stand, never kept. A
 ## What keeps a routine (`bzh:routine-kept-by`)
 
 A routine is **kept** by every chore that names the routine's slug on a cadence of the routine's own project that is not
-retired. A routine no chore keeps runs only when someone starts it. Four cases settle what the sentence leaves open:
+retired. A routine no chore keeps runs only when someone starts it. These cases settle what the sentence leaves open:
 
 - **A retired cadence.** A chore on a retired cadence keeps nothing, and keeps its routine again once the cadence is
   re-enabled ([The retired brake](#the-retired-brake)).

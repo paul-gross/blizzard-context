@@ -13,11 +13,11 @@ in by a frontend copy. Presentation of what a view already carries is the fronte
 judgment is read off a view field, never computed in the frontend (Scope draws the line). Generated client functions are
 called only from data-access files (`*.query.ts`, `*.mutations.ts`); generated types may be imported anywhere.
 
-**Why.** A hand-written copy compiles against the wire as it was when the copy was written: when the backend adds a
-value or moves a judgment, the regenerated types change under every conforming consumer while the copy keeps rendering
-the old answer with nothing to flag it. A judgment computed in the frontend is the same copy in another form: every
-other consumer of the wire has to compute it again, and the copies drift apart. Data-access files own each resource's
-query keys and invalidations, so a client call made anywhere else bypasses the cache plane the views read from.
+**Why.** A hand-written copy compiles against the wire as it was when the copy was written, and a judgment computed in
+the frontend is one more copy that every other consumer of the wire must write again: when the backend adds a value or
+moves a judgment, the regenerated types change under every conforming consumer while each copy keeps rendering the old
+answer with nothing to flag it. Data-access files own each resource's query keys and invalidations, so a client call
+made anywhere else bypasses the cache plane the views read from.
 
 **Exception.** A pending override's predicted outcome (`bzh:frontend-pending-override`) states what an in-flight
 mutation will change before the wire reports it; it is a prediction over a request, not a copy of a classification, and
@@ -36,9 +36,10 @@ falls back to disabled-and-pending wherever it is not total.
 
 Where presentation stops and a backend judgment begins:
 
-- **Presentation**, the frontend's own — formatting, ordering, grouping, and filtering rows by a field each carries, and
-  wording or toning a value a view already carries, including choosing the wording by branching on a value of a
-  generated vocabulary (`bzh:frontend-open-vocabulary`).
+- **Presentation**, the frontend's own — formatting, ordering, and grouping rows by a field each carries, filtering them
+  by a criterion the person or the page supplies rather than a value taken from another record, and wording or toning a
+  value a view already carries, including choosing the wording by branching on a value of a generated vocabulary
+  (`bzh:frontend-open-vocabulary`).
 - **Backend judgment**, a field on the view — any answer that joins records the wire serves separately by a domain rule,
   that previews a predicate the backend enforces on a write, or that the domain model names
   ([`../../domain/index.md`](../../domain/index.md)).
@@ -57,10 +58,11 @@ owns each sweep's scope, report, and self-test.
 `web:client-drift` fails a generated client that no longer matches the exported specs, so a wire fix lands with its
 regenerated types. A hand-written vocabulary, classification, or shape is a review question, not tooled: does this
 literal set, interface, or status predicate duplicate what a generated type carries, or what a view field should carry?
-So is a computed answer: does this join, capability check, or derived fact pass Scope's second-consumer test? The fix is
-the generated enum or model when the wire has it, and a backend change when it does not — a vocabulary or off-route
-shape registers in `src/blizzard/wire/components.py` so the spec carries it, and a classification, a join, or a write's
-predicate becomes a field on the view of the record the answer is about.
+So is a computed answer: would a second consumer have to reimplement this join, capability check, or derived fact to
+give the same answer? If so it is a judgment (Scope's second-consumer test). The fix is the generated enum or model when
+the wire has it, and a backend change when it does not — a vocabulary or off-route shape registers in
+`src/blizzard/wire/components.py` so the spec carries it, and a classification, a join, or a write's predicate becomes a
+field on the view of the record the answer is about.
 
 **Do.**
 
@@ -85,8 +87,6 @@ predicate becomes a field on the view of the record the answer is about.
 - A component importing `listFindingsApiFindingsGet` and awaiting it in `ngOnInit`.
 - Presentation: asking the wire for a display string beside `ChoreView.mode` — wording a `RunMode` value is the
   frontend's own, and a label on the wire fixes one surface's wording for every consumer.
-- Presentation: sorting `CadenceView.attention` by a hand-written ranking of which `AttentionReason` is worse — the
-  ordering is display, the ranking is a classification.
 - Backend judgment: `cadence.chores.filter((chore) => chore.routine === routine.slug)` over each `CadenceView` with
   `!cadence.retired && cadence.project_id === routine.project_id` — joins cadences to a `RoutineView` by the domain's
   kept-by rule (`bzh:routine-kept-by`, [`../../domain/cadences.md`](../../domain/cadences.md)), which the CLI would have
