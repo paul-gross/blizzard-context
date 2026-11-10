@@ -20,17 +20,18 @@ the fleet wedges.
 outside that surface selection is invisible to it.
 
 **Do.** A new optional response field; a new route kept beside its replacement; and, when a new runner→hub call reaches
-outside the declared surface, extending the wire selection in the same change. Naming the runner's tenant took the first
-form: `RunnerRegistrationResponse` and `RunnerIdentityView` (`src/blizzard/wire/runner.py`) gained `tenant_id` and
-`tenant_name`, each optional and `None` by default, so a previous-minor runner parses the reply it always did, and the
-route, the request, and the refusal shapes stayed as they were. Naming the projects a runner serves took it too:
-`RunnerRegistrationRequest.projects` is optional, and its absence (`None`) keeps the declaration the hub holds where
-`[]` serves none, so a previous-minor runner that sends no `projects` key never erases its declaration;
-`RunnerRegistrationResponse.projects` is `None` from a hub that predates projects. A refusal that needs a new cause
-extends the body it already has rather than adding one: a claim refused because the runner does not serve the chunk's
-project keeps the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, `src/blizzard/wire/route.py`), which gained
-a `reason` (`ClaimDenialReason`, `capability` by default) and a `detail` naming the project, so a previous-minor runner
-reads it as the refusal it already handles.
+outside the declared surface, extending the wire selection in the same change. The reference shapes:
+
+- **An optional response field.** `tenant_id` and `tenant_name` on `RunnerRegistrationResponse` and `RunnerIdentityView`
+  (`src/blizzard/wire/runner.py`) are each optional and `None` by default, so a runner that does not know them parses
+  the reply unchanged.
+- **An optional request field whose absence means "unchanged".** `RunnerRegistrationRequest.projects` is optional:
+  absent (`None`) keeps the declaration the hub holds, where `[]` serves none, so a runner that sends no `projects` key
+  never erases its declaration. `RunnerRegistrationResponse.projects` is `None` from a hub that does not know projects.
+- **A new refusal cause on the body the refusal already has.** A claim refused because the runner does not serve the
+  chunk's project is the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, `src/blizzard/wire/route.py`),
+  carrying a `reason` (`ClaimDenialReason`, `capability` by default) and a `detail` naming the project, so a runner that
+  knows neither field reads it as the refusal it already handles.
 
 **Don't.** A response enum gaining a value that `bzh:open-response-vocabulary` does not make additive and no admitted
 break covers.
