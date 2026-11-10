@@ -142,6 +142,57 @@ exercised by a worker the runner spawns, not typed by hand.
 **Passes when.** The stated observable holds on the running runner and still holds after the next tick, confirmed
 through a second surface.
 
+### `blizzard:manual-runner-ingest`
+
+**Surface.** The stopped-host `blizzard runner ingest` CLI: classification, configuration and file transfer, store
+movement, refusals, and resumption. This is an offline host operation against an env-local hub, not the running runner
+HTTP exercise `blizzard:manual-runner`.
+
+**Setup.** From the workspace root provision and start the feature environment and source its shell band:
+
+```bash
+winter provision <env>
+winter service up <env> --wait
+source <(winter env <env>)
+curl -fs "$BZ_HUB_URL/api/health"
+```
+
+Confirm the URL names the env-local loopback hub. Run the candidate CLI from `<env>/blizzard`; keep fixtures and
+evidence under `$BLIZZARD_TMPDIR`. Isolate inherited host and runner tokens and operator-session state so neither
+scratch host picks up another identity. Never target the hosted hub, singleton directories or stores, or another
+environment. Keep both scratch hosts stopped throughout; never start either runner.
+
+**Steps.**
+
+1. Prepare distinct source and destination host configurations using the current scaffold, with distinct runner and
+   workspace names. Initialize and register each with `uv run blizzard runner init <directory> --hub "$BZ_HUB_URL"`.
+   Record host and runner ids, baseline parsed configuration, marker files, and read-only store observations.
+2. Set a registered source runner path key to a marker beneath its runner directory and another to an absolute path
+   outside the source, also under the scratch directory. Record their values and marker bytes. Release and adopt the
+   moving runner at the env-local hub:
+
+   ```bash
+   uv run blizzard hub runner-host release <source-host-id> <runner-id>
+   uv run blizzard hub runner-host adopt <destination-host-id> <runner-id>
+   ```
+
+3. Run `uv run blizzard runner ingest <source> --runner <runner-id> --dir <destination>`. Compare its output with parsed
+   destination TOML, copied marker bytes and the unchanged outside path. Independently check token placement without
+   exposing token values, destination identity and ingest records, and source row removal or store set-aside.
+4. Repeat the ingest and independently check the resumed outcome and that the destination has no duplicate runner
+   configuration. Record the outcome even if the completed first ingest set the source store aside.
+5. Invoke the same verb with a non-SQLite file and a nonexistent path as sources. Compare each refusal's text with the
+   candidate's source-classification contract and confirm independently that destination configuration and store state
+   did not change.
+
+**Evidence.** Retain the candidate revision, commands, exits, redacted output, and independent configuration, file,
+token-placement and read-only store observations with the change. Do not retain token values.
+
+**Passes when.** The successful ingest's output agrees with the independent observations, the inside path and marker are
+copied and rewritten, the outside path is unchanged, token and store movement match the operation, and repetition
+produces the expected resumed outcome without duplicate configuration. Both invalid sources produce the expected refusal
+text and leave the destination unchanged.
+
 ### `blizzard:manual-sse-probe`
 
 **Surface.** What only a live socket can show: timing and framing over the wire — the reserved open-of-stream comment,
