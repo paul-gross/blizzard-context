@@ -10,8 +10,8 @@ the [domain model](./index.md).
 
 Every read, write, queue operation, and live stream acts within one tenant. A record of another tenant cannot be reached
 by any means, its id included: asking for it answers as if it did not exist, never that it is forbidden. What a tenant
-chooses a name for — a graph, a project, a source, a repository, a secret, a scope, a routine, a cadence — is unique
-within that tenant only, so two tenants never collide on a name neither knows the other holds.
+chooses a name for — a graph, a project, a source, a repository, a secret, a scope, a routine, a cadence, an urgency —
+is unique within that tenant only, so two tenants never collide on a name neither knows the other holds.
 
 A project is not a second wall inside the tenant: it is a lens over the tenant's state ([projects.md](./projects.md)).
 The tenant is the only boundary.
@@ -26,6 +26,12 @@ A tenant has an id and a name, each with one job:
   the only way anything names a tenant — every request, command, credential, and link.
 - **The name** is for people to read. It is unique nowhere, so two tenants may share one, and nothing looks a tenant up
   by it; renaming a tenant breaks nothing and leaves nothing to redirect.
+
+## What a new tenant starts with
+
+A tenant is born holding one urgency, `standard`, as its default ([work/urgency.md](./work/urgency.md) §The default), so
+every chunk minted in it carries an urgency from its first mint. An operator may change `standard`'s display name, add
+urgencies around it, or point the default elsewhere; the tenant is never without a default.
 
 ## Memberships and roles
 

@@ -233,7 +233,8 @@ cannot end a live daemon's turn.
 ## Tenant creation, one identity unit of work
 
 `TenantAdministration.create` (`blizzard/src/blizzard/hub/domain/tenancy/administration.py`) writes a tenant's `tenants`
-row, its packaged graphs, its `hub` work-ref sequence, and, when one is named, its first admin's membership, inside one
+row, its packaged graphs, its `hub` work-ref sequence, its default project, its `standard` urgency with its position,
+the tenant's settings naming `standard` as the default, and, when one is named, its first admin's membership, inside one
 identity unit of work (`blizzard/src/blizzard/hub/auth/identity_transaction.py`). The tenant's writes join the unit's
 own connection through `ScopedConnections.founding` (`blizzard/src/blizzard/hub/store/scoped.py`), which opens by
 inserting the scope's `tenants` row where every other scoped write locks it, so each later write in the unit locks the

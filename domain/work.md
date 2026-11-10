@@ -1,17 +1,18 @@
 # Work
 
 The unit of work at the model's center: the chunk, its derived statuses, the movement facts carrying it — in-graph
-transitions, cross-graph migrations, and an operator's restart — and how it ranks against others resting in the same
-list. Part of the domain model; parent hub: [./index.md](./index.md).
+transitions, cross-graph migrations, and an operator's restart — how it ranks against others resting in the same list,
+and the urgency it carries. Part of the domain model; parent hub: [./index.md](./index.md).
 
-| File                                         | When to read                                                                                                    |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| [work/chunk.md](./work/chunk.md)             | You need what a chunk is and carries — its work refs, its graph pin, and the properties an operator edits on it |
-| [work/statuses.md](./work/statuses.md)       | You need what a status means, or which condition a chunk in some state derives                                  |
-| [work/transitions.md](./work/transitions.md) | You need how a chunk moves along an edge within its pinned graph                                                |
-| [work/migration.md](./work/migration.md)     | You need how a chunk changes graphs — what triggers a re-pin, and where it lands                                |
-| [work/restart.md](./work/restart.md)         | You need what an operator's forced move onto a node does, defers, or refuses                                    |
-| [work/ranking.md](./work/ranking.md)         | You need how the `not_ready` list or the `ready` queue is ordered, or why the two never rank together           |
+| File                                         | When to read                                                                                                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [work/chunk.md](./work/chunk.md)             | You need what a chunk is and carries — its work refs, its graph pin, and the properties an operator edits on it                                           |
+| [work/statuses.md](./work/statuses.md)       | You need what a status means, or which condition a chunk in some state derives                                                                            |
+| [work/transitions.md](./work/transitions.md) | You need how a chunk moves along an edge within its pinned graph                                                                                          |
+| [work/migration.md](./work/migration.md)     | You need how a chunk changes graphs — what triggers a re-pin, and where it lands                                                                          |
+| [work/restart.md](./work/restart.md)         | You need what an operator's forced move onto a node does, defers, or refuses                                                                              |
+| [work/ranking.md](./work/ranking.md)         | You need how the `not_ready` list or the `ready` queue is ordered, or why the two never rank together                                                     |
+| [work/urgency.md](./work/urgency.md)         | You need how an operator marks work more pressing than other work — the tenant's ordered urgencies, its default, or retiring an urgency open work carries |
 
 ## See also
 
