@@ -63,8 +63,8 @@ precedent as `_CP_AFTER_MINT`'s reuse below.
 ## SSE announcement after commit
 
 The detached record-then-announce shape used by `park_on_ask` and `_wake` commits the durable write first, then calls
-`publish_*`. A crash between them loses at most one live SSE announcement: the next read derives from durable state.
-That bounded loss is accepted, so this shape needs no sweep point.
+`publish_*`. A crash after commit can lose all live SSE announcements not yet published for that transaction: the next
+read derives from durable state. That bounded loss is accepted, so this shape needs no sweep point.
 
 ## The preamble fingerprint
 
