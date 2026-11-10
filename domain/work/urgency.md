@@ -45,6 +45,11 @@ editing a chunk asks for, beside the one every configuration change asks for.
 
 A finished chunk is not open: it keeps the urgency it ran under, retired or not.
 
+The same retire clears every routine's default urgency and every chore's override that names the retiring urgency
+([../routines-and-scopes.md](../routines-and-scopes.md), [../cadences.md](../cadences.md)), each recorded as that
+routine's or cadence's own change, so their runs fall through to the next urgency the chain names
+([./chunk.md](./chunk.md#urgency)). Enabling the urgency again restores none of them.
+
 ## Enabling
 
 Enabling brings a retired urgency back, meaning what it meant, at its standing place in the order, choosable again. It
