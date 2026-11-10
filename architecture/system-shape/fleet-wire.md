@@ -29,9 +29,9 @@ outside the declared surface, extending the wire selection in the same change. T
   absent (`None`) keeps the declaration the hub holds, where `[]` serves none, so a runner that sends no `projects` key
   never erases its declaration. `RunnerRegistrationResponse.projects` is `None` from a hub that does not know projects.
 - **A new refusal cause on the body the refusal already has.** A claim refused because the runner does not serve the
-  chunk's project is the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, `src/blizzard/wire/route.py`),
-  carrying a `reason` (`ClaimDenialReason`, `capability` by default) and a `detail` naming the project, so a runner that
-  knows neither field reads it as the refusal it already handles.
+  chunk's project is the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, `src/blizzard/wire/route.py`), which
+  keeps its `detail`, now naming the project, and adds a `reason` (`ClaimDenialReason`, `capability` by default), so a
+  runner that does not know `reason` reads it as the refusal it already handles.
 
 **Don't.** A response enum gaining a value that `bzh:open-response-vocabulary` does not make additive and no admitted
 break covers.
