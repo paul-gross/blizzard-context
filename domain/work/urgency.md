@@ -56,6 +56,14 @@ Enabling brings a retired urgency back, meaning what it meant, at its standing p
 is never refused for want of anything, and it moves no chunk back: the work it once carried went where the operator sent
 it.
 
+## Claim order
+
+The urgencies' order decides what a runner is offered first: the ready chunks are walked by their urgency's place, most
+urgent first, and by rank within an urgency. The order is derived and not stored, and the ready queue's own rank is
+unchanged ([./ranking.md](./ranking.md#claim-order-is-not-a-third-ranked-list)). The walk raises no prerequisite: an
+urgent chunk waiting on a less urgent one is passed over or held at, as acquisition says
+([../execution/acquisition.md](../execution/acquisition.md)).
+
 ## See also
 
 - [./chunk.md](./chunk.md) — the chunk that carries an urgency.

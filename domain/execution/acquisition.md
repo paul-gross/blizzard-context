@@ -4,10 +4,12 @@ How a chunk is granted to a runner, what the route locates, and which writes giv
 [execution hub](../execution.md).
 
 Acquisition is the hub granting a ready chunk to exactly one runner able to run it — the one point of cross-runner
-contention, where fleet exactly-once is upheld. The claim is claim-by-route: the runner peeks the hub-ordered queue,
-acquires the environments, and posts the complete route; the hub accepts exactly one claim per chunk. The environment
-identifier is opaque to the hub — it knows which environment, never what an environment is. What the grant obliges of
-the claimant's leases is owned by [./fencing.md](./fencing.md).
+contention, where fleet exactly-once is upheld. The claim is claim-by-route: the runner peeks the ready queue in claim
+order — urgency before rank ([../work/urgency.md](../work/urgency.md#claim-order)) — acquires the environments, and
+posts the complete route; the hub accepts exactly one claim per chunk. A peek never raises a prerequisite: an urgent
+chunk behind an unfinished one is passed over or held at as its marking says. The environment identifier is opaque to
+the hub — it knows which environment, never what an environment is. What the grant obliges of the claimant's leases is
+owned by [./fencing.md](./fencing.md).
 
 Which entry a runner claims out of a peek carrying a [blocked marking](../work/statuses.md#the-blocked-marking) is that
 runner's own choice on the unfiltered peek: by default it reaches past a marked entry for the first unmarked one in the
