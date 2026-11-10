@@ -61,6 +61,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   beside one another in the center column and the rail's hub, host and open-asks panels stack in their own fixed column
   to the right, with nothing — a long runner name, a two-workspace runner's binding lines, a long-named environment —
   pushing the page sideways, with the chunk dock open or closed.
+- `hub-panel.shell-sweep.spec.ts` covers the runner board rail's hub panel: at 390px and 1280px the link, issue rows,
+  and fleet strip keep a 6px gap between consecutive rows.
 - `glance-view.shell-sweep.spec.ts` covers the mobile glance board at 390px and 320px: the day's spend sits below the
   vitals strip and above its one list of cards — attention and work in flight, READY over the divider over BACKLOG, then
   completed work — which stays ordered vertically; a card's work ref and short id share its head line at opposite ends,
