@@ -40,7 +40,9 @@ seam exists to bind a mock to. For the harness seam, the adapter-isolation check
 
 - a harness-core module importing an adapter package — `harness/claude_code/`, `harness/opencode/`, or
   `harness/opencode_v2/`;
-- one adapter importing another, including one major version's binding importing the other's;
+- one adapter importing another, including one major version's binding importing the other's — the one admitted import
+  is a version-selected package (`harness/opencode_v2/`) importing its family's `section` module
+  (`harness/opencode/section.py`), and nothing else of that family;
 - any module but `harness/wiring.py` and a composition root importing an adapter;
 - a harness module other than `harness/wiring.py` importing `wiring.py`, which reaches every adapter through it;
 - a module under `harness/` importing `runner/loop/` or the loop's composition root, `runner/loop_wiring.py`.
