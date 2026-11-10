@@ -162,20 +162,19 @@ then the urgency it names, and the two never deadlock. A re-read that finds an o
 that took the urgency after the read ahead — writes nothing, and the retire runs its unit again over the wider set. A
 settings edit takes the settings lock and the named urgency's. A mint takes the settings lock, the urgency a read ahead
 of its unit found as the default, and every urgency a link of its chain named ahead of it, retired or not — the stated
-one, the chore's override, the routine's default — beside its own lock set; under them it re-reads each and resolves
-the chain (`blizzard/src/blizzard/hub/domain/urgency/chain.py::resolve_chain`) over what it re-read. A chunk edit naming
-an urgency opens through `IChunkExclusiveWrites.locked` with `keys=`, taking the chunk row and that urgency's key and no
+one, the chore's override, the routine's default — beside its own lock set; under them it re-reads each and resolves the
+chain (`blizzard/src/blizzard/hub/domain/urgency/chain.py::resolve_chain`) over what it re-read. A chunk edit naming an
+urgency opens through `IChunkExclusiveWrites.locked` with `keys=`, taking the chunk row and that urgency's key and no
 settings lock, and re-reads the urgency under them. A routine or cadence write that newly names urgencies — a routine's
 default, a chore override its stored cadence names on no chore — opens a unit locking each one's key and re-checks each
 live under it (`UrgencyReferences.held`); a configuration apply adds those keys to its plan's locks and refuses an entry
 as stale when such an urgency's revision has moved since the plan read it. A reference the write leaves is guarded by
-the record's own revision, which a retire clearing the reference moves. Every
-change of the default and every retire takes the settings lock, so a mint's re-read default is live, and a retire never
-runs beside a write taking up the urgency it retires. Create and both reorders take the `urgency_order` lock, re-reading
-the order under it. A new decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the
-existing ones reach it through the legacy handles `IChunkExclusiveWrites.locked_work_refs` and
-`IWriteGraphRepository.locked_name`, each its own type — never an `ILockedChunkRead`, so a handle that holds no
-chunk-row lock cannot satisfy a chunk-row `*_locked` write.
+the record's own revision, which a retire clearing the reference moves. Every change of the default and every retire
+takes the settings lock, so a mint's re-read default is live, and a retire never runs beside a write taking up the
+urgency it retires. Create and both reorders take the `urgency_order` lock, re-reading the order under it. A new
+decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the existing ones reach it through
+the legacy handles `IChunkExclusiveWrites.locked_work_refs` and `IWriteGraphRepository.locked_name`, each its own type —
+never an `ILockedChunkRead`, so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, the ceiling's self-engagement, and the

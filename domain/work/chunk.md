@@ -105,6 +105,6 @@ its chain names: the one the mint states, then — for a chunk a cadence mints �
 the mint is refused; a chore's or routine's urgency that is retired names none, and the chain falls through to the next
 link.
 
-The operator can change the urgency at any non-terminal status, claimed or not — the widest window of the properties
-here — to any live urgency of the tenant; it can never be cleared. Changing it leaves the chunk's rank where it stood
-([./ranking.md](./ranking.md)). A finished chunk keeps the urgency it ran under.
+The operator can change the urgency at any non-terminal status, claimed or not — the same window as the intended
+migration — to any live urgency of the tenant; it can never be cleared. Changing it leaves the chunk's rank where it
+stood ([./ranking.md](./ranking.md)). A finished chunk keeps the urgency it ran under.
