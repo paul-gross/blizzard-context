@@ -23,8 +23,8 @@ A host is a record of its tenant at the hub, beside its runners:
   under itself. It claims no work and acts as none of its runners, and no runner's credential acts as the host. A host
   acts only on the runners it holds. It is revoked and re-issued the way a runner's is
   ([./retirement.md](./retirement.md) §Token revocation).
-- **One tenant, for life.** A host serves the tenant it was added in, and every runner it adds is born there. Nothing
-  moves a host between tenants: its operator retires it and adds another.
+- **Tenant boundary.** Nothing moves a host between tenants: its operator retires it and adds another
+  ([../tenancy.md](../tenancy.md) §Memberships and roles owns the rule).
 - **Its report is never refused.** The host describes itself on every contact, and the hub records what arrives; a name
   another live host holds is not recorded, and the host keeps the one it had.
 
