@@ -44,6 +44,14 @@ before a promotion is never undone by it.
 Demotion always stamps an explicit position in the backlog — the tail, or the named anchor's slot — so the mint-instant
 fallback never ranks a demoted chunk.
 
+## Claim order is not a third ranked list
+
+The `ready` queue's rank is not the order a runner is offered work in. Claim order groups the same ready chunks by their
+urgency's place in the tenant's set, most urgent first, keeping rank within a group
+([./urgency.md](./urgency.md#claim-order), [../execution/acquisition.md](../execution/acquisition.md)). It is derived on
+every read from the rank and the set's order and never stored, so no reorder writes it and `bzh:ranking-is-per-list`
+still holds: the queue is ranked once, and claim order only reads it.
+
 ## See also
 
 - [./statuses.md](./statuses.md) — `not_ready` and `ready`, and what moves a chunk from one to the other.
