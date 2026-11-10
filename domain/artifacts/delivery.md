@@ -64,10 +64,8 @@ worker node's judgement ([edges](../graphs/edges.md)).
   to its own repository record, which names the forge record it lands on, so a chunk may mix forges, owners, base
   branches and credentials. A landing refuses a visit where one `owner/repo` resolves to two repository records, since
   both would write the one merged marker.
-- **Landing follows the project's order.** A multi-repository visit steps every unlanded repository's policy, then lands
-  them in its project's landing order ([../projects.md](../projects.md) §Where a chunk may land). The order and each
-  repository's policy are the visit's terms, taken at its first turn and kept through every retry and restart, so an
-  edit made while a visit waits reaches only the next visit.
+- **Landing follows the project's order.** [../projects.md](../projects.md) §Where a chunk may land owns the landing
+  order and the visit's terms.
 - **A chunk delivers one project's work.** A chunk lands only in repositories its project links, and a commit naming one
   it does not link is refused before any push — [../projects.md](../projects.md) §Where a chunk may land owns the rule,
   the moment the links are read, and the refusal.

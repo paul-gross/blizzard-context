@@ -17,10 +17,8 @@ Parent: [./index.md](./index.md).
 
 ## The two parked conditions
 
-`waiting_on_human` is invited input — the model expects a person and the reap clock stops; `needs_human` is failure —
-the system is out of moves and a person must act. Both derive from open facts, never stored flags;
-[./work/statuses.md](./work/statuses.md) owns the derivation. [./execution.md](./execution.md) owns the lease kept
-dormant while a chunk parks and the reap clock these entries stop.
+[./work/statuses.md](./work/statuses.md) owns the meanings and derivation of `waiting_on_human` and `needs_human`.
+[./execution.md](./execution.md) owns the lease kept dormant while a chunk parks and the reap clock these entries stop.
 
 ## Posture
 
