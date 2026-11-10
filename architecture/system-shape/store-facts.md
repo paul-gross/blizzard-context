@@ -53,9 +53,7 @@ closes it when the hub terminally ends the chunk (stopped or done).
 
 **Why.** The runner derives openness from its own facts, but the hub owns whether a chunk is still work, and a
 terminally-ended chunk produces no further runner-local event — no lease minted, no worker exit, no binding taken — so a
-closer expressed only in runner-local terms can never fire and the fact stands forever. This failure has shipped twice
-on real fleets — an ask-parked lease's park fact and held binding never retired after a non-happy-path ending, and an
-escalation left a permanent `needs_human` alert after its chunk was stopped — both found by an operator, not by a test.
+closer expressed only in runner-local terms can never fire and the fact stands forever.
 
 **Detect.** An `open_*` read, or an `Unsuperseded`/`Unclosed` predicate, whose superseding facts are all runner-local (a
 lease mint, a spawn, a closure, a release) with no arm for the hub reporting the chunk terminal; or a PULL step that

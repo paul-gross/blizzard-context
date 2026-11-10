@@ -47,8 +47,8 @@ rather than with the change under test.
   checks hub unit-of-work lock ordering on Postgres, not a second general test matrix. Other Postgres behavior still
   rests on the portable SQL surface (`bzh:sql-portable`) and the named gaps.
 - Test data: in Python tiers, stand it up through the mock-data CLI and its fixtures (`tool:mock-data`), never through
-  ad-hoc SQL; a Playwright service spec creates it through the hub's public surfaces (`bzh:service-public-surfaces`),
-  never by seeding the store. The harness restoring a template its own CLIs built is not a spec seeding the store.
+  ad-hoc SQL; where a Playwright service spec's test data comes from is owned by `bzh:service-public-surfaces`
+  ([`./service-tests/surfaces.md`](./service-tests/surfaces.md)).
 
 **Detect.** Review a service or UI test or fixture that reaches a non-loopback host or carries a real vendor or forge
 credential, a case that reaches a rare state through the real daemon or the real external tool where a mock's lever

@@ -90,9 +90,8 @@ those calls, not work done. For a file, the count sees only read-tool calls: a f
 its own — the workspace and extension hubs, and everything they import — or one a session reads through the shell never
 registers, so its zero is no evidence at all.
 
-Ids split across mints: every graph edit mints new node and graph ids, so one node's use or spend is spread over a row
-per mint. A per-node or per-graph claim reads the `--by-name` roll-up of the node-counts and spend verbs, which folds
-the rows into one per name — a node keyed `<graph>/<node>` — and never sums the per-id rows by eye.
+A per-node or per-graph claim reads the node-counts and spend verbs with `--by-name`, never the per-id rows summed by
+eye; blizzard's `docs/deployment/analytics.md` owns what the flag folds and why.
 
 These bodies bound what counts as a gap:
 

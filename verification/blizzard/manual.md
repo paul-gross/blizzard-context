@@ -682,8 +682,8 @@ only on a host with none, and remove it afterward.
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
 `docs/install.md`. `blizzard:unit-test`'s `tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down`
 already proves every shipped revision has a working `downgrade()`; the drill wraps the operator-facing procedure around
-that guarantee, by hand because no CI tier stands up a real compose deployment. Run it at least once per DISTRIB slice
-landing, and re-run it whenever `docs/rollback.md`'s commands change.
+that guarantee, by hand because no CI tier stands up a real compose deployment. Run it whenever the compose deployment's
+packaging changes (`packaging/docker/`), and whenever `docs/rollback.md`'s commands change.
 
 **Setup.** A running compose stack (`docker compose up -d`, `packaging/docker/compose.yaml`) on at least two published
 or locally-built image tags, so a real previous tag exists to roll back to.

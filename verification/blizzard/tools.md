@@ -59,7 +59,8 @@ The blizzard-mock-data CLI seeds hub and runner stores into a known world by ref
 importing nothing from blizzard. Every write runs a drift guard: schema drift fails loud with `SchemaDriftError` naming
 the table and columns. Whether to seed the store directly versus drive the real work-source/ingest wire path is a choice
 owned by [../../tooling/store-seeding.md](../../tooling/store-seeding.md). This tool serves the Python tiers and manual
-seeded worlds; Playwright service specs build state through public hub surfaces and do not invoke it.
+seeded worlds; where a Playwright service spec's state comes from is owned by `bzh:service-public-surfaces`
+([`./service-tests/surfaces.md`](./service-tests/surfaces.md)).
 
 - `reset --store hub|runner` is an FK-safe delete-all, the workhorse every scenario starts from.
 - `create` has one verb per seedable concept; the root verb `chunk` composes the exact fact rows `derive_chunk_status`
