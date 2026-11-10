@@ -1,8 +1,9 @@
 # Cadences
 
 A **cadence** is a project's bucket of rhythm: when, and how often, the routines it keeps should run. A **chore** is one
-routine a cadence keeps, with the scopes it runs over, the mode its runs take, a note each run carries, and whether the
-work each run makes is admitted to the queue. An **errand** is one chore over one scope. Part of the
+routine a cadence keeps, with the scopes it runs over, the mode its runs take, a note each run carries, whether the work
+each run makes is admitted to the queue, and optionally its **override**: the urgency its runs take over the routine's
+default urgency ([work/chunk.md](./work/chunk.md#urgency)). An **errand** is one chore over one scope. Part of the
 [domain model](./index.md).
 
 A cadence belongs to one project ([projects.md](./projects.md)), fixed when it is made, and its slug is unique within
@@ -63,12 +64,17 @@ time the cadence is read. A routine's slug is its lineage
 project, so a slug holds as steadily as an id would. Naming by slug lets a cadence be declared beside the routine it
 keeps, before either exists.
 
+A chore's override names its urgency by slug too, but unlike the routine and the scopes it must resolve: a chore naming
+an urgency the tenant does not hold, or a retired one, is refused. Retiring an urgency clears every override naming it
+([work/urgency.md](./work/urgency.md#retiring-with-the-work-moved)), and an override found retired at a run names none,
+so the run falls through to the routine's default.
+
 ## A chore's identity across edits
 
 A chore is keyed within its cadence by its key. An edit that keeps a key keeps the chore, whatever else it changes — its
-routine, its scopes, its mode, its note, whether it admits its work — so its errands keep their history. An edit that
-drops a key ends that chore, and writing the key again later makes a new chore, whose errands have never run. A key is
-never renamed: renaming a chore is removing one and adding another.
+routine, its scopes, its mode, its note, whether it admits its work, its urgency — so its errands keep their history. An
+edit that drops a key ends that chore, and writing the key again later makes a new chore, whose errands have never run.
+A key is never renamed: renaming a chore is removing one and adding another.
 
 ## The retired brake
 
@@ -80,9 +86,9 @@ admits nothing, so it asks no more than any other edit.
 
 ## Needs attention, never invalid
 
-A cadence is refused only when its shape cannot mean anything. What it points at may come and go beside it: a routine
-nobody holds, a retired routine, a routine whose graph no longer resolves, a scope unknown, retired, or not linked to
-the routine, a chore with no scopes left to run over, and a cadence with no chores are each accepted. Each is shown as
-attention the cadence needs, naming the chore and, where it stops one errand only, the scope — the refusals a
-hand-started run would meet, shown before the cadence fires. Attention is read as things stand, never kept. A retired
-cadence needs none.
+A cadence is refused only when its shape cannot mean anything, or a chore's override names no live urgency
+([Linked by slug](#linked-by-slug)). What it points at may come and go beside it: a routine nobody holds, a retired
+routine, a routine whose graph no longer resolves, a scope unknown, retired, or not linked to the routine, a chore with
+no scopes left to run over, and a cadence with no chores are each accepted. Each is shown as attention the cadence
+needs, naming the chore and, where it stops one errand only, the scope — the refusals a hand-started run would meet,
+shown before the cadence fires. Attention is read as things stand, never kept. A retired cadence needs none.

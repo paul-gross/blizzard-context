@@ -3,7 +3,7 @@
 A **scope** is an operator-named bucket — a slug and a description, findings grouped into it. The slug is lowercase
 letters, digits, and hyphens, at least one character and nothing else; whatever wants prose goes in the description. A
 **routine** is an operator-named pointer at a graph its runs execute, a default scope, and default run preferences
-(model, effort); a run is the routine acting, addressed at itself and an effective scope. Part of the
+(model, effort, urgency); a run is the routine acting, addressed at itself and an effective scope. Part of the
 [domain model](./index.md).
 
 Every scope and routine belongs to one project ([projects.md](./projects.md)), fixed at its mint. A scope's slug and a
@@ -76,7 +76,11 @@ its own, and its chunk rests behind the ordinary promote gate rather than enteri
 chore that promotes minted it, which admits it to the ready queue as it is minted
 ([cadences.md](./cadences.md#when-an-errand-is-due)). Mode settles the baseline, never admission: a `full` run needs no
 baseline, while a `delta` run runs against the routine/scope pair's own recorded revision, and downgrades to `full` — on
-the record, never refused — when the pair has recorded none yet. What turns a run away is [What refuses](#what-refuses).
+the record, never refused — when the pair has recorded none yet. A routine may name a **default urgency**, the urgency
+its runs take when the run names none ([work/chunk.md](./work/chunk.md#urgency)); naming none leaves its runs to the
+tenant's default. The default urgency must be live when it is set, and retiring that urgency clears it
+([work/urgency.md](./work/urgency.md#retiring-with-the-work-moved)). What turns a run away is
+[What refuses](#what-refuses).
 
 ## What refuses
 

@@ -43,8 +43,9 @@ through its source; a delivered one still does.
 
 Grouping folds unacquired chunks into a survivor, which absorbs their work refs, gated on the same unacquired predicate
 as deletion below. It is not a reorder: a `ready` and a `not_ready` chunk may fold together, the survivor keeps the
-status it derives, and a folded chunk's promotion and queue position vanish with it. Grouping never crosses projects:
-folding in a chunk of another project than the survivor's is refused.
+status it derives, and a folded chunk's promotion and queue position vanish with it. The survivor keeps its own urgency;
+a folded chunk's urgency vanishes with it. Grouping never crosses projects: folding in a chunk of another project than
+the survivor's is refused.
 
 ## Deletion
 
@@ -63,8 +64,8 @@ stands.
 
 ## Operator-editable properties
 
-The graph pin, the model/effort/harness defaults, and the intended migration are plain mutable properties, not fact
-logs.
+The graph pin, the model/effort/harness defaults, the intended migration, and the urgency are plain mutable properties,
+not fact logs.
 
 ### Graph pin
 
@@ -94,3 +95,16 @@ The intended migration property is null when no migration is queued, else an int
 a target graph, and, for `forced`, a target node. The operator can set, overwrite, or clear it at any non-terminal
 status. Applying it re-pins the chunk and clears the intent in one atomic write; an eager cross-graph restart
 ([./restart.md](./restart.md)) clears it in its own write, superseding rather than firing it.
+
+### Urgency
+
+Every chunk carries exactly one urgency ([./urgency.md](./urgency.md)), never none. At mint it takes the first urgency
+its chain names: the one the mint states, then — for a chunk a cadence mints — its chore's override
+([../cadences.md](../cadences.md)), then — for a routine's run — the routine's default urgency
+([../routines-and-scopes.md](../routines-and-scopes.md)), then the tenant's default. A stated urgency must be live, or
+the mint is refused; a chore's or routine's urgency that is retired names none, and the chain falls through to the next
+link.
+
+The operator can change the urgency at any non-terminal status, claimed or not — the widest window of the properties
+here — to any live urgency of the tenant; it can never be cleared. Changing it leaves the chunk's rank where it stood
+([./ranking.md](./ranking.md)). A finished chunk keeps the urgency it ran under.
