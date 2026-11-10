@@ -92,8 +92,12 @@ ladder.
   map over the wire's lease `state` and `closure_healthy`), `runner/src/app/core/chunk-status.ts`'s
   `deriveMachineChunkStatus` (a map over the wire's `display_status`, falling through to the lease map), and
   `hub/src/app/core/lifecycle-tone.ts`'s `lifecycleTone` (a hub record's enabled/retired lifecycle) and
-  `graphLifecycleTone` (a graph version's wire lifecycle). A label renders through `KitBadge`; a surface needing the
-  bare colour instead binds `toneColor(tone)` (`fleet/lib/kit/kit-badge.ts`) rather than re-typing the ladder.
+  `graphLifecycleTone` (a graph version's wire lifecycle), `runner/src/app/core/runner-health.model.ts`'s
+  `identityRefusal`, `runnerLight` and `hubLink` (a runner's identity verdict, light and hub link),
+  `runner/src/app/host/host-registration.model.ts`'s registration lookup (the host's registration state), and
+  `fleet/lib/host/subscription-pace.model.ts`'s `LAPSED_TONE`, `freshnessTone` and `sampleTone` (a subscription's
+  condition). A label renders through `KitBadge`; a surface needing the bare colour instead binds `toneColor(tone)`
+  (`fleet/lib/kit/kit-badge.ts`) rather than re-typing the ladder.
 - **Relative age** — `ageMs`, `formatAge`, and `formatSeenAgo` implement the bounded-skew clause of `./wire.md`'s
   `bzh:utc-instants` once for every consumer: a derived age tolerates bounded clock skew, then falls through to the
   backend-derived liveness — never clamping a large negative value to a confident zero.
