@@ -64,8 +64,9 @@ time the cadence is read. A routine's slug is its lineage
 project, so a slug holds as steadily as an id would. Naming by slug lets a cadence be declared beside the routine it
 keeps, before either exists.
 
-A chore's override names its urgency by slug too, but unlike the routine and the scopes it must resolve: a chore naming
-an urgency the tenant does not hold, or a retired one, is refused. Retiring an urgency clears every override naming it
+A chore's override is written by the urgency's slug too, but unlike the routine and the scopes it must resolve, and
+holds the urgency itself, not the slug: a chore naming an urgency the tenant does not hold, or a retired one, is
+refused. Retiring an urgency clears every override naming it
 ([work/urgency.md](./work/urgency.md#retiring-with-the-work-moved)), and an override found retired at a run names none,
 so the run falls through to the routine's default.
 
