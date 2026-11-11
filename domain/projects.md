@@ -118,6 +118,12 @@ slug. A visit takes the order, and each repository's policy, at its first turn a
 restart, so a reorder reaches the next visit, never one already under way. Landing otherwise behaves as it does for any
 chunk.
 
+A chunk starts from and lands into each repository's effective branch — its project's link branch, else the repository's
+— and captures it the first time anything needs it: at its claim, or at its first landing for a repository it had not
+captured. It keeps that branch across every lease, retry and restart, so a branch edit reaches only chunks that have not
+captured the repository. Chunks of any projects landing on one branch take turns; different branches of one repository
+land independently.
+
 ## A call that needs a project
 
 Creating something a project owns — a scope, a routine, an operator's garden proposal, a link, a hub item — and finding
