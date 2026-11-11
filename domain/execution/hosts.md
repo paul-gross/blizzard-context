@@ -1,8 +1,7 @@
 # Hosts
 
 The machine a tenant's runners live on: the host, its workspaces and their shared environments, the bindings that place
-a runner's projects in them, and the subscriptions its runners spend. Spoke of the [execution hub](../execution.md); the
-invariant below is written in the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+a runner's projects in them, and the subscriptions its runners spend. Spoke of the [execution hub](../execution.md).
 
 ## The host
 

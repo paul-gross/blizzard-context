@@ -1,10 +1,10 @@
 # Graph identity
 
 A graph pairs an immutable definition with mutable operational metadata; every edit creates a new graph rather than
-changing an existing one, so anything pinned to one can trust it forever. Definitional — a taxonomy of a graph's
-identity, what that identity freezes, the bound on any same-id representation change, the one legacy carry-over admitted
-outside that bound, and its mutable operational surfaces (`canon:rule-shape` §File kinds); the definition's content is
-routed from [../graphs.md](../graphs.md). Part of the [domain model](../index.md).
+changing an existing one, so anything pinned to one can trust it forever. This file states a graph's identity, what that
+identity freezes, the bound on any same-id representation change, the one legacy carry-over admitted outside that bound,
+and its mutable operational surfaces; the definition's content is routed from [../graphs.md](../graphs.md). Part of the
+[domain model](../index.md).
 
 ## Standalone graphs
 

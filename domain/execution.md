@@ -2,8 +2,7 @@
 
 Who runs a chunk, on which machine, and how exactly-once holds. Part of the [domain model](./index.md).
 
-Full detail lives under [./execution/](./execution/), one file per reader question; where a spoke states an enforceable
-invariant, it does so in the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+Full detail lives under [./execution/](./execution/), one file per reader question.
 
 ## Routing
 

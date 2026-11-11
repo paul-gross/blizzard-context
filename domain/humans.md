@@ -1,8 +1,8 @@
 # Human entry points (`bzh:human-entries`)
 
-Where people enter blizzard's loop, and the two parked conditions those entries produce. This file is a definitional
-taxonomy (`canon:rule-shape` §File kinds); each spoke owns what resolves its entry and what an operator's restart
-([./work/restart.md](./work/restart.md)) does to it — the hub routes without restating that.
+Where people enter blizzard's loop, and the two parked conditions those entries produce. Each spoke owns what resolves
+its entry and what an operator's restart ([./work/restart.md](./work/restart.md)) does to it — the hub routes without
+restating that.
 
 Parent: [./index.md](./index.md).
 

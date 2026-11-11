@@ -16,7 +16,8 @@ Concretely, on this target:
   (`canon:row-is-router`, `canon:truthful-names`).
 - A fact given a second full statement in a second file, where a pointer at its owner would serve
   (`canon:point-dont-duplicate`, `canon:one-owner`).
-- A rule authored outside the slot skeleton, or carrying no stable id for a citation to resolve (`canon:rule-shape`).
+- A rule outside the product model authored outside the slot skeleton, or carrying no stable id for a citation to
+  resolve (`canon:rule-shape`).
 - A process reference left in prose that is read as current guidance — a GH- reference, a tracker URL, a bare `M`/`C`
   id, "per the review" phrasing, or delivery-plan shorthand (a step label, a phase number) — or change-history narration
   (`canon:no-process-refs`, `canon:no-retro`).
@@ -32,6 +33,12 @@ Concretely, on this target:
 `winter-canon:/index.md` owns every rule this axis judges by; `winter-canon:/routing.md` resolves a cited `canon:` id to
 the file that owns it. [`../CONTRIBUTING.md`](../CONTRIBUTING.md) is in range for the authoring conventions local to
 this harness — the `bzh:` id scheme and the skeleton a rule here is written in.
+
+`canon:rule-shape` is out of range for the product model under [`../domain/`](../domain/index.md): a model file is plain
+prose, so a missing slot, a missing membership `Why`, a missing heading id, or slot order is no finding there.
+`bzh:domain-no-technical-detail` in [`../domain/no-technical-detail.md`](../domain/no-technical-detail.md) owns how a
+domain section is written, and is itself in range as a rule in the skeleton. Every other judgement in Evaluates stays in
+range for `domain/`.
 
 Where a command already judges the same prose, it owns that judgement and this axis does not
 (`winter-canon:/enforcement-channels.md`):

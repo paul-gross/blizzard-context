@@ -1,8 +1,7 @@
 # Migration
 
 A migration is the explicit re-pin of a chunk from one immutable graph to another, recorded as its own fact. Spoke of
-the [work hub](../work.md); the invariant below is written in the slot skeleton owned by `winter-canon:/rule-shape.md`
-(`canon:rule-shape`).
+the [work hub](../work.md).
 
 A graph name is minted repeatedly, each mint a separate immutable definition, and a chunk stays pinned to the mint it
 started on. A migration records what moved the chunk, not just that it moved: choice, intent, eager restart, and

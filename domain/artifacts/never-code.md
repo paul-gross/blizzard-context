@@ -1,7 +1,6 @@
 # Artifact contents
 
-What an artifact may and may not carry. A spoke of the [artifacts hub](../artifacts.md); the rule follows the slot
-skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
+What an artifact may and may not carry. A spoke of the [artifacts hub](../artifacts.md).
 
 ## Never code (`bzh:never-code`)
 
