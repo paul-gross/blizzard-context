@@ -68,6 +68,11 @@ through a link, any number of projects may link the same record, and a link neve
   whichever project carried the work.
 - **A repository link** says the project's chunks may land in that repository, and grants nothing else. A repository no
   project links receives nothing.
+- **A repository link may name its own branch.** The link's branch is the one the project's chunks start from and land
+  into in that repository. A link that names none inherits the repository's branch, and follows it when the repository's
+  changes; clearing a link's branch makes it inherit again. Everything else about the repository — where it lives, its
+  credential, how work lands into it — stays the repository's, so two projects may work on different branches of one
+  repository.
 - **A project orders the repositories it links.** Each link may hold a position in the project's landing order, or be
   unranked. The order is the project's, not the repository's: two projects linking the same repositories may order them
   differently. Unlinking a repository takes it out of the order, and relinking it restores the position it held.
@@ -112,6 +117,17 @@ position first, then every unranked one, each tie broken by slug. A project that
 slug. A visit takes the order, and each repository's policy, at its first turn and keeps them across a retry or a
 restart, so a reorder reaches the next visit, never one already under way. Landing otherwise behaves as it does for any
 chunk.
+
+A chunk starts from and lands into each repository's effective branch — its project's link branch, else the repository's
+— and captures it the first time anything needs it: at its claim, or at its first landing for a repository it had not
+captured. It keeps that branch across every lease, retry and restart, so a branch edit reaches only chunks that have not
+captured the repository. Chunks of any projects landing on one branch take turns; different branches of one repository
+land independently.
+
+A runner starts the chunk's work on the same branches: each repository a chunk targets arrives on its branch, and every
+other repository on the runner's own. A branch the repository does not have keeps the chunk from being claimed, never
+started on another branch. A runner that cannot start work on a chunk's branches is never offered a chunk whose link
+names its own, and a runner that prepared on branches the chunk no longer targets is refused the chunk and tries again.
 
 ## A call that needs a project
 

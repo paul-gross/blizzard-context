@@ -40,7 +40,9 @@ an urgency, and the tenant's settings depart from the verb set itself:
   unlink, `enable` for a relink — each beside its link fact.
 - **A project's link** is named into being by `PUT /api/projects/{project}/source-links/{source}` (or
   `repository-links/{repository}`), which links or relinks and leaves a standing link as it is, and unlinked by that
-  path's `POST …/retire`; on the CLI, `blizzard hub project link` and `unlink`.
+  path's `POST …/retire`; on the CLI, `blizzard hub project link` and `unlink`. A repository link's own base branch is
+  edited by a sparse `PATCH /api/projects/{project}/repository-links/{repository}` under the link's revision, where an
+  explicit `null` clears it so the link inherits the repository's again; on the CLI, `blizzard hub project base`.
 - **A project's landing order** is written on its repository links, never on the repository:
   `PUT /api/projects/{project}/landing-order` sets the whole order and
   `POST /api/projects/{project}/landing-order/position` moves one repository — on the CLI, `blizzard hub project order`

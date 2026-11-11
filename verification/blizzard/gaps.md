@@ -418,6 +418,15 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
   landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
   (`src/blizzard/hub/store/internal/invariants.py`) alone, and its behavior under enforced keys is unverified.
+- **A chunk's captured targets.** A chunk's repository targets are inserted once under its row lock — at its claim, in
+  the route's own transaction, and at a delivery's submission (`ChunkTargetsStore.capture`,
+  `src/blizzard/hub/store/internal/chunk_targets_store.py`) — reading the held rows and inserting only the missing ones.
+  That the row lock alone, not a SQLite writer lock, keeps a claim and a submission racing on Postgres from both
+  inserting one repository's row is unverified; the `(tenant_id, chunk_id, repository_id)` unique key would refuse the
+  second insert, a refusal no path handles.
+- **A link's base-branch write.** A link's `base_branch` edit compares and sets the link's revision (`record_link`,
+  `src/blizzard/hub/store/internal/project_link_store.py`); that two concurrent edits under READ COMMITTED leave one
+  winner and one revision conflict is unverified.
 - **A question or decision under a contended chunk lock.** A question or decision written while its chunk's row lock is
   contended is unverified under concurrent writes on Postgres.
 - **The `?project=` read plans.** Every read a `?project=` narrows has its `EXPLAIN QUERY PLAN` shape asserted on SQLite
