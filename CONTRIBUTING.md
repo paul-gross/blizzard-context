@@ -23,14 +23,15 @@ Conventional Commits with a scope:
 
 ## Authoring conventions
 
-Every rule and convention outside `domain/` follows the canon slot skeleton, and every `bzh:` id the stable-id scheme:
+Every rule and convention, and none of `domain/`'s model files, follows the canon slot skeleton, and every `bzh:` id the
+stable-id scheme:
 
 - Write rules in the `Rule` / `Why` / `Detect` / `Do` / `Don't` / `See also` skeleton owned by
   `winter-canon:/rule-shape.md`; keep hubs pure routers and let spokes own content
   (`winter-canon:/progressive-disclosure.md`). A `Detect` paragraph under `architecture/` cites the gate by its test
   module or method id, never by a test function name; the function names live in the code, and the reference lint fails
   one that appears there.
-- Write `domain/` as plain prose describing the product model, never in the skeleton:
+- Write `domain/`'s model files as plain prose describing the product model, never in the skeleton:
   `winter-canon:/harness-structure.md` leaves each domain's content to the consuming harness, and a reader of the model
   has no use for slots. `bzh:domain-no-technical-detail` in
   [domain/no-technical-detail.md](./domain/no-technical-detail.md) owns how a domain section is written; it is the

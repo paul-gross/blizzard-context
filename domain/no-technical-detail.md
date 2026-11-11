@@ -23,8 +23,7 @@ shipped-set census.
 
 A domain section is plain prose: sentences stating what is true of the concept and, where it is not obvious, why. It
 carries no `Rule` / `Why` / `Detect` / `Do` / `Don't` slots and declares no file kind. Its heading takes a
-``(`bzh:<slug>`)`` id only where something cites the section; the id is a citation anchor, never a mark that the section
-is a rule.
+``(`bzh:<slug>`)`` id only where something cites the section.
 
 ## Why
 
@@ -46,7 +45,7 @@ A key no spoke takes on either count is outside the delegation, and stays.
 
 Binds this tree's model files — the spokes stating concept behavior, and the hub where it frames them. A file whose
 subject is how to author or review the tree, this one included, states a convention rather than the model: it is not
-bound by this rule, and is written as a rule in the slot skeleton.
+bound by this rule.
 
 ## Detect
 
