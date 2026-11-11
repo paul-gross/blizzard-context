@@ -24,8 +24,7 @@ names chunks from one list only, and one naming a chunk from each is refused. A 
 not measure the same thing — falling back across lists would sort a chunk that has rested unordered a long time against
 one just promoted by two incomparable clocks, an ordering with no meaning to an operator ranking either list.
 
-A reorder's chunks are resolved against the one list it names before any is ranked. The two lists' explicit positions
-never merge into one shared order, and a reorder of one list never repositions a chunk that belongs to the other.
+A reorder of one list never repositions a chunk that belongs to the other.
 
 ## Promotion and demotion after rank
 

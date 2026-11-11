@@ -41,7 +41,7 @@ How an epoch is minted, owned, and read:
   mint lands only on an epoch its own runner already owns. The route here only refuses, never admits.
 - A transition is never accepted because its submitter still holds the route — route tenure is not attempt fencing.
 - A runner's write is refused, never recorded, when its attempt does not own the write's epoch — a hub-owned epoch, or
-  one another runner owns. Its epoch alone never admits it.
+  one another runner owns.
 - The epoch alone does not place a completion or decision at a node; [../work/transitions.md](../work/transitions.md)
   owns the guards at the write.
 - A fencing write's own epoch is derived inside the transaction recording it, never from a read the write no longer

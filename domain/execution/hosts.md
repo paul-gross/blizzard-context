@@ -66,7 +66,7 @@ runner that has stopped working keeps the environments its claims hold, even whe
 is handed to a neighbour until its claim releases it. Two claims in one environment overwrite each other's work, and no
 runner sees another's claims; only the host, which holds every runner's claims together, can arbitrate the pool, so a
 free environment is chosen against every runner's claims, never the acquiring runner's own alone. Each claim takes a
-free environment of its workspace, whichever runner holds it, and a claim that finds none free waits for one.
+free environment of its workspace, and a claim that finds none free waits for one.
 
 [./claim-vocabulary.md](./claim-vocabulary.md) states the environment as an operator reads it, and
 `bzh:invariant-checker` in [../../architecture/crash-correctness.md](../../architecture/crash-correctness.md) audits

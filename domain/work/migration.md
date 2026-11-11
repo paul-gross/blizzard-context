@@ -17,10 +17,10 @@ judged, fenced movement within one immutable definition — a cross-graph one wo
 migration's explicit intent, record, and fencing.
 
 The one exception is a chunk that is unclaimed and has never moved: its graph pin is a plain editable property outside
-the invariant, since a pre-flight edit re-routes no in-flight attempt. The window closes at first movement, and editing
-the pin within it writes no migration record. The chunk's default model and effort are [./chunk.md](./chunk.md)'s to
-govern, not this invariant's. A chunk that has already moved is outside the window even when it is re-queued and resting
-`ready`: its pin never changes without a migration record.
+the invariant while it stays so, since a pre-flight edit re-routes no in-flight attempt. That pre-flight window closes
+at first movement, and editing the pin within it writes no migration record. The chunk's default model and effort are
+[./chunk.md](./chunk.md)'s to govern, not this invariant's. A chunk that has already moved is outside the window even
+when it is re-queued and resting `ready`: its pin never changes without a migration record.
 
 What a change of pin writes:
 

@@ -9,7 +9,10 @@ Never the reverse.
 
 An id names exactly one thing in one immutable graph and can never dangle or drift; a name is all same-purpose entities
 across graphs share — correlation's only key. For instance, a transition records its two nodes' exact ids, and an
-authored-choice migration lands on the target graph's name-matched node. Matching an exact reference by name would
-conflate two graphs' `build` nodes; correlating across graphs by id would have a migration expect the same node id in
-the target graph, where no node carries it; and an artifact series keyed on node id would break at every migration or
-re-publish though the work is the same station's.
+authored-choice migration lands on the target graph's name-matched node. Reversing either breaks:
+
+- Matching an exact reference by name would conflate two graphs' `build` nodes.
+- Correlating across graphs by id would have a migration expect the same node id in the target graph, where no node
+  carries it.
+- An artifact series keyed on node id would break at every migration or re-publish, though the work is the same
+  station's.

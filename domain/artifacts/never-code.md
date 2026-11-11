@@ -12,11 +12,15 @@ The forge already durably owns code, so a pointer keeps the hub small and safe t
 The hub validates only what has a required structure; policing free-form content would need a scanner that cannot tell a
 quoted snippet from a diff.
 
-What never-code asks in practice: the branch is pushed to the forge first, then the repository, branch, and commit hash
-are submitted as the pointer artifact; assets are written as prose, quoting a snippet only where it makes a point; and
-conversation travels in the transcript lane, on its own caps. It asks that neither a prompt nor a graph's authored text
-direct an agent to attach a diff or the worker's transcript as an asset, and that a graph's `artifacts:` declaration
-name no diff as its baked-in content.
+What never-code asks in practice:
+
+- The branch is pushed to the forge first, then the repository, branch, and commit hash are submitted as the pointer
+  artifact.
+- Assets are written as prose, quoting a snippet only where it makes a point.
+- Conversation travels in the transcript lane, on its own caps.
+
+It also asks that neither a prompt nor a graph's authored text direct an agent to attach a diff or the worker's
+transcript as an asset, and that a graph's `artifacts:` declaration name no diff as its baked-in content.
 
 The one exception is transcripts, and only through the transcript lane: the hub retains an agent session's turns — tool
 calls and their output included, verbatim, so code the agent wrote or read can appear in them — each message and each
@@ -38,7 +42,6 @@ The validated kinds, and what each check covers:
   ([findings-and-proposals](../findings-and-proposals.md) §A finding can also be raised by a delivery lane's review).
   `class` is indexed and never interpreted.
 
-A validated kind is never accepted without its validation, and no hub schema or lane is designed to hold code or diffs.
 Every other asset, a worker node's included, is stored as submitted. A graph's `artifacts:` declaration is authored
 definition text, the same class as an inlined `prompt:`, and always the asset kind. Hub-command output is recorded as
 produced. A hub-owned work item's title and body are held at the hub because the hub is that item's source
