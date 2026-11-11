@@ -29,3 +29,10 @@ from the notes alone.
 8. **A deprecation or a removal:** name the removal line in `removes-in`, or the deprecation the removal `retires`,
    under `bzh:deprecation-note`; a moved date is a `postpones` note.
 9. **Prove it** with `blizzard:change-notes` ([../verification/blizzard.md](../verification/blizzard.md)).
+
+## Don't
+
+- Write a note's judgement, fields, or `## Upgrade` text from this file instead of from its owner.
+- Change a watched contract document with neither a note nor a `Change-Note: none — <reason>` trailer.
+- Leave an operator step only in the work item's `## Landing and deployment` section.
+- Mark a commit `!` without a breaking note, or write a breaking note without the `!`.

@@ -16,10 +16,9 @@ whether the surface can stay, which no tool decides.
    and `uv run python -m blizzard.tools.cli_surface` for the CLI; the SSE goldens are authored by hand) and run again. A
    finding that disappears was a document the change forgot to regenerate.
 2. **Can the old surface stay beside its replacement?** That is always preferred, and it makes the finding additive.
-3. **If not, does the window allow the break now?** It does when the surface is deprecated in every supported release
-   and `floor` can be raised to a line that deprecates it; or, on a `master` whose window carries `opening`, when the
-   change declares it with a `!` commit and a breaking change note. `docs/versioning.md` and `blizzard:compat`
-   ([../verification/blizzard.md](../verification/blizzard.md)) own the window and the admission.
+3. **If not, does the window admit the break now?** `blizzard:compat` owns the admission
+   ([../verification/blizzard/commands/packaging.md](../verification/blizzard/commands/packaging.md#blizzardcompat)),
+   and `blizzard`'s `docs/versioning.md` §The hub↔runner skew window owns when `floor` may rise.
 4. **If not, do that release's consumers already survive it?** Read the release's own tree, not `master`'s: every
    consumer of the surface it ships — the runner, its CLI, the panel, the board — and what each does with the change. A
    consumer survives when it handles the change without failing. One that fails until reloaded, and whose reload loads

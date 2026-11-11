@@ -11,15 +11,13 @@ the check then says when the next one is owed.
 
 1. **Is there a flag already?** Read `src/blizzard/foundation/flags/registry.toml` in `blizzard`. Work belonging to the
    same capability joins the live flag of its epic; a new capability declares a new one.
-2. **Choose the scope** — `hub`, `runner`, or `fleet` — by who must agree on the behavior (`registry.md` §Scopes). Split
-   behavior is one `fleet` flag, never two.
-3. **Declare it** under `[flag.<name>]` with `owner`, `summary`, `scope`, and `default = "off"`. A flag is never created
-   on.
+2. **Choose the scope** — `hub`, `runner`, or `fleet` — by who must agree on the behavior. Split behavior is one `fleet`
+   flag.
+3. **Declare it** under `[flag.<name>]` with `owner`, `summary`, `scope`, and `default = "off"`.
 4. **Guard the behavior and only the behavior**: each surface through the seam `bzh:flag-hides-behavior` names,
    answering as its table says while off; a board screen or control through the board's flag store and route guard.
-   Never guard a migration, and never leave surface unregistered.
 5. **Prove the on path**: tests that build their `Flags` with the flag on, living with the change, beside the off-path
-   tests the default gate already runs (`lifecycle.md` §Testing both sides).
+   tests the default gate already runs.
 6. **Prove it** with `uv run pytest tests/unit/test_flag_registry.py` and `mise run flag-lifecycle`
    (`blizzard:flag-lifecycle`, [../verification/blizzard.md](../verification/blizzard.md)), then `blizzard:compat`.
 
@@ -27,7 +25,7 @@ the check then says when the next one is owed.
 
 1. **Is it time?** The capability is complete on the on path, and no stable release has promised the flag off.
 2. **Make the one change**: the registry's `default` set to `on`, and the change note naming the flag, written under
-   `bzh:change-notes` ([change-notes.md](./change-notes.md)). Neither goes alone.
+   `bzh:change-notes` ([change-notes.md](./change-notes.md)).
 3. **Keep every off-path test** until the flag retires; move the on-path tests onto the default path unchanged.
 4. **Prove it** with `mise run flag-lifecycle` on the pull request, which fails a flip with no note naming the flag, and
    by running the suite: the on path is now the gate's, since the gate runs every flag at its registry default.
@@ -38,7 +36,15 @@ the check then says when the next one is owed.
    has shipped with it still live.
 2. **Collapse every branch to its on side**: each `flags.on(name)` read, each `FlagOff` answer for the flag, the board's
    guard and markers, and the off-path tests. What the flag guarded stays exactly as it was released.
-3. **Move the name** from `[flag.<name>]` to `[retired]`, keeping its scope. Never reuse the name. A retirement owes no
-   change note.
+3. **Move the name** from `[flag.<name>]` to `[retired]`, keeping its scope. A retirement owes no change note.
 4. **Prove it** with `uv run pytest tests/unit/test_flag_registry.py` (no code names the flag, the file holds no unread
    live flag) and `mise run flag-lifecycle` (`cut` mode fails a due flag still live, and a tombstone removed too early).
+
+## Don't
+
+- Split one behavior across two flags — a `hub` flag and a `runner` flag for what both sides must agree on.
+- Declare a flag with `default = "on"`.
+- Leave a flagged surface unregistered while its flag is off, or make a migration conditional on a flag:
+  `bzh:flag-hides-behavior` owns both.
+- Flip a `default` to `on` without the change note naming the flag, or land the note without the flip.
+- Reuse a retired name, or drop a `[retired]` tombstone while a supported release still holds the flag live.

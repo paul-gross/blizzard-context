@@ -1,7 +1,8 @@
 # Workflows
 
-The procedures a fleet agent follows end to end, routed by the reader's task. Parent hub: [../index.md](../index.md).
-The passes only an operator drives are the workspace's: `workspace:/context/project/workflows/index.md`.
+The procedures and the delivery rules a fleet agent follows, routed by the reader's task. Parent hub:
+[../index.md](../index.md). The passes only an operator drives are the workspace's:
+`workspace:/context/project/workflows/index.md`.
 
 | File                                                             | When to read                                                                                                                                          |
 | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
