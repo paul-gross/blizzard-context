@@ -19,20 +19,13 @@ long unordered still sorts by when it arrived, not arbitrarily.
 
 ## Each list ranks within itself (`bzh:ranking-is-per-list`)
 
-**Rule.** The `not_ready` list and the `ready` queue rank independently, never as one interleaved order: an operator's
-reorder names chunks from one list only, and one naming a chunk from each is refused.
+The `not_ready` list and the `ready` queue rank independently, never as one interleaved order: an operator's reorder
+names chunks from one list only, and one naming a chunk from each is refused. A mint instant and a promotion instant do
+not measure the same thing — falling back across lists would sort a chunk that has rested unordered a long time against
+one just promoted by two incomparable clocks, an ordering with no meaning to an operator ranking either list.
 
-**Why.** A mint instant and a promotion instant do not measure the same thing — falling back across lists would sort a
-chunk that has rested unordered a long time against one just promoted by two incomparable clocks, an ordering with no
-meaning to an operator ranking either list.
-
-**Detect.** A reorder that accepts chunk ids without also requiring they share one list's status.
-
-**Do.** Resolve a reorder's candidate chunks against the one list it names before ranking; refuse a reorder mixing
-chunks from both.
-
-**Don't.** Merge the two lists' explicit positions into one shared order, or let a reorder for one list silently
-reposition a chunk that belongs to the other.
+A reorder's chunks are resolved against the one list it names before any is ranked. The two lists' explicit positions
+never merge into one shared order, and a reorder of one list never repositions a chunk that belongs to the other.
 
 ## Promotion and demotion after rank
 

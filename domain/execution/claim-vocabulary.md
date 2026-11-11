@@ -3,8 +3,6 @@
 The one operator-facing vocabulary for what a chunk action does to a runner's claim — what UI copy, CLI help, and
 operator docs use in place of blizzard's internal terms. Spoke of the [execution hub](../execution.md).
 
-## Why
-
 Route, tenure, lease, epoch, attempt, and holding runner name the same handful of concepts inconsistently across
 surfaces, and none of them mean anything to an operator deciding whether an action is safe to click. This set is the
 whole of what an operator needs to read a chunk action's consequence, no more and no less;
