@@ -2,7 +2,7 @@
 
 **Rule.** Told to land work behind a flag, turn a flag on, or retire one, run the part of this procedure that names it.
 The rule applied is `bzh:flag-hides-behavior`
-([../standards/flag-hides-behavior.md](../standards/flag-hides-behavior.md)).
+([../architecture/system-shape/flag-hides-behavior.md](../architecture/system-shape/flag-hides-behavior.md)).
 
 **Why.** A flag's age is read from the releases, so the one thing an author must get right is the shape of each change;
 the check then says when the next one is owed.

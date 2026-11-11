@@ -15,13 +15,10 @@ same commands regardless of component.
 **Detect.** A second formatter (black, autopep8) or packaging tool (poetry, pip-tools) beside these — a second formatter
 is a second opinion fighting the one ruff already is.
 
-**Do.** A change must pass, after `uv sync` installs the project and its dev group:
-
-- `uv run ruff check .`
-- `uv run ruff format --check .` (write with `uv run ruff format .`)
-- `uv run pyright`
-- `uv run pytest` — the unit and component tiers; [./frontend.md](./frontend.md) and
-  [../verification/blizzard.md](../verification/blizzard.md) own the browser tiers.
+**Do.** A change must pass `blizzard:build`, `blizzard:lint`, `blizzard:format`, `blizzard:typecheck`,
+`blizzard:unit-test`, and `blizzard:component-test` — in `blizzard-mock`, the `blizzard-mock:` rows that scope carries
+for them. [../verification/blizzard.md](../verification/blizzard.md) §Commands owns the command each id runs, and with
+[./frontend.md](./frontend.md) the browser tiers.
 
 **Don't.** A `# noqa: S10x` directive — `pyproject.toml`'s `[tool.ruff.lint]` `select` lists the enabled families and
 omits bandit's `S` family, so it silences a rule ruff never runs and fails as an unused noqa instead.

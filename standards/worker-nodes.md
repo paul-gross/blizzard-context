@@ -1,4 +1,4 @@
-# Worker command nodes
+# Worker nodes
 
 The authoring contract a graph author is held to for a worker node — `executor: runner`, the default
 ([../domain/graphs/nodes.md](../domain/graphs/nodes.md)). [../domain/graphs/nodes.md](../domain/graphs/nodes.md) and

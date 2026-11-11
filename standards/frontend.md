@@ -23,10 +23,8 @@ name — [../verification/blizzard/tier-rules.md](../verification/blizzard/tier-
 **Detect.** A prettier dependency, a `.prettierrc`, or a `format` script in the Angular workspace; a second test runner
 beside vitest in the unit/component tier.
 
-**Do.** The two gates:
-
-- **Lint** — `npm run lint` in `web/` and `npm run lint` in `tests/`: eslint over their respective TypeScript trees.
-- **Test** — `npm run test`: vitest, the unit/component tier.
+**Do.** A change must pass `web:lint` and `web:unit-test` in `web/`, and `blizzard:playwright-static` over `tests/`'s
+TypeScript. [../verification/blizzard.md](../verification/blizzard.md) §Commands owns the command each id runs.
 
 **Don't.**
 

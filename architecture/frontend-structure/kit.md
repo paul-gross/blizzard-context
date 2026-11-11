@@ -21,14 +21,15 @@ element; and a site that genuinely should not convert, on the kit-floor sweep's 
 query, mutation, or client injection — keeping it presentational, testable by plain inputs, and at the bottom of the
 dependency graph; nothing in it may depend upward on a feature.
 
-**Detect.** `web:lint` refuses a native `<button>`, `<select>`, or `<input>` in application `.html` templates outside
-`fleet/src/lib/kit/`, independent of its class name; the ESLint AST probe in `web/scripts/kit-control-lint-probe.js`
-pins forbidden tags, kit controls, comments, and the exception form.
+**Detect.** A native control in an application template outside the kit is tooled by `web:lint`
+([`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
+owns what it refuses and its probe); a reviewer asks whether a suppression's reason names a genuinely distinct native
+interaction.
 
-A new component's sibling `.css` declaring the retired chrome classes
-`.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl`/`.s-head` (plus `KitAsyncState`'s own hand-rolled precursors
-`.none`/`.hint`/`.rest`) outside `fleet/lib/kit/`, or a sibling `.html` hand-rolling `KitFactList`'s own
-`<dl class="kv">` grid — both tooled by `web:structural-gate`'s kit-floor sweep
+A new component's sibling `.css` declaring a chrome class the kit components own —
+`.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl`/`.s-head` — or a local `.none`/`.hint`/`.rest` state line standing in for
+`KitAsyncState`, outside `fleet/lib/kit/`, or a sibling `.html` hand-rolling `KitFactList`'s own `<dl class="kv">` grid
+— both tooled by `web:structural-gate`'s kit-floor sweep
 ([`../../verification/blizzard.md`](../../verification/blizzard.md)); a kit component (`fleet/lib/kit/*`) importing a
 query, mutation, or the generated API client — this half stays a review question.
 

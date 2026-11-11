@@ -10,8 +10,8 @@ Parent: [../hub-nodes.md](../hub-nodes.md).
 with an optional `with:` map carrying only the string or string-list arguments that action declares — every argument it
 requires present — never as a `prompt` a worker interprets. `action:` and `with:` are legal only on `executor: hub`; a
 hub node must not declare `prompt`, `checks`, or `judgement.prompt`, and must declare a judgement authoring the reserved
-`failure` choice and every other choice its action can answer, reserved waits aside. `run:` is retired: a graph naming
-it on a hub node is refused at mint, naming `action:` in its place. The mint-time validator rejects each violation, the
+`failure` choice and every other choice its action can answer, reserved waits aside. A graph naming `run:` on a hub node
+is refused at mint, the refusal naming `action:` in its place. The mint-time validator rejects each violation, the
 worker-only fields as meaningless on a node no agent ever works.
 
 **Why.** A catalogued action is reviewable code whose answers are known before a graph is minted, so validation proves
@@ -23,15 +23,8 @@ instead of a convention a node could quietly violate.
 node's outcome choices are authored exactly like a worker node's own
 ([../../domain/graphs/edges.md](../../domain/graphs/edges.md)). The markers an action records are its own effects, not
 the node-level `produces:` list ([../../domain/graphs/nodes.md](../../domain/graphs/nodes.md)), which names artifacts a
-worker node is expected to submit. A stored hub node naming no action is carried onto one where its retired `run:` is a
-single step invoking a recognized packaged script module: the step reads as that script's action and its flags as the
-action's `with:` arguments, the step's `name` and `produces` are dropped, each packaged landing script reads as `land`,
-and an empty `run:` reads as `pass`. A `run:` outside that — several steps, an unrecognized module, a flag the action
-does not declare — is not translated: its stored command is retained as the node's `legacy_run` for diagnosis, and a
-chunk standing at the node escalates `hub-action-missing` rather than running anything. This spoke owns what the
-carry-over translates, drops, and retains, and that escalation;
-[../../domain/graphs/identity.md](../../domain/graphs/identity.md) §The admitted legacy carry-over owns why it is
-admitted under the same ids, and that it proves no preservation.
+worker node is expected to submit. A hub node that names no action runs nothing: a chunk standing at it escalates
+`hub-action-missing` ([../../domain/humans/escalation.md](../../domain/humans/escalation.md)).
 
 **Detect.** `action:` or `with:` authored on a node whose `executor` is not `hub`; a hub node naming no `action:`, an
 uncatalogued one, or `run:`; a `with:` key the action does not declare, or a required one missing; a hub node also
