@@ -17,7 +17,8 @@ when a node's bounce cap is crossed, or when a worker takes a choice targeting t
 its hub knows, or when a node's outcome has no edge its graph authors. It also escalates when delivery's action is
 refused by its forge or landing: the repository's credential is rejected, its repository is unknown to that credential,
 the forge lacks a capability the landing needs, a parked change is closed or times out, branch protection refuses the
-branch operation, or the forge refuses the merge method.
+branch operation, or the forge refuses the merge method. Delivery also escalates when its candidate has no CI checks
+under the repository's landing terms ([delivery](../artifacts/delivery.md)).
 
 ## Why it escalated
 
@@ -43,6 +44,7 @@ Every escalation records its cause, from a closed vocabulary, and a one-line det
 | a parked change exceeded its review timeout (hub-authored)                      | `park-timeout`                  |
 | branch protection refused the required branch operation (hub-authored)          | `branch-protected`              |
 | the forge refused the required merge method (hub-authored)                      | `merge-method-refused`          |
+| a landing candidate has no CI checks (hub-authored)                             | `missing-checks`                |
 
 A missing cause means the cause was not recorded, never that the escalation had none. A worker's ask is never an
 escalation: it parks the chunk waiting on a human through a question, so no cause names it.

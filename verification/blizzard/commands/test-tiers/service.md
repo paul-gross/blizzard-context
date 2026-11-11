@@ -90,8 +90,11 @@ component checker exercises flow invariants independently.
   protected-candidate escalation.
 - `test_fast_forward_stands_when_second_forge_refuses_merge_method` proves the first forge's PR-free landing survives
   the second forge's refusal.
-- `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` proves missing checks time out without
+- `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` proves missing checks escalate without
   advancing the base.
+- `empty checks ${policy} allow_no_ci=${allowNoCi}` exercises fast-forward and merge-on-checks with and without the
+  opt-in: empty checks land when allowed; otherwise they escalate without advancing, then land after checks succeed and
+  the chunk is requeued.
 
 **Parked landing** (`tests/service/fleet/park.spec.ts`) exercises a real host, hub and mock forge:
 
@@ -329,8 +332,8 @@ an authored graph with the shipped choices, a brisk poll cadence, and conflict a
   escalates with `forge-config`, naming the forge, with nothing merged.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish`
   waits for a second pending check even when the first is green, then lands when the second goes green.
-- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` pends
-  with no check and bounces `poll-timeout`, with nothing merged.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_escalates_a_revision_with_no_check_at_its_poll_timeout` pends
+  with no check and escalates `missing-checks`, with nothing merged.
 
 The component-tier `tests/component/hub/forge/internal/test_github_landing.py` covers conditional forge lookup behavior;
 the component-tier

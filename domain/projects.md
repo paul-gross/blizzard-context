@@ -114,9 +114,9 @@ refusal distinct from landing into a repository the tenant has not configured at
 
 A chunk landing several repositories lands them in its project's landing order: ranked repositories first, lowest
 position first, then every unranked one, each tie broken by slug. A project that ranks nothing lands its repositories by
-slug. A visit takes the order, and each repository's policy, at its first turn and keeps them across a retry or a
-restart, so a reorder reaches the next visit, never one already under way. Landing otherwise behaves as it does for any
-chunk.
+slug. A visit takes the order, and each repository's policy and no-CI opt-in, at its first turn and keeps them across a
+retry or a restart, so a reorder reaches the next visit, never one already under way. Landing otherwise behaves as it
+does for any chunk.
 
 A chunk starts from and lands into each repository's effective branch — its project's link branch, else the repository's
 — and captures it the first time anything needs it: at its claim, or at its first landing for a repository it had not

@@ -48,11 +48,13 @@ an urgency, and the tenant's settings depart from the verb set itself:
   `POST /api/projects/{project}/landing-order/position` moves one repository — on the CLI, `blizzard hub project order`
   and `position` — each appending a position fact only for a link whose position changes, and refusing a repository the
   project does not link with `422 repository_not_linked`.
-- **A repository** carries its landing policy as two fields: `landing_policy`, required and never null, which a request
-  takes from the closed policy set and a response reports as an open string, and `park_timeout_hours`, the one
-  repository field an explicit `null` clears. A repository write whose policy needs a capability its forge does not
-  offer is refused `forge_capability_missing` on `landing_policy`, naming each missing capability, the policy, and the
-  forge — on create, on a policy or forge edit, and on every repository write a document apply plans.
+- **A repository** carries `landing_policy`, required and never null, which a request takes from the closed policy set
+  and a response reports as an open string, and `park_timeout_hours`, the one repository field an explicit `null`
+  clears. Its required, non-null boolean `allow_no_ci` defaults to `false` and is included in configuration documents
+  and repository reads and writes; its landing meaning belongs to [delivery](../../domain/artifacts/delivery.md). A
+  repository write whose policy needs a capability its forge does not offer is refused `forge_capability_missing` on
+  `landing_policy`, naming each missing capability, the policy, and the forge — on create, on a policy or forge edit,
+  and on every repository write a document apply plans.
 - **A record a project owns** — a scope, a routine, or a kind added beside them — is created in the project the call
   names — `--project` on the CLI, by id or slug — and a call naming none falls back or is refused as
   [../../domain/projects.md](../../domain/projects.md) §A call that needs a project states, the refusal
