@@ -92,9 +92,13 @@ component checker exercises flow invariants independently.
   the second forge's refusal.
 - `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` proves missing checks escalate without
   advancing the base.
+- `checks registered during the grace period land with ${policy}` proves both fast-forward and merge-on-checks wait
+  without advancing the base, then land when checks register successfully within the grace period.
 - `empty checks ${policy} allow_no_ci=${allowNoCi}` exercises fast-forward and merge-on-checks with and without the
   opt-in: empty checks land when allowed; otherwise they escalate without advancing, then land after checks succeed and
   the chunk is requeued.
+- `an externally merged PR is adopted after missing-checks escalation and requeue` proves requeue records the external
+  merge as landed and closes the tracked PR without advancing the base again.
 
 **Parked landing** (`tests/service/fleet/park.spec.ts`) exercises a real host, hub and mock forge:
 
