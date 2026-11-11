@@ -11,11 +11,14 @@ A node-scope artifact accumulates as an append-only, versioned series per node a
   artifacts never exist.
 - **Append, never overwrite** — re-running a node adds new entries under the new attempt, and earlier entries remain as
   history.
-- **Reads resolve to the newest entry** — later nodes fetching a node-scope artifact by name get the latest attempt's
-  version, while the shadowed history stays available.
-- **An ambiguous read is refused, never guessed** — newest-entry resolution runs within one node's series, not across
-  nodes: a name more than one node produced is refused until the read names the producing node, and a name resolving in
-  more than one scope until it names the scope; either refusal lists the candidates
+- **Reads resolve to the newest entry** — a later node fetching a node-scope artifact by name gets the newest entry
+  under that name, ordered by epoch, then by when it was produced, while the shadowed history stays available.
+- **A name several nodes produced resolves across all of them** — the newest entry wins whichever node wrote it, so a
+  node several paths converge on reads the one name each branch publishes and gets whichever branch wrote last. Naming a
+  producing node (`--node`) is an optional narrowing: the read then resolves to the newest entry in that node's series
+  alone.
+- **A name in more than one scope is refused, never guessed** — a name that resolves in more than one of the node,
+  graph, and system scopes is refused until the read names the scope, and the refusal lists the candidates
   ([declarations](../../standards/worker-nodes/declarations.md) owns the narrowing verbs).
 - **The series keys on the node name** — after a migration or a re-published graph, a re-run of `build` keeps appending
   to the same series (`bzh:ids-exact-names-correlate`, [ids and names](../graphs/ids-and-names.md)); the exact producing
