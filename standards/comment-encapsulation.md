@@ -53,7 +53,7 @@ Binds the same trees as `bzh:comment-locality`, and the seams it holds are each 
   [./one-prose-home.md](./one-prose-home.md) owns what a pointer may carry.
 - On a repository Protocol in blizzard's Python, a phrase naming who holds the variant is banned, and the crisp forms
   are caught mechanically by `blizzard:process-ref-lint`'s `styles/Blizzard/VariantHolder.yml`, whose token list is the
-  one statement of which forms those are; a holder named any other way is a reviewer's call.
+  one statement of which forms those are; the remaining forms need a reviewer's judgement.
 
 ## Do
 

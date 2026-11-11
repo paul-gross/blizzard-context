@@ -23,8 +23,8 @@ instead of a convention a node could quietly violate.
 node's outcome choices are authored exactly like a worker node's own
 ([../../domain/graphs/edges.md](../../domain/graphs/edges.md)). The markers an action records are its own effects, not
 the node-level `produces:` list ([../../domain/graphs/nodes.md](../../domain/graphs/nodes.md)), which names artifacts a
-worker node is expected to submit. A hub node that names no action runs nothing: a chunk standing at it escalates
-`hub-action-missing` ([../../domain/humans/escalation.md](../../domain/humans/escalation.md)).
+worker node is expected to submit. A hub node naming no action its hub knows runs nothing: a chunk standing at it
+escalates `hub-action-missing` ([../../domain/humans/escalation.md](../../domain/humans/escalation.md)).
 
 **Detect.** `action:` or `with:` authored on a node whose `executor` is not `hub`; a hub node naming no `action:`, an
 uncatalogued one, or `run:`; a `with:` key the action does not declare, or a required one missing; a hub node also

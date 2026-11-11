@@ -53,8 +53,8 @@ not recognize stays untranslated for comparison, and its stored command is retai
 human escalation, never executed — an old custom script does not run, and a packaged set naming only actions does not
 show the carry-over to be unused. A new graph naming `run:` on a hub node is refused regardless. This section owns why
 the carry-over is admitted under the same ids and that it proves no preservation;
-[../../standards/hub-nodes/action-shape.md](../../standards/hub-nodes/action-shape.md) owns the escalation a node it
-cannot carry takes.
+[../humans/escalation.md](../humans/escalation.md) owns the escalation a node it cannot carry takes,
+`hub-action-missing`.
 
 ## Comparison at reconciliation
 
