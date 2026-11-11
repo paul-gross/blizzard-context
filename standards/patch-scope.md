@@ -44,5 +44,7 @@ Only the first belongs on the branch.
 - `bzh:released-surface-additive` in
   [../architecture/system-shape/released-surfaces.md](../architecture/system-shape/released-surfaces.md) — the surface a
   release holds.
-- `bzh:flag-hides-behavior` in [./flag-hides-behavior.md](./flag-hides-behavior.md) — flags a patch leaves as they are.
+- `bzh:flag-hides-behavior` in
+  [../architecture/system-shape/flag-hides-behavior.md](../architecture/system-shape/flag-hides-behavior.md) — flags a
+  patch leaves as they are.
 - `bzh:change-note` in [./change-notes/change-note.md](./change-notes/change-note.md) — the note a patch carries.

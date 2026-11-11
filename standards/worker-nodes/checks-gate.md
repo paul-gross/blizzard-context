@@ -6,22 +6,22 @@ Parent: [../worker-nodes.md](../worker-nodes.md).
 
 ## `requires_checks` makes green checks a precondition of a choice (`bzh:worker-node-checks-gate`)
 
-**Rule.** A choice may declare `requires_checks: true`; a worker's selecting it while any of the node's `checks:` is red
-is treated as a failure, not a judgement — a cross-graph choice included — the engine consumes a retry and re-queues a
-fresh attempt, injecting the red evidence into the re-attempt's judgement. No config flag governs the gate: it applies
-iff a choice declares `requires_checks`. The gate is enforced twice off one shared predicate (`ChecksGate.violated` in
-`foundation/completion_gates.py`) — the runner's own gate plus the hub's completion backstop — so a runner that skips
-its gate is still fenced by the hub. The gate binds a worker's selection only: a human resolving a gate decision may
-override red checks, owned by [../../domain/humans/gates.md](../../domain/humans/gates.md) §Resolution.
+**Rule.** A choice a worker must not take while any of the node's `checks:` is red declares `requires_checks: true`;
+[../../domain/graphs/edges.md](../../domain/graphs/edges.md) §Failure, not judgement owns what selecting it over a red
+check does. No config flag governs the gate: it applies iff a choice declares `requires_checks`. The gate is enforced
+twice off one shared predicate (`ChecksGate.violated` in `foundation/completion_gates.py`) — the runner's own gate plus
+the hub's completion backstop — so a runner that skips its gate is still fenced by the hub. The gate binds a worker's
+selection only: a human resolving a gate decision may override red checks, owned by
+[../../domain/humans/gates.md](../../domain/humans/gates.md) §Resolution.
 
 **Why.** Without the gate, "checks are green" is enforced only socially — prompt prose plus the worker's honest
 self-report — and the prose and the `checks:` YAML can silently drift. The gate makes the graph author's intent
 mechanical without taking routing authority from the worker.
 
 **Scope.** The runner runs the node's `checks:` at worker exit;
-[../../domain/graphs/edges.md](../../domain/graphs/edges.md) owns the concept and which ill-formed gate shapes the
-mint-time validator rejects. A red check reported through a non-gated choice (`fail`) routes normally. Declare `checks:`
-and the gate only on a single-application graph, never a reusable one: `checks:` makes a graph application-specific
+[../../domain/graphs/edges.md](../../domain/graphs/edges.md) owns the concept, how a red check reported through a
+non-gated choice routes, and which ill-formed gate shapes the mint-time validator rejects. Declare `checks:` and the
+gate only on a single-application graph, never a reusable one: `checks:` makes a graph application-specific
 (`bzh:app-agnostic-graphs`, [../../architecture/system-shape/graphs.md](../../architecture/system-shape/graphs.md)).
 
 **Detect.** A graph whose prompt or judgement text tells the worker to take a choice only when its checks pass, with no

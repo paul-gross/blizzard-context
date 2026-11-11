@@ -89,10 +89,10 @@ when genuinely empty. A disabled query (`enabled: false` — a conditional read 
 `isPending()` permanently true, so its own "nothing selected" rest state is answered before the pending/error/empty
 triad is consulted, or that rest state renders as an endless spinner.
 
-**Why.** `data() ?? []` is indistinguishable from a settled empty read — a real shipped defect rendered a healthy busy
-fleet as "FLEET IDLE" on every reload while the first `GET /api/chunks` was still in flight. Why `isPending()` is read
-rather than `isFetching()` is owned by `query-state.ts`'s own doc comment: a background refetch (a poll, an SSE-driven
-invalidation) must not regress an already-rendered view to loading.
+**Why.** During the first fetch `data() ?? []` is indistinguishable from a settled empty read, so a length check shows
+the empty state over a read still in flight. Why `isPending()` is read rather than `isFetching()` is owned by
+`query-state.ts`'s own doc comment: a background refetch (a poll, an SSE-driven invalidation) must not regress an
+already-rendered view to loading.
 
 **Detect.** A component rendering a `data-testid` matching `*-empty` without referencing `fleet-kit-async-state` in the
 same file — caught in review, not by a tool; a container reading `query.isFetching()` where `isPending()` belongs; a

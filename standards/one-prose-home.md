@@ -119,9 +119,9 @@ those constants; it reads markdown only.
 - A hand-maintained count — `canon:parallel-structure` (`winter-canon:/principles.md`) names it a Detect signal, and
   `canon:row-is-router` forbids one in a hub row outright.
 
-Mechanically: `mise run restatement-check` ([`blizzard:restatement-sweep`](../verification/blizzard.md)) — a restated
-fact at an undeclared site is a `new` finding, and a declared site no longer observed is `stale`. A restated count
-carries no phrase for that sweep to match, so cardinality is checked separately by check F against the census,
+Mechanically: [`blizzard:restatement-sweep`](../verification/blizzard.md) — a restated fact at an undeclared site is a
+`new` finding, and a declared site no longer observed is `stale`. A restated count carries no phrase for that sweep to
+match, so cardinality is checked separately by check F against the census,
 [`../scripts/registry-copies.json`](../scripts/registry-copies.json). Check F's contract and limits are stated once, in
 `scripts/check-registry-drift.py`'s module docstring — read its Declared limitations before treating a green run as full
 coverage.

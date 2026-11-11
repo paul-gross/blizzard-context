@@ -1,6 +1,7 @@
 # A flag hides behavior, never contract (`bzh:flag-hides-behavior`)
 
-Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-rule granularity.
+Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-rule granularity. The macro-shape hub is
+[../system-shape.md](../system-shape.md).
 
 ## Rule
 
@@ -75,9 +76,9 @@ Nor leave the route unregistered while the flag is off, or write a migration tha
 
 ## See also
 
-- `bzh:released-surface-additive` in
-  [../architecture/system-shape/released-surfaces.md](../architecture/system-shape/released-surfaces.md) — what a
-  configuration key, store schema, trace, or egress change stays on once released.
-- `bzh:fleet-wire-additive` in [../architecture/system-shape/fleet-wire.md](../architecture/system-shape/fleet-wire.md)
-  — the hub↔runner wire a flagged route or field stays additive on.
-- `bzh:help-states-effect` in [./help-text.md](./help-text.md) — the wording of a marker in `--help`.
+- `bzh:released-surface-additive` in [./released-surfaces.md](./released-surfaces.md) — what a configuration key, store
+  schema, trace, or egress change stays on once released.
+- `bzh:fleet-wire-additive` in [./fleet-wire.md](./fleet-wire.md) — the hub↔runner wire a flagged route or field stays
+  additive on.
+- `bzh:help-states-effect` in [../../standards/help-text.md](../../standards/help-text.md) — the wording of a marker in
+  `--help`.

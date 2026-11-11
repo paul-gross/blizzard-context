@@ -51,9 +51,9 @@ Binds the same trees as `bzh:comment-locality`, and the seams it holds are each 
   form.
 - A contract restated on both sides of a seam, which is `bzh:one-prose-home`'s signature: a reviewer cites that id, and
   [./one-prose-home.md](./one-prose-home.md) owns what a pointer may carry.
-- On a repository Protocol in blizzard's Python, the retired variant-holder phrase (`depends on this variant`,
-  `held by read-path edges`, and their wrapped forms) is Vale-gated by `blizzard:process-ref-lint`; a holder named any
-  other way is a reviewer's call.
+- On a repository Protocol in blizzard's Python, a phrase naming who holds the variant is banned, and the crisp forms
+  are caught mechanically by `blizzard:process-ref-lint`'s `styles/Blizzard/VariantHolder.yml`, whose token list is the
+  one statement of which forms those are; the remaining forms need a reviewer's judgement.
 
 ## Do
 
