@@ -23,8 +23,8 @@ The facets:
 - **`executor`** — names who runs the steps: a runner (the default) or the hub. A hub-executed node names an `action:`,
   one of the hub's own catalogued actions, and passes it arguments through `with:`, each one value or a list. It takes
   no agent turn, and a delivery node is just this shape. `bzh:hub-node-action-shape`
-  ([../../standards/hub-nodes/action-shape.md](../../standards/hub-nodes/action-shape.md)) owns what validation refuses
-  on such a node.
+  ([../../standards/hub-nodes/action-shape.md](../../standards/hub-nodes/action-shape.md)) owns how validation holds
+  such a node's `action:`, `with:`, worker-only fields, and answers.
 - **`checks`** — deterministic commands the runner runs at worker exit and injects into the exit judgement as durable
   facts, so the worker judges against mechanical truth; a `requires_checks` choice may gate on them. `checks_cwd` (where
   checks run, relative to the leased env's workdir) and `checks_timeout` (per-check seconds) configure checks and are
