@@ -1,8 +1,7 @@
 # Ranking
 
 An operator's explicit order over each of the two lists an unacquired chunk rests in — `not_ready` and `ready`
-([./statuses.md](./statuses.md)) — recorded as position facts. Spoke of the [work hub](../work.md); the invariant below
-is written in the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+([./statuses.md](./statuses.md)) — recorded as position facts. Spoke of the [work hub](../work.md).
 
 Ranking exists wherever a chunk can be reordered by hand: the `not_ready` list's order decides which resting work an
 operator promotes next, the `ready` queue's decides which unclaimed work a runner claims next. Reordering touches

@@ -1,10 +1,9 @@
 # Nodes
 
 A node is one station in one graph, in the definition routed from [../graphs.md](../graphs.md); same-named nodes in
-different graphs are distinct, correlated only by name. Definitional — a taxonomy of the node's facets and what each
-governs (`canon:rule-shape` §File kinds). Part of the [domain model](../index.md). There is no node type — the
-distinctions are structural: a gate is a node with a human-judged judgement, a hub-executed node one whose executor is
-the hub.
+different graphs are distinct, correlated only by name. This file states the node's facets and what each governs. Part
+of the [domain model](../index.md). There is no node type — the distinctions are structural: a gate is a node with a
+human-judged judgement, a hub-executed node one whose executor is the hub.
 
 The facets:
 

@@ -23,18 +23,25 @@ Conventional Commits with a scope:
 
 ## Authoring conventions
 
-Every rule here follows the canon slot skeleton and stable-id scheme:
+Every rule and convention outside `domain/` follows the canon slot skeleton, and every `bzh:` id the stable-id scheme:
 
 - Write rules in the `Rule` / `Why` / `Detect` / `Do` / `Don't` / `See also` skeleton owned by
   `winter-canon:/rule-shape.md`; keep hubs pure routers and let spokes own content
   (`winter-canon:/progressive-disclosure.md`). A `Detect` paragraph under `architecture/` cites the gate by its test
   module or method id, never by a test function name; the function names live in the code, and the reference lint fails
   one that appears there.
+- Write `domain/` as plain prose describing the product model, never in the skeleton:
+  `winter-canon:/harness-structure.md` leaves each domain's content to the consuming harness, and a reader of the model
+  has no use for slots. `bzh:domain-no-technical-detail` in
+  [domain/no-technical-detail.md](./domain/no-technical-detail.md) owns how a domain section is written; it is the
+  tree's authoring convention rather than part of the model, so it is itself a rule in the skeleton.
 - Give every rule its stable id, per the scheme `winter-canon:/rule-shape.md` owns — with two differences here: the
   prefix is `bzh:`, held stable because blizzard's and blizzard-mock's code cite it; and the rule's heading is the id's
   only home — this harness keeps no id registry to re-sync, so an id resolves by grepping the tree for its slug, a
   deliberate trade while the rule count stays greppable and revisited if resolution ever misses. Adding or renaming an
-  id updates every citation in the same change.
+  id updates every citation in the same change. A ``(`bzh:<slug>`)`` on a `domain/` heading is a citation anchor — code
+  and other files cite it — not a declaration that the section is a skeleton rule, and the scheme binds it as it binds a
+  rule's id.
 - Never name a store migration revision or its colocated test here — a fold deletes it; `bzh:no-revision-citations` in
   [standards/persistence.md](./standards/persistence.md) owns what to point at instead.
 - Read `winter-canon:/principles.md` before authoring or editing any file here, and follow every principle it states —

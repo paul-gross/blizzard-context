@@ -1,7 +1,6 @@
 # Ids and names (`bzh:ids-exact-names-correlate`)
 
-A convention rule in the graph definition routed from [../graphs.md](../graphs.md), following the slot skeleton owned by
-`winter-canon:/rule-shape.md` (`canon:rule-shape`).
+A convention in the graph definition routed from [../graphs.md](../graphs.md).
 
 ## Rule
 

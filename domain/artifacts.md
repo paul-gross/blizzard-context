@@ -3,8 +3,7 @@
 What work produces and how it lands, what a graph declares for its workers to read, and delivery as graph-authored
 content. Part of the [domain model](./index.md).
 
-Full detail lives under [./artifacts/](./artifacts/), one file per reader question; where a spoke states an enforceable
-invariant, it does so in the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+Full detail lives under [./artifacts/](./artifacts/), one file per reader question.
 
 ## Routing
 

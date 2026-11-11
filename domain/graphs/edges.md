@@ -2,13 +2,13 @@
 
 An edge is a directed, outcome-keyed connection between two nodes of the same graph, in the definition routed from
 [../graphs.md](../graphs.md); cross-graph movement is a migration, never an edge (`bzh:migration-not-transition`,
-[../work/migration.md](../work/migration.md)). Definitional — a taxonomy of edges, choices, and the judgement that
-selects them (`canon:rule-shape` §File kinds). Part of the [domain model](../index.md). An edge is keyed by exactly one
-choice of the source node's judgement, and every choice has exactly one edge; resolution is checked at graph creation,
-so neither an edge nor a judgement can dangle. A graph has exactly one entry node; cycles are intentional, not a
-validation error. Reachability is warned, never rejected: a node no path from the entry reaches, or an entry with no
-path to the terminal, is a warning on the mint response, and the definition still mints. An edge carries arrival
-context: prose appended to the target node's prompt.
+[../work/migration.md](../work/migration.md)). This file states edges, choices, and the judgement that selects them.
+Part of the [domain model](../index.md). An edge is keyed by exactly one choice of the source node's judgement, and
+every choice has exactly one edge; resolution is checked at graph creation, so neither an edge nor a judgement can
+dangle. A graph has exactly one entry node; cycles are intentional, not a validation error. Reachability is warned,
+never rejected: a node no path from the entry reaches, or an entry with no path to the terminal, is a warning on the
+mint response, and the definition still mints. An edge carries arrival context: prose appended to the target node's
+prompt.
 
 ## Choices
 
