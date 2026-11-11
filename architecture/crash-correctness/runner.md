@@ -725,7 +725,7 @@ still in place, so a re-run writes another archive and deletes them, losing noth
 
 ## The ingest
 
-`blizzard runner ingest` (`blizzard/src/blizzard/runner/ingest.py`) moves one runner between stores and host files that
+`blizzard runner ingest` (`blizzard/src/blizzard/runner/transfer/ingest.py`) moves one runner between stores and host files that
 share no transaction, holding this host's lock for the whole run, and the source's when the source is a host directory;
 a runner directory that has not graduated takes no lock, so it is held only by probing its `runner.sock`. It reads the
 source only through a backup copy, so the source is written by the last step alone. The steps run in this order:
