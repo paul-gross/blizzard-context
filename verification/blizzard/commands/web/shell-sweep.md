@@ -195,6 +195,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `graph-detail.shell-sweep.spec.ts` covers `GraphDetailLifecycle`, mounted directly with plain inputs. Its action-error
   line and entry line must genuinely stack with a real gap, proving `graph-detail-lifecycle.css`'s `:host` flex column
   supplies spacing within the container's single flex slot; proven able to fail by setting that `:host`'s `gap` to `0`.
+- `new-hub-item.shell-sweep.spec.ts` mounts the new hub item dialog on stubbed reads at 1280px and 320px. The panel
+  stays inside the viewport, and its title, body, urgency, and submit controls stay inside the panel.
 - `board-dock.shell-sweep.spec.ts` covers the board page's chunk dock, `BoardPage` mounted on stubbed reads in a
   height-bounded column. With nothing selected the dock is mounted but takes no box and the board runs the column's full
   height; selecting a chunk opens the dock beneath the board, which keeps its left, top and width and shortens;
