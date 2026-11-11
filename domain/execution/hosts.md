@@ -61,27 +61,16 @@ to the pool only when the claim holding it releases it ([./acquisition.md](./acq
 
 ## An environment is held by one claim across the host (`bzh:environment-held-once`)
 
-**Rule.** At most one claim holds an environment of a workspace at a time, whichever of the host's runners holds that
-claim; a runner that has stopped working keeps the environments its claims hold, and none is handed to a neighbour until
-its claim releases it.
+At most one claim holds an environment of a workspace at a time, whichever of the host's runners holds that claim; a
+runner that has stopped working keeps the environments its claims hold, even when nothing is working in them, and none
+is handed to a neighbour until its claim releases it. Two claims in one environment overwrite each other's work, and no
+runner sees another's claims; only the host, which holds every runner's claims together, can arbitrate the pool, so a
+free environment is chosen against every runner's claims, never the acquiring runner's own alone. Each claim takes a
+free environment of its workspace, and a claim that finds none free waits for one.
 
-**Why.** Two claims in one environment overwrite each other's work, and no runner sees another's claims; only the host,
-which holds every runner's claims together, can arbitrate the pool.
-
-**Detect.**
-
-- An environment two claims hold at once, of one runner or of two.
-- A runner's acquisition that consults only its own claims when choosing a free environment.
-- A stopped runner's held environments offered to another runner while its chunks still hold them.
-
-**Do.** Two runners bind projects to one workspace of ten environments; each claim takes a free one, and a claim that
-finds none free waits for one.
-
-**Don't.** Free a stopped runner's environments for its neighbours because nothing is working in them.
-
-**See also.** [./claim-vocabulary.md](./claim-vocabulary.md) — the environment as an operator reads it;
-[../../architecture/crash-correctness.md](../../architecture/crash-correctness.md) `bzh:invariant-checker` — the
-invariant it audits after every crash.
+[./claim-vocabulary.md](./claim-vocabulary.md) states the environment as an operator reads it, and
+`bzh:invariant-checker` in [../../architecture/crash-correctness.md](../../architecture/crash-correctness.md) audits
+this invariant after every crash.
 
 ## Bindings
 

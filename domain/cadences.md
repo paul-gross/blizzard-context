@@ -45,16 +45,12 @@ queue admits its run as it is minted; any other chore's run rests behind the pro
 
 ## One live run per errand (`bzh:errand-one-live-run`)
 
-**Rule.** An errand whose last run is not settled is never due, whatever its rhythm says; this is judged before any
-moment or spacing is read, and judged again as the run is minted.
-
-**Why.** A fleet behind on its queue would otherwise pile up a run for every moment it fell behind; holding one run per
-errand keeps a slow fleet and a run waiting on a person to one outstanding run each.
-
-**Do.** An errand whose evening run is still waiting on a person at the next evening's moment mints nothing; once that
-run is stopped, the errand is due again and mints one run.
-
-**Don't.** Mint a second run of an errand because a moment fell while its first run was still being worked.
+An errand whose last run is not settled is never due, whatever its rhythm says; this is judged before any moment or
+spacing is read, and judged again as the run is minted. A fleet behind on its queue would otherwise pile up a run for
+every moment it fell behind; holding one run per errand keeps a slow fleet and a run waiting on a person to one
+outstanding run each. A moment that falls while an errand's run is still being worked mints no second one: an errand
+whose evening run is still waiting on a person at the next evening's moment mints nothing, and once that run is stopped,
+the errand is due again and mints one run.
 
 ## Linked by slug
 

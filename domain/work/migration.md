@@ -11,28 +11,23 @@ traces a chunk to whatever put it on a graph it did not start on.
 
 ## Movement between graphs is a migration (`bzh:migration-not-transition`)
 
-**Rule.** Once a chunk has moved at all, movement between graphs is a migration — its own recorded fact re-pinning the
-chunk — never a transition: transitions move along edges within the pinned graph, and no edge crosses graphs.
+Once a chunk has moved at all, movement between graphs is a migration — its own recorded fact re-pinning the chunk —
+never a transition: transitions move along edges within the pinned graph, and no edge crosses graphs. Transitions are
+judged, fenced movement within one immutable definition — a cross-graph one would re-route in-flight work without
+migration's explicit intent, record, and fencing.
 
-**Why.** Transitions are judged, fenced movement within one immutable definition — a cross-graph one would re-route
-in-flight work without migration's explicit intent, record, and fencing; a pre-flight edit re-routes no in-flight
-attempt.
+The one exception is a chunk that is unclaimed and has never moved: its graph pin is a plain editable property outside
+the invariant while it stays so, since a pre-flight edit re-routes no in-flight attempt. That pre-flight window closes
+at first movement, and editing the pin within it writes no migration record. The chunk's default model and effort are
+[./chunk.md](./chunk.md)'s to govern, not this invariant's. A chunk that has already moved is outside the window even
+when it is re-queued and resting `ready`: its pin never changes without a migration record.
 
-**Exception.** While a chunk is unclaimed and has never moved, its graph pin is a plain editable property outside the
-invariant; the window closes at first movement, and editing it writes no migration record. The chunk's default model and
-effort are [./chunk.md](./chunk.md)'s to govern, not this invariant's.
-
-**Detect.** A transition whose nodes belong to different graphs, an edge targeting another graph's node, or an
-already-moved chunk whose pin changes with no migration record — a re-queued chunk resting `ready` included.
-
-**Do.**
+What a change of pin writes:
 
 | Chunk                      | What is written                                    |
 | -------------------------- | -------------------------------------------------- |
 | Has moved, crossing graphs | One migration record — the trigger and the new pin |
 | Unclaimed, never moved     | The graph pin itself, edited in place; no record   |
-
-**Don't.** Add a cross-graph edge, or update a moved chunk's pinned graph without recording the re-pin.
 
 ## Triggers
 
