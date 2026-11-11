@@ -9,8 +9,8 @@ patch branch (`patch/X.Y/<slug>`) is the operator's workflow, never a name a fle
 **Why.** The prefix tells a reader what the branch carries before they open it, and one name across repos lets every
 later node find the work by the name alone.
 
-**Detect.** A declared branch whose prefix before the `/` is not a Conventional Commits type, or a chunk whose repos
-carry different branch names.
+**Detect.** A declared branch not of the form `<type>/<slug>` with `<type>` a Conventional Commits type, or a chunk
+whose repos carry different branch names.
 
 **Do.** `fix/<slug>` for a bug fix and `feat/<slug>` for a feature: `feat/cadence-anchor` for a feature that also fixes
 a bug, declared under that one name in every repo the chunk touches.

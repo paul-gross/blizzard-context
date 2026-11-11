@@ -7,9 +7,10 @@ Slot skeleton: `canon:rule-shape` (`winter-canon:/rule-shape.md`), at file-per-r
 Working a node of a blizzard chunk, perform exactly the node role your session was primed with, then exit: blizzard
 itself orchestrates feature delivery, and your reported facts move the chunk — never hand-drive the delivery sequence.
 The default graph triages a chunk into one of three delivery lanes — `bas-dwf`, `adv-dwf`, or `bas-hwf`. A node worker
-owes its node's prompt, done to [../standards/index.md](../standards/index.md) and proven before exit by the matrix rows
-for the touched surface ([../verification/blizzard.md](../verification/blizzard.md)) — reported as facts and artifacts,
-never a self-landed merge.
+owes its node's prompt, done to [../standards/index.md](../standards/index.md) and proven before exit by the touched
+repository's verifiability matrix — [../verification/blizzard.md](../verification/blizzard.md) for blizzard,
+[../verifiability.md](../verifiability.md) for this repository — reported as facts and artifacts, never a self-landed
+merge.
 
 ## Why
 
@@ -38,7 +39,8 @@ landing. A worker that cannot finish just exits with its facts, and the platform
 
 ## Detect
 
-- A worker session merging a branch, pushing `master`, or opening its own pull request.
+- A worker session merging into the base branch, merging its own pull request, pushing `master`, or opening its own pull
+  request.
 - A review node committing fixes to the work it reviews.
 
 ## Do
@@ -46,7 +48,7 @@ landing. A worker that cannot finish just exits with its facts, and the platform
 - A build worker whose tests pass pushes its feature branch, declares the tip as its node's commit artifact, and ends
   its session; the `deliver` node lands the work.
 - A review worker that finds a defect records the finding, answers its node's judgement, and exits; the graph carries
-  the chunk back to a build node.
+  the chunk back to the node that repairs it.
 
 ## Don't
 

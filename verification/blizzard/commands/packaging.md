@@ -80,16 +80,16 @@ the OpenAPI documents, `contracts/config/`, `contracts/traces/`, `contracts/egre
 the releases `src/blizzard/wire/window.toml` and the tags select. A finding the base of the range already carried is
 reported as inherited and does not fail. A finding passes only where the window admits a break: deprecated in every
 supported release and a commit in the range carrying `!`; or, on a `master` whose window carries `opening`, a `!` and a
-breaking change note naming it. A change that moves `floor` is judged too: a lowered `floor` fails, and a raised one
-fails unless it retires a finding the old floor's releases failed. Nothing passes on a release branch
-(`--line release/X.Y`). A response enum's gained value is additive against a release whose own document marks every
-response position reaching it open (`x-blizzard-open`); a union's gained member never is. A finding an entry of
-`contracts/compat/allowances.toml` admits passes under the state `allowance`, printed with its `because`, and a stale
-entry fails the run; that file's README owns when an entry admits and when it is stale. `--json` prints every finding,
-with an `allowance` field, and the stale entries under `allowances`; `--tag <version>` judges HEAD as that tag and
-writes `compat-breaks.json`, whose entries carry the same field. `gate.yml`'s `compat` job (named
-`compatibility against supported releases`) runs it on every trigger but a tag; `release.yml`'s job of the same name
-runs `--tag` before any build. `blizzard:manual-compat` drives the tool by hand.
+breaking change note naming it. A change that moves `floor` is judged too, except the change that sets `opening`: a
+lowered `floor` fails, and a raised one fails unless it retires a finding the old floor's releases carry — failing,
+inherited, or allowed. Nothing passes on a release branch (`--line release/X.Y`). A response enum's gained value is
+additive against a release whose own document marks every response position reaching it open (`x-blizzard-open`); a
+union's gained member never is. A finding an entry of `contracts/compat/allowances.toml` admits passes under the state
+`allowance`, printed with its `because`, and a stale entry fails the run; that file's README owns when an entry admits
+and when it is stale. `--json` prints every finding, with an `allowance` field, and the stale entries under
+`allowances`; `--tag <version>` judges HEAD as that tag and writes `compat-breaks.json`, whose entries carry the same
+field. `gate.yml`'s `compat` job (named `compatibility against supported releases`) runs it on every trigger but a tag;
+`release.yml`'s job of the same name runs `--tag` before any build. `blizzard:manual-compat` drives the tool by hand.
 
 ### blizzard:change-notes
 
