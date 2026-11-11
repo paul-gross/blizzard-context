@@ -32,6 +32,10 @@ outside the declared surface, extending the wire selection in the same change. T
   chunk's project is the incompatible-claim `409` (`RouteClaimIncompatibleDenial`, `src/blizzard/wire/route.py`), which
   keeps its `detail`, now naming the project, and adds a `reason` (`ClaimDenialReason`, `capability` by default), so a
   runner that does not know `reason` reads it as the refusal it already handles.
+- **A capability a runner opts into.** `QueuePeekRequest.repository_targets` (`src/blizzard/wire/queue.py`) defaults
+  `false`, so a runner of an earlier release is never offered a chunk whose targets it would ignore; an opted-in peek's
+  entry names `repository_targets`, and the claim echoes them (`RouteClaim.repository_targets`, `None` from an earlier
+  runner), refused with the gained `ClaimDenialReason` `targets` on a mismatch.
 
 **Don't.** A response enum gaining a value that `bzh:open-response-vocabulary` does not make additive and no admitted
 break covers.

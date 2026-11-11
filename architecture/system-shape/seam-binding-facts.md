@@ -19,18 +19,18 @@ selection points, the bindings' own modules, and migrations. By eye: an `if … 
 anywhere a seam is already injected.
 
 **Do.** Ask the seam. The workspace provider reports where a worker is spawned (`IWorkspaceProvider.spawn_root`), how
-many environments it may hold (`capacity`), and its environment pool (`pool`), in
-`blizzard/src/blizzard/runner/environments/provider.py`; the selection point is the factory registry in
-`runner/environments/factory.py`, whose builders take a `WorkspaceSettings` (built by `HostWorkspace.settings`), not
-`RunnerConfig`. Harnesses are iterated, never named: `blizzard/src/blizzard/runner/harness/wiring.py` holds the cached
-`harness_catalog()` of `IHarnessDeclaration`s and its walks (`declared`, `enabled`, `declared_normalizer_versions`,
-`declared_telemetry_names`, `combined_telemetry_plan`), `declared` and `enabled` pairing each declaration with its
-`HarnessSection` (both in `harness/declaration.py`); each walk takes the `BindingSelection` that picks one declaration
-per harness id, its mechanism owned by `bzh:pluggable-seams`. A binding's own telemetry — the names it arrives under and
-what the runner does with each exporter — is answered by its declaration (`telemetry_names`, `telemetry_plan`), never
-named by the composition root or the tracing receiver. Importing `wiring.py` loads only each adapter's section module;
-an adapter's declaration loads on the catalog's first call. A third harness costs three things, and nothing else outside
-its own package:
+many environments it may hold (`capacity`), its environment pool (`pool`), and whether it prepares worktrees at a
+chunk's repository targets (`honors_targets`), in `blizzard/src/blizzard/runner/environments/provider.py`; the selection
+point is the factory registry in `runner/environments/factory.py`, whose builders take a `WorkspaceSettings` (built by
+`HostWorkspace.settings`), not `RunnerConfig`. Harnesses are iterated, never named:
+`blizzard/src/blizzard/runner/harness/wiring.py` holds the cached `harness_catalog()` of `IHarnessDeclaration`s and its
+walks (`declared`, `enabled`, `declared_normalizer_versions`, `declared_telemetry_names`, `combined_telemetry_plan`),
+`declared` and `enabled` pairing each declaration with its `HarnessSection` (both in `harness/declaration.py`); each
+walk takes the `BindingSelection` that picks one declaration per harness id, its mechanism owned by
+`bzh:pluggable-seams`. A binding's own telemetry — the names it arrives under and what the runner does with each
+exporter — is answered by its declaration (`telemetry_names`, `telemetry_plan`), never named by the composition root or
+the tracing receiver. Importing `wiring.py` loads only each adapter's section module; an adapter's declaration loads on
+the catalog's first call. A third harness costs three things, and nothing else outside its own package:
 
 - its declaration and section kind in the catalog (`harness/wiring.py`);
 - its own row in `_RUNNER_PACKAGE_LAYERS` in `blizzard/tests/guards/test_layering.py`, whose edges the unused-edge check

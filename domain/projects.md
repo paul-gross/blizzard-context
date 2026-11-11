@@ -124,6 +124,11 @@ captured. It keeps that branch across every lease, retry and restart, so a branc
 captured the repository. Chunks of any projects landing on one branch take turns; different branches of one repository
 land independently.
 
+A runner starts the chunk's work on the same branches: each repository a chunk targets arrives on its branch, and every
+other repository on the runner's own. A branch the repository does not have keeps the chunk from being claimed, never
+started on another branch. A runner that cannot start work on a chunk's branches is never offered a chunk whose link
+names its own, and a runner that prepared on branches the chunk no longer targets is refused the chunk and tries again.
+
 ## A call that needs a project
 
 Creating something a project owns — a scope, a routine, an operator's garden proposal, a link, a hub item — and finding
