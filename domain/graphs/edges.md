@@ -54,6 +54,5 @@ The engine refuses the edge and fails the attempt, never overriding the worker's
 re-runs the checks. A red check reported through a non-gated choice — a fail with the worker's why — routes normally;
 that context-rich path stays open.
 
-A human gate decision is not an agent's selection. It is shown the checks and may override them: resolving to a
-`requires_checks` choice over a red check is accepted, and the override is recorded with the resolution
-([../humans/gates.md](../humans/gates.md)).
+The `requires_checks` gate binds an agent's selection, never a human gate decision:
+[../humans/gates.md](../humans/gates.md) §Resolution owns the override.
