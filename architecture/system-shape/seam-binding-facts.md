@@ -38,10 +38,13 @@ its own package:
 - its id in the ast-grep rule's id lists and binding-module `ignores`, held to the catalog by a unit test in the same
   module.
 
-Every other roster derives from the catalog (`HARNESS_SECTION_KINDS`): the layer gate's binding nodes, the adapter
-packages, and the runner-home keys a host file refuses at the top level. The one exception is a second major version's
-binding package under an existing id, which the layer gate lists by hand (`_VERSION_BINDING_PACKAGES`) beside its own
-row. Not a new branch in a consumer.
+A binding's section kind answers its own id (its `section.py` owns the constant, and a version-selected package of the
+same id imports it from there), the runtime files its `scaffold_runtime` writes (`runtime_files`), and the `[[runner]]`
+path keys it parses (`path_keys`). Every other roster derives from the catalog (`HARNESS_SECTION_KINDS`): the layer
+gate's binding nodes, the adapter packages, the runner-home keys a host file refuses at the top level, the host
+registry's runtime files, and the runner path keys. The one exception is a second major version's binding package under
+an existing id, which the layer gate lists by hand (`_VERSION_BINDING_PACKAGES`) beside its own row. Not a new branch in
+a consumer.
 
 **Don't.** Pick a worker's cwd with `if workspace_provider == "winter"` in the runner, or add a harness by threading a
 second `opencode_*` parameter through the composition root, the probes, and the CLI beside the Claude Code one.

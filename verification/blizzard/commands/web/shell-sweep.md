@@ -116,6 +116,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   no page error, and a multi-paragraph ask renders on its own lines without overflowing. At 390px a running worker's
   state must render as a kit badge in `--amber`, and a chunk waiting on an ask in the ask's own tone, distinct from it.
   The desktop board is `app-panel-layout.shell-sweep.spec.ts`'s.
+- `hub-panel.shell-sweep.spec.ts` covers the runner board's hub panel rail: the link, issues and fleet rows keep a 6px
+  gap between them at phone and desktop widths.
 - `chunk-page-runner-layout.shell-sweep.spec.ts` covers the runner's chunk page (the shared fleet `ChunkPage`): at 390px
   and 320px it walks all four tabs — General, Node history, Artifacts, Transcripts — each checked for no horizontal
   overflow, exercising the General tab's `@media (min-width: 720px)` collapse and a long unbroken artifact key. Only
