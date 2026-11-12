@@ -312,10 +312,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `board-list.shell-sweep.spec.ts` frames it: at both, the unknown lane renders headed with the raw status, every lane
   stays equal-width inside the board and the viewport, and the chunk's card sits inside that lane.
 - `gardening-page.shell-sweep.spec.ts` covers a project's garden page: a bare `/p/{project}/gardening` lands on the
-  Proposals tab; the gardening strip wears the kit's sub-strip — 30px tall on `--panel-deep`, its active tab cyan on
-  `--overlay-30` with a `--cyan-dim` underline — beneath the app's own strip; the Proposals count turns `--amber-hi`
-  while any proposal waits and stays plain at zero; and at a phone width the strip scrolls inside itself rather than
-  widening the page, its active tab still on screen.
+  Proposals tab; the gardening strip wears the kit's sub-strip — 30px tall on desktop, on `--panel-deep`, its active tab
+  cyan on `--overlay-30` with a `--cyan-dim` underline — beneath the app's own strip; the Proposals count turns
+  `--amber-hi` while any proposal waits and stays plain at zero; and at phone widths the tabs wrap within the page with
+  44px targets, the active tab still on screen.
 - `gardening-page-grids.shell-sweep.spec.ts` covers the gardening sub-tabs that share one claim rather than each
   carrying its own file — Scopes, Cadences, Runs, and Findings — each composing the same `fleet-kit-master-detail` split
   and mobile route-driven drill-down. Table-driven over those pages: at 1280px the list and detail sit side by side; at
@@ -337,6 +337,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-delivery.shell-sweep.spec.ts` mounts the board card, detail dock, and routed General tab with both a PR and a
   landed repository at 1280px and 390px. All outbound anchors stay within the viewport and outside the card's select
   button, while the dock and routed tab both show the explicit human-merge wait.
+- `delivery-layout.shell-sweep.spec.ts` covers the real routed Delivery drawer and phone full-page composition at
+  1280px, 901px, 900px, 390px, and 320px, with 16 repositories and 60 history entries inside a height-bounded app shell.
+  It asserts the drawer's repository and history columns split above 900px and stack at 900px and below; the full-page
+  composition stacks at every swept width. It checks horizontal bounds, the drawer's bounded height, independent column
+  scroll ownership when split, and drawer-owned scrolling when stacked. After scrolling the owning pane, the final
+  history entry must be fully visible inside it and the shell, with a non-zero height and a hit-testable center.
 - `machine-detail-header.shell-sweep.spec.ts` covers the machine detail dock's own header: a real pointer hover on
   Pause/Resume must open the wired `KitTooltip` naming the claiming runner — a real CDK overlay claim jsdom cannot make
   — and the header's two clusters (identity, actions) must never overflow with a long chunk id and runner name live at
