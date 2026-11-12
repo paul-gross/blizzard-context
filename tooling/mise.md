@@ -2,7 +2,7 @@
 
 `blizzard` and `blizzard-mock` each carry a `mise.toml` at the repo root that pins the toolchain and declares every
 routine command as a named task. Tasks are repo-local and every mise command runs from that repo's root; there is no
-workspace-level mise surface, and `blizzard-context` and `blizzard-discovery` carry none.
+workspace-level mise surface, and `blizzard-context` carries none.
 
 - `mise tasks` lists a repo's tasks.
 - `mise run <task>` runs one task.
