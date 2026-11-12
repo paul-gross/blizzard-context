@@ -160,7 +160,10 @@ workflows and the watch loop are documented in the `blizzard` app repo's `docs/c
 **Required checks on `master`.** The checks below are every job `pr.yml` runs for a `master` base — `line provenance`
 runs only on a release-line base, so it is not among them. The jobs a pull request skips by condition (the store
 baseline, the rehearsal) are required through always-running result jobs that pass when the guarded job was skipped by
-its condition. The set is what an operator applies and verifies via `blizzard:manual-branch-protection`:
+its condition. A same-repository `hotfix/` pull request into `master` runs only the gate's lint-class jobs and skips the
+other gate and upper-tier jobs by condition, and a skipped job passes its required check, so the one set merges both
+lanes. The set is what an operator applies and verifies via `blizzard:manual-branch-protection`; it binds admins and
+requires a pull request, with no approving review, since the sole maintainer cannot approve their own:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'EOF'
@@ -174,6 +177,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / compatibility against supported releases"},
       {"context": "gate / eslint + vitest + client drift"},
       {"context": "gate / exemplar check (web)"},
+      {"context": "gate / playwright static"},
       {"context": "gate / process-reference and change-history lint"},
       {"context": "upper-tiers / service tier (blizzard:service-test)"},
       {"context": "upper-tiers / kill-9 crash sweep (blizzard:crash-sweep)"},
@@ -185,8 +189,8 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "upgrade rehearsal (release cut)"}
     ]
   },
-  "enforce_admins": false,
-  "required_pull_request_reviews": null,
+  "enforce_admins": true,
+  "required_pull_request_reviews": {"required_approving_review_count": 0},
   "restrictions": null
 }
 EOF

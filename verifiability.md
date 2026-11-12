@@ -64,7 +64,8 @@ workspace's per-worktree trust prompts, so `dprint`, `rumdl`, and `vale` — the
 installed and pinned inline in the workflow (`mise x <tool>@<version> --`) rather than declared as `[tools]`.
 
 **Required checks on `master`.** The `pr.yml`/`push.yml` checks below are the set an operator applies and verifies via
-`blizzard:manual-branch-protection`:
+`blizzard:manual-branch-protection`. This repo's `pr.yml` has no `hotfix/` lane: every check is cheap, so a `hotfix/`
+pull request runs all three. The protection binds admins and requires a pull request, with no approving review:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard-context/branches/master/protection --input - <<'EOF'
@@ -77,8 +78,8 @@ gh api -X PUT repos/paul-gross/blizzard-context/branches/master/protection --inp
       {"context": "gate / reference lint"}
     ]
   },
-  "enforce_admins": false,
-  "required_pull_request_reviews": null,
+  "enforce_admins": true,
+  "required_pull_request_reviews": {"required_approving_review_count": 0},
   "restrictions": null
 }
 EOF

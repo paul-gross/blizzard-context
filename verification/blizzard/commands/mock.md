@@ -61,7 +61,8 @@ and the mock-to-real guard covers declared response and event shapes; the mock r
 `IHubGateway` still have no independent cross-repo diff.
 
 **Required checks on `master`.** The four `pr.yml` checks below are the set an operator applies and verifies via
-`blizzard:manual-branch-protection`:
+`blizzard:manual-branch-protection`. A `hotfix/` pull request into `master` skips the two test jobs by condition, which
+pass their required checks skipped. The protection binds admins and requires a pull request, with no approving review:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input - <<'EOF'
@@ -75,8 +76,8 @@ gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input 
       {"context": "gate / wire parity (needs_blizzard)"}
     ]
   },
-  "enforce_admins": false,
-  "required_pull_request_reviews": null,
+  "enforce_admins": true,
+  "required_pull_request_reviews": {"required_approving_review_count": 0},
   "restrictions": null
 }
 EOF
