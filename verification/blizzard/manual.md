@@ -994,8 +994,9 @@ fleet-delivered PR for each repo being checked.
 **Steps.**
 
 1. Per protected repo, read back live protection: `gh api repos/<owner>/<repo>/branches/master/protection`.
-2. Compare its `required_status_checks.checks[].context` list against the repo's documented required set, and its
-   `enforce_admins.enabled` / `required_pull_request_reviews` against the documented `false` / unset.
+2. Compare its `required_status_checks.checks[].context` list against the repo's documented required set, its
+   `enforce_admins.enabled` against the documented `true`, and its
+   `required_pull_request_reviews.required_approving_review_count` against the documented `0`.
 3. From the known PR URL, confirm its branch matches the delivered chunk and its state is merged with
    `gh pr view <fleet-pr-number> --repo <owner>/<repo> --json state,headRefName,mergedAt,mergeCommit`.
 4. Fetch in that repo's worktree with `git -C <repo-worktree> fetch origin`, then
