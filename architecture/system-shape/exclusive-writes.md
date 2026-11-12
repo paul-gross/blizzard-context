@@ -184,7 +184,7 @@ same transaction (`runner/store/internal/pause_store.py`, `runner/store/internal
 no identity row yet has no neighbour to race.
 
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
-write calls on its own connection after the lock and its replay probe and before its first insert. It applies the
+write calls on the caller's locked unit after the lock and its replay probe and before its first insert. It applies the
 caller's terminal verdict — decided by the domain from chunk facts read under the same lock — and reads the newest epoch
 there, so a stop or restart cannot land between the guard and the write.
 
