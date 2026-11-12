@@ -67,9 +67,7 @@ pass criteria; what belongs here is only *which* a change owes:
 ## Delivery
 
 - Default branch: `master`.
-- This repo lands work the same two ways `workspace:/context/project/contributing.md` describes — which one applies is a
-  fact about who is driving, not about the change. `.github/workflows/pr.yml` and `push.yml`
-  ([verifiability.md](./verifiability.md) owns what they run) are what give a PR here a gate to wait on, whether the
-  fleet or an agent working by hand opened it.
-- By hand: `workspace:/context/project/contributing.md` §The by-hand path owns the sequence.
+- How work lands here, by hand or by the fleet, is owned by `workspace:/context/project/contributing.md` §Delivery.
+  `.github/workflows/pr.yml` and `push.yml` ([verifiability.md](./verifiability.md) owns what they run) are the gate a
+  PR here waits on.
 - See `workspace:/context/winter/worktree-ops.md` for the exact git commands per worktree.
