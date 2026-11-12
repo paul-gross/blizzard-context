@@ -24,13 +24,16 @@ hub with no setup; and `fleet/` as `service-fleet`, a real runner host enrolled 
 shared real hub, with a `service-fleet-<profile>` for each subfolder named after a hub profile. One `service-*`
 selection reaches all of them; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python
 half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`) and keeps only the cases
-whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks), wire
-parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk findings, transcript
-segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health, credential renewal, runner
-self-test), and nothing else; their shared launchers live in `tests/support/mock_fleet.py`. Both exercise a running
-daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this tier's. The Python half
-needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts, stub IdP, and
-`mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
+whose subject is Python itself, in four kinds: store-file subjects (host graduation, host ingest), wire parity and the
+mock contract (wire parity, parity guard, host token, runner bindings, mock chunk findings, transcript segments, mock
+data seeding), external-tool bindings (OpenCode compatibility, harness health, credential renewal, runner self-test),
+and the forge adapter; their shared launchers live in `tests/support/mock_fleet.py`. Both exercise a running daemon from
+outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this tier's. The Python half needs the
+sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts, stub IdP, and `mock-claude-code`)
+and skips cleanly without `BLIZZARD_SERVICE=1`.
+
+`tests/service/forge/test_github_checks_service.py` exercises the production GitHub adapter against the mock forge over
+HTTP, checking pagination at 100, 101 and 205 check runs and status contexts and latest-status deduplication.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
