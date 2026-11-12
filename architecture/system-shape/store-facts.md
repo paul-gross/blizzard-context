@@ -70,8 +70,8 @@ never claimed again, so that closer is unreachable by construction.
 
 **Rule.** A chunk's fact families are declared once, in one adapter-internal registry
 (`blizzard/src/blizzard/hub/store/internal/fact_families.py`), and every projection over them — the `ChunkFacts` load,
-the status probe, the `StepFacts` trace and egress reads, the closing candidates, and the event projection — narrows
-that registry rather than listing tables of its own.
+the status probe, the `StepFacts` trace and egress reads, the closing candidates, the event projection, and the env
+timeline — narrows that registry rather than listing tables of its own.
 
 **Why.** Status is derived from facts (`bzh:facts-not-status`), so a family missing from one projection silently drops
 that history from everything the projection feeds — a status that is untruthful without any error to say so.
