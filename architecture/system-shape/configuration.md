@@ -75,10 +75,10 @@ an urgency, and the tenant's settings depart from the verb set itself:
   `POST /api/urgencies/order/position` moves one urgency to just after another, or first under `after: null`. A reorder
   that moves anything appends one change row of kind `urgency_order`, keyed by the tenant id, whose revision is the
   order's sequence; one that moves nothing appends neither a fact nor a row. Its retire takes a body naming `move_to`,
-  and is refused in order `409 urgency_is_default`, `409 urgency_in_use` when open chunks carry it and no `move_to` is
-  named, then `422 urgency_unknown`, `422 urgency_retired`, or `422 urgency_move_to_self` on `move_to`; a retire that
-  moves open work needs `chunk:control` beside `config:edit`. The model, the order, and the refusal ladder live in
-  `blizzard/src/blizzard/hub/domain/urgency/`.
+  and is refused in order `409 urgency-is-default`, `409 urgency-in-use` (its `open_chunks` member counting them) when
+  open chunks carry it and no `move_to` is named, then `422 urgency_unknown`, `422 urgency_retired`, or
+  `422 urgency_move_to_self` on `move_to`; a retire that moves open work needs `chunk:control` beside `config:edit`. The
+  model, the order, and the refusal ladder live in `blizzard/src/blizzard/hub/domain/urgency/`.
 - **The tenant's settings** are a keyless singleton, one per tenant, taking show and edit only: `GET /api/settings` and
   `PATCH /api/settings`, with no `{key}`, since the tenant the request resolved is the key, and no create, retire, or
   enable, since a tenant always holds its settings. Its change rows, of kind `tenant_settings`, are keyed by the tenant
