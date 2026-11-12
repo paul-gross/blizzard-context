@@ -184,10 +184,9 @@ same transaction (`runner/store/internal/pause_store.py`, `runner/store/internal
 no identity row yet has no neighbour to race.
 
 An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
-write calls on its own connection after the lock and its replay probe and before its first insert. It reads the terminal
-facts and the newest epoch there, so a stop or restart cannot land between the guard and the write. That order is the
-pattern; its terminal judgment is not — a domain predicate decided in the store, legacy under `bzh:store-refuses-stale`
-([Known debt](#known-debt)).
+write calls on the caller's locked unit after the lock and its replay probe and before its first insert. It applies the
+caller's terminal verdict — decided by the domain from chunk facts read under the same lock — and reads the newest epoch
+there, so a stop or restart cannot land between the guard and the write.
 
 **Don't.** A `threading.Lock` shared by `ClaimService` and `EditService`, serializing their read-then-write CAS in one
 process — correct until a second hub process starts against the same store, at which point the two locks stop
@@ -236,18 +235,6 @@ Stated so a reviewer need not re-derive them:
   - `DependencyService.release` — as its only lock. Without a row lock for cycle safety (Scope above), release is
     ordered against `group`'s edge rewrite by this lock alone, which keeps a fold from reminting an edge released
     between the fold's read of the standing set and its write.
-- **Store-side domain predicates.** Legacy under `bzh:store-refuses-stale`, not to be extended to a new write or a new
-  predicate:
-  - `fence` (`hub/store/internal/chunk_rows.py`) — its terminal check, run inside every epoch-fenced write.
-  - `ChunkEscalationsStore.record_escalation` (`hub/store/internal/chunk_escalations_store.py`) — admits or refuses the
-    escalation by running `fence` on its write — its own, or the unit it joins — never returning the facts to the
-    domain.
-  - `ChunkQueueStore.record_backlog_positions` (`hub/store/internal/chunk_queue_store.py`) — drops each pair naming a
-    currently promoted chunk. Every caller decides the backlog's order in a unit holding its ranking lock, and promote
-    and demote, which move a chunk between the lists, hold both lists' locks, so the filter drops no pair its caller
-    decided on.
-  - `ChunkQueueStore.record_promote` — writes nothing for a currently promoted chunk rather than leaving that replay to
-    the domain's `promotion_writes` (`hub/domain/operations/promote.py`).
 - **The export's pass lock.** `EgressSweep.sweep` and `EgressReset.reset` share one hub-wide in-process lock, built in
   `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
   flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
