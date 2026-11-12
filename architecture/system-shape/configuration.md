@@ -275,8 +275,8 @@ replacement. A value that nothing can read back needs no read permission to guar
 
 **Scope.** A secret belongs to one tenant, like every configured record, and its name is unique within that tenant
 (`bzh:tenant-scoped-uniqueness`). The hub's one secret key seals every tenant's values, each against its own
-`(name, revision)` (`blizzard/src/blizzard/hub/secrets/internal/aes_gcm.py`); the tenant boundary on a value is the
-store's, never the cipher's.
+`(name, revision)` (`blizzard/src/blizzard/foundation/secrets/internal/aes_gcm.py`); the tenant boundary on a value is
+the store's, never the cipher's.
 
 **Detect.** A `SecretValue` reaching a controller, a serializer, or a logger; an `ISecretReader` injected anywhere but
 an object the composition root builds to call an external system — which reveals a value per use
