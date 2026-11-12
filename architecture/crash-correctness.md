@@ -52,7 +52,8 @@ sweep's or the flow driver's timer. Span timestamps stay real too.
 
 **Detect.** `datetime.now()`, `datetime.utcnow()`, `time.time()`, or `func.now()` / `server_default=func.now()` in loop,
 store, domain, or model code; a timestamp written from anything but the injected clock; a `BLIZZARD_CLOCK` read outside
-the resolver; a timeout, backoff, or readiness wait taken from `IClock`.
+the resolver; a timeout, backoff, or readiness wait taken from `IClock`; an ambient `time.monotonic()` or `time.sleep()`
+call outside the clock implementation, which `blizzard/tests/guards/test_clock_injection.py` fails the unit tier on.
 
 **Do.** The clock is injected; timestamps come from `clock.now()`, and column values are set by the writing code from
 that clock — not by a database default. The runner's hub proxy measures its retry budget on `IMonotonicClock`
