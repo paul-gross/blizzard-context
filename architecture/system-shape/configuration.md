@@ -331,6 +331,10 @@ registry (`blizzard/src/blizzard/hub/config_keys.py`, `blizzard/src/blizzard/run
 that registry every key read and every durable path under the daemon's runtime root. Adding, retiring or retyping a key
 changes `contracts/config/`. A retired key stays declared `deprecated`, with `replaced_by` naming its home.
 
+Every value key declares its lifetime, and a grouping key declares none. A deprecated key takes its replacement's
+lifetime. `env`, legal only on a `boot` key, names the environment variable that supplies the key and overrides the
+file. Moving a key's lifetime later is a break that `blizzard:compat` reports; moving it earlier is additive.
+
 **Why.** A key the code reads and no document lists is a setting an operator cannot discover and a release cannot diff.
 Refusing a retired key is itself a read of it, so the registry stays complete only while those keys stay declared.
 
@@ -342,6 +346,10 @@ ignored: an undeclared key in a file loads, and an undeclared read in the test s
 - A `tomllib` read of the daemon's file outside its loader, or a section parser given a bare `dict` rather than a view.
 - A key read through the view and absent from the registry, or declared and never read.
 - A registry edit with no regenerated `contracts/config/` document.
+- A value key with no lifetime, a grouping key with one, or `env` on a key that is not `boot`: the registry refuses it
+  at construction, so the daemon fails at import.
+- A key whose lifetime moved later than the latest supported release declares: `blizzard:compat` fails on the `config`
+  surface.
 
 The `bzh:config-key-declared` ast-grep rule fails a `tomllib` import anywhere under `blizzard/src/blizzard/runner/` or
 `blizzard/src/blizzard/hub/` outside the two loaders and the version window's in-memory decode.
