@@ -323,7 +323,8 @@ an authored graph with the shipped choices, a brisk poll cadence, and conflict a
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_routes_conflict_when_updating_a_behind_branch_conflicts`
   proves a real base conflict refuses `update-branch` and routes `conflict`, with nothing merged.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_escalates_a_rejected_credential_as_forge_auth` escalates at
-  `deliver` with `forge-auth`, naming the repository.
+  `deliver` with `forge-auth`, naming the repository, and pins its detail (operation, status, message, request id) and
+  the one `forge-auth-refused` event, with the token in none of the answers or hub log lines.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_escalates_a_repository_the_forge_does_not_know_as_forge_config`
   escalates with `forge-config`, naming the forge, with nothing merged.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish`
