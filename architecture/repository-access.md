@@ -237,13 +237,15 @@ adapter implementation or private helpers.
 **Why.** Adapter-to-adapter dependencies hide the domain operation and couple persistence implementations. A shared
 transaction lets each repository own its own facts without sacrificing atomicity.
 
-**Scope.** Existing composite mint methods in `WorkItemStore` use shared store helpers; they remain current
-implementation, not a pattern for new cross-repository operations.
+**Scope.** Three adapters are declared exceptions of `engineering:adapters-stay-apart`: `ConfigApplyStore`,
+`ConfigImportStore`, and `TenantAdminStore` each write their siblings' facts in one transaction. They are not a pattern
+for new cross-repository operations.
 
 **Detect.** An adapter imports a sibling adapter or its private write helper to perform another repository's mutation.
 The `hub-store-adapter-imports` ast-grep rule (`blizzard:structural-gate`) gates the import of any `*_store` module
-under `hub/store/internal/`, existing imports carrying a reasoned ignore as recorded debt; whether an import mutates
-another repository's facts is judged by review. Move coordination to the domain seam.
+under `hub/store/internal/`. A remaining import carries a reasoned ignore naming it a read, a shared helper, or a
+declared exception; whether an import mutates another repository's facts is judged by review. Move coordination to the
+domain seam.
 
 **Do.** `DeleteService.delete` invokes each repository's own write under one transaction.
 

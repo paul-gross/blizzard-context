@@ -263,18 +263,16 @@ recovery: a restarted hub opens only the tenants with no deletion fact.
 ## The item-creation chunk mint
 
 `POST /api/work-sources/hub/items` writes the item's `work_items` row and its resting `not_ready` chunk's rows —
-`chunks` plus `chunk_work_refs` — together, a pairing spanning two tables `ChunkRecordStore` and `ChunkWorkRefsStore`
-otherwise split between them. Both of those inserts run on the same connection inside one `engine.begin()` in
-`WorkItemStore.create_with_chunk` (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), through one
-repository adapter, which reaches into the shared `insert_chunk_rows`
-(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) free function rather than through the chunk-seam adapters'
-own write methods. This composite uses an adapter-owned transaction; the tenant unit-of-work seam supports composing
-repository writes without that bypass ([`../repository-access.md`](../repository-access.md) `bzh:unit-of-work`).
+`chunks` plus `chunk_work_refs` — together. `WorkItemEditService.create`
+(`blizzard/src/blizzard/hub/domain/work_items/editing.py`) opens one tenant unit of work that locks the chunk's
+`WORK_REF` keys, and `mint_item` writes the item through the work-item repository, then the chunk through the chunk
+record repository's own `mint`, both joining that unit ([`../repository-access.md`](../repository-access.md)
+`bzh:unit-of-work`).
 
 One narrower window is named and accepted here: `WorkItemEditService.create` allocates the item's `ref` through
-`WorkItemStore.allocate_ref` before that transaction opens, under the allocator's own already-accepted gap-tolerant
-contract, so a crash in between burns that one `ref`, never reused — the same price a bare `allocate_ref` call already
-pays with no chunk attached.
+`WorkItemStore.allocate_ref` before that unit opens, under the allocator's own already-accepted gap-tolerant contract,
+so a crash in between burns that one `ref`, never reused — the same price a bare `allocate_ref` call already pays with
+no chunk attached.
 
 The pairing owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
@@ -282,24 +280,22 @@ recompute.
 ## The routine-run mint
 
 `POST /api/routines/{routine_id}/run` writes the run item's `work_items` row, its resting chunk's rows — `chunks` plus
-one `chunk_work_refs` row per work ref — and the run's own identity row (`work_item_runs`), together: inserts spanning
-four tables `WorkItemStore`/the chunk-seam adapters/`RunContextStore` otherwise own across three repositories. Every one
-of them runs on the same connection inside one `engine.begin()` in `WorkItemStore.create_run_with_chunk`
-(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`), reusing the shared free functions `insert_chunk_rows`
-(`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) and `insert_run_context_row`
-(`blizzard/src/blizzard/hub/store/internal/run_context_store.py`) — the same seam-bypass shape §The item-creation chunk
-mint already takes, with all four tables in one transaction. `work_item_runs` is what garden delivery's own read
-(`blizzard/src/blizzard/hub/domain/garden/run_context.py`) resolves a chunk's run identity through; landing it outside
-this transaction would reopen exactly the window this section exists to close.
+one `chunk_work_refs` row per work ref — and the run's own identity row (`work_item_runs`), together: four tables owned
+across three repositories. `RunService.run` opens one tenant unit of work that locks the chunk's `WORK_REF` key, and
+`mint_run` (`blizzard/src/blizzard/hub/domain/garden/run_mint.py`) writes the item and chunk through `mint_item`, then
+the run identity through the run-context repository's own `record`, each repository joining that unit — the same domain
+composition §The item-creation chunk mint takes, with all four tables in one transaction. `work_item_runs` is what
+garden delivery's own read (`blizzard/src/blizzard/hub/domain/garden/run_context.py`) resolves a chunk's run identity
+through; landing it outside this transaction would reopen exactly the window this section exists to close.
 
 The chunk is written with no promote fact and no queue position: it rests `not_ready` until the standalone promote.
 
 One narrower window is named and accepted here. `RunService.run` (`blizzard/src/blizzard/hub/domain/garden/runs/run.py`)
-allocates the run's `ref` through `WorkItemStore.allocate_ref` before this transaction opens, identical in shape to §The
+allocates the run's `ref` through `WorkItemStore.allocate_ref` before this unit opens, identical in shape to §The
 item-creation chunk mint's own: under the allocator's own already-accepted gap-tolerant contract, a crash in between
 burns that one `ref`, never reused. The run's effective scope carries no write of its own to window: the API edge
 resolves it to an already-existing, already-related `Scope` — a read, refusing rather than minting one — before
-`RunService.run` is ever called, so the domain layer opens no second write ahead of the transaction.
+`RunService.run` is ever called, so the domain layer opens no second write ahead of the unit.
 
 The composite owes the checker nothing because it is a single-transaction insert, not a derived cross-fact invariant to
 recompute.
@@ -308,12 +304,11 @@ recompute.
 
 The cadence sweep mints a due errand's run through `CadenceMint.mint`
 (`blizzard/src/blizzard/hub/domain/cadence/mint.py`), a domain unit of work over `IHubTransactions.begin()`. It writes
-the same four tables §The routine-run mint writes, through the same `WorkItemStore.create_run_with_chunk`, here joining
-the unit's locked transaction rather than opening a write of its own, and the run's identity row carries the errand's
-mark in that same write. For a promoting chore the unit also writes the promote fact and the chunk's ready-list
-position, landed at the tail through the queue's own landing, so a run minted promoted is never seen resting
-`not_ready`. Every write commits or none does: the same single-transaction exemption §The routine-run mint takes, and
-the composite owes the checker nothing for the same reason.
+the same four tables §The routine-run mint writes, through the same `mint_run`, here joining the cadence unit's locked
+transaction, and the run's identity row carries the errand's mark in that same write. For a promoting chore the unit
+also writes the promote fact and the chunk's ready-list position, landed at the tail through the queue's own landing, so
+a run minted promoted is never seen resting `not_ready`. Every write commits or none does: the same single-transaction
+exemption §The routine-run mint takes, and the composite owes the checker nothing for the same reason.
 
 The one window is the routine-run mint's own: the run's `ref` is allocated through `prepare_mint` before the transaction
 opens, so a crash between them burns that one `ref`, never reused. A mint that loses its re-read inside the transaction,
@@ -345,10 +340,11 @@ invariant to recompute.
 
 ## Garden delivery, marker folded into its own transaction
 
-`GardenDeliveryStore.deliver` (`blizzard/src/blizzard/hub/store/internal/garden_delivery_store.py`) writes a garden
-run's whole delta in one locked unit: the run's new `findings`, `finding_facts`, `finding_sets`, `garden_proposals`, and
-`garden_proposal_findings` rows, plus the delivery's own `garden-delivered` marker artifact row, all on the same
-connection — five candidate tables and the marker land together or not at all.
+`GardenDelivery.deliver` (`blizzard/src/blizzard/hub/domain/garden/delivery/materialize.py`) writes a garden run's whole
+delta in one locked unit: `write_delivery_plan` writes the run's new `findings`, `finding_facts`, `finding_sets`,
+`garden_proposals`, and `garden_proposal_findings` rows through their own repositories, then the delivery's own
+`garden-delivered` marker artifact row through the delivery repository, every write joining the unit — five candidate
+tables and the marker land together or not at all.
 
 Unlike a marker an action records after its effect lands, the marker here is checked for existence and, if absent,
 inserted as this same transaction's last statement. That is what makes a replay safe on either side of the commit: a
@@ -370,19 +366,20 @@ the first place.
 
 ## Review findings delivery, marker folded into its own transaction
 
-`ReviewFindingsStore.deliver` (`blizzard/src/blizzard/hub/store/internal/review_findings_store.py`) mirrors the garden
-delivery entry above: it writes a review round's whole plan — the new `findings` and `finding_facts` rows the round's
-`deferred` entries mint — plus its own `review-findings-delivered` marker artifact row, all on the same locked-unit
-connection. The idempotence check (`already_delivered`, keyed on `chunk_id` alone, not `(chunk_id, node_id, epoch)`,
-since a chunk owes at most one review-findings delivery) reads for the marker before writing, exactly as garden
-delivery's does, giving the same before/after-commit replay safety: nothing durable on a pre-commit crash, and the next
-`record-findings` pass finding its own marker and minting nothing further on one after.
+`ReviewFindingsMaterialize.deliver` (`blizzard/src/blizzard/hub/domain/garden/review/materialize.py`) mirrors the garden
+delivery entry above: `write_review_plan` writes a review round's whole plan — the new `findings` and `finding_facts`
+rows the round's `deferred` entries mint — through the finding repository, plus its own `review-findings-delivered`
+marker artifact row through the delivery repository, all joining one locked unit. The idempotence check
+(`already_delivered`, keyed on `chunk_id` alone, not `(chunk_id, node_id, epoch)`, since a chunk owes at most one
+review-findings delivery) reads for the marker before writing, exactly as garden delivery's does, giving the same
+before/after-commit replay safety: nothing durable on a pre-commit crash, and the next `record-findings` pass finding
+its own marker and minting nothing further on one after.
 
 This entry deviates from the garden precedent on one point: a scope a `deferred` entry names that does not yet exist is
-minted inside this same transaction (`domain/routines-and-scopes.md`'s own mint-on-name path for review delivery), where
-garden delivery's own write instead reads the scope and refuses the whole delivery if it is missing. A crash before this
-transaction commits therefore leaves neither the findings, the marker, nor any scope it would have minted — the same
-all-or-nothing shape, just with one more table folded in.
+minted inside this same unit through the scope repository (`domain/routines-and-scopes.md`'s own mint-on-name path for
+review delivery), where garden delivery's own write instead reads the scope and refuses the whole delivery if it is
+missing. A crash before this transaction commits therefore leaves neither the findings, the marker, nor any scope it
+would have minted — the same all-or-nothing shape, just with one more table folded in.
 
 The write owes the checker nothing for the same reason garden delivery's does: a single-transaction, multi-table insert
 with its own in-transaction marker, not a derived cross-fact invariant to recompute.
@@ -396,17 +393,17 @@ re-reads its closure under it before the domain decides. A crash before commit l
 durable for a retried close to collide with; a crash after it leaves the closure already recorded, and a re-attempted
 close re-reads it under the key and refuses as already-closed, exactly as a live race would.
 
-The accept-with-mint path is a second writer of the same table: `WorkItemStore.accept_create`
-(`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the accepted-and-minted
-`garden_proposal_closures` row, the item's `work_items` row, and its resting `not_ready` chunk's rows, all on one
-`engine.begin()` connection — the same shape §The item-creation chunk mint's `create_with_chunk` uses, plus the closure
-row folded into the same transaction. The unit declares the proposal's `GARDEN_PROPOSAL` key and the domain refuses an
-already-closed proposal from the closure it re-read under that key, so an already-closed proposal mints nothing. It
-inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref` still runs in its own
-transaction before this one opens, so a crash in between still burns one `ref`, never reused.
+The accept-with-mint path is a second writer of the same table: `GardenProposalClosureService.accept`
+(`blizzard/src/blizzard/hub/domain/garden/proposals/closure.py`) opens one unit that writes the accepted-and-minted
+`garden_proposal_closures` row through the closure repository, then the item's `work_items` row and its resting
+`not_ready` chunk's rows through `WorkItemEditService.mint_drafted` — the same composition §The item-creation chunk mint
+uses, plus the closure row folded into the same unit. The unit declares the proposal's `GARDEN_PROPOSAL` key and the
+domain refuses an already-closed proposal from the closure it re-read under that key, so an already-closed proposal
+mints nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref`
+still runs in its own transaction before this one opens, so a crash in between still burns one `ref`, never reused.
 
-Two adapters currently write the closure table: the accept-with-mint composite encloses its closure, item, and chunk
-inserts in the item adapter's transaction; `GardenProposalClosureStore` handles the standalone closure writes.
+`GardenProposalClosureStore` is the one adapter that writes the closure table, for every close path; the
+accept-with-mint unit composes its closure write with the item and chunk writes in the domain.
 
 Both write paths owe the checker nothing because each is a single-transaction insert (plus, for accept-with-mint, the
 item and chunk inserts), not a derived cross-fact invariant to recompute.
