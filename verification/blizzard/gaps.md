@@ -403,6 +403,11 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   `batch_alter_table` rebuild on SQLite and native `ALTER`s on Postgres. They reach head and return to base under
   `blizzard:manual-postgres-migrations`; those rebuilds over a table the `fk_runner_registrations_hosts` key binds have
   never run where foreign keys are enforced.
+- **The host column added above the baseline.** The revision adding the nullable `hosts.urls` column is a
+  `batch_alter_table` rebuild on SQLite and a native `ALTER` on Postgres. A hand run under
+  `blizzard:manual-postgres-migrations` took it to head, down to base and up again, and walked it down and up over a
+  populated host row, which kept its `url` and read `NULL` in the new column; no tier repeats that run. The rebuild has
+  never run over a `hosts` table that rows in other tables bind where foreign keys are enforced.
 - **A live host name's uniqueness.** `HostRegistryStore.add` reads the tenant's live host names and inserts under the
   scoped write's tenant-row lock, so two adds of one name queue on that row. That the lock alone keeps a name unique
   among live hosts is unverified on Postgres; SQLite's writer lock serializes every add. A report reads the other live
