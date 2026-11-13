@@ -2,10 +2,15 @@
 
 These rules bind specs under `blizzard/tests/service/`, in three Playwright folders: `hub/` (the hub's own wire),
 `runner/` (a real runner host on a mock hub), and `fleet/` (a real runner host on a real hub). Beside them, the tier's
-pytest half keeps the cases whose subject is Python itself in four packages these rules do not bind: `harnesses/` (the
-harness adapters against the mock binaries), `wire/` (the Python client's wire parity), `mock_fleet/` (the mock fleet's
-own routes and seeding), and `store_migration/` (moving an older build's store onto this one). Start at the service
-method's [command detail](./commands/test-tiers/service.md) for the paired task commands and at
+pytest half keeps the cases whose subject is Python itself in packages these rules do not bind:
+
+- `forge/` — the GitHub forge adapter against a mock origin.
+- `harnesses/` — the harness adapters against the mock binaries.
+- `wire/` — the Python client's wire parity.
+- `mock_fleet/` — the mock fleet's own routes and seeding.
+- `store_migration/` — moving an older build's store onto this one.
+
+Start at the service method's [command detail](./commands/test-tiers/service.md) for the paired task commands and at
 [tier-rules.md](./tier-rules.md) for allocation and statement guards. The harness owns fixtures in
 `tests/harness/fixtures.ts`, clients in `tests/harness/client/`, and project and profile discovery in
 `tests/playwright.config.ts`, `tests/harness/projects.ts`, and `tests/harness/profiles.ts`.
