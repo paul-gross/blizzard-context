@@ -38,9 +38,9 @@ HTTP, checking pagination at 100, 101 and 205 check runs and status contexts and
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
 **Kept transition-era export**
-(`tests/service/hub/config-kept-export.spec.ts::test_a_kept_transition_era_export_applies_cleanly_and_exports_back_as_itself`)
+(`tests/service/hub/config-kept-export.spec.ts::test_a_kept_transition_era_export_applies_cleanly_and_exports_with_defaults`)
 applies a version-2 export kept from a hub that still took the forge address fields to a real hub, unrefused and
-unwarned, and checks it exports back as itself.
+unwarned, and checks it exports with current repository defaults.
 
 When lease scratch is too long for Unix sockets, set `TMPDIR="$BLIZZARD_TMPDIR"` and `BLIZZARD_TEST_HOST_RUNTIME` to a
 unique private short directory for the Playwright host and scratch-host runtime directories. Keep logs, homes, fixture
