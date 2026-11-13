@@ -356,10 +356,10 @@ foreign keys off, so each holds there by construction and stays unverified on Po
 - **A work source's slug move.** It takes the project slug move's shape, so it shares that move's race under READ
   COMMITTED, equally unverified.
 - **An ingest against a link or unlink.** An ingest takes the `keyed_locks` key of the project it mints into before its
-  pointers' keys, and every source link or unlink takes the same project's key (`PROJECT_SOURCE_LINKS_LOCK_NAMESPACE`,
-  `src/blizzard/hub/store/internal/project_link_store.py`), so the links an ingest read stand until it commits. That an
-  unlink racing an ingest under READ COMMITTED waits on the key rather than committing between the ingest's link read
-  and its mint is unverified; SQLite's writer lock serializes the two whatever the key.
+  pointers' keys, and every source link or unlink takes the same project's key (`project_source_links_lock`,
+  `src/blizzard/hub/domain/projects/links.py`), so the links an ingest read stand until it commits. That an unlink
+  racing an ingest under READ COMMITTED waits on the key rather than committing between the ingest's link read and its
+  mint is unverified; SQLite's writer lock serializes the two whatever the key.
 - **A landed repository row's keys.** `delivery_repo_landed`'s foreign keys to its chunk and its tenant have never been
   enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
   landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
