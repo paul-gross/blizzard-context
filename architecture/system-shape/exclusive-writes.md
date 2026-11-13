@@ -131,6 +131,12 @@ rule, in the keyed-lock form under **Do**.
   `UPDATE` locks nothing on an empty table, so the exclusion never engages. Not mechanically checkable; judged at
   review. The remedy is the keyed-lock-row form under **Do**.
 
+**Do.** A lock on a concept no tenant owns — the identity lock, the tenant-lifecycle lock — is a seeded row of the
+`hub_locks` table, taken by `lock_hub` (`hub/store/locking.py`) and declared through `lock_set(hub=)` on a tenant unit
+or `begin(hub=)` on the identity unit; the migration seeds it and `lock_hub` never inserts. The order is `IDENTITY`,
+then the tenant's rows (its row, then chunk and keyed rows), then `TENANT_LIFECYCLE`: a tenant unit names only
+`TENANT_LIFECYCLE`, an identity unit takes `IDENTITY` first and names only `TENANT_LIFECYCLE`.
+
 **Do.** `lock_chunk_row` (`hub/store/locking.py`) — a no-op `UPDATE` on the chunk's own row, already minted before any
 claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
 `ScopedConnections.write` (`hub/store/scoped.py`) opens with, with every guard read that follows it on the same
