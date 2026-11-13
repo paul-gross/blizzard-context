@@ -110,9 +110,9 @@ lifetime, or resolves a connection in domain code; a new `*_locked` twin or per-
 inside a unit whose `transaction` defaults to `None`. Review the adapter and callers; no general mechanical gate
 enforces this rule.
 
-**Do.** `WorkItemStore.withdraw_open` joins a supplied transaction or opens its own scoped write when called alone.
-`IWriteChunkRecordRepository.record_deleted` (`blizzard/src/blizzard/hub/domain/chunk/ports/record.py`) takes
-`transaction: LockedTransaction` with no default: a delete is correct only under its chunk's lock.
+**Do.** `ChunkQuestionsStore.record_answer_delivered` joins a supplied transaction or opens its own scoped write when
+called alone. `IWriteChunkRecordRepository.record_deleted` (`blizzard/src/blizzard/hub/domain/chunk/ports/record.py`)
+takes `transaction: LockedTransaction` with no default: a delete is correct only under its chunk's lock.
 
 **Don't.** Call a standalone committing repository method from inside a unit expecting rollback to undo it, or add
 `withdraw_open_locked(handle, …)` beside `withdraw_open` to join a locked decision.

@@ -385,18 +385,19 @@ with its own in-transaction marker, not a derived cross-fact invariant to recomp
 
 `GardenProposalClosureStore.record_pass`/`record_accept_decline`
 (`blizzard/src/blizzard/hub/store/internal/garden_proposal_closure_store.py`) each write one `garden_proposal_closures`
-row in its own `store.write` transaction, checking the proposal's existing closure first as its own idempotence guard. A
-crash before commit loses the whole write, with nothing yet durable for a retried close to collide with; a crash after
-it leaves the closure already recorded, and a re-attempted close reads it back through `get` and refuses as
-already-closed, exactly as a live race would.
+row on the connection of the unit the garden service opens, which declares the proposal's `GARDEN_PROPOSAL` key and
+re-reads its closure under it before the domain decides. A crash before commit loses the whole write, with nothing yet
+durable for a retried close to collide with; a crash after it leaves the closure already recorded, and a re-attempted
+close re-reads it under the key and refuses as already-closed, exactly as a live race would.
 
 The accept-with-mint path is a second writer of the same table: `WorkItemStore.accept_create`
 (`blizzard/src/blizzard/hub/store/internal/work_item_store.py`) writes the accepted-and-minted
 `garden_proposal_closures` row, the item's `work_items` row, and its resting `not_ready` chunk's rows, all on one
 `engine.begin()` connection — the same shape §The item-creation chunk mint's `create_with_chunk` uses, plus the closure
-row folded into the same transaction. The closure row is checked and inserted first, so an already-closed proposal mints
-nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref` still runs
-in its own transaction before this one opens, so a crash in between still burns one `ref`, never reused.
+row folded into the same transaction. The unit declares the proposal's `GARDEN_PROPOSAL` key and the domain refuses an
+already-closed proposal from the closure it re-read under that key, so an already-closed proposal mints nothing. It
+inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref` still runs in its own
+transaction before this one opens, so a crash in between still burns one `ref`, never reused.
 
 Two adapters currently write the closure table: the accept-with-mint composite encloses its closure, item, and chunk
 inserts in the item adapter's transaction; `GardenProposalClosureStore` handles the standalone closure writes.
@@ -460,11 +461,11 @@ the delivered item minted from one.
 
 A crash between those two writes leaves the item delivered with its proposal's findings still live — not a gap, the same
 shape §The close-intent drain sweep's own `close.after-close.before-record` window already covers: the intent's own
-retirement fact has not landed either, so the sweep retries `close` for the same ref, `deliver` replays as the store's
-own `closed_at IS NULL` no-op, and `resolve_for_item` runs again. Its own gate is `has_delivery_for_proposal` (a
-`finding_facts` row already carrying the proposal's id), not any one finding's current state, so that retry completes an
-interrupted closure exactly once and a finding a person reopens afterward is never silently re-closed by a later,
-unrelated repeat of the same close.
+retirement fact has not landed either, so the sweep retries `close` for the same ref, `deliver` re-reads the item under
+its `WORK_ITEM` key and replays as the domain's `NOOP`, and `resolve_for_item` runs again. Its own gate is
+`has_delivery_for_proposal` (a `finding_facts` row already carrying the proposal's id), not any one finding's current
+state, so that retry completes an interrupted closure exactly once and a finding a person reopens afterward is never
+silently re-closed by a later, unrelated repeat of the same close.
 
 ## Runner and host fact ingest: each fact and its high-water mark in one unit
 
