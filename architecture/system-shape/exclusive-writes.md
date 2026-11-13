@@ -185,8 +185,8 @@ write leaves is guarded by the record's own revision, which a retire clearing th
 default and every retire takes the settings lock, so a mint's re-read default is live, and a retire never runs beside a
 write taking up the urgency it retires. Create and both reorders take the `urgency_order` lock, re-reading the order
 under it. A new decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the existing one
-reaches it through the legacy handle `IWriteGraphRepository.locked_name`, its own type — never an `ILockedChunkRead`,
-so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write. A pointer's key comes from
+reaches it through the legacy handle `IWriteGraphRepository.locked_name`, its own type — never an `ILockedChunkRead`, so
+a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write. A pointer's key comes from
 `work_ref_lock`.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
