@@ -445,10 +445,10 @@ already-locked connection (`bzh:store-exclusive-write`). `GroupService.group`
 `record_fold_locked` exactly once inside it, covering every target the fold carries, so no target's `chunk_grouped` row
 can ever commit ahead of a sibling target's own edge release/mint — the condition
 `hub:no-standing-dependency-onto-ephemeral-chunk` forbids: a standing edge naming an already-grouped-away chunk.
-`add_work_refs` runs in the same unit too, ahead of `record_fold_locked` in the same loop-then-once shape,
-so the fold's work-ref merges and its edge rewrite share one transaction: no crash can leave some targets' work refs
-merged with none of them grouped. The whole fold earns no `bzh:crash-point-registry` entry on the "no window at all"
-ground: there is nothing for a crash to land partway through, across the whole fold, work refs included.
+`add_work_refs` runs in the same unit too, ahead of `record_fold_locked` in the same loop-then-once shape, so the fold's
+work-ref merges and its edge rewrite share one transaction: no crash can leave some targets' work refs merged with none
+of them grouped. The whole fold earns no `bzh:crash-point-registry` entry on the "no window at all" ground: there is
+nothing for a crash to land partway through, across the whole fold, work refs included.
 
 ## Delivery-triggered finding closure, riding the close-intent drain
 
