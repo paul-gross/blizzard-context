@@ -340,60 +340,6 @@ into the billed amount. Nothing repeats that observation automatically, so the c
 add a real-token/live-OpenCode CI tier to close this — an external harness's live pricing behavior sits outside a
 hermetic, network-free CI tier's reach.
 
-## Per-key non-serialization of keyed write locks
-
-`keyed_locks` rows (`bzh:store-exclusive-write`) serialize two ingests of one pointer, two first mints of one graph
-name, two decisions on one queue list's ranking, and two transcript pushes on one runner's lane or one chunk's
-transcript. On Postgres the keyed rows themselves do not exclude writers of different keys, but the current production
-tenant-open guard serializes ordinary writes within one tenant before they reach those rows. The SQLite tiers cannot
-observe independent key-row locks, or a concurrent insert of one key losing to an `IntegrityError`.
-`blizzard:postgres-uow-concurrency` checks same-key contention and ordering on pre-existing lock rows, not either gap.
-
-Standing in for a tier: the per-key structure, asserted on what each decision declares, together with the same-key
-interleavings, which SQLite does exercise:
-
-- **Work-ref ingest** — at `blizzard:component-test`, each ingest locks only the `keyed_locks` rows of its own pointers.
-- **Queue ranking** — at `blizzard:unit-test`, `tests/unit/hub/domain/operations/test_queue_service.py`'s
-  `test_reposition_locks_both_chunks_and_the_list_ranking_and_returns_the_order_it_leaves` and
-  `test_reorder_names_its_chunks_first_then_the_rest_in_current_order_in_one_locked_unit` assert each move declares its
-  list's ranking lock beside its chunks.
-- **Transcript ingest** — at `blizzard:component-test`,
-  `tests/component/hub/domain/observability/test_transcript_ingest_service.py`'s
-  `test_an_ingest_locks_its_runners_lane_and_each_chunk_its_batch_names_once` asserts one declaration of the calling
-  runner's `transcript_lane` key and a `transcript_chunk` key per chunk the batch names; the same-key interleavings are
-  `tests/component/hub/domain/observability/test_transcript_ingest_race.py`.
-
-Do not add a Postgres tier to close this.
-
-## Tenancy's migrations and locks under Postgres
-
-The Python tiers run on SQLite, whose single writer lock serializes every writer. The focused
-`blizzard:postgres-uow-concurrency` method checks production tenant-guard contention but not the close interleavings
-below. The tenancy mechanisms therefore hold on SQLite by construction and stay unverified on Postgres, where each
-statement of a READ COMMITTED transaction reads its own snapshot and foreign keys are enforced:
-
-- **A scoped write's closed-tenant check.** A scoped write opens with one statement,
-  `UPDATE tenants … WHERE tenant_id = :t AND NOT EXISTS (<the tenant's deletion fact>)` (`_lock_open_tenant`,
-  `src/blizzard/hub/store/scoped.py`). On Postgres a write that blocks on a close's lock of that row re-checks, once the
-  close commits, the row against its condition, but evaluates the `NOT EXISTS` against the snapshot taken before it
-  blocked, so it can still write into the tenant just closed. The drain removes that late row on its next pass, and a
-  completion that meets it first fails on the foreign key until the next sweep pass. Closing the hole portably costs a
-  separate existence read after the row lock, on every scoped write.
-- **The drain under enforced foreign keys.** The drain deletes children before parents in the schema's own dependency
-  order (`DRAIN_ORDER`, `src/blizzard/hub/store/internal/tenant_teardown_store.py`) and relies on no cascade, because
-  SQLite runs with `foreign_keys` off. No tier drains with foreign keys enforced, so an order that breaks one surfaces
-  only on Postgres, as a failed batch.
-- **The last-open-tenant check.** A tenant's close (`TenantTeardown.close`, `hub/domain/tenancy/teardown.py`) refuses to
-  close the last open tenant. Two closes of the last two open tenants could each see the other still open and both
-  commit, leaving none; each close holds its own tenant's row and the `TENANT_LIFECYCLE` row of `hub_locks` before it
-  reads the open tenants, so a second close queues behind the first and reads its committed deletion fact. On SQLite the
-  writer lock serializes the two closes whatever the lock order, so no tier can tell whether the lock holds on Postgres.
-
-Standing in for a tier: each mechanism's interleavings that SQLite can run, at `blizzard:component-test`, and the
-portable SQL `bzh:sql-portable` holds each statement to. The hosted hub runs SQLite (`blizzard-infra`'s
-`deploy/compose.yaml`), so dogfooding exercises none of them on Postgres. The gap stays open, not permanent: it closes
-the day some tier gains a Postgres-backed run, which `packaging/docker/compose.yaml` already makes possible.
-
 ## Projects' migration and writes under Postgres
 
 The projects mechanisms below have the same exposure as tenancy's: every tier runs on SQLite, with one writer lock and

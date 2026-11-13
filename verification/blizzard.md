@@ -91,10 +91,10 @@ A command method passes when its command exits 0, except where its row states ad
 
 <!-- vale Blizzard.ProcessReference = NO -->
 
-| Method                              | Command                                                                                                                                       |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard:sqlite-test-engine-leaks` | `uv run pytest -n auto` — Linux parallel suite SQLite test-engine and deleted-file handle proof; exit 0 and worker evidence required *(more)* |
-| `blizzard:postgres-uow-concurrency` | `uv run --extra postgres python scripts/check_hub_uow_postgres.py` — focused Postgres lock-order and contention proof *(more)*                |
+| Method                              | Command                                                                                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard:sqlite-test-engine-leaks` | `uv run pytest -n auto` — Linux parallel suite SQLite test-engine and deleted-file handle proof; exit 0 and worker evidence required *(more)*                    |
+| `blizzard:postgres-uow-concurrency` | `uv run --extra postgres python scripts/check_hub_uow_postgres.py` — focused Postgres lock-order, contention, tenant-close and drain proof, run nightly *(more)* |
 
 <!-- vale Blizzard.ProcessReference = YES -->
 
