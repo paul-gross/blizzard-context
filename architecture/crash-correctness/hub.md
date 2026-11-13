@@ -441,15 +441,15 @@ invariant of its own.
 
 ### A fold's edge rewrite, riding its own `chunk_grouped` write
 
-`ChunkDependenciesStore.record_fold_locked` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`)
-takes every target a fold carries and records each one's `chunk_grouped` row — via `record_grouped_row_conn`
+`ChunkDependenciesStore.record_fold` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`) takes
+every target a fold carries and records each one's `chunk_grouped` row — via `record_grouped_row_conn`
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — plus its own release/mint edge rewrite, on the fold's
 already-locked connection (`bzh:store-exclusive-write`). `GroupService.group`
 (`blizzard/src/blizzard/hub/domain/operations/queue.py`) opens that one locked transaction for the whole fold and calls
-`record_fold_locked` exactly once inside it, covering every target the fold carries, so no target's `chunk_grouped` row
-can ever commit ahead of a sibling target's own edge release/mint — the condition
+`record_fold` exactly once inside it, covering every target the fold carries, so no target's `chunk_grouped` row can
+ever commit ahead of a sibling target's own edge release/mint — the condition
 `hub:no-standing-dependency-onto-ephemeral-chunk` forbids: a standing edge naming an already-grouped-away chunk.
-`add_work_refs` runs in the same unit too, ahead of `record_fold_locked` in the same loop-then-once shape, so the fold's
+`add_work_refs` runs in the same unit too, ahead of `record_fold` in the same loop-then-once shape, so the fold's
 work-ref merges and its edge rewrite share one transaction: no crash can leave some targets' work refs merged with none
 of them grouped. The whole fold earns no `bzh:crash-point-registry` entry on the "no window at all" ground: there is
 nothing for a crash to land partway through, across the whole fold, work refs included.
