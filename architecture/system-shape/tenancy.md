@@ -66,8 +66,10 @@ whose reason is "simpler" or "shared" rather than a fact about when its rows are
 **Do.** `hub_event_log` is on the list because its rows are the hub's own occurrences — startup, migration, a tenant's
 teardown, the exports' failures — which concern no tenant and which no tenant member reads.
 
-**Don't.** Putting a configured record's table on the list so two tenants can share one row — sharing across tenants is
-what the boundary forbids; each tenant configures its own.
+**Don't.** Putting a tenant-owned configured record's table on the list so two tenants can share one row — sharing
+across tenants is what the boundary forbids; each tenant configures its own. Hub-wide settings are hub-owned, not a
+tenant's configured record; their global tables and access are governed by `bzh:configured-record`
+([./configuration.md](./configuration.md)).
 
 ## Adapters hold scoped connections only (`bzh:tenant-scoped-store`)
 
