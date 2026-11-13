@@ -589,6 +589,25 @@ characters.
   edited the chore keeping its id, refused a stale `If-Match` with `409`, retired and re-enabled the cadence, refused a
   second cadence of the same slug, and wrote one change row for each write.
 
+## Credentials under Postgres
+
+Every tier runs the revision adding the credential tables on SQLite only. It creates `credentials`,
+`credential_former_slugs`, and `credential_lifecycle_facts`, each tenant-keyed with its foreign keys, and adds a
+nullable `credential_id` to `repositories` and `work_sources`, and backfills nothing. On Postgres, foreign keys are
+enforced, DDL is transactional, and identifiers stop at 63 characters.
+
+- **What a hand run reached.** On a throwaway Postgres 16 cluster, an empty store reached head under
+  `blizzard hub init`. A hub hosted over it held two tenants, each with a secret, a forge, a repository, and a
+  credential `ConfigAuthoring.create_credential` wrote, which the repository named by a SQL update.
+  `blizzard:manual-postgres-invariants`, steps 1–2, then ran: `GET /api/admin/invariants` answered `200` with no
+  violation, and after one tenant's `credentials.authority` was rewritten by SQL it answered `200` with
+  `hub:credential-authority-derived` naming that tenant and credential.
+- **What no tier repeats.** No CI tier runs that pass, and no door writes a credential or a referrer's `credential_id`
+  yet, so the credential checks have read only rows a script or SQL wrote.
+
+Standing in for a tier: the revision's colocated migration test, `blizzard:store-contract`, and the credential
+invariants' component tests, all on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to.
+
 ## Errand marks under Postgres
 
 Every tier runs the revision adding the errand marks on SQLite only. It adds nullable `cadence_id` and `chore_id` to
