@@ -24,20 +24,23 @@ hub with no setup; and `fleet/` as `service-fleet`, a real runner host enrolled 
 shared real hub, with a `service-fleet-<profile>` for each subfolder named after a hub profile. One `service-*`
 selection reaches all of them; its authoring rules are [service-tests.md](../../service-tests.md). The existing Python
 half runs `BLIZZARD_SERVICE=1 uv run pytest -n auto tests/service/` (`mise run service-test`) and keeps only the cases
-whose subject is Python itself, in three kinds: store-file subjects (host graduation, host ingest, forge checks), wire
-parity and the mock contract (wire parity, parity guard, host token, runner bindings, mock chunk findings, transcript
-segments, mock data seeding), external-tool bindings (OpenCode compatibility, harness health, credential renewal, runner
-self-test), and nothing else; their shared launchers live in `tests/support/mock_fleet.py`. Both exercise a running
-daemon from outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this tier's. The Python half
-needs the sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts, stub IdP, and
-`mock-claude-code`) and skips cleanly without `BLIZZARD_SERVICE=1`.
+whose subject is Python itself, in four kinds: store-file subjects (host graduation, host ingest), wire parity and the
+mock contract (wire parity, parity guard, host token, runner bindings, mock chunk findings, transcript segments, mock
+data seeding), external-tool bindings (OpenCode compatibility, harness health, credential renewal, runner self-test),
+and the forge adapter; their shared launchers live in `tests/support/mock_fleet.py`. Both exercise a running daemon from
+outside against the mock fleet. A browser scenario is `blizzard:ui`'s, not this tier's. The Python half needs the
+sibling provisioned `blizzard-mock` worktree (its venv ships the mock-fleet scripts, stub IdP, and `mock-claude-code`)
+and skips cleanly without `BLIZZARD_SERVICE=1`.
+
+`tests/service/forge/test_github_checks_service.py` exercises the production GitHub adapter against the mock forge over
+HTTP, checking pagination at 100, 101 and 205 check runs and status contexts and latest-status deduplication.
 
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
 **Kept transition-era export**
-(`tests/service/hub/config-kept-export.spec.ts::test_a_kept_transition_era_export_applies_cleanly_and_exports_back_as_itself`)
+(`tests/service/hub/config-kept-export.spec.ts::test_a_kept_transition_era_export_applies_cleanly_and_exports_with_defaults`)
 applies a version-2 export kept from a hub that still took the forge address fields to a real hub, unrefused and
-unwarned, and checks it exports back as itself.
+unwarned, and checks it exports with current repository defaults.
 
 When lease scratch is too long for Unix sockets, set `TMPDIR="$BLIZZARD_TMPDIR"` and `BLIZZARD_TEST_HOST_RUNTIME` to a
 unique private short directory for the Playwright host and scratch-host runtime directories. Keep logs, homes, fixture
@@ -90,8 +93,15 @@ component checker exercises flow invariants independently.
   protected-candidate escalation.
 - `test_fast_forward_stands_when_second_forge_refuses_merge_method` proves the first forge's PR-free landing survives
   the second forge's refusal.
-- `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` proves missing checks time out without
+- `test_candidate_without_checks_exhausts_pending_timeout_without_advancing` proves missing checks escalate without
   advancing the base.
+- `checks registered during the grace period land with ${policy}` proves both fast-forward and merge-on-checks wait
+  without advancing the base, then land when checks register successfully within the grace period.
+- `empty checks ${policy} allow_no_ci=${allowNoCi}` exercises fast-forward and merge-on-checks with and without the
+  opt-in: empty checks land when allowed; otherwise they escalate without advancing, then land after checks succeed and
+  the chunk is requeued.
+- `an externally merged PR is adopted after missing-checks escalation and requeue` proves requeue records the external
+  merge as landed and closes the tracked PR without advancing the base again.
 
 **Parked landing** (`tests/service/fleet/park.spec.ts`) exercises a real host, hub and mock forge:
 
@@ -329,8 +339,8 @@ an authored graph with the shipped choices, a brisk poll cadence, and conflict a
   escalates with `forge-config`, naming the forge, with nothing merged.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_does_not_merge_ahead_of_a_check_that_starts_after_the_others_finish`
   waits for a second pending check even when the first is green, then lands when the second goes green.
-- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_revision_with_no_check_at_its_poll_timeout` pends
-  with no check and bounces `poll-timeout`, with nothing merged.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_escalates_a_revision_with_no_check_at_its_poll_timeout` pends
+  with no check and escalates `missing-checks`, with nothing merged.
 
 The component-tier `tests/component/hub/forge/internal/test_github_landing.py` covers conditional forge lookup behavior;
 the component-tier

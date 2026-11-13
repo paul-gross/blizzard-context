@@ -528,6 +528,12 @@ Standing in for a tier: the hub half's run of the same opener under `blizzard:ma
 runner half's single-read component tests on SQLite. The gap closes the day a method hosts a runner on Postgres, or some
 tier gains a Postgres-backed runner run.
 
+## The no-CI opt-in columns under Postgres
+
+The migration adds non-null, default-false `allow_no_ci` columns to repositories and frozen flow submission terms. On a
+disposable Postgres cluster, the hub chain passed head → base → head, and a seeded parent store passed upgrade →
+downgrade → upgrade. No CI tier repeats those Postgres runs; the colocated migration test runs on SQLite.
+
 ## Landing policies' columns under Postgres
 
 Every tier runs the revision adding landing policies on SQLite only. It adds `repositories.landing_policy` and

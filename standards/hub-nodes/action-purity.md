@@ -31,6 +31,10 @@ a blank or fabricated `merged/<repo>` revision. The chunk-artifacts store's deli
 projection of these markers, skips a PR reference of any other shape without error. What each marker means is
 [delivery](../../domain/artifacts/delivery.md)'s.
 
+An empty-check observation is named `empty-checks/<repository-record-id>/<sha>` and carries a JSON object with `repo`
+(the forge owner and repository), `policy`, `sha`, and `at` (the observation time as an ISO timestamp). It is scoped to
+the node and epoch; its identity includes the repository record and candidate revision.
+
 **Why.** A pass runs on a thread shared by every tenant's passes, beside the process environment that holds the key
 sealing every tenant's secrets. An action that could read the environment, open a process or a socket, write the store,
 or take a collaborator through its constructor could leak a secret or decide an effect the executor never sees made

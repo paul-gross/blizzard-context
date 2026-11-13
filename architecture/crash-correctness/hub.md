@@ -206,6 +206,12 @@ The windows inside a pass stay the `action.` family's above, with the turn's tas
 (`tests/crash/test_kill9_sweep.py`) arms each `flow.` point and lands the chunk on the restarted hub without merging
 twice.
 
+An empty-check observation is a marker effect written by the turn's `write_effect` through `record_hub_artifact` during
+the pass, before the pending answer and turn end, not in their transaction. The sink waits for the marker to be durable;
+a crash after that write replays against the node and epoch's existing marker and retains its first observation time. A
+crash before the write leaves no observation and the next pass reads the forge again. The marker's shape is owned by
+[action purity](../../standards/hub-nodes/action-purity.md).
+
 ## The boot recovery of open turns
 
 `FlowDriver.recover_turns` runs from the hub daemon's startup, once in each open tenant before the hub serves and before

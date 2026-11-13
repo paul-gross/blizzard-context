@@ -49,6 +49,12 @@ worker node's judgement ([edges](../graphs/edges.md)).
   outcome choices, routed to whatever edge the graph authors — a node that resolves the conflict, one that rebuilds, or
   any other — and the markers already recorded stay durable, outliving the conflict for a later attempt to reconcile
   against.
+- **Checks and empty results.** `merge-on-checks` and `fast-forward` check the actual candidate revision. A successful
+  empty check read is not green by default: the first observation waits, and an empty read of the same revision after
+  ten minutes escalates as missing checks. A different revision starts its own observation. A repository may explicitly
+  opt in to landing with no CI; that permits an empty result, not a failed, pending, or unreadable check result. If the
+  overall delivery deadline expires with an observation recorded, it escalates as missing checks without claiming a
+  later read confirmed the absence. A parked change remains a person's merge decision.
 - **The policy is the repository's.** How a change lands is a fact about the repository it lands in: each repository
   record carries a landing policy, and the `land` action runs each repository's own. A policy is accepted only on a
   forge that offers its required capabilities. The policies are:
