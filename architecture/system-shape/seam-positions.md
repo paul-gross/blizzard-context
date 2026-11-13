@@ -31,8 +31,10 @@ means structurally never edited for every source but the hub, not merely not opt
 Delivery reaches a repository's forge through the landing seam, `hub/forge/landing.py`: three narrow Protocols,
 `IForgeRefs`, `IForgeChanges`, and `IForgeChecks`, each under `bzh:seam-size-ceiling` and never composed into one wide
 seam. The registry builds one adapter bundle per repository from its forge record's kind and API origin, its
-`owner/repo`, and its revealed secret, and the `land` action and the garden's commit check call only the roles they
-need. Work items reach the forge through the work-source family, and login through its own seam:
+`owner/repo`, and the authorization the forge authorization boundary (`IForgeAuthorizations`, `hub/forge/auth.py`)
+builds for the credential it acts with — never a secret it reveals itself — and the `land` action and the garden's
+commit check call only the roles they need. What the registry offers a repository is its forge kind's set narrowed by
+that authorization. Work items reach the forge through the work-source family, and login through its own seam:
 
 | Path             | Reaches the forge for                                                                                                                                                                                | Seam status                                                                                                                                                                                          |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,7 +51,7 @@ owner, base branch and secret, and a `deliver` step and the garden's commit chec
 on to its record on every use; a work source names its forge record likewise, and the OAuth provider declares its own
 endpoint through its config entry.
 
-Each tenant holds one rate budget per forge key — a forge record and the secret its calls go out under, or that forge's
+Each tenant holds one rate budget per forge key — a forge record and the authority its calls go out as, or that forge's
 anonymous budget when none — beside the registry and outside its adapter cache, so an edit that rebuilds an adapter
 keeps the budget. The landing seam's role handles and the work-source family share it, reaching it as
 `bzh:forge-rate-budget` below states.
