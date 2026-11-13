@@ -5,21 +5,22 @@ configured record shares, how a declarative document is decoded, what may carry 
 read; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rule here follows the slot skeleton owned
 by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
-A **configured record** is a row the hub holds as operator-set configuration and that an operator changes while the hub
-runs: a forge, a work source, a repository, a secret, a project, a project source link, a project repository link, a
-scope, a routine, a cadence, an urgency, or the tenant's settings. The rules below name the seams and tables that keep
-them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so
-code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet
-hold.
+A **configured record** is a record the hub holds as operator-set configuration and that an operator changes while the
+hub runs: a forge, a work source, a repository, a secret, a project, a project source link, a project repository link, a
+scope, a routine, a cadence, an urgency, the tenant's settings, or the hub-wide settings. The rules below name the seams
+and tables that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their
+implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code
+these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
 **Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable; a kind
 listed below departs from it only as its entry states. Give editable records a sparse-merge edit, and each record a
-`revision` that every committed write increments and one `config_changes` row appended in the same transaction as each
-write. A sparse merge leaves an absent field unchanged, sets a present field, and takes an explicit `null` as clearing a
-nullable field, refusing it on any other. A retire of a retired record, or an enable of an enabled one, writes nothing;
-an edit of a retired record is legal and leaves it retired. Enable reverses a retirement.
+`revision` that every changed write increments and one change row appended in the same transaction as each write; tenant
+records use `config_changes`, while hub-wide settings use their own audit below. A sparse merge leaves an absent field
+unchanged, sets a present field, and takes an explicit `null` as clearing a nullable field, refusing it on any other. A
+retire of a retired record, or an enable of an enabled one, writes nothing; an edit of a retired record is legal and
+leaves it retired. Enable reverses a retirement.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
@@ -32,7 +33,7 @@ an edit of a retired record is legal and leaves it retired. Enable reverses a re
 
 Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its edit. Each entry below states
 a kind's own surface beside the six; only the entries for a project, a project's link, a graph, a work item, a secret,
-an urgency, and the tenant's settings depart from the verb set itself:
+an urgency, the tenant's settings, and the hub-wide settings depart from the verb set itself:
 
 - **A project** takes create, list, show, and edit but no retire or enable: a project, once created, stays
   ([../../domain/projects.md](../../domain/projects.md)). Its links to sources and repositories carry the lifecycle in
@@ -84,14 +85,25 @@ an urgency, and the tenant's settings depart from the verb set itself:
   enable, since a tenant always holds its settings. Its change rows, of kind `tenant_settings`, are keyed by the tenant
   id and name no project. Its `default_urgency` refuses an explicit `null`, and an urgency the tenant does not hold or
   has retired with `422 urgency_unknown` or `422 urgency_retired`.
+- **The hub-wide settings** are one singleton shared by all tenants, not a tenant's settings. They take show and edit at
+  `GET` and `PATCH /api/admin/settings`, document apply at `POST /api/admin/settings/apply`, and history at
+  `GET /api/admin/settings/changes`, and export at `GET /api/admin/settings/export`; they have no create, retire, or
+  enable. Every read and write on these routes requires the hub-only `SETTINGS_ADMIN` permission; a tenant role grants
+  no access. Their own revision and audit live in `hub_settings`, `hub_setting_entries`, and `hub_setting_changes`, not
+  tenant-scoped `config_changes`. Writes use the shared settings-record decision and transaction in
+  `blizzard/src/blizzard/foundation/settings_record/`: a matching revision is required, validation precedes the write,
+  and a no-op moves neither revision nor audit. A changed write moves the revision and appends its audit in the same
+  transaction. Set and unset are distinct: unset restores the default and leaves an entry that prevents a later file
+  seed from restoring the old value.
 
-Implement configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord` requires
-only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names the
-link-specific capabilities. Reuse the applicable revision, transition, ordered field comparison, change-row, slug-left
-and label-merge mechanics in `blizzard/src/blizzard/hub/domain/config/lifecycle.py`, which uses `ConfigChange.of` in
-`blizzard/src/blizzard/hub/domain/config/changes.py`. Kinds own validation, projection, identity and construction.
-Projects use the base capability without retirement; links use linked polarity and project attribution, and position
-facts are not link revisions. Secrets' encryption and revision exception is outside these helpers.
+Implement tenant configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord`
+requires only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names
+the link-specific capabilities. Reuse the applicable revision, transition, ordered field comparison, change-row,
+slug-left and label-merge mechanics in `blizzard/src/blizzard/hub/domain/config/lifecycle.py`, which uses
+`ConfigChange.of` in `blizzard/src/blizzard/hub/domain/config/changes.py`. Kinds own validation, projection, identity
+and construction. Projects use the base capability without retirement; links use linked polarity and project
+attribution, and position facts are not link revisions. Secrets' encryption and revision exception is outside these
+helpers.
 
 **Why.** Sparse merge is the only patch meaning under which two writers editing different fields do not overwrite each
 other, and the only one a declarative apply's per-field difference maps onto without restating the record. One verb set
@@ -107,8 +119,8 @@ identified and resolved is `bzh:configured-record-names` below.
 - A `PATCH` request model that does not forbid extra fields, so an unknown field is silently dropped.
 - A `PUT` that replaces a whole record, other than a secret's value replace; a project link's `PUT` replaces no fields.
 - A `DELETE` route on a configured record.
-- A write to a configured record with no `config_changes` row in its transaction, or one that leaves `revision` where it
-  was.
+- A changed write to a configured record with no change row in its transaction, or one that leaves `revision` where it
+  was, except the secret lifecycle debt below; hub-wide settings use their own audit rather than `config_changes`.
 - A change row of a project, a project's link, or a record of any kind a project owns written without that record's
   project.
 - A create of a kind a project owns that does not take the call's project by id or slug (`--project` on the CLI), does
@@ -199,30 +211,30 @@ longer the document the API accepts.
 
 ## A declarative apply is a door, one transaction, and never a retire (`bzh:config-apply`)
 
-**Rule.** Treat a declarative apply as a door into the configured records and not an owner of them: it reconciles each
-record the document names through the verbs the record's model already decides — create when absent, a sparse edit of
-only the fields the entry states when present, enable when retired — and writes nothing for a record that already stands
-as declared. Commit every write of one apply in a single transaction, each beside its `config_changes` row, with the
-door set to `apply` by the server and every row sharing one `apply_id`. Never retire a record because the document omits
-it. A dry run is the same transaction rolled back, so it reaches every refusal a real apply reaches and returns the
-outcome the real apply would.
+**Rule.** Treat a tenant declarative apply as a door into the tenant's configured records and not an owner of them: it
+reconciles each record the document names through the verbs the record's model already decides — create when absent, a
+sparse edit of only the fields the entry states when present, enable when retired — and writes nothing for a record that
+already stands as declared. Commit every write of one apply in a single transaction, each beside its `config_changes`
+row, with the door set to `apply` by the server and every row sharing one `apply_id`. Never retire a record because the
+document omits it. A dry run is the same transaction rolled back, so it reaches every refusal a real apply reaches and
+returns the outcome the real apply would.
 
 **Why.** An apply that owned the records would read an omitted record as a wish to remove it, and a document that left
 out one entry could retire it. An apply that committed per record would leave a half-applied document behind its first
 refusal. A dry run assembled from reads cannot know what a write's own checks — secret availability, uniqueness, the
 compare-and-set — will refuse, so only the real transaction rolled back reports truthfully.
 
-**Scope.** Binds every kind a document carries. A kind added to the document adds its writes to the one transaction and
-its entries to the outcome rows; it takes no transaction of its own. An apply reconciles the records of the tenant its
-request resolved, in that tenant's one transaction; a document never reaches a second tenant. An apply composed with
-another write — seeding a tenant at its creation — either joins `TenantAdministration.create`'s unit of work through
-`ScopedConnections.founding` (`blizzard/src/blizzard/hub/store/scoped.py`), as
-[../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant creation, one identity unit of work describes, or
-names the window between its commits in that file, owing what `bzh:recorded-crash-exemption`
-([../crash-correctness.md](../crash-correctness.md)) sets for an entry on that ground. A document's `projects` section
-reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind added beside them — may name a
-project the same document declares. The apply itself resolves no project: the package that owns projects plans the
-section and the project each entry acts in, and hands both to it planned
+**Scope.** Binds every kind the tenant configuration document carries, not the separate hub settings document and its
+apply above. A kind added to the tenant document adds its writes to the one transaction and its entries to the outcome
+rows; it takes no transaction of its own. An apply reconciles the records of the tenant its request resolved, in that
+tenant's one transaction; a document never reaches a second tenant. An apply composed with another write — seeding a
+tenant at its creation — either joins `TenantAdministration.create`'s unit of work through `ScopedConnections.founding`
+(`blizzard/src/blizzard/hub/store/scoped.py`), as [../crash-correctness/hub.md](../crash-correctness/hub.md) §Tenant
+creation, one identity unit of work describes, or names the window between its commits in that file, owing what
+`bzh:recorded-crash-exemption` ([../crash-correctness.md](../crash-correctness.md)) sets for an entry on that ground. A
+document's `projects` section reconciles first, so an entry of any kind a project owns — a scope, a routine, or a kind
+added beside them — may name a project the same document declares. The apply itself resolves no project: the package
+that owns projects plans the section and the project each entry acts in, and hands both to it planned
 (`blizzard/src/blizzard/hub/domain/projects/declarations.py`). A project entry's stated `sources` or `repositories` list
 is that project's whole set, so a name the list leaves out is unlinked — the one write an omission drives, retiring a
 link and never a record; a list the entry omits leaves the stored links. A project entry's `landing_order` lists the
@@ -293,23 +305,26 @@ the route that serves it has read the plaintext.
 
 **Rule.** Read a configured record from the store at the use that needs it — a request when it runs, a sweep at the
 start of each pass, a hub step when it starts — and cache anything built from a record under that record's revision. The
-store is the only answer to what is configured; no process holds configuration in memory as truth.
+store is the authority over configured records; only values whose declared lifetime is boot are fixed for the process.
 
 **Why.** A record read on use makes a change take effect on the next use with no restart and nothing to announce it, in
 one hub process or several. A cache keyed by revision holds nothing true only in memory: a cold cache is correct, and a
 second process reading the same revisions builds equivalent objects.
 
-**Scope.** Binds configured records. Each tenant's records build into that tenant's own cache, opened with its services
-(`build_live_config`, `blizzard/src/blizzard/hub/composition.py`), so an object built from one tenant's record never
-serves another's request or pass. Process settings in the hub's file — its root, store URL, bind address, auth and
-tracing settings, and the hub secret key — are read at start and changed by a restart.
+**Scope.** Binds configured records, including hub-wide settings. Each tenant's records build into that tenant's own
+cache, opened with its services (`build_live_config`, `blizzard/src/blizzard/hub/composition.py`), so an object built
+from one tenant's record never serves another's request or pass. Hub-wide settings are shared across tenants, not placed
+in a tenant cache. A hub setting's declared lifetime decides when a change takes effect: a `boot` value is fixed for the
+running process and needs a restart; a later-lifetime value is read at its use. The hub's file seeds a stated key only
+when no stored entry exists, including an unset entry; it is not the authority over an existing entry. Boot inputs such
+as the root and secret key, and environment overrides declared for boot keys, remain process inputs.
 
 **Detect.**
 
-- A configured record captured at composition time into a long-lived object.
+- A later-lifetime configured value captured at composition time into a long-lived object.
 - A cache of a configured record, or of an object built from one, keyed without its revision — or without its secret's
   revision when the object holds a credential.
-- A configured value read from `os.environ` outside the hub's file and key bootstrap.
+- A configured value read from `os.environ` outside the declared boot overrides and key bootstrap.
 - A decrypted secret value cached on its own rather than inside a built object.
 
 **Do.** A built object — an authenticated client, a work-source adapter, a resolver — is kept under
@@ -324,16 +339,46 @@ the hub restarts, and a second hub process answers from a different dict.
 **See also.** `bzh:dependency-injection` ([../clean-architecture.md](../clean-architecture.md)): the composition root
 wires the store-backed reader, not the records it reads.
 
+## One hub settings snapshot per entry (`bzh:hub-settings-snapshot-per-entry`)
+
+**Rule.** Resolve hub-wide settings once at the start of each request, sweep pass, or hub step that needs them, and use
+that immutable effective configuration throughout that entry. The next entry reads again. A revision-keyed reader may
+reuse a snapshot after checking the store's current revision; do not capture a pass-lifetime value in a long-lived
+service at boot. Read a sweep's scheduling interval afresh when scheduling the next pass.
+
+**Why.** A single entry must not combine values from both sides of an edit, while a later entry must see the edit
+without a restart.
+
+**Scope.** Hub-wide settings only; this rule makes no claim about runner settings. Boot-lifetime values remain fixed for
+the process. The store snapshot rule for a pass's deciding data reads remains `bzh:pass-reads-one-snapshot`
+([../repository-access.md](../repository-access.md)); a settings snapshot does not replace that transaction.
+
+**Detect.** A request, pass, or hub step resolving settings more than once, or a long-lived hub service using a
+boot-captured pass-lifetime setting.
+
+**Do.** `blizzard/src/blizzard/hub/api/request_config.py` memoizes the effective configuration on the request;
+`blizzard/src/blizzard/hub/settings/pass_config.py` binds it for a pass.
+
+**Don't.** Read a setting again halfway through a sweep after an operator edit: the pass would act on two revisions.
+
+**See also.** `bzh:config-read-on-use` above owns revision-keyed reads and the lifetime boundary.
+
 ## A process setting is read only through its daemon's registry (`bzh:config-key-declared`)
 
-**Rule.** Read a key of `blizzard-hub.toml` or `blizzard-host.toml` only through the strict accessor over its daemon's
-registry (`blizzard/src/blizzard/hub/config_keys.py`, `blizzard/src/blizzard/runner/config_keys.py`), and declare in
-that registry every key read and every durable path under the daemon's runtime root. Adding, retiring or retyping a key
-changes `contracts/config/`. A retired key stays declared `deprecated`, with `replaced_by` naming its home.
+**Rule.** Seed or validate a key of `blizzard-hub.toml` or `blizzard-host.toml` through the strict accessor over its
+daemon's registry (`blizzard/src/blizzard/hub/config_keys.py`, `blizzard/src/blizzard/runner/config_keys.py`), and
+declare in that registry every key read and every durable path under the daemon's runtime root. Adding, retiring or
+retyping a key changes `contracts/config/`. A retired key stays declared `deprecated`, with `replaced_by` naming its
+home.
 
 Every value key declares its lifetime, and a grouping key declares none. A deprecated key takes its replacement's
 lifetime. `env`, legal only on a `boot` key, names the environment variable that supplies the key and overrides the
 file. Moving a key's lifetime later is a break that `blizzard:compat` reports; moving it earlier is additive.
+
+On the hub, the file accessor is for seeding and configuration validation, not a runtime source for settings already
+held in the store. Runtime consumers take the effective settings snapshot at their entry; they do not bypass it by
+reading the file or its accessor. Shared settings-record write and seed decisions remain owned by
+`blizzard/src/blizzard/foundation/settings_record/`, not a hub-specific copy.
 
 **Why.** A key the code reads and no document lists is a setting an operator cannot discover and a release cannot diff.
 Refusing a retired key is itself a read of it, so the registry stays complete only while those keys stay declared.
