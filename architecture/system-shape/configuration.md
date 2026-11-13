@@ -6,11 +6,11 @@ read; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rul
 by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 A **configured record** is a row the hub holds as operator-set configuration and that an operator changes while the hub
-runs: a forge, a work source, a repository, a secret, a project, a project source link, a project repository link, a
-scope, a routine, a cadence, an urgency, or the tenant's settings. The rules below name the seams and tables that keep
-them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so
-code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet
-hold.
+runs: a forge, a credential, a work source, a repository, a secret, a project, a project source link, a project
+repository link, a scope, a routine, a cadence, an urgency, or the tenant's settings. The rules below name the seams and
+tables that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by the names their
+implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code
+these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
@@ -157,9 +157,9 @@ such kind: 1 to 64 lowercase letters, digits and single inner hyphens.
 **Why.** A reference that held a slug would break on the next rename, and a slug resolved past the edge would resolve
 differently at each door; one immutable id for references and one resolution for handles keep a rename a label change.
 
-**Scope.** A project, a repository, a work source, a forge, and an urgency take the three names; a secret is keyed by
-its name. An urgency's slug never changes, so it holds no former slug and takes no part in the former-slug claim and
-release. A kind's own reserved slugs stay that kind's refusal.
+**Scope.** A project, a repository, a work source, a forge, a credential, and an urgency take the three names; a secret
+is keyed by its name. An urgency's slug never changes, so it holds no former slug and takes no part in the former-slug
+claim and release. A kind's own reserved slugs stay that kind's refusal.
 
 **Detect.**
 
@@ -375,3 +375,5 @@ the change that brings it under the rule:
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
   its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
   than refusing it.
+- **A credential has no door.** It is a configured record with its verbs on `ConfigAuthoring`, its store, and its change
+  rows, but no route or CLI noun creates, edits, retires, or enables one yet, and no document carries it.
