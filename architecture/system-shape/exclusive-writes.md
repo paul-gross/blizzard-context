@@ -156,7 +156,7 @@ connection. `IHubTransactions.begin` opens a tenant unit; its `lock_set` declare
 repository statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating
 repository (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents
 writers naming the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token,
-not the domain. `IChunkExclusiveWrites` and its `*_locked` methods are this seam's legacy form
+not the domain. The remaining `*_locked` repository methods are this seam's legacy form
 (`bzh:transaction-participation`).
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
@@ -192,10 +192,8 @@ keys to its plan's locks and refuses an entry as stale when such an urgency's re
 A reference the write leaves is guarded by the record's own revision, which a retire clearing the reference moves. Every
 change of the default and every retire takes the settings lock, so a mint's re-read default is live, and a retire never
 runs beside a write taking up the urgency it retires. Create and both reorders take the `urgency_order` lock, re-reading
-the order under it. A new decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the
-existing one reaches it through the legacy handle `IWriteGraphRepository.locked_name`, its own type — never an
-`ILockedChunkRead`, so a handle that holds no chunk-row lock cannot satisfy a chunk-row `*_locked` write. A pointer's
-key comes from `work_ref_lock`.
+the order under it. A decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the default
+graph's first mint declares `graph_name_lock` through `lock_set`. A pointer's key comes from `work_ref_lock`.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, the ceiling's self-engagement, and the

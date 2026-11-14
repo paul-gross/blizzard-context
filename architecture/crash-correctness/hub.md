@@ -412,11 +412,11 @@ item and chunk inserts), not a derived cross-fact invariant to recompute.
 
 `ChunkDependenciesStore.declare`/`.release` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`)
 each write `chunk_dependencies` in one transaction — `declare` a single insert of the fresh edge row, on the connection
-of the locked unit `DependencyService` opens through `IChunkExclusiveWrites.locked` and hands over as the handle's
-`transaction`; `release` a read of the standing row followed by its `released_at`/`released_by` update on the same
-connection, inside its own `store.write` transaction. Neither has a partial-write span for a crash to land inside:
-`declare`'s insert either lands whole or not at all, and `release`'s read-then-write has nothing outside the transaction
-observing the read before the write commits.
+of the locked unit `DependencyService` opens through `IHubTransactions.begin` and hands over as its `transaction`;
+`release` a read of the standing row followed by its `released_at`/`released_by` update on the same connection, inside
+its own `store.write` transaction. Neither has a partial-write span for a crash to land inside: `declare`'s insert
+either lands whole or not at all, and `release`'s read-then-write has nothing outside the transaction observing the read
+before the write commits.
 
 `DependencyService` (`blizzard/src/blizzard/hub/domain/chunk/dependencies.py`) runs `declare` and `release` under locks
 [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns — which
