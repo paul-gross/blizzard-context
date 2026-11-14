@@ -119,28 +119,42 @@ row would re-fire every tick, and a row without its warning would suppress the w
 (`context_sample_state`), so no status derives from it, no spawn is gated on it, and a lost row costs one point on a
 diagnostic curve the next interval re-samples.
 
+## Execution observations
+
+`ExecutionObserve` (`blizzard/src/blizzard/runner/loop/steps.py`) appends one `execution_observations` row per sample of
+a live lease's current execution, and when the sample raises the no-progress warning enqueues an `event.recorded` fact
+in the same transaction as the row (`record_execution_observation`), the row carrying the progress anchor the warning
+fired on. The exemption is on the **no-window** ground: one transaction, so there is nothing for the sweep to arm. A
+warning buffered without its row would re-fire on the next sample, and a row marked warned without its warning would
+suppress that stall's warning — the single transaction admits neither.
+
+REAP reads the rows as liveness evidence, but only through the lease's current generation and only by the evidence's own
+time, so a lost row costs at most one minute of renewal the next sample re-supplies. No derived cross-fact invariant is
+introduced, so no invariant-checker assertion is owed.
+
 ## Retention pruning
 
-`Retention` (`blizzard/src/blizzard/runner/loop/steps.py`) runs four prunes, one for each of the append-only lanes named
-below plus the worker-stdout file sweep, on a one-hour floor rather than every tick: `prune_outbound` deletes an acked
+`Retention` (`blizzard/src/blizzard/runner/loop/steps.py`) runs one prune for each of the append-only lanes named below
+plus the worker-stdout file sweep, on a one-hour floor rather than every tick: `prune_outbound` deletes an acked
 `outbound_buffer` row past its window but only below the lowest still-pending seq, and `prune_heartbeats` /
-`prune_external_usage_samples` each compact their table to every lease's or slug's newest row past a shorter window. The
-last-pass instant lives in memory, on a long-lived holder the loop's composition root builds once, and is recorded once
-every lane has been attempted whatever each one's outcome. A restart forgets it, so the first tick after one runs a full
-pass. Each prune is one `DELETE` statement in its own transaction, so a `kill -9` anywhere around it leaves the table
-exactly as it was before the statement or exactly as it would be after — never a partially-applied delete. That is a
-**no-window** write: there is no second half a crash could separate it from, and so no `bzh:crash-point-registry` entry
-is owed.
+`prune_external_usage_samples` each compact their table to every lease's or slug's newest row past a shorter window, as
+`prune_execution_observations` does to each lease's newest row and its newest warning row. The last-pass instant lives
+in memory, on a long-lived holder the loop's composition root builds once, and is recorded once every lane has been
+attempted whatever each one's outcome. A restart forgets it, so the first tick after one runs a full pass. Each prune is
+one `DELETE` statement in its own transaction, so a `kill -9` anywhere around it leaves the table exactly as it was
+before the statement or exactly as it would be after — never a partially-applied delete. That is a **no-window** write:
+there is no second half a crash could separate it from, and so no `bzh:crash-point-registry` entry is owed.
 
 None of the store prunes can delete a row a live reader still depends on. The outbound prune's pending-floor check keeps
 every row a still-open fact might need, and it also keeps an acked `completion.submitted` or `decision.submitted` row
 whose lease has no closure: declaration admission reads such a row as "the outcome is settled", so a runner restarted
 after the retention window would otherwise reopen an acked-but-unclosed lease to declarations nothing would carry; the
 heartbeat and usage-sample prunes keep each lease's or slug's newest row unconditionally, which is the only row
-`latest_heartbeat` and `last_external_usage_attempt_at` ever read — so a crash losing the retried prune's effect costs
-nothing beyond a few more rows lingering until the next pass, never a wrong answer from either read. `Retention.run`
-also isolates each lane's own prune in its own `try`/`except`, so one lane raising costs that lane's pass, not the other
-three, and it retries at the next floor.
+`latest_heartbeat` and `last_external_usage_attempt_at` ever read; the execution-observation prune keeps each lease's
+newest row and newest warning row — the cadence anchor and the warning dedupe — and drops only evidence far older than
+the liveness window — so a crash losing the retried prune's effect costs nothing beyond a few more rows lingering until
+the next pass, never a wrong answer from either read. `Retention.run` also isolates each lane's own prune in its own
+`try`/`except`, so one lane raising costs that lane's pass, not the others, and it retries at the next floor.
 
 ## The lease mint
 
