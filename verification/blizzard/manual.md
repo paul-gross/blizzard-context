@@ -732,6 +732,44 @@ hosted backend, and a copied credentials file could rotate the shared refresh to
 under `/etc/claude-code` by hand is machine-wide: it also reaches the instance runners' workers on this host, so do it
 only on a host with none, and remove it afterward.
 
+### `blizzard:manual-claude-code-tool-heartbeat`
+
+**Surface.** Whether a real `claude -p --output-format stream-json --verbose` writes `tool_progress` heartbeats while a
+foreground tool runs — the evidence the Claude Code binding's execution observation reads off a worker's stdout. Only
+the real CLI decides whether, how often, and on whose behalf it heartbeats, so no mock tier stands in. The recorded
+streams are the contract corpus under `blizzard/src/blizzard/runner/harness/contracts/claude_code/<version>/`.
+
+**Setup.** Every Claude Code version installed in the environment inside the admitted range (`>=2.1`) — the installed
+binaries sit under `~/.local/share/claude/versions/` — and a login. A disposable cwd under `$BLIZZARD_TMPDIR` (a
+`mktemp -d` directory outside a lease), one per run. The cheapest model (`--model haiku`). Nothing outside the
+disposable cwd is written: no runner, no hub, no store.
+
+**Steps.** Run each from its own disposable cwd, with `--allowedTools Bash Agent`, stdout to a file:
+
+1. Main session, newest version: `claude -p --model haiku --output-format stream-json --verbose` with a prompt telling
+   it to run one foreground `Bash` command, `python3 -c "import time; time.sleep(70)"`, with a 120 s timeout, then reply
+   `ok`.
+2. Subagent, newest version: the same, but the prompt tells it to launch one foreground `Agent` whose subagent runs that
+   command.
+3. Steps 1 and 2 against the oldest installed version. When only one version is installed, record the older-version case
+   as unprobed.
+4. Per stream, record the `tool_progress` events (`tool_name`, `tool_use_id`, `parent_tool_use_id`,
+   `elapsed_time_seconds`, `heartbeat`) and their period, and confirm the stream ends in a `type: result` event.
+5. Scrub each stream — the disposable paths, and the `system/init` event's lists of the operator's own skills, plugins,
+   agents, MCP servers, and slash commands — and commit it as `main_tool_heartbeat.jsonl` or
+   `subagent_tool_heartbeat.jsonl` under its version's corpus directory. Run the corpus tests,
+   `uv run pytest tests/unit/runner/harness/claude_code/test_execution_stream.py`.
+
+**Passes when.** Every probed version's main-session stream carries a heartbeat at least every 30 s while the tool runs,
+and its result last. The subagent finding is recorded as observed: whose `tool_name` heartbeats, and whether the
+parent's stream stays written for the subagent's whole run. `docs/deployment/worker-spawn.md` §Execution evidence states
+the coverage by version and for subagents exactly as measured. The oldest probed version is the binding's
+`HEARTBEAT_MIN_VERSION` (`claude_code/execution_stream.py`); a version below it is reported `unknown`. The corpus tests
+pass. Walk it again when the admitted range or the installed `claude`'s minor version moves.
+
+**Hazards.** Each run spends a few cents of tokens on the operator's login, and leaves its session transcript under the
+login's `~/.claude/projects/`, keyed by the disposable cwd. Never point it at a runner's worktree or store.
+
 ### `blizzard:manual-rollback-drill`
 
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
