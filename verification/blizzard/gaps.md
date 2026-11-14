@@ -451,6 +451,9 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   carried, or queues behind it and is refused. SQLite's single writer lock serializes the two whatever the row, and
   `tests/component/runner/test_declaration_admission_races.py` runs a second thread against a held capture unit there.
   No tier shows that Postgres queues the second writer on the row and reads the buffered submission once it commits.
+- **The execution observations table.** The revision creating `execution_observations`, whose downgrade drops it, has
+  not been hand-run under `blizzard:manual-postgres-runner-migrations`: its colocated test walks it forward and back on
+  SQLite only, and it creates one table of portable column types and writes no data.
 - **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. No run has carried an empty
   Postgres store from the baseline to head, so a revision above the baseline has run on Postgres only where a bullet
   above says so.
