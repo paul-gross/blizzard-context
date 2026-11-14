@@ -178,7 +178,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   Edit, Replace, Retire, or Enable and must show the `blizzard hub …` command, and the list must not offer New. At every
   width the detail, the command, and the list must stay within their own width — a long record name wraps rather than
   widening them — with no page error. Which layout a width gets is decided by `configActions`, which `web:unit-test`
-  covers. The phone is read-only, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  covers. The phone is read-only, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`). It also mounts the secret
+  form with a multi-line PEM as its value: at 1280px, 390px, and 320px the value field must be a masked multi-line
+  control that keeps the value's line breaks, with no page error.
 - `admin-shell.shell-sweep.spec.ts` covers Admin → Projects: the admin shell's strip is the shorter, cyan-active sub
   strip with its counts in `--snow` — Changes counted by the change log's `total` — and the projects list and the opened
   project sit in two panels with a 6px gap. On All at 1280px the first project opens beside the list; at 390px the page

@@ -620,6 +620,13 @@ enforced, DDL is transactional, and identifiers stop at 63 characters.
 Standing in for those: the revision's colocated migration test, `blizzard:store-contract`, and the credential
 invariants' component tests, all on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to.
 
+The revision admitting GitHub App installation credentials changes no table. Its downgrade reads the credentials and
+refuses, naming each one and before any write, while a credential bound to `github.app-installation` exists. Only its
+colocated migration test, on SQLite, runs that read. No tier runs it on Postgres. The hand run that stands in is
+`blizzard:manual-postgres-migrations`: take a Postgres store to head, write an App credential through `ConfigAuthoring`,
+and confirm the downgrade is refused naming it; then retire and remove the credential, downgrade to base, and upgrade to
+head again.
+
 ## Errand marks under Postgres
 
 Every tier runs the revision adding the errand marks on SQLite only. It adds nullable `cadence_id` and `chore_id` to
