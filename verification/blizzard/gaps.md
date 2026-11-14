@@ -607,8 +607,8 @@ enforced, DDL is transactional, and identifiers stop at 63 characters.
   `blizzard:manual-postgres-invariants`, steps 1–2, then ran: `GET /api/admin/invariants` answered `200` with no
   violation, and after one tenant's `credentials.authority` was rewritten by SQL it answered `200` with
   `hub:credential-authority-derived` naming that tenant and credential.
-- **What no tier repeats.** No CI tier runs that pass, and no door writes a credential or a referrer's `credential_id`
-  yet, so the credential checks have read only rows a script or SQL wrote.
+- **What no tier repeats.** No CI tier runs that pass, and it wrote its rows by script and SQL, so the credential checks
+  have not read a credential or a referrer's `credential_id` written through the credential routes under Postgres.
 
 Standing in for a tier: the revision's colocated migration test, `blizzard:store-contract`, and the credential
 invariants' component tests, all on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to.
