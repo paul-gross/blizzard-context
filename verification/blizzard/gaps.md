@@ -607,10 +607,13 @@ enforced, DDL is transactional, and identifiers stop at 63 characters.
   `blizzard:manual-postgres-invariants`, steps 1–2, then ran: `GET /api/admin/invariants` answered `200` with no
   violation, and after one tenant's `credentials.authority` was rewritten by SQL it answered `200` with
   `hub:credential-authority-derived` naming that tenant and credential.
-- **What no tier repeats.** No CI tier runs that pass, and it wrote its rows by script and SQL, so the credential checks
-  have not read a credential or a referrer's `credential_id` written through the credential routes under Postgres.
+- **What `blizzard:rehearsal` now covers.** Its Postgres leg, on every `master` push, migrates a supported release's
+  store through the credential revisions, including the carry-over, and reads the journey's repository and work source
+  and the credential each names through the routes, then ingests and lands with the carried-over credential.
+- **What no tier repeats.** No CI tier runs the invariant pass under Postgres, and none writes a credential, or a
+  referrer's `credential_id`, through the credential routes there.
 
-Standing in for a tier: the revision's colocated migration test, `blizzard:store-contract`, and the credential
+Standing in for those: the revision's colocated migration test, `blizzard:store-contract`, and the credential
 invariants' component tests, all on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to.
 
 ## Errand marks under Postgres

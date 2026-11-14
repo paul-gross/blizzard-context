@@ -29,6 +29,11 @@ each running the hub store on SQLite and on Postgres; the runner store is SQLite
   windowed. With a page limit of one it requires at least two pages, checks each cursor follows the preceding page and
   the last is null, and checks the returned rows match the pages. Each unfiltered page's policy is null; each windowed
   page's policy is an object carrying `window_seconds`, `floor`, and `done_since`.
+- The forge authenticates only registered tokens: the fixture secret's value, registered as classic before seeding, and
+  a token of the rehearsal's own for filing issues. After the hub upgrade, the journey's repository and work source,
+  created on the baseline with a secret name only, each name a `github.token` credential, read through
+  `GET /api/repositories/{slug}`, `GET /api/work-sources/{slug}` and `GET /api/credentials/{slug}`. Every later ingest
+  and landing then proves the hub sends the token entered at the baseline, with none re-entered.
 - The baseline runner host, untouched, is admitted by the candidate hub's handshake, lands a fresh chunk, and finishes
   the chunk it left delivering — read back as landed through the hub's API.
 - The release's installed client classifies terminal, not-ready, dependency, incompatible, conflict and paused claim
