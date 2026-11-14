@@ -281,9 +281,9 @@ replacement. A value that nothing can read back needs no read permission to guar
 the store's, never the cipher's.
 
 **Detect.** A `SecretValue` reaching a controller, a serializer, or a logger; an `ISecretReader` injected anywhere but
-an object the composition root builds to call an external system — which reveals a value per use
-(`bzh:config-read-on-use`), never once at start; a secret's view, change-row diff, or apply outcome with a value or
-ciphertext field; a value taken from a command-line argument.
+an object the composition root builds to call an external system — for a forge, only the forge authorization boundary
+under `hub/forge/internal/` — which reveals a value per use (`bzh:config-read-on-use`), never once at start; a secret's
+view, change-row diff, or apply outcome with a value or ciphertext field; a value taken from a command-line argument.
 
 **Do.** A secret's view carries its name, revision, who replaced it and when, and the records that reference it. A
 replace appends a change row with no diff. The CLI reads a value from stdin.
@@ -315,10 +315,11 @@ tracing settings, and the hub secret key — are read at start and changed by a 
 - A decrypted secret value cached on its own rather than inside a built object.
 
 **Do.** A built object — an authenticated client, a work-source adapter, a resolver — is kept under
-`(kind, key, revision, secret_name, secret_revision)`, `key` being the record's own key; before handing one out, the
-cache reads the current revisions in one indexed read, reuses the entry on a match, and otherwise builds a new object
-and closes the one it replaces. Each read is an indexed single-row read or a read of the active set
-(`bzh:live-set-read`, [../read-cost.md](../read-cost.md)).
+`(kind, key, revision, credential_id, credential_revision, secret_name, secret_revision)`, `key` being the record's own
+key, and the secret being the credential's for a record naming one; before handing one out, the cache reads the current
+revisions in one indexed read, reuses the entry on a match, and otherwise builds a new object and closes the one it
+replaces. Each read is an indexed single-row read or a read of the active set (`bzh:live-set-read`,
+[../read-cost.md](../read-cost.md)).
 
 **Don't.** A work-source registry built as a dict in the composition root — an edit to a source reaches nothing until
 the hub restarts, and a second hub process answers from a different dict.
