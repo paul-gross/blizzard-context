@@ -230,19 +230,20 @@ inserting the scope's `tenants` row where every other scoped write locks it, so 
 row just inserted. No window: a crash ahead of the commit loses the tenant and everything minted into it together, and
 the in-memory open-tenant set is refreshed only after the commit.
 
-## Tenant settings: seed entries, edit, and apply
+## Hub-wide settings: seed entries, edit, and apply
 
-Tenant settings are one configured record, with each write and its `config_changes` row committed together
-(`bzh:configured-record`, [`../system-shape/configuration.md`](../system-shape/configuration.md)). Their seed entries,
-edits, and declarative apply take the no-window ground:
+Hub-wide settings are a singleton separate from tenant settings (`bzh:configured-record`,
+[`../system-shape/configuration.md`](../system-shape/configuration.md)). `HubSettingsStore` in
+`blizzard/src/blizzard/hub/store/internal/hub_settings_store.py` commits each changed write with its revision and
+`hub_setting_changes` audit row. Seed entries, edits, and declarative apply take the no-window ground:
 
-- **Seed entries.** The settings seed and its change join tenant creation's identity unit above. A crash before commit
-  loses the settings and their seed entries with the tenant and the rest of its founding writes.
+- **Seed entries.** Each stated file key is seeded in its own transaction, with its revision and audit row. A crash
+  loses that key's whole write or commits it whole; the next boot seeds any missing keys without overwriting existing
+  entries. The seed as a whole can therefore be partially complete.
 - **Edit.** A settings edit and its change row share one transaction, including the revision compare-and-set. A crash
   before commit leaves neither the edit nor its change durable.
-- **Apply.** A settings write and its change join the whole declarative apply's transaction (`bzh:config-apply`). A
-  crash before commit loses all of that apply's writes together; an apply joined to tenant creation shares the founding
-  unit instead.
+- **Apply.** A hub settings document apply writes its changes in one transaction; a dry run rolls it back. A crash
+  before commit loses all of that apply's writes together.
 
 None has a partial-commit window to arm, so these writes add no crash point. The transaction boundary is the exemption,
 not a claim that a kill-9 sweep exercises it.

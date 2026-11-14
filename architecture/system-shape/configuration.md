@@ -285,8 +285,8 @@ is used, and lives only inside the object built from it. A value is never blank:
 **Why.** Every surface that can return or record a value is a place it leaks from and a copy that survives its
 replacement. A value that nothing can read back needs no read permission to guard and leaves nothing behind to scrub.
 
-**Scope.** A secret belongs to one tenant, like every configured record, and its name is unique within that tenant
-(`bzh:tenant-scoped-uniqueness`). The hub's one secret key seals every tenant's values, each against its own
+**Scope.** A secret belongs to one tenant, like every tenant configured record, and its name is unique within that
+tenant (`bzh:tenant-scoped-uniqueness`). The hub's one secret key seals every tenant's values, each against its own
 `(name, revision)` (`blizzard/src/blizzard/foundation/secrets/internal/aes_gcm.py`); the tenant boundary on a value is
 the store's, never the cipher's.
 
