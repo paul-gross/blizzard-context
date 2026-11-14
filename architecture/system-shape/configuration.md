@@ -375,5 +375,5 @@ the change that brings it under the rule:
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
   its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
   than refusing it.
-- **A credential has no door.** It is a configured record with its verbs on `ConfigAuthoring`, its store, and its change
-  rows, but no route or CLI noun creates, edits, retires, or enables one yet, and no document carries it.
+- **No document carries a credential.** Its routes and its `blizzard hub credential` noun create, edit, retire, and
+  enable one, but the configuration document neither exports nor applies it.
