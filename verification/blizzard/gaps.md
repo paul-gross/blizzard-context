@@ -624,8 +624,8 @@ The revision admitting GitHub App installation credentials changes no table. Its
 refuses, naming each one and before any write, while a credential bound to `github.app-installation` exists. Only its
 colocated migration test, on SQLite, runs that read. No tier runs it on Postgres. The hand run that stands in is
 `blizzard:manual-postgres-migrations`: take a Postgres store to head, write an App credential through `ConfigAuthoring`,
-and confirm the downgrade is refused naming it; then retire and remove the credential, downgrade to base, and upgrade to
-head again.
+and confirm the downgrade is refused naming it; then remove the credential by the direct store edit the refusal names,
+downgrade to base, and upgrade to head again.
 
 ## Errand marks under Postgres
 
