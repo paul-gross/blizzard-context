@@ -28,6 +28,9 @@ evidence, and re-run it over the roster whenever a swept surface moves, since no
 Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is excluded from its project's default
 `ng test` run via `web/angular.json`'s per-project `test.exclude`, because jsdom cannot run it. The roster:
 
+- `app-boot.shell-sweep.spec.ts` covers the hub's initial shell at 390px and 320px: while identity is pending,
+  non-interactive navigation reserves the same bottom bar box as the settled shell, without horizontal overflow.
+
 - `app-nav-menu.shell-sweep.spec.ts` and `app-header.shell-sweep.spec.ts` cover the shared header shells — `hub`'s
   `BoardHeader` plus `AppNavMenu`, and `runner`'s `AppHeader`. At widths 1400px down to 320px, straddling every declared
   header breakpoint, and the one content-dependent width each header carries — on the runner, usernames from authless to
@@ -244,8 +247,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   that rule's `background` declaration. `FleetRunDelta`, at 390px, must stack its two finding-set blocks with distinct
   `top`s, and, within the first set, stack its added/observed/gone groups in that order with no overlap and no
   horizontal overflow of the delta itself; proven able to fail by forcing `run-delta.css`'s `.rd-groups`
-  `flex-direction` to `row`. Gardening sits in the hub's mobile bottom tab bar, so the narrow width binds
-  (`bzh:narrow-viewport-tier-rule`).
+  `flex-direction` to `row`. It also mounts populated proposal Markdown and finding Note panels at 1800px, 390px, and
+  320px, asserting each reading box fills its available width up to 1200px without horizontal overflow. Gardening sits
+  in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `gardening-proposals-page.shell-sweep.spec.ts` covers the garden proposal docket container's `.gp-layout`
   list-beside-panel split — its `fleet-kit-master-detail` host: the list and panel sit side by side at 1280px; at 740px,
   700px, 390px, and 320px the bare route shows only the docket, while a selected route shows only the detail and a
@@ -289,8 +293,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   clear of the step and flush right with the cost; a multi-prerequisite count stays unclipped at 320px; and a real
   pointer reaches the PR link and the fold.
 - `chunk-card-tone.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s and `ChunkListRow`'s status colour with the
-  design tokens loaded: in every `Tone`, the left edge and the id must resolve to exactly the colour `toneColor` names
-  for the view's tone, and a selected card's or row's edge must resolve to the selection cyan.
+  design tokens loaded: in every `Tone`, the left edge resolves to `toneColor`, card ids stay gold, list-row ids retain
+  their tone, and a selected card's or row's edge resolves to the selection cyan.
 - `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out at 800px and at
   390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding, bottom hairline, left edge and
   `--surface-selected` background, while `bare` draws no padding, border or background selected or hovered, and a flex
