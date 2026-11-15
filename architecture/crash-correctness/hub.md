@@ -236,6 +236,24 @@ inserting the scope's `tenants` row where every other scoped write locks it, so 
 row just inserted. No window: a crash ahead of the commit loses the tenant and everything minted into it together, and
 the in-memory open-tenant set is refreshed only after the commit.
 
+## Hub-wide settings: seed entries, edit, and apply
+
+Hub-wide settings are a singleton separate from tenant settings (`bzh:configured-record`,
+[`../system-shape/configuration.md`](../system-shape/configuration.md)). `HubSettingsStore` in
+`blizzard/src/blizzard/hub/store/internal/hub_settings_store.py` commits each changed write with its revision and
+`hub_setting_changes` audit row. Seed entries, edits, and declarative apply take the no-window ground:
+
+- **Seed entries.** Each stated file key is seeded in its own transaction, with its revision and audit row. A crash
+  loses that key's whole write or commits it whole; the next boot seeds any missing keys without overwriting existing
+  entries. The seed as a whole can therefore be partially complete.
+- **Edit.** A settings edit and its change row share one transaction, including the revision compare-and-set. A crash
+  before commit leaves neither the edit nor its change durable.
+- **Apply.** A hub settings document apply writes its changes in one transaction; a dry run rolls it back. A crash
+  before commit loses all of that apply's writes together.
+
+None has a partial-commit window to arm, so these writes add no crash point. The transaction boundary is the exemption,
+not a claim that a kill-9 sweep exercises it.
+
 ## Invitation acceptance, one identity unit of work
 
 `AuthService.accept_invitation` (`blizzard/src/blizzard/hub/auth/service.py`) resolves or creates the person, grants the
