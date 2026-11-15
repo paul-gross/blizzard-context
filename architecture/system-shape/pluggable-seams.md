@@ -16,10 +16,11 @@ in the seam's package imports the loop that consumes it. House each adapter by t
 - When the harness binary's major version needs a separate implementation, that binding is a package of its own beside
   the package its harness id names, held to the same isolation, with a declaration of its own — `harness/opencode_v2/`
   binds OpenCode 2. Configuration still selects the harness; the binary's version selects among the harness id's
-  declarations, which the catalog lists together, the first the default. `harness/binding_selection.py` runs the
-  configured binary's `--version` once as a runner is composed, names no adapter, and chooses the declaration whose
-  admitted range holds it, else the first, whose health then refuses the version. The choice is threaded to everything
-  composing that runner — publish, registry, health, runtime init's scaffold — and never swapped while it runs. No walk
+  declarations, which the catalog lists together, the first the default. `harness/binding_selection.py` observes the
+  configured binary's version, names no adapter, and chooses the declaration whose admitted range holds it, else the
+  first, whose health then refuses the version. Composition assembles a harness set around that selection. Its binding
+  remains stable for the set and its retained invocations, including terminal work, even if a replacement set becomes
+  current. Production composes a set at startup; replacement is an internal seam, not live configuration. No walk
   defaults the selection; a caller composing no runner names `first_bindings()` itself.
 - An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
   composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
