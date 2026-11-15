@@ -8,8 +8,11 @@ What bounds one node-step attempt, and how a stale attempt is kept from advancin
 Acquisition decides who holds the chunk; a lease records one attempt at one node — the executing party's own uncontended
 single-writer bookkeeping. A lease is one node-step attempt: at a runner node, one agent session, heartbeat-renewed,
 kept dormant while the chunk parks on a human ([../humans.md](../humans.md) owns parking). The heartbeat that keeps a
-lease alive is a side effect of the worker's tool use — no agent cooperation required. A hub-executed node has no
-session; the hub mints its lease itself, in the same write as the exit it records.
+lease alive is a side effect of the worker's tool use — no agent cooperation required. The harness's own evidence that
+the lease's current execution is running keeps it alive too: evidence from an earlier spawn of the lease, from another
+session, or an answer that cannot tell renews nothing, and once evidence stops the lease ages out as before. Liveness is
+not progress — an execution observed alive but making no progress is warned about once per stall, never stopped for it.
+A hub-executed node has no session; the hub mints its lease itself, in the same write as the exit it records.
 
 Each lease mints a fresh epoch, a counter that only rises across a chunk's attempts; the epoch is the fence every
 state-advancing write is checked against.
