@@ -9,9 +9,8 @@ A **configured record** is a record the hub holds as operator-set configuration 
 hub runs: a forge, a credential, a work source, a repository, a secret, a project, a project source link, a project
 repository link, a scope, a routine, a cadence, an urgency, the tenant's settings, or the hub-wide settings. The rules
 below name the seams and tables that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by
-the names their
-implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt) lists the code
-these rules do not yet hold.
+the names their implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt)
+lists the code these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
