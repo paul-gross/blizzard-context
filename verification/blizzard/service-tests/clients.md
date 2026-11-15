@@ -40,7 +40,9 @@ names.
 Beyond its clients, a `runnerHost` carries:
 
 - `cli(args)` — runs the real `blizzard-runner` on its directory; a non-zero exit is a result, not a throw.
-- `reconfigure`, `clearHubTokens`, `renameRunner` and `removeStore` — edit its stopped directory, never a file by hand.
+- `await reconfigure(overlay)` — writes live per-runner pass/session settings over the running host API; boot edits
+  require a stopped host and restart. Use the pre-start profile for initial authored values.
+- `clearHubTokens`, `renameRunner` and `removeStore` — edit its stopped directory, never a file by hand.
 - The `runnerOtlp` option and `host.otlp` — the option exports its telemetry to a test-owned sink, and `host.otlp` reads
   its spans, sum data points, and log records.
 - `socketApi` — answers its shared routes (`health`, `exportTelemetry`) over its Unix socket as well, so a spec loops

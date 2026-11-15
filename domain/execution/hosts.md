@@ -86,6 +86,9 @@ runner claiming it already knows the one workspace its work will happen in; the 
 - **Agents are not environments.** The count is separate from how many environments a workspace holds: an agent whose
   next project's workspace has no free environment claims only as one frees, and the runner looks to the projects whose
   workspaces have one.
+- **Live binding edits are checked before acceptance.** A binding naming an undeclared workspace, or a subscription
+  outside the host roster, is refused without disturbing the current settings or running work. A valid edit affects
+  future claims, not a held binding.
 - **The workspace is fixed for the chunk's tenure.** Recovery, release, and resume work in the workspace the chunk was
   claimed through; a binding changed later affects only the next claim.
 - **One project, one binding.** A runner that binds the same project twice by name halts before it registers. Two

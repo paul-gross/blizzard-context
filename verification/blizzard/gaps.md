@@ -419,6 +419,13 @@ foreign keys off, so each holds there by construction and stays unverified on Po
 Standing in for a tier: the registration-column revisions' colocated tests, the adoption and name tests on SQLite, and
 the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
 
+## Runner settings under Postgres
+
+Runner settings seed, revision-conditioned writes, history and spawn metadata have SQLite coverage, but no runner tier
+exercises their migrations or concurrent writes on Postgres. In particular, the revision compare-and-set and its history
+transaction have not been proven under Postgres concurrency. The runner Postgres migration and runtime gap below
+applies; no Postgres evidence is implied by the SQLite tests.
+
 ## The runner store under Postgres
 
 The runner store runs on SQLite or Postgres by configuration (`bzh:sql-portable`), and every tier runs it on SQLite, so

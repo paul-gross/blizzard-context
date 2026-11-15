@@ -611,19 +611,24 @@ never both. The in-process identity holder is updated only after the row commits
 from the row at boot. This is a **no-window** write: there is no partner write a crash could separate it from, and a
 lost write is made again by the next registration or matching check.
 
-The row is forgotten (`forget_runner_identity`) by two callers, both through the `runner/hub` identity service, so a
-store names no runner the hub retired and no `[[runner]]` configures. `runner retire` forgets it itself only with the
-host stopped, under `store_write_guard`'s hold, after the hub retire and before the `[[runner]]` removal; with a host
-running it writes nothing to the store. The running host's registration step forgets it (`RetiredRunnerWatch`) for a
-runner it judges not held, and only when the runner's own token is refused as `retired` naming that runner: not held
-alone also describes a runner moved to another host and awaiting adoption. The delete is one transaction and idempotent,
-a **no-window** write. Recovery from a crash:
+The row may be forgotten (`forget_runner_identity`) by two callers through the `runner/hub` identity service, but is
+retained whenever settings or history remain, so those rows never outlive their identity. A retained unconfigured
+identity still trips the wrong-store guard; stop the owned host and use
+`runner store reset <host-directory> --runner <id>` to archive and remove that runner before restarting configured
+siblings. Archive ingest does not reinstate a retired runner. `runner retire` forgets it itself only with the host
+stopped, under `store_write_guard`'s hold, after the hub retire and before the `[[runner]]` removal; with a host running
+it writes nothing to the store. The running host's registration step forgets it (`RetiredRunnerWatch`) for a runner it
+judges not held, and only when the runner's own token is refused as `retired` naming that runner: not held alone also
+describes a runner moved to another host and awaiting adoption. The delete is one transaction and idempotent, a
+**no-window** write. Recovery from a crash:
 
 - After the hub retire with the `[[runner]]` still present: the next `retire` finishes, since the hub retire is
-  idempotent; a host start also finishes, since the hub refuses the built runner's token and the tick forgets the row.
+  idempotent; a host start also finishes, since the hub refuses the built runner's token and the tick forgets the row
+  only if no settings or history require it.
 - After the CLI removed the `[[runner]]` and before the host tick forgot the row: the next start meets a store naming a
   runner no `[[runner]]` configures and halts it as `foreign_store_reason` words it, since a start does not contact the
-  hub. `retire --runner <id>` with the host stopped finishes, resolving the runner from the store's row.
+  hub. `retire --runner <id>` with the host stopped finishes when no settings or history retain the row; otherwise use
+  the archive cleanup above.
 
 The verdict the row is checked against is held only in the process: `IdentityVerdictHolder`
 (`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
@@ -789,3 +794,13 @@ keeps what it had. A failed write exits naming `blizzard hub runner retire <id> 
 runner shows as never connected in `hub runner list`, and retiring it by its id is the recovery either way. The loss is
 one inert registry row: it holds no route and claims nothing, and re-running init adds the runner afresh over the
 already fresh store. No crash point stands in for it.
+
+## Runner settings and launch metadata
+
+Runner settings writes commit their entries, revision compare-and-set and change history in one transaction through
+`blizzard/src/blizzard/runner/store/internal/settings_store.py`; seed writes use the same atomic record machinery. A
+crash commits the whole change or none, and a repeated seed does not overwrite a stored entry or unset. These are
+**no-window** writes, not an armed crash proof. Spawn revision and transcript root ride the `record_spawn` transaction
+with the spawn fact, so a crash cannot publish a spawn with only part of its launch metadata. Old spawn rows may lack
+those fields and use the existing fallback. Identity is retained while settings or history remain; the per-runner reset
+above copies the identity and scoped settings/history into the archive before removing live rows.

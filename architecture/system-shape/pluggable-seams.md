@@ -20,8 +20,9 @@ in the seam's package imports the loop that consumes it. House each adapter by t
   configured binary's version, names no adapter, and chooses the declaration whose admitted range holds it, else the
   first, whose health then refuses the version. Composition assembles a harness set around that selection. Its binding
   remains stable for the set and its retained invocations, including terminal work, even if a replacement set becomes
-  current. Production composes a set at startup; replacement is an internal seam, not live configuration. No walk
-  defaults the selection; a caller composing no runner names `first_bindings()` itself.
+  current. Production composes a set at startup and replaces it when live runner settings require a rebuild; a failed
+  rebuild keeps the last good set and retries on a later pass. Running invocations retain their original set until they
+  finish. No walk defaults the selection; a caller composing no runner names `first_bindings()` itself.
 - An adapter of one module stays a module in the seam's `internal/` package, imported only by the seam's factory and the
   composition roots; a helper several adapters share sits in a module of its own beside them — the shape of
   `hub/work_sources/internal/` and `hub/auth/oauth/internal/`.
