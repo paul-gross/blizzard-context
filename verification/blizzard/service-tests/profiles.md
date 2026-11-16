@@ -49,7 +49,8 @@ A harness a spec runs on is enabled through `test.use({ runnerConfig })`, as `ru
 `${mockBin}/mock-opencode`, never in a `runner.toml`, which binds every spec in its folder. The host always holds a
 synthetic OpenCode login at its private data home, as it holds a Claude one. A spec that moves a runner between OpenCode
 releases names `${opencode}` as `runner[].opencode.binary` in place of `${mockBin}/mock-opencode`: a host-owned path
-holding the `runnerOpencode` release when the host is built — `1`, the default, for OpenCode 1, or a version the
+holding the `runnerOpencode` release when the host is built — set this `RunnerHostOptions` field through
+`runnerHosts.create({ runnerOpencode })`, not `test.use`. It is `1` by default for OpenCode 1, or a version the
 engine-backed OpenCode 2 mock reports — which `runnerHost.installOpencode()` replaces in place, as an operator's upgrade
 does. A published harness bundle is given with the `runnerBundle` option, whose files the fixture writes into a
 test-owned directory before the host boots and which a profile names as `${bundle}`, as in

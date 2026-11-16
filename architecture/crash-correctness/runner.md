@@ -83,26 +83,26 @@ full, a token cost rather than a safety break.
 
 ## The escalation and takeover closures
 
-`Pull._reconcile_escalations` (`blizzard/src/blizzard/runner/loop/steps.py`) appends one `escalation_closures` row per
-open local escalation whose chunk the hub reports `stopped`, durable state written from a loop step ahead of
-`pull.before-flush`. `Pull._reconcile_takeovers` (same module) appends one `takeover_ends` row per open takeover whose
-chunk the hub reports terminal, likewise written from a loop step ahead of `pull.before-flush`. Each of the two closure
-writes is a lone insert in its own transaction, with nothing to pair it with atomically.
+`OwnershipReconcile._reconcile_escalations` (`blizzard/src/blizzard/runner/lifecycle/ownership_reconcile.py`) appends
+one `escalation_closures` row per open local escalation superseded by the hub's chunk view, durable state written from
+the PULL step ahead of `pull.before-flush`. `OwnershipReconcile._reconcile_takeovers` (same module) appends one
+`takeover_ends` row per open takeover whose chunk the hub reports terminal, likewise ahead of `pull.before-flush`. Each
+of the two closure writes is a lone insert in its own transaction, with nothing to pair it with atomically.
 
-A crash before either closure commits leaves the escalation or takeover open, and the next tick re-reads the same
-still-stopped or still-terminal chunk and writes the same mark; a crash after it commits is already at the intended
-state. Nothing gates a spawn or a claim on `escalation_closures` — it suppresses a display read (`open_escalations`) and
-the `runner requeue` guard, never work admission — so a lost or duplicated row costs one tick of a stale panel row. The
-escalation closure is also a purely local mirror of a fact the hub already holds: the hub's own `chunk.stopped` fact is
-what the two sides agree on, and the row only spares the runner re-deriving it.
+A crash before either closure commits leaves the escalation or takeover open, and the next tick re-reads the chunk and
+writes the mark if the view still supersedes it; a crash after it commits is already at the intended state. An open
+escalation gates escalation-only lease mints and can hold node entry as well as the `runner requeue` guard; a delayed
+closure can therefore delay admission until reconciliation succeeds, not merely leave a stale panel row. The closure
+mirrors the hub view's supersession, whose conditions are owned by
+[`../../domain/humans/escalation.md`](../../domain/humans/escalation.md) §Supersession, not only `chunk.stopped`.
 
 The takeover closure rests on narrower ground, because its correctness matters rather than its freshness: the
 open-takeover fact gates REAP's and ADVANCE's per-tick skip of a taken-over chunk, and a resumed session's worker-verb
 reach through the worker-authorization resolver. `record_takeover_end` is the same call the CLI's end-PATCH already
 makes on the ordinary hand-back path, so the loop's closure is a second caller of an existing idempotent write. A
-closure row admitted twice is equally harmless — `escalation_closures` reads through an `Unsuperseded` existence test
-and `_OPEN_TAKEOVER` through an `Unclosed` plain `NOT IN`, so N marks read as one — which is also why the loop and the
-CLI's end-PATCH racing to close one takeover is safe rather than conflicting.
+closure row admitted twice is equally harmless — an escalation is unresolved only absent a same-chunk closure with a
+strictly later `closed_at`, and `_OPEN_TAKEOVER` uses an `Unclosed` plain `NOT IN`, so repeated qualifying marks read as
+one — which is also why the loop and the CLI's end-PATCH racing to close one takeover is safe rather than conflicting.
 
 Neither closure table owes the invariant checker anything: supersession is an ordering comparison and
 closure-by-`NOT IN` an existence comparison, both over append-only rows, not derived cross-fact invariants.
@@ -355,8 +355,8 @@ never fires; the ordinary exhausted-retries path runs through the shared escalat
 committing it with the `ESCALATED` closure in one transaction — composing no takeover, the same "escalated before any
 worker session existed" shape any other never-spawned lease reaches. A later re-entry of the same node — this same
 `enter_node` call replayed, or a genuine post-recovery retry — costs nothing beyond `open_escalation_for_chunk`'s own
-read: an already-open escalation short-circuits `_escalate_unresolvable_resume_owner` before it mints again, and
-supersession (a later lease minted for the chunk) is the only way that escalation ever closes.
+read: an already-open escalation short-circuits `_escalate_unresolvable_resume_owner` before it mints again, and either
+a later-epoch lease or a qualifying escalation closure supersedes the open escalation.
 
 The synchronous, no-crash path closes this same mint through `escalate_owner_unresolvable` directly rather than through
 `fail`, so it takes that method's own detached/paused precedence (mirroring `fail`'s) instead: a chunk the hub no longer

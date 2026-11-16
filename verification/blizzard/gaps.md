@@ -342,12 +342,13 @@ hermetic, network-free CI tier's reach.
 
 ## Projects' migration and writes under Postgres
 
-The projects mechanisms below have the same exposure as tenancy's: every tier runs on SQLite, with one writer lock and
-foreign keys off, so each holds there by construction and stays unverified on Postgres.
+The project mechanisms below have SQLite coverage, where the writer lock serializes writes and foreign keys are off.
+`blizzard:rehearsal` also runs a project journey on Postgres, but does not establish the concurrency and other specific
+behaviors below.
 
 - **The project keys.** The `fk_<table>_projects` foreign keys, `fk_questions_projects` and `fk_decisions_projects`
-  among them, have never been enforced against a written row, since every tier leaves foreign keys off. Nor has the
-  tenant drain run over rows those keys bind.
+  among them, include keys exercised by the Postgres rehearsal for its project journey. That journey does not establish
+  every key or exercise the tenant drain over rows those keys bind.
 - **The slug move.** A project's slug move (`update_project`, `src/blizzard/hub/store/internal/project_store.py`) runs
   in one transaction. It reads for a current holder of the new slug, deletes the new slug's former-slug row, updates the
   project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two
@@ -360,10 +361,10 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   `src/blizzard/hub/domain/projects/links.py`), so the links an ingest read stand until it commits. That an unlink
   racing an ingest under READ COMMITTED waits on the key rather than committing between the ingest's link read and its
   mint is unverified; SQLite's writer lock serializes the two whatever the key.
-- **A landed repository row's keys.** `delivery_repo_landed`'s foreign keys to its chunk and its tenant have never been
-  enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
-  landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
-  (`src/blizzard/hub/store/internal/invariants.py`) alone, and its behavior under enforced keys is unverified.
+- **A landed repository row's keys.** `delivery_repo_landed`'s `repository_id` carries neither a unique key nor a
+  foreign key to the repository record: that a landing names a repository its project linked is held by the invariant
+  checker's `hub:landed-repository-linked` (`src/blizzard/hub/store/internal/invariants.py`) alone, and its behavior
+  under enforced keys is unverified.
 - **A chunk's captured targets.** A chunk's repository targets are inserted once under its row lock — at its claim, in
   the route's own transaction, and at a delivery's submission (`ChunkTargetsStore.capture`,
   `src/blizzard/hub/store/internal/chunk_targets_store.py`) — reading the held rows and inserting only the missing ones.
@@ -386,15 +387,15 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   pairs. The verbs themselves run on SQLite only, where the writer lock serializes the two whatever the key.
 
 Standing in for a tier: the slug-move and link tests on SQLite, and the portable SQL `bzh:sql-portable` holds each
-statement to. The gap closes as the tenancy one above does.
+statement to, and the Postgres rehearsal for its exercised journey. The concurrent cases need Postgres-backed coverage.
 
 ## Hosts under Postgres
 
-The hosts mechanisms below have the same exposure as projects': every tier runs on SQLite, with one writer lock and
-foreign keys off, so each holds there by construction and stays unverified on Postgres.
+The host mechanisms below have SQLite coverage, where the writer lock serializes writes and foreign keys are off. The
+Postgres rehearsal exercises a host journey but does not establish the concurrency and other specific behaviors below.
 
-- **The host key.** The `fk_runner_registrations_hosts` key has never been enforced against a written row, nor has the
-  tenant drain run over rows it binds.
+- **The host key.** The Postgres rehearsal exercises host registration, but not the tenant drain over rows bound by
+  `fk_runner_registrations_hosts`.
 - **The host fact lane's upserts.** `host_high_water`, `host_external_usage`, and `host_external_usage_misses` are each
   tenant-keyed and carry no key on `host_id`; the upserts that refresh a `(host_id, slug)` row in place have only run
   under SQLite's writer lock.
@@ -417,7 +418,8 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   exactly one host is unverified; SQLite's writer lock serializes them.
 
 Standing in for a tier: the registration-column revisions' colocated tests, the adoption and name tests on SQLite, and
-the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
+the portable SQL `bzh:sql-portable` holds each statement to, and the Postgres rehearsal for its exercised journey. The
+concurrent cases need Postgres-backed coverage.
 
 ## Runner settings under Postgres
 
@@ -468,12 +470,12 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
 
 Standing in for a tier: `blizzard:store-baseline` for the baseline, the colocated migration tests of the revisions above
 it and the seam's component tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand
-run is not repeatable from a durable script, since the matrix carries the method and no driver. The gap closes as the
-tenancy one above does.
+run is not repeatable from a durable script, since the matrix carries the method and no driver. The remaining
+runner-specific cases need Postgres-backed coverage.
 
 ## Hub actions' columns under Postgres
 
-Every tier runs the two hub action revisions on SQLite only: the first adds `graph_nodes.action` and
+The colocated tests run the two hub action revisions on SQLite: the first adds `graph_nodes.action` and
 `graph_nodes.action_args`, and the second adds `graph_nodes.legacy_run` and carries each stored hub row with no action
 onto one.
 
@@ -489,9 +491,9 @@ and the portable SQL `bzh:sql-portable` holds each statement to.
 
 ## The flow tables under Postgres
 
-Every tier runs the revision creating the flow tables on SQLite only. It creates `flows`, `flow_submissions`,
-`flow_submission_flows`, `flow_submission_closures`, `hub_turns`, and `flow_facts`, with their indexes, and writes no
-row.
+The colocated migration test runs the revision creating the flow tables on SQLite. It creates `flows`,
+`flow_submissions`, `flow_submission_flows`, `flow_submission_closures`, `hub_turns`, and `flow_facts`, with their
+indexes, and writes no row.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head at the revision, returned to base leaving only `alembic_version`, and reached head again. It then
@@ -505,8 +507,8 @@ portable SQL `bzh:sql-portable` holds each statement to.
 
 ## The hub-execution slot's drop under Postgres
 
-Every tier runs the revision dropping the hub-execution slot table on SQLite only. It drops the table, its tenant index
-and its rows; its downgrade recreates the table empty, with its index and both foreign keys.
+The colocated migration test runs the revision dropping the hub-execution slot table on SQLite. It drops the table, its
+tenant index and its rows; its downgrade recreates the table empty, with its index and both foreign keys.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head at the revision with no slot table, stepped down to the revision's parent leaving the table empty
@@ -552,11 +554,11 @@ downgrade → upgrade. No CI tier repeats those Postgres runs; the colocated mig
 
 ## Landing policies' columns under Postgres
 
-Every tier runs the revision adding landing policies on SQLite only. It adds `repositories.landing_policy` and
-`hub_node_poll.kind`, each added nullable with its server default, filled in bounded pages, and tightened to `NOT NULL`
-keeping that default. It adds nullable `repositories.park_timeout_hours` and `hub_node_poll.last_polled_at`, and creates
-`project_repository_positions` and `flow_submission_terms` empty. On SQLite each tightening is a `batch_alter_table`
-rebuild; on Postgres it is a native `ALTER`.
+The colocated migration test runs the revision adding landing policies on SQLite. It adds `repositories.landing_policy`
+and `hub_node_poll.kind`, each added nullable with its server default, filled in bounded pages, and tightened to
+`NOT NULL` keeping that default. It adds nullable `repositories.park_timeout_hours` and `hub_node_poll.last_polled_at`,
+and creates `project_repository_positions` and `flow_submission_terms` empty. On SQLite each tightening is a
+`batch_alter_table` rebuild; on Postgres it is a native `ALTER`.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head, returned to base leaving only `alembic_version`, and reached head again. It then stepped down to
@@ -573,8 +575,8 @@ portable SQL `bzh:sql-portable` holds each statement to.
 
 ## Routines' slug under Postgres
 
-Every tier runs the revision adding a routine's slug on SQLite only. It adds `routines.slug` nullable with a server
-default, fills it from `name` in bounded pages, and tightens it to `NOT NULL` keeping that default. It replaces
+The colocated migration test runs the revision adding a routine's slug on SQLite. It adds `routines.slug` nullable with
+a server default, fills it from `name` in bounded pages, and tightens it to `NOT NULL` keeping that default. It replaces
 `uq_routines_project_name` with `uq_routines_project_slug` and rebuilds the tenant-wide handle index on the slug. On
 SQLite the tightening and the constraint swap are one `batch_alter_table` rebuild; on Postgres they are native `ALTER`s.
 
@@ -593,10 +595,10 @@ portable SQL `bzh:sql-portable` holds each statement to.
 
 ## Cadences under Postgres
 
-Every tier runs the revision adding the cadence tables on SQLite only. It creates `cadences`, `cadence_chores`,
-`cadence_chore_scopes`, and `cadence_lifecycle_facts`, each tenant-keyed with its foreign keys and a tenant-led index,
-and backfills nothing. On Postgres, foreign keys are enforced, DDL is transactional, and identifiers stop at 63
-characters.
+The colocated migration test runs the revision adding the cadence tables on SQLite. It creates `cadences`,
+`cadence_chores`, `cadence_chore_scopes`, and `cadence_lifecycle_facts`, each tenant-keyed with its foreign keys and a
+tenant-led index, and backfills nothing. On Postgres, foreign keys are enforced, DDL is transactional, and identifiers
+stop at 63 characters.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head with the four tables and their primary, unique, and foreign-key constraints, returned to base
@@ -607,7 +609,7 @@ characters.
 
 ## Credentials under Postgres
 
-Every tier runs the revision adding the credential tables on SQLite only. It creates `credentials`,
+The colocated migration test runs the revision adding the credential tables on SQLite. It creates `credentials`,
 `credential_former_slugs`, and `credential_lifecycle_facts`, each tenant-keyed with its foreign keys, and adds a
 nullable `credential_id` to `repositories` and `work_sources`, and backfills nothing. On Postgres, foreign keys are
 enforced, DDL is transactional, and identifiers stop at 63 characters.
@@ -636,8 +638,8 @@ downgrade to base, and upgrade to head again.
 
 ## Errand marks under Postgres
 
-Every tier runs the revision adding the errand marks on SQLite only. It adds nullable `cadence_id` and `chore_id` to
-`work_item_runs` with a tenant-led index over its tenant, chore, and scope, and a nullable `linked_at` to
+The colocated migration test runs the revision adding the errand marks on SQLite. It adds nullable `cadence_id` and
+`chore_id` to `work_item_runs` with a tenant-led index over its tenant, chore, and scope, and a nullable `linked_at` to
 `routine_scopes`, and backfills nothing: a run minted by hand and a link made before the stamp both read null. Its
 upgrade is native `ADD COLUMN`s on either backend; its downgrade is a `batch_alter_table` rebuild of each table on
 SQLite and native `ALTER`s on Postgres.
@@ -653,10 +655,10 @@ portable SQL `bzh:sql-portable` holds each statement to.
 
 ## Forge references required under Postgres
 
-Every tier runs the revision that keys repositories and work sources on their forge on SQLite only. It refuses, before
-any write, a record whose `forge_id` is null, names no forge, or names another tenant's forge. It then drops
-`repositories.forge_api_url` and `work_sources.api_base` and `web_base`, tightens both `forge_id` columns to `NOT NULL`
-under a foreign key onto `forges`, and rekeys `uq_repositories_tenant_coordinate` and
+The colocated migration test runs the revision that keys repositories and work sources on their forge on SQLite. It
+refuses, before any write, a record whose `forge_id` is null, names no forge, or names another tenant's forge. It then
+drops `repositories.forge_api_url` and `work_sources.api_base` and `web_base`, tightens both `forge_id` columns to
+`NOT NULL` under a foreign key onto `forges`, and rekeys `uq_repositories_tenant_coordinate` and
 `uq_work_sources_tenant_provider_locator` on the forge. Its downgrade refuses a tenant holding one locator on two
 forges, then refills the address columns from each record's forge and restores the address-keyed constraints. On SQLite
 each table is one `batch_alter_table` rebuild; on Postgres the same batch is native `ALTER`s.

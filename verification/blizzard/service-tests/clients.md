@@ -59,10 +59,11 @@ Beyond its clients, a `runnerHost` carries:
 
 A host reads a branch head in its world's bare origins with `originHead(repo, branch)`, so a spec proves a worker's push
 without running `git`; `originTree`, `originLog` (optionally by path) and `originFile` take that branch, or the sha
-`originHead` answers, and read the pushed tree, history and file text, each `undefined` for a repo, ref or path that is
-not there. The `runnerOnForge` option names forge repositories made before the host is, and `${forgeOrigins}` in
-`runnerConfig` is the directory of the forge's bare repositories, `<owner>/<name>.git` below it, so a host whose
-repository is the forge's own lands what a worker pushes.
+`originHead` answers, and read the pushed tree, history and file text. A missing repo or ref returns `undefined`; a
+missing file path returns `undefined` from `originFile`, but an empty array from `originLog`. The `runnerOnForge` option
+names forge repositories made before the host is, and `${forgeOrigins}` in `runnerConfig` is the directory of the
+forge's bare repositories, `<owner>/<name>.git` below it, so a host whose repository is the forge's own lands what a
+worker pushes.
 
 A fleet test that drives delivery passes its `repository()` result to
 `runnerHosts.create({ runnerRepositories: { [repo.name]: repo.origin! } })` before minting the graph: the host then
