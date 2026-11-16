@@ -162,6 +162,11 @@ are never opened or replaced again; a loader that reads only files a manifest na
 files. The scenario asserts the re-written rows equal the killed pass's rows apart from `exported_at`, and that every
 cursor row names files and a manifest that exist and agree.
 
+A pass whose cursor append loses to a concurrent cursor move likewise leaves its committed files and manifest intact;
+the next pass reads the authoritative cursor and replays from there. The cursor transaction's predecessor check and
+append order are owned by [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md)
+`bzh:store-exclusive-write`.
+
 The events dataset keeps the no-probe claim: it reads derivation markers and drops past its cursor through their
 time-leading indexes, never a corpus it would rescan to find nothing changed.
 
@@ -171,9 +176,9 @@ Its other writes are exempt:
   informational, append-only, and each a single-statement write. A crash before one commits loses only that row: a lost
   failure or recovery row is recorded again on the next state change, and a rejection is recorded again on the next
   start.
-- **Operator reset.** `EgressReset` appends one cursor row, then records its `egress-cursor-reset` event; it holds the
-  sweep's pass lock across the append, so the move is never overwritten by a pass in flight. A crash between the two
-  writes keeps the move and loses only the informational event row; the cursor is a fact, and `status` shows it.
+- **Operator reset.** `EgressReset` appends one cursor row and captures its predecessor atomically, then computes the
+  reported window and records its `egress-cursor-reset` event after commit. A crash between the two writes keeps the
+  move and loses only the informational event row; the cursor is a fact, and `status` shows it.
 - **Anchor and idle rows.** The first pass's anchor row, and an advance that wrote no rows, are each one cursor-row
   append with no partner write. A crash before one commits leaves the cursor where it was, and the next pass derives the
   same row from a fresh read.
@@ -348,10 +353,9 @@ The transaction seam and participation contract are owned by [`../repository-acc
 `bzh:unit-of-work`. There is no partial-write window within this unit to arm; this exemption does not claim a kill-9
 test of the transaction.
 
-`DeleteService.delete` also holds the residual per-tenant lock across that transaction — like the row lock above, a
-guard against a concurrent writer rather than a crash;
-[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt owns who shares it and the race
-it closes.
+The dependency key shared with declare, release, and fold guards the edge releases against concurrent rewrites;
+[`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) owns that exclusion. It is a concurrency
+guard, not a crash guard.
 
 The pairing owes the checker nothing because it is a single-transaction insert-plus-update(s), not a derived cross-fact
 invariant to recompute.
@@ -431,10 +435,10 @@ item and chunk inserts), not a derived cross-fact invariant to recompute.
 `ChunkDependenciesStore.declare`/`.release` (`blizzard/src/blizzard/hub/store/internal/chunk_dependencies_store.py`)
 each write `chunk_dependencies` in one transaction — `declare` a single insert of the fresh edge row, on the connection
 of the locked unit `DependencyService` opens through `IHubTransactions.begin` and hands over as its `transaction`;
-`release` a read of the standing row followed by its `released_at`/`released_by` update on the same connection, inside
-its own `store.write` transaction. Neither has a partial-write span for a crash to land inside: `declare`'s insert
-either lands whole or not at all, and `release`'s read-then-write has nothing outside the transaction observing the read
-before the write commits.
+`release` a read of the standing row followed by its `released_at`/`released_by` update on the same connection, on the
+connection of the locked unit `DependencyService` opens. Neither has a partial-write span for a crash to land inside:
+`declare`'s insert either lands whole or not at all, and `release`'s read-then-write has nothing outside the transaction
+observing the read before the write commits.
 
 `DependencyService` (`blizzard/src/blizzard/hub/domain/chunk/dependencies.py`) runs `declare` and `release` under locks
 [`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) (`bzh:store-exclusive-write`) owns — which

@@ -17,9 +17,15 @@ opposite order. A test-only tenant-open guard allows concurrent writers; the pro
 by the first at the decision lock and checks both complete in canonical order. A separate run checks contention with the
 production tenant guard. Scratch tables on this first database contain only the guard and locking columns.
 
-A second scratch database is migrated to the head revision, so foreign keys are enforced and the production teardown and
-guard are the code under test. Four cases run on it, each reporting `PASS` or `FAIL` and failing the run if any fails:
+The decision-lock cases include disjoint dependency declarations and declare, group, delete, and release pairings in
+both relevant orders. They prove the shared dependency key contends even when chunk rows are disjoint; a production
+tenant-guard run also covers group against release. These lock-set proofs do not execute the domain operations.
 
+A second scratch database is migrated to the head revision, so foreign keys are enforced and the production teardown and
+guard are the code under test. Cases run on it, each reporting `PASS` or `FAIL` and failing the run if any fails:
+
+- **Egress cursor authority**: a pass followed by a reset, and two queued resets, use independent connections. The
+  waiting reset captures the committed predecessor; a stale pass append is refused without moving the cursor.
 - **The closed-tenant check**, in both orders: a write holds its tenant's row while a close waits (the write commits,
   then the close closes), and a close holds it while a write waits (the write refuses `TenantClosed` and leaves no row).
 - **Two closes of the last two open tenants**: exactly one commits and the other refuses `LastTenant`.

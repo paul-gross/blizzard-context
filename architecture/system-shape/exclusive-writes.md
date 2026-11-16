@@ -123,13 +123,16 @@ macro-shape constraint on deployment topology, on what holds once more than one 
 `kill -9` crash-correctness requirement; one hub process already serializes every one of these correctly today. The
 tenant-row lock ahead of the decision's lock changes neither guarantee: on SQLite it already took the writer lock, and
 on Postgres every writer takes the tenant row first and its chunk or keyed rows after, so the order two writers lock in
-never inverts. Dependency **release** needs no row lock for cycle safety: it can only shrink the standing set and can
-never close a cycle. Its ordering against a fold's edge rewrite still depends on the residual per-tenant lock in
-[Known debt](#known-debt). A create whose only race is a duplicate of a tenant-chosen name is no decision under this
-rule: the table's tenant-led primary key or unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one
-insert, and the store maps the losing insert's `IntegrityError` to the named conflict — `SecretStore.create`
-(`hub/store/internal/secret_store.py`) is the pattern. A create that reads state before its insert — a cap, a parent's
-state, a default it mints — stays a decision under this rule, in the keyed-lock form under **Do**.
+never inverts. Dependency declare, group, delete, and release declare the tenant's fixed `DEPENDENCIES_LOCK` key in
+their unit before reading or changing standing edges. Declare and group serialize the tenant-wide cycle judgment,
+including disjoint chunk sets; release and delete serialize with a fold's edge rewrite so it cannot remint an edge they
+released. Delete and declare also declare their chunk rows, and delete declares its work-item keys, in canonical order.
+Release needs no chunk row for cycle safety: it can only shrink the standing set. A create whose only race is a
+duplicate of a tenant-chosen name is no decision under this rule: the table's tenant-led primary key or unique
+constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's
+`IntegrityError` to the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A
+create that reads state before its insert — a cap, a parent's state, a default it mints — stays a decision under this
+rule, in the keyed-lock form under **Do**.
 
 **Detect.**
 
@@ -197,6 +200,13 @@ runs beside a write taking up the urgency it retires. Create and both reorders t
 the order under it. A decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the default
 graph's first mint declares `graph_name_lock` through `lock_set`. A pointer's key comes from `work_ref_lock`.
 
+The hub-wide egress cursor is a short store-level exception to domain-declared units: `EgressStore` takes the seeded
+`EGRESS_CURSOR` hub lock inside each append or reset transaction, then reads the current dataset cursor. A pass appends
+only if its observed predecessor still matches; a reset captures its actual predecessor under that lock and appends
+unconditionally. Per-dataset `append_order` decides current authority, not `recorded_at`, which remains timestamp
+metadata for reporting. The lock covers only the cursor transaction, not file export. The export sweep itself remains a
+single-process background loop.
+
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, the ceiling's self-engagement, and the
 takeover open each take a no-op `UPDATE` on their own runner's `runner_identity` row before reading their guard on that
@@ -242,23 +252,6 @@ which the draw runs under the lock.
 
 Stated so a reviewer need not re-derive them:
 
-- **The residual per-tenant lock.** One in-process `threading.Lock` per tenant — `cycle_lock`, built with the tenant's
-  stores in `hub/composition.py`'s `build_tenant_stores` — stands where a row lock does not reach; dependencies never
-  cross tenants, so one tenant's lock never waits on another's. Each `import threading` it needs carries this rule's
-  `ast-grep-ignore`. Moving any of its holders onto a store-level row needs a schema migration. Its holders:
-  - `DependencyService.declare` and `GroupService.group` — for the tenant-wide standing-dependency cycle check
-    (`hub:no-standing-dependency-cycle`), which reasons over the tenant's whole graph: two disjoint writers racing on
-    different rows can still together close a cycle neither alone would.
-  - `DeleteService.delete`, for its whole transaction — the deleted chunk's row lock does not reach the other end of an
-    outgoing edge the delete releases, so a concurrent fold of that other chunk, locking only its own survivor and merge
-    ids, could otherwise remint the edge with the deleted chunk as its dependent.
-  - `DependencyService.release` — as its only lock. Without a row lock for cycle safety (Scope above), release is
-    ordered against `group`'s edge rewrite by this lock alone, which keeps a fold from reminting an edge released
-    between the fold's read of the standing set and its write.
-- **The export's pass lock.** `EgressSweep.sweep` and `EgressReset.reset` share one hub-wide in-process lock, built in
-  `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
-  flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
-  single-process background loop.
 - **Running more than one hub process.** No deployment topology stands up a second hub process against one store.
 - **Single-process components outside this rule.** Each is single-process by construction, and this rule governs none of
   them:
