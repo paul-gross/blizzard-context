@@ -433,12 +433,11 @@ applies; no Postgres evidence is implied by the SQLite tests.
 
 The runner store runs on SQLite or Postgres by configuration (`bzh:sql-portable`), and every tier runs it on SQLite, so
 its runner key and counters hold there by construction. `blizzard:store-baseline` builds the runner baseline from an
-empty Postgres store and holds it to `contracts/store/runner.json`; what that proof and the hand runs under
-`blizzard:manual-postgres-runner-migrations` leave unverified:
+empty Postgres store and holds it to `contracts/store/runner.json`; the Postgres evidence and remaining gaps include:
 
 - **The counter allocation.** `insert_outbox_row` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
   lane under READ COMMITTED. Eight threads racing the first allocation of a new runner's lane were issued `1` through
-  `8`, with the counter at `8` and the invariants holding.
+  `8`, with the counter at `8` and the invariants holding in a hand run. No tier repeats that race on Postgres.
 - **The usage-limit floor tables.** The revision creating the empty `subscription_usage_limits`,
   `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables, whose downgrade drops them, has
   not been executed on Postgres; it creates four tables of portable column types and writes no data.
@@ -607,6 +606,11 @@ stop at 63 characters.
   dropped the four tables, and came back up to head. A hosted hub app over that store created a cadence with a chore,
   edited the chore keeping its id, refused a stale `If-Match` with `409`, retired and re-enabled the cadence, refused a
   second cadence of the same slug, and wrote one change row for each write.
+- **What no tier repeats.** No CI tier repeats the Postgres migration and hosted-hub pass, so a later change remains
+  unverified there until the pass is run again.
+
+Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
+portable SQL `bzh:sql-portable` holds each statement to.
 
 ## Credentials under Postgres
 

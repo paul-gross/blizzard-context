@@ -10,8 +10,8 @@ transcript lane is recorded in [`./transcripts.md`](./transcripts.md) instead.
 
 The runner store's `jwt_jti_seen(jti PK, aud, expires_at)` table (`blizzard/src/blizzard/runner/store/schema.py`) keeps
 a hub-signed federation JWT single-use across a runner restart inside the token's 60-second validity window. Its
-check-not-seen, insert, and mint-session sequence is one transaction under the `jti` primary key, so no interleaving
-admits a replay.
+check-and-record is an insert in its own transaction under the `jti` primary key, so no interleaving admits a replay.
+Session minting follows separately, after that transaction commits.
 
 A crash after the jti row commits but before the session is minted loses only the runner-domain session: the row that
 rejects a replay is already durable, so the forced re-bounce through the hub is harmless. The write owes the invariant
@@ -507,12 +507,11 @@ row owes the invariant checker nothing: it is the hub's own answer about the tok
 
 ## The credential-renewal window
 
-`CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on the host tick in
-`runner host` (`HostTick`, `blizzard/src/blizzard/runner/loop/host_tick.py`), first after the host's report and ahead of
-the usage sampling, so a slow vendor endpoint never delays it. It never runs in a runner's tick. Per slug it gates on
-the newest claim's cadence, asks the renewer binding whether a renewal is due, then writes three steps in order: it
-commits a claim through `ExternalUsageStore.claim_credential_renewal`, fires the renewal, and commits the outcome
-through `ExternalUsageStore.record_credential_renewal_outcome`
+`CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on its own periodic driver in
+`runner host`, off the reconciliation tick, so a slow vendor endpoint does not hold that tick. It never runs in a
+runner's tick. Per slug it gates on the newest claim's cadence, asks the renewer binding whether a renewal is due, then
+writes three steps in order: it commits a claim through `ExternalUsageStore.claim_credential_renewal`, fires the
+renewal, and commits the outcome through `ExternalUsageStore.record_credential_renewal_outcome`
 (`blizzard/src/blizzard/runner/store/internal/host_external_usage_store.py`). The claim and the outcome are separate
 append-only facts, and the claim is never updated. The renewal itself is the vendor CLI's own rewrite of its credential
 file, driven as a bounded one-shot subprocess
@@ -520,16 +519,16 @@ file, driven as a bounded one-shot subprocess
 writing (`bzh:subscriptions-no-write`).
 
 The window runs from the claim, through the vendor's rewrite, to the outcome. It is a **real window**, and its loss is
-**accepted**, an exemption rather than a crash point. A `kill -9` inside it loses only the outcome row. The claim is
-already durable, so the slug's newest renewal reads as *unrecorded* in the runner-local diagnostics. The claim also
-anchors the slug's renewal cadence, so the renewal is never repeated within that cadence. A claim that fails to commit
-fires no renewal at all, and an outcome write that fails leaves the same standing claim a crash does. The credential
-file is the vendor's own atomic, lock-guarded write either way, so a renewed token is on disk regardless, and the slug's
-next sample reads it.
+**accepted**, an exemption rather than a crash point. A `kill -9` inside it leaves no outcome row; if it happens before
+the renewal runs or finishes, the credential may not be renewed. The claim is already durable, so the slug's newest
+renewal reads as *unrecorded* in the runner-local diagnostics. The claim also anchors the slug's renewal cadence, so
+another renewal is not attempted within that cadence. A claim that fails to commit fires no renewal at all, and an
+outcome write that fails leaves the same standing claim a crash does. The credential file is the vendor's own atomic,
+lock-guarded write; a completed renewal can leave a renewed token on disk even when its outcome is lost.
 
 A renewal still in flight when `runner host` shuts down is the same case. The driver's `stop()` waits a bounded time,
-then abandons the pass. The vendor child leads its own session and finishes its own atomic write, and the outcome it
-would have recorded is lost, reading as unrecorded.
+then abandons the pass. The outcome it would have recorded can be lost, reading as unrecorded; the claim still gates
+another attempt on the cadence.
 
 The writes owe the invariant checker nothing: both are append-only facts, and the outcome is never cross-checked against
 the credential file it describes.
@@ -634,7 +633,7 @@ The verdict the row is checked against is held only in the process: `IdentityVer
 (`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
 process `UNCHECKED`. A crash therefore loses it, and the restart re-derives it from a fresh check. The check is the head
 of every tick (`blizzard/src/blizzard/runner/loop/tick.py`): it asks the hub which runner the token belongs to and
-compares that id with the row's, before any other hub call. One function, `tick_scope`
+compares that id with the configured runner id, before any other hub call. One function, `tick_scope`
 (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`), then decides from the verdict whether the rest of the tick
 runs every step, the registration alone beside the local steps, or the local steps alone. Until the verdict is
 `MATCHED`, every call through `VerifiedHubClient` (`blizzard/src/blizzard/runner/hub/verified.py`) answers a
