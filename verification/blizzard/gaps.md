@@ -68,9 +68,10 @@ its threshold contrast is observed; a configuration echo or a documented procedu
 The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
 retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
 otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under any of the
-runner's committed corpus directories — the runner's admitted range (currently `>=1.18.25,<2.0`) is backed by only the
-one, `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — carries it: that corpus version's live runs
-never compacted. A wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
+runner's committed 1.x captures carries it. The runner's admitted range (currently `>=1.18.25,<2.0`) has one admitted
+corpus, `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`, and supplemental captures at `1.18.32/` and
+`1.18.33/` without manifests. The admitted corpus's live runs never compacted. A wrong spelling parses as absent, so the
+fallback silently stops firing rather than failing.
 
 Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
 for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
@@ -180,8 +181,8 @@ pinned at no tier at all. Every component-tier test of the transcript lane binds
 (`blizzard/tests/support/runner_fakes.py`), so `tests/component/runner/transcripts/test_transcript_pump.py` and
 `tests/component/runner/transcripts/test_transcript_backfill.py` reach the pump's and the backfill's own decisions and
 never those three pieces. `OpenCodeTranscriptSource` is a distinct implementer this gap does not name: its own
-export-identity cursor, bound token, and `not_found`/`unreadable` split are pinned at `blizzard:unit-test` — "OpenCode
-transcript reads never distinguish `not_found`" above covers what that tier does not.
+export-identity cursor, bound token, and `unreadable` default for export failures are pinned at `blizzard:unit-test` —
+"OpenCode transcript reads never distinguish `not_found`" above covers what that tier does not.
 
 Standing in for a tier: `blizzard runner transcript reship` and `blizzard runner transcript backfill` drive
 `TranscriptPump.drain_segment` with `deadline=None` over a complete historical file from offset 0 until the source

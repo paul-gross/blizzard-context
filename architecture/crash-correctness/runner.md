@@ -313,8 +313,8 @@ and completes the park. No brake is engaged on either side of the gap.
 
 ## The identity-failure-mark-before-close gap
 
-`Reap.run`'s provisional-generation branch and `Spawner.spawn`'s `WorkerIdentityError` handler
-(`blizzard/src/blizzard/runner/loop/steps.py`, `blizzard/src/blizzard/runner/lifecycle/spawn.py`) both call
+`Reap.run` delegates to `ReapSweep.run`'s provisional-generation branch, and `Spawner.spawn`'s `WorkerIdentityError`
+handler (`blizzard/src/blizzard/runner/lifecycle/reap.py`, `blizzard/src/blizzard/runner/lifecycle/spawn.py`) also calls
 `record_identity_failed` to close a durably-provisional generation as unidentified — the first ahead of `Attempt.fail`'s
 own kill-then-close, the second ahead of re-raising `HarnessSpawnError` with the lease left open for REAP's next pass.
 `record_identity_failed` is its own transaction, so in either caller a `kill -9` right after it commits, and before what
@@ -323,15 +323,15 @@ follows it completes, is a real span.
 Both halves are independently harmless. `record_identity_failed` finds the lease's newest still-open `lease_spawns` row
 (`session_id IS NULL`) and stamps `identity_failed_at`; re-running it after a crash re-stamps the same row with a later
 timestamp, never a second row. The lease itself sits open with `pid` set and `session_id` still `NULL` in the interim —
-the exact shape `Reap.run`'s own provisional-generation branch re-scans on every tick, and the module's own contract
-already promises to recover: "every step is idempotent... a crash mid-tick and a restart re-run the tick harmlessly;
-startup recovery is REAP running first." A crash before `Attempt.fail` closes the lease leaves REAP's next pass
-re-entering the identical branch, re-marking (harmlessly) and completing the close; a crash inside the spawn handler
-leaves the same reapable shape, which REAP's ordinary sweep reaches on its own schedule whether or not the handler's own
-marking landed first. `NoUnownedLiveLeaseProcess` inspects only CLOSED leases, so the open-but-marked or
-open-and-unmarked interim never violates it — the invariant is owed only at the moment `Attempt.fail`'s own close lands,
-by which point `record_identity_failed` has always already run at least once. The write earns no window at all: its
-halves are independently harmless, and the existing REAP re-scan is the recovery, not a new registry point.
+the shape `ReapSweep.run`'s provisional-generation branch re-scans after registration, and the loop's contract already
+promises to recover: "every step is idempotent... a crash mid-tick and a restart re-run the tick harmlessly; startup
+recovery is REAP running first." A crash before `Attempt.fail` closes the lease leaves REAP's next pass re-entering the
+identical branch, re-marking (harmlessly) and completing the close; a crash inside the spawn handler leaves the same
+reapable shape, which REAP's ordinary sweep reaches on its own schedule whether or not the handler's own marking landed
+first. `NoUnownedLiveLeaseProcess` inspects only CLOSED leases, so the open-but-marked or open-and-unmarked interim
+never violates it — the invariant is owed only at the moment `Attempt.fail`'s own close lands, by which point
+`record_identity_failed` has always already run at least once. The write earns no window at all: its halves are
+independently harmless, and the existing REAP re-scan is the recovery, not a new registry point.
 
 ## The unresolvable-pool-owner escalation mint
 
@@ -595,21 +595,21 @@ last answered for it. Three callers write it, all through `RunnerIdentityStore.r
 (`blizzard/src/blizzard/runner/store/internal/identity_store.py`): `runner init`, through `RunnerIdentityService.record`
 (`blizzard/src/blizzard/runner/hub/identity_service.py`), `Registration.run`
 (`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
-(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). None adopts an id: the store is bound to the configured id
-before anything runs, and the write refuses an identity naming another runner (`RunnerAlreadyBound`). Registration
-refreshes the name and tenant under the configured id, and a reply naming another runner writes nothing and turns the
-verdict to a mismatch. The check judges the token's runner against the configured id, never against the row, and writes
-only to fill in the tenant a matching answer names. `init` writes the row from the hub's answer whether it added the
-runner or kept it, so a configured runner has its row before it writes anything. Nothing ever overwrites the id: `init`
-writes the host file's `id` only into an entry that has none, or over a stale one under `--allow-readd` with a store
-that is fresh (set aside for the re-add) or names only the joined runner; a held token naming another runner than the
-configured id stops `init` before it writes a token, host-file id or identity row (the store itself may already have
-been adopted or migrated by then), and a start, `host --check` or `tick` over a store whose identity rows name any
-runner other than the configured one refuses that runner untouched. The bound runner's row is updated in place, or
-inserted when none exists, in one transaction, so a `kill -9` leaves the previous row or the new one, never neither and
-never both. The in-process identity holder is updated only after the row commits, and is restart-erased and reseeded
-from the row at boot. This is a **no-window** write: there is no partner write a crash could separate it from, and a
-lost write is made again by the next registration or matching check.
+(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). The scoped store is bound to the configured id, and the
+write refuses an identity naming another runner (`RunnerAlreadyBound`). Registration refreshes the name and tenant under
+the configured id, and a reply naming another runner writes nothing and turns the verdict to a mismatch. The check
+judges the token's runner against the configured id, never against the row, and writes only to fill in the tenant a
+matching answer names. `init` writes the row from the hub's answer whether it added the runner or kept it; a configured
+id alone does not establish that the row exists. Nothing ever overwrites the id: `init` writes the host file's `id` only
+into an entry that has none, or over a stale one under `--allow-readd` with a store that is fresh (set aside for the
+re-add) or names only the joined runner; a held token naming another runner than the configured id stops `init` before
+it writes a token, host-file id or identity row (the store itself may already have been adopted or migrated by then),
+and a start, `host --check` or `tick` over a store whose identity rows name any runner other than the configured one
+refuses that runner untouched. The bound runner's row is updated in place, or inserted when none exists, in one
+transaction, so a `kill -9` leaves the previous row or the new one, never neither and never both. The in-process
+identity holder is updated only after the row commits, and is restart-erased and reseeded from the row at boot. This is
+a **no-window** write: there is no partner write a crash could separate it from, and a lost write is made again by the
+next registration or matching check.
 
 The row may be forgotten (`forget_runner_identity`) by two callers through the `runner/hub` identity service, but is
 retained whenever settings or history remain, so those rows never outlive their identity. A retained unconfigured
