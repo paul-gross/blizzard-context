@@ -221,17 +221,18 @@ the worker pushing to real GitHub. Do not add a real-forge CI tier.
 The packaged `garden-routine` prompts carry the routine's whole method: `survey.md` resolves the routine's slug as an
 axis against the target project's gardening-axes registry, follows that entry's Criteria pointer, and records its
 declared Measurement, and `propose.md` rules what a proposal's `findings` may cite and how its `class` is spelled. The
-same gap holds for the packaged `ideation` graph's prompts: its `survey`/`reconcile`/`propose` carry the charter
+same gap holds for the packaged `ideation` graph's prompts: its `survey`/`reconcile`/`propose` carry the intent
 resolution and proposal-classing behavior that replaces `garden-routine`'s standard-judged method — resolving the
-target's own charter rather than a standard, and classing a proposal as `direction`/`tweak`/`retire` rather than citing
-findings a fix answers. The declared methods reach the mechanical half only — `blizzard:unit-test`'s packaged-prompt
-byte bars (`blizzard/tests/guards/test_prompt_byte_bars.py`) and its `blizzard hub` verb guard,
-`blizzard:component-test`'s graph mint and choice-edge resolution, and `blizzard:service-test`'s
-`test_garden_routine_runs_end_to_end_on_all_six_paths` and `test_ideation_runs_end_to_end_on_all_authored_paths`, whose
-scripted node bodies deliberately exercise no model at all. That `survey` actually resolves its axis from the target's
-registry rather than improvising a yardstick, that `propose` actually cites the refs its own run just minted, or that
-`ideation`'s `survey`/`reconcile`/`propose` actually resolve the target's charter and class a proposal correctly, is
-asserted by nothing: a prompt is an input to a model no tier runs.
+target's own intent through the axis's Criteria pointer rather than a standard, and classing a proposal as
+`direction`/`tweak`/`retire` rather than citing findings a fix answers. The declared methods reach the mechanical half
+only — `blizzard:unit-test`'s packaged-prompt byte bars (`blizzard/tests/guards/test_prompt_byte_bars.py`) and its
+`blizzard hub` verb guard, `blizzard:component-test`'s graph mint and choice-edge resolution, and
+`blizzard:service-test`'s `test_garden_routine_runs_end_to_end_on_all_six_paths` and
+`test_ideation_runs_end_to_end_on_all_authored_paths`, whose scripted node bodies deliberately exercise no model at all.
+That `survey` actually resolves its axis from the target's registry rather than improvising a yardstick, that `propose`
+actually cites the refs its own run just minted, or that `ideation`'s `survey`/`reconcile`/`propose` actually resolve
+the target's intent and class a proposal correctly, is asserted by nothing: a prompt is an input to a model no tier
+runs.
 
 Standing in for a tier: a live routine run against a real fleet, whose delivered finding set and docket are read back
 and judged against what the axis entry declares — the dogfood deployment
@@ -254,24 +255,26 @@ input to a model no tier runs.
 
 The same residue covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and `bas-hwf`'s
 `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through on every lane
-— and each lane's `pre-push.md` rebase-to-empty qualifier. The `land` action's own classification is proven by
-`blizzard:component-test`'s `tests/component/hub/delivery/actions/test_land.py` cases over a scripted forge, and
-`blizzard:unit-test`'s `tests/unit/hub/domain/graph/test_authoring.py` per-lane edge/addendum pins; that a worker reads
-the addendum's repair charge correctly, or applies the loop bound's chunk-history check rather than repeating the repair
-a second time, is not. Nor is whether a `failure` bounce's own-defect case is actually triaged `significant` rather than
-treated as a plain rebase, or whether a repair worker reads `delivery-findings` at all. No tier asserts that a repair
-worker reads a foreign-advance `failure` correctly, rather than adopting the foreign commit under `resolved`.
+— and each lane's `pre-push.md` rebase-to-empty qualifier. `blizzard:component-test`'s
+`tests/component/hub/delivery/actions/test_land.py` cases over a scripted forge pin inherited, own-defect, and
+foreign-head classifications; `blizzard:unit-test`'s `tests/unit/hub/domain/graph/test_authoring.py` pins each lane's
+inherited-failure edge and a nonempty addendum containing `loop bound`. That a worker reads the addendum's repair charge
+correctly, or applies the loop bound's chunk-history check rather than repeating the repair a second time, is not
+proven. Nor is whether a `failure` bounce's own-defect case is actually triaged `significant` rather than treated as a
+plain rebase, or whether a repair worker reads `delivery-findings` at all. No tier asserts that a repair worker reads a
+foreign-advance `failure` correctly, rather than adopting the foreign commit under `resolved`.
 
 No lane's `retrospective.md` directs the worker to verify the PR's merge state or the merged sha's reachability from
 base. The prompts alone therefore do not establish that landing check.
 
 `adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-push.md` addenda, scope a second or later visit to the
 delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method covers
-pass without a re-run. The byte bars and `tests/unit/hub/graphs/test_adw_docket.py`'s pointer census hold the prompts'
-mechanics; that a re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix,
-scopes by the change's own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the
-prior report records as failed, and records the scoping decision in the new report is asserted by nothing — a scoping
-that quietly skips a method the delta touches passes the same as an honest one until a live chunk exposes it.
+pass without a re-run. The byte bars limit prompt size; `tests/unit/hub/graphs/test_adw_docket.py` checks the docket
+retrieval pointer in six docket-vocabulary prompts, including `review.md`, not the re-entry scoping instructions. That a
+re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix, scopes by the change's
+own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the prior report records
+as failed, and records the scoping decision in the new report is asserted by nothing — a scoping that quietly skips a
+method the delta touches passes the same as an honest one until a live chunk exposes it.
 
 Standing in for a tier: a live chunk run through each lane on the dogfood deployment
 (`workspace:/context/project/singleton-instance.md`), whose transitions, bounces, and retrospective are read back and
@@ -458,9 +461,9 @@ runner-specific cases need Postgres-backed coverage.
 
 ## Hub actions' columns under Postgres
 
-The colocated tests run the two hub action revisions on SQLite: the first adds `graph_nodes.action` and
-`graph_nodes.action_args`, and the second adds `graph_nodes.legacy_run` and translates actionless hub rows where
-possible, retaining an untranslatable row's `run` in `legacy_run` instead.
+The colocated tests run the two hub action revisions on SQLite: the first adds `graph_nodes.action`,
+`graph_nodes.action_args`, and `hub_node_poll.next_poll_at`, and the second adds `graph_nodes.legacy_run` and translates
+actionless hub rows where possible, retaining an untranslatable row's `run` in `legacy_run` instead.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, the chain
   reached head, returned to base, and reached head again, with one translatable and one untranslatable hub row seeded at
@@ -503,14 +506,15 @@ on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to.
 
 ## Landing-policy operator guidance
 
-The policy-selection page's capability preconditions follow `hub/domain/config/landing_policies.py` and the runtime
-capability guard in `hub/delivery/flow_turn.py`. Its fast-forward candidate, protected-write and orphan-pruning claims
-follow `hub/delivery/actions/landing/fast_forward.py` and the forge ref calls in `hub/forge/internal/github_landing.py`.
-Its park timeout and human-merge claims follow `hub/delivery/actions/landing/park.py` and the wait cadence in
-`hub/domain/delivery/flows.py`; rollback settlement is enforced by the downgrade of the hub revision adding the park
-wait, which refuses while a repository or an open submission holds a policy other than `merge-on-checks`. The mock-forge
-service specs and policy crash sweep reach the principal paths, but no tier verifies an operator's push-CI configuration
-or the manual orphan-branch pruning step.
+The policy-selection page's capability preconditions follow `src/blizzard/hub/domain/config/landing_policies.py` and the
+runtime capability guard in `src/blizzard/hub/delivery/flow_turn.py`. Its fast-forward candidate, protected-write and
+orphan-pruning claims follow `src/blizzard/hub/delivery/actions/landing/fast_forward.py` and the forge ref calls in
+`src/blizzard/hub/forge/internal/github_landing.py`. Its park timeout and human-merge claims follow
+`src/blizzard/hub/delivery/actions/landing/park.py` and the wait cadence in `src/blizzard/hub/domain/delivery/flows.py`;
+rollback settlement is enforced by the downgrade of the hub revision adding the park wait, which refuses while a
+repository or an open submission holds a policy other than `merge-on-checks`. The mock-forge service specs and policy
+crash sweep reach the principal paths, but no tier verifies an operator's push-CI configuration or the manual
+orphan-branch pruning step.
 
 ## The runner host's invariant read under Postgres
 

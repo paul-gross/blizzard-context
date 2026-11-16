@@ -17,9 +17,7 @@ this — every consumer ends up typed against the same wide seam regardless of w
 for one caller must still stand in for methods it never touches.
 
 **Exception.** `SpawnContext` (`runner/lifecycle/spawn.py`) is registered as genuinely wide: `Spawner` and `Attempt`
-hand each other their context, so it is the union of what either reads. `IReadFlows`
-(`hub/domain/delivery/ports/flows.py`) and `IReadGraphRepository` (`hub/domain/graph/model.py`) are also registered:
-each reads one aggregate's store and gained the plural read a bounded path needs.
+hand each other their context, so it is the union of what either reads.
 
 **Scope.** Every Protocol under `src/blizzard/`, not only a repository's read/write seam (`bzh:repository-split`
 generalizes here to the whole population) — a coding-harness adapter or a hub client is gated exactly as a repository

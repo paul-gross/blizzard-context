@@ -23,7 +23,8 @@ or `service/fleet/`.
 
 Put a hub-wide variant in its own profile, or request a one-off case with
 `test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people belongs under the `auth` profile; a
-test whose subject is the login throttle takes a `fresh-hub` with the throttle left on.
+test whose subject is the login throttle takes a `fresh-hub` and enables the throttle in `hubConfig`, since the `auth`
+profile disables it.
 
 ## Don't
 
@@ -85,5 +86,5 @@ A runner spec produces a subscription sample through the vendor counterpart, nev
 credential reports on `vendorUsage` using `resetsAt` in Unix seconds, `stepHost()`, then read the recorded sample off
 `GET /api/host/subscriptions`, whose windows carry `resets_at` as a timestamp string. Mint one credential per
 subscription so the counterpart can move one without the other, and take a held window's label from that sampled read,
-never a literal. A usage-limited worker's named reset places its mark in a window only when it matches a sampled
-`resets_at` to the minute, so sample first and seed the limited chunk after.
+never a literal. A usage-limited worker's named reset places its mark in a window only when it and a sampled `resets_at`
+fall in the same minute, so sample first and seed the limited chunk after.

@@ -9,50 +9,56 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 ### blizzard:gate
 
-`mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
-workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
-(`blizzard:structural-gate`), the repo-path pointer check (`blizzard:pointer-check`), pytest, the OpenAPI spec-drift
-check, the contract-document drift check (`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility
-against the supported releases (`blizzard:compat`), the change-note check (`mise run change-notes`, which runs
-`uv run blizzard-change-notes check && uv run blizzard-change-notes owed --against origin/master`), then eslint, vitest,
-the web structural gate's sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`), the
-story render check (`web:story-render`), and generated-client drift over `web/`. Stage regenerated `openapi/`,
-`contracts/` or `web/` client output before running it: the drift checks are a working-tree-vs-index `git diff`, so a
-staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
+`mise run gate` (`./scripts/ci-gate.sh`) runs most of CI's shared `gate` suite locally, the one the `pr` and `push`
+workflows both call: ruff format --check, ruff check, pyright, dprint, Vale, the ast-grep structural gate
+(`blizzard:structural-gate`), the repo-path pointer check (`blizzard:pointer-check`), Playwright static checks, pytest
+and the runner refusal aggregate census, the OpenAPI spec-drift check, the contract-document drift check
+(`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility against the supported releases
+(`blizzard:compat`), the change-note check (`mise run change-notes`, which runs
+`uv run blizzard-change-notes check && uv run blizzard-change-notes owed --against origin/master`), flag lifecycle, then
+eslint, vitest, the web structural gate's sweeps (`web:structural-gate`), the bundle-composition check
+(`web:bundle-composition`), the story render check (`web:story-render`), and generated-client drift over `web/`. Stage
+regenerated `openapi/`, `contracts/` or `web/` client output before running it: the drift checks are a
+working-tree-vs-index `git diff`, so a staged-but-uncommitted regeneration passes and an unstaged one fails
+(`web:client-drift`). Contract drift also rejects untracked output. The separate CI web exemplar job is not run by this
+script.
 
 `mise run gate` is not the full master merge gate — it omits every upper tier, which the `pr` workflow runs as separate
-real gate jobs; `blizzard:gate-full` below reproduces the unconditional tiers, and `bzh:ci-job-local-command`
+real gate jobs; `blizzard:gate-full` below covers most unconditional tiers, and `bzh:ci-job-local-command`
 ([`../pre-push.md`](../pre-push.md)) maps each CI job to its local command. `mise run gate` runs
 `blizzard:process-ref-lint` as one of its own steps (`scripts/ci-gate.sh`), so a green `blizzard:gate` already covers
 it; the row below exists for running the rule on its own.
 
 ### blizzard:gate-full
 
-`mise run gate-full` (`./scripts/gate-full.sh`) reproduces the unconditional `pr` tiers locally: `blizzard:gate`
+`mise run gate-full` (`./scripts/gate-full.sh`) runs the unconditional `pr` tiers locally, except the Playwright half of
+`blizzard:service-test` and the web exemplar check, which must be run separately: `blizzard:gate`
 (`./scripts/ci-gate.sh`), then `mise run service-test`, the FULL `mise run crash-sweep`, `mise run ui`,
 `mise run journey`, `mise run image-smoke` and `mise run compose-smoke`, serially, because the smokes bind fixed ports.
 A red tier does not stop the later ones: the run ends with a per-tier verdict and exits non-zero on any red.
-`GATE_FULL_TIERS` narrows it to the named tiers. The conditional checks are separate: for changed store revisions run
-`mise run store-baseline` (`blizzard:store-baseline`), and for a cut PR run `mise run rehearsal` (`blizzard:rehearsal`).
-Both need `gh` and Postgres. The task needs everything its tiers need: the sibling `blizzard-mock` worktree, Chromium,
-and a docker daemon with compose v2.
+`GATE_FULL_TIERS` replaces the tier list with space-separated names run in the given order. The conditional checks are
+separate: for changed store revisions run `mise run store-baseline` (`blizzard:store-baseline`), and for a cut PR run
+`mise run rehearsal` (`blizzard:rehearsal`). Both need `gh` and Postgres. The task needs everything its tiers need: the
+sibling `blizzard-mock` worktree, Chromium, and a docker daemon with compose v2.
 
 ### blizzard:process-ref-lint
 
-`mise run process-ref-lint` (`vale --output=line .`, then `tests/component/test_route_clause_rule.py` with Vale
-required) from the repo root — `styles/Blizzard/ProcessReference.yml`, `styles/Blizzard/ChangeHistory.yml`,
-`styles/Blizzard/VariantHolder.yml`, `styles/Blizzard/ShortFormPointer.yml`, and `styles/Blizzard/RouteClause.yml`
-against `.vale.ini`'s `[*.md]`, `[{src,tests,scripts}/**/*.py]`, `[src/**/*.{yaml,yml}]`, and
+`mise run process-ref-lint` (`vale --output=line .`, then `tests/component/test_route_clause_rule.py` and
+`tests/component/test_ui_surface_rule.py` with Vale required) from the repo root —
+`styles/Blizzard/ProcessReference.yml`, `styles/Blizzard/ChangeHistory.yml`, `styles/Blizzard/VariantHolder.yml`,
+`styles/Blizzard/ShortFormPointer.yml`, `styles/Blizzard/RouteClause.yml`, and `styles/Blizzard/UiSurface.yml`.
+`.vale.ini` configures `[*.md]`, `[{src,tests,scripts}/**/*.py]`, `[src/**/*.{yaml,yml}]`, and
 `[web/projects/**/*.{ts,css}]` sections. A process reference (tracker, issue or PR number, review/finding id, phase, or
 lettered-change token) or crisp change-history narration — the shapes `ChangeHistory.yml`'s own token list names — or a
 repository Protocol naming who holds its variant (`depends on this variant`, `held by read-path edges`), or a short-form
 same-repo `.py` pointer, is a hard failure; so is a `client of <METHOD> /route` clause in a `.py` file under
-`src/blizzard/hub/cli/` or `src/blizzard/runner/cli/` (`RouteClause.yml`, enabled only in that section). The test module
-copies its fixtures into a temp tree under the repo's real `.vale.ini` and proves both directory scopes, the clause
-allowed elsewhere, and the other rules still firing; it skips when Vale is absent unless `BLIZZARD_REQUIRE_VALE=1`. The
-generated web clients are excluded; `.html` templates are outside the configured extensions. That token list is the one
-statement of what the gate flags. `gate.yml` runs the command as its own dedicated job, installing Vale through
-`jdx/mise-action`.
+`src/blizzard/hub/cli/` or `src/blizzard/runner/cli/` (`RouteClause.yml`, enabled only in that section). `UiSurface.yml`
+also rejects its listed UI-surface terms in `src/blizzard/wire/`, `src/blizzard/foundation/`, and
+`src/blizzard/auth_core/`. The route-clause test module copies its fixtures into a temp tree under the repo's real
+`.vale.ini` and proves both directory scopes, the clause allowed elsewhere, and the other rules still firing; it skips
+when Vale is absent unless `BLIZZARD_REQUIRE_VALE=1`. The generated web clients are excluded; `.html` templates are
+outside the configured extensions. That token list is the one statement of what the gate flags. `gate.yml` runs the
+command as its own dedicated job, installing Vale through `jdx/mise-action`.
 
 ### blizzard:pointer-check
 
@@ -146,8 +152,8 @@ no port of its own) is pinned at `blizzard:unit-test` in `tests/guards/test_comp
 `mise run collector-config-check` runs `otelcol-contrib validate` over `packaging/otel-collector/collector.yaml`, the
 example operator collector config that fans one trace stream to two backends. The task pins `otelcol-contrib` through
 mise's github backend, scoped to the task rather than the global `[tools]`, so the pin is the collector release the
-config is promised valid for. Local-only: the binary is about 390 MB and `gate.yml` is network-free, so no CI job runs
-it — the same pattern as `blizzard:ci-workflows`.
+config is promised valid for. `upper-tiers.yml` runs it while installing the collector for each service Playwright
+shard; `gate.yml` does not run it.
 
 Falsify it by planting an unknown key in the file and observing `validate` reject it, then reverting.
 
@@ -157,13 +163,13 @@ Falsify it by planting an unknown key in the file and observing `validate` rejec
 master or the `pr` gate, to completion, exiting non-zero on failure. This is the authoritative remote gate; the
 workflows and the watch loop are documented in the `blizzard` app repo's `docs/ci.md`.
 
-**Required checks on `master`.** The checks below are every job `pr.yml` runs for a `master` base — `line provenance`
-runs only on a release-line base, so it is not among them. The jobs a pull request skips by condition (the store
-baseline, the rehearsal) are required through always-running result jobs that pass when the guarded job was skipped by
-its condition. A same-repository `hotfix/` pull request into `master` runs only the gate's lint-class jobs and skips the
-other gate and upper-tier jobs by condition, and a skipped job passes its required check, so the one set merges both
-lanes. The set is what an operator applies and verifies via `blizzard:manual-branch-protection`; it binds admins and
-requires a pull request, with no approving review, since the sole maintainer cannot approve their own:
+**Required checks on `master`.** The checks below are the required result contexts for a `master` base —
+`line provenance` runs only on a release-line base, so it is not among them. The jobs a pull request skips by condition
+(the store baseline, the rehearsal) are required through always-running result jobs that pass when the guarded job was
+skipped by its condition. A same-repository `hotfix/` pull request into `master` runs only the gate's lint-class jobs
+and skips the other gate and upper-tier jobs by condition, and a skipped job passes its required check, so the one set
+merges both lanes. The set is what an operator applies and verifies via `blizzard:manual-branch-protection`; it binds
+admins and requires a pull request, with no approving review, since the sole maintainer cannot approve their own:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'EOF'

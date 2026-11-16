@@ -10,12 +10,12 @@ the appropriate client rather than bypassing it.
 
 ## Why
 
-Clients supply tenant headers, authentication and response failure diagnostics consistently across shared hubs.
+Clients supply the tenant or authentication appropriate to their surface and consistent response failure diagnostics.
 
 ## Detect
 
-`tests/eslint.config.mjs` rejects `fetch` in specs; a literal daemon URL or direct request context is a reviewable
-signature that lint alone does not cover.
+`tests/eslint.config.mjs` rejects `fetch` and Playwright's built-in `request` fixture in specs; a literal daemon URL or
+another direct request context is a reviewable signature that lint alone does not cover.
 
 ## Do
 
@@ -29,7 +29,7 @@ Assemble `http://localhost:${port}/api/...` in a spec.
 
 ## The hub world's clients
 
-The `federation` client drives a sign-in bounce from a browser at a runner host to the hub and back, holding the
+The `federation` client simulates a browser's sign-in bounce from a runner host to the hub and back, holding the
 runner's cookies and the hub's in separate contexts, since both answer on `127.0.0.1` and cookies ignore the port. To
 act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and
 `events.open`; a call made as a worker carries the credential [`./surfaces.md`](./surfaces.md) §A worker's credential
@@ -43,8 +43,9 @@ Beyond its clients, a `runnerHost` carries:
 - `await reconfigure(overlay)` — writes live per-runner pass/session settings over the running host API; boot edits
   require a stopped host and restart. Use the pre-start profile for initial authored values.
 - `clearHubTokens`, `renameRunner` and `removeStore` — edit its stopped directory, never a file by hand.
-- The `runnerOtlp` option and `host.otlp` — the option exports its telemetry to a test-owned sink, and `host.otlp` reads
-  its spans, sum data points, and log records.
+- The `runnerOtlp` option and `host.otlp` — the option supplies a test-owned sink as the host's telemetry endpoint;
+  tracing still requires configuration. `host.otlp` reads spans and the attributes and resource of sum data points and
+  log records.
 - `socketApi` — answers its shared routes (`health`, `exportTelemetry`) over its Unix socket as well, so a spec loops
   over both transports without importing `node:http` or `node:net`.
 - The `runnerWinterTrap` option and `winterInvoked()` — the option puts a `winter` that records its invocation first on
@@ -79,7 +80,7 @@ format `egress.format` names (NDJSON by default), through the `egress` fixture:
 
 - `query` and `recipe` — run the docs' own DuckDB load and the dictionary's views once a manifest names the dataset:
   `steps` and `invocations` through `<dataset>_newest`, `events` through `events_current` and `events_by_version`.
-- `exports(dataset)` — asks once whether a manifest names the dataset.
+- `exports(dataset)` — asks once whether a manifest names a file of the dataset.
 - `rowTexts(dataset)` and `documents()` — render every copy of every row as text, and give the text of the manifests and
   schemas, so a scan that a value never left needs no file read of its own.
 - `copies` — renders every copy of every `steps` or `invocations` row in the shape both formats share, so a test picks

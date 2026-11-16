@@ -84,10 +84,11 @@ cannot widen the scope it was given (`bzh:controller-read-only`). Repository Pro
 
 **Scope.** The scope is the tenant and nothing narrower: a project filter is an ordinary argument of the read that
 applies it, never part of the scope. Services are built from one tenant's `TenantStores`, never from the unscoped core
-(`bzh:dependency-injection`). A write on a closed tenant's scope is refused inside its own transaction, on SQLite and
-Postgres alike, so a writer that opened its stores before the close cannot write behind the drain: it locks the tenant's
-row, then reads the deletion fact in a statement of its own, so a write that waited on a concurrent close sees that
-close's commit.
+(`bzh:dependency-injection`). An ordinary write on a closed tenant's scope is refused inside its own transaction, on
+SQLite and Postgres alike, so a writer that opened its stores before the close cannot write behind the drain: it locks
+the tenant's row, then reads the deletion fact in a statement of its own, so a write that waited on a concurrent close
+sees that close's commit. Teardown instead locks the underway deletion and removes the closed tenant's rows through
+`ScopedConnections.teardown`.
 
 For the opener and locked-scope obligations of a domain unit of work, see `bzh:short-locked-unit`
 ([../repository-access.md](../repository-access.md)).
@@ -132,17 +133,17 @@ a connection it marks hub-scoped itself, and it never holds `HubScopedReads`.
 
 - resolving a credential to its tenant — a runner's or a host's bearer token, a runner id at sign-in, an invitation
   token, a hub-executed node's marker — each returning the tenant beside its principal;
-- a sweep's corpus read (`bzh:sweep-acts-in-row-tenant`), and the status reads of the hub's exports, whose cursors every
-  tenant's rows share;
+- a sweep's corpus read (`bzh:sweep-acts-in-row-tenant`);
 - tenant administration — whether a tenant is open, and the open tenants with their names.
 
-The export-status reads (trace export's and fact egress's newest-cursor reads) are members of the second kind, and the
-readers built on `AllTenantStatements` (`bzh:sweep-acts-in-row-tenant`) are members of the first and third.
+The readers built on `AllTenantStatements` (`bzh:sweep-acts-in-row-tenant`) include credential and invitation
+resolution, probe signatures, and tenant administration.
 
 A read of a global table is an ordinary hub-level read, not a member: memberships and hub administrators are global
 (`bzh:global-tables-closed`), so listing a person's tenants or the hub administrators reads through the identity
-repositories the hub-level services hold. Tenant deletion's own reads are hub-level the same way: the deletions a
-teardown has yet to finish are read from `tenant_deletions` on the hub-level connections
+repositories the hub-level services hold. The exports' newest-cursor reads use the global `trace_cursor` and
+`egress_cursor` tables through their own stores, not `HubScopedReads`. Tenant deletion's own reads are hub-level the
+same way: the deletions a teardown has yet to finish are read from `tenant_deletions` on the hub-level connections
 (`TenantTeardownStore.underway`), not through the seam. A write never goes through it; a pass that must write across
 tenants loops over open tenants and writes through each one's own stores.
 

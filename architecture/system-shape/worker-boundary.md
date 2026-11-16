@@ -42,8 +42,9 @@ token a tool has no use for.
 ## Every child launches through one seam (`bzh:runner-child-launch`)
 
 **Rule.** Every child the runner launches goes through the `IChildProcesses` seam in `runner/process`, which gives the
-child its own process group, kills the whole group on timeout, and closes stdin unless input is given; a PTY child
-instead receives the PTY slave as stdin. A run-to-completion launch takes a required timeout.
+child its own process group and kills the whole group on timeout. A run-to-completion launch takes a required timeout
+and closes stdin unless input is given; a long-lived spawn defaults stdin to closed, and a PTY child receives the PTY
+slave as stdin.
 
 **Why.** A child killed alone leaves its grandchildren running — a `sh -c` check command's forked `sleep` outlives the
 shell — and a child holding inherited stdin can block on the daemon's terminal, either of which wedges a tick
@@ -71,10 +72,10 @@ Stop a long-lived child through the group helpers in `src/blizzard/runner/proces
 **Don't.** Import `subprocess` in an adapter for its `DEVNULL` constant — the seam's `Stream` carries the stream
 constants. Don't call `proc.kill()` on a timed-out child alone.
 
-## Only the worker mutates git (`bzh:git-write-in-worker-seam`)
+## Only the worker publishes its git artifact (`bzh:git-write-in-worker-seam`)
 
-**Rule.** Only the worker mutates git — it commits its work and pushes its branch — and the runner's git surface is
-read-only: the worker declares what it pushed (env, repo, branch, commit) through the runner's local declaration
+**Rule.** Only the worker commits its work and pushes its branch; the runner's artifact verification surface is
+read-only. The worker declares what it pushed (env, repo, branch, commit) through the runner's local declaration
 channel, and the runner's read-only verification is what turns that declaration into a submitted artifact.
 
 **Why.** The runner cannot know what a worker's turn produced without blind trust or inference from git residue, and
@@ -84,10 +85,13 @@ pointer from residue nor merely trusts an unverified claim.
 
 **Scope.** Governs the runner's `IWorktreeGit` seam (`src/blizzard/runner/environments/worktree.py`) and its ADVANCE
 collection step; the runner still holds the only credentialed copy of the leased environment — only the git mutation
-within it belongs to the worker.
+that publishes the worker's work belongs to the worker. Workspace providers still prepare and remove worktrees and may
+clone and fetch repositories (`src/blizzard/runner/environments/internal/basic_provider.py`).
 
-**Detect.** A runner-side `git push` or `git commit`, or any runner git call resolving which branch or commit to act on
-from repository state rather than from the worker's declaration through the local API.
+**Detect.** A runner-side `git push` or `git commit` publishing a worker's work, or an artifact-verification git call
+resolving which branch or commit to act on from repository state rather than from the worker's declaration through the
+local API. The selftest creates a baseline commit in its isolated scratch repository
+(`src/blizzard/runner/selftest/internal/subprocess_scratch_git.py`); that is not a worker artifact.
 
 **Do.** The worker pushes its branch and declares it with
 `blizzard runner artifact commit --repo <r> --branch <b> --commit <sha>`, and the runner's
