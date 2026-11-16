@@ -773,9 +773,10 @@ login's `~/.claude/projects/`, keyed by the disposable cwd. Never point it at a 
 
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
 `docs/install.md`. `blizzard:unit-test`'s `tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down`
-already proves every shipped revision has a working `downgrade()`; the drill wraps the operator-facing procedure around
-that guarantee, by hand because no CI tier stands up a real compose deployment. Run it whenever the compose deployment's
-packaging changes (`packaging/docker/`), and whenever `docs/rollback.md`'s commands change.
+walks both migration chains from head to base and back on freshly initialized SQLite stores; it does not prove a
+downgrade succeeds for every populated store. The drill walks the operator-facing procedure by hand because no CI tier
+stands up a real compose deployment. Run it whenever the compose deployment's packaging changes (`packaging/docker/`),
+and whenever `docs/rollback.md`'s commands change.
 
 **Setup.** A running compose stack (`docker compose up -d`, `packaging/docker/compose.yaml`) on at least two published
 or locally-built image tags, so a real previous tag exists to roll back to.
@@ -1048,8 +1049,8 @@ plan.
 ### `blizzard:manual-postgres-migrations`
 
 **Surface.** The hub store's migration chain, driven by `blizzard hub init` and `blizzard hub migrate` against a
-throwaway local Postgres cluster. SQLite runs every tier; this is the one place the chain runs where DDL is
-transactional, identifiers stop at 63 characters, and foreign keys are enforced.
+throwaway local Postgres cluster. The Postgres rehearsal also migrates a hub store, but does not repeat this method's
+full down-and-up pass; Postgres adds transactional DDL, a 63-character identifier limit, and enforced foreign keys.
 
 **Setup.** From the `blizzard` worktree: `initdb -A trust -D <dir>/data`, then `pg_ctl` on a private port with a short
 `-k` socket directory (the socket path is capped near 100 bytes) and `listen_addresses=''`, then `createdb hub`. Point
@@ -1080,7 +1081,8 @@ baseline and its outbox counters run where DDL is transactional and a sequence n
 
 **Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on loopback (`initdb -A trust`, `pg_ctl` on a
 private port, `createdb`), and every `blizzard` command run under `uv run --no-sync --with 'psycopg[binary]==3.3.4'`. A
-scratch host directory scaffolded by `Runtime.init`, its `blizzard-host.toml` `db_url` set to the cluster.
+scratch host directory scaffolded by runner `Runtime.init` (`src/blizzard/runner/runtime.py`), its `blizzard-host.toml`
+`db_url` set to the cluster.
 
 **Steps.**
 

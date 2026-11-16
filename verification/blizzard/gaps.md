@@ -98,12 +98,13 @@ parser can name; a live `opencode export` against a genuinely absent session id 
 ## A bare node's chunk-declared default at spawn
 
 `tests/service/runner/mixed-harness-dispatch.spec.ts` records a proof the mock hub's fidelity leaves unreachable: a bare
-node honoring the chunk's own declared default all the way through spawn. `blizzard-mock-hub`'s own `envelope()` route,
-unlike the real hub's `EffectiveSession.of`, never bakes the chunk's `default_harnesses` back onto the node before
-handing the envelope to the runner, so while a bare node's matched peek does honor the chunk's own declared default
-(proven), the SPAWN that follows falls through to `Spawner.spawn`'s own no-`session_harnesses` fallback — this runner's
-own configured default, never the chunk's declared one. Baking `default_harnesses` onto the envelope's node the way
-`EffectiveSession.of` does would close it.
+node honoring the chunk's own declared default all the way through spawn. `blizzard-mock-hub`'s
+`MockHubService.envelope` (`blizzard-mock/src/blizzard_mock/mock_hub/domain/service.py`), unlike the real hub's
+`EffectiveSession.of`, never bakes the chunk's `default_harnesses` back onto the node before handing the envelope to the
+runner, so while a bare node's matched peek does honor the chunk's own declared default (proven), the SPAWN that follows
+falls through to `Spawner.spawn`'s own no-`session_harnesses` fallback — this runner's own configured default, never the
+chunk's declared one. Baking `default_harnesses` onto the envelope's node the way `EffectiveSession.of` does would close
+it.
 
 Standing in for a tier: none. Do not invent the behavior at the unit or component tier: it is a hub-side routing
 decision this suite means to prove against the real production `HttpHubClient`/`Spawner.spawn` path, never a hand-built
@@ -186,16 +187,16 @@ neither hermetic nor reproducible.
 test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
 `ix_findings_tenant_project_routine_scope`/`ix_findings_tenant_project_routine_class` rather than a table scan.
 `tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` checks twenty `chunk_id`-filtered fact-table reads
-and the hub store's hot-path indexes. For three composite-index tables it asserts a tenant-and-chunk search and the
-absence of the superseded single-column index, not the exact composite index name; it pins named indexes for the other
-fact-table reads, the artifacts/graph-choices/transcript-segments/chunk-work-refs/close-intents hot-path reads, and each
-of `activity_facts_since`'s eighteen per-source ordered reads.
-`tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over `usage_total_stmt`
-builder asserts `ix_usage_facts_tenant_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s
-scan gate classifies its hub and runner census recipes, with non-SQL methods exempted, and
-`tests/component/runner/store/test_indexes.py` pins selected named indexes on the same sqlite backend. No tier runs any
-of these assertions against postgres, so whether the portable index declarations actually earn an index scan under
-postgres's own planner stays unproven.
+and the hub store's hot-path indexes. For three composite-index tables it asserts a tenant-and-chunk search and that the
+plan does not use the superseded single-column index; it does not assert that index is absent from the schema or name
+the composite index used. It pins named indexes for the other fact-table reads, the artifacts/graph-choices/
+transcript-segments/chunk-work-refs/close-intents hot-path reads, and each of `activity_facts_since`'s eighteen
+per-source ordered reads. `tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case
+over `usage_total_stmt` builder asserts `ix_usage_facts_tenant_recorded_at_id` the same way.
+`tests/component/test_store_read_index_gate.py`'s scan gate classifies its hub and runner census recipes, with non-SQL
+methods exempted, and `tests/component/runner/store/test_indexes.py` pins selected named indexes on the same sqlite
+backend. No tier runs any of these assertions against postgres, so whether the portable index declarations actually earn
+an index scan under postgres's own planner stays unproven.
 
 Standing in for a tier: the declarations use portable SQLAlchemy indexes, but portability alone does not prove the
 postgres planner will choose them for these reads. A sequential scan may be appropriate for a small or insufficiently
