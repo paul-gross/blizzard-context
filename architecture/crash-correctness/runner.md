@@ -37,11 +37,13 @@ and the hub's per-runner high-water mark, machinery the sweep and the checker al
 
 `Attempt.fail`'s retry event is enqueued in the same transaction as the closure it describes, on the atomic
 local-plus-outbound precedent of `record_local_pause` and `record_usage`, so that branch opens no partial-write window.
-The reassign-abandon branch is deliberately non-atomic, its closure sitting one level down in the shared
-`Attempt.abandon`, and still needs no armed crash point: at-most-once-per-attempt is structural, since `Attempt.fail`
-runs once per attempt and closes, requeues, or escalates the lease, leaving the next tick a different lease state and no
-need of a durable guard fact. A crash between the abandon closure and its enqueue loses at most one informational,
-append-only event, which the next attempt's failure re-emits.
+The reassign-abandon branch is deliberately non-atomic: `Attempt.fail` enqueues its informational event before calling
+the shared `Attempt.abandon`, which releases the chunk and closes the lease. A crash before the enqueue commits leaves
+no event and the lease open; recovery may abandon it through the silent detach sweep. A crash after enqueue and before
+closure leaves the event durable and the lease open, so recovery completes the abandon; if it re-enters `Attempt.fail`,
+it can enqueue a duplicate. A crash after closure leaves both the event and closure durable. The possible missing or
+duplicate informational event is accepted, so this ordering needs no additional armed crash point; abandon's own release
+windows are covered separately below.
 
 Every escalating close runs through one shared close in `Attempt` (`blizzard/src/blizzard/runner/lifecycle/attempt.py`),
 which composes the escalation before it closes. The escalation payload depends only on reads still valid before the
@@ -71,9 +73,9 @@ read derives from durable state. That bounded loss is accepted, so this shape ne
 The runner store's `session_preamble_facts` table (`blizzard/src/blizzard/runner/store/schema.py`) holds, per harness
 session, a digest of the standing spawn-preamble prose that session was last sent, so a resumed spawn can skip an
 unchanged layer and announce a changed one. `Spawner.spawn` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) is the
-only caller: the fingerprint write sits inside the SPAWN step immediately after `record_identified_spawn`, once the
-launched process's identity is durable, but lands only after the spawn call itself returns, so a durable fingerprint
-always implies the prose actually reached the process. A dormant session's own wake
+only caller: the fingerprint write sits inside the SPAWN step after `record_identified_spawn` and its optional event
+announcement, once the launched process's identity is durable and the harness spawn call has returned, so a durable
+fingerprint always implies the prose actually reached the process. A dormant session's own wake
 (`blizzard/src/blizzard/runner/lifecycle/dormant.py`) resumes the same session through `record_spawn` instead,
 delivering a short wake message rather than a re-rendered preamble, so that path never reads or writes this table at
 all.
@@ -115,9 +117,10 @@ a running lease's session context, and on a first crossing of the configured `[c
 warning atomically is what makes the crossing report correct rather than merely cheap: a warning buffered without its
 row would re-fire every tick, and a row without its warning would suppress the warning permanently.
 
-`context_samples` is append-only and purely observational, read only by the sampler's own cadence-and-dedupe state
-(`context_sample_state`), so no status derives from it, no spawn is gated on it, and a lost row costs one point on a
-diagnostic curve the next interval re-samples.
+`context_samples` is append-only and observational: the sampler reads its cadence-and-dedupe state
+(`context_sample_state`), and lease trace assembly reads the samples through `LeaseTraceFactsStore`
+(`blizzard/src/blizzard/runner/store/internal/lease_trace_facts_store.py`). No status derives from it and no spawn is
+gated on it; a lost row costs one point on a diagnostic curve the next interval re-samples.
 
 ## Execution observations
 
@@ -208,14 +211,15 @@ named: the response is all it loses, the takeover stays open and entered, and th
 ## The graph-artifact mirror
 
 `Spawner._mint` (`blizzard/src/blizzard/runner/lifecycle/spawn.py`) records a pinned mint's graph-scope declarations
-into the runner's own `graph_artifacts` table, insert-if-absent keyed on `graph_id`, immediately before the mint
-transaction (see [§The lease mint](#the-lease-mint)) — ahead of the lease those rows exist to serve. The presence check
-and every insert behind it are one transaction, so a mint's declarations land all or none and the `graph_id`-granular
-check can never mistake a half-written set for a complete one and skip the remainder for that mint's life. A crash
-between the artifact write and the mint transaction leaves at most a complete orphan set keyed to an immutable mint, and
-the retried mint writes identical rows, insert-if-absent making the retry a no-op past the first success. A
-`graph_artifacts` row owes the checker nothing because it is a durable fact about an immutable mint, never revised once
-written, so agreement between readers after a crash is structural.
+into the host-scoped `graph_artifacts` table, whose rows are keyed on `(graph_id, name)`, immediately before the mint
+transaction (see [§The lease mint](#the-lease-mint)) — ahead of the lease those rows exist to serve. The graph-level
+presence check and every insert behind it are one transaction, so a mint's declarations land all or none and the
+`graph_id`-granular check can never mistake a half-written set for a complete one and skip the remainder for that mint's
+life. A crash between the artifact write and the mint transaction leaves at most a complete orphan set keyed to an
+immutable mint, and the retried mint sees the existing graph and makes the retry a no-op past the first success. An
+empty declaration writes no rows, so later mints check again. A `graph_artifacts` row owes the checker nothing because
+it is a durable fact about an immutable mint, never revised once written, so agreement between readers after a crash is
+structural.
 
 The pin guarantee reaches exactly as far as the mint, and the window past it is accepted rather than repaired. A lease
 already in flight resumes through `Spawner.preamble`, which re-mints only the capability token and never re-enters
@@ -288,12 +292,18 @@ and to any in-flight elicitation's, then the durable park, which names that elic
 re-signals only a still-live owned group. Completing the teardown is `DormantSession.on_unpause`'s first act
 (`blizzard/src/blizzard/runner/lifecycle/dormant.py`), on every tick the park is open: a group still alive within
 `SHUTDOWN_DRAIN_DEADLINE` of `parked_at` is left alone, one alive past it is SIGKILLed, and a named elicitation that has
-exited books its `judge` usage against the paused generation through the recorder and is then cleared, its files swept —
-the same usage-then-clear order as `Judgement.collect`. Those two writes are the teardown's only durable ones, and
+exited books its `judge` usage against the paused generation through the recorder if its harness owner resolves, and is
+then cleared, its files swept. If the owner is unavailable or unknown, usage is skipped and the record is still cleared
+— the same usage-then-clear order as `Judgement.collect`. Those two writes are the teardown's only durable ones, and
 neither opens a window: the usage write replays as an exact-replay no-op under its `(lease, generation, kind)` key, and
 a crash between it and the clear leaves the record standing for the next tick to book (no-op) and clear again. The
 deadline is read off the durable `parked_at`, so a runner restart resumes the countdown rather than restarting it. This
 is the no-window ground; no registry point is owed.
+
+The recorder's `record_attempt` can record both worker and judge samples in separate calls; it is not one atomic
+two-sample write. Each `record_sample` calls `record_usage`, which commits its `usage_facts` row and outbound fact in
+one transaction (`blizzard/src/blizzard/runner/store/internal/usage_store.py`). A crash between the samples leaves the
+first durable and replay skips it before recording the second.
 
 The park's named-elicitation column is what the teardown reads to tell two standing records apart. An in-flight
 elicitation record still standing under an open pause park is one of exactly two things: the park's own interrupted
@@ -320,18 +330,20 @@ own kill-then-close, the second ahead of re-raising `HarnessSpawnError` with the
 `record_identity_failed` is its own transaction, so in either caller a `kill -9` right after it commits, and before what
 follows it completes, is a real span.
 
-Both halves are independently harmless. `record_identity_failed` finds the lease's newest still-open `lease_spawns` row
-(`session_id IS NULL`) and stamps `identity_failed_at`; re-running it after a crash re-stamps the same row with a later
-timestamp, never a second row. The lease itself sits open with `pid` set and `session_id` still `NULL` in the interim —
-the shape `ReapSweep.run`'s provisional-generation branch re-scans after registration, and the loop's contract already
-promises to recover: "every step is idempotent... a crash mid-tick and a restart re-run the tick harmlessly; startup
-recovery is REAP running first." A crash before `Attempt.fail` closes the lease leaves REAP's next pass re-entering the
-identical branch, re-marking (harmlessly) and completing the close; a crash inside the spawn handler leaves the same
-reapable shape, which REAP's ordinary sweep reaches on its own schedule whether or not the handler's own marking landed
-first. `NoUnownedLiveLeaseProcess` inspects only CLOSED leases, so the open-but-marked or open-and-unmarked interim
-never violates it — the invariant is owed only at the moment `Attempt.fail`'s own close lands, by which point
-`record_identity_failed` has always already run at least once. The write earns no window at all: its halves are
-independently harmless, and the existing REAP re-scan is the recovery, not a new registry point.
+Both halves are independently harmless. `record_identity_failed` finds the lease's newest provisional `lease_spawns` row
+(`session_id IS NULL` and `pid IS NOT NULL`) and stamps `identity_failed_at`; the pid predicate excludes legacy rows.
+Re-running it after a crash re-stamps the same row with a later timestamp, never a second row. The lease itself sits
+open with `pid` set and `session_id` still `NULL` in the interim — the shape `ReapSweep.run`'s provisional-generation
+branch re-scans after registration, and the loop's contract already promises to recover: "every step is idempotent... a
+crash mid-tick and a restart re-run the tick harmlessly; startup recovery is REAP running first." REAP precedes PULL,
+which performs registration, on a full tick; identity and host standing can restrict which steps run. A crash before
+`Attempt.fail` closes the lease leaves an eligible REAP pass re-entering the identical branch, re-marking (harmlessly)
+and completing the close; a crash inside the spawn handler leaves the same reapable shape, which REAP's ordinary sweep
+reaches on its own schedule whether or not the handler's own marking landed first. `NoUnownedLiveLeaseProcess` inspects
+only CLOSED leases, so the open-but-marked or open-and-unmarked interim never violates it — the invariant is owed only
+at the moment `Attempt.fail`'s own close lands, by which point `record_identity_failed` has always already run at least
+once. The write earns no window at all: its halves are independently harmless, and the existing REAP re-scan is the
+recovery, not a new registry point.
 
 ## The unresolvable-pool-owner escalation mint
 
@@ -348,15 +360,17 @@ minted; worker not spawned" shape a `HarnessSpawnError`'d ordinary mint already 
 caller of a window already armed.
 
 A crash in that window is recovered by REAP's ordinary orphan sweep (`Reap.run`,
-`blizzard/src/blizzard/runner/loop/steps.py`): any lease with no recorded pid or session is `Attempt.fail`'d regardless
-of why it was minted. This lease's session is `None` (never spawned), so `_owner_block` finds nothing to short-circuit
-the retry check on; its `retries_max` is pinned to `0`, so `retried (0) < retries_max (0)` is false and the retry branch
-never fires; the ordinary exhausted-retries path runs through the shared escalating close, composing the escalation and
-committing it with the `ESCALATED` closure in one transaction — composing no takeover, the same "escalated before any
-worker session existed" shape any other never-spawned lease reaches. A later re-entry of the same node — this same
-`enter_node` call replayed, or a genuine post-recovery retry — costs nothing beyond `open_escalation_for_chunk`'s own
-read: an already-open escalation short-circuits `_escalate_unresolvable_resume_owner` before it mints again, and either
-a later-epoch lease or a qualifying escalation closure supersedes the open escalation.
+`blizzard/src/blizzard/runner/loop/steps.py`): a reapable orphan with no recorded pid or session is `Attempt.fail`'d
+regardless of why it was minted. `fail` first applies detached and locally-paused precedence: it abandons a detached
+chunk and defers an escalation while locally paused. Once those conditions clear, this lease's session is `None` (never
+spawned), so `_owner_block` finds nothing to short-circuit the retry check on; its `retries_max` is pinned to `0`, so
+`retried (0) < retries_max (0)` is false and the retry branch never fires; the ordinary exhausted-retries path runs
+through the shared escalating close, composing the escalation and committing it with the `ESCALATED` closure in one
+transaction — composing no takeover, the same "escalated before any worker session existed" shape any other
+never-spawned lease reaches. A later re-entry of the same node — this same `enter_node` call replayed, or a genuine
+post-recovery retry — costs nothing beyond `open_escalation_for_chunk`'s own read: an already-open escalation
+short-circuits `_escalate_unresolvable_resume_owner` before it mints again, and either a later-epoch lease or a
+qualifying escalation closure supersedes the open escalation.
 
 The synchronous, no-crash path closes this same mint through `escalate_owner_unresolvable` directly rather than through
 `fail`, so it takes that method's own detached/paused precedence (mirroring `fail`'s) instead: a chunk the hub no longer
@@ -461,14 +475,15 @@ cross-fact invariant a second writer could disagree with.
 ## The external-usage sampling pass
 
 `ExternalUsageSamplePass` (`blizzard/src/blizzard/runner/usage/external_usage_sample.py`) runs on the host tick in
-`runner host`, never in a runner's tick, over every `[[subscription]]` the host declares. Per slug it gates on the
-newest attempt's cadence, samples, and records the attempt with its report in one transaction. Which lane is
-`ExternalUsageAttemptLane`'s rule, beside the pass in `runner/usage/`. An unregistered host records through its first
+`runner host` on a periodic driver separate from the reconciliation tick, never in a runner's tick, over every
+`[[subscription]]` the host declares. A slug with no bound sampler is skipped; otherwise the newest attempt's cadence or
+an early trigger makes it due. The pass samples and records the attempt with its report in one transaction. Which lane
+is `ExternalUsageAttemptLane`'s rule, beside the pass in `runner/usage/`. An unregistered host records through its first
 registered runner's attempt handle — `record_external_usage_attempt` over that runner's bound connections — whose report
 lands in that runner's `outbound_buffer`; a registered host records through
 `HostLaneStore.record_host_external_usage_attempt`, whose report lands in `host_outbound_buffer`. Both are **no-window**
-writes: a `kill -9` commits the attempt and its report or neither, and the next pass re-samples a slug whose attempt did
-not commit.
+writes: a `kill -9` commits the attempt and its report or neither. With no registered host or runner, the attempt is not
+recorded; an uncommitted attempt does not advance the cadence, and a later due pass samples again.
 
 ## The host's lane
 
@@ -482,10 +497,12 @@ predates hosts, or answers as another host, the facts wait in the buffer and nev
 
 The window between the hub applying a push and the mark landing is a **real window**, registered as
 `hostlane.after-push.before-mark` and swept by `blizzard/tests/crash/test_kill9_sweep.py`. A crash there leaves the
-pushed rows buffered and no mark recorded; the next pass re-pushes them, the hub answers them already applied against
-its own per-host mark, and the host clears them then. The mark write itself is a **no-window** write: the mark and the
-clearing commit together, and a mark below the recorded one moves nothing back. A failed push leaves everything buffered
-for the next pass, with no backoff and no latch, the shape the hub-as-sink class names.
+pushed rows buffered and no mark recorded; the next pass re-pushes them, and the hub deduplicates applied rows against
+its per-host mark. The runner records the maximum of the hub's high-water and rejected sequence numbers, logging and
+clearing rejected facts as well so they cannot wedge the lane; rejection is not application. The mark write itself is a
+**no-window** write: the mark and the clearing commit together, and a mark below the recorded one moves nothing back. A
+failed push leaves everything buffered for the next pass, with no backoff and no latch, the shape the hub-as-sink class
+names.
 
 The lane owes the invariant checker nothing: its rows carry the host's own `seq`, never a runner's, and the hub's mark
 is what de-duplicates a replay.
@@ -507,11 +524,12 @@ row owes the invariant checker nothing: it is the hub's own answer about the tok
 
 ## The credential-renewal window
 
-`CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on its own periodic driver in
-`runner host`, off the reconciliation tick, so a slow vendor endpoint does not hold that tick. It never runs in a
-runner's tick. Per slug it gates on the newest claim's cadence, asks the renewer binding whether a renewal is due, then
-writes three steps in order: it commits a claim through `ExternalUsageStore.claim_credential_renewal`, fires the
-renewal, and commits the outcome through `ExternalUsageStore.record_credential_renewal_outcome`
+`CredentialRenewalPass` (`blizzard/src/blizzard/runner/usage/credential_renewal.py`) runs on the same periodic host-tick
+driver as external usage sampling in `runner host`, off the reconciliation tick, so a slow vendor endpoint does not hold
+that tick. It never runs in a runner's tick. Per slug it gates on the newest claim's cadence, asks the renewer binding
+whether a renewal is due, then writes three steps in order: it commits a claim through
+`ExternalUsageStore.claim_credential_renewal`, fires the renewal, and commits the outcome through
+`ExternalUsageStore.record_credential_renewal_outcome`
 (`blizzard/src/blizzard/runner/store/internal/host_external_usage_store.py`). The claim and the outcome are separate
 append-only facts, and the claim is never updated. The renewal itself is the vendor CLI's own rewrite of its credential
 file, driven as a bounded one-shot subprocess
@@ -523,8 +541,8 @@ The window runs from the claim, through the vendor's rewrite, to the outcome. It
 the renewal runs or finishes, the credential may not be renewed. The claim is already durable, so the slug's newest
 renewal reads as *unrecorded* in the runner-local diagnostics. The claim also anchors the slug's renewal cadence, so
 another renewal is not attempted within that cadence. A claim that fails to commit fires no renewal at all, and an
-outcome write that fails leaves the same standing claim a crash does. The credential file is the vendor's own atomic,
-lock-guarded write; a completed renewal can leave a renewed token on disk even when its outcome is lost.
+outcome write that fails leaves the same standing claim a crash does. The vendor controls the credential file's write; a
+completed renewal can leave a renewed token on disk even when its outcome is lost.
 
 A renewal still in flight when `runner host` shuts down is the same case. The driver's `stop()` waits a bounded time,
 then abandons the pass. The outcome it would have recorded can be lost, reading as unrecorded; the claim still gates
@@ -630,16 +648,18 @@ describes a runner moved to another host and awaiting adoption. The delete is on
   the archive cleanup above.
 
 The verdict the row is checked against is held only in the process: `IdentityVerdictHolder`
-(`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
-process `UNCHECKED`. A crash therefore loses it, and the restart re-derives it from a fresh check. The check is the head
-of every tick (`blizzard/src/blizzard/runner/loop/tick.py`): it asks the hub which runner the token belongs to and
-compares that id with the configured runner id, before any other hub call. One function, `tick_scope`
-(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`), then decides from the verdict whether the rest of the tick
-runs every step, the registration alone beside the local steps, or the local steps alone. Until the verdict is
-`MATCHED`, every call through `VerifiedHubClient` (`blizzard/src/blizzard/runner/hub/verified.py`) answers a
-`HubClientError`, so an unchecked loop behaves exactly as it does during a hub outage, taking only the outage paths
-every step already owns. The transcript operator verbs, backfill and reship, build their own process graph and run the
-same check once before their first hub call (`LoopWiring` in `blizzard/src/blizzard/runner/loop_wiring.py`).
+(`blizzard/src/blizzard/runner/hub/identity.py`) can be `UNCHECKED`, `MATCHED`, `MISMATCHED`, `REFUSED`, `NOT_HELD`,
+`TENANT_DIFFERS` or `VERSION_REFUSED`, and starts every process `UNCHECKED`. A crash therefore loses it, and the restart
+re-derives it from a fresh check. The check is the head of every tick (`blizzard/src/blizzard/runner/loop/tick.py`): it
+asks the hub which runner the token belongs to and compares that id with the configured runner id, before any other hub
+call. One function, `tick_scope` (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`), then decides from the
+verdict whether the rest of the tick runs every step, the registration alone beside the local steps, or the local steps
+alone. Until the verdict is `MATCHED`, calls through `VerifiedHubClient`
+(`blizzard/src/blizzard/runner/hub/verified.py`) answer a `HubClientError`, except registration may forward when the hub
+lacks an identity read or the version is refused. An unchecked loop otherwise behaves as it does during a hub outage,
+taking only the outage paths every step already owns. The transcript operator verbs, backfill and reship, build their
+own process graph and run the same check once before their first hub call (`LoopWiring` in
+`blizzard/src/blizzard/runner/loop_wiring.py`).
 
 The runner's hub proxy (`blizzard/src/blizzard/runner/api/hub_proxy.py`) is a first contact of its own. While the loop
 has not checked, `ProxyIdentityCheck` (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`) has the proxy ask the
@@ -737,9 +757,10 @@ migrate it names, completes the job.
 (`blizzard/src/blizzard/runner/runtime.py`). It migrates a new archive store under a temporary name beside the host's,
 copies the runner's rows into it in one transaction, folds the archive into one file, and renames it to
 `<store>.<runner>.<UTC stamp>`. Only then does it delete the runner's rows from the host store, in one transaction that
-keeps its outbox counters. This is a **no-window** write. Before the rename no archive name exists, and a re-run removes
-the temporary file and starts again. After the rename and before the delete, the archive is complete and the rows are
-still in place, so a re-run writes another archive and deletes them, losing nothing.
+keeps its outbox counters. This is a **no-window** write. Before the rename no archive name exists. A re-run removes the
+temporary file and its SQLite siblings for its own timestamped archive name; a different timestamp leaves the old
+temporary files behind. After the rename and before the delete, the archive is complete and the rows are still in place,
+so a re-run writes another archive and deletes them, losing nothing.
 
 ## The ingest
 

@@ -49,9 +49,9 @@ Beyond its clients, a `runnerHost` carries:
   over both transports without importing `node:http` or `node:net`.
 - The `runnerWinterTrap` option and `winterInvoked()` — the option puts a `winter` that records its invocation first on
   every host's `PATH`, a `runnerEnv.PATH` beside it refused, and `winterInvoked()` reports it.
-- `mockSessions()` and `opencodeExports()` — read what the mock fleet wrote into the world the fixture minted: the mock
-  harness's session records in the workspace, and the `mock-opencode` export documents under the host's own transcripts
-  root.
+- `mockSessions()` and `opencodeExports()` — read JSON documents from the fixture-minted workspace's
+  `.blizzard-mock-harness/sessions` and the fixture-minted transcripts directory's `mock-opencode`, respectively. These
+  readers keep those locations even if configuration or environment overrides direct the mocks elsewhere.
 - A runner's client — names each route a spec reads (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`,
   `dashboard`, `heartbeat`), so a spec reaches no route through `raw`.
 

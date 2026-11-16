@@ -25,9 +25,9 @@ score prose without reading the code.
 
 ## Per-block prose caps
 
-`bzh:prose-budget`'s caps are checked by `blizzard/tests/guards/test_layering.py` on `blizzard/exemplars/python` only.
-No command checks `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, or `blizzard-mock/tests`, where a large backlog
-of over-cap blocks stands.
+`bzh:prose-budget`'s caps are checked by `blizzard/tests/guards/test_layering.py` on
+`blizzard/exemplars/python/exemplar` and `blizzard/exemplars/python/tests` only. No command checks `blizzard/src`,
+`blizzard/tests`, `blizzard-mock/src`, or `blizzard-mock/tests`, where a large backlog of over-cap blocks stands.
 
 Standing in for a tier: a change shows that no block it added or edited is over cap, counting with
 `blizzard/scripts/prose_caps.py`. Gating the whole tree is not the fix, because it fails on prose the change never
@@ -36,21 +36,22 @@ touched and stops being read.
 ## Session stickiness, effective model, and context accounting
 
 The session-model contract — owned by [declared sessions](../../domain/graphs/declared-sessions.md#model-preference) —
-is proven at the flag, never at the model a harness ran under. Where the runner supplies no model on resume — OpenCode,
-whose resume passes only the session — the contract rests on that harness restoring a resumed session's own model, and
-nothing asserts that restoration. The live OpenCode compatibility diagnostic checks that the requested provider/model
-and variant survive fresh and resumed exports, but it deliberately supplies them on every invocation and therefore does
-not assert effective model stickiness when they are omitted, as the runner's resumes omit them. No tier asserts the
-effective context accounting a harness ran under, because the mock façade sees argv and nothing else.
+is proven at the invocation, never at the model a harness ran under. OpenCode 1 resumes pass the session without a
+model, so the contract rests on the harness restoring that session's own model, and nothing asserts that restoration.
+OpenCode 2 resumes use the managed-service driver, which switches the session model when the request names a different
+one; they are not the OpenCode 1 CLI resume path. The live OpenCode 1 compatibility diagnostic checks that the requested
+provider/model and variant survive fresh and resumed exports, but it deliberately supplies them on every invocation and
+therefore does not assert effective model stickiness when they are omitted, as the runner's resumes omit them. No tier
+asserts the effective context accounting a harness ran under, because the mock façade sees argv and nothing else.
 `blizzard:service-test`'s
 `tests/service/fleet/session-modes.spec.ts::test_a_named_pool_threads_one_session_across_nodes_and_reasserts_its_model`
 asserts the flag on the Claude Code façade — the mint and every resume carry the same resolved model — and stops there.
 
-Standing in for a tier: what backs the surrounding export behavior is a one-time empirical observation of Claude Code
-CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted range (currently `>=1.18.25,<2.0`).
-Neither observation proves OpenCode session stickiness when model flags are omitted; each harness also has a
-configuration that can defeat stickiness, which `docs/deployment/worker-spawn.md` states as deployment requirements. Do
-not add a real-token tier to close this gap.
+Standing in for a tier: the surrounding behavior is backed by a one-time empirical observation of Claude Code CLI
+2.1.220 and retained live compatibility evidence for the runner's admitted OpenCode ranges (currently `>=1.18.25,<2.0`
+and `>=2.0,<3.0`), using their respective CLI-export and managed-service paths. Neither proves OpenCode 1 session
+stickiness when model flags are omitted; each harness also has a configuration that can defeat stickiness, which
+`docs/deployment/worker-spawn.md` states as deployment requirements. Do not add a real-token tier to close this gap.
 
 ## The declared compaction window
 
@@ -63,28 +64,29 @@ Standing in for a tier: `blizzard:manual-autocompact-window` provides a live pro
 compaction behavior sits outside a hermetic, network-free CI tier's reach. The procedure is evidence only when run and
 its threshold contrast is observed; a configuration echo or a documented procedure alone does not close the gap.
 
-## OpenCode's compaction tail marker
+## OpenCode 1's compaction tail marker
 
 The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
 retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
 otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under any of the
-runner's committed 1.x captures carries it. The runner's admitted range (currently `>=1.18.25,<2.0`) has one admitted
-corpus, `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`, and supplemental captures at `1.18.32/` and
-`1.18.33/` without manifests. The admitted corpus's live runs never compacted. A wrong spelling parses as absent, so the
-fallback silently stops firing rather than failing.
+runner's committed 1.x captures carries it. The runner's admitted 1.x range (currently `>=1.18.25,<2.0`) has one
+admitted corpus, `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`, and supplemental captures at
+`1.18.32/` and `1.18.33/` without manifests. The admitted corpus's live runs never compacted. A wrong spelling parses as
+absent, so the fallback silently stops firing rather than failing.
 
 Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
 for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
 Re-run `blizzard:manual-opencode-compatibility` long enough to force a compaction before treating the fallback as
 proven, and do not add a tier that would assert a hand-authored spelling against itself.
 
-## OpenCode transcript reads never distinguish `not_found`
+## OpenCode 1 transcript reads never distinguish `not_found`
 
 `IHarnessTranscriptSource.turns_since`'s `TranscriptReadReason` names `not_found` and `unreadable` as distinct outcomes,
 but `opencode export <session-id>` gives no confirmed signal separating "no such session" from any other export failure
 — the compatibility probe's own `_export_session` (`opencode/compatibility/probe.py`) does not distinguish them either,
 always folding a non-zero exit into one generic error string. `OpenCodeTranscriptSource` therefore reports every export
 failure as `unreadable`, never `not_found`, until a live run's exit code or stderr shape is captured and confirmed.
+OpenCode 2 reads through its managed service and has a separate `not_found` path; this export gap does not describe it.
 
 Standing in for a tier: `blizzard:unit-test` covers the chosen `unreadable` default against every failure shape this
 parser can name; a live `opencode export` against a genuinely absent session id would be the evidence for a narrower
@@ -107,9 +109,9 @@ substitute.
 ## The worker deny list
 
 `WorkerSettings.document`'s `permissions.deny` list travels to the harness as a JSON settings file on every worker
-invocation path. The mock-visible tiers — `blizzard:unit-test`'s exact-list pin and `blizzard:component-test`'s
-prefix-parity check — prove only that the file is built and threaded, never that `claude -p` itself honors a
-`permissions.deny` entry.
+invocation path. The mock-visible tiers — `blizzard:unit-test`'s exact-list pin and the resume/judge prefix-parity check
+in `tests/component/runner/harness/claude_code/test_adapter.py` — prove only that the file is built and threaded, never
+that `claude -p` itself honors a `permissions.deny` entry.
 
 Standing in for a tier: `blizzard:manual-worker-deny-list` closes this as a live procedure, the same shape as
 [`blizzard:manual-autocompact-window`](./manual.md#blizzardmanual-autocompact-window) — an external harness's live
@@ -173,23 +175,6 @@ at `blizzard:unit-test` and by the component-tier projection golden tests, both 
 transcript shapes are involved, and why, is owned by `blizzard-mock`'s `src/blizzard_mock/harness/README.md`
 §"Conversation transcripts". Do not add a real-corpus CI tier reading a developer's `~/.claude/projects`, which is
 neither hermetic nor reproducible.
-
-## Claude Code's transcript source position codec, batch budget, and EOF clamps
-
-The position codec, the shared batch budget, and the past-EOF clamps inside `ClaudeCodeTranscriptSource.turns_since` are
-pinned at no tier at all. Every component-tier test of the transcript lane binds a scriptable `FakeTranscriptSource`
-(`blizzard/tests/support/runner_fakes.py`), so `tests/component/runner/transcripts/test_transcript_pump.py` and
-`tests/component/runner/transcripts/test_transcript_backfill.py` reach the pump's and the backfill's own decisions and
-never those three pieces. `OpenCodeTranscriptSource` is a distinct implementer this gap does not name: its own
-export-identity cursor, bound token, and `unreadable` default for export failures are pinned at `blizzard:unit-test` —
-"OpenCode transcript reads never distinguish `not_found`" above covers what that tier does not.
-
-Standing in for a tier: `blizzard runner transcript reship` and `blizzard runner transcript backfill` drive
-`TranscriptPump.drain_segment` with `deadline=None` over a complete historical file from offset 0 until the source
-catches up, exercising the three unpinned pieces harder than a tick ever does. The backfill verb is the first path that
-requires `ship = true`, so an operator running it against a real `~/.claude/projects` produces evidence of the
-forward-read lane that no tier records — which dogfooding does not supply by default, since the transcript lane ships
-disabled (`[transcripts] ship = false`).
 
 ## The query-plan assertions never run under postgres
 
@@ -266,16 +251,15 @@ input to a model no tier runs.
 The same residue covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and `bas-hwf`'s
 `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through on every lane
 — and each lane's `pre-push.md` rebase-to-empty qualifier. The `land` action's own classification is proven by
-`blizzard:unit-test`'s `land` action cases over a scripted forge and `tests/unit/hub/domain/graph/test_authoring.py`'s
-per-lane edge/addendum pins; that a worker reads the addendum's repair charge correctly, or applies the loop bound's
-chunk-history check rather than repeating the repair a second time, is not. Nor is whether a `failure` bounce's
-own-defect case is actually triaged `significant` rather than treated as a plain rebase, or whether a repair worker
-reads `delivery-findings` at all. No tier asserts that a repair worker reads a foreign-advance `failure` correctly,
-rather than adopting the foreign commit under `resolved`.
+`blizzard:component-test`'s `tests/component/hub/delivery/actions/test_land.py` cases over a scripted forge, and
+`blizzard:unit-test`'s `tests/unit/hub/domain/graph/test_authoring.py` per-lane edge/addendum pins; that a worker reads
+the addendum's repair charge correctly, or applies the loop bound's chunk-history check rather than repeating the repair
+a second time, is not. Nor is whether a `failure` bounce's own-defect case is actually triaged `significant` rather than
+treated as a plain rebase, or whether a repair worker reads `delivery-findings` at all. No tier asserts that a repair
+worker reads a foreign-advance `failure` correctly, rather than adopting the foreign commit under `resolved`.
 
-Every lane's `retrospective.md` verifies landing by the PR's own merge state and its merged sha's reachability from
-base, never the sha pre-push declared — no tier reads this leg back; a worker misreading it (checking the wrong sha, or
-skipping the merge-state read) is silent until a live chunk exposes it.
+No lane's `retrospective.md` directs the worker to verify the PR's merge state or the merged sha's reachability from
+base. The prompts alone therefore do not establish that landing check.
 
 `adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-push.md` addenda, scope a second or later visit to the
 delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method covers
@@ -390,19 +374,21 @@ Postgres rehearsal exercises a host journey but does not establish the concurren
   tenant-keyed and carry no key on `host_id`; the upserts that refresh a `(host_id, slug)` row in place have only run
   under SQLite's writer lock.
 - **The registration columns added above the baseline.** The revisions adding nullable `runner_registrations` columns —
-  for the reported version, the refusal reason and when it was judged; `agents`; `declining` — are each a
-  `batch_alter_table` rebuild on SQLite and native `ALTER`s on Postgres. They reach head and return to base under
-  `blizzard:manual-postgres-migrations`; those rebuilds over a table the `fk_runner_registrations_hosts` key binds have
-  never run where foreign keys are enforced.
-- **The host column added above the baseline.** The revision adding the nullable `hosts.urls` column is a
-  `batch_alter_table` rebuild on SQLite and a native `ALTER` on Postgres. A hand run under
-  `blizzard:manual-postgres-migrations` took it to head, down to base and up again, and walked it down and up over a
-  populated host row, which kept its `url` and read `NULL` in the new column; no tier repeats that run. The rebuild has
-  never run over a `hosts` table that rows in other tables bind where foreign keys are enforced.
+  for the reported version, the refusal reason and when it was judged; `agents`; `declining` — use native `ADD COLUMN`
+  on upgrade on both backends. Their downgrades rebuild the table on SQLite and use native `ALTER`s on Postgres. They
+  reach head and return to base under `blizzard:manual-postgres-migrations`; the SQLite rebuilds over a table bound by
+  `fk_runner_registrations_hosts` have never run where foreign keys are enforced.
+- **The host column added above the baseline.** The revision adding the nullable `hosts.urls` column uses native
+  `ADD COLUMN` on upgrade on both backends; its downgrade rebuilds the table on SQLite and uses a native `ALTER` on
+  Postgres. A hand run under `blizzard:manual-postgres-migrations` took it to head, down to base and up again, and
+  walked it down and up over a populated host row, which kept its `url` and read `NULL` in the new column; no tier
+  repeats that run. The rebuild has never run over a `hosts` table that rows in other tables bind where foreign keys are
+  enforced.
 - **A live host name's uniqueness.** `HostRegistryStore.add` reads the tenant's live host names and inserts under the
   scoped write's tenant-row lock, so two adds of one name queue on that row. That the lock alone keeps a name unique
-  among live hosts is unverified on Postgres; SQLite's writer lock serializes every add. A report reads the other live
-  names outside any lock and so can record a name an add took in between on either backend.
+  among live hosts is unverified on Postgres; SQLite's writer lock serializes every add. A report rechecks other live
+  names inside its scoped write under the same tenant-row lock, serializing a rename against an add or another rename;
+  that exclusion is likewise unverified on Postgres.
 - **An adoption racing another.** `HostRegistryStore` places a runner with an `UPDATE … WHERE host_id IS NULL` and rolls
   the write back on a runner that matched no row. That two adoptions of one runner under READ COMMITTED leave it under
   exactly one host is unverified; SQLite's writer lock serializes them.
@@ -653,9 +639,9 @@ The colocated migration test runs the revision that keys repositories and work s
 refuses, before any write, a record whose `forge_id` is null, names no forge, or names another tenant's forge. It then
 drops `repositories.forge_api_url` and `work_sources.api_base` and `web_base`, tightens both `forge_id` columns to
 `NOT NULL` under a foreign key onto `forges`, and rekeys `uq_repositories_tenant_coordinate` and
-`uq_work_sources_tenant_provider_locator` on the forge. Its downgrade refuses a tenant holding one locator on two
-forges, then refills the address columns from each record's forge and restores the address-keyed constraints. On SQLite
-each table is one `batch_alter_table` rebuild; on Postgres the same batch is native `ALTER`s.
+`uq_work_sources_tenant_provider_locator` on the forge. Its downgrade refuses work sources sharing a tenant, provider,
+and locator across forges, then refills the address columns from each record's forge and restores the former
+constraints. On SQLite each table is one `batch_alter_table` rebuild; on Postgres the same batch is native `ALTER`s.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head, returned to base leaving only `alembic_version`, and reached head again. It then stepped down to
@@ -674,9 +660,9 @@ portable SQL `bzh:sql-portable` holds each statement to.
 
 ## The project lens is not an access boundary
 
-The board's project lens narrows what a view reads, and a call naming no project reads the whole tenant; access is
-decided by the tenant alone. Nothing proves a person sees only a project's records, because nothing restricts them to
-one — a stated non-goal, not a missing check.
+The board's project lens narrows what a view reads, and a call naming no project reads the whole tenant. The tenant is
+the data boundary, while membership and role govern access within it. Nothing proves a person sees only a project's
+records, because the project lens does not restrict access to one project.
 
 ## Refusals absent from a supported release's document
 

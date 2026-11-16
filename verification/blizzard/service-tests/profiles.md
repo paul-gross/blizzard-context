@@ -82,7 +82,8 @@ only before boot or after stop, by the table and column names `contracts/store/r
 ## Subscription samples
 
 A runner spec produces a subscription sample through the vendor counterpart, never a store write: set what the
-credential reports on `vendorUsage`, `stepHost()`, then read the recorded sample off `GET /api/host/subscriptions`. Mint
-one credential per subscription so the counterpart can move one without the other, and take a held window's label from
-that sampled read, never a literal. A usage-limited worker's named reset places its mark in a window only when it
-matches a sampled `resetsAt` to the minute, so sample first and seed the limited chunk after.
+credential reports on `vendorUsage` using `resetsAt` in Unix seconds, `stepHost()`, then read the recorded sample off
+`GET /api/host/subscriptions`, whose windows carry `resets_at` as a timestamp string. Mint one credential per
+subscription so the counterpart can move one without the other, and take a held window's label from that sampled read,
+never a literal. A usage-limited worker's named reset places its mark in a window only when it matches a sampled
+`resets_at` to the minute, so sample first and seed the limited chunk after.
