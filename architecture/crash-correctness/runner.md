@@ -448,9 +448,9 @@ The fact these rows feed — whether a lease is currently backing off — is der
 generation (worker) or elicitation launch instant (judge) no longer matching the identity the fact recorded, not by a
 separate closing write. A lease that closes without ever recording a later generation or elicitation launch closes the
 fact a second way (`bzh:open-facts-declare-closure`): `OverloadStore.open_overload_facts` anti-joins `lease_closures`
-directly, the same shape `ask_store.py` already uses, rather than leaning on every caller scoping its own read to
-`list_active_leases()`. A crash between `record_overload` committing and the caller's own
-`publish_lease_changed(cause="dormant")` takes the accepted loss in
+directly, the same shape `blizzard/src/blizzard/runner/store/internal/ask_store.py` already uses, rather than leaning on
+every caller scoping its own read to `list_active_leases()`. A crash between `record_overload` committing and the
+caller's own `publish_lease_changed(cause="dormant")` takes the accepted loss in
 [§SSE announcement after commit](#sse-announcement-after-commit): the next read of `backing_off_facts` (or
 `LeaseActivity.state`) derives `"backing-off"` from the durable row.
 
@@ -481,11 +481,11 @@ while the host's latest report was answered with the host's own identity, so aga
 predates hosts, or answers as another host, the facts wait in the buffer and never ride a runner's lane.
 
 The window between the hub applying a push and the mark landing is a **real window**, registered as
-`hostlane.after-push.before-mark` and swept by `tests/crash/test_kill9_sweep.py`. A crash there leaves the pushed rows
-buffered and no mark recorded; the next pass re-pushes them, the hub answers them already applied against its own
-per-host mark, and the host clears them then. The mark write itself is a **no-window** write: the mark and the clearing
-commit together, and a mark below the recorded one moves nothing back. A failed push leaves everything buffered for the
-next pass, with no backoff and no latch, the shape the hub-as-sink class names.
+`hostlane.after-push.before-mark` and swept by `blizzard/tests/crash/test_kill9_sweep.py`. A crash there leaves the
+pushed rows buffered and no mark recorded; the next pass re-pushes them, the hub answers them already applied against
+its own per-host mark, and the host clears them then. The mark write itself is a **no-window** write: the mark and the
+clearing commit together, and a mark below the recorded one moves nothing back. A failed push leaves everything buffered
+for the next pass, with no backoff and no latch, the shape the hub-as-sink class names.
 
 The lane owes the invariant checker nothing: its rows carry the host's own `seq`, never a runner's, and the hub's mark
 is what de-duplicates a replay.
@@ -566,8 +566,8 @@ invariant. The startup sweep is not a candidate for `bzh:probe-gated-pass` or `R
 `LeaseTraceSweep.sweep` (`blizzard/src/blizzard/runner/tracing/sweep.py`) tells closed leases to the configured
 exporter, then appends a runner `trace_cursor` row recording how far it told. Its one dangerous window is registered:
 `leasetrace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not yet
-appended), swept by one dedicated scenario against an in-test OTLP sink (`tests/crash/test_kill9_sweep.py`). A crash
-there leaves the cursor unmoved, so the next pass re-reads and re-sends the same leases under the same span ids —
+appended), swept by one dedicated scenario against an in-test OTLP sink (`blizzard/tests/crash/test_kill9_sweep.py`). A
+crash there leaves the cursor unmoved, so the next pass re-reads and re-sends the same leases under the same span ids —
 delivery is at-least-once, and a backend deduplicates on span id. A crash before the exporter accepts loses nothing
 durable.
 
