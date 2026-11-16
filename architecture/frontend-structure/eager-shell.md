@@ -56,20 +56,23 @@ feature and dagre with it; a re-export shim that still names the menu components
 eager even though nothing renders it until a click.
 
 **See also.** `bzh:frontend-disjoint-diffs` — the sub-barrels this rule routes the eager path around still own each
-feature's public surface for every lazy consumer. `bzh:frontend-project-lens-seam` below — the project lens reaches
-`fleet` through the same entry point's seams.
+feature's public surface for every lazy consumer. `bzh:frontend-project-lens-seam` below — the app scope reaches `fleet`
+through the same entry point's seams.
 
 ## A view follows the project lens through its `fleet/shell` seams (`bzh:frontend-project-lens-seam`)
 
-**Rule.** Make a hub view, a read, or a link follow the project lens by injecting the seams `fleet/shell` exports —
-`HUB_PROJECT_FILTER` (`injectProjectFilter()`) for the project a read narrows to, `IN_APP_LINK` (the `lensLink` pipe)
-for a link that keeps the lens — and never by reading the URL's `/p/{project}/` segment yourself. Only
-`core/project-lens.ts` derives the lens from the URL, and `shell/app.config.ts`'s `provideProjectLens()` provides both
-seams from it; no `fleet` module imports `core/project-lens.ts`.
+**Rule.** Make a hub view, a read, or a link follow its app's scope through the seams `fleet/shell` exports —
+`HUB_PROJECT_FILTER` (`injectProjectFilter()`, hub only) for the project a read narrows to, `APP_SCOPE` for a link that
+keeps the scope: `appLink` for a cross-page link or navigation, `appPath` only where an anchor deliberately keeps the
+current query through `queryParamsHandling` — and never by reading the URL's `/p/{project}/` segment yourself. An app
+supplies policy only: the hub a path rewrite (its project prefix), the runner a scope query (`?runner=`, `?project=`).
+Only `core/project-lens.ts` derives the lens from the URL, and `shell/app.config.ts`'s `provideProjectLens()` provides
+the hub's seams from it; no `fleet` module imports `core/project-lens.ts` or names a policy's query keys.
 
 **Why.** One module parsing the lens segment keeps every view agreeing on which project the page is under, and a `fleet`
-module that took the lens from a seam rather than the hub's own lens stays servable by the runner app, which provides
-neither seam and so keeps every read whole and every link as written.
+module that takes the scope from a seam rather than an app's own stays servable by both apps. The runner keeps its
+display context on a shared link only because composition lives once in `fleet`; an app with no policy keeps every link
+as written.
 
 **Detect.**
 
@@ -77,11 +80,11 @@ neither seam and so keeps every read whole and every link as written.
   project.
 - An import of `core/project-lens` from under `projects/fleet/`.
 - A lensed read whose query key omits the project — not built through `lensedKey` — so two lenses share a cache entry.
-- An absolute in-app `routerLink` in a view the lens covers that does not pass through `lensLink` or `IN_APP_LINK`.
+- An absolute in-app `routerLink` in a view the scope covers that does not pass through `appLink` or `appPath`.
 
 **Do.** `admin/changes/changes.query.ts` takes the project from `injectProjectFilter()`, keys its read
 `lensedKey(hubConfigChangesKey, project)`, and sends the project as `?project=`; a template links
-`[routerLink]="'/board' | lensLink"`.
+`[routerLink]="'/board' | appLink: { chunk: id }"`.
 
 **Don't.** A query that splits `router.url` on `/` to find the project — a second parser that drifts from the lens the
 moment the URL shape changes, and that writes the hub's URL into a `fleet` view the runner app also serves.
