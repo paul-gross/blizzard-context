@@ -10,14 +10,15 @@ model at [./index.md](./index.md).
 The log is the hub's durable, append-only, typed record of operationally-significant tenant occurrences — failures an
 operator must act on and their recoveries, not a mirror of every state delta. The hub owns the log, recording each event
 and re-broadcasting it live; a failure the runner detects reaches it as a durable fact the runner reports. The event
-kinds below also include the hub-only fact-egress kinds, which appear only in the hub's own log.
+kind vocabulary below also includes fact-egress kinds; the hub records its own fact-egress occurrences only in its own
+log, never in a tenant's.
 
 Each event carries a severity (`info` | `warning` | `critical`), a noun-verb kind name, the runner/chunk/lease/node it
 concerns where present, a human-legible message, and an open detail payload. An event naming a chunk links back to it.
 The log reads newest first across every severity, each row keeping its severity, and is filterable by severity, runner,
 or chunk.
 
-Both vocabularies are closed: the hub refuses an `event.recorded` fact whose kind is not in §Event kinds, or whose
+Both logs' vocabularies are closed: the hub refuses an `event.recorded` fact whose kind is not in §Event kinds, or whose
 severity is not the one that kind declares. It also refuses an `event.recorded` fact of a kind the log only projects —
 `needs-human` is projected from open escalations, never recorded.
 
@@ -94,8 +95,8 @@ occurrences, which concern no tenant, and only hub administrators read it ([./te
 is recorded in one log or the other, never both. The hub's own log takes the same shape — severity, kind, message,
 detail — reads newest first, and has its own closed vocabulary:
 
-- the eight trace-export and fact-egress kinds above, each at the severity it carries there, when the export failing,
-  recovering, skipping, or reset is the hub's own — a runner's own trace export still reports into its tenant's log;
+- the eight trace-export and fact-egress kinds above, each at the severity it carries there, for the hub's own exports —
+  a runner's own trace export still reports into its tenant's log; fact-egress occurrences belong only to the hub's log;
 - `hub-started` (`info`) — the hub started and reached its store, naming its version and the store's revision;
 - `hub-migrated` (`info`) — the hub moved its store between schema revisions, in either direction, by `migrate` or
   `init`, naming both (`none` for a store just created); a downgrade below the hub log's own revision is not recorded;

@@ -784,9 +784,10 @@ login's `~/.claude/projects/`, keyed by the disposable cwd. Never point it at a 
 **Surface.** The app repo's own `docs/rollback.md`, walked verbatim against a live compose deployment stood up per
 `docs/install.md`. `blizzard:unit-test`'s `tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down`
 walks both migration chains from head to base and back on freshly initialized SQLite stores; it does not prove a
-downgrade succeeds for every populated store. The drill walks the operator-facing procedure by hand because no CI tier
-stands up a real compose deployment. Run it whenever the compose deployment's packaging changes (`packaging/docker/`),
-and whenever `docs/rollback.md`'s commands change.
+downgrade succeeds for every populated store. `blizzard:compose-smoke` stands up the real compose deployment in CI, but
+exercises one local image and a down-and-up, not a downgrade or a switch to an older image. The drill walks that
+rollback procedure by hand. Run it whenever the compose deployment's packaging changes (`packaging/docker/`), and
+whenever `docs/rollback.md`'s commands change.
 
 **Setup.** A running compose stack (`docker compose up -d`, `packaging/docker/compose.yaml`) on at least two published
 or locally-built image tags, so a real previous tag exists to roll back to.
@@ -1397,8 +1398,9 @@ verification, so the run proves it needs no checkout. The workspace's own `gh` h
 is not installed, so `mise` supplies both pinned, run from that directory:
 
 ```bash
-mkdir -p "$BLIZZARD_TMPDIR/verify-release" && cd "$BLIZZARD_TMPDIR/verify-release"
-cp <env>/blizzard/scripts/verify-release.sh .
+mkdir -p "$BLIZZARD_TMPDIR/verify-release"
+cp <absolute-path-to-env>/blizzard/scripts/verify-release.sh "$BLIZZARD_TMPDIR/verify-release/"
+cd "$BLIZZARD_TMPDIR/verify-release"
 mise x cosign@3.1.3 gh@2.102.0 -- ./verify-release.sh <tag>
 ```
 
