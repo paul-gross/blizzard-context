@@ -71,13 +71,16 @@ retained rather than removed. That field is read as `tail_start_id`, a snake_cas
 otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under any of the
 runner's committed 1.x captures carries it. The runner's admitted 1.x range (currently `>=1.18.25,<2.0`) has one
 admitted corpus, `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/`, and supplemental captures at
-`1.18.32/` and `1.18.33/` without manifests. The admitted corpus's live runs never compacted. A wrong spelling parses as
-absent, so the fallback silently stops firing rather than failing.
+`1.18.32/` and `1.18.33/` without manifests. The admitted corpus includes `compaction.json`, but its manifest does not
+identify that fixture as live evidence. `live_diagnostic.json` reports observed compaction and pruning, but retains only
+a summary, not the payload or the pruning mechanism. The supplemental exports are trimmed, so their absence of the
+marker does not prove their original sessions never compacted. A wrong spelling parses as absent, so the fallback
+silently stops firing rather than failing.
 
-Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
-for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
-Re-run `blizzard:manual-opencode-compatibility` long enough to force a compaction before treating the fallback as
-proven, and do not add a tier that would assert a hand-authored spelling against itself.
+Standing in for a tier: the live diagnostic reports pruning without retaining its shape; unit tests exercise both the
+physical-removal path and a hand-authored tail marker. The fallback is unverified until a live compaction's shape is
+captured. Re-run `blizzard:manual-opencode-compatibility` long enough to force a compaction and retain its payload
+before treating the fallback as proven, and do not add a tier that would assert a hand-authored spelling against itself.
 
 ## OpenCode 1 transcript reads never distinguish `not_found`
 
@@ -182,10 +185,11 @@ neither hermetic nor reproducible.
 `test_count_by_class_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend every component
 test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
 `ix_findings_tenant_project_routine_scope`/`ix_findings_tenant_project_routine_class` rather than a table scan.
-`tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty
-`chunk_id`-filtered fact tables' indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composite
-searches, the artifacts/graph-choices/transcript-segments/chunk-work-refs/close-intents hot-path reads, and each of
-`activity_facts_since`'s eighteen per-source ordered reads.
+`tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` checks twenty `chunk_id`-filtered fact-table reads
+and the hub store's hot-path indexes. For three composite-index tables it asserts a tenant-and-chunk search and the
+absence of the superseded single-column index, not the exact composite index name; it pins named indexes for the other
+fact-table reads, the artifacts/graph-choices/transcript-segments/chunk-work-refs/close-intents hot-path reads, and each
+of `activity_facts_since`'s eighteen per-source ordered reads.
 `tests/component/hub/store/internal/test_chunk_usage_store.py`'s `EXPLAIN QUERY PLAN` case over `usage_total_stmt`
 builder asserts `ix_usage_facts_tenant_recorded_at_id` the same way. `tests/component/test_store_read_index_gate.py`'s
 scan gate classifies its hub and runner census recipes, with non-SQL methods exempted, and
@@ -193,14 +197,13 @@ scan gate classifies its hub and runner census recipes, with non-SQL methods exe
 of these assertions against postgres, so whether the portable index declarations actually earn an index scan under
 postgres's own planner stays unproven.
 
-Standing in for a tier: every index declaration here is `bzh:sql-portable` — ordinary SQLAlchemy `Index()` DDL, not a
-sqlite-specific construct — so a postgres planner choosing a table scan over one would be a planner-statistics anomaly
-(e.g. an empty table) rather than a declaration defect. Do not add a postgres-backed component tier to close this: the
+Standing in for a tier: the declarations use portable SQLAlchemy indexes, but portability alone does not prove the
+postgres planner will choose them for these reads. A sequential scan may be appropriate for a small or insufficiently
+selective table, or expose a mismatch between a query and its index; representative data and statistics matter. The
 hosted hub runs SQLite, not postgres (`blizzard-infra`'s `deploy/compose.yaml`), so dogfooding never exercises the
-postgres planner. Blizzard's own `packaging/docker/compose.yaml` reference deployment does run postgres, but no test
-tier watches its planner either — an adopter's compose stack is not something any of blizzard's own tiers connects to.
-The gap stays open, not permanent: it closes the day some tier gains a postgres-backed component run, which the
-reference compose image already makes possible.
+postgres planner. Blizzard's own `packaging/docker/compose.yaml` reference deployment runs postgres, but no test tier
+watches its planner either. A postgres-backed component run would close this gap only if it actually asserts the
+relevant plans under representative conditions.
 
 ## The worker's push to a real forge
 
@@ -307,10 +310,11 @@ step. A fake catalog proves the tier rule is applied correctly to whatever entry
 whether that entry, or its resolved path, is real.
 
 Standing in for a tier: a change to the estimation path — the price cache, its path resolution, or the adapter's
-per-step pricing — owes `blizzard:manual-runner` together with `web:manual-board`, run against a local runner with a
-real OpenCode subscription binding and a local hub (`workspace:/context/project/hub-data-modes.md`; never the hosted
-hub): one real node-step observed showing its `~`-marked figure on the board and in `hub chunk get`, the estimate folded
-into the billed amount. Nothing repeats that observation automatically, so the change's author owes it by hand. Do not
+per-step pricing — owes a real OpenCode subscription step against a local runner and local hub
+(`workspace:/context/project/hub-data-modes.md`; never the hosted hub), and `web:manual-board`: observe the step's
+`~`-marked figure on the board and in `hub chunk get`, folded into the billed amount. `blizzard:manual-runner` uses the
+fenced mock and cannot supply the real step. The display observation alone does not prove the cache path or the price
+against OpenCode's own billing; those also need live evidence. Nothing repeats that observation automatically. Do not
 add a real-token/live-OpenCode CI tier to close this — an external harness's live pricing behavior sits outside a
 hermetic, network-free CI tier's reach.
 
@@ -325,20 +329,22 @@ behaviors below.
   every key or exercise the tenant drain over rows those keys bind.
 - **The slug move.** A project's slug move (`update_project`, `src/blizzard/hub/store/internal/project_store.py`) runs
   in one transaction. It reads for a current holder of the new slug, deletes the new slug's former-slug row, updates the
-  project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two
-  concurrent writes touching one slug leave is unverified: a uniqueness refusal in place of `ProjectSlugTaken`, or a
-  former-slug row the other write removed.
-- **A work source's slug move.** It takes the project slug move's shape, so it shares that move's race under READ
-  COMMITTED, equally unverified.
+  project, then records the slug it left. `ProjectStore.update` opens a scoped write, which locks the tenant row before
+  these statements, and translates `IntegrityError` to `ProjectSlugTaken`. Whether concurrent moves serialize as
+  intended under Postgres READ COMMITTED remains unverified.
+- **A work source's slug move.** It uses the same slug claim and release shape inside a locked transaction, and
+  `WorkSourceRecordStore.update` translates an `IntegrityError` to a locator or slug refusal. Its concurrency under
+  Postgres READ COMMITTED is likewise unverified.
 - **An ingest against a link or unlink.** An ingest takes the `keyed_locks` key of the project it mints into before its
   pointers' keys, and every source link or unlink takes the same project's key (`project_source_links_lock`,
   `src/blizzard/hub/domain/projects/links.py`), so the links an ingest read stand until it commits. That an unlink
-  racing an ingest under READ COMMITTED waits on the key rather than committing between the ingest's link read and its
-  mint is unverified; SQLite's writer lock serializes the two whatever the key.
+  racing an ingest under READ COMMITTED waits rather than committing between the ingest's link read and its mint is
+  unverified; both scoped writes also lock the tenant row, and SQLite's writer lock serializes them whatever the key.
 - **A landed repository row's keys.** `delivery_repo_landed`'s `repository_id` carries neither a unique key nor a
-  foreign key to the repository record: that a landing names a repository its project linked is held by the invariant
-  checker's `hub:landed-repository-linked` (`src/blizzard/hub/store/internal/invariants.py`) alone, and its behavior
-  under enforced keys is unverified.
+  foreign key to the repository record. The invariant checker's `hub:landed-repository-linked`
+  (`src/blizzard/hub/store/internal/invariants.py`) checks that a non-null repository was linked by the landing time;
+  older null ids are not judged, and later unlinks do not invalidate a landing. Its behavior under enforced keys is
+  unverified.
 - **A chunk's captured targets.** A chunk's repository targets are inserted once under its row lock — at its claim, in
   the route's own transaction, and at a delivery's submission (`ChunkTargetsStore.capture`,
   `src/blizzard/hub/store/internal/chunk_targets_store.py`) — reading the held rows and inserting only the missing ones.
@@ -350,10 +356,10 @@ behaviors below.
   winner and one revision conflict is unverified.
 - **A question or decision under a contended chunk lock.** A question or decision written while its chunk's row lock is
   contended is unverified under concurrent writes on Postgres.
-- **The `?project=` read plans.** Every read a `?project=` narrows has its `EXPLAIN QUERY PLAN` shape asserted on SQLite
-  only, so whether Postgres's planner uses the project read indexes for it stays unproven, as
-  [§The query-plan assertions never run under postgres](#the-query-plan-assertions-never-run-under-postgres) states for
-  every index.
+- **The `?project=` read plans.** SQLite plan assertions do not establish whether Postgres's planner uses the project
+  read indexes for reads narrowed by `?project=`, as
+  [§The query-plan assertions never run under postgres](#the-query-plan-assertions-never-run-under-postgres) describes
+  for the asserted plans.
 - **The forge and secret keys.** A forge or secret retire, and every work-source or repository write naming one, declare
   its `FORGE` or `SECRET` key in their domain unit before any read. That each verb declares its keys is asserted by unit
   test (`tests/unit/hub/domain/config/test_record_verb_locks.py`), and that the shared key makes a retire and a
@@ -370,9 +376,10 @@ Postgres rehearsal exercises a host journey but does not establish the concurren
 
 - **The host key.** The Postgres rehearsal exercises host registration, but not the tenant drain over rows bound by
   `fk_runner_registrations_hosts`.
-- **The host fact lane's upserts.** `host_high_water`, `host_external_usage`, and `host_external_usage_misses` are each
-  tenant-keyed and carry no key on `host_id`; the upserts that refresh a `(host_id, slug)` row in place have only run
-  under SQLite's writer lock.
+- **The host fact lane's writes.** `host_high_water`, `host_external_usage`, and `host_external_usage_misses` each carry
+  a tenant foreign key but no foreign key from `host_id` to `hosts`. The high-water row is keyed by `host_id` and
+  advanced by compare-and-set; the usage and miss rows are keyed by `(host_id, slug)` and refreshed in place. Their
+  concurrent writes have only been exercised under SQLite's writer lock.
 - **The registration columns added above the baseline.** The revisions adding nullable `runner_registrations` columns —
   for the reported version, the refusal reason and when it was judged; `agents`; `declining` — use native `ADD COLUMN`
   on upgrade on both backends. Their downgrades rebuild the table on SQLite and use native `ALTER`s on Postgres. They
@@ -451,8 +458,8 @@ runner-specific cases need Postgres-backed coverage.
 ## Hub actions' columns under Postgres
 
 The colocated tests run the two hub action revisions on SQLite: the first adds `graph_nodes.action` and
-`graph_nodes.action_args`, and the second adds `graph_nodes.legacy_run` and carries each stored hub row with no action
-onto one.
+`graph_nodes.action_args`, and the second adds `graph_nodes.legacy_run` and translates actionless hub rows where
+possible, retaining an untranslatable row's `run` in `legacy_run` instead.
 
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, the chain
   reached head, returned to base, and reached head again, with one translatable and one untranslatable hub row seeded at
@@ -473,9 +480,8 @@ indexes, and writes no row.
 - **What a hand run reached.** On a throwaway Postgres 16 cluster under `blizzard:manual-postgres-migrations`, an empty
   store reached head at the revision, returned to base leaving only `alembic_version`, and reached head again. It then
   stepped down to the revision's parent, which left none of the six tables, and up to head once more.
-- **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
-  someone runs it again. No row was written through the tables there either, so the foreign keys SQLite never enforces
-  have not met a submission, a closure, or a turn on Postgres.
+- **What no tier repeats.** No CI tier repeats that full migration pass. The hand run wrote no rows through the tables;
+  the Postgres rehearsal's landing journey exercises them, but does not repeat the hand run's revision-boundary checks.
 
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
@@ -541,9 +547,8 @@ and creates `project_repository_positions` and `flow_submission_terms` empty. On
   Every row read `merge-on-checks` and `pending`, both columns read `NOT NULL` with their defaults, and a row inserted
   without either column read its default. A second step down kept every seeded row and dropped the four columns and both
   tables.
-- **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
-  someone runs it again. No row was written through the two new tables there, so their foreign keys onto a link and a
-  submission have not been enforced against a row.
+- **What no tier repeats.** No CI tier repeats that populated revision-boundary pass. The hand run wrote no rows through
+  the two new tables; the Postgres rehearsal exercises a landing, but does not repeat that seeded migration check.
 
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
@@ -624,11 +629,10 @@ The colocated migration test runs the revision adding the errand marks on SQLite
 upgrade is native `ADD COLUMN`s on either backend; its downgrade is a `batch_alter_table` rebuild of each table on
 SQLite and native `ALTER`s on Postgres.
 
-- **What a hand run reached.** None yet: `blizzard:manual-postgres-migrations` has not been run over this revision, so
-  head, base, and head again, and a step from its parent with seeded `work_item_runs` and `routine_scopes` rows, are
-  each unverified on Postgres.
-- **What no tier repeats.** No CI tier runs that pass, so the revision stays unverified on Postgres until someone runs
-  it.
+- **What the rehearsal reaches.** The Postgres leg of `blizzard:rehearsal` migrates an empty hub store to head and
+  compares its reflected schema with the store contract; its supported-release journey also migrates the seeded hub.
+- **What no tier repeats.** No tier steps from this revision's parent with seeded `work_item_runs` and `routine_scopes`
+  rows, then downgrades and upgrades those rows again on Postgres. That populated transition remains unverified there.
 
 Standing in for a tier: the revision's colocated migration test and `blizzard:store-contract`, both on SQLite, and the
 portable SQL `bzh:sql-portable` holds each statement to.
@@ -650,8 +654,9 @@ constraints. On SQLite each table is one `batch_alter_table` rebuild; on Postgre
   `NOT NULL`, both foreign keys and both rekeyed constraints stood, and the address columns were gone. At head, a second
   work source of an already-held locator on the other forge made the step down refuse, naming the tenant and both
   sources, with nothing written. Once the locator was changed by hand, the step down refilled every address from its
-  forge, a null `web_base` included, read `forge_api_url` `NOT NULL` again, and restored both address-keyed constraints
-  with the foreign keys dropped. A work source set back to no forge at the parent made the step up refuse, naming it.
+  forge, a null `web_base` included, read `forge_api_url` `NOT NULL` again, and restored the repository's address-keyed
+  constraint and the work source's tenant/provider/locator constraint with the foreign keys dropped. A work source set
+  back to no forge at the parent made the step up refuse, naming it.
 - **What no tier repeats.** No CI tier runs that pass, so a later change to the revision is unverified on Postgres until
   someone runs it again.
 

@@ -164,8 +164,8 @@ tenants, and the member would be a standing cross-tenant read with no reason to 
 ## Uniqueness a tenant can observe is per tenant (`bzh:tenant-scoped-uniqueness`)
 
 **Rule.** Every primary key, unique constraint, and unique index on a tenant-owned table holds `tenant_id`, or holds a
-column the schema marks hub-unique (`info={"hub_unique": True}`) — a hub-minted ULID or an autoincrement surrogate, the
-table's own or a foreign key to one.
+hub-unique column: a hub-minted id the schema marks `info={"hub_unique": True}`, an autoincrement surrogate, or a
+foreign key to either.
 
 **Why.** A natural key a tenant chooses — a name, a slug, a work ref, an id a runner minted — is one two tenants can
 both claim; unique across the hub, the second tenant's write fails on a row it cannot see, and the failure tells it the
@@ -208,13 +208,13 @@ write nothing into any tenant's store; their rows carry their tenant's id instea
 narrowed to one tenant: it reads the same hub-scoped probe and corpus and acts only in that tenant.
 
 **Detect.** The read half: the ast-grep rule `bzh:sweep-acts-in-row-tenant`
-(`contracts/ast-grep/rules/sweep-acts-in-row-tenant.yml`, run by `blizzard:structural-gate`) refuses a raw SQLAlchemy
-`select`, `exists`, `join`, or `union` constructor in the hub-scoped read modules that is not reached through one of the
-two builders, and the closed-tenant component test `tests/component/hub/store/internal/test_hub_scoped_corpus.py` gives
-a closed tenant a row in every table `step_facts_for` reads and fails when any corpus read returns one. The write half
-has no structural gate: the statement guard sees a scoped write as scoped whichever tenant it was opened for. A reviewer
-asks of each write a pass makes: whose scope is this, and is it the tenant of the row being acted on? A sweep's service
-test seeds two tenants and asserts each write lands in its row's tenant.
+(`contracts/ast-grep/rules/sweep-acts-in-row-tenant.yml`, run by `blizzard:structural-gate`) refuses raw SQLAlchemy
+`select`, `exists`, `join`, `outerjoin`, `union`, and `union_all` constructors in its named cross-tenant read modules,
+and the closed-tenant component test `tests/component/hub/store/internal/test_hub_scoped_corpus.py` gives a closed
+tenant a row in every table `step_facts_for` reads and fails when any corpus read returns one. The write half has no
+structural gate: the statement guard sees a scoped write as scoped whichever tenant it was opened for. A reviewer asks
+of each write a pass makes: whose scope is this, and is it the tenant of the row being acted on? A sweep's service test
+seeds two tenants and asserts each write lands in its row's tenant.
 
 **Do.** The close drain reads every pending close across open tenants, then for each one opens the services of the
 tenant the close belongs to and issues the close through that tenant's work-source client and event log.

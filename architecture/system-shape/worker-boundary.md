@@ -58,8 +58,8 @@ foreground group.
 the hub has no sanctioned launch site, and `hub/**` launches no process at all.
 
 **Detect.** `bzh:runner-child-launch` is tooled by `blizzard:structural-gate`'s ast-grep scan
-(`contracts/ast-grep/rules/runner-child-launch.yml`), which refuses `import subprocess`, `from subprocess import …`, and
-`import pty` outside `runner/process/**` and the colocated migration tests (`bzh:colocated-migration-tests`).
+(`contracts/ast-grep/rules/runner-child-launch.yml`), which refuses imports of `subprocess` and `pty` outside
+`runner/process/**` and the colocated migration tests (`bzh:colocated-migration-tests`).
 `tests/unit/runner/process/test_tick_subprocess_timeouts.py` (`blizzard:unit-test`) pins that the seam's
 run-to-completion timeout is required and non-optional.
 

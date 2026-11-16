@@ -70,7 +70,7 @@ free environment of its workspace, and a claim that finds none free waits for on
 
 [./claim-vocabulary.md](./claim-vocabulary.md) states the environment as an operator reads it, and
 `bzh:invariant-checker` in [../../architecture/crash-correctness.md](../../architecture/crash-correctness.md) audits
-this invariant after every crash.
+this invariant after each crash-sweep recovery cycle.
 
 ## Bindings
 

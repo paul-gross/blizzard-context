@@ -84,10 +84,9 @@ against the live stack rather than seeding past it:
 3. File a forge issue.
 4. `POST /api/chunks`, so the env's runner ticks the chunk to `done`.
 
-`blizzard:service-test` runs this same loop as a tier, and
-`tests/service/fleet/acceptance-loop.spec.ts::test_acceptance_loop_one_chunk_ingest_to_landed` is the exact sequence to
-read when a by-hand step is unclear. Walking it by hand exercises a change on the loop while watching it; it never
-stands in for the tier.
+`blizzard:service-test` runs this same loop as a tier, and the `test_acceptance_loop_one_chunk_ingest_to_landed`
+Playwright test in `tests/service/fleet/acceptance-loop.spec.ts` is the exact sequence to read when a by-hand step is
+unclear. Walking it by hand exercises a change on the loop while watching it; it never stands in for the tier.
 
 **Passes when.** The stated observable holds on the running hub, confirmed through a second surface — and, for a loop
 walk, the chunk lands in the bare origin and the hub's facts derive `done`, with no tokens and no network.
@@ -240,9 +239,9 @@ a scratch dir, or a provisioned env's own `$BZ_HUB_RUNTIME` if that env's hub is
 `[auth] mode = "oauth"`, an `[auth] superuser` naming the email the IdP's first profile reports, and one
 `[[auth.oauth.provider]] type = "oidc"` entry whose `issuer` points at the standing IdP and that sets
 `emails_authoritative = true`, which an invitation's acceptance needs. The auth mode value is `"oauth"`, not `"oidc"`;
-`oidc` is the provider `type` (`hub/config.py`'s `AUTH_MODE_OAUTH`). `auth.mode = "none"` is the default a
-`winter service up <env>`-started hub scaffolds via `blizzard hub init`, so a running env's own service stack serves
-everything unauthenticated until this setup is applied to it.
+`oidc` is the provider `type` (`src/blizzard/hub/config_defaults.py`'s `AUTH_MODE_OAUTH`). `auth.mode = "none"` is the
+default a `winter service up <env>`-started hub scaffolds via `blizzard hub init`, so a running env's own service stack
+serves everything unauthenticated until this setup is applied to it.
 
 **Steps.**
 
@@ -561,7 +560,7 @@ handful of turns crosses a low declared window.
 3. Read each turn's context size the way the runner already does — the main-chain record's
    `message.usage.input_tokens + cache_read_input_tokens + cache_creation_input_tokens` in
    `~/.claude/projects/<project>/<session-id>.jsonl`, per `ClaudeCodeTranscriptSource.context_tokens` in
-   `claude_code/transcript.py`.
+   `src/blizzard/runner/harness/claude_code/transcript.py`.
 4. Repeat the whole run with `--autocompact` omitted, same prompts and same turn count.
 
 **Passes when.** The declared-window run's context size drops sharply back toward a small fraction of 100k within a turn
