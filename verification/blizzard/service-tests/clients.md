@@ -31,9 +31,10 @@ Assemble `http://localhost:${port}/api/...` in a spec.
 
 The `federation` client simulates a browser's sign-in bounce from a runner host to the hub and back, holding the
 runner's cookies and the hub's in separate contexts, since both answer on `127.0.0.1` and cookies ignore the port. To
-act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and
-`events.open`; a call made as a worker carries the credential [`./surfaces.md`](./surfaces.md) §A worker's credential
-names.
+act as a specific person, use `user.api`, a person's `api` from `people`, or pass `{ as: person }` to `cli` or
+`events.open`. The CLI logs the person in under their own config home; the stream carries their session cookie instead
+of the default superuser session and still names the fixture's tenant. A call made as a worker carries the credential
+[`./surfaces.md`](./surfaces.md) §A worker's credential names.
 
 ## A runner host's handle
 
@@ -44,8 +45,8 @@ Beyond its clients, a `runnerHost` carries:
   require a stopped host and restart. Use the pre-start profile for initial authored values.
 - `clearHubTokens`, `renameRunner` and `removeStore` — edit its stopped directory, never a file by hand.
 - The `runnerOtlp` option and `host.otlp` — the option supplies a test-owned sink as the host's telemetry endpoint;
-  tracing still requires configuration. `host.otlp` reads spans and the attributes and resource of sum data points and
-  log records.
+  tracing still requires configuration. `spans()` returns decoded spans, including attributes, scope and resource;
+  `sumPoints()` and `logRecords()` return only each item's attributes and resource, not its value or log body.
 - `socketApi` — answers its shared routes (`health`, `exportTelemetry`) over its Unix socket as well, so a spec loops
   over both transports without importing `node:http` or `node:net`.
 - The `runnerWinterTrap` option and `winterInvoked()` — the option puts a `winter` that records its invocation first on
@@ -65,7 +66,8 @@ without running `git`; `originTree`, `originLog` (optionally by path) and `origi
 `originFile` returns `undefined` for a path absent at the ref. `originLog` returns an empty array when no reachable
 commit touched the path, but can return history for a file absent at the ref. The `runnerOnForge` option names forge
 repositories made before the host is, and `${forgeOrigins}` in `runnerConfig` is the directory of the forge's bare
-repositories, `<owner>/<name>.git` below it, so a host whose repository is the forge's own lands what a worker pushes.
+repositories, `<owner>/<name>.git` below it. The option creates the repositories; the host profile must select their
+origins for the worker's pushes to land on that forge.
 
 A fleet test that drives delivery passes its `repository()` result to
 `runnerHosts.create({ runnerRepositories: { [repo.name]: repo.origin! } })` before minting the graph: the host then

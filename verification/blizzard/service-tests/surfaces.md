@@ -51,12 +51,14 @@ reads a store's currentness through `blizzard-runner host --check`.
 
 ## Templates and cold initialization
 
-By default, each hub stack, shared or fresh, and each runner host starts from a per-run template the harness built once
-with the real `init` of each daemon: the hub restores its durable files, and the runner host copies the migrated
-`data/host.db` before its own `blizzard-runner init` runs. A shared hub has no cold option; a spec that needs a cold hub
-declares `fresh-hub` and takes `test.use({ coldInit: true })`. A runner-host spec whose subject is what `init` produces
-can also set `coldInit`, alongside runner options such as `runnerStarted` and `runnerDir`. `FreshHub.reset()` always
-runs `init` cold.
+By default, each hub stack, shared or fresh, and each fixture-initialized runner host starts from a per-run template the
+harness built once with the real `init` of each daemon. The hub restores `blizzard-hub.toml`, `data/hub.db`, and
+`data/auth/secret-keys`, then merges the profile; it does not restore logs, forge origins, or egress. The runner host
+copies the migrated `data/host.db` before its own `blizzard-runner init` runs. A shared hub has no cold option; a spec
+that needs a cold hub declares `fresh-hub` and takes `test.use({ coldInit: true })`. A runner-host spec whose subject is
+what `init` produces can also set `coldInit`, alongside runner options such as `runnerStarted`. A host given an already
+initialized `runnerDir` skips fixture initialization and the template; its owner controls how that directory was
+initialized. `FreshHub.reset()` always runs `init` cold.
 
 ## A worker's credential
 

@@ -133,9 +133,9 @@ Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — 
 3. Drive the behavior with `curl` against `http://127.0.0.1:$BZ_RUNNER_PORT/runners/<id>/api/…`, or the root's
    `/api/host/…` for a host read. The app repo's `openapi/runner.openapi.json` carries schema-included routes and their
    shapes; the SSE stream and OTLP receivers are excluded from OpenAPI.
-4. Account for the tick: the daemon reconciles its store on every tick — 30 seconds by default, `tick end` in the
-   runner's log — so re-read after one, and treat a row that changes across it as the daemon's doing rather than the
-   request's.
+4. Account for the tick: the daemon reconciles its store on every tick — 30 seconds by default — so re-read after one,
+   and treat a row that changes across it as the daemon's doing rather than the request's. `tick end` is a debug-level
+   log event and may not appear at the configured log level.
 5. Confirm it through a second surface — `uv run blizzard runner status --runner-url "http://127.0.0.1:$BZ_RUNNER_PORT"`
    from `<env>/blizzard`, `GET /runners/<id>/api/dashboard`, or, for a read, the seed or the drive that put the state
    there — and keep the commands run and their output with the change under verification.
@@ -226,11 +226,13 @@ answering at `<hub-url>`; one on `auth.mode = "none"` needs no sign-in.
 1. Start the daemon under test on the scratch port.
 2. Hold an SSE subscription open against its `GET /api/events/stream` with `curl -N` or a streaming client, before
    driving the act.
-3. Drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call under test.
-4. Assert that the reserved comment opens the stream, that a keepalive comment arrives on an idle connection within the
-   cadence `src/blizzard/foundation/events/stream.py`'s `DEFAULT_KEEPALIVE_SECONDS` declares, and that the frames'
-   `id`/reconnect-replay behavior holds on a live socket. The hub's and the runner's reserved open-of-stream comments
-   carry different literal text, so check the one the daemon under test actually owns.
+3. Drive each publish site over HTTP — the endpoint or CLI call behind the `broker.publish_*` call under test. Record an
+   event id, disconnect, drive another event, and reconnect with the recorded `Last-Event-ID` while both events remain
+   in the broker's replay tail. Check that the newer event replays and the acknowledged event does not.
+4. Assert that the reserved comment opens the stream and that a keepalive comment arrives on an idle connection at the
+   cadence `src/blizzard/foundation/events/stream.py`'s `DEFAULT_KEEPALIVE_SECONDS` declares, allowing for scheduling
+   and transport delay. The hub's and the runner's reserved open-of-stream comments carry different literal text, so
+   check the one the daemon under test actually owns.
 
 **Passes when.** That framing and timing behavior holds over a real connection for every call driven.
 
@@ -296,7 +298,8 @@ names a slug declared by the host; a host with no `[[subscription]]` has none to
 `anthropic` (Claude Code), but another host's declarations need not include that slug.
 
 **Setup.** The runner machine's own real OAuth credentials for the slug under test (`~/.claude/.credentials.json` for
-`anthropic`) and a working `blizzard runner` binary.
+`anthropic`) and a working `blizzard runner` binary. Select the host that declares the slug with `--dir` or
+`$BZ_RUNNER_DIR`; otherwise the command reads the current directory.
 
 **Steps.** Run `blizzard runner external-usage probe <slug>` (e.g. `probe anthropic`), a read-only diagnostic
 subcommand, then separately read that provider's own usage view for the same account (Claude Code's own `/usage`
@@ -317,14 +320,15 @@ throwaway copy.
 
 **Setup.** A runner with an `openai`-provider `[[subscription]]` declared, whose credential file (`~/.codex/auth.json`
 by default, or the declaration's own `credentials_path`) is inside the renewer's lead window — at or near its own
-access-token `exp` — and a working `codex` binary the runner's environment can reach. Record the credential file's own
-`tokens.refresh_token` and access-token `exp` before starting.
+access-token `exp` — and a working `codex` binary the runner's environment can reach. Record the access-token `exp` and
+compare the refresh token privately before and after; do not retain or disclose the token value in evidence.
 
 **Steps.** Run the runner under `blizzard runner host` in timed mode and let its credential-renewal pass fire naturally:
 the host-wide pass runs on its own driver, beside runner ticks, and renews a due credential once the subscription's
 cadence has elapsed since its newest renewal claim, whether or not that claim completed. An ordinary `runner tick` runs
-only a runner pass; `runner tick --host` steps the host-wide pass and can renew. Optionally, run `codex` by hand at the
-same time (e.g. `codex login status`), so the live proof also covers the concurrent-writer path the mock only simulates.
+only a runner pass; `runner tick --host` steps the host-wide pass of a running host and can renew. Optionally, run
+`codex` by hand at the same time (e.g. `codex login status`), but do not treat that alone as proof of a concurrent
+write: record independent evidence of a vendor-CLI credential write overlapping the renewal if claiming that path.
 
 **Passes when.** The credential file's `tokens.refresh_token` and access-token `exp` have both changed from what was
 recorded in Setup, `codex login status` (or an equivalent vendor-CLI check) still reports the login as active afterward,
@@ -375,8 +379,8 @@ git grep -n -E "$pattern"
 ```
 
 Read every hit in its surrounding context — the phrase alone never decides a verdict — and classify each under the
-ordered tests above. This is a census, not a sweep: it reads the tree and does not change it. A `deleted` occurrence is
-a failure to report, not something the pass removes on its way through.
+ordered tests above. This is a census, not a sweep: it reads the tree and does not change it. Report a `deleted`
+occurrence as a failure; do not remove it on the way through.
 
 **Evidence.** Record the revision, the search expression, the total hit count, and one line per occurrence giving its
 path, line, phrase, class, and the reason that class was reached. Keep it with the change under review — the pull
@@ -444,9 +448,9 @@ plugin's real CLI command; the env-local runner API check below proves that comm
    `OPENCODE_CONFIG_CONTENT` use absolute snapshot paths, since OpenCode resolves them against the worker cwd. Each
    independent setting survives and the runner's `permission.question` remains `deny`.
 2. Launch a fresh real worker turn that uses a permitted tool and attempts both an operator-denied tool and `question`.
-   Read the tool/permission events and plugin instrumentation, including the runner heartbeat endpoint under
-   `/runners/<id>/api/`: denied calls are refused without waiting, each plugin loads once, and exactly one heartbeat
-   arrives for each completed tool call.
+   Read the tool/permission events and plugin instrumentation: denied calls are refused without waiting, each plugin
+   loads once, and exactly one heartbeat is emitted for each completed tool call. The script intercepts the heartbeat
+   command; the separate runner check below exercises the endpoint.
 3. Resume the same session, send a nudge, run a judgement and invoke a child `task` session. Compare the adapter's
    effective environment and resolved config for each invocation, and the aggregate plugin and heartbeat counts to the
    tool events. Instrument per-invocation counts separately: the script's aggregate counts alone do not establish the
@@ -465,14 +469,17 @@ untouched. From `<env>/blizzard`, source `winter env <env>` and run
 disposable bundle-backed runner against that env's hub, waits for an active mock OpenCode lease, records a heartbeat,
 confirms its timestamp after a later tick via the runner API and the lease through the CLI, then publishes a changed
 bundle from the probe's own process so `current` moves, and asserts that every recorded worker launch's
-`OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` still name the snapshot the runner started on. It gives the disposable
-runner a scratch `XDG_DATA_HOME`, so the operator's own OpenCode store, once migrated to OpenCode 2, cannot withdraw the
-OpenCode 1 binding it claims through. It then stops the runner and detaches the test chunk back to ready. Its local hub
+`OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` still name the snapshot the runner started on. It waits for another launch
+after the move but does not require one; check the recorded launch count and independently exercise a later launch to
+prove that boundary. It gives the disposable runner a scratch `XDG_DATA_HOME`, so the operator's own OpenCode store,
+once migrated to OpenCode 2, cannot withdraw the OpenCode 1 binding it claims through. It then stops the runner and
+attempts to detach the test chunk; confirm its final state independently, including after a failure. Its local hub
 gateway admits only the selected chunk at queue peek and claim, regardless of other ready chunks' positions. The caller
 must supply a disposable chunk that is ready before the run.
 
 **Retained evidence.** Keep sanitized resolved-config output, the effective file's path and hash, CLI/tool events,
-plugin instrumentation and heartbeat counts alongside the change under verification.
+plugin instrumentation and heartbeat counts alongside the change under verification. The operator-bundle script deletes
+its temporary home and prints a summary, not the resolved config or events: capture those separately before cleanup.
 
 **Passes when.** All settings and companion files load with the documented precedence, denied calls are refused, runner
 and operator plugins execute once each, exactly one heartbeat is emitted per tool call through fresh, resume, nudge,
@@ -505,9 +512,9 @@ anywhere else. If the budget this reading records fails, the source moves behind
 instead, without changing the seam.
 
 **Blind spot.** A dev machine's `opencode export` cost is not the hosted runner host's — different disk, different CPU
-class, a different concurrent-worker count. What it measures instead is the **ratio** between the export's cost at a
-small retained conversation and at a large one, and between one concurrent caller and several, on the same machine — the
-shape a budget decision turns on, not an absolute SLA.
+class, a different concurrent-worker count. A comparison of one concurrent caller and several on the same machine shows
+the concurrency shape, not an absolute SLA. Comparing small and large retained conversations additionally requires
+readings at both sizes.
 
 **Setup.** A real OpenCode 1 `opencode` binary (or the emitted mock CLI-surface artifact, once it gains a general
 `export`, standing in when a live provider is unavailable), driving one session compacted enough to carry a
@@ -586,7 +593,8 @@ or two of first crossing it and stays down, while the undeclared run's context s
 dropping. That contrast is the compaction event itself, because no other mechanism resets a session's context
 mid-lineage.
 
-**OpenCode exercise.** From the provisioned `blizzard` worktree, use an admitted real OpenCode binary and run:
+**OpenCode exercise.** From the provisioned `blizzard` worktree, use a real OpenCode 1 binary in the probe's admitted
+range (`>=1.18.25,<2.0`) and run:
 
 ```bash
 uv run python scripts/probe_opencode_compaction_window.py --binary <absolute-opencode> --window 8k --evidence-dir "$BLIZZARD_TMPDIR/compaction-window"
@@ -722,7 +730,9 @@ Part (a), the precedence probe:
    without a reply, and the output reports that it did. The fallback uses the real config directory for subsequent cells
    and skips `user-same-name`; record that cell as unwalked if fallback is used.
 2. Record the `claude` version and, per cell and signal, which sink received it: `settings` means the settings
-   document's `env` beat the process env (outcome A), `process` means the process env won (outcome B).
+   document's `env` beat the process env (outcome A), `process` means the process env won (outcome B). The report can
+   also say `both` or `none`; neither establishes a single winner. The generic-endpoint and beta cells compare different
+   variables, not simply same-name precedence.
 3. Record the scope names.
 4. Record whether spans parent on the `TRACEPARENT` span.
 5. Record which signals the `beta-endpoint` cell's endpoint took from the documented exporters, in any encoding.
@@ -738,12 +748,13 @@ into `default-delivery` ends the chunk after the one `triage` node.
 8. Run one node with `harness_telemetry` on and no operator destination in the worker settings. The sink holds Claude
    Code metrics, logs, and spans under `blizzard-claude-code`, each stamped with the node's chunk, lease, and runner;
    the spans sit under the step root; a span from a `blizzard` command the worker ran parents on the step root, since
-   the CLI reads only `BLIZZARD_TRACEPARENT`; `blizzard runner status` shows all three signals captured.
+   the CLI reads only `BLIZZARD_TRACEPARENT`; `blizzard runner status` shows the configured capture plan for all three
+   signals. The sink, not that plan, proves receipt.
 9. For the handoff to programs that read `TRACEPARENT`, run one `haiku` `claude -p` turn under the same switches, with a
    known `TRACEPARENT` and a traces sink, that runs `printenv TRACEPARENT` through `Bash`: the printed span id is one of
    Claude Code's spans.
 10. Put one signal's exporter in the `--settings` document's `env`, and rerun. That signal reaches the operator's
-    destination and `runner status` shows it as operator-configured.
+    destination and `runner status` shows it as operator-configured (not captured).
 
 **Passes when.** The probe exits 0 and its reading is recorded with the `claude` version: outcome A or B per source, the
 scope names, and the parenting. Exit 0 establishes only that the baseline emitted something, not that every cell or
@@ -827,13 +838,15 @@ release that adds a runner revision or graduates the directory, once per runner 
 
 **Hazards.** The live store file is only ever read, by SQLite's backup API; nothing in the rehearsal opens it for
 writing, migrates it, or points a daemon at it. Every command after the copy names the scratch directory, never the live
-one. The scratch directory carries no `.env`, so no hub token leaves the live directory and nothing can reach a hub.
+one. Do not copy `.env` or credentials, and isolate inherited tokens, database URL overrides and other environment
+settings; the absence of a scratch `.env` alone does not prevent inherited credentials or network access.
 
-**Setup.** A scratch virtualenv with the release's wheel installed (`uv venv`, then `uv pip install <wheel>`), so the
-rehearsal runs the migrations the release ships and not the live runner's installed ones. A scratch directory holding a
-copy of the live host configuration and an empty `data/`. For a pre-graduation directory, copy `blizzard-runner.toml`;
-otherwise copy `blizzard-host.toml`, removing any `[hub_tokens]` table. Remove any `db_url` pointing outside the scratch
-directory. This SQLite method does not cover a runner using an external database.
+**Setup.** A scratch virtualenv with the release's wheel installed (`uv venv <venv>`, then
+`uv pip install --python <venv>/bin/python <wheel>`), so the rehearsal runs the migrations the release ships and not the
+live runner's installed ones. A scratch directory holding a copy of the live host configuration and an empty `data/`.
+For a pre-graduation directory, copy `blizzard-runner.toml`; otherwise copy `blizzard-host.toml`, removing any
+`[hub_tokens]` table. Remove any `db_url` pointing outside the scratch directory. This SQLite method does not cover a
+runner using an external database.
 
 **Steps.**
 
@@ -852,13 +865,13 @@ directory. This SQLite method does not cover a runner using an external database
    token at a hub. The page is the operator's deploy rehearsal and runs it.
 3. Record the copy's AUTOINCREMENT counters, which a table rebuild can reset:
    `sqlite3 <scratch store> 'select name, seq from sqlite_sequence order by name'`.
-4. Migrate the copy from the scratch install: `blizzard runner migrate --dir <scratch dir>`. It adopts `data/runner.db`
-   as `data/host.db` when graduating and applies the pending revisions. Read `sqlite_sequence` from `data/host.db` after
-   the upgrade.
-5. Check its invariants: `blizzard dev check-invariants --runner-dir <scratch dir>`.
+4. Migrate the copy from the scratch install: `<venv>/bin/blizzard runner migrate --dir <scratch dir>`. It adopts
+   `data/runner.db` as `data/host.db` when graduating and applies the pending revisions. Read `sqlite_sequence` from
+   `data/host.db` after the upgrade.
+5. Check its invariants: `<venv>/bin/blizzard dev check-invariants --runner-dir <scratch dir>`.
 6. Run the downgrade and upgrade round trip:
-   `blizzard runner migrate --dir <scratch dir> --down <the revision's parent>`, then
-   `blizzard runner migrate --dir <scratch dir>` again, then check invariants once more.
+   `<venv>/bin/blizzard runner migrate --dir <scratch dir> --down <the revision's parent>`, then
+   `<venv>/bin/blizzard runner migrate --dir <scratch dir>` again, then check invariants once more.
 7. Read `sqlite_sequence` again from `data/host.db` after the round trip. After the upgrade, the
    `in_flight_elicitations` is not below its recorded value; the runner outboxes keep their counters in
    `outbox_counters` instead and have no row. The host's own `host_outbound_buffer` also uses AUTOINCREMENT. After the
@@ -880,9 +893,10 @@ change reports this by hand.
 ([`./gaps.md`](./gaps.md#the-query-plan-assertions-never-run-under-postgres) owns which one, and why) but not its
 EBS-backed volume's I/O characteristics or its EC2 host's hardware, so an absolute reading here still says nothing about
 the hosted hub's own latency. What it measures instead is the **ratio** between two readings of the *same* store, before
-and after the code change — a ratio those hardware differences still track proportionally. The hosted reading is
-separate: operator inspection against `https://blizzard.grosscode.net` once a release carrying the change is deployed
-there, never a dev surface pointed at it (`workspace:/context/project/hub-data-modes.md` owns why).
+and after the code change. Hardware and I/O differences can change that ratio too, so it is not a prediction of the
+hosted ratio. The hosted reading is separate: operator inspection against `https://blizzard.grosscode.net` once a
+release carrying the change is deployed there, never a dev surface pointed at it
+(`workspace:/context/project/hub-data-modes.md` owns why).
 
 **Setup.** A fleet-scale hub store that is not the live fleet — `workspace:/context/project/hub-data-modes.md`'s mode 2
 (a migrated snapshot copy) or mode 3 (seeded synthetic) — or, for a reading taken mid-change before a fresh store
@@ -1154,9 +1168,10 @@ from an empty Postgres store to head (`gaps.md` records what that leaves unexerc
 **Steps.**
 
 1. `GET /api/admin/invariants` on the hub and `GET /api/host/invariants` on the host, on the clean state.
-2. Write a deliberate breach into the Postgres store by SQL, one an invariant of the hub half names, then
-   `GET /api/admin/invariants` again.
-3. Fire two overlapping requests at one route.
+2. Write a deliberate breach into the Postgres store by SQL, choosing an invariant whose detail identifies the tenant,
+   then `GET /api/admin/invariants` again.
+3. Hold one request inside its invariant check while issuing another to the same route; merely starting two requests
+   together does not guarantee their checks overlap.
 4. `GET /api/admin/invariants` bearing the runner's token.
 
 **Passes when.** Step 1 answers `200` with an empty `violations` list on both routes; step 2 answers `200` with a
