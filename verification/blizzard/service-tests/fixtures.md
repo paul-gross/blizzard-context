@@ -60,12 +60,20 @@ of the behavioral assertions.
 
 ## The export barrier
 
-After finishing the scenario, poll `traceSink.spans()` until both the hub step root and runner invocation for that chunk
-have arrived, then apply the dictionary-driven trace oracle. A completed host step alone is not an export barrier for
-both daemons. A companion on a controlled stack exports on a stepped hub sweep instead: the fixture opens the export
-before the test can move the clock, and `flushTraces(host)` returns once the sink holds every span, so the test reads
-`traceSink.spans()` once rather than polling.
+A companion runs on a controlled stack (`test.use({ clockMode: 'controlled' })` in a describe of its own, so the
+ordinary cases keep the system clock). It drives the hub itself, with the harness's controlled-hub wait for every wait
+that crosses a hub-executed node, and reads fleet spans once, after `flushTraces(host)`, then applies the
+dictionary-driven trace oracle. `flushTraces` steps the hub's export sweep, which covers fleet spans only: platform and
+worker-command spans ride a batch processor on machine time, and only shutdown flushes them. A companion therefore reads
+those after the host-then-hub shutdown barrier below, and never compares a platform timestamp with a fleet timestamp:
+the two planes run on different clocks, so it bounds by what it stepped, not by a time cutoff. The system-clock poll of
+`traceSink.spans()` for the hub step root and runner invocation is the fallback for a companion that cannot run
+controlled; a completed host step alone is not an export barrier for both daemons.
+
+A frozen clock puts many records on one instant, so a companion moves the clock where an assertion compares instants or
+durations (a gate's end against `resolved_at`, the backlog wait against `blizzard.chunk.backlog_ms`), and the
+controlled-hub wait moves it on each turn so step roots do not tie.
 
 Before a negative leak scan of the full export, stop the companion's `runnerHost` and `freshHub` in that order, then
 read `traceSink.spans()` again. Their shutdown flushes close the worker-command and hub-export windows; the earlier
-root-and-invocation poll alone does not prove that a later command span cannot still arrive.
+fleet-span read alone does not prove that a later command span cannot still arrive.
