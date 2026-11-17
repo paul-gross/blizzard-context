@@ -78,20 +78,27 @@ change needs with `tool:mock-data`, or through the real ingest path when ingest 
 When the behavior under exercise rides the acceptance loop — ingest, acquire, commit, deliver, landed — walk the loop
 against the live stack rather than seeding past it:
 
-1. `BLIZZARD_MOCK_WINTER_SOURCE=<workspace root> uv run blizzard-mock-fixture reset --env <env>`, from
-   `<env>/blizzard-mock` — the env's runner is winter-bound, so the fixture names its winter source explicitly; none is
-   discovered.
-2. Drop the harness fence marker in the fixture's `workspace/`.
-3. File a forge issue.
-4. `POST /api/chunks`, then `POST /api/chunks/<chunk-id>/promote` so the ready chunk can be claimed and the env's runner
-   ticks it to `done`.
+1. Ensure the env has no work using its fixture, then run
+   `BLIZZARD_MOCK_WINTER_SOURCE=<workspace root> uv run blizzard-mock-fixture reset --env <env>` from
+   `<env>/blizzard-mock`. Reset destroys and remints that env's fixture, including the origins shared with the forge; it
+   is not safe against work to preserve. The env's runner is winter-bound, so name the winter source explicitly.
+2. Drop `.blizzard-mock-harness-fence` in the fixture's `workspace/`; the runner also needs
+   `BLIZZARD_MOCK_HARNESS_FENCE=1` in its environment. The workspace service band sets the latter.
+3. Confirm the hub's mock-forge work source and repository are linked to the target project. Install a default-named
+   graph selected by ingest, with executable mock-harness build and judgement prompts that commit, push and declare the
+   commit artifact for the same fixture repository, followed by a hub `land` node. The service test below is an example;
+   its fixture-owned graph is not installed by the standing stack.
+4. File a forge issue, `POST /api/chunks` against that source and project, then `POST /api/chunks/<chunk-id>/promote` so
+   the ready chunk can be claimed and the env's runner ticks it to `done`.
 
-`blizzard:service-test` runs this same loop as a tier, and the `test_acceptance_loop_one_chunk_ingest_to_landed`
-Playwright test in `tests/service/fleet/acceptance-loop.spec.ts` is the exact sequence to read when a by-hand step is
-unclear. Walking it by hand exercises a change on the loop while watching it; it never stands in for the tier.
+`blizzard:service-test` also runs the loop: `test_acceptance_loop_one_chunk_ingest_to_landed` in
+`tests/service/fleet/acceptance-loop.spec.ts` builds a fixture-owned graph and origin, files and promotes an issue, and
+steps the runner to `done`. It does not use the winter-bound reset sequence above. Walking the loop by hand exercises a
+change while watching it; it never stands in for the tier.
 
 **Passes when.** The stated observable holds on the running hub, confirmed through a second surface — and, for a loop
-walk, the chunk lands in the bare origin and the hub's facts derive `done`, with no tokens and no network.
+walk, the chunk lands in the bare origin and the hub's facts derive `done`, using only mock credentials and loopback
+services, with no external network.
 
 ### `blizzard:manual-runner`
 
@@ -133,10 +140,10 @@ Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — 
    from `<env>/blizzard`, `GET /runners/<id>/api/dashboard`, or, for a read, the seed or the drive that put the state
    there — and keep the commands run and their output with the change under verification.
 
-`--runner-url` and `--dir` name the host. The verbs that reach a runner — `pause`, `start`, `clear-floor`, `status`,
-`takeover`, `requeue`, `selftest`, and `traces status`/`traces replay` — take `--runner <name|id>` to pick one; on a
-host of one they pick its runner when it is omitted. `clear-floor` takes `--runner` only in place of `--subscription`,
-naming exactly one.
+`--runner-url` and `--dir` name the host. The runner-directed verbs `pause`, `start`, `status`, `takeover`, `requeue`,
+`selftest`, and `traces status`/`traces replay` take `--runner <name|id>`; on a host of one they pick its runner when it
+is omitted. `clear-floor` instead requires exactly one of `--runner` or `--subscription`: the runner target must spend
+no subscription; otherwise clear the subscription's floor.
 
 The CLI verbs whose help is labeled **Worker:** resolve their lease from a spawned worker's environment, so they are
 exercised by a worker the runner spawns, not typed by hand.
@@ -248,7 +255,9 @@ serves everything unauthenticated until this setup is applied to it.
 
 **Steps.**
 
-1. Start the hub with `blizzard hub host --dir <hub-dir> --port <hub-port>`.
+1. Start the hub with `blizzard hub host --dir <hub-dir> --port <hub-port>`. Point all CLI commands below at this hub
+   (for example, set `BZ_HUB_URL=http://127.0.0.1:<hub-port>`), and sign the CLI in as the superuser with
+   `blizzard hub login` before using its administrator verbs. Do not leave a sourced env's different hub URL in place.
 2. Drive a real browser to `http://127.0.0.1:<hub-port>/` and confirm the `/login` gate renders the configured
    provider's button. Sign in as the identity whose email the runtime dir names as `[auth] superuser`: the claim admits
    it without an invitation — a hub administrator with an `admin` membership in the hub's one tenant — and the board
@@ -259,17 +268,19 @@ serves everything unauthenticated until this setup is applied to it.
 4. Invite that identity: `uv run blizzard hub invite create --email <email> --role guest` from the superuser's signed-in
    CLI prints the link. Open it in the second context and sign in from its landing: the account lands in the tenant and
    the board renders read-only — a chunk opened in the dock carries no ⋮ actions menu. Opening the used link again lands
-   on the sign-in page with the `invitation_unusable` text, and a live link opened by an account without the invited
-   email with the `invitation_email_mismatch` text, the invitation staying live. Change the person's role from the
-   members page and reload on the same session cookie: the dock's ⋮ actions menu appears for `contributor`.
+   on the sign-in page with the `invitation_unusable` text. Create another live invitation and use the IdP lever in a
+   fresh browser context to sign in with a different email: the `invitation_email_mismatch` text appears and the
+   invitation stays live. Change the person's role from the members page and reload on the same session cookie: the
+   dock's ⋮ actions menu appears for `contributor`.
 5. Create a second tenant with `uv run blizzard hub tenant create <name> --admin <user_id>` for the second person. A
    person holding one membership never sees a choice. With two, a fresh tab reuses a valid remembered tenant. To
    exercise the picker, remove `blizzard.tenant` from that tab's session storage and `blizzard.tenant.last` from the hub
    origin's local storage, then reload: the tenant picker renders outside the shell. The chosen tenant's name shows in
    the header, the profile menu's switcher moves the tab to the other, and a reload keeps the tab in its tenant. A
    signed-in person with no membership renders the no-access screen outside the shell — no header, no nav.
-6. Delete a tenant with `uv run blizzard hub tenant delete <tenant_id> --yes` and reload a member's tab: the deleted
-   tenant is gone from the picker and the switcher.
+6. Delete the second tenant with `uv run blizzard hub tenant delete <tenant_id> --yes` and reload a member's tab: the
+   deleted tenant is gone from the picker and the switcher. Then, as the superuser, revoke that person's remaining
+   membership with `blizzard hub member revoke <user_id>` in the original tenant and check the no-access screen.
 
 **Passes when.** An uninvited sign-in is refused with its page text and writes no session, an invited one lands in its
 tenant, two roles render visibly different UI on the same state, and with two tenants the picker, the header's tenant
@@ -309,11 +320,11 @@ by default, or the declaration's own `credentials_path`) is inside the renewer's
 access-token `exp` — and a working `codex` binary the runner's environment can reach. Record the credential file's own
 `tokens.refresh_token` and access-token `exp` before starting.
 
-**Steps.** Run the runner under `blizzard runner host` and let its credential-renewal pass fire naturally: the pass runs
-on its own driver, beside the tick, and renews a due credential once the subscription's cadence has elapsed since its
-newest renewal claim, whether or not that claim completed. A `runner tick` never renews. Optionally, run `codex` by hand
-at the same time (e.g. `codex login status`), so the live proof also covers the concurrent-writer path the mock only
-simulates.
+**Steps.** Run the runner under `blizzard runner host` in timed mode and let its credential-renewal pass fire naturally:
+the host-wide pass runs on its own driver, beside runner ticks, and renews a due credential once the subscription's
+cadence has elapsed since its newest renewal claim, whether or not that claim completed. An ordinary `runner tick` runs
+only a runner pass; `runner tick --host` steps the host-wide pass and can renew. Optionally, run `codex` by hand at the
+same time (e.g. `codex login status`), so the live proof also covers the concurrent-writer path the mock only simulates.
 
 **Passes when.** The credential file's `tokens.refresh_token` and access-token `exp` have both changed from what was
 recorded in Setup, `codex login status` (or an equivalent vendor-CLI check) still reports the login as active afterward,
@@ -392,7 +403,8 @@ gates a candidate owes before this diagnostic applies to it, and when a new corp
 
 For OpenCode 2, follow that page's "OpenCode 2" section. Start the operator's service first and leave it idle so the
 proof may restart it once. Pass `--opencode1-binary` and `--opencode1-model` so `store_migration` is observed rather
-than ambiguous. The run commits nothing: a corpus for a newly admitted version is the evidence directory, landed under
+than ambiguous. The proof may commit in a disposable scratch repository, but does not commit the caller's checkout.
+Follow the operator procedure when deciding whether a newly admitted version needs a committed corpus under
 `src/blizzard/runner/harness/contracts/opencode/<version>/`.
 
 **Retained evidence.** Retain the diagnostic output and the sanitized evidence directory: `report.json` and
@@ -484,21 +496,21 @@ and the run ends the way the page says it will.
 
 ### `blizzard:manual-opencode-export-budget`
 
-**Surface.** `OpenCodeTranscriptSource`'s wall-clock cost — one `opencode export <session-id>` shell-out plus its strict
-parse — under fleet-realistic concurrency, against the cursor's token-size budget. No CI tier measures wall-clock time
-at all, and every component-tier test of the source binds a scripted export rather than a real `opencode` binary, so
-neither the shell-out's latency nor the parser's cost at a large retained conversation is pinned anywhere else. If the
-budget this reading records fails, the source moves behind OpenCode's documented server API instead, without changing
-the seam.
+**Surface.** OpenCode 1's `OpenCodeTranscriptSource`'s wall-clock cost — one `opencode export <session-id>` shell-out
+plus its strict parse — under fleet-realistic concurrency, against the cursor's token-size budget. No CI tier measures
+wall-clock time at all, and every component-tier test of the source binds a scripted export rather than a real
+`opencode` binary, so neither the shell-out's latency nor the parser's cost at a large retained conversation is pinned
+anywhere else. If the budget this reading records fails, the source moves behind OpenCode's documented server API
+instead, without changing the seam.
 
 **Blind spot.** A dev machine's `opencode export` cost is not the hosted runner host's — different disk, different CPU
 class, a different concurrent-worker count. What it measures instead is the **ratio** between the export's cost at a
 small retained conversation and at a large one, and between one concurrent caller and several, on the same machine — the
 shape a budget decision turns on, not an absolute SLA.
 
-**Setup.** A real `opencode` binary (or the emitted mock CLI-surface artifact, once it gains a general `export`,
-standing in when a live provider is unavailable), driving one session compacted enough to carry a fleet-realistic
-retained-turn count.
+**Setup.** A real OpenCode 1 `opencode` binary (or the emitted mock CLI-surface artifact, once it gains a general
+`export`, standing in when a live provider is unavailable), driving one session compacted enough to carry a
+fleet-realistic retained-turn count.
 
 **Steps.**
 
@@ -624,9 +636,10 @@ mock-driven tier observes either CLI's handling, are [`./gaps.md`](./gaps.md#hea
 guaranteed and it needs no credential; Claude Code runs a cheap model.
 
 **Steps.** Run `uv run python scripts/probe_headless_permission_refusal.py` (`--skip-claude` omits Claude Code). Per
-autonomy value it launches through the production adapters under a disposable home and scratch project. OpenCode cells
-ask from the operator bundle, user config, project config, project `agent.build.permission`, and a built-in default (a
-`.env` read). The Claude Code cell has an operator `permissions.ask` rule on a Bash command.
+autonomy value it launches through the production adapters in a scratch project. OpenCode uses a disposable home; Claude
+Code uses the caller's login environment. OpenCode cells ask from the operator bundle, user config, project config,
+project `agent.build.permission`, and a built-in default (a `.env` read). The Claude Code cell has an operator
+`permissions.ask` rule on a Bash command.
 
 **Passes when.** The script exits 0. In `normal`, every OpenCode cell ends with the call refused as a tool result, a
 final reply, and no `auto-rejecting` on stderr. In `auto` and `dangerous`, every OpenCode cell resolves the request
@@ -702,10 +715,11 @@ Part (a), the precedence probe:
 1. Run `uv run python scripts/probe_claude_code_telemetry_precedence.py`. It points the model endpoint at a closed
    loopback port under a disposable `CLAUDE_CONFIG_DIR`, home, and project, and observes two local sinks. It runs the
    `baseline`, `flag-same-name`, `user-same-name`, `generic-in-settings`, `beta-endpoint`, `switch-off`, and
-   `enable-only` cells and writes one sanitized protobuf export body per signal to
+   `enable-only` cells and writes an available sanitized baseline protobuf export body per signal to
    `blizzard/tests/fixtures/claude_code_telemetry/` (`--fixtures-dir` redirects them when the walk is not meant to
    refresh the fixtures). `--fallback-model-turn` runs one cheapest-model turn only when the baseline emits nothing
-   without a reply, and the output reports that it did.
+   without a reply, and the output reports that it did. The fallback uses the real config directory for subsequent cells
+   and skips `user-same-name`; record that cell as unwalked if fallback is used.
 2. Record the `claude` version and, per cell and signal, which sink received it: `settings` means the settings
    document's `env` beat the process env (outcome A), `process` means the process env won (outcome B).
 3. Record the scope names.
@@ -731,9 +745,10 @@ into `default-delivery` ends the chunk after the one `triage` node.
     destination and `runner status` shows it as operator-configured.
 
 **Passes when.** The probe exits 0 and its reading is recorded with the `claude` version: outcome A or B per source, the
-scope names, and the parenting. Part (b)'s observations hold. Walk it again whenever the admitted range in
-`blizzard/src/blizzard/runner/harness/claude_code/health.py` or the installed `claude`'s minor version moves: the
-precedence is undocumented behavior.
+scope names, and the parenting. Exit 0 establishes only that the baseline emitted something, not that every cell or
+signal was observed; inspect the report and record any unwalked cell or missing signal. Part (b)'s observations hold.
+Walk it again whenever the admitted range in `blizzard/src/blizzard/runner/harness/claude_code/health.py` or the
+installed `claude`'s minor version moves: the precedence is undocumented behavior.
 
 **Hazards.** As `blizzard:manual-live-node`'s: never the systemd runners' stores, and never the hosted hub. An
 operator's own `~/.claude/settings.json` `env` beats the runner's process env, so it could redirect a signal or reach a
@@ -789,16 +804,17 @@ exercises one local image and a down-and-up, not a downgrade or a switch to an o
 rollback procedure by hand. Run it whenever the compose deployment's packaging changes (`packaging/docker/`), and
 whenever `docs/rollback.md`'s commands change.
 
-**Setup.** A running compose stack (`docker compose up -d`, `packaging/docker/compose.yaml`) on at least two published
-or locally-built image tags, so a real previous tag exists to roll back to.
+**Setup.** A running compose stack (`docker compose up -d`, `packaging/docker/compose.yaml`) on the newer image, with a
+previous published or locally-built image tag available to roll back to.
 
 **Steps.** Stop the hub, run `docker compose run --rm hub blizzard-hub migrate --dir … --down <rev>`, then swap to the
 previous image tag and bring the hub back up. The `--down` step runs on the still-current, newer image because that
 image carries the `downgrade()` steps the older image's tree never heard of.
 
 **Passes when.** The hub then serves at the previous tag's version — `GET /api/health` reports the older `version` — and
-`GET /api/ready` reports `ready: true`, proving the store landed at exactly the older revision rather than merely some
-earlier one.
+`GET /api/ready` reports `ready: true`. Read the store revision after the downgrade and before starting the older image
+and compare it with the older image's `migrate --head` output: readiness alone cannot prove the downgrade stopped at
+that revision, since the older image migrates on startup.
 
 ### `blizzard:manual-store-copy-rehearsal`
 
@@ -814,30 +830,35 @@ one. The scratch directory carries no `.env`, so no hub token leaves the live di
 
 **Setup.** A scratch virtualenv with the release's wheel installed (`uv venv`, then `uv pip install <wheel>`), so the
 rehearsal runs the migrations the release ships and not the live runner's installed ones. A scratch directory holding a
-copy of the live directory's `blizzard-runner.toml` and an empty `data/`.
+copy of the live host configuration and an empty `data/`. For a pre-graduation directory, copy `blizzard-runner.toml`;
+otherwise copy `blizzard-host.toml`, removing any `[hub_tokens]` table. Remove any `db_url` pointing outside the scratch
+directory. This SQLite method does not cover a runner using an external database.
 
 **Steps.**
 
-1. Take a WAL-consistent copy of the live store into the scratch directory with SQLite's backup API —
-   `sqlite3 -readonly <live dir>/data/runner.db ".backup '<scratch dir>/data/runner.db'"` — never a file copy, which can
-   miss pages still in the WAL. `-readonly` keeps the shell from checkpointing the live WAL when it closes.
-2. Convert the scratch directory as the release's `docs/upgrade.md` §Host graduation boundary does at its
-   file-conversion step: write `blizzard-host.toml` from the copied `blizzard-runner.toml`, with the one `[[runner]]`
-   carrying the `id` the page's step 6 names, a `db_url` naming the live directory's store dropped so the default
-   `data/host.db` applies, and no `token_env`; then rename the copied file to `blizzard-runner.toml.graduated`. The
-   conversion is the procedure under rehearsal, so a step that does not work as the page words it is a finding against
-   the page. This method departs from the page in one place, deliberately: it is a matrix check on scratch copies with
-   no hub, so it does not run `blizzard runner host --check`, which resolves each token at a hub. The page is the
-   operator's deploy rehearsal and runs it.
+1. Take a WAL-consistent copy of the live store into the scratch directory with SQLite's backup API — for a
+   pre-graduation directory, `sqlite3 -readonly <live dir>/data/runner.db ".backup '<scratch dir>/data/runner.db'"`; for
+   a graduated directory, use its configured store as the source and `<scratch dir>/data/host.db` as the destination.
+   Never use a file copy, which can miss pages still in the WAL. `-readonly` keeps the shell from checkpointing the live
+   WAL when it closes.
+2. For a pre-graduation directory, convert the scratch directory as the release's `docs/upgrade.md` §Host graduation
+   boundary does at its file-conversion step: write `blizzard-host.toml` from the copied `blizzard-runner.toml`, with
+   the one `[[runner]]` carrying the `id` the page's step 6 names, a `db_url` naming the live directory's store dropped
+   so the default `data/host.db` applies, and no `token_env`; then rename the copied file to
+   `blizzard-runner.toml.graduated`. The conversion is the procedure under rehearsal, so a step that does not work as
+   the page words it is a finding against the page. This method departs from the page in one place, deliberately: it is
+   a matrix check on scratch copies with no hub, so it does not run `blizzard runner host --check`, which resolves each
+   token at a hub. The page is the operator's deploy rehearsal and runs it.
 3. Record the copy's AUTOINCREMENT counters, which a table rebuild can reset:
-   `sqlite3 <scratch dir>/data/runner.db 'select name, seq from sqlite_sequence order by name'`.
+   `sqlite3 <scratch store> 'select name, seq from sqlite_sequence order by name'`.
 4. Migrate the copy from the scratch install: `blizzard runner migrate --dir <scratch dir>`. It adopts `data/runner.db`
-   as `data/host.db` and applies the pending revisions.
+   as `data/host.db` when graduating and applies the pending revisions. Read `sqlite_sequence` from `data/host.db` after
+   the upgrade.
 5. Check its invariants: `blizzard dev check-invariants --runner-dir <scratch dir>`.
 6. Run the downgrade and upgrade round trip:
    `blizzard runner migrate --dir <scratch dir> --down <the revision's parent>`, then
    `blizzard runner migrate --dir <scratch dir>` again, then check invariants once more.
-7. Read `sqlite_sequence` again, from `data/host.db`, after the upgrade and after the round trip. After the upgrade, the
+7. Read `sqlite_sequence` again from `data/host.db` after the round trip. After the upgrade, the
    `in_flight_elicitations` is not below its recorded value; the runner outboxes keep their counters in
    `outbox_counters` instead and have no row. The host's own `host_outbound_buffer` also uses AUTOINCREMENT. After the
    round trip, every table recorded is back and none is below its recorded value.
@@ -1075,14 +1096,14 @@ the hub at it with `BZ_HUB_DB_URL='postgresql+psycopg://@/hub?host=<socket dir>&
 
 1. `blizzard hub init` — an empty database migrates to head.
 2. `blizzard hub migrate --down base`, then read `alembic_version` and `\dt`.
-3. `blizzard hub migrate` — head again.
+3. `blizzard hub migrate` — head again; read `alembic_version` and compare it with `blizzard hub migrate --head`.
 4. When the change touches a backfill revision, `migrate --down <that revision's parent>`, seed the rows it reads (more
    than one flush batch, with the rows its markers or links name), then `migrate` to head and read the backfilled column
    and its closing constraint.
 
 **Passes when.** Every step exits zero with no cursor, `executemany`, or dependent-object error; step 2 leaves
-`alembic_version` empty and no other table; step 3 reports the head revision; and a step 4 backfill leaves no row
-unfilled and its column required.
+`alembic_version` empty and no other table; step 3's stored revision matches the head; and a step 4 backfill leaves no
+row unfilled and its column required.
 
 ### `blizzard:manual-postgres-runner-migrations`
 
@@ -1090,10 +1111,10 @@ unfilled and its column required.
 Postgres cluster. Every tier runs the runner store on SQLite; this is the one place the revisions above the runner
 baseline and its outbox counters run where DDL is transactional and a sequence never reuses a value.
 
-**Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on loopback (`initdb -A trust`, `pg_ctl` on a
-private port, `createdb`), and every `blizzard` command run under `uv run --no-sync --with 'psycopg[binary]==3.3.4'`. A
-scratch host directory scaffolded by runner `Runtime.init` (`src/blizzard/runner/runtime.py`), its `blizzard-host.toml`
-`db_url` set to the cluster.
+**Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on a Unix socket (`initdb -A trust`, `pg_ctl` on
+a private port, `createdb`), and every `blizzard` command run under `uv run --no-sync --with 'psycopg[binary]==3.3.4'`.
+A scratch host directory scaffolded by runner `Runtime.init` (`src/blizzard/runner/runtime.py`), its
+`blizzard-host.toml` `db_url` set to the cluster.
 
 **Steps.**
 
@@ -1101,7 +1122,8 @@ scratch host directory scaffolded by runner `Runtime.init` (`src/blizzard/runner
    schema after the second `migrate` with the first.
 2. When the change touches a backfill revision, `--down` to that revision's parent, seed a populated store — an identity
    row and more rows than one batch in each table the revision reads — and `migrate`. Read the backfilled columns and
-   their closing constraints, compare the schema with step 1's head, and run `blizzard dev check-invariants`.
+   their closing constraints, compare the schema with step 1's head, and run
+   `blizzard dev check-invariants --runner-dir <dir>` against the stopped store.
 3. Through the store's own seam, write the next outbox row and expect the seq above the counter. Then race eight threads
    on the first allocation of a second runner's lane and expect `1` through `8`, the counter at `8`, and the invariants
    holding.
@@ -1118,8 +1140,8 @@ host, with the hub store on a throwaway local Postgres cluster. Every tier runs 
 place the hub half's single read runs under `REPEATABLE READ` and read-only, across tenants, where each statement of an
 ordinary transaction would read its own snapshot.
 
-**Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on loopback (`initdb -A trust`, `pg_ctl` on a
-private port with a short `-k` socket directory, `createdb hub`), and every `blizzard` command run under
+**Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on a Unix socket (`initdb -A trust`, `pg_ctl` on
+a private port with a short `-k` socket directory, `createdb hub`), and every `blizzard` command run under
 `uv run --no-sync --with 'psycopg[binary]==3.3.4'`. Host the hub on the cluster with `--allow-external-db` in auth mode
 `none`, which admits the implicit operator at the hub route. Seed two tenants, each holding chunks with facts and
 records. Beside it, run a runner host on its default SQLite store with one registered runner, and keep that runner's
@@ -1136,8 +1158,8 @@ when done.
 4. `GET /api/admin/invariants` bearing the runner's token.
 
 **Passes when.** Step 1 answers `200` with an empty `violations` list on both routes; step 2 answers `200` with a
-violation whose `detail` names the breached tenant by id; step 3 draws exactly one
-`409 {"code": "invariants_in_progress"}`; and step 4 is refused.
+violation whose `detail` names the breached tenant by id; step 3 draws exactly one `409` with `code`
+`invariants_in_progress` (the hub also returns problem-detail fields); and step 4 is refused.
 
 ### `blizzard:manual-live-routine`
 
@@ -1152,11 +1174,15 @@ with a routine's charge.
 - The hub store is at head: run `blizzard hub migrate --dir "$BZ_HUB_RUNTIME"` and restart the hub, or re-`init` a fresh
   runtime. A store left by an earlier tenant can carry a stamped revision without its columns, and delivery then fails
   with a 500 that no artifact can fix.
-- The routine's graph is minted: `blizzard hub graph sync`, then `hub routine create` for the routine, plus one
-  throwaway routine per extra scope slug (a scope is minted by the routine that names it) so `routine scope add` can
-  link it.
-- The hub holds no repository record — create none. With the env's mock forge, delivery resolves each cited commit
-  against fixture origins that hold no real commit, and rejects every delta.
+- The routine's graph is minted: `blizzard hub graph sync`, then
+  `blizzard hub routine create <slug> <graph-name>
+  <default-scope-slug>` for the routine, plus one throwaway routine
+  per extra scope slug (a scope is minted by the routine that names it) so
+  `blizzard hub routine scope add <routine-id> <scope-slug>` can link it. Sync reads the running hub's packaged graphs,
+  not the CLI's; restart the hub on the build under test before syncing.
+- The run's project links no repository record — create none for this exercise. An unaddressable repository's cited
+  revision is checked for SHA shape, not existence; an addressable mock-forge repository that answers the commit is
+  absent instead makes delivery reject it. This setup does not prove the revisions exist at a forge.
 - The verification runner has its own runtime directory, joined to the env-local hub with
   `blizzard runner init <dir> --hub <env-local hub url>`, which adds it there and writes its token to `<dir>/.env`. Then
   keep the initialized `[[runner]]`'s `name` so its token variable still matches, set its `agents = 1` and its project
@@ -1166,8 +1192,9 @@ with a routine's charge.
   values, so use the fresh runtime or update its stored settings. It starts from a clean environment, never the env
   band, so no mock fence reaches the real harness. The runner resets the dedicated env to `base_branch` on every
   acquire; a branch already checked out in another env's worktree cannot be that base, so name a remote-tracking ref
-  that only the verification needs (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls
-  back to its own main, so the ref is set only in the repo under test.
+  that only the verification needs (`git update-ref refs/remotes/origin/<name> <sha>`). Set that ref in the repo under
+  test: checkout refuses if it exists in no non-pinned repo. Other non-pinned repos without it fall back to their own
+  configured `origin/<main-branch>`, which must exist locally or checkout refuses. Pinned repos are excluded.
 - The delta run needs a baseline that both carries the command under test and leaves changed functions with mutants. An
   older commit alone cannot: it may predate the command, or the range may change only functions the method cannot see.
   Build the base as an older commit with the command's own commit cherry-picked onto it, and confirm with a direct run
@@ -1175,19 +1202,25 @@ with a routine's charge.
 
 **Steps.**
 
-1. Start a run with `blizzard hub routine run --mode full` with the runner's `base_branch` at an older commit, and, once
-   it ends, `--mode delta` with `base_branch` moved to the branch under test, so the delta has a real diff to narrow to.
+1. Mint a run with `blizzard hub routine run <routine-slug> --mode full` with the runner's `base_branch` at an older
+   commit, then `blizzard hub chunk promote <chunk-id>` using the id returned by the run command. Once it delivers, read
+   its recorded baseline with `blizzard hub routine sweeps <routine-slug> --since <time> --until <time>`: confirm the
+   tested repository's revision is the intended base and is available in the verification worktree. Mint and promote
+   another with `--mode delta` and `base_branch` moved to the branch under test. Use the same routine and scope for both
+   runs; confirm the command reports effective delta, since without a recorded baseline it downgrades to full.
 2. While a run is live, read the verification runner's lease activity on its API, `GET /runners/<id>/api/leases`, on a
    cadence shorter than the staleness threshold; note the largest gap between heartbeats.
-3. Read the terminal state, findings, proposals, and measurement back through the operator CLI (`routine sweeps`, the
-   findings and proposals verbs), never the store.
+3. Read the terminal state, findings, proposals, and measurement back through the operator CLI
+   (`blizzard hub routine sweeps <routine-slug> --since <time> --until <time>`, the findings and proposals verbs), never
+   the store.
 4. Capture the run's transcript: the longest single tool call, and the exact arguments the survey passed to any command
    the axis routes to.
 5. Record which revision of the agent context the worker read.
 
 **Passes when.** The routine run reaches its terminal state with its findings, proposals, and measurement delivered,
-read back through the operator CLI; the verification runner's lease never read `stale`; and the transcript is kept with
-the verification report.
+read back through the operator CLI; the delta survey's transcript shows it used the recorded revision to narrow the
+command or sweep to the intended diff; the verification runner's lease never read `stale`; and the transcript is kept
+with the verification report. A delta-mode label alone does not establish that the worker used the baseline.
 
 **Hazards.** Never the systemd runners' stores, and never the hosted hub —
 `workspace:/context/project/hub-data-modes.md` owns which hub is safe.
@@ -1229,8 +1262,8 @@ node consumed the asset as its addendum directs, and the runner's lease never re
 ### `blizzard:manual-change-notes`
 
 **Surface.** `blizzard-change-notes guide`, `cut`, `render` and `owed`, and `mise run release-notes`, driven by hand —
-the commands a release engineer runs and the Markdown a person reads on a release page. No test fixture shows how the
-rendered notes read, or that the task resolves the tag's tree rather than the working tree's.
+the commands a release engineer runs and the Markdown a person reads on a release page. Fixture tests cover tagged
+rendering, including working-tree isolation; this method also checks how the task's output reads to a person.
 
 **Setup.** A throwaway `git clone` of the `blizzard` worktree under `$BLIZZARD_TMPDIR`, run from its root. Tags created
 there are never pushed. Exercise both a pre-1.0 minor (`0.Y`) and a major (`X`) with synthetic released directories; the
@@ -1243,9 +1276,9 @@ clone's CLI must load the implementation under exercise.
    unrelated breaking note. Put the boundary under `## Upgrading to the next release` in `docs/upgrade.md`.
 2. Run `blizzard-change-notes guide <line>` and inspect the order, removal prose, upgrade instructions and boundary
    link. Stage a due deprecation without a removal; confirm `guide` and an opening `cut <X.Y.0>` refuse it by name and
-   leave all files byte-for-byte unchanged. Also stage an invalid postponement and a new deprecation due at the cut;
-   confirm `cut` refuses each by name for both a pre-1.0 minor and a major. Advance the promised lines and provide
-   removals.
+   leave `changes/` and `docs/upgrade.md` byte-for-byte unchanged. Also stage an invalid postponement and a new
+   deprecation due at the cut; confirm `cut` refuses each by name for both a pre-1.0 minor and a major. Advance the
+   promised lines and provide removals.
 3. Run `blizzard-change-notes cut <X.Y.0>`, then `blizzard-change-notes check`. Commit, tag `v<X.Y.0>`, and run
    `mise run release-notes v<X.Y.0>` twice. Add an unrelated working-tree note after tagging and compare the output.
    Repeat a candidate cut into the same version directory and confirm the guide and rendered tag remain deterministic.
@@ -1265,14 +1298,14 @@ clone's CLI must load the implementation under exercise.
    unrecorded value goes to stderr, the exit code is 0. Add an entry no note names to `compat-breaks.json` and
    re-render: it exits non-zero naming the entry, with empty stdout; a `tag` naming another tag is refused too.
 
-**Passes when.** Refusals name every unkept promise and write nothing; released postponements change the displayed
-current line. The successful cut moves notes and the boundary under `## Upgrading to <X.Y.0>` with its heading intact;
-`check` passes. The guide orders deprecations by carrying release, pairs their retiring removals and upgrade prose, then
-lists unrelated breaking notes. Both tag renders agree despite working-tree changes, open with **Upgrading to <line>**,
-link to the tag's boundary and end in the collapsed commit block. The legacy tag renders its commit block alone. An
-unnamed compat break refuses the cut and the render with nothing written or printed; a named one is listed beside its
-note. For `owed`: (a), (d), (e), (f) and (h) fail, (a) naming the document and (d) the expected trailer form; (b), (c)
-and (g) pass, (c) printing its reason.
+**Passes when.** Refusals name every unkept promise and leave `changes/` and `docs/upgrade.md` unchanged; released
+postponements change the displayed current line. The successful cut moves notes and the boundary under
+`## Upgrading to <X.Y.0>` with its heading intact; `check` passes. The guide orders deprecations by carrying release,
+pairs their retiring removals and upgrade prose, then lists unrelated breaking notes. Both tag renders agree despite
+working-tree changes, open with **Upgrading to <line>**, link to the tag's boundary and end in the collapsed commit
+block. The legacy tag renders its commit block alone. An unnamed compat break refuses the cut and the render with
+nothing written or printed; a named one is listed beside its note. For `owed`: (a), (d), (e), (f) and (h) fail, (a)
+naming the document and (d) the expected trailer form; (b), (c) and (g) pass, (c) printing its reason.
 
 ### `blizzard:manual-compat`
 
@@ -1286,15 +1319,19 @@ there are never pushed. Tag two synthetic releases (a stable `v0.2.0` and a cand
 documents carry a deprecated route and an undeprecated one, and set `src/blizzard/wire/window.toml` to the matching
 `floor`. For steps 6 to 9, tag `v0.2.0` and `v0.3.0` instead, with `floor = "0.2"`, on commits whose wire route answers
 a response enum: `v0.2.0`'s position reaching it unmarked, `v0.3.0`'s marked `x-blizzard-open`. The clone's CLI must
-load the implementation under exercise.
+load the implementation under exercise. Isolate the synthetic tags from existing release tags in the clone: remove or
+replace conflicting tags there only, and leave no other supported tags that would affect the verdicts.
 
 **Steps.**
 
 1. An additive change (a new route, a new optional field): run `blizzard-compat --commits <base>..HEAD`.
-2. Remove an undeprecated route, then a deprecated one without a `!` commit, then with a `!` commit.
-3. Commit a document that already carries a finding, take that commit as the range base, and make an unrelated change.
+2. In independent ranges, remove an undeprecated route, then a deprecated one without a `!` commit, then with a `!`
+   commit. Run `blizzard-compat --commits <base>..HEAD` for each, with the removal commit in the range.
+3. Commit a document that already carries a finding, take that commit as the range base, make an unrelated change, and
+   run `blizzard-compat --commits <base>..HEAD`.
 4. Add `opening = "1"` to the window. Remove a route with a `!` commit and a `changes/unreleased/` note
-   (`breaking: true`, the surface, the route under `breaks`); then delete the note.
+   (`breaking: true`, the surface, the route under `breaks`) committed in the range; run with `--commits <base>..HEAD`,
+   then delete the note and run again.
 5. Run `blizzard-compat --tag <version>` for a candidate and for a patch (`X.Y.1`), and read `compat-breaks.json`; run
    again with `--json`.
 6. Gain a value in the enum and run `blizzard-compat`.
@@ -1309,14 +1346,14 @@ load the implementation under exercise.
 `BREAK`; the deprecated removal exits 1 without the `!` and 0 with it. Step 3 reports the finding as inherited and
 exits 0. Step 4 exits 0 with the note and the `!`, and 1 once the note is gone. Step 5: the candidate exits 0 and
 `compat-breaks.json` holds `tag` and a sorted `breaks` list naming each break let through (an empty list when none); the
-patch exits 1 on any break; `--json` entries carry `release`, `surface`, `where`, `reason`, `deprecated`, `inherited`,
-`passes` and `allowance`. Step 6 exits 1 with the gain a `BREAK` against `v0.2.0` alone, `v0.3.0` reading additive. Step
-7: the first two runs exit 0 with the finding under `[allowance]` and its `because` on the next line, and both
-`compat-breaks.json` and `--json` carry it with `allowance` holding the `line` and the `because`; `--tag 0.2.1` exits 1
-with the finding a `BREAK`. Step 8: `--tag 0.4.0` exits 1 naming the entry under `allowance: [BREAK]` as matching no
-finding against `v0.2.0`; `--line release/0.3` exits 0; the line `0.1` entry exits 1 as outside the window. Step 9, with
-the entry unedited: the first two runs exit 0 with the finding under `[allowance]` against `v0.2.1` and no stale entry;
-`--tag 0.2.2` exits 1 with the finding a `BREAK`.
+patch exits 1 on an unallowed break; `--json` entries carry `release`, `surface`, `where`, `reason`, `deprecated`,
+`inherited`, `passes` and `allowance`. Step 6 exits 1 with the gain a `BREAK` against `v0.2.0` alone, `v0.3.0` reading
+additive. Step 7: the first two runs exit 0 with the finding under `[allowance]` and its `because` on the next line, and
+both `compat-breaks.json` and `--json` carry it with `allowance` holding the `line` and the `because`; `--tag 0.2.1`
+exits 1 with the finding a `BREAK`. Step 8: `--tag 0.4.0` exits 1 naming the entry under `allowance: [BREAK]` as
+matching no finding against `v0.2.0`; `--line release/0.3` exits 0; the line `0.1` entry exits 1 as outside the window.
+Step 9, with the entry unedited: the first two runs exit 0 with the finding under `[allowance]` against `v0.2.1` and no
+stale entry; `--tag 0.2.2` exits 1 with the finding a `BREAK`.
 
 **Hazards.** Read-only against the clone's git history; nothing is pushed, and `compat-breaks.json` is written in the
 clone only.
@@ -1331,7 +1368,9 @@ repositories from synthetic snapshots and a stubbed `blizzard-compat`; this meth
 **Setup.** A throwaway `git clone` of the `blizzard` worktree under `$BLIZZARD_TMPDIR`, run from its root. Tags created
 there are never pushed. Tag two synthetic releases (a candidate and a stable `v0.2.0`) on commits whose
 `src/blizzard/foundation/flags/registry.toml` declares one flag `off`, and set `src/blizzard/wire/window.toml` so
-`uv run blizzard-compat releases` lists them. The clone's CLI must load the implementation under exercise.
+`uv run blizzard-compat releases` lists them. Isolate these from existing release tags in the clone, replacing
+conflicting tags there only and excluding other supported tags that would affect the verdicts. The clone's CLI must load
+the implementation under exercise.
 
 **Steps.**
 
@@ -1361,15 +1400,18 @@ real release's wheel, history and files as an operator running a fold would.
 **Setup.** A throwaway `git clone` of the `blizzard` worktree on the branch under verification, under
 `$BLIZZARD_TMPDIR`, run from its root, with `GH_TOKEN` set and `GH_REPO` naming the repository (the clone's origin is
 not on GitHub). The floor is the `oldest` entry of `uv run blizzard-compat releases --json`. The clone's CLI must load
-the implementation under exercise.
+the implementation under exercise. For the rewrite and deletion checks, the floor revision must sit above the current
+base in each tree; if a tree is already folded to that floor, the tool leaves it untouched instead. Use a suitable
+pre-fold branch and published floor for a full exercise, or record that tree's rewrite and deletion checks as
+unexercised.
 
 **Steps.**
 
 1. `uv run python scripts/fold_store.py <floor-tag>`.
 2. `git status` and `git diff --stat`: each tree's floor-revision file is rewritten, and every other change is a deleted
    file.
-3. Read each tree through Alembic's `ScriptDirectory`: one base, the baseline, and the first kept revision's
-   `down_revision` resolves to it.
+3. Read each tree through Alembic's `ScriptDirectory`: one base, the baseline, and, when a revision remains above it,
+   the first kept revision's `down_revision` resolves to it.
 4. `uv run pytest tests/unit/foundation/store/test_migrations.py::test_migrate_up_and_down tests/unit/foundation/store/test_baseline_floor.py`.
 5. Stamp a scratch hub store (`blizzard hub init`) at an absorbed revision id, then `blizzard hub migrate --dir` on it.
 6. `blizzard:typecheck` and `blizzard:structural-gate` on the clone.

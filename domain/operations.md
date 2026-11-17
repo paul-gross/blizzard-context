@@ -7,11 +7,11 @@ model at [./index.md](./index.md).
 
 ## The event log
 
-The log is the hub's durable, append-only, typed record of operationally-significant tenant occurrences — failures an
-operator must act on and their recoveries, not a mirror of every state delta. The hub owns the log, recording each event
-and re-broadcasting it live; a failure the runner detects reaches it as a durable fact the runner reports. The event
-kind vocabulary below also includes fact-egress kinds; the hub records its own fact-egress occurrences only in its own
-log, never in a tenant's.
+The log is the hub's durable, append-only, typed record of operationally-significant tenant occurrences — including
+failures, recoveries, and significant non-failure occurrences such as landings and abandoned attempts, not a mirror of
+every state delta. The hub owns the log, recording each event and re-broadcasting it live; a failure the runner detects
+reaches it as a durable fact the runner reports. The event kind vocabulary below also includes fact-egress kinds; the
+hub records its own fact-egress occurrences only in its own log, never in a tenant's.
 
 Each event carries a severity (`info` | `warning` | `critical`), a noun-verb kind name, the runner/chunk/lease/node it
 concerns where present, a human-legible message, and an open detail payload. An event naming a chunk links back to it.

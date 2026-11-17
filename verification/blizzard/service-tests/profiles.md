@@ -22,9 +22,9 @@ or `service/fleet/`.
 ## Do
 
 Put a hub-wide variant in its own profile, or request a one-off case with
-`test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people belongs under the `auth` profile; a
-test whose subject is the login throttle takes a `fresh-hub` and enables the throttle in `hubConfig`, since the `auth`
-profile disables it.
+`test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people uses the `auth` profile or a fresh
+hub with authentication enabled in `hubConfig`. A test whose subject is the login throttle takes a `fresh-hub` and
+enables the throttle in `hubConfig`, since the `auth` profile disables it.
 
 ## Don't
 
@@ -46,11 +46,11 @@ test's `hubEnv` cannot name either variable.
 
 ## Harnesses, bundles, and stubs
 
-A harness a spec runs on is enabled through `test.use({ runnerConfig })`, as `runner[].opencode` with
-`${mockBin}/mock-opencode`, never in a `runner.toml`, which binds every spec in its folder. The host always holds a
-synthetic OpenCode login at its private data home, as it holds a Claude one. A spec that moves a runner between OpenCode
-releases names `${opencode}` as `runner[].opencode.binary` in place of `${mockBin}/mock-opencode`: a host-owned path
-holding the `runnerOpencode` release when the host is built — set this `RunnerHostOptions` field through
+A harness a spec runs on is enabled through `test.use({ runnerConfig })`, for example `runner[].opencode` with
+`${mockBin}/mock-opencode` or `${mockOpencode2}`, never in a `runner.toml`, which binds every spec in its folder. The
+host holds a synthetic OpenCode login at its private data home, as it holds a Claude one. A spec that moves a runner
+between OpenCode releases names `${opencode}` as `runner[].opencode.binary` in place of `${mockBin}/mock-opencode`: a
+host-owned path holding the `runnerOpencode` release when the host is built — set this `RunnerHostOptions` field through
 `runnerHosts.create({ runnerOpencode })`, not `test.use`. It is `1` by default for OpenCode 1, or a version the
 engine-backed OpenCode 2 mock reports — which `runnerHost.installOpencode()` replaces in place, as an operator's upgrade
 does. A published harness bundle is given with the `runnerBundle` option, whose files the fixture writes into a

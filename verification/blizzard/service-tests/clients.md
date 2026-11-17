@@ -53,8 +53,9 @@ Beyond its clients, a `runnerHost` carries:
 - `mockSessions()` and `opencodeExports()` — read JSON documents from the fixture-minted workspace's
   `.blizzard-mock-harness/sessions` and the fixture-minted transcripts directory's `mock-opencode`, respectively. These
   readers keep those locations even if configuration or environment overrides direct the mocks elsewhere.
-- A runner's client — names each route a spec reads (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`,
-  `dashboard`, `heartbeat`), so a spec reaches no route through `raw`.
+- A runner's client — names routes such as `leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`,
+  and `heartbeat`. It also exposes `raw`, but a spec adds a missing route to the client instead of using that escape
+  hatch.
 
 ## Origins, and what a worker pushed
 

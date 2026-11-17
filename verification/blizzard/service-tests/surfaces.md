@@ -54,8 +54,9 @@ reads a store's currentness through `blizzard-runner host --check`.
 By default, each hub stack, shared or fresh, and each runner host starts from a per-run template the harness built once
 with the real `init` of each daemon: the hub restores its durable files, and the runner host copies the migrated
 `data/host.db` before its own `blizzard-runner init` runs. A shared hub has no cold option; a spec that needs a cold hub
-declares `fresh-hub` and takes `test.use({ coldInit: true })`, beside `runnerStarted` and `runnerDir`, as does a
-runner-host spec whose subject is what `init` produces. `FreshHub.reset()` always runs `init` cold.
+declares `fresh-hub` and takes `test.use({ coldInit: true })`. A runner-host spec whose subject is what `init` produces
+can also set `coldInit`, alongside runner options such as `runnerStarted` and `runnerDir`. `FreshHub.reset()` always
+runs `init` cold.
 
 ## A worker's credential
 
