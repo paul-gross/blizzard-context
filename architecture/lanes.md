@@ -70,6 +70,10 @@ all pending intents before filtering and limiting is unbounded backlog-read debt
 recorded exemption for the window after the hub accepts a generic batch or a decision and before the runner records its
 acknowledgement. These windows remain unaddressed coverage debt under clause 2, not exemptions.
 
+**Known gap.** The annotation reconciler (`blizzard/src/blizzard/hub/domain/observability/forge_status.py`) keeps an
+in-memory per-tenant, per-source outage announcement latch rather than the no-latch shape its sink class requires; it is
+not the persistent `OutageLatch`.
+
 **Don't.** A new lane that hand-copies a failure counter, a next-due instant, and a failing flag, then re-implements the
 doubling and the open/close transitions beside them, instead of taking the helper. The copies drift: one lane clamps the
 doubling and another overflows on a long outage.
@@ -120,6 +124,9 @@ or whose ten-minute floor is due, and records each converged tenant's signature 
 due tenant, an unchanged pass costs the probe's one statement. Until then, a fresh process also reads
 `derived_segment_ids()` on each pass to find tenants whose segments and chunks are all gone, including when the store is
 empty.
+
+**Known gap.** The annotation reconciler reads two hub-wide signature probes, `live_work_refs_signature` and
+`work_source_changes_signature`, rather than the one probe statement this rule requires.
 
 **Don't.** A converging `sweep()` that reads its whole corpus and every remote's state unconditionally on each pass, so
 an idle fleet pays the whole diff every interval, changed or not.

@@ -216,10 +216,11 @@ takeover open each take a no-op `UPDATE` on their own runner's `runner_identity`
 same transaction (`runner/store/internal/pause_store.py`, `runner/store/internal/takeover_store.py`); a runner holding
 no identity row yet has no neighbour to race.
 
-An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
-write calls on the caller's locked unit after the lock and its replay probe and before its first insert. It applies the
-caller's terminal verdict — decided by the domain from chunk facts read under the same lock — and reads the newest epoch
-there, so a stop or restart cannot land between the guard and the write.
+An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), normally
+called on the caller's locked unit after the replay probe and before the first insert. It applies the caller's terminal
+verdict — decided by the domain from chunk facts read under the same lock — and reads the newest epoch there, so a stop
+or restart cannot land between the guard and the write. `write_landing_rows` is an exception: it calls the fence before
+the replay probe and records a prior forge landing even when fenced, reporting the refusal to its caller.
 
 **Don't.** A `threading.Lock` shared by `ClaimService` and `EditService`, serializing their read-then-write CAS in one
 process — correct until a second hub process starts against the same store, at which point the two locks stop
