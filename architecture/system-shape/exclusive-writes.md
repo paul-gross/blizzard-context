@@ -82,16 +82,16 @@ alone, raising `PermitChanged`, and judges no permit state.
 
 ## An exactly-one-wins decision locks its row before it reads (`bzh:store-exclusive-write`)
 
-**Rule.** A decision the hub commits to exactly once — a claim, or any write another such decision's guard reads consult
-— runs in one write transaction that locks a row before every decision guard read on that same connection. After the
-tenant-row opener, a known row is locked by a no-op update; a keyed lock may first select and conditionally insert its
-lock row under a savepoint before the no-op update. None of these acquisition reads is a decision guard read. A read
-that gates admission independently of the race itself (a paused runner, checked once before the lock opens) or that
-resolves a different aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs:
-nothing about the exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the
-lock, without reopening anything the lock closes. The scoped write's own opening lock on its tenant's row
-(`bzh:tenant-scoped-store`) precedes decision-lock acquisition and reads deletion state after locking the tenant row.
-The write that creates the tenant inserts that row instead; teardown locks the tenant's deletion row instead.
+**Rule.** A decision the hub commits to exactly once — a claim, or any write another such decision's guard reads — runs
+in one write transaction that locks a row before every decision guard read on that same connection. After the tenant-row
+opener, a known row is locked by a no-op update; a keyed lock may first select and conditionally insert its lock row
+under a savepoint before the no-op update. None of these acquisition reads is a decision guard read. A read that gates
+admission independently of the race itself (a paused runner, checked once before the lock opens) or that resolves a
+different aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs: nothing about
+the exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the lock, without
+reopening anything the lock closes. The scoped write's own opening lock on its tenant's row (`bzh:tenant-scoped-store`)
+precedes decision-lock acquisition and reads deletion state after locking the tenant row. The write that creates the
+tenant inserts that row instead; teardown locks the tenant's deletion row instead.
 
 **Why.** An in-process lock only serializes callers inside one process; the moment a second hub process shares the
 store, two processes' own locks stop serializing each other, and the transaction is the only thing both still share.
