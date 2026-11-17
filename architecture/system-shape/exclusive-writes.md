@@ -117,27 +117,28 @@ before locking, then declares that key beside the item mint's own keys in one un
 existing closure under the lock and the service maps a losing insert to an already-closed refusal before minting. This
 path does not re-read the closure in domain code before deciding, and remains debt against
 `bzh:write-reestablishes-read`. Garden delivery declares the plan's chunk and the `FINDING` key (`finding_lock`) of
-every finding it expects, and the finding exit declares the `FINDING` keys of every finding it records facts for. A work
+every finding it expects, and the finding exit declares the `FINDING` keys of every finding it writes or expects. A work
 item's edit, withdraw, and deliver each declare its `WORK_ITEM` key (`work_item_lock`) and re-read the item's closure
 under it. The chunk delete pre-reads the chunk's hub-source refs, declares the chunk and those refs' `WORK_ITEM` keys,
 and re-reads the record under them; a ref outside the declared keys ends the run before any write, and the delete runs
-again over the union. Each of these stores' writes takes the `LockedTransaction` and judges no closure itself. The flow
-pair is governed too: a turn's admission and a submission's close read their flows' open turns and the queue ahead, so
-their unit declares the submission's chunk and a `FLOW` key per flow it holds; a stop, completion, or restart reads its
-chunk's waiting submissions under the chunk lock, which a turn also declares. A macro-shape constraint on deployment
-topology, on what holds once more than one hub process may share a store — not a `kill -9` crash-correctness
-requirement; one hub process already serializes every one of these correctly today. The tenant-row lock ahead of the
-decision's lock changes neither guarantee: on SQLite it already took the writer lock, and on Postgres every writer takes
-the tenant row first and its chunk or keyed rows after, so the order two writers lock in never inverts. Dependency
-declare, group, delete, and release declare the tenant's fixed `DEPENDENCIES_LOCK` key in their unit before reading or
-changing standing edges. Declare and group serialize the tenant-wide cycle judgment, including disjoint chunk sets;
-release and delete serialize with a fold's edge rewrite so it cannot remint an edge they released. Delete and declare
-also declare their chunk rows, and delete declares its work-item keys, in canonical order. Release needs no chunk row
-for cycle safety: it can only shrink the standing set. A create whose only race is a duplicate of a tenant-chosen name
-is no decision under this rule: the table's tenant-led primary key or unique constraint (`bzh:tenant-scoped-uniqueness`)
-admits exactly one insert, and the store maps the losing insert's `IntegrityError` to the named conflict —
-`SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A create that reads state before its insert
-— a cap, a parent's state, a default it mints — stays a decision under this rule, in the keyed-lock form under **Do**.
+again over the union. These stores' writes take the `LockedTransaction`; finding writes compare expected derived state
+under the lock, while closure decisions remain in domain code. The flow pair is governed too: a turn's admission and a
+submission's close read their flows' open turns and the queue ahead, so their unit declares the submission's chunk and a
+`FLOW` key per flow it holds; a stop, completion, or restart reads its chunk's waiting submissions under the chunk lock,
+which a turn also declares. A macro-shape constraint on deployment topology, on what holds once more than one hub
+process may share a store — not a `kill -9` crash-correctness requirement; one hub process already serializes every one
+of these correctly today. The tenant-row lock ahead of the decision's lock changes neither guarantee: on SQLite it
+already took the writer lock, and on Postgres every writer takes the tenant row first and its chunk or keyed rows after,
+so the order two writers lock in never inverts. Dependency declare, group, delete, and release declare the tenant's
+fixed `DEPENDENCIES_LOCK` key in their unit before reading or changing standing edges. Declare and group serialize the
+tenant-wide cycle judgment, including disjoint chunk sets; release and delete serialize with a fold's edge rewrite so it
+cannot remint an edge they released. Delete and declare also declare their chunk rows, and delete declares its work-item
+keys, in canonical order. Release needs no chunk row for cycle safety: it can only shrink the standing set. A create
+whose only race is a duplicate of a tenant-chosen name is no decision under this rule: the table's tenant-led primary
+key or unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing
+insert's `IntegrityError` to the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the
+pattern. A create that reads state before its insert — a cap, a parent's state, a default it mints — stays a decision
+under this rule, in the keyed-lock form under **Do**.
 
 **Detect.**
 
@@ -194,18 +195,20 @@ urgency it names, and the two never deadlock. A re-read that finds an open chunk
 the urgency after the read ahead — writes nothing, and the retire runs its unit again over the wider set. A settings
 edit takes the settings lock and the named urgency's. A mint takes the settings lock, the urgency a read ahead of its
 unit found as the default, and every urgency a link of its chain named ahead of it, retired or not — the stated one, the
-chore's override, the routine's default — beside its own lock set; under them it re-reads each and resolves the chain
-(`blizzard/src/blizzard/hub/domain/urgency/chain.py::resolve_chain`) over what it re-read. A chunk edit naming an
-urgency opens through `IHubTransactions.begin()` and takes a `lock_set` with `keys=`, taking the chunk row and that
-urgency's key and no settings lock, and re-reads the urgency under them. A routine or cadence write that newly names
-urgencies — a routine's default, a chore override its stored cadence names on no chore — opens a unit locking each one's
-key and re-checks each live under it (`UrgencyReferences.held`); a configuration apply adds those keys to its plan's
-locks and refuses an entry as stale when such an urgency's revision has moved since the plan read it. A reference the
-write leaves is guarded by the record's own revision, which a retire clearing the reference moves. Every change of the
-default and every retire takes the settings lock, so a mint's re-read default is live, and a retire never runs beside a
-write taking up the urgency it retires. Create and both reorders take the `urgency_order` lock, re-reading the order
-under it. A decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the default graph's
-first mint declares `graph_name_lock` through `lock_set`. A pointer's key comes from `work_ref_lock`.
+chore's override, the routine's default — beside its own lock set. It re-reads those urgency entities and the current
+default under the settings lock, then resolves the chain
+(`blizzard/src/blizzard/hub/domain/urgency/chain.py::resolve_chain`); the chore and routine references themselves were
+read ahead and are not re-read in this unit. A chunk edit naming an urgency opens through `IHubTransactions.begin()` and
+takes a `lock_set` with `keys=`, taking the chunk row and that urgency's key and no settings lock, and re-reads the
+urgency under them. A routine or cadence write that newly names urgencies — a routine's default, a chore override its
+stored cadence names on no chore — opens a unit locking each one's key and re-checks each live under it
+(`UrgencyReferences.held`); a configuration apply adds those keys to its plan's locks and refuses an entry as stale when
+such an urgency's revision has moved since the plan read it. A reference the write leaves is guarded by the record's own
+revision, which a retire clearing the reference moves. Every change of the default and every retire takes the settings
+lock, so a mint's re-read default is live, and a retire never runs beside a write taking up the urgency it retires.
+Create and both reorders take the `urgency_order` lock, re-reading the order under it. A decision graduates its unit
+with `lock_keys`, or `lock_set` when it spans namespaces; the default graph's first mint declares `graph_name_lock`
+through `lock_set`. A pointer's key comes from `work_ref_lock`.
 
 The hub-wide egress cursor is a short store-level exception to domain-declared units: `EgressStore` takes the seeded
 `EGRESS_CURSOR` hub lock inside each append or reset transaction, then reads the current dataset cursor. A pass appends

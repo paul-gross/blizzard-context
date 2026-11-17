@@ -31,7 +31,7 @@ with no position, not a crash inside this one transaction.
 completion transaction enqueued. Its two windows are both registered: `close.after-enqueue.before-drain` (the landing
 record call has returned inside the effect writer; a new landing can have enqueued intents before their drain) and
 `close.after-close.before-record` (a close attempt returned; the outcome-and-retirement write has not landed yet), swept
-by one dedicated scenario driving the built-in `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
+by one dedicated scenario driving the built-in `hub` work source and a mock forge (`tests/crash/test_kill9_sweep.py`).
 
 `enqueue_close_intents` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) is called from multiple stores and
 rides each caller's transaction, so none has a window of its own — each leaves its intents or terminal no-closer skip
@@ -49,8 +49,8 @@ or refusal, and before the effect writer returns; it can exercise that window fo
 sweep may already have drained its intents. It is not reached separately for every enqueuing caller.
 
 A terminal transition and its intents commit or roll back together, whether the transition comes from a hub node or a
-later graph node. A no-code marker alone and a nonterminal transition enqueue nothing. Retried enqueues deduplicate, and
-ephemeral chunks and already-terminal refs remain excluded.
+later graph node. A no-code marker alone and a nonterminal transition without a landing-marker artifact enqueue nothing.
+Retried enqueues deduplicate, and ephemeral chunks and already-terminal refs remain excluded.
 
 Within one intent's own attempt, past `close.after-close.before-record`, one transaction — `record_work_item_closure` —
 writes the outcome fact and, for a `closed`/`gone`/`skipped` outcome, retires the intent together; a second, separate
@@ -112,11 +112,11 @@ the configured exporter, then appends a `trace_cursor` row recording how far it 
 registered: `trace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not
 yet appended), swept by one dedicated scenario against an in-test OTLP sink (`tests/crash/test_kill9_sweep.py`). A crash
 there leaves the cursor unmoved. Ordinarily the next pass re-reads and re-sends the same steps under the same span ids:
-delivery is at-least-once, and a backend deduplicates on span id. After a restart, however, `first_pass_jump` moves a
-cursor older than `max_lag_seconds` to now before reading the window; the skipped window is not automatically re-sent. A
-later pass can likewise jump to the lag boundary when its oldest unsent step exceeds the cap. An operator must replay
-the skipped window to tell it; that replay can duplicate spans already accepted before the crash. A crash before the
-exporter accepts loses nothing durable.
+delivery replays within the retained window, and a backend can deduplicate on span id. After a restart, however,
+`first_pass_jump` moves a cursor older than `max_lag_seconds` to now before reading the window; the skipped window is
+not automatically re-sent. A later pass can likewise jump to the lag boundary when its oldest unsent step exceeds the
+cap. An operator must replay the skipped window to tell it; that replay can duplicate spans already accepted before the
+crash. A crash before the exporter accepts loses nothing durable.
 
 Its other writes are exempt:
 
@@ -151,9 +151,8 @@ effects and memory writes, subject to the unavailable-clearer loss below.
   re-reads its markers and clears any remainder before forgetting it, if a clearer is still available.
 - **A departure without a clearer** is logged and forgotten even if labels remain. Those labels can remain orphaned:
   later passes do not retry the clear once the source is forgotten. This loss is accepted independently of a crash.
-- **An entrant is remembered before its first label write.** A crash after the entry write leaves a remembered source
-  with nothing to clear. The entry write is ordered ahead of the effects so that a crash plus the source then being
-  disabled can never orphan labels no memory names.
+- **An entrant is remembered before its first label write.** A crash after the entry write leaves the source remembered
+  before this pass writes labels. The source can still have orphaned labels from an earlier departure without a clearer.
 
 Each tenant's probe and last-pass instant live in memory only. A restart runs a full pass, so no durable probe state is
 owed under `bzh:probe-gated-pass`'s floor.
@@ -226,7 +225,7 @@ window. The windows that remain are the `flow.` family:
 | `flow.after-poll.before-turn-end`   | The turn and its `turn-started` facts       | The poll row and the turn's end, one transaction        | Boot recovery ends the turn `interrupted`; the next turn polls afresh                |
 | `flow.boot.after-interrupt`         | One tenant's open turns ended `interrupted` | That tenant's reconciliation, later tenants, the driver | The next boot reconciles and ends remaining turns; already-ended turns write nothing |
 
-The windows inside a pass stay the `action.` family's above, with the turn's task as the writer. The kill-9 sweep
+The windows inside a pass stay the `action.` family's above, with the turn's task as the writer. The full kill-9 sweep
 (`tests/crash/test_kill9_sweep.py`) arms each `flow.` point and asserts the restarted hub reaches `done`, leaves no open
 turns, and records the two expected sequence artifacts.
 
@@ -238,12 +237,13 @@ crash before the write leaves no observation and the next pass reads the forge a
 
 ## The boot recovery of open turns
 
-`FlowDriver.recover_turns` runs from the hub daemon's startup, once in each open tenant before the hub serves and before
-the driver's first tick. Every turn with no end belongs to the process that ran it, which crashed or shut down, since
-one hub process serves the store ([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known
-debt). It ends each one `interrupted`, with a `turn-ended` fact on each flow it held, a `turn-interrupted` event, and
-any withdrawal a lever deferred to it, then reconciles the tenant's lines in full. A submission still current keeps its
-place, and its next turn takes a fresh pass that skips whatever its markers say is done.
+The hub daemon's startup attempts `FlowDriver.recover_turns` once in each open tenant before serving and before the
+driver's first tick. A tenant's failure is logged and does not prevent startup; later ticks can end unanswered turns.
+Every turn with no end belongs to the process that ran it, which crashed or shut down, since one hub process serves the
+store ([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt). It ends each one
+`interrupted`, with a `turn-ended` fact on each flow it held, a `turn-interrupted` event, and any withdrawal a lever
+deferred to it, then reconciles the tenant's lines in full. A submission still current keeps its place, and its next
+turn takes a fresh pass that skips whatever its markers say is done.
 
 Its one window is `flow.boot.after-interrupt`, after interrupting one tenant's turns and before reconciling that same
 tenant. Both steps are idempotent, so a boot that dies midway is finished by the next. Composition never calls it, so a
@@ -397,10 +397,9 @@ idempotence check and mints nothing a second time. `GardenDeliveryRecorder.recor
 that check, so missing artifacts can still refuse a replay. Otherwise the recorder returns `ALREADY_RECORDED`, the
 effect writer maps it to `EffectStatus.RECORDED`, and the action returns `Pass(choice="recorded")`.
 
-The window this leaves is between `deliver`'s own commit and the action's resuming — already
-`action.after-write.before-resume` in `bzh:crash-point-registry`, and already covered: the visit's next turn re-runs the
-pass, and the in-transaction marker's own idempotence is what absorbs that re-run, so this write opens no window
-`action.after-write.before-resume` doesn't already name.
+The window between `deliver`'s commit and the action's resuming is named by `action.after-write.before-resume` in
+`bzh:crash-point-registry`. The kill sweep exercises that boundary with another action; garden delivery's marker replay
+is covered by component tests. The next turn re-runs the pass, and the in-transaction marker absorbs the re-run.
 
 The write owes the checker nothing because it is a single-transaction, multi-table insert, not a derived cross-fact
 invariant to recompute — and, unlike most of this register's writes, whose idempotence marker an action records after
@@ -420,9 +419,9 @@ its own marker and minting nothing further on one after.
 
 This entry deviates from the garden precedent on one point: a scope a `deferred` entry names that does not yet exist is
 minted inside this same unit through the scope repository (`domain/routines-and-scopes.md`'s own mint-on-name path for
-review delivery), where garden delivery's own write instead reads the scope and refuses the whole delivery if it is
-missing. A crash before this transaction commits therefore leaves neither the findings, the marker, nor any scope it
-would have minted — the same all-or-nothing shape, just with one more table folded in.
+review delivery). Garden delivery validates the scope slug against the run instead of minting a scope. A crash before
+the review transaction commits leaves neither the findings, the marker, nor any scope and configuration-change row it
+would have minted — the same all-or-nothing shape.
 
 The write owes the checker nothing for the same reason garden delivery's does: a single-transaction, multi-table insert
 with its own in-transaction marker, not a derived cross-fact invariant to recompute.
@@ -526,10 +525,11 @@ can need no new domain row but still advance the mark.
 
 No window: a crash ahead of a unit's commit loses any new domain write and its mark advance together. A replay resubmits
 every seq the runner's own ack never confirmed. Seqs at or below the mark answer `already_applied`. The rest, the
-in-flight fact among them, apply once against the mark the crash left. Committing per fact, not once after the whole
+in-flight fact among them, are judged against the mark the crash left. Committing per fact, not once after the whole
 batch, keeps what a push already committed when the crash lands: a crash mid-way through a ten-fact push after the third
-fact's unit commits leaves three facts applied, and the replay applies only the other seven. A rejected fact never
-advances the mark, so its unit commits nothing.
+fact's unit commits leaves three facts applied, and the replay applies only the other seven if all are admitted. A
+rejected fact commits nothing and does not itself advance the mark, but a later accepted fact can advance past it; its
+replay then answers `already_applied`.
 
 The advance moves the mark only from the seq the push last read or set (`bzh:write-reestablishes-read`), so an
 overlapping push of the same runner's can neither re-apply a seq the other committed nor move the mark back. The write
@@ -551,13 +551,11 @@ host can add no runner from that instant. Second, `FleetService.retire` runs onc
 the first step commits.
 
 The span between the two steps is a real window whose whole loss is accepted and named: a crash inside it leaves a host
-retired with runners under it that are not. The loss is bounded to those runners staying live a while longer, and
-nothing is corrupted — re-running `retire` over the retired host writes no second host fact and runs each runner's
-retire again, which retires any left standing and finishes any interrupted release of their chunks, as a runner's own
-re-run does. A sweep point would arm a span an operator's re-run already closes, so none is registered. The re-run finds
-those runners because `runner_registrations.host_id` stays their durable roster: every write that places a runner under
-a host, releases one, or reinstates one lands only on the host's and the runner's lifecycle versions it was decided on
-(`bzh:write-reestablishes-read`), and `Host.release` refuses an unretired runner from a retired host.
+retired with runners under it that are not. Those runners can stay live until an operator successfully re-runs `retire`;
+a rerun writes no second host fact and retries runner retirement and interrupted chunk release, but can itself refuse or
+be interrupted. No sweep point is registered. The rerun finds runners because `runner_registrations.host_id` stays their
+durable roster: placement and release check the applicable existing host and runner lifecycle versions and placement
+conditions (`bzh:write-reestablishes-read`), and `Host.release` refuses an unretired runner from a retired host.
 
 `HostEnrollmentService.add` with `--adopt` has no window. `HostRegistryStore.add` inserts the host and places every
 adopted runner in one scoped write transaction, and a runner that came to stand under a host first rolls the whole write
