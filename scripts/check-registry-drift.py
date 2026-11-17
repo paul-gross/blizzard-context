@@ -33,10 +33,11 @@ inline `vale@` pin in `.github/workflows/gate.yml`, since this repo carries no `
 (`blizzard-context:ci-workflows`). A sibling checkout that is absent is a skip for G, the
 same shape check A's missing-checkout case uses.
 
-Check H compares each frontend layer table in the docs
+Check H compares the `fleet` and `runner` layer tables in the docs
 (`architecture/frontend-structure/placement.md`) against the data its gate holds
 (`web/scripts/structural-gate.js`): the same units and the same edges per unit. The Python
-layer data has one home, `tests/guards/test_layering.py`, which the docs point at. A missing table or gate name is a fail, since the comparison cannot be made
+layer data has one home, `tests/guards/test_layering.py`, and the hub roster has one home,
+`HUB_LAYERS` in the gate; the docs point at both and carry no table for either. A missing table or gate name is a fail, since the comparison cannot be made
 without it. An absent blizzard checkout is a skip for H, the caller's, the same shape as A
 and G.
 
@@ -1709,7 +1710,6 @@ LAYER_GATE_JS = "web/scripts/structural-gate.js"
 # the paragraph above.
 LAYER_TABLES = (
     (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "fleet"), LAYER_GATE_JS, "FLEET_LAYERS"),
-    (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "hub"), LAYER_GATE_JS, "HUB_LAYERS"),
     (LAYER_TABLES_DOC_FRONTEND, "bzh:frontend-package-layers", ("lead", "runner"), LAYER_GATE_JS, "RUNNER_LAYERS"),
 )
 

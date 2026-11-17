@@ -137,14 +137,15 @@ specs, stories, and the generated `fleet/src/lib/api/`:
 
 The same script also runs the package-layers sweep
 ([`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
-`bzh:frontend-package-layers`, which owns the three layer tables the sweep declares as data and the files and edge kinds
-it binds), with no exemption list. It resolves each edge to a file and its unit, and fails on an import its table does
-not allow, a file in no unit, a table unit with no folder or an edge naming an undeclared one, a cycle in a table
-counting the implicit kernel edges, a relative import that leaves its project, and a file below a source root importing
-its own project's package entry, save a spec or a story taking the spec-support entry. Its self-test,
-`assertPackageLayersDetectorWorks` — must-catch an undeclared feature-to-feature import, an undeclared stylesheet or
-template edge, a stray app-root file, a file reaching its own package entry, and a planted table cycle; must-pass a
-declared edge, a kernel import, and a spec or a story importing `testing` — runs before the sweep is trusted.
+`bzh:frontend-package-layers`, which owns the `fleet` and `runner` layer tables (`HUB_LAYERS` owns the hub roster) the
+sweep declares as data and the files and edge kinds it binds), with no exemption list. It resolves each edge to a file
+and its unit, and fails on an import its table does not allow, a file in no unit, a table unit with no folder or an edge
+naming an undeclared one, a cycle in a table counting the implicit kernel edges, a relative import that leaves its
+project, and a file below a source root importing its own project's package entry, save a spec or a story taking the
+spec-support entry. Its self-test, `assertPackageLayersDetectorWorks` — must-catch an undeclared feature-to-feature
+import, an undeclared stylesheet or template edge, a stray app-root file, a file reaching its own package entry, and a
+planted table cycle; must-pass a declared edge, a kernel import, and a spec or a story importing `testing` — runs before
+the sweep is trusted.
 
 The same script also runs the containers-compose sweep (`web/scripts/containers-compose-sweep.js`, over the TypeScript
 compiler API;

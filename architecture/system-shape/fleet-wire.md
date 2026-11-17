@@ -81,7 +81,12 @@ meaning, and cannot tell an unknown refusal from a known one.
 
 **Scope.** Refusals the CLI verbs, the proxy and the board read. A response outcome that is not a refusal (`202`, `410`
 on a deletion) keeps its status. A refusal whose `type` is absent comes from a hub before problem details; the reader
-falls back to the legacy `detail.code` for that case only.
+falls back to the legacy `detail.code` for that case only. Exactly four retained old-hub fallbacks may let a status
+stand in for an absent `type`: the invariant-check `409` in `blizzard/src/blizzard/cli/dev.py`, the `401` login hint and
+the `403` forbidden in `blizzard/src/blizzard/hub/cli/context.py`, and the old-hub runner-add with no host ID in
+`blizzard/src/blizzard/hub/cli/runner.py`. Each keeps its reasoned `cli-refusal-body-confined` suppression;
+`blizzard/docs/versioning.md` owns their deprecation and removal. A new caller, a typed problem, or a new fallback stays
+forbidden.
 
 **Detect.** `cli-refusal-body-confined` (`blizzard:structural-gate`) fails a CLI-tree read of `resp.json()["detail"]`, a
 status-code read of a response the function also passes to `refusal_of`, and a `resp.json()` re-read inside a
