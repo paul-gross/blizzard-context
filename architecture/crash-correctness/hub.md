@@ -15,23 +15,23 @@ after a named anchor — in the one unit the promote opens, beside any renormali
 (`insert_promote_rows`, `blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). `DemoteService.demote`
 (`blizzard/src/blizzard/hub/domain/operations/demote.py`) is the same shape through `record_demote_with_position` and
 `insert_demote_rows`: the `chunk_demoted.demoted_at` fact and an explicit backlog position. No window: a crash ahead of
-either unit's commit loses every fact it wrote together, and a retry re-derives the same landing from a fresh read.
-`queue_positions` is shared by both lists and newest-wins, so a demote that landed its fact without its position would
-leave the chunk ranked by its stale ready-queue position.
+either unit's commit loses every fact it wrote together, and a retry derives its landing from a fresh read; intervening
+queue changes can give it a different position. `queue_positions` is shared by both lists and newest-wins, so a demote
+that landed its fact without its position would leave the chunk ranked by its stale ready-queue position.
 
 `QueueRanking.effective_position`'s (`blizzard/src/blizzard/hub/domain/operations/queue.py`) fallback — an un-positioned
-chunk sorts by its promotion timestamp, or its mint timestamp if it has no promotion — applies when no explicit position
-exists. Explicit positions can themselves be based on timestamp-valued fallbacks. This handles a chunk with no position,
-not a crash inside this one transaction.
+chunk sorts by its latest promotion timestamp if currently promoted, or its mint timestamp otherwise — applies when no
+explicit position exists. Explicit positions can themselves be based on timestamp-valued fallbacks. This handles a chunk
+with no position, not a crash inside this one transaction.
 
 ## The close-intent drain sweep
 
 `CloseDrainSweep.sweep()` delegates to `CloseIntentDrainer.drain()`
 (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) to retire pending `close_intents` rows a landing or
-completion transaction enqueued. Its two windows are both registered: `close.after-enqueue.before-drain` (a landing
-writer has returned; a new landing can have enqueued intents before their drain) and `close.after-close.before-record`
-(a close attempt returned; the outcome-and-retirement write has not landed yet), swept by one dedicated scenario driving
-the built-in `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
+completion transaction enqueued. Its two windows are both registered: `close.after-enqueue.before-drain` (the landing
+record call has returned inside the effect writer; a new landing can have enqueued intents before their drain) and
+`close.after-close.before-record` (a close attempt returned; the outcome-and-retirement write has not landed yet), swept
+by one dedicated scenario driving the built-in `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
 
 `enqueue_close_intents` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) is called from multiple stores and
 rides each caller's transaction, so none has a window of its own — each leaves its intents or terminal no-closer skip
@@ -44,9 +44,9 @@ facts durable together with the triggering fact. The callers are:
 - an operator's hand-completion.
 
 The span open past any of them is the window between that commit and the intents' drain. The point
-`close.after-enqueue.before-drain` is reached after every `LandingRecord` writer return, including a replay or refusal;
-it can exercise that window for a new landing, but an independent sweep may already have drained its intents. It is not
-reached separately for every enqueuing caller.
+`close.after-enqueue.before-drain` is reached inside `write_effect` after `_record_landing` returns, including a replay
+or refusal, and before the effect writer returns; it can exercise that window for a new landing, but an independent
+sweep may already have drained its intents. It is not reached separately for every enqueuing caller.
 
 A terminal transition and its intents commit or roll back together, whether the transition comes from a hub node or a
 later graph node. A no-code marker alone and a nonterminal transition enqueue nothing. Retried enqueues deduplicate, and
@@ -65,15 +65,15 @@ re-attempt after a posted comment, a failed close, or a crash here never double-
 event write, loses only the informational, append-only event, never the fact or the retirement.
 
 The sweep's per-intent backoff (`close_intent_attempts`) opens no window of its own. A `failed` outcome's attempt row
-rides `record_work_item_closure`'s own transaction above — the same one that writes the outcome fact — so it is exactly
-as durable as that fact and never separately lost. A due intent with no bound closer records a terminal `skipped`
-outcome and retires in one transaction; a crash before commit leaves the intent pending for another pass. A `deferred`
-attempt (the forge's rate budget turned the close away, so the row carries the `resume_at` the intent waits for) is the
-same shape: `record_close_attempt_deferred` is its own single-statement transaction, with no outcome fact, no retirement
-and no event beside it, so a crash before it commits loses nothing durable — the next pass re-attempts the intent, and
-the budget turns it away again until its reset. Either way the ledger is append-only (`bzh:facts-not-status`): a crash
-mid-sweep leaves some intents' backoff clocks ticked and others not, and the next pass reads each one's own history
-fresh.
+rides `record_work_item_closure`'s own transaction above. The first failed outcome fact and its attempt commit together;
+later failures append attempts even when the outcome fact is deduplicated. A due intent with no bound closer records a
+terminal `skipped` outcome and retires in one transaction; a crash before commit leaves the intent pending for another
+pass. A `deferred` attempt (the forge's rate budget turned the close away, so the row carries the `resume_at` the intent
+waits for) is the same shape: `record_close_attempt_deferred` is its own single-statement transaction, with no outcome
+fact, no retirement and no event beside it, so a crash before it commits loses nothing durable — the next pass
+re-attempts the intent, and the budget turns it away again until its reset. Either way the ledger is append-only
+(`bzh:facts-not-status`): a crash mid-sweep leaves some intents' backoff clocks ticked and others not, and the next pass
+reads each one's own history fresh.
 
 Per-ref close-once is `record_work_item_closure`'s own store-level uniqueness constraint on
 `(chunk_id, source, ref, outcome)`, mirroring `record_hub_artifact`'s own idempotent-bool contract; retirement rides the
@@ -88,11 +88,11 @@ the point the folded transaction ever leaves one standing alone.
 action loop to the turn's task, one at a time, and releases its result back to the action after the writer returns.
 Three points name the spans around the write:
 
-| Point                              | Window                                                                                                                 |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `action.after-effect.before-write` | The action has submitted an effect; its writer has not run                                                             |
-| `action.after-write.before-resume` | The effect writer has returned; the action has not resumed                                                             |
-| `close.after-enqueue.before-drain` | The `LandingRecord` writer has returned, including on replay or refusal; an independent sweep may have drained intents |
+| Point                              | Window                                                                                                                                          |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `action.after-effect.before-write` | The action has submitted an effect; its writer has not run                                                                                      |
+| `action.after-write.before-resume` | The effect writer has returned; the action has not resumed                                                                                      |
+| `close.after-enqueue.before-drain` | `_record_landing` has returned inside the `LandingRecord` writer, including on replay or refusal; an independent sweep may have drained intents |
 
 The action points surround every submitted effect, whether or not it follows a forge write; the writer can also return
 `INVALID` or `FENCED` without a durable success. For an admitted effect, a crash loses only the pass in flight: the next
@@ -129,10 +129,10 @@ Its other writes are exempt:
   commits leaves the cursor advanced and can permanently lose the note.
 - **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append, followed by a skip
   event when the skipped window contains unsent steps. A crash before the cursor append commits leaves the cursor where
-  it was, and the next pass re-derives the same jump from a fresh read.
+  it was, and the next pass derives its jump from a fresh read and time; the destination can differ.
 - **Idle-advance rows.** A pass that read closing facts but told nothing appends one cursor row moving past the newest
   instant it read, or to the frontier. It is a single-statement write with no partner. A crash before it commits leaves
-  the cursor where it was, and the next pass re-reads the same facts and re-derives the same row.
+  the cursor where it was, and the next pass reads facts and time afresh, potentially deriving a different row.
 
 The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass selects closed steps past its own cursor — the
 rows it has not yet told — rather than rescanning a corpus to find changes. It hydrates whole-chunk facts for
@@ -168,11 +168,12 @@ scenario against a real temporary directory (`tests/crash/test_kill9_sweep.py`):
 - `egress.after-write.before-commit`: the pass's files are placed; the manifest that lists them is not.
 - `egress.after-commit.before-cursor`: the files and the manifest are placed; the cursor row that records them is not.
 
-A crash at either leaves the cursor unmoved, so the next pass re-reads the same rows and writes them again to new file
-names — delivery is at-least-once, and a reader keeps the copy with the latest `exported_at`. The killed pass's files
-are never opened or replaced again; a loader that reads only files a manifest names never sees the first pass's unlisted
-files. The scenario asserts the re-written rows equal the killed pass's rows apart from `exported_at`, that empty cursor
-rows name no files, and that populated cursor rows name existing data files and a manifest that agree.
+A crash at either leaves the cursor unmoved, so the next pass reads again from that cursor and writes to new file names
+— delivery is at-least-once, and a reader keeps the copy with the latest `exported_at`. The next pass takes a fresh
+snapshot and a later time boundary, so intervening facts can change the rows it writes. The killed pass's files are
+never opened or replaced again; a loader that reads only files a manifest names never sees the first pass's unlisted
+files. With fixed input, the scenario asserts the re-written rows equal the killed pass's rows apart from `exported_at`,
+that empty cursor rows name no files, and that populated cursor rows name existing data files and a manifest that agree.
 
 A pass whose cursor append loses to a concurrent cursor move likewise leaves its committed files and manifest intact;
 the next pass reads the authoritative cursor and replays from there. The cursor transaction's predecessor check and
@@ -194,8 +195,10 @@ Its other writes are exempt:
   reported window and records its `egress-cursor-reset` event after commit. A crash between the two writes keeps the
   move and loses only the informational event row; the cursor is a fact, and `status` shows it.
 - **Anchor and idle rows.** The first pass's anchor row, and an advance that wrote no rows, are each one cursor-row
-  append with no partner write. A crash before one commits leaves the cursor where it was, and the next pass derives the
-  same row from a fresh read.
+  append with no partner write. A crash before one commits leaves the cursor where it was. The next pass derives a new
+  anchor at its own `now - settle` for each still-unanchored dataset, or re-derives an idle advance from a fresh read.
+  The later anchor can pass over facts that arrived between the uncommitted anchor and the new boundary; those facts are
+  not exported by the ordinary cursor-based pass.
 - **Schema widening.** When the current schema widens a dataset's existing `_schema/` document with nullable columns,
   `DirectoryEgressWriter` (`blizzard/src/blizzard/hub/egress/internal/files.py`) swaps the document whole for the wider
   one in one atomic `os.replace`, with no partner write. A crash before the swap leaves the narrower document, which the
@@ -487,8 +490,8 @@ every target a fold carries and records each one's `chunk_grouped` row — via `
 (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) — plus its own release/mint edge rewrite, on the fold's
 already-locked connection (`bzh:store-exclusive-write`). `GroupService.group`
 (`blizzard/src/blizzard/hub/domain/operations/queue.py`) opens that one locked transaction for the whole fold and calls
-`record_fold` exactly once inside it, covering every target the fold carries, so no target's `chunk_grouped` row can
-ever commit ahead of a sibling target's own edge release/mint — the condition
+`record_fold` once inside it when targets are nonempty, covering every target the fold carries, so no target's
+`chunk_grouped` row can ever commit ahead of a sibling target's own edge release/mint — the condition
 `hub:no-standing-dependency-onto-ephemeral-chunk` forbids: a standing edge naming an already-grouped-away chunk.
 `add_work_refs` runs in the same unit too, ahead of `record_fold` in the same loop-then-once shape, so the fold's
 work-ref merges and its edge rewrite share one transaction: no crash can leave some targets' work refs merged with none
@@ -516,16 +519,17 @@ meantime.
 ## Runner and host fact ingest: each fact and its high-water mark in one unit
 
 `FactIngestService.ingest` (`blizzard/src/blizzard/hub/domain/execution/facts.py`) walks a runner's pushed batch in seq
-order. Each fact that applies lands in its own unit, opened through `IHubTransactions.begin`. The unit writes the fact's
-domain row, then advances `runner_high_water` to that fact's seq through `set_runner_high_water`, and both commit
-together before the loop moves to the next fact.
+order. Each fact that applies lands in its own unit, opened through `IHubTransactions.begin`. The unit performs the
+fact's domain write when needed, then advances `runner_high_water` to that fact's seq through `set_runner_high_water`;
+any domain write and the advance commit together before the loop moves to the next fact. An `answer.delivered` replay
+can need no new domain row but still advance the mark.
 
-No window: a crash ahead of a unit's commit loses the fact's row and its mark advance together. A replay resubmits every
-seq the runner's own ack never confirmed. Seqs at or below the mark answer `already_applied`. The rest, the in-flight
-fact among them, apply once against the mark the crash left. Committing per fact, not once after the whole batch, keeps
-what a push already committed when the crash lands: a crash mid-way through a ten-fact push after the third fact's unit
-commits leaves three facts applied, and the replay applies only the other seven. A rejected fact never advances the
-mark, so its unit commits nothing.
+No window: a crash ahead of a unit's commit loses any new domain write and its mark advance together. A replay resubmits
+every seq the runner's own ack never confirmed. Seqs at or below the mark answer `already_applied`. The rest, the
+in-flight fact among them, apply once against the mark the crash left. Committing per fact, not once after the whole
+batch, keeps what a push already committed when the crash lands: a crash mid-way through a ten-fact push after the third
+fact's unit commits leaves three facts applied, and the replay applies only the other seven. A rejected fact never
+advances the mark, so its unit commits nothing.
 
 The advance moves the mark only from the seq the push last read or set (`bzh:write-reestablishes-read`), so an
 overlapping push of the same runner's can neither re-apply a seq the other committed nor move the mark back. The write

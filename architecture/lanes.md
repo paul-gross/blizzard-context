@@ -29,15 +29,14 @@ governs loop phases; `bzh:probe-gated-pass` below governs the cost of converging
    serves many tenants carries this down to each tenant (`bzh:pass-isolates-tenants`).
 5. **Hosting.** On the runner, a lane whose only sink is the hub is a step of the pass that owns its rows: a runner's
    lane is a step of that runner's tick, and the host's own lane, `HostLaneDrain`, is a step of the host tick, which
-   runs on its own driver beside the runners' ticks. Either way the hub client bounds each call, and the pass's later
-   steps consume its result. A lane whose sink is operator-configured, such as an exporter, runs on a dedicated driver,
-   so a stalled sink never holds a tick. On the hub, every lane is a `SweepRoster` entry, stepped by a `Sweep` when
-   timed and by the sweep routes on request, except one. `FlowDriver`
-   (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) is the one hub lane that is not a `Sweep` or a `SweepRoster`
-   entry: in timed mode its own coroutine, started in the hub's lifespan beside the sweeps' tasks and awaited before the
-   action loop stops, steps its `tick` through `asyncio.to_thread`. It runs turn tasks under the `flow.` crash-point
-   family: each tick's writes are store transactions with no external effect, and each turn's task drives a pass whose
-   effect writes keep the `action.` family.
+   runs on its own driver beside the runners' ticks. Either way the hub client bounds each call. A lane whose sink is
+   operator-configured, such as an exporter, runs on a dedicated driver, so a stalled sink never holds a tick. On the
+   hub, every lane is a `SweepRoster` entry, stepped by a `Sweep` when timed and by the sweep routes on request, except
+   one. `FlowDriver` (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) is the one hub lane that is not a `Sweep` or
+   a `SweepRoster` entry: in timed mode its own coroutine, started in the hub's lifespan beside the sweeps' tasks and
+   awaited before the action loop stops, steps its `tick` through `asyncio.to_thread`. It runs turn tasks under the
+   `flow.` crash-point family: each tick's writes are store transactions with no external effect, and each turn's task
+   drives a pass whose effect writes keep the `action.` family.
 
 The failure shapes, by sink class:
 
