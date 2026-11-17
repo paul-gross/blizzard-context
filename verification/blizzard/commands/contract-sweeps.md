@@ -28,7 +28,7 @@ test module or spec basename exists — the method's surface is exactly these tw
   exactly as its owning daemon frames it — through a stubbed `fetch` into the real `SseService`/`FetchEventSource`
   byte-stream reader and asserts on what reaches `SseHandle.events`.
 
-Per-scope compile-time frame-field-spec descriptors — `HUB_FRAME_FIELD_SPECS` off `fleet-live.ts`'s exported per-kind
+Per-scope compile-time frame-field-spec descriptors — `HUB_FRAME_FIELD_SPECS` off `hub-events.ts`'s exported per-kind
 interfaces, `RUNNER_FRAME_FIELD_SPECS` off `runner-events.ts`'s — stop compiling when an interface field is renamed or
 dropped, and at runtime cross-check each golden's key set against its scope's spec. The compile-time half holds only
 because each slot is authored through the spec's own exactness helper: a bare `Record<Keys<T>, true>` degrades to `{}`

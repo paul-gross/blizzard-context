@@ -20,9 +20,10 @@ menu stack behind them — is `@defer`-loaded.
 - **The runner.** Its `shell/` folder (the same parts) and the `core/` modules they reach (the host, lease, and status
   reads, the session and its recovery, the live stream, and the panel reads) import through `fleet/shell` for what both
   apps read and through `fleet/runner-shell` (`projects/fleet/src/runner-shell-api.ts`) for what only the runner does —
-  the runner API and client, its live-stream vocabulary, and its query keys. The runner's exports sit in a second file
-  because esbuild keeps every module a re-export names, so the same exports in `shell-api.ts` would grow the hub's
-  initial chunk.
+  the runner API and client and its live-stream vocabulary. The shared live mechanics — the SSE transport, the
+  invalidation spine, the coalesce window, and the plane-root chunk key helpers — sit on `fleet/shell`, which both apps'
+  live services read; the query keys are each app's own. The runner's exports sit in a second file because esbuild keeps
+  every module a re-export names, so the same exports in `shell-api.ts` would grow the hub's initial chunk.
 
 **Why.** esbuild keeps every decorated module a barrel on the eager path names, whether or not the shell reads its
 export, so one `from 'fleet'` in the app root ships every feature area before the board renders. A lazy route page keeps
@@ -61,13 +62,14 @@ through the same entry point's seams.
 
 ## A view follows the project lens through its `fleet/shell` seams (`bzh:frontend-project-lens-seam`)
 
-**Rule.** Make a hub view, a read, or a link follow its app's scope through the seams `fleet/shell` exports —
-`HUB_PROJECT_FILTER` (`injectProjectFilter()`, hub only) for the project a read narrows to, `APP_SCOPE` for a link that
-keeps the scope: `appLink` for a cross-page link or navigation, `appPath` only where an anchor deliberately keeps the
-current query through `queryParamsHandling` — and never by reading the URL's `/p/{project}/` segment yourself. An app
-supplies policy only: the hub a path rewrite (its project prefix), the runner a scope query (`?runner=`, `?project=`).
-Only `core/project-lens.ts` derives the lens from the URL, and `shell/app.config.ts`'s `provideProjectLens()` provides
-the hub's seams from it; no `fleet` module imports `core/project-lens.ts` or names a policy's query keys.
+**Rule.** Make a hub view, a read, or a link follow its app's scope through its scope seams — `HUB_PROJECT_FILTER`
+(`injectProjectFilter()`, the hub kernel's seam in `hub/src/app/core/project-filter.ts`) for the project a read narrows
+to, `APP_SCOPE` (on `fleet/shell`) for a link that keeps the scope: `appLink` for a cross-page link or navigation,
+`appPath` only where an anchor deliberately keeps the current query through `queryParamsHandling` — and never by reading
+the URL's `/p/{project}/` segment yourself. An app supplies policy only: the hub a path rewrite (its project prefix),
+the runner a scope query (`?runner=`, `?project=`). Only `core/project-lens.ts` derives the lens from the URL, and
+`shell/app.config.ts`'s `provideProjectLens()` provides the hub's seams from it; no `fleet` module imports
+`core/project-lens.ts` or names a policy's query keys.
 
 **Why.** One module parsing the lens segment keeps every view agreeing on which project the page is under, and a `fleet`
 module that takes the scope from a seam rather than an app's own stays servable by both apps. The runner keeps its
@@ -83,8 +85,8 @@ as written.
 - An absolute in-app `routerLink` in a view the scope covers that does not pass through `appLink` or `appPath`.
 
 **Do.** `admin/changes/changes.query.ts` takes the project from `injectProjectFilter()`, keys its read
-`lensedKey(hubConfigChangesKey, project)`, and sends the project as `?project=`; a template links
-`[routerLink]="'/board' | appLink: { chunk: id }"`.
+`lensedKey(hubConfigChangesKey, project)` (both from the hub's `core/query-keys.ts`), and sends the project as
+`?project=`; a template links `[routerLink]="'/board' | appLink: { chunk: id }"`.
 
 **Don't.** A query that splits `router.url` on `/` to find the project — a second parser that drifts from the lens the
 moment the URL shape changes, and that writes the hub's URL into a `fleet` view the runner app also serves.

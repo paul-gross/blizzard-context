@@ -113,9 +113,10 @@ compiler-API program;
 `lib/api/` — needs a consumer outside that barrel's own directory, judged per symbol through any alias chain, where a
 re-export is not consumption, a spec counts as a consumer, and a namespace or dynamic `import()` consumes a module's
 every export; and each `public-api.ts` statement re-exports only from a sub-barrel. The generated client (`lib/api/`)
-and `core/query-keys` are allowed direct sources in `ROOT_DIRECT_EXPORT_ALLOWED`, each with its reason; `shell-api.ts`
-is not read. A violation prints under `fleet barrel exports outside the disjoint-diffs rule` with file, line, and symbol
-or source. Its self-test, `assertDisjointDiffsDetectorWorks`, runs first.
+and `core/query-keys` (the plane-root chunk and transcript key helpers both daemons read) are allowed direct sources in
+`ROOT_DIRECT_EXPORT_ALLOWED`, each with its reason; `shell-api.ts` is not read. A violation prints under
+`fleet barrel exports outside the disjoint-diffs rule` with file, line, and symbol or source. Its self-test,
+`assertDisjointDiffsDetectorWorks`, runs first.
 
 The same script also runs the two wire-conformist sweeps (`web/scripts/wire-conformist-sweep.js`;
 [`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
