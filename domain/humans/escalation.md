@@ -24,30 +24,68 @@ under the repository's landing terms ([delivery](../artifacts/delivery.md)).
 
 Every escalation records its cause, from a closed vocabulary, and a one-line detail, at the moment it is written:
 
-| Origin                                                                          | Cause                           |
-| ------------------------------------------------------------------------------- | ------------------------------- |
-| a worker's retries exhausted, or death without a verdict past the cap           | `retries-exhausted`             |
-| an existing session's recorded harness owner is unknown or unavailable          | `owner-unresolvable`            |
-| no acceptable harness can serve a mint                                          | `no-acceptable-harness`         |
-| a changed harness version refused a launch and its one relaunch                 | `harness-version-changed`       |
-| the chunk's spend cap is reached                                                | `spend-cap`                     |
-| a node's bounce cap is crossed (hub-authored)                                   | `bounce-cap`                    |
-| a migrating choice's target graph fails to resolve (hub-authored)               | `migration-target-unresolvable` |
-| a worker takes a choice whose target is the reserved `escalate`                 | `escalate-choice`               |
-| a hub step's last three turns were all cut off at their deadline (hub-authored) | `hub-action-stuck`              |
-| a hub node names no action its hub knows (hub-authored)                         | `hub-action-missing`            |
-| a hub node's outcome has no edge its graph authors (hub-authored)               | `unroutable-outcome`            |
-| a repository's forge rejects its credential (hub-authored)                      | `forge-auth`                    |
-| a repository is unknown to its credential's forge (hub-authored)                | `forge-config`                  |
-| the forge lacks a capability a landing needs (hub-authored)                     | `forge-capability-missing`      |
-| a parked change was closed without merging (hub-authored)                       | `change-closed`                 |
-| a parked change exceeded its review timeout (hub-authored)                      | `park-timeout`                  |
-| branch protection refused the required branch operation (hub-authored)          | `branch-protected`              |
-| the forge refused the required merge method (hub-authored)                      | `merge-method-refused`          |
-| a landing candidate has no CI checks (hub-authored)                             | `missing-checks`                |
+| Origin                                                                                                                                                        | Cause                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| a worker's retries exhausted, or death without a verdict past the cap                                                                                         | `retries-exhausted`             |
+| an existing session's recorded harness owner is unknown or unavailable                                                                                        | `owner-unresolvable`            |
+| no acceptable harness can serve a mint                                                                                                                        | `no-acceptable-harness`         |
+| a changed harness version refused a launch and its one relaunch                                                                                               | `harness-version-changed`       |
+| the chunk's spend cap is reached                                                                                                                              | `spend-cap`                     |
+| a node's bounce cap is crossed (hub-authored)                                                                                                                 | `bounce-cap`                    |
+| a migrating choice's target graph fails to resolve (hub-authored)                                                                                             | `migration-target-unresolvable` |
+| a worker takes a choice whose target is the reserved `escalate`                                                                                               | `escalate-choice`               |
+| a hub step's last three turns were all cut off at their deadline (hub-authored)                                                                               | `hub-action-stuck`              |
+| a hub node names no action its hub knows (hub-authored)                                                                                                       | `hub-action-missing`            |
+| a hub node's outcome has no edge its graph authors (hub-authored)                                                                                             | `unroutable-outcome`            |
+| a repository's forge refuses its credential, diagnosed by `forge-auth-refused` and [recovered by a check and a requeue](#a-refused-credential) (hub-authored) | `forge-auth`                    |
+| a repository is unknown to its credential's forge (hub-authored)                                                                                              | `forge-config`                  |
+| the forge lacks a capability a landing needs (hub-authored)                                                                                                   | `forge-capability-missing`      |
+| a parked change was closed without merging (hub-authored)                                                                                                     | `change-closed`                 |
+| a parked change exceeded its review timeout (hub-authored)                                                                                                    | `park-timeout`                  |
+| branch protection refused the required branch operation (hub-authored)                                                                                        | `branch-protected`              |
+| the forge refused the required merge method (hub-authored)                                                                                                    | `merge-method-refused`          |
+| a landing candidate has no CI checks (hub-authored)                                                                                                           | `missing-checks`                |
 
 A missing cause means the cause was not recorded, never that the escalation had none. A worker's ask is never an
 escalation: it parks the chunk waiting on a human through a question, so no cause names it.
+
+## A refused credential
+
+A `forge-auth` escalation is written at a `deliver` step when the forge refuses the credential a landing acts with —
+whether on obtaining the access the landing will use or on a landing call
+([the credential](../projects.md#the-credential-a-source-or-repository-acts-with)). The hub settles why from the forge's
+answer, as one refusal of a closed vocabulary: the token invalid, a permission missing, the kind of token unable to make
+the call, an organization's authorization missing, or the managed identity or its grant refused.
+
+The diagnostic is in two places, and neither ever carries the token. The escalation's detail names the repository and
+its forge, the call that was refused, the refusal, the forge's own words, the credential the call carried, and the
+remedy for that refusal. The `forge-auth-refused` event recorded with the escalation carries the same refusal and the
+forge's sanitized answer ([../operations.md](../operations.md)).
+
+Nothing the chunk did is undone: a change it opened stays open, and every repository it already landed stays landed.
+Recovery is a loop a person drives:
+
+1. **Fix the credential** as the remedy says.
+2. **Check it** for the repository ([the check](../projects.md#the-credential-a-source-or-repository-acts-with)), which
+   asks the forge read-only whether the credential can now do what the repository's landing needs.
+3. **Requeue the chunk** at the hub ([../execution/recovery.md](../execution/recovery.md#requeue)). The requeue
+   supersedes the escalation and the hub takes the `deliver` step again, reusing the open change and skipping every
+   repository already landed, so each landing is recorded once.
+
+The detail's last line carries the check and the requeue as two commands, with the credential, the repository, and the
+chunk filled in. A refused call that carried only a secret, naming no credential, has no such line.
+
+A requeue is never refused for want of a check. A step refused again writes a new escalation naming what is still
+missing.
+
+Three things near a refused credential are not this escalation:
+
+- **Access the hub renews itself.** A managed token the forge rejects as invalid is obtained afresh and the call sent
+  once more; only a rejection of the fresh one escalates. Every other refusal escalates at once.
+- **A credential the forge accepts but that cannot do the work.** A repository the credential cannot see escalates
+  `forge-config`, and access lacking a capability the landing needs escalates `forge-capability-missing`.
+- **A work source's refused credential.** It escalates no chunk: a refused read leaves the remedy in the item's error,
+  and the forge-status pass records `forge-auth-refused` ([../operations.md](../operations.md)).
 
 ## The commands an escalation carries
 
@@ -91,6 +129,8 @@ session predating that record gets a bare command rather than a guessed one.
   guidance in place of the raw command — which graph to mint before requeuing, not how to resume — and the session
   behind it is real and reachable through the ordinary takeover check; reached instead through a human gate's resolved
   choice, no worker ran ([./gates.md](./gates.md)), so no such session guarantee holds.
+- **Forge credential refused** — the hub writes the escalation, so it carries neither the wrapped verb nor the raw
+  command; its recovery is [§A refused credential](#a-refused-credential)'s.
 
 - **Escalate choice taken** — a worker's own live transition or a human gate's resolved choice; the hub writes the
   escalation, so it carries operator guidance in place of the raw command, and the session behind it is real and

@@ -105,10 +105,12 @@ refusal, the default graph's first mint, and promote's promotability judgment. I
 referrer-write pair too: a secret's retire reads that no active work source or repository references it, and each such
 record's create, edit, or enable reads that its secret is not retired, so the domain unit of each declares the secret's
 `SECRET` key before it reads. The forge-retire / referrer-write pair beside it does the same on the forge's `FORGE` key:
-a forge's retire reads that no enabled record names it, and each referrer's write reads that its forge is live. Three
-more keyed namespaces guard closure judgments. A garden proposal's edit, attach, detach, pass, and accept each declare
-its `GARDEN_PROPOSAL` key (`garden_proposal_lock`) and re-read its closure under it; the minting accept declares that
-key beside the item mint's own keys in one unit. Garden delivery declares the plan's chunk and the `FINDING` key
+a forge's retire reads that no enabled record names it, and each referrer's write reads that its forge is live. The
+credential-retire / referrer-write pair does the same on the credential's `CREDENTIAL` key (`credential_lock`): a
+credential's retire reads that no enabled record names it, and each referrer's write reads that its credential is live.
+Three more keyed namespaces guard closure judgments. A garden proposal's edit, attach, detach, pass, and accept each
+declare its `GARDEN_PROPOSAL` key (`garden_proposal_lock`) and re-read its closure under it; the minting accept declares
+that key beside the item mint's own keys in one unit. Garden delivery declares the plan's chunk and the `FINDING` key
 (`finding_lock`) of every finding it expects, and the finding exit declares the `FINDING` keys of every finding it
 records facts for. A work item's edit, withdraw, and deliver each declare its `WORK_ITEM` key (`work_item_lock`) and
 re-read the item's closure under it. The chunk delete pre-reads the chunk's hub-source refs, declares the chunk and
