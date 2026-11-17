@@ -271,9 +271,9 @@ Stated so a reviewer need not re-derive them:
   - **The open-tenant set and the tenant cache** — the open tenants with their names, and each opened tenant's stores
     and services, held in memory (`hub/open_tenants.py`, `TenantCache` in `hub/composition.py`). A tenant another
     process created is read on the first lookup that misses it, but a rename refreshes only the process that made it.
-  - **The boot recovery of open turns** — an open turn at startup is taken to belong to a dead process's run and is
-    ended `interrupted` before the hub serves ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The boot
-    recovery of open turns).
+  - **The boot recovery of open turns** — startup treats an open turn as belonging to a dead process and attempts to end
+    it `interrupted` before serving; a failed tenant recovery does not block startup
+    ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The boot recovery of open turns).
   - **The flow driver's sweep of open turns** — each tick ends `interrupted` every open turn that started before the
     previous tick began and whose task is not in the driver's in-memory set of running turns; a turn another process is
     running would be in no set this process holds.
