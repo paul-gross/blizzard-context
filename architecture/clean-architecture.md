@@ -361,6 +361,24 @@ refuses.
 protocol; and `is_tenant_name`, which restates the wire's `TENANT_NAME_PATTERN` and `TENANT_NAME_MAX_LENGTH` and stays
 beside them.
 
+One effectful workflow also stays in the kernel by decision, and a sweep does not re-raise it against the purity clause:
+`rotate_keys` in `blizzard/src/blizzard/foundation/secrets/rotation.py`, with what serves only it — that module's
+`_Target` key view and `_reseal` step, and the `mint`, `promote`, and `prune` methods of the key sources behind
+`IRotatableKeyProvider`. It is an operational sequence over the key-provider, cipher, and repository seams, not a pure
+business rule; the kernel owns it so that sequence has one implementation. The sequence is the order of its effects. It
+reads every supplied repository's sealed rows and refuses a referenced key generation the key source lacks, before it
+mints. It takes the target generation from the provider — freshly minted, or the current one where the source's
+generations are fixed outside the process — and re-seals each repository through that repository's own atomic `reseal`.
+It promotes only once every repository has succeeded, then re-reads the referenced generations and prunes. Recovery is
+staged, with no rollback across tenants and key files: a later repository can fail after an earlier one's re-seals
+committed, which leaves the old generation current and the ciphertext already written readable through the target
+generation. `_reseal` is effectful as well — the cipher reads key material through its provider and draws a fresh nonce
+— and the deterministic parts, `uncovered_key_ids` and `stale_seals`, are pure functions in
+`blizzard/src/blizzard/foundation/secrets/sealing.py`. The exception names this workflow alone: it admits no other
+`foundation/` I/O, no other effectful shared rule, and no class of workflows. It answers the purity clause only: whether
+one daemon alone reaches the module is the layering test's allowlist question, and the entry there stands on its own
+reason.
+
 **Detect.** `tests/guards/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard
 package, on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and on
 a hub or runner composition root loading the other daemon. The same module fails an import of a kernel vocabulary name
@@ -374,7 +392,8 @@ gives it an allowlist entry with its reason, which the check drops once the entr
 only: a one-sided rule living as a name in a shared module is not caught and stays a judgment call. A business rule in
 `foundation/` that only one daemon applies is that daemon's rule placed in the kernel; the fix moves it into that
 daemon's domain. One both daemons apply that takes a repository, clock, or client, or performs I/O, is made pure, with
-the facts and the instant passed in as values.
+the facts and the instant passed in as values; the rotation workflow the Exception names is the one such function left
+effectful.
 
 **Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
 `wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.
