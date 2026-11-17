@@ -203,9 +203,9 @@ graph's first mint declares `graph_name_lock` through `lock_set`. A pointer's ke
 The hub-wide egress cursor is a short store-level exception to domain-declared units: `EgressStore` takes the seeded
 `EGRESS_CURSOR` hub lock inside each append or reset transaction, then reads the current dataset cursor. A pass appends
 only if its observed predecessor still matches; a reset captures its actual predecessor under that lock and appends
-unconditionally. Per-dataset `append_order` decides current authority, not `recorded_at`, which remains timestamp
-metadata for reporting. The lock covers only the cursor transaction, not file export. The export sweep itself remains a
-single-process background loop.
+unconditionally. Current authority is ordered per dataset by descending `append_order`, then `recorded_at`, then `id`.
+Legacy rows all have append order 0, so their timestamp and id retain their ordering. The lock covers only the cursor
+transaction, not file export. The export sweep itself remains a single-process background loop.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, the ceiling's self-engagement, and the
