@@ -1287,13 +1287,7 @@ FRONTEND_DOC = """## Folders import only what their project's layer table allows
 | `api` | L0    | —           |
 | `core` | L1   | `api`       |
 
-`hub`, rooted at `hub/src/app/`:
-
-| Unit     | Layer | May import |
-| -------- | ----- | ---------- |
-| `core`   | L0    | —          |
-| `garden/core` | L1 | —        |
-| `garden` | L1    | `garden/core` |
+`hub`, rooted at `hub/src/app/`, has no table: `HUB_LAYERS` is its one roster.
 
 `runner`, rooted at `runner/src/app/`:
 
@@ -1344,18 +1338,24 @@ class CheckHTests(unittest.TestCase):
     def test_matching_tables_and_gate_data_pass(self):
         findings = self._run()
         self.assertEqual([f for f in findings if f.status == "fail"], [])
-        self.assertEqual(len([f for f in findings if f.status == "pass"]), 3)
+        self.assertEqual(len([f for f in findings if f.status == "pass"]), 2)
 
     def test_the_python_layer_data_is_not_compared(self):
         self.assertFalse((self.blizzard / "tests" / "test_layering.py").exists())
         self.assertFalse((self.context / "architecture" / "clean-architecture.md").exists())
         self.assertEqual([f for f in self._run() if f.status == "fail"], [])
 
-    def test_a_planted_js_edge_mismatch_fails(self):
+    def test_a_hub_roster_change_with_no_doc_hub_table_is_not_a_finding(self):
         _write(self.blizzard / "web" / "scripts" / "structural-gate.js", JS_GATE.replace("'garden/core',\n  ]", "'garden/core', 'core',\n  ]"))
+        findings = self._run()
+        self.assertEqual([f for f in findings if f.status == "fail"], [])
+        self.assertFalse(any("HUB_LAYERS" in f.message for f in findings))
+
+    def test_a_planted_js_edge_mismatch_fails(self):
+        _write(self.blizzard / "web" / "scripts" / "structural-gate.js", JS_GATE.replace("board: ['core'],", "board: [],"))
         fails = [f for f in self._run() if f.status == "fail"]
         self.assertEqual(len(fails), 1)
-        self.assertIn("HUB_LAYERS", fails[0].message)
+        self.assertIn("RUNNER_LAYERS", fails[0].message)
         self.assertEqual(fails[0].file, "architecture/frontend-structure/placement.md")
 
     def test_a_unit_only_the_gate_holds_fails(self):
@@ -1367,13 +1367,13 @@ class CheckHTests(unittest.TestCase):
     def test_a_missing_gate_name_fails(self):
         _write(self.blizzard / "web" / "scripts" / "structural-gate.js", "const X = {};\n")
         fails = [f for f in self._run() if f.status == "fail"]
-        self.assertEqual(len(fails), 3)
+        self.assertEqual(len(fails), 2)
         self.assertTrue(all("not found" in f.message for f in fails))
 
     def test_a_missing_doc_table_fails(self):
         (self.context / "architecture" / "frontend-structure" / "placement.md").unlink()
         fails = [f for f in self._run() if f.status == "fail"]
-        self.assertEqual(len(fails), 3)
+        self.assertEqual(len(fails), 2)
         self.assertTrue(all("no layer table" in f.message for f in fails))
 
 

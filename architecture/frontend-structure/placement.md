@@ -71,31 +71,8 @@ may also import `testing`:
 | `shell`       | L3           | `api`, `core`, `kit`                |
 | `testing`     | spec support | `api`                               |
 
-`hub`, rooted at `hub/src/app/`, with kernel `core`:
-
-| Unit               | Layer | May import                                                                                                                                                                                          |
-| ------------------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`             | L0    | —                                                                                                                                                                                                   |
-| `admin`            | L1    | —                                                                                                                                                                                                   |
-| `board`            | L1    | `runners`                                                                                                                                                                                           |
-| `delivery`         | L1    | —                                                                                                                                                                                                   |
-| `demo`             | L1    | —                                                                                                                                                                                                   |
-| `events`           | L1    | —                                                                                                                                                                                                   |
-| `graphs`           | L1    | —                                                                                                                                                                                                   |
-| `login`            | L1    | —                                                                                                                                                                                                   |
-| `runners`          | L1    | —                                                                                                                                                                                                   |
-| `garden/core`      | L1    | —                                                                                                                                                                                                   |
-| `garden/proposals` | L1    | `garden/core`                                                                                                                                                                                       |
-| `garden/runs`      | L1    | `garden/core`                                                                                                                                                                                       |
-| `garden/scopes`    | L1    | `garden/core`, `garden/runs`                                                                                                                                                                        |
-| `garden/findings`  | L1    | `garden/core`, `garden/proposals`                                                                                                                                                                   |
-| `garden/routines`  | L1    | `garden/core`, `garden/runs`, `graphs`                                                                                                                                                              |
-| `garden/cadences`  | L1    | `garden/core`                                                                                                                                                                                       |
-| `garden/doorway`   | L1    | `garden/core`, `garden/proposals`, `garden/runs`                                                                                                                                                    |
-| `garden`           | L1    | `garden/cadences`, `garden/core`, `garden/doorway`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`                                                        |
-| `shell`            | L2    | `admin`, `board`, `delivery`, `demo`, `events`, `garden`, `garden/cadences`, `garden/findings`, `garden/proposals`, `garden/routines`, `garden/runs`, `garden/scopes`, `graphs`, `login`, `runners` |
-
-`web/scripts/structural-gate.js`'s `HUB_LAYERS` is this table's executable copy and must match it row for row.
+`hub`, rooted at `hub/src/app/`, with kernel `core`, has no table here: its units and their edges are
+`web/scripts/structural-gate.js`'s `HUB_LAYERS`, the one roster.
 
 `runner`, rooted at `runner/src/app/`, with kernel `core`:
 
@@ -117,16 +94,16 @@ feature imports it — and folder cycles form unseen.
 static, type-only, and dynamic imports, a component's `styleUrl`, `styleUrls`, and `templateUrl`, and CSS `@import`. The
 `fleet` barrels (`fleet/src/public-api.ts`, `shell-api.ts`, `runner-shell-api.ts`) and each app's `src/main.ts` sit
 outside the source roots and are not bound. Which project a unit belongs to is `bzh:frontend-placement`'s call; this
-rule governs the edges inside one project. These tables own each project's graph; `web/scripts/structural-gate.js`'s
-`FLEET_LAYERS`, `HUB_LAYERS`, and `RUNNER_LAYERS` mirror them, so a new edge or unit changes a table here and its mirror
-in the same change.
+rule governs the edges inside one project. The tables here own the `fleet` and `runner` graphs;
+`web/scripts/structural-gate.js`'s `FLEET_LAYERS` and `RUNNER_LAYERS` mirror them, so a new edge or unit changes a table
+here and its mirror in the same change. `HUB_LAYERS` owns the hub graph, and a hub change edits it alone.
 
 **Detect.** The package-layers sweep inside `web:structural-gate`, proven first by `assertPackageLayersDetectorWorks`,
-carries the three tables as data with no exemption list and fails an import its table does not allow, a file in no
-declared unit, and a cycle in a table.
+carries the three project graphs as data with no exemption list and fails an import its table does not allow, a file in
+no declared unit, and a cycle in a table.
 [`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
-owns the sweep's full fail list and self-test cases. `scripts/check-registry-drift.py` check H fails when a table here
-and its mirror in `structural-gate.js` differ in a unit or an edge.
+owns the sweep's full fail list and self-test cases. `scripts/check-registry-drift.py` check H fails when a `fleet` or
+`runner` table here and its mirror in `structural-gate.js` differ in a unit or an edge.
 
 **Do.** `hub/src/app/board/board-page.ts` and `runners/runner-rows.ts` both read `core/chunks.query.ts`: the chunks read
 two features need sits in the kernel, so `board` → `runners` stays the only edge between them. The routine detail in
