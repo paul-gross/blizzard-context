@@ -32,7 +32,8 @@ Spec-support (`testing/`, which has its own `fleet/testing` entry) and declarati
 
 **Do.** `ChunkTranscriptsContainer` and the chunk page in `fleet/src/lib/chunk/chunk-page/` take their client and plane
 from the daemon the route provides; the hub supplies an actions port and the runner supplies none, so one page renders
-read-only on the runner. The hub's gardening, graphs, admin, and board reads live under `hub/src/app/`.
+read-only on the runner. The hub's gardening, graphs, admin, and board reads live under `hub/src/app/`, and so do its
+query keys and live service (`core/query-keys.ts`, `core/live/`), as the runner's sit in `runner/src/app/core/`.
 
 **Don't.** A second chunk page in `runner/` that mirrors the hub's, or a gardening folder left in `fleet` because it was
 written there first.
