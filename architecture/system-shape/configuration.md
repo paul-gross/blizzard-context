@@ -56,13 +56,30 @@ an urgency, the tenant's settings, and the hub-wide settings depart from the ver
   repository write whose policy needs a capability its forge does not offer is refused `forge_capability_missing` on
   `landing_policy`, naming each missing capability, the policy, and the forge — on create, on a policy or forge edit,
   and on every repository write a document apply plans.
+- **A credential** names its `forge` and its `binding` at create and neither ever changes: an edit naming either at all,
+  or a declared document entry naming another, is refused `credential_binding_immutable`. A binding is looked up by name
+  in `CREDENTIAL_BINDINGS` (`blizzard/src/blizzard/hub/domain/config/credential_bindings.py`); it says whether its
+  secret is supplied by the operator or its access renewed by the hub, validates and canonicalizes the record's
+  `settings`, and derives its `authority`, which no write states and which a second credential on the forge is refused
+  `credential_authority_taken` for claiming, a retired holder keeping its claim. Its retire is refused
+  `credential_in_use`, listing each enabled repository and work source naming it. Beside the verb set it takes a
+  read-only check — `POST /api/credentials/{credential}/checks`, on the CLI `blizzard hub credential check` — which
+  writes no record and no change row. What a credential is, and who maintains its access, is
+  [../../domain/projects.md](../../domain/projects.md#the-credential-a-source-or-repository-acts-with)'s.
+- **A repository and a work source** each name the credential they act with in `credential`, by id or slug. One of
+  another forge is refused `credential_forge_mismatch`; one unknown, or retired while the record is enabled,
+  `credential_unavailable`. The deprecated `secret_name` or `secret` field, given alone, resolves to the `github.token`
+  credential reading that secret on the record's forge and records a `config-old-field-used` event; given beside a
+  `credential` it disagrees with, the write is refused `credential_conflict`. A work source names only a binding its
+  provider lists in `PROVIDER_BINDINGS` (`blizzard/src/blizzard/hub/domain/config/work_sources.py`), any other refused
+  `credential_binding_unsupported`.
 - **A record a project owns** — a scope, a routine, or a kind added beside them — is created in the project the call
   names — `--project` on the CLI, by id or slug — and a call naming none falls back or is refused as
   [../../domain/projects.md](../../domain/projects.md) §A call that needs a project states, the refusal
   `422 project_required` listing the tenant's projects; its list, and the change log, take `?project=` to narrow to one
   project and read the whole tenant without it. A change row of a project, a project's link, or a record a project owns
   names that record's project, since its key means something only inside its project; one of a tenant-wide record — a
-  forge, a work source, a repository, a secret — names none.
+  forge, a credential, a work source, a repository, a secret — names none.
 - **A graph** is an immutable mint, so its definition takes no patch — an edit is a new mint — and only its mutable
   flags take the sparse `PATCH`, beside its retire and enable, each of which appends a fact even when it repeats the
   standing value ([../../domain/graphs/identity.md](../../domain/graphs/identity.md)).
@@ -417,7 +434,7 @@ the change that brings it under the rule:
   `revision` or change row.
 - **A secret's retire and enable move no revision.** Each appends a change row at the secret's unchanged revision,
   because its value is sealed against `(name, revision)` and a revision moved without resealing would leave the value
-  undecryptable. A forge's, a work source's, or a repository's retire and enable do move its revision.
+  undecryptable. A forge's, a credential's, a work source's, or a repository's retire and enable do move its revision.
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
   its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
   than refusing it.

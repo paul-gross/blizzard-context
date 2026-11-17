@@ -47,9 +47,9 @@ that authorization. Work items reach the forge through the work-source family, a
 | Landing seam     | Delivery: the `land` action's refs, changes and checks, and the garden's commit check, which resolves a name or `owner/repo` against the enabled records and answers nothing for one no record names | Protocol seams, `IForgeRefs`, `IForgeChanges` and `IForgeChecks`, built per repository by the registry; each forge kind offers a capability set, and an action's unmet requirement refuses the visit |
 
 The hub holds no shared forge endpoint and no owner fallback: each repository is a record naming its forge record,
-owner, base branch and secret, and a `deliver` step and the garden's commit check each resolve every repository they act
-on to its record on every use; a work source names its forge record likewise, and the OAuth provider declares its own
-endpoint through its config entry.
+owner, base branch and credential, and a `deliver` step and the garden's commit check each resolve every repository they
+act on to its record on every use; a work source names its forge record and credential likewise, and the OAuth provider
+declares its own endpoint through its config entry.
 
 Each tenant holds one rate budget per forge key — a forge record and the authority its calls go out as, or that forge's
 anonymous budget when none — beside the registry and outside its adapter cache, so an edit that rebuilds an adapter
@@ -57,6 +57,40 @@ keeps the budget. The landing seam's role handles and the work-source family sha
 `bzh:forge-rate-budget` below states.
 [../../verification/blizzard/tier-rules.md](../../verification/blizzard/tier-rules.md) owns how tests bind the mock
 forge for the land action's path.
+
+## A forge credential becomes an authorization at one boundary
+
+The forge authorization boundary, `IForgeAuthorizations` (`hub/forge/auth.py`), is the one place a credential becomes
+what a forge client authenticates with, and the only forge code that reveals a secret (`bzh:secret-write-only`,
+[./configuration.md](./configuration.md)). It is a seam of its own, apart from the landing seam and the work-source
+family: both sit behind it, and neither knows how its calls are authenticated. A caller hands it the credential a record
+resolved to and the scope it is asking for:
+
+| Scope         | Asked by                                                                                            |
+| ------------- | --------------------------------------------------------------------------------------------------- |
+| `landing`     | The forge registry, building a repository's adapter bundle                                          |
+| `work-source` | The work-source family, through its own `IWorkSourceAuthorizations`, seated at the composition root |
+| `check`       | The credential check (`hub/forge/readiness.py`), whose client is held to reads by its transport     |
+
+The work-source family declares that narrow Protocol itself so it imports nothing of `hub/forge/`
+(`bzh:forge-rate-budget` below); the composition root seats the one boundary behind it, fixed to its scope.
+
+What comes back is an authorization, never a secret: the `auth` its client authenticates each request with, the
+authority the calls go out as — which keys the rate budget every caller acting as it shares, and the write lane its
+landing writes go out under — and the capabilities it offers, narrowing its forge kind's set. `ForgeAuthorizations`
+(`hub/forge/internal/authorizations.py`) builds one by the credential's binding, and a binding that mints access mints
+it there, narrowed to the scope. A new way to authenticate is therefore a `CredentialBinding`
+(`blizzard/src/blizzard/hub/domain/config/credential_bindings.py`) and its builder behind the boundary, with no change
+to the landing seam, a work-source binding, or any action — beside its entry in `PROVIDER_BINDINGS`
+(`blizzard/src/blizzard/hub/domain/config/work_sources.py`) for each work-source provider that may act with it.
+
+A forge's refusal of a credential is worded in one vocabulary wherever it is raised — at the boundary's mint, on a
+landing call, or on a work-source call. Each forge kind's adapter classifies the answer into an `AuthRefusal` and a
+sanitized `ForgeDiagnostic` (`blizzard/src/blizzard/hub/domain/kernel/forge_refusals.py`), which sit in the kernel
+because the landing seam, the work-source family, and the forge-status pass all name them and the work-source family may
+not import the forge package. The module owns each refusal's sentence and remedy and the `forge-auth-refused` event's
+detail, so the escalation, the event, and a check's outcome word one refusal one way. What an operator does with them is
+[../../domain/humans/escalation.md](../../domain/humans/escalation.md#a-refused-credential)'s.
 
 ## The rate budget is reached by handle, in the forge kind's dialect (`bzh:forge-rate-budget`)
 

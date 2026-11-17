@@ -61,8 +61,9 @@ a cadence's slug are unique within its project, and two projects never collide o
 ([routines-and-scopes.md](./routines-and-scopes.md#what-refuses)), and a run's work is ingested into the routine's
 project.
 
-Forges, work sources and repositories are the tenant's, not any project's. A project reaches a source or repository only
-through a link, any number of projects may link the same record, and a link never makes the record the project's own:
+Forges, credentials, work sources and repositories are the tenant's, not any project's. A project reaches a source or
+repository only through a link, any number of projects may link the same record, and a link never makes the record the
+project's own:
 
 - **A source link** says the project draws from that source. Closing and annotating an item still go through its source,
   whichever project carried the work.
@@ -79,8 +80,42 @@ through a link, any number of projects may link the same record, and a link neve
 - **The built-in hub source** is one list for the whole tenant, linked to every project without being configured, and
   cannot be unlinked. Each item in it belongs to the project it was created in.
 - **A forge is never linked.** A project reaches one only through the sources and repositories it links.
-- **A project holds no secrets.** A credential belongs to the source or repository that uses it, and a project reaches
-  it only by linking that record.
+- **A project holds no credentials and no secrets.** A source or repository acts with the credential it names, and a
+  project reaches that credential only by linking the record.
+
+### The credential a source or repository acts with
+
+A forge identifies a server and its kind; a **credential** identifies how one use authenticates to that server. Each
+work source and each repository names the credential it acts with, and each choice is its own: reading a project's
+issues need not carry the privileges that landing its changes does. A record names only a credential of its own forge.
+
+A tenant may hold several credentials on one forge, and any number of sources and repositories may share one. A shared
+credential is one thing to maintain: replacing what it authenticates with reaches every record naming it at that
+record's next use. Neither a credential nor the ability to use it crosses the tenant boundary
+([tenancy.md](./tenancy.md)).
+
+A credential's forge, and how it authenticates, are fixed when it is created. What an operator has to know about a
+credential is who maintains its access:
+
+- **An externally supplied token.** The operator supplies the secret and replaces it; blizzard never renews one.
+- **Provider-managed access.** The operator supplies an identity and its authorization, and blizzard obtains and renews
+  the short-lived access that authorization permits, each narrowed to the use it is for and never stored.
+
+Each credential acts as one authority on its forge, and no two credentials of a tenant act as the same authority there,
+retired ones included. Every record acting as an authority shares its allowance of forge calls, and the repositories
+acting as it land their writes one at a time.
+
+A credential an enabled source or repository names is never retired from under it: the retire is refused, naming each
+such record, until they are retired or name another credential. An enabled record likewise never names a credential that
+is unknown or retired.
+
+**A credential can be checked before any work depends on it.** A check asks the forge, read-only, whether the credential
+can do what each source and repository acting with it needs: it makes the reads landing and ingestion make, and judges
+every write from what the credential is granted, sending none. Each operation ends `proven`, `granted`, `unproven`,
+`refused`, or `unsupported`, a refusal carrying its remedy. A check stores nothing and gates nothing; it records one
+`credential-check` event ([operations.md](./operations.md)). One that passes does not prove a write will succeed, and
+reads neither branch protection nor review requirements. What a credential refused mid-landing does to its chunk, and
+how the chunk recovers, is [humans/escalation.md](./humans/escalation.md#a-refused-credential)'s.
 
 ## A chunk belongs to exactly one project
 
