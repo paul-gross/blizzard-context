@@ -26,7 +26,11 @@ still held to its check on the framework packages — fastapi, starlette, sqlalc
 is named explicitly, so a new binding fails `tests/guards/test_layering.py` until it is named. Any other module's
 stdlib-driver import needs a reasoned entry in the per-module exemption map in `tests/guards/test_layering.py`, which
 admits only the packages it names; an entry whose module no longer imports a package it admits is stale and fails the
-check. Pure path arithmetic (`posixpath`, `PurePosixPath`) needs no exemption.
+check. Pure path arithmetic (`posixpath`, `PurePosixPath`) needs no exemption. The binding packages sit outside the
+disk-call rule (`blizzard/contracts/ast-grep/rules/runner-domain-core-disk-calls.yml`) as they sit outside the driver
+check. A read of prose shipped inside the package itself (the harness prompt and workspace-prompt sample files) carries
+a per-site `# ast-grep-ignore` with its one-line reason, never a module-level exemption, since those modules also hold
+domain code; a suppression whose site no longer matches fails the structural gate.
 
 **Scope.** A runner domain-core module is any module of a `bzh:domain-package-layers` runner node outside an `internal/`
 package (`_runner_domain_core_files`): a concept package's public surface holds its models, ports, and the services
@@ -34,10 +38,15 @@ carrying its rules, and the adapter binding a framework or driver sits in its `i
 
 **Detect.** A domain module importing any of those packages, or a business rule reachable only through a store or HTTP
 app. `tests/guards/test_layering.py` fails the unit tier on a `hub/domain/` module, or a runner domain-core module,
-importing fastapi, starlette, sqlalchemy, click, httpx2, os, shutil, subprocess, or tempfile; the import check cannot
-see pathlib I/O (`Path.read_text`, `Path.mkdir`). The layer gate already keeps every such module off
-`blizzard.runner.store` and `blizzard.runner.api`, which no row lists. The same layer walker fails a `hub/domain/`
-module importing `blizzard.hub.config` or `blizzard.hub.delivery`, in any import form.
+importing fastapi, starlette, sqlalchemy, click, httpx2, os, shutil, subprocess, or tempfile. The ast-grep rule in
+`blizzard/contracts/ast-grep/rules/runner-domain-core-disk-calls.yml` fails a runner domain-core module calling
+`exists`, `is_dir`, `is_file`, `resolve`, or `iterdir` with no argument, or `mkdir`, `read_text`, `write_text`, `glob`,
+or `unlink` with any; it reads the call's shape only, with no typing, so a zero-argument call of one of those names on a
+non-Path receiver is matched too. It does not see any other pathlib method (`open`, `stat`, `rename`, `touch`,
+`read_bytes`, `write_bytes`, …), builtin `open`, or a call through a stored bound method — it narrows disk I/O in the
+domain core, it does not prove its absence. The layer gate already keeps every such module off `blizzard.runner.store`
+and `blizzard.runner.api`, which no row lists. The same layer walker fails a `hub/domain/` module importing
+`blizzard.hub.config` or `blizzard.hub.delivery`, in any import form.
 
 **Do.** `blizzard/src/blizzard/hub/domain/` and the runner's concept packages (`runner/leases/`, `runner/lifecycle/`,
 `runner/tracing/`, …) import no web, ORM, or CLI package; `hub/api/`, `hub/store/`, `runner/api/`, and `runner/store/`
