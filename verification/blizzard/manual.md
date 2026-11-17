@@ -338,8 +338,8 @@ describes them as live.
 
 **Setup.** Run in the `blizzard` worktree of the feature env the retirement was built in, or in `projects/blizzard/`
 when working from the source checkout; `workspace:/context/winter/workspace-layout.md` owns both shapes. The mock's
-mirror of these response models is not in surface here — `blizzard-mock:unit-test`'s wire-parity guard holds it
-mechanically.
+mirror of these response models is not in surface here — the `needs_blizzard` wire-parity guard in
+`blizzard-mock/tests/test_wire_parity.py` compares the mapped mirrors with the hub's committed schema mechanically.
 
 **Phrase declarations.** Search these exact identifiers and semantic legacy-shape phrases:
 
@@ -449,10 +449,11 @@ plugin's real CLI command; the env-local runner API check below proves that comm
    arrives for each completed tool call.
 3. Resume the same session, send a nudge, run a judgement and invoke a child `task` session. Compare the adapter's
    effective environment and resolved config for each invocation, and the aggregate plugin and heartbeat counts to the
-   tool events. Instrument per-invocation counts separately if the change requires them. For fresh, resume, nudge and
-   judgement, inspect `debug config --pure` under each exact launch environment with a numeric window and an operator
-   model-output override. Check both explicit and default reserves: the stamped model's input limit less the effective
-   reserve equals the window, while its output limit and permission denials survive.
+   tool events. Instrument per-invocation counts separately: the script's aggregate counts alone do not establish the
+   per-invocation claim below. For fresh, resume, nudge and judgement, inspect `debug config --pure` under each exact
+   launch environment with a numeric window and an operator model-output override. Check both explicit and default
+   reserves: the stamped model's input limit less the effective reserve equals the window, while its output limit and
+   permission denials survive.
 4. Introduce a collision with `question` and separately with the runner plugin in the operator bundle; attempt startup
    and confirm the error names the native source file and the previously published snapshot remains readable. Repeat
    duplicate plugin identity tests across bundle, project and user JSON entries and native plugin directories. A
@@ -641,10 +642,10 @@ Code uses the caller's login environment. OpenCode cells ask from the operator b
 project `agent.build.permission`, and a built-in default (a `.env` read). The Claude Code cell has an operator
 `permissions.ask` rule on a Bash command.
 
-**Passes when.** The script exits 0. In `normal`, every OpenCode cell ends with the call refused as a tool result, a
-final reply, and no `auto-rejecting` on stderr. In `auto` and `dangerous`, every OpenCode cell resolves the request
-without a prompt. Every Claude Code cell refuses the `ask` rule with a `permission_denials` entry and completes the
-turn. No cell times out.
+**Passes when.** The script exits 0 without `--skip-claude`. In `normal`, every OpenCode cell ends with the call refused
+as a tool result, a final reply, and no `auto-rejecting` on stderr. In `auto` and `dangerous`, every OpenCode cell
+resolves the request without a prompt. Every Claude Code cell refuses the `ask` rule with a `permission_denials` entry
+and completes the turn. No cell times out.
 
 ### `blizzard:manual-claude-code-bundle`
 
@@ -915,8 +916,9 @@ not measured.
 
 - Jaeger all-in-one in docker: `docker run -d -p 4317:4317 -p 16686:16686 jaegertracing/jaeger:latest` (OTLP gRPC on
   4317, UI and query API on 16686).
-- Honeycomb as the hosted service. The key is the operator's own: ask for it through `blizzard runner ask`, naming only
-  where it lives, never its value, and pass it to the collector as `HOSTED_TRACES_API_KEY` from that location.
+- Honeycomb as the hosted service. The key is the operator's own: ask where it lives, never for its value, and pass it
+  to the collector as `HOSTED_TRACES_API_KEY` from that location. `blizzard runner ask` is available only inside a
+  spawned worker; otherwise use the operator's secure channel.
 - The documented collector config, the file itself unchanged, with `TRACE_STORE_ENDPOINT=127.0.0.1:4317`,
   `TRACE_STORE_INSECURE=true`, `HOSTED_TRACES_ENDPOINT=https://api.honeycomb.io` and the key. Where the machine already
   holds the config's default ports (`4318` for the receiver, `8888` for the collector's own metrics), move them with
@@ -972,7 +974,7 @@ loader's behavior beyond these reads is not measured.
 
 - The directory: `mise run playwright -- --project=service-fleet tests/service/fleet/egress-night.spec.ts`, then the
   `egress-parquet` directory beside the hub's `egress` under the held stack's `fresh/` directory in the run's
-  `tests/.run/<run>/`. A run keeps it; the next run's `.run` directory is a new one.
+  `${BLIZZARD_TMPDIR:-tests}/.run/<run>/`. A run keeps it; the next run's `.run` directory is a new one.
 - MinIO (`cgr.dev/chainguard/minio`) with a throwaway root key, and `rclone/rclone` for the copy.
 - `clickhouse/clickhouse-server` and `grafana/grafana` with `GF_INSTALL_PLUGINS=grafana-clickhouse-datasource`, the
   official ClickHouse data source.
@@ -994,9 +996,9 @@ loader's behavior beyond these reads is not measured.
    `blizzard` between the reads.
 
 6. Run `mise run playwright -- --project=service-fleet tests/service/fleet/egress-events.spec.ts`; the hub's NDJSON
-   export is the `egress` directory under that test's `fresh/` directory in the run's `tests/.run/<run>/`. Copy it the
-   same way. In ClickHouse, create a table over the `events` files from the manifests' file list, and paste
-   `contracts/egress/events_current.sql` over it unchanged as `events_current`.
+   export is the `egress` directory under that test's `fresh/` directory in the run's
+   `${BLIZZARD_TMPDIR:-tests}/.run/<run>/`. Copy it the same way. In ClickHouse, create a table over the `events` files
+   from the manifests' file list, and paste `contracts/egress/events_current.sql` over it unchanged as `events_current`.
 7. In Grafana, add a table panel of the files each station read in the last seven days and one of counts by skill, from
    `events_current` alone. Run the docs' `files-a-station-read-last-week` recipe and a count by `subject` over
    `kind = 'skill_invocation'` in DuckDB over the same directory, and record each beside Grafana's.
@@ -1085,12 +1087,12 @@ throwaway local Postgres cluster. The Postgres rehearsal also migrates a hub sto
 full down-and-up pass; Postgres adds transactional DDL, a 63-character identifier limit, and enforced foreign keys.
 
 **Setup.** From the `blizzard` worktree: `initdb -A trust -D <dir>/data`, then `pg_ctl` on a private port with a short
-`-k` socket directory (the socket path is capped near 100 bytes) and `listen_addresses=''`, then `createdb hub`. Point
-the hub at it with `BZ_HUB_DB_URL='postgresql+psycopg://@/hub?host=<socket dir>&port=<port>'` and
-`BZ_HUB_DIR=<empty dir>`, and run every `blizzard` command as
-`uv run --no-sync --with 'psycopg[binary]==3.3.4' blizzard hub …
---allow-external-db`. Stop the cluster with
-`pg_ctl stop` and remove its directories when done.
+`-k` socket directory (the socket path is capped near 100 bytes) and `listen_addresses=''`, then
+`createdb -h <socket dir> -p <port> hub`. Point the hub at it with
+`BZ_HUB_DB_URL='postgresql+psycopg://@/hub?host=<socket dir>&port=<port>'` and `BZ_HUB_DIR=<empty dir>`, and run every
+`blizzard` command as `uv run --no-sync --with 'psycopg[binary]==3.3.4' blizzard hub …
+--allow-external-db`. Stop the
+cluster with `pg_ctl stop` and remove its directories when done.
 
 **Steps.**
 
@@ -1112,9 +1114,9 @@ Postgres cluster. Every tier runs the runner store on SQLite; this is the one pl
 baseline and its outbox counters run where DDL is transactional and a sequence never reuses a value.
 
 **Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on a Unix socket (`initdb -A trust`, `pg_ctl` on
-a private port, `createdb`), and every `blizzard` command run under `uv run --no-sync --with 'psycopg[binary]==3.3.4'`.
-A scratch host directory scaffolded by runner `Runtime.init` (`src/blizzard/runner/runtime.py`), its
-`blizzard-host.toml` `db_url` set to the cluster.
+a private port, `createdb -h <socket dir> -p <port> <database>`), and every `blizzard` command run under
+`uv run --no-sync --with 'psycopg[binary]==3.3.4'`. A scratch host directory scaffolded by runner `Runtime.init`
+(`src/blizzard/runner/runtime.py`), its `blizzard-host.toml` `db_url` set to the cluster.
 
 **Steps.**
 
@@ -1141,13 +1143,13 @@ place the hub half's single read runs under `REPEATABLE READ` and read-only, acr
 ordinary transaction would read its own snapshot.
 
 **Setup.** As `blizzard:manual-postgres-migrations`: a private cluster on a Unix socket (`initdb -A trust`, `pg_ctl` on
-a private port with a short `-k` socket directory, `createdb hub`), and every `blizzard` command run under
-`uv run --no-sync --with 'psycopg[binary]==3.3.4'`. Host the hub on the cluster with `--allow-external-db` in auth mode
-`none`, which admits the implicit operator at the hub route. Seed two tenants, each holding chunks with facts and
-records. Beside it, run a runner host on its default SQLite store with one registered runner, and keep that runner's
-token. The runner host stays on SQLite, since no run has yet carried the runner chain from an empty Postgres store to
-head (`gaps.md` records what that leaves unexercised). Stop the cluster with `pg_ctl stop` and remove its directories
-when done.
+a private port with a short `-k` socket directory, `createdb -h <socket dir> -p <port> hub`), and every `blizzard`
+command run under `uv run --no-sync --with 'psycopg[binary]==3.3.4'`. Host the hub on the cluster with
+`--allow-external-db` in auth mode `none`, which admits the implicit operator at the hub route. Seed two tenants, each
+holding chunks with facts and records. Beside it, run a runner host on its default SQLite store with one registered
+runner, and keep that runner's token. The runner host stays on SQLite, since no run has yet carried the runner chain
+from an empty Postgres store to head (`gaps.md` records what that leaves unexercised). Stop the cluster with
+`pg_ctl stop` and remove its directories when done.
 
 **Steps.**
 
@@ -1275,10 +1277,11 @@ clone's CLI must load the implementation under exercise.
    deprecation's line. Stage a retiring `removed` note with its `## Upgrade` section and `upgrade-guide`, plus an
    unrelated breaking note. Put the boundary under `## Upgrading to the next release` in `docs/upgrade.md`.
 2. Run `blizzard-change-notes guide <line>` and inspect the order, removal prose, upgrade instructions and boundary
-   link. Stage a due deprecation without a removal; confirm `guide` and an opening `cut <X.Y.0>` refuse it by name and
-   leave `changes/` and `docs/upgrade.md` byte-for-byte unchanged. Also stage an invalid postponement and a new
-   deprecation due at the cut; confirm `cut` refuses each by name for both a pre-1.0 minor and a major. Advance the
-   promised lines and provide removals.
+   link. Add another due deprecation to a released directory without a removal; confirm `guide` and an opening
+   `cut <X.Y.0>` refuse it by name and leave `changes/` and `docs/upgrade.md` byte-for-byte unchanged. Also stage an
+   invalid postponement and a new deprecation due at the cut; confirm `cut` refuses each by name for both a pre-1.0
+   minor and a major. Remove or fix the invalid fixtures, advance the promised lines where needed, and provide the due
+   removals.
 3. Run `blizzard-change-notes cut <X.Y.0>`, then `blizzard-change-notes check`. Commit, tag `v<X.Y.0>`, and run
    `mise run release-notes v<X.Y.0>` twice. Add an unrelated working-tree note after tagging and compare the output.
    Repeat a candidate cut into the same version directory and confirm the guide and rendered tag remain deterministic.
@@ -1331,9 +1334,11 @@ replace conflicting tags there only, and leave no other supported tags that woul
    run `blizzard-compat --commits <base>..HEAD`.
 4. Add `opening = "1"` to the window. Remove a route with a `!` commit and a `changes/unreleased/` note
    (`breaking: true`, the surface, the route under `breaks`) committed in the range; run with `--commits <base>..HEAD`,
-   then delete the note and run again.
-5. Run `blizzard-compat --tag <version>` for a candidate and for a patch (`X.Y.1`), and read `compat-breaks.json`; run
-   again with `--json`.
+   then delete the note from the working tree and run again. Use an undeprecated route for this case; the note's surface
+   and break must match the emitted finding, and its addition must be committed in the range.
+5. Restore the matching note and run `blizzard-compat --tag <version>` for a candidate above every stable major (for
+   example `1.0.0-rc.1` when the only stable release is `v0.2.0`) and for a patch on the supported release's own line
+   (`0.2.1`); read `compat-breaks.json` and run again with `--json`.
 6. Gain a value in the enum and run `blizzard-compat`.
 7. Add an entry to `contracts/compat/allowances.toml` for line `0.2`'s finding, with a `because`. Run `blizzard-compat`,
    `--tag 0.4.0` (then read `compat-breaks.json` and run again with `--json`), and `--tag 0.2.1`.
@@ -1375,15 +1380,18 @@ the implementation under exercise.
 **Steps.**
 
 1. Move the flag into `[retired]`, commit, and run `blizzard-flag-lifecycle pr`. Tag a further stable release on a
-   commit that no longer declares the flag, advance the window past the older tags, and run it again.
-2. Restore the state of step 1's first run, delete the `[retired]` entry and commit that deletion, then run
-   `blizzard-flag-lifecycle pr`, then `cut`, then `tag`.
-3. Flip a declared flag `off` to `on`, commit it on a branch from `origin/master`, and run `mise run flag-lifecycle`.
-   Add and commit a `changes/unreleased/` note with `flag: <name>` and run it again; the check reads notes from HEAD.
+   commit that no longer declares the flag, then restore the tombstone in HEAD, commit it, advance the window past the
+   older tags, and run it again. Keep the later release inside the advanced window.
+2. Restore the state of step 1's first run, including its window that supports a release holding the flag live. Delete
+   the `[retired]` entry and commit that deletion, then run `blizzard-flag-lifecycle pr`, then `cut`, then `tag`.
+3. On a separate branch from the setup, use a different flag never retired or released `on` in any tagged registry.
+   Commit it `off`, tag a release holding it `off` if none does, and record that commit as `<base>`, then flip it `on`
+   and commit. Run `blizzard-flag-lifecycle pr --base <base>`. Add and commit a `changes/unreleased/` note with
+   `flag: <name>` and run it again; the check reads the registry and notes from HEAD.
 4. Corrupt the clone's `src/blizzard/wire/window.toml` and run `blizzard-flag-lifecycle pr`.
 
-**Passes when.** Step 1: the first run prints `NOTE [tombstone-removable]` for the name only once no supported release
-holds it live, and exits 0 in both runs; before that point it prints no note for it. Step 2: all three modes exit 1 with
+**Passes when.** Step 1: the first run prints no `tombstone-removable` note; the second prints
+`NOTE [tombstone-removable]` for the name, and both exit 0. Step 2: all three modes exit 1 with
 `FAIL [tombstone-removed]` naming the flag and the supported release that holds it. Step 3: the first run exits 1 with
 `FAIL [flip-without-note]`; with the note it exits 0 and prints no such finding. Step 4 exits 1 with a one-line message
 naming `blizzard-compat`.
