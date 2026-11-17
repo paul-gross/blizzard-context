@@ -51,7 +51,9 @@ instant, controlled or not; a spec never reads the machine's clock itself. `cloc
 `clock.set(instant)` move the hub or mock hub, the runner hosts, the mock runners and forge, and the browser together,
 and resolve once all have answered. On a controlled hub, `api.flowStep()` runs one flow-driver pass at `clock.now()`; it
 is refused on a system stack. To drive a pending poll, advance to its due time, then step and read the public state. The
-fleet test that steps the hub and the runner host is `tests/service/fleet/flow-turns.spec.ts`.
+harness's `controlledHubWait` does that for a chunk crossing hub nodes: each read moves the clock to the pending visit's
+due time (or on a tick), runs one flow turn, and reads the chunk. The fleet test that steps the hub and the runner host
+is `tests/service/fleet/flow-turns.spec.ts`.
 
 ## The collector's decision barrier
 
