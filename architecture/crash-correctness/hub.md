@@ -10,9 +10,9 @@ transcript lane is recorded in [`./transcripts.md`](./transcripts.md) instead.
 
 `PromoteService.promote` (`blizzard/src/blizzard/hub/domain/operations/promote.py`) calls
 `ChunkQueueStore.record_promote_with_position` (`blizzard/src/blizzard/hub/store/internal/chunk_queue_store.py`), which
-inserts the `chunk_promoted.promoted_at` fact and an explicit `queue_positions` fact — the queue tail, or the slot after
-a named anchor — in the one unit the promote opens, beside any renormalization its landing needs (`insert_promote_rows`,
-`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). `DemoteService.demote`
+inserts the `chunk_promoted.promoted_at` fact and an explicit `queue_positions` fact — the queue head, tail, or the slot
+after a named anchor — in the one unit the promote opens, beside any renormalization its landing needs
+(`insert_promote_rows`, `blizzard/src/blizzard/hub/store/internal/chunk_rows.py`). `DemoteService.demote`
 (`blizzard/src/blizzard/hub/domain/operations/demote.py`) is the same shape through `record_demote_with_position` and
 `insert_demote_rows`: the `chunk_demoted.demoted_at` fact and an explicit backlog position. No window: a crash ahead of
 either unit's commit loses every fact it wrote together, and a retry re-derives the same landing from a fresh read.
@@ -20,8 +20,8 @@ either unit's commit loses every fact it wrote together, and a retry re-derives 
 leave the chunk ranked by its stale ready-queue position.
 
 `QueueRanking.effective_position`'s (`blizzard/src/blizzard/hub/domain/operations/queue.py`) fallback — an un-positioned
-chunk sorts by its `chunk_promoted.promoted_at`, a real-world timestamp always far larger than any small
-explicit-position float assigned to another chunk — guards a chunk promoted with no queue position by some other route,
+chunk sorts by its promotion timestamp, or its mint timestamp if it has no promotion — applies when no explicit position
+exists. Explicit positions can themselves be based on timestamp-valued fallbacks. This handles a chunk with no position,
 not a crash inside this one transaction.
 
 ## The close-intent drain sweep
@@ -33,9 +33,9 @@ marker and its intents are durable; no drain has run yet) and `close.after-close
 returned; the outcome-and-retirement write has not landed yet), swept by one dedicated scenario driving the built-in
 `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
 
-Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) rides its own
-caller's transaction, so none has a window of its own — each leaves its intents or terminal no-closer skip facts durable
-together with the triggering fact. The callers are:
+`enqueue_close_intents` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) is called from multiple stores and
+rides each caller's transaction, so none has a window of its own — each leaves its intents or terminal no-closer skip
+facts durable together with the triggering fact. The callers are:
 
 - a landing-marker artifact write, in whichever store records it;
 - the `delivery_repo_landed` write, on the hub node's landing step and in a hub action's landing record;
@@ -110,36 +110,43 @@ durable landing record.
 the configured exporter, then appends a `trace_cursor` row recording how far it told. Its one dangerous window is
 registered: `trace.after-export.before-cursor` (the exporter accepted the batch; the cursor row that records it is not
 yet appended), swept by one dedicated scenario against an in-test OTLP sink (`tests/crash/test_kill9_sweep.py`). A crash
-there leaves the cursor unmoved, so the next pass re-reads and re-sends the same steps under the same span ids —
-delivery is at-least-once, and a backend deduplicates on span id. A crash before the exporter accepts loses nothing
-durable.
+there leaves the cursor unmoved. Ordinarily the next pass re-reads and re-sends the same steps under the same span ids:
+delivery is at-least-once, and a backend deduplicates on span id. After a restart, however, `first_pass_jump` moves a
+cursor older than `max_lag_seconds` to now before reading the window; the skipped window is not automatically re-sent. A
+later pass can likewise jump to the lag boundary when its oldest unsent step exceeds the cap. An operator must replay
+the skipped window to tell it; that replay can duplicate spans already accepted before the crash. A crash before the
+exporter accepts loses nothing durable.
 
 Its other writes are exempt:
 
 - **Event-log rows.** The `trace-export-failed`, `trace-export-recovered`, and `trace-window-skipped` rows are
   informational, append-only, and each a single-statement write. A crash before one commits loses only that row: a lost
-  failure or recovery row is recorded again on the next state change, and a lost skip row loses only the note, never the
-  cursor move it describes, because the jump row follows it.
-- **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append with no partner
-  write. A crash before it commits leaves the cursor where it was, and the next pass re-derives the same jump from a
-  fresh read.
+  failure or recovery row is recorded again on the next state change. A skip row follows the cursor jump: a crash after
+  the jump commits but before the skip row commits leaves the cursor advanced and can permanently lose the note.
+- **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append, followed by a skip
+  event when the skipped window contains unsent steps. A crash before the cursor append commits leaves the cursor where
+  it was, and the next pass re-derives the same jump from a fresh read.
 - **Idle-advance rows.** A pass that read closing facts but told nothing appends one cursor row moving past the newest
   instant it read, or to the frontier. It is a single-statement write with no partner. A crash before it commits leaves
   the cursor where it was, and the next pass re-reads the same facts and re-derives the same row.
 
-The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps past its own cursor
-— the rows it has not yet told — never a corpus it would rescan to find nothing changed.
+The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass selects closed steps past its own cursor — the
+rows it has not yet told — rather than rescanning a corpus to find changes. It hydrates whole-chunk facts for
+closing-fact candidate chunks before selecting the steps and finished chunks to tell.
 
 ## The forge-status annotation sweep
 
 `AnnotationReconciler.sweep` (`blizzard/src/blizzard/hub/domain/observability/forge_status.py`) writes forge labels and
-keeps a durable memory of the sources it annotates. It has no registered crash point: each effect and its record pair
-has no window that loses anything.
+keeps a durable memory of the sources it annotates. It has no registered crash point: replay closes the windows between
+effects and memory writes, subject to the unavailable-clearer loss below.
 
 - **Label writes on an annotating source** have no hub record. The forge's own markers are the record, and every full
   pass re-reads them, so a crash between two writes leaves a gap the next full pass closes.
-- **A departure's clear before it is forgotten** replays as a no-op. A crash between them leaves the source remembered;
-  the next pass re-reads its markers, clears any remainder, and then forgets it.
+- **A departure with a clearer** is forgotten after a successful clear. A failed build, marker read, or clear leaves it
+  remembered for retry. A crash after clearing but before forgetting likewise leaves it remembered; the next pass
+  re-reads its markers and clears any remainder before forgetting it, if a clearer is still available.
+- **A departure without a clearer** is logged and forgotten even if labels remain. Those labels can remain orphaned:
+  later passes do not retry the clear once the source is forgotten. This loss is accepted independently of a crash.
 - **An entrant is remembered before its first label write.** A crash after the entry write leaves a remembered source
   with nothing to clear. The entry write is ordered ahead of the effects so that a crash plus the source then being
   disabled can never orphan labels no memory names.
@@ -160,8 +167,8 @@ scenario against a real temporary directory (`tests/crash/test_kill9_sweep.py`):
 A crash at either leaves the cursor unmoved, so the next pass re-reads the same rows and writes them again to new file
 names — delivery is at-least-once, and a reader keeps the copy with the latest `exported_at`. The killed pass's files
 are never opened or replaced again; a loader that reads only files a manifest names never sees the first pass's unlisted
-files. The scenario asserts the re-written rows equal the killed pass's rows apart from `exported_at`, and that every
-cursor row names files and a manifest that exist and agree.
+files. The scenario asserts the re-written rows equal the killed pass's rows apart from `exported_at`, that empty cursor
+rows name no files, and that populated cursor rows name existing data files and a manifest that agree.
 
 A pass whose cursor append loses to a concurrent cursor move likewise leaves its committed files and manifest intact;
 the next pass reads the authoritative cursor and replays from there. The cursor transaction's predecessor check and
@@ -188,8 +195,9 @@ Its other writes are exempt:
   one in one atomic `os.replace`, with no partner write. A crash before the swap leaves the narrower document, which the
   next pass that writes the dataset swaps again.
 
-The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass reads only the closed steps and usage past its
-own cursors — the rows it has not yet written — never a corpus it would rescan to find nothing changed.
+The sweep owes no probe or floor under `bzh:probe-gated-pass`: each pass selects closed steps and usage past its own
+cursors — the rows it has not yet written — rather than rescanning a corpus to find changes. It also hydrates
+whole-chunk facts for selected and late chunks.
 
 ## A turn on a flow
 
@@ -201,16 +209,16 @@ turn's end are one transaction, and a landing's `merged/<repo>` marker, its `del
 intents, its flow's `landed` fact, and its `flow-landed` event row are one more, so neither opens a window. The windows
 that remain are the `flow.` family:
 
-| Point                               | Durable                                     | Not yet                                          | Recovered by                                                                |
-| ----------------------------------- | ------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------- |
-| `flow.after-submit.before-turn`     | The submission, its flow rows, `submitted`  | Any turn                                         | The next tick takes the turn; the reconcile never submits it twice          |
-| `flow.after-turn-start.before-pass` | The turn and its `turn-started` facts       | The pass                                         | Boot recovery ends the turn `interrupted`; the next turn takes a fresh pass |
-| `flow.after-poll.before-turn-end`   | The turn and its `turn-started` facts       | The poll row and the turn's end, one transaction | Boot recovery ends the turn `interrupted`; the next turn polls afresh       |
-| `flow.boot.after-interrupt`         | One tenant's open turns ended `interrupted` | The next tenant's, the driver                    | The next boot ends the rest; ending a turn already ended writes nothing     |
+| Point                               | Durable                                     | Not yet                                                 | Recovered by                                                                         |
+| ----------------------------------- | ------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `flow.after-submit.before-turn`     | The submission, its flow rows, `submitted`  | Any turn                                                | The next tick takes the turn; the reconcile never submits it twice                   |
+| `flow.after-turn-start.before-pass` | The turn and its `turn-started` facts       | The pass                                                | Boot recovery ends the turn `interrupted`; the next turn takes a fresh pass          |
+| `flow.after-poll.before-turn-end`   | The turn and its `turn-started` facts       | The poll row and the turn's end, one transaction        | Boot recovery ends the turn `interrupted`; the next turn polls afresh                |
+| `flow.boot.after-interrupt`         | One tenant's open turns ended `interrupted` | That tenant's reconciliation, later tenants, the driver | The next boot reconciles and ends remaining turns; already-ended turns write nothing |
 
 The windows inside a pass stay the `action.` family's above, with the turn's task as the writer. The kill-9 sweep
-(`tests/crash/test_kill9_sweep.py`) arms each `flow.` point and lands the chunk on the restarted hub without merging
-twice.
+(`tests/crash/test_kill9_sweep.py`) arms each `flow.` point and asserts the restarted hub reaches `done`, leaves no open
+turns, and records the two expected sequence artifacts.
 
 An empty-check observation is a marker effect written by the turn's `write_effect` through `record_hub_artifact` during
 the pass, before the pending answer and turn end, not in their transaction. The sink waits for the marker to be durable;
@@ -227,9 +235,9 @@ debt). It ends each one `interrupted`, with a `turn-ended` fact on each flow it 
 any withdrawal a lever deferred to it, then reconciles the tenant's lines in full. A submission still current keeps its
 place, and its next turn takes a fresh pass that skips whatever its markers say is done.
 
-Its one window is `flow.boot.after-interrupt`, between one tenant's recovery and the next. Both steps are idempotent, so
-a boot that dies midway is finished by the next. Composition never calls it, so a CLI or test build over shared stores
-cannot end a live daemon's turn.
+Its one window is `flow.boot.after-interrupt`, after interrupting one tenant's turns and before reconciling that same
+tenant. Both steps are idempotent, so a boot that dies midway is finished by the next. Composition never calls it, so a
+CLI or test build over shared stores cannot end a live daemon's turn.
 
 ## Tenant creation, one identity unit of work
 
@@ -375,7 +383,9 @@ crash before commit loses the whole write, findings and marker alike, with nothi
 with; a crash after commit leaves the marker already present, so the next `garden-deliver` pass
 (`bzh:hub-node-step-idempotence`,
 [`../../standards/hub-nodes/step-idempotence.md`](../../standards/hub-nodes/step-idempotence.md)) finds it on its own
-idempotence check and returns `recorded` having minted nothing a second time.
+idempotence check and mints nothing a second time. `GardenDeliveryRecorder.record` selects required artifacts before
+that check, so missing artifacts can still refuse a replay. Otherwise the recorder returns `ALREADY_RECORDED`, the
+effect writer maps it to `EffectStatus.RECORDED`, and the action returns `Pass(choice="recorded")`.
 
 The window this leaves is between `deliver`'s own commit and the action's resuming — already
 `action.after-write.before-resume` in `bzh:crash-point-registry`, and already covered: the visit's next turn re-runs the
@@ -420,10 +430,11 @@ The accept-with-mint path is a second writer of the same table: `GardenProposalC
 (`blizzard/src/blizzard/hub/domain/garden/proposals/closure.py`) opens one unit that writes the accepted-and-minted
 `garden_proposal_closures` row through the closure repository, then the item's `work_items` row and its resting
 `not_ready` chunk's rows through `WorkItemEditService.mint_drafted` — the same composition §The item-creation chunk mint
-uses, plus the closure row folded into the same unit. The unit declares the proposal's `GARDEN_PROPOSAL` key and the
-domain refuses an already-closed proposal from the closure it re-read under that key, so an already-closed proposal
-mints nothing. It inherits §The item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref`
-still runs in its own transaction before this one opens, so a crash in between still burns one `ref`, never reused.
+uses, plus the closure row folded into the same unit. The domain first reads the closure before opening the unit. The
+unit declares the proposal's `GARDEN_PROPOSAL` key and conditionally inserts the closure; if it already exists, the
+domain re-reads it under the key and refuses, so an already-closed proposal mints nothing. It inherits §The
+item-creation chunk mint's one named gap unchanged: `prepare_mint`'s `allocate_ref` still runs in its own transaction
+before this one opens, so a crash in between still burns one `ref`, never reused.
 
 `GardenProposalClosureStore` is the one adapter that writes the closure table, for every close path; the
 accept-with-mint unit composes its closure write with the item and chunk writes in the domain.
@@ -485,13 +496,15 @@ hub-native implementation, reached by §The close-intent drain sweep the same wa
 `GardenProposalDeliveryResolution.resolve_for_item` appends the accepted proposal's `delivered` `finding_facts` rows, if
 the delivered item minted from one.
 
-A crash between those two writes leaves the item delivered with its proposal's findings still live — not a gap, the same
-shape §The close-intent drain sweep's own `close.after-close.before-record` window already covers: the intent's own
-retirement fact has not landed either, so the sweep retries `close` for the same ref, `deliver` re-reads the item under
-its `WORK_ITEM` key and replays as the domain's `NOOP`, and `resolve_for_item` runs again. Its own gate is
-`has_delivery_for_proposal` (a `finding_facts` row already carrying the proposal's id), not any one finding's current
-state, so that retry completes an interrupted closure exactly once and a finding a person reopens afterward is never
-silently re-closed by a later, unrelated repeat of the same close.
+A crash between those two writes leaves the item delivered with its proposal's findings still live — an interval before
+§The close-intent drain sweep's `close.after-close.before-record` point: that point is reached only after `closer.close`
+returns. The intent's retirement fact has not landed, so the sweep retries `close` for the same ref; `deliver` returns
+early as `NOOP` when given an already-terminal item (otherwise it re-reads under its `WORK_ITEM` key), and
+`resolve_for_item` runs again. Its own gate is `has_delivery_for_proposal` (a `finding_facts` row already carrying the
+proposal's id), not any one finding's current state, so a retry can complete an interrupted closure. Once a delivery
+fact exists, a finding a person reopens afterward is not silently re-closed by a later repeat of the same close. If the
+first resolution finds no live finding, it writes no such gate; a later retry can close a finding reopened in the
+meantime.
 
 ## Runner and host fact ingest: each fact and its high-water mark in one unit
 

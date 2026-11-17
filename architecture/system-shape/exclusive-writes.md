@@ -48,8 +48,9 @@ whose only race is a duplicate key is no decision here (`bzh:store-exclusive-wri
 a stop committing between the check and the append is silently outlived.
 
 **See also.** `blizzard/exemplars/python/exemplar/hub/domain/permits/service.py`
-([../../exemplars/index.md](../../exemplars/index.md)) — compare-and-set as reference code: each verb decides on the
-permit it was handed and writes at that permit's revision, refusing `PermitChanged` with `409`.
+([../../exemplars/index.md](../../exemplars/index.md)) — compare-and-set as reference code: grant, suspend, resume, and
+revoke decide on the permit handed to them and write at its revision, refusing `PermitChanged` with `409`; request
+creates a new permit.
 
 ## The store refuses stale writes, never disallowed ones (`bzh:store-refuses-stale`)
 
@@ -89,8 +90,8 @@ that gates admission independently of the race itself (a paused runner, checked 
 resolves a different aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs:
 nothing about the exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the
 lock, without reopening anything the lock closes. The scoped write's own opening lock on its tenant's row
-(`bzh:tenant-scoped-store`) precedes decision-lock acquisition; every write on a tenant's stores issues it first — save
-the one that creates the tenant, which inserts that row instead.
+(`bzh:tenant-scoped-store`) precedes decision-lock acquisition and reads deletion state after locking the tenant row.
+The write that creates the tenant inserts that row instead; teardown locks the tenant's deletion row instead.
 
 **Why.** An in-process lock only serializes callers inside one process; the moment a second hub process shares the
 store, two processes' own locks stop serializing each other, and the transaction is the only thing both still share.
@@ -155,14 +156,13 @@ then the tenant's rows (its row, then chunk and keyed rows), then `TENANT_LIFECY
 `TENANT_LIFECYCLE`, an identity unit takes `IDENTITY` first and names only `TENANT_LIFECYCLE`.
 
 **Do.** `lock_chunk_row` (`hub/store/locking.py`) — a no-op `UPDATE` on the chunk's own row, already minted before any
-claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
-`ScopedConnections.write` (`hub/store/scoped.py`) opens with, with every guard read that follows it on the same
-connection. `IHubTransactions.begin` opens a tenant unit; its `lock_set` declares the complete set once before any
-repository statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating
-repository (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents
-writers naming the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token,
-not the domain. The remaining `*_locked` repository methods are this seam's legacy form
-(`bzh:transaction-participation`).
+claim, edit, or dependency write can reach it — called after `ScopedConnections.write` (`hub/store/scoped.py`) locks the
+tenant row and reads deletion state, with every decision guard read that follows it on the same connection.
+`IHubTransactions.begin` opens a tenant unit; its `lock_set` declares the complete set once before any repository
+statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating repository
+(`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents writers naming
+the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token, not the domain.
+The remaining `*_locked` repository methods are this seam's legacy form (`bzh:transaction-participation`).
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
 locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/locking.py`). Every namespace is a `LockNamespace`

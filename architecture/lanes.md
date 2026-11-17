@@ -23,10 +23,10 @@ governs loop phases; `bzh:probe-gated-pass` below governs the cost of converging
 3. **One failure shape per sink class.** The lane takes the shape its sink class names below, and takes its retry state
    from `blizzard/src/blizzard/foundation/lane_retry.py` rather than keeping its own.
 4. **Isolation.** A lane's failure never escapes into its host's other work. The hub runs each `Sweep` as its own task
-   with its own catch, the flow driver catches each tick and each turn's task on its own, and a requested pass's raise
-   is caught by the route that ran it. A runner tick-step lane catches its own failures inside `run()`, so later tick
-   steps still run. A runner driver catches per pass. A hub pass that serves many tenants carries this down to each
-   tenant (`bzh:pass-isolates-tenants`).
+   while `SweepRoster.pass_every_tenant` catches ordinary pass failures; the flow driver catches each tick and each
+   turn's task on its own. A requested single-tenant pass can propagate an exception. A runner tick-step lane catches
+   its own failures inside `run()`, so later tick steps still run. A runner driver catches per pass. A hub pass that
+   serves many tenants carries this down to each tenant (`bzh:pass-isolates-tenants`).
 5. **Hosting.** On the runner, a lane whose only sink is the hub is a step of the pass that owns its rows: a runner's
    lane is a step of that runner's tick, and the host's own lane, `HostLaneDrain`, is a step of the host tick, which
    runs on its own driver beside the runners' ticks. Either way the hub client bounds each call, and the pass's later
@@ -112,8 +112,10 @@ floor; for a pruning pass, the recorded instant and the floor alone.
 
 **Do.** `blizzard/src/blizzard/hub/domain/observability/analytics/derivation.py`'s `EventDerivationReconciler.sweep`
 reads `derivation_signature()` first, converges only the tenants whose signature differs from their last converged one
-or whose ten-minute floor is due, and records each converged tenant's signature and instant. An unchanged pass costs the
-probe's one statement.
+or whose ten-minute floor is due, and records each converged tenant's signature and instant. After a pass has found a
+due tenant, an unchanged pass costs the probe's one statement. Until then, a fresh process also reads
+`derived_segment_ids()` on each pass to find tenants whose segments and chunks are all gone, including when the store is
+empty.
 
 **Don't.** A converging `sweep()` that reads its whole corpus and every remote's state unconditionally on each pass, so
 an idle fleet pays the whole diff every interval, changed or not.
