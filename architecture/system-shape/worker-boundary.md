@@ -22,18 +22,18 @@ so its base is the operator's shell layered with the takeover env.
 seam (`bzh:pluggable-seams`); it does not bound what a harness binary may read from its own environment once launched.
 
 **Detect.** `os.environ`, `env=None`, or an omitted `env=` (all inherit the parent) reaching a child launch instead of
-an allowlisted `ChildEnv`; the launch seam's `env` parameter takes only that resolved value and has no default, so
-pyright (`blizzard:typecheck`) refuses a bare mapping.
+an `AllowlistedEnv` profile; the launch seam's `env` parameter takes only a profile value and has no default, so pyright
+(`blizzard:typecheck`) refuses a bare mapping.
 
-**Do.** `AllowlistedEnv` in `src/blizzard/runner/process/child_env.py` builds both `ChildEnv` profiles. `tool()` is the
-base allowlist plus `LC_*` plus `env_passthrough`, with `PATH` led by the configured `path_prepend` directories ahead of
-the daemon's own — a runner's `[worker] path_prepend` for its children, and for a host-scoped tool child the host tool
-profile (`[tools]`, or the runners' file values when they all agree); until host settings are seeded, this implicit host
+**Do.** `AllowlistedEnv` in `src/blizzard/runner/process/child_env.py` builds both profiles. `tool()` is the base
+allowlist plus `LC_*` plus `env_passthrough`, with `PATH` led by the configured `path_prepend` directories ahead of the
+daemon's own — a runner's `[worker] path_prepend` for its children, and for a host-scoped tool child the host tool
+profile (`[tools]`, or the runners' file values when they all agree). Until host settings are seeded, this implicit host
 profile remains file-derived, not derived from live runner entries. Host-settings seeding must first capture the
-effective profile, explicit when supplied and otherwise the agreed implicit profile, before this exception can be
-removed; `worker(identity)` is the tool profile plus the configured worker shell and per-spawn identity variables
-(`BLIZZARD_LEASE_ID`, the lease token, the scratch dir, the tracing exporter). Any other per-launch variable is an
-explicit `adding(...)` on the profile value. A tool that needs a daemon variable is named in `env_passthrough`.
+effective profile, explicit when supplied and otherwise the agreed implicit profile; `worker(identity)` is the tool
+profile plus the per-spawn identity variables (`BLIZZARD_LEASE_ID`, the lease token, the scratch dir, the tracing
+exporter). Any other per-launch variable is an explicit `adding(...)` on the profile value. A tool that needs a daemon
+variable is named in `env_passthrough`.
 
 **Don't.** `env=os.environ`, or a bare `env=dict(os.environ)` — either hands the child the per-runner token
 (`BZ_HUB_TOKEN_<NAME>`) and every other daemon secret. Don't give a tool child the worker profile: it carries the lease
@@ -42,9 +42,8 @@ token a tool has no use for.
 ## Every child launches through one seam (`bzh:runner-child-launch`)
 
 **Rule.** Every child the runner launches goes through the `IChildProcesses` seam in `runner/process`, which gives the
-child its own process group and kills the whole group on timeout. A run-to-completion launch takes a required timeout
-and closes stdin unless input is given; a long-lived spawn defaults stdin to closed, and a PTY child receives the PTY
-slave as stdin.
+child its own process group, kills the whole group on timeout, and closes stdin unless input is given. A
+run-to-completion launch takes a required timeout.
 
 **Why.** A child killed alone leaves its grandchildren running — a `sh -c` check command's forked `sleep` outlives the
 shell — and a child holding inherited stdin can block on the daemon's terminal, either of which wedges a tick
@@ -59,23 +58,23 @@ foreground group.
 the hub has no sanctioned launch site, and `hub/**` launches no process at all.
 
 **Detect.** `bzh:runner-child-launch` is tooled by `blizzard:structural-gate`'s ast-grep scan
-(`contracts/ast-grep/rules/runner-child-launch.yml`), which refuses imports of `subprocess` and `pty` outside
-`runner/process/**` and the colocated migration tests (`bzh:colocated-migration-tests`).
-`tests/unit/runner/process/test_tick_subprocess_timeouts.py` (`blizzard:unit-test`) pins that the seam's
-run-to-completion timeout is required and non-optional.
+(`contracts/ast-grep/rules/runner-child-launch.yml`), which refuses `import subprocess`, `from subprocess import …`, and
+`import pty` outside `runner/process/**`, the hub's sanctioned site, and the colocated migration tests
+(`bzh:colocated-migration-tests`). `tests/unit/runner/process/test_tick_subprocess_timeouts.py` (`blizzard:unit-test`)
+pins that the seam's run-to-completion timeout is required and non-optional.
 
 **Do.** Take `IChildProcesses` by injection, bound in the runner composition roots, and its driver
-(`src/blizzard/runner/process/internal/subprocess_child_processes.py`) launches through `subprocess` and uses
-`os.openpty` for PTY allocation. Read a timeout from the seam's `ChildRun` result value, not from a caught exception.
-Stop a long-lived child through the group helpers in `src/blizzard/runner/process/groups.py`.
+(`src/blizzard/runner/process/internal/subprocess_child_processes.py`) is the only module that imports `subprocess` and
+`pty`. Read a timeout from the seam's `ChildRun` result value, not from a caught exception. Stop a long-lived child
+through the group helpers in `src/blizzard/runner/process/groups.py`.
 
 **Don't.** Import `subprocess` in an adapter for its `DEVNULL` constant — the seam's `Stream` carries the stream
 constants. Don't call `proc.kill()` on a timed-out child alone.
 
-## Only the worker publishes its git artifact (`bzh:git-write-in-worker-seam`)
+## Only the worker mutates git (`bzh:git-write-in-worker-seam`)
 
-**Rule.** Only the worker commits its work and pushes its branch; the runner's artifact verification surface is
-read-only. The worker declares what it pushed (env, repo, branch, commit) through the runner's local declaration
+**Rule.** Only the worker mutates git — it commits its work and pushes its branch — and the runner's git surface is
+read-only: the worker declares what it pushed (env, repo, branch, commit) through the runner's local declaration
 channel, and the runner's read-only verification is what turns that declaration into a submitted artifact.
 
 **Why.** The runner cannot know what a worker's turn produced without blind trust or inference from git residue, and
@@ -85,13 +84,10 @@ pointer from residue nor merely trusts an unverified claim.
 
 **Scope.** Governs the runner's `IWorktreeGit` seam (`src/blizzard/runner/environments/worktree.py`) and its ADVANCE
 collection step; the runner still holds the only credentialed copy of the leased environment — only the git mutation
-that publishes the worker's work belongs to the worker. Workspace providers still prepare and remove worktrees and may
-clone and fetch repositories (`src/blizzard/runner/environments/internal/basic_provider.py`).
+within it belongs to the worker.
 
-**Detect.** A runner-side `git push` or `git commit` publishing a worker's work, or an artifact-verification git call
-resolving which branch or commit to act on from repository state rather than from the worker's declaration through the
-local API. The selftest creates a baseline commit in its isolated scratch repository
-(`src/blizzard/runner/selftest/internal/subprocess_scratch_git.py`); that is not a worker artifact.
+**Detect.** A runner-side `git push` or `git commit`, or any runner git call resolving which branch or commit to act on
+from repository state rather than from the worker's declaration through the local API.
 
 **Do.** The worker pushes its branch and declares it with
 `blizzard runner artifact commit --repo <r> --branch <b> --commit <sha>`, and the runner's
