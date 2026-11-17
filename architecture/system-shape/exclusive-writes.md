@@ -257,7 +257,6 @@ Stated so a reviewer need not re-derive them:
   them:
   - **The event broker** — an in-memory subscriber fan-out.
   - **Background sweeps** — loops with no cross-process coordination.
-  - **Migrate-on-boot** — a migration run assumed uncontended at boot.
   - **The open-tenant set and the tenant cache** — the open tenants with their names, and each opened tenant's stores
     and services, held in memory (`hub/open_tenants.py`, `TenantCache` in `hub/composition.py`). A tenant another
     process created is read on the first lookup that misses it, but a rename refreshes only the process that made it.

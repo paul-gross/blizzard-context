@@ -26,11 +26,12 @@ not a crash inside this one transaction.
 
 ## The close-intent drain sweep
 
-`CloseIntentDrainer.sweep()` (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) retires pending `close_intents`
-rows a landing or completion transaction enqueued. Its two windows are both registered:
-`close.after-enqueue.before-drain` (a landing marker and its intents are durable; no drain has run yet) and
-`close.after-close.before-record` (a close attempt returned; the outcome-and-retirement write has not landed yet), swept
-by one dedicated scenario driving the built-in `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
+`CloseDrainSweep.sweep()` delegates to `CloseIntentDrainer.drain()`
+(`blizzard/src/blizzard/hub/domain/work_items/closure.py`) to retire pending `close_intents` rows a landing or
+completion transaction enqueued. Its two windows are both registered: `close.after-enqueue.before-drain` (a landing
+marker and its intents are durable; no drain has run yet) and `close.after-close.before-record` (a close attempt
+returned; the outcome-and-retirement write has not landed yet), swept by one dedicated scenario driving the built-in
+`hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
 
 Every `enqueue_close_intents` call site (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) rides its own
 caller's transaction, so none has a window of its own — each leaves its intents or terminal no-closer skip facts durable
