@@ -319,6 +319,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   not list (`bzh:frontend-open-vocabulary`), at 1440px and at the narrowest centre column the desktop board renders, as
   `board-list.shell-sweep.spec.ts` frames it: at both, the unknown lane renders headed with the raw status, every lane
   stays equal-width inside the board and the viewport, and the chunk's card sits inside that lane.
+- `step-drawer-view.shell-sweep.spec.ts` mounts `StepDrawerView` with plain inputs and a step whose executor the build's
+  generated vocabulary does not list (`bzh:frontend-open-vocabulary`), at 1280px and 1024px: the `executor <raw>` label
+  renders inside the Transcript section head, the transcript viewer still mounts, and neither the head nor the drawer
+  overflows horizontally (`bzh:visual-change-needs-a-render`). The drawer docks under the desktop `BoardPage` alone —
+  the mobile shell routes `/board` to the glance board — so no phone width reaches it. Proven able to fail by dropping
+  the unlisted-executor branch from `step-drawer-view.html`.
 - `gardening-page.shell-sweep.spec.ts` covers a project's garden page: a bare `/p/{project}/gardening` lands on the
   Proposals tab; the gardening strip wears the kit's sub-strip — 30px tall on desktop, on `--panel-deep`, its active tab
   cyan on `--overlay-30` with a `--cyan-dim` underline — beneath the app's own strip; the Proposals count turns
@@ -375,6 +381,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   unbroken long note (an ordinary-prose fixture wraps at word boundaries regardless of `overflow-wrap: anywhere` and
   proves nothing) must wrap inside its row with no horizontal overflow — gardening sits in the hub's mobile bottom tab
   bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+- `finding-panel.shell-sweep.spec.ts` covers the finding detail panel's Summary and Note, each a `fleet-kit-prose-block`
+  in its `markdown` format: at 1280px, 390px and 320px the rail and tick must sit beside both blocks, the Markdown
+  paragraph's computed `white-space` must be `normal` rather than an inherited `pre-wrap`, the Summary label and the
+  Timeline `h4` must share computed `text-transform`, `letter-spacing` and `font-size`, and nothing may overflow
+  horizontally. Proven able to fail by nesting the Markdown inside `.tx` in `kit-prose-block.html`.
 - `gardening-findings-filters.shell-sweep.spec.ts` covers the findings tab, which spans every routine and every scope:
   at 390px and 320px the four filter dropdowns (routine, scope, class, state) must render with no filter-label column
   and no horizontal overflow of `.gf-filters`, the finding list's first row must start within the first screen, and an
