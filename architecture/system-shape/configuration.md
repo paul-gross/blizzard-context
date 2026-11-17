@@ -53,26 +53,30 @@ an urgency, the tenant's settings, and the hub-wide settings depart from the ver
   and a response reports as an open string, and `park_timeout_hours`, the one repository field an explicit `null`
   clears. Its required, non-null boolean `allow_no_ci` defaults to `false` and is included in configuration documents
   and repository reads and writes; its landing meaning belongs to [delivery](../../domain/artifacts/delivery.md). A
-  repository write whose policy needs a capability its forge does not offer is refused `forge_capability_missing` on
-  `landing_policy`, naming each missing capability, the policy, and the forge — on create, on a policy or forge edit,
-  and on every repository write a document apply plans.
+  repository write whose policy needs a capability its forge or its credential does not offer is refused
+  `forge_capability_missing` on `landing_policy`, naming each missing capability, the policy, and the forge — on create,
+  on a policy or forge edit, and on every repository write a document apply plans.
 - **A credential** names its `forge` and its `binding` at create and neither ever changes: an edit naming either at all,
   or a declared document entry naming another, is refused `credential_binding_immutable`. A binding is looked up by name
   in `CREDENTIAL_BINDINGS` (`blizzard/src/blizzard/hub/domain/config/credential_bindings.py`); it says whether its
   secret is supplied by the operator or its access renewed by the hub, validates and canonicalizes the record's
   `settings`, and derives its `authority`, which no write states and which a second credential on the forge is refused
-  `credential_authority_taken` for claiming, a retired holder keeping its claim. Its retire is refused
-  `credential_in_use`, listing each enabled repository and work source naming it. Beside the verb set it takes a
-  read-only check — `POST /api/credentials/{credential}/checks`, on the CLI `blizzard hub credential check` — which
-  writes no record and no change row. What a credential is, and who maintains its access, is
-  [../../domain/projects.md](../../domain/projects.md#the-credential-a-source-or-repository-acts-with)'s.
+  `credential_authority_taken` for claiming, a retired holder keeping its claim. An edit whose settings would stop
+  offering a capability an enabled repository acting with it needs is refused `forge_capability_missing`, listing each.
+  Its retire is refused `credential_in_use`, listing each enabled repository and work source naming it. Beside the verb
+  set it takes a read-only check — `POST /api/credentials/{credential}/checks`, on the CLI
+  `blizzard hub credential check` — which writes no record and no change row. What a credential is, and who maintains
+  its access, is [../../domain/projects.md](../../domain/projects.md#the-credential-a-source-or-repository-acts-with)'s;
+  how a binding becomes what a forge client authenticates with, and what adding one takes, is
+  [./seam-positions.md](./seam-positions.md#a-forge-credential-becomes-an-authorization-at-one-boundary)'s.
 - **A repository and a work source** each name the credential they act with in `credential`, by id or slug. One of
   another forge is refused `credential_forge_mismatch`; one unknown, or retired while the record is enabled,
   `credential_unavailable`. The deprecated `secret_name` or `secret` field, given alone, resolves to the `github.token`
-  credential reading that secret on the record's forge and records a `config-old-field-used` event; given beside a
-  `credential` it disagrees with, the write is refused `credential_conflict`. A work source names only a binding its
-  provider lists in `PROVIDER_BINDINGS` (`blizzard/src/blizzard/hub/domain/config/work_sources.py`), any other refused
-  `credential_binding_unsupported`.
+  credential reading that secret on the record's forge, created — slugged by the secret's name — when none acts as that
+  authority; the write answers with a `Deprecation` header and a `warnings` entry and records a `config-old-field-used`
+  event. Given beside a `credential` it disagrees with, the write is refused `credential_conflict`. A work source names
+  only a binding its provider lists in `PROVIDER_BINDINGS` (`blizzard/src/blizzard/hub/domain/config/work_sources.py`),
+  any other refused `credential_binding_unsupported`.
 - **A record a project owns** — a scope, a routine, or a kind added beside them — is created in the project the call
   names — `--project` on the CLI, by id or slug — and a call naming none falls back or is refused as
   [../../domain/projects.md](../../domain/projects.md) §A call that needs a project states, the refusal

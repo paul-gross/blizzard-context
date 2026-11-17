@@ -51,7 +51,8 @@ escalation: it parks the chunk waiting on a human through a question, so no caus
 
 ## A refused credential
 
-A `forge-auth` escalation is written at a `deliver` step when the forge refuses the credential a landing call carried
+A `forge-auth` escalation is written at a `deliver` step when the forge refuses the credential a landing acts with —
+whether on obtaining the access the landing will use or on a landing call
 ([the credential](../projects.md#the-credential-a-source-or-repository-acts-with)). The hub settles why from the forge's
 answer, as one refusal of a closed vocabulary: the token invalid, a permission missing, the kind of token unable to make
 the call, an organization's authorization missing, or the managed identity or its grant refused.
@@ -72,8 +73,7 @@ Recovery is a loop a person drives:
    repository already landed, so each landing is recorded once.
 
 The detail's last line carries the check and the requeue as two commands, with the credential, the repository, and the
-chunk filled in. A refused call that carried only a secret, naming no credential, has no such line. Being hub-authored,
-the escalation carries neither takeover command.
+chunk filled in. A refused call that carried only a secret, naming no credential, has no such line.
 
 A requeue is never refused for want of a check. A step refused again writes a new escalation naming what is still
 missing.
@@ -129,6 +129,8 @@ session predating that record gets a bare command rather than a guessed one.
   guidance in place of the raw command — which graph to mint before requeuing, not how to resume — and the session
   behind it is real and reachable through the ordinary takeover check; reached instead through a human gate's resolved
   choice, no worker ran ([./gates.md](./gates.md)), so no such session guarantee holds.
+- **Forge credential refused** — the hub writes the escalation, so it carries neither the wrapped verb nor the raw
+  command; its recovery is [§A refused credential](#a-refused-credential)'s.
 
 - **Escalate choice taken** — a worker's own live transition or a human gate's resolved choice; the hub writes the
   escalation, so it carries operator guidance in place of the raw command, and the session behind it is real and
