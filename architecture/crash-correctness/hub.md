@@ -29,9 +29,9 @@ not a crash inside this one transaction.
 `CloseDrainSweep.sweep()` delegates to `CloseIntentDrainer.drain()`
 (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) to retire pending `close_intents` rows a landing or
 completion transaction enqueued. Its two windows are both registered: `close.after-enqueue.before-drain` (a landing
-marker and its intents are durable; no drain has run yet) and `close.after-close.before-record` (a close attempt
-returned; the outcome-and-retirement write has not landed yet), swept by one dedicated scenario driving the built-in
-`hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
+writer has returned; a new landing can have enqueued intents before their drain) and `close.after-close.before-record`
+(a close attempt returned; the outcome-and-retirement write has not landed yet), swept by one dedicated scenario driving
+the built-in `hub` work source with no forge (`tests/crash/test_kill9_sweep.py`).
 
 `enqueue_close_intents` (`blizzard/src/blizzard/hub/store/internal/chunk_rows.py`) is called from multiple stores and
 rides each caller's transaction, so none has a window of its own — each leaves its intents or terminal no-closer skip
@@ -43,9 +43,10 @@ facts durable together with the triggering fact. The callers are:
 - the `delivery_landed` write and the `finalize_delivery` terminal transition — seam methods no live path calls;
 - an operator's hand-completion.
 
-The only span open past any of them is the window between that commit and the drain, which
-`close.after-enqueue.before-drain` arms — once, on the marker path, rather than once per enqueuing caller, because every
-caller opens the identical span.
+The span open past any of them is the window between that commit and the intents' drain. The point
+`close.after-enqueue.before-drain` is reached after every `LandingRecord` writer return, including a replay or refusal;
+it can exercise that window for a new landing, but an independent sweep may already have drained its intents. It is not
+reached separately for every enqueuing caller.
 
 A terminal transition and its intents commit or roll back together, whether the transition comes from a hub node or a
 later graph node. A no-code marker alone and a nonterminal transition enqueue nothing. Retried enqueues deduplicate, and
@@ -83,23 +84,23 @@ the point the folded transaction ever leaves one standing alone.
 
 ## A hub action pass's effect writes
 
-`ActionPassDriver.drive` (`blizzard/src/blizzard/hub/delivery/action_pass.py`) writes each effect a pass records off the
-action loop, one at a time, through the turn's task, and releases it back to the action only once it is durable; each
-effect is one transaction of its own, so the windows are the spans between them. Three points name them:
+`ActionPassDriver.drive` (`blizzard/src/blizzard/hub/delivery/action_pass.py`) sends each effect a pass records off the
+action loop to the turn's task, one at a time, and releases its result back to the action after the writer returns.
+Three points name the spans around the write:
 
-| Point                              | Window                                                                                                                          |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `action.after-effect.before-write` | The action's forge write — a merge, a pull request opened, a check re-run — is done; the effect recording it is not yet durable |
-| `action.after-write.before-resume` | An effect is durable; the action has not resumed                                                                                |
-| `close.after-enqueue.before-drain` | A landing record and its close intents are durable in one transaction; no drain has run yet                                     |
+| Point                              | Window                                                                                                                 |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `action.after-effect.before-write` | The action has submitted an effect; its writer has not run                                                             |
+| `action.after-write.before-resume` | The effect writer has returned; the action has not resumed                                                             |
+| `close.after-enqueue.before-drain` | The `LandingRecord` writer has returned, including on replay or refusal; an independent sweep may have drained intents |
 
-A crash in any of them loses only the pass in flight: the next pass reads the forge and the node's markers and
-converges, as it does after any crash, so an unwritten effect is written once on the re-take and a written one is
-counted past. The kill-9 sweep (`tests/crash/test_kill9_sweep.py`) reaches the `action.` family through `test.sequence`
-and through a two-repository `land` against the mock forge. Every landing record reaches
-`close.after-enqueue.before-drain`, so the sweep opens the window between `land`'s two repositories there: killed with
-the first landing durable and the second repository not yet merged, the restarted hub lands the second without merging
-the first twice.
+The action points surround every submitted effect, whether or not it follows a forge write; the writer can also return
+`INVALID` or `FENCED` without a durable success. For an admitted effect, a crash loses only the pass in flight: the next
+pass reads the forge and the node's markers and converges, re-taking an unwritten effect and counting a written one
+past. The kill-9 sweep (`tests/crash/test_kill9_sweep.py`) reaches the `action.` family through `test.sequence` and
+through a two-repository `land` against the mock forge. Every landing record reaches `close.after-enqueue.before-drain`,
+so the sweep opens the window between `land`'s two repositories there: killed with the first landing durable and the
+second repository not yet merged, the restarted hub lands the second without merging the first twice.
 
 Landing recovery re-reads forge state and durable markers; a candidate is proven before reuse and cleanup follows a
 durable landing record.
@@ -120,9 +121,12 @@ exporter accepts loses nothing durable.
 Its other writes are exempt:
 
 - **Event-log rows.** The `trace-export-failed`, `trace-export-recovered`, and `trace-window-skipped` rows are
-  informational, append-only, and each a single-statement write. A crash before one commits loses only that row: a lost
-  failure or recovery row is recorded again on the next state change. A skip row follows the cursor jump: a crash after
-  the jump commits but before the skip row commits leaves the cursor advanced and can permanently lose the note.
+  informational, append-only, and each a single-statement write. A crash before one commits can permanently lose that
+  note: the outage latch is restored from committed failure and recovery rows, not from the lost observation. In
+  particular, a healthy restart after a lost first failure row has no failure latch to recover and records neither row.
+  A lost recovery leaves a committed failure latched; a later successful export can record recovery, but a pass with
+  nothing to export does not. A skip row follows the cursor jump: a crash after the jump commits but before the skip row
+  commits leaves the cursor advanced and can permanently lose the note.
 - **Jump rows.** A cursor jump — on enable after a gap or at the lag cap — is one cursor-row append, followed by a skip
   event when the skipped window contains unsent steps. A crash before the cursor append commits leaves the cursor where
   it was, and the next pass re-derives the same jump from a fresh read.
@@ -181,9 +185,11 @@ time-leading indexes, never a corpus it would rescan to find nothing changed.
 Its other writes are exempt:
 
 - **Event-log rows.** The `egress-write-failed`, `egress-write-recovered`, and `egress-config-rejected` rows are
-  informational, append-only, and each a single-statement write. A crash before one commits loses only that row: a lost
-  failure or recovery row is recorded again on the next state change, and a rejection is recorded again on the next
-  start.
+  informational, append-only, and each a single-statement write. A crash before one commits can permanently lose that
+  note: the outage latch is restored from committed failure and recovery rows, not from the lost observation. In
+  particular, a healthy restart after a lost first failure row has no failure latch to recover and records neither row.
+  A lost recovery leaves a committed failure latched; a later pass that writes data can record recovery, but an idle
+  pass does not. A rejection is recorded on a later start only if the configuration is still rejected then.
 - **Operator reset.** `EgressReset` appends one cursor row and captures its predecessor atomically, then computes the
   reported window and records its `egress-cursor-reset` event after commit. A crash between the two writes keeps the
   move and loses only the informational event row; the cursor is a fact, and `status` shows it.
@@ -205,9 +211,10 @@ whole-chunk facts for selected and late chunks.
 `delivering` to its flows and starts the turns its submissions may take; the turn's task
 (`blizzard/src/blizzard/hub/delivery/flow_turn.py`) runs the pass and ends the turn in the transaction that routes its
 answer. A verdict's transition — or, on a cross-graph choice, the migration it records, with any gate it opens — and its
-turn's end are one transaction, and a landing's `merged/<repo>` marker, its `delivery_repo_landed` row, its close
-intents, its flow's `landed` fact, and its `flow-landed` event row are one more, so neither opens a window. The windows
-that remain are the `flow.` family:
+turn's end are one transaction. An admitted landing's `merged/<repo>` marker, `delivery_repo_landed` row and close
+intents share another transaction; when the submission holds a flow for the repository, its `landed` fact and
+`flow-landed` event row join it. Otherwise the landing is recorded on the chunk alone. Neither transaction opens a
+window. The windows that remain are the `flow.` family:
 
 | Point                               | Durable                                     | Not yet                                                 | Recovered by                                                                         |
 | ----------------------------------- | ------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------ |

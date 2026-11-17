@@ -66,6 +66,10 @@ computes whether each intent is due using `backoff_delay`, then delegates attemp
 all pending intents before filtering and limiting is unbounded backlog-read debt, not an example of the bound clause.
 `TranscriptDrain` catches every failure inside `run()`.
 
+**Known gap.** `OutboundDrain` (`blizzard/src/blizzard/runner/lifecycle/drain.py`) has no registered crash point or
+recorded exemption for the window after the hub accepts a generic batch or a decision and before the runner records its
+acknowledgement. These windows remain unaddressed coverage debt under clause 2, not exemptions.
+
 **Don't.** A new lane that hand-copies a failure counter, a next-due instant, and a failing flag, then re-implements the
 doubling and the open/close transitions beside them, instead of taking the helper. The copies drift: one lane clamps the
 doubling and another overflows on a long outage.
