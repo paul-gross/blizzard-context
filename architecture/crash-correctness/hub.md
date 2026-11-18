@@ -240,10 +240,10 @@ crash before the write leaves no observation and the next pass reads the forge a
 The hub daemon's startup attempts `FlowDriver.recover_turns` once in each open tenant before serving and before the
 driver's first tick. A tenant's failure is logged and does not prevent startup; later ticks can end unanswered turns.
 Every turn with no end belongs to the process that ran it, which crashed or shut down, since one hub process serves the
-store ([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §Known debt). It ends each one
-`interrupted`, with a `turn-ended` fact on each flow it held, a `turn-interrupted` event, and any withdrawal a lever
-deferred to it, then reconciles the tenant's lines in full. A submission still current keeps its place, and its next
-turn takes a fresh pass that skips whatever its markers say is done.
+store ([`../system-shape/exclusive-writes.md`](../system-shape/exclusive-writes.md) §What stays single-process). It ends
+each one `interrupted`, with a `turn-ended` fact on each flow it held, a `turn-interrupted` event, and any withdrawal a
+lever deferred to it, then reconciles the tenant's lines in full. A submission still current keeps its place, and its
+next turn takes a fresh pass that skips whatever its markers say is done.
 
 Its one window is `flow.boot.after-interrupt`, after interrupting one tenant's turns and before reconciling that same
 tenant. Both steps are idempotent, so a boot that dies midway is finished by the next. Composition never calls it, so a
