@@ -110,12 +110,12 @@ forge's `FORGE` key: a forge's retire reads that no enabled record names it. A r
 its other writes require the forge to exist and, when the referrer is enabled or being enabled, to be live. An edit of a
 retired referrer can keep its retired forge. The credential-retire / referrer-write pair does the same on the
 credential's `CREDENTIAL` key (`credential_lock`): a credential's retire reads that no enabled record names it, and each
-referrer's write reads that its credential is live. Three more keyed namespaces guard closure judgments. A garden proposal's
-edit, attach, detach, pass, and accept each declare its `GARDEN_PROPOSAL` key (`garden_proposal_lock`). Edit, attach,
-detach, pass, and non-minting accept re-read its closure in domain code under that key. Minting accept reads the closure
-before locking, then declares that key beside the item mint's own keys in one unit; its insert-if-absent checks for an
-existing closure under the lock and the service maps a losing insert to an already-closed refusal before minting. This
-path does not re-read the closure in domain code before deciding, and remains debt against
+referrer's write reads that its credential is live. Three more keyed namespaces guard closure judgments. A garden
+proposal's edit, attach, detach, pass, and accept each declare its `GARDEN_PROPOSAL` key (`garden_proposal_lock`). Edit,
+attach, detach, pass, and non-minting accept re-read its closure in domain code under that key. Minting accept reads the
+closure before locking, then declares that key beside the item mint's own keys in one unit; its insert-if-absent checks
+for an existing closure under the lock and the service maps a losing insert to an already-closed refusal before minting.
+This path does not re-read the closure in domain code before deciding, and remains debt against
 `bzh:write-reestablishes-read`. Garden delivery declares the plan's chunk and the `FINDING` key (`finding_lock`) of
 every finding it expects, and the finding exit declares the `FINDING` keys of every finding it writes or expects. A work
 item's edit, withdraw, and deliver each declare its `WORK_ITEM` key (`work_item_lock`) and re-read the item's closure
