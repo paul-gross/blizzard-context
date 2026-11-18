@@ -113,11 +113,12 @@ an urgency, the tenant's settings, and the hub-wide settings depart from the ver
   `GET /api/admin/settings/changes`, and export at `GET /api/admin/settings/export`; they have no create, retire, or
   enable. Every read and write on these routes requires the hub-only `SETTINGS_ADMIN` permission; a tenant role grants
   no access. Their own revision and audit live in `hub_settings`, `hub_setting_entries`, and `hub_setting_changes`, not
-  tenant-scoped `config_changes`. Writes use the shared settings-record decision and transaction in
-  `blizzard/src/blizzard/foundation/settings_record/`: a matching revision is required, validation precedes the write,
-  and a no-op moves neither revision nor audit. A changed write moves the revision and appends its audit in the same
-  transaction. Set and unset are distinct: unset restores the default and leaves an entry that prevents a later file
-  seed from restoring the old value.
+  tenant-scoped `config_changes`. The write decision is shared and pure, in
+  `blizzard/src/blizzard/foundation/settings_record/`; the revision-conditioned transaction is the hub settings
+  adapter's own. A matching revision is required, validation of the whole candidate precedes the write, and a no-op
+  moves neither revision nor audit. A changed write moves the revision and appends its audit in the same transaction.
+  Set and unset are distinct: unset restores the default and leaves an entry that prevents a later file seed from
+  restoring the old value.
 
 Implement tenant configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord`
 requires only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names
