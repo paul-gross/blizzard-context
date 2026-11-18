@@ -480,6 +480,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `tenant-picker.shell-sweep.spec.ts` covers the hub's tenant picker (`TenantPicker`), mounted with a short, a long, and
   a one-letter tenant name: at 1280px, 390px, and 320px every option must share one width and left edge — the widest
   name's, not each its own — with every option's right edge inside the viewport and no horizontal overflow of the page.
+- `chip-pointer.shell-sweep.spec.ts` covers real pointer selection in the project color picker after a custom color and
+  repeated clicks on an enabled `KitChips` option, asserting one choice per click.
 - `projects-table.shell-sweep.spec.ts` covers the admin projects table, mounted with a project whose name, slug, and
   description have no break opportunity and whose "no runner" badge shows: at 360px, 768px, and 1280px the page never
   scrolls sideways, the table stays inside the viewport, the badge keeps a width and stays on screen, and each row's
