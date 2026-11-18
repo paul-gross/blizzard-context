@@ -289,10 +289,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   against `finding-list.css`. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
   (`bzh:narrow-viewport-tier-rule`).
 - `gardening-finding-triage-dialog.shell-sweep.spec.ts` covers the findings triage bulk-action dialog's own view,
-  mounted directly with plain inputs, once per verb that carries a distinct field shape. At 1400px, 390px, and 320px the
-  note field must render without overflowing the dialog panel, the `supersede` verb's extra absorbing-finding field must
-  render below or beside the note field with no overlap, and the footer's Cancel/submit buttons must sit side by side
-  without overflowing the panel — real CSS layout claims jsdom cannot make.
+  mounted over a real form, once per verb that carries a distinct field shape. At 1400px, 390px, and 320px the note
+  field must render without overflowing the dialog panel, the `supersede` verb's extra absorbing-finding field must
+  render below or beside the note field with no overlap, the form's action row (Save and Cancel) must sit side by side
+  inside the panel, and a form-line error must stay inside the panel — real CSS layout claims jsdom cannot make.
 - `board-card-cost.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s right-hand meta group at its fullest: a done-lane
   card carrying its completion stamp and its one combined cost figure, billed, estimated, and partial at once. At 800px
   and at 390px/320px (`bzh:narrow-viewport-tier-rule`) the two must sit side by side on one line, neither overlapping
