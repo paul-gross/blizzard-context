@@ -67,7 +67,9 @@ failing. Freshness is a property of the row the store holds; legality is the con
 one, decides no write.
 
 **Detect.** A store write method that reads a status-family fact — `is_terminal`, a closure, a retirement — and returns
-or raises a refusal from it. Judged at review; no mechanical check. The fix returns the fact to the domain and
+or raises a refusal from it. `blizzard/contracts/ast-grep/rules/store-refuses-stale.yml` flags a call to a listed
+status-family helper inside a store write block or a guard helper (`fence`, `mint_admission`, `_check_*`); a judgment
+made inline, or one level below a helper, is still judged at review. The fix returns the fact to the domain and
 conditions the write on a token or moves the decision inside the unit (`bzh:write-reestablishes-read`).
 
 **Do.** `ScopeStore.record_lifecycle` refuses on the revision alone; whether retiring an already-retired scope writes
@@ -116,30 +118,31 @@ guard closure judgments. A garden proposal's edit, attach, detach, pass, and acc
 key (`garden_proposal_lock`). Edit, attach, detach, pass, and non-minting accept re-read its closure in domain code
 under that key. Minting accept reads the closure before locking, then declares that key beside the item mint's own keys
 in one unit; its insert-if-absent checks for an existing closure under the lock and the service maps a losing insert to
-an already-closed refusal before minting. This path does not re-read the closure in domain code before deciding, and
-remains debt against `bzh:write-reestablishes-read`. Garden delivery declares the plan's chunk and the `FINDING` key
-(`finding_lock`) of every finding it expects, and the finding exit declares the `FINDING` keys of every finding it
-writes or expects. A work item's edit, withdraw, and deliver each declare its `WORK_ITEM` key (`work_item_lock`) and
-re-read the item's closure under it. The chunk delete pre-reads the chunk's hub-source refs, declares the chunk and
-those refs' `WORK_ITEM` keys, and re-reads the record under them; a ref outside the declared keys ends the run before
-any write, and the delete runs again over the union. These stores' writes take the `LockedTransaction`; finding writes
-compare expected derived state under the lock, while closure decisions remain in domain code. The flow pair is governed
-too: a turn's admission and a submission's close read their flows' open turns and the queue ahead, so their unit
-declares the submission's chunk and a `FLOW` key per flow it holds; a stop, completion, or restart reads its chunk's
-waiting submissions under the chunk lock, which a turn also declares. A macro-shape constraint on deployment topology,
-on what holds once more than one hub process may share a store — not a `kill -9` crash-correctness requirement; one hub
-process already serializes every one of these correctly today. The tenant-row lock ahead of the decision's lock changes
-neither guarantee: on SQLite it already took the writer lock, and on Postgres every writer takes the tenant row first
-and its chunk or keyed rows after, so the order two writers lock in never inverts. Dependency declare, group, delete,
-and release declare the tenant's fixed `DEPENDENCIES_LOCK` key in their unit before reading or changing standing edges.
-Declare and group serialize the tenant-wide cycle judgment, including disjoint chunk sets; release and delete serialize
-with a fold's edge rewrite so it cannot remint an edge they released. Delete and declare also declare their chunk rows,
-and delete declares its work-item keys, in canonical order. Release needs no chunk row for cycle safety: it can only
-shrink the standing set. A create whose only race is a duplicate of a tenant-chosen name is no decision under this rule:
-the table's tenant-led primary key or unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and
-the store maps the losing insert's `IntegrityError` to the named conflict — `SecretStore.create`
-(`hub/store/internal/secret_store.py`) is the pattern. A create that reads state before its insert — a cap, a parent's
-state, a default it mints — stays a decision under this rule, in the keyed-lock form under **Do**.
+an already-closed refusal before minting. The insert-if-absent of the closure row is the conditioned write that
+re-establishes the closure read (`bzh:write-reestablishes-read`). Garden delivery declares the plan's chunk and the
+`FINDING` key (`finding_lock`) of every finding it expects, and the finding exit declares the `FINDING` keys of every
+finding it writes or expects. A work item's edit, withdraw, and deliver each declare its `WORK_ITEM` key
+(`work_item_lock`) and re-read the item's closure under it. The chunk delete pre-reads the chunk's hub-source refs,
+declares the chunk and those refs' `WORK_ITEM` keys, and re-reads the record under them; a ref outside the declared keys
+ends the run before any write, and the delete runs again over the union. These stores' writes take the
+`LockedTransaction`; finding writes compare expected derived state under the lock, while closure decisions remain in
+domain code. The flow pair is governed too: a turn's admission and a submission's close read their flows' open turns and
+the queue ahead, so their unit declares the submission's chunk and a `FLOW` key per flow it holds; a stop, completion,
+or restart reads its chunk's waiting submissions under the chunk lock, which a turn also declares. A macro-shape
+constraint on deployment topology, on what holds once more than one hub process may share a store — not a `kill -9`
+crash-correctness requirement; one hub process already serializes every one of these correctly today. The tenant-row
+lock ahead of the decision's lock changes neither guarantee: on SQLite it already took the writer lock, and on Postgres
+every writer takes the tenant row first and its chunk or keyed rows after, so the order two writers lock in never
+inverts. Dependency declare, group, delete, and release declare the tenant's fixed `DEPENDENCIES_LOCK` key in their unit
+before reading or changing standing edges. Declare and group serialize the tenant-wide cycle judgment, including
+disjoint chunk sets; release and delete serialize with a fold's edge rewrite so it cannot remint an edge they released.
+Delete and declare also declare their chunk rows, and delete declares its work-item keys, in canonical order. Release
+needs no chunk row for cycle safety: it can only shrink the standing set. A create whose only race is a duplicate of a
+tenant-chosen name is no decision under this rule: the table's tenant-led primary key or unique constraint
+(`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's `IntegrityError` to
+the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A create that reads
+state before its insert — a cap, a parent's state, a default it mints — stays a decision under this rule, in the
+keyed-lock form under **Do**.
 
 **Detect.**
 
@@ -170,7 +173,6 @@ tenant row and reads deletion state, with every decision guard read that follows
 statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating repository
 (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents writers naming
 the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token, not the domain.
-The remaining `*_locked` repository methods are this seam's legacy form (`bzh:transaction-participation`).
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
 locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/locking.py`). Every namespace is a `LockNamespace`
@@ -215,8 +217,8 @@ The hub-wide egress cursor is a short store-level exception to domain-declared u
 `EGRESS_CURSOR` hub lock inside each append or reset transaction, then reads the current dataset cursor. A pass appends
 only if its observed predecessor still matches; a reset captures its actual predecessor under that lock and appends
 unconditionally. Current authority is ordered per dataset by descending `append_order`, then `recorded_at`, then `id`.
-Legacy rows all have append order 0, so their timestamp and id retain their ordering. The lock covers only the cursor
-transaction, not file export. The export sweep itself remains a single-process background loop.
+Rows from before append order all carry 0, so their timestamp and id retain their ordering. The lock covers only the
+cursor transaction, not file export. The export sweep itself remains a single-process background loop.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, the ceiling's self-engagement, and the
@@ -260,9 +262,9 @@ which the draw runs under the lock.
 
 **Don't.** Block on the lock inside the claim, or draw from the pool without it because the pool looks free.
 
-## Known debt
+## What stays single-process
 
-Stated so a reviewer need not re-derive them:
+The hub runs as one process per store. These facts are that premise, stated so a reviewer need not re-derive them:
 
 - **Running more than one hub process.** No deployment topology stands up a second hub process against one store.
 - **Single-process components outside this rule.** Each is single-process by construction, and this rule governs none of

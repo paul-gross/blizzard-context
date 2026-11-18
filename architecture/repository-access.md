@@ -35,8 +35,7 @@ them.
 **See also.** `blizzard/exemplars/python/exemplar/hub/domain/permits/model.py`
 ([../exemplars/index.md](../exemplars/index.md)) — a read/write Protocol pair, implemented by the exemplar `PermitStore`
 and bound in the exemplar `composition.py`. [`./system-shape/exclusive-writes.md`](./system-shape/exclusive-writes.md)
-`bzh:store-exclusive-write` — the one seam where a write Protocol splits further than read and write, a legacy form
-`bzh:transaction-participation` refuses to extend; read it before calling a `*_locked` method.
+`bzh:store-exclusive-write` — the one seam where a write Protocol splits further than read and write, by lock.
 
 ## Controllers hold read repositories only (`bzh:controller-read-only`)
 
@@ -98,13 +97,12 @@ joined call on one method, where a twin method or a handle type duplicates it pe
 
 **Scope.** Connections and token resolution stay in the store layer; `connection_for` in
 `blizzard/src/blizzard/hub/store/transactions.py` validates the token and any required lock coverage, and
-`connection_in` beside it resolves the optional form. The `*_locked` repository methods are the legacy form: existing
-callers keep them, and no new twin or handle type is added. A chunk-locked decision opens its unit with
-`IHubTransactions.begin` and `lock_chunks` (or `lock_set`) directly, and hands the unit's `transaction` to every
-participant.
+`connection_in` beside it resolves the optional form. The hub's repositories are the rule's scope; the runner store has
+no unit-of-work seam and is outside it. A chunk-locked decision opens its unit with `IHubTransactions.begin` and
+`lock_chunks` (or `lock_set`) directly, and hands the unit's `transaction` to every participant.
 
 **Detect.** A participant ignores its token, opens a second write, accepts a token from another scope or after its
-lifetime, or resolves a connection in domain code; a new `*_locked` twin or per-area handle type; a method correct only
+lifetime, or resolves a connection in domain code; a `*_locked` twin or per-area handle type; a method correct only
 inside a unit whose `transaction` defaults to `None`. Review the adapter and callers; no general mechanical gate
 enforces this rule.
 
@@ -128,8 +126,7 @@ lets adapters verify authority over each resource they mutate.
 **Scope.** `lock_chunks`, `lock_keys`, and `lock_set` graduate the unit; the store sorts chunk ids and then
 namespace-key pairs. The original token is superseded, and a graduated token cannot acquire further locks. The scoped
 tenant opener precedes graduation; lock ordering is owned by
-[./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md) `bzh:store-exclusive-write`, and the legacy
-locked seams by `bzh:transaction-participation`.
+[./system-shape/exclusive-writes.md](./system-shape/exclusive-writes.md) `bzh:store-exclusive-write`.
 
 **Detect.** A repository statement before graduation, a second graduation, use of the superseded token, or a locked
 mutation without coverage of its resource. `blizzard/tests/component/hub/store/test_transactions.py` exercises token
@@ -180,7 +177,8 @@ store on it sees the state from before that write commits. Publishing from the r
 of the domain's atomic operation.
 
 **Detect.** A broker or event-port call inside an open unit — within a `with … begin()` block, a locked handle's scope,
-or a store write method. Judged at review; no mechanical check.
+or a store write method. `blizzard/contracts/ast-grep/rules/publish-after-commit.yml` flags a broker call or import in
+the store; a publish inside a domain unit's `with … begin()` block is judged at review.
 
 **Do.** `delete_chunk` (`blizzard/src/blizzard/hub/api/chunks.py`) publishes the `deleted` frame from the fact id
 `DeleteService.delete` returns, after its unit has committed.
