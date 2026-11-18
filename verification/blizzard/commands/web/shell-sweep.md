@@ -232,6 +232,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   height without scrolling.
 - `kit-option-group.shell-sweep.spec.ts` covers `KitOptionGroup` as one native same-name radio group: real `ArrowDown`
   and `ArrowUp` move the check and set the bound form value, and a disabled group cannot take focus.
+- `kit-form-chrome.shell-sweep.spec.ts` covers `KitForm`, `KitField`, `KitNumberInput`, and `KitOrDefault` composed:
+  real `Tab` walks the native controls in source order, Save on an invalid form sends nothing and focuses the first
+  field in error, choosing the default makes `Tab` skip the disabled number input, and a long field error and form-line
+  error wrap within the form at 390px and 320px with the action row fully visible.
 - `kit-swatch.shell-sweep.spec.ts` covers `KitSwatch` across the whole project-color palette, read from the generated
   `ProjectColor` const: every name's swatch resolves a non-empty computed background, no two names resolve the same one,
   and each holds at least 3:1 contrast against `--surface-resting` and `--surface-selected`. It is the guard against
