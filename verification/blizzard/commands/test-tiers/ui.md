@@ -79,7 +79,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   real router against the hub's own project resolution. Creates a project, then moves it to a new slug. Proves a deep
   link to `/p/default/board` opens the board under the `default` project's lens; a link naming the project by the slug
   it has left, or by its id, is rewritten in place to its current slug; and a link naming no project of the tenant opens
-  the same view on All, with a notice.
+  the same view on All, with a notice. The named project listbox follows focus and route changes with arrow keys and has
+  one Tab entry. At the narrow viewport the proposal waiting-status listbox follows focus and exits with Tab without
+  horizontal page overflow.
 - `tests/ui/actions/gardening-run-dialog.spec.ts` — `test_gardening_run_dialog_browser`. The gardening run dialog,
   opened from the selected routine's own panel, on the `actions` hub, since the routine's graph names a test action.
   Mints a routine with a never-swept default scope, links a second scope into its related set ahead of time, and mints a
@@ -130,13 +132,18 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   canvas clears the selection. The third syncs the packaged graphs, enumerates them from `GET /api/graphs`, and proves
   each renders a diagram, or the fallback only when an edge leaves the graph, and that a graph authoring a targeted
   resume renders its `resume:<node>` meta line. The measurer contract the boxes are sized by is held by
-  `web:shell-sweep`.
+  `web:shell-sweep`. The Retired control remains an independent pressed toggle.
 - `tests/ui/runner-panel-live.spec.ts` — `test_runner_panel_updates_live_over_sse_with_no_reload`. The runner's own
   panel, served by a real `blizzard-runner host` the test steps, its page pointed at the host's URL rather than the
   hub's. Loads the panel's board at `/board` once, never reloading, over an empty board; then promotes a chunk and steps
   the host once, and the chunk's card must arrive well inside the panel's one-minute poll backstop, so the publish,
   stream, `RunnerLiveUpdates` registry and re-read chain alone can have put it there. The host then steps the chunk to
-  `done`, and the card settles in the Done lane with no live worker line.
+  `done`, and the card settles in the Done lane with no live worker line. The Runner and Project listboxes each expose
+  All as their single selected option.
+- `tests/ui/tracks-progress.spec.ts` — `tracks shows real chunk graph progress while switching layouts`. A real runner
+  advances a chunk through a question and human decision. The Tracks span listbox follows focus and exits with Tab;
+  question and decision toolbars move focus without selection. Space answers once, Enter resolves once, and a held
+  resolution refuses repeated keyboard and pointer activation while pending; hub reads confirm both outcomes.
 - `tests/ui/board-browser.spec.ts` — `test_board_browser_live_group_reorder_answer_and_pause`. The mission-control board
   over a runner host the test steps, loaded once and never reloaded until its own `?chunk=` URL is mounted fresh.
   Promotes three chunks through the hub API, watching each land live in Ready, and proves decorative grips and no
