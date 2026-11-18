@@ -401,8 +401,10 @@ file. Moving a key's lifetime later is a break that `blizzard:compat` reports; m
 
 On the hub, the file accessor is for seeding and configuration validation, not a runtime source for settings already
 held in the store. Runtime consumers take the effective settings snapshot at their entry; they do not bypass it by
-reading the file or its accessor. Shared settings-record write and seed decisions remain owned by
-`blizzard/src/blizzard/foundation/settings_record/`, not a hub-specific copy.
+reading the file or its accessor. The runner host holds the same line: a `pass` or `session` key of `blizzard-host.toml`
+read through `ConfigView` outside the seed is a finding, since the host and runner settings records own those values
+once seeded. Shared settings-record write and seed decisions remain owned by
+`blizzard/src/blizzard/foundation/settings_record/`, not a daemon-specific copy.
 
 **Why.** A key the code reads and no document lists is a setting an operator cannot discover and a release cannot diff.
 Refusing a retired key is itself a read of it, so the registry stays complete only while those keys stay declared.
@@ -445,23 +447,24 @@ the change that brings it under the rule:
 
 ## Runner settings hold one snapshot per pass (`bzh:settings-snapshot-per-pass`)
 
-**Rule.** Resolve runner pass and session entries from the runner-scoped store at use, over boot-held configuration, not
-from a cached file value. A tick and a trace sweep each acquire one coherent revision and entries and hold their own
-immutable snapshot for the whole pass. Cache built objects under their actual inputs or revisions. Publish a rebuilt
-context and harness set together only after a successful build; retain the last good pair on failure, report a failed
-rebuild's acquired revision and retry on a later pass. Startup without a good build fails. A launch takes session
-settings from its pass and records the pass revision and transcript root; a resume preserves the original session's
-locating values and, when recorded, its transcript root. Already-running invocations retain their launch settings and
-harness set.
+**Rule.** Resolve the host's and each runner's pass and session entries from the runner store at use, over boot-held
+configuration, not from a cached file value. A tick, a host pass and a trace sweep each acquire one coherent revision —
+for a runner tick, the pair of host and runner revisions — and entries and hold their own immutable snapshot for the
+whole pass. Cache built objects under their actual inputs or revisions. Publish a rebuilt context and harness set
+together only after a successful build; retain the last good pair on failure, report a failed rebuild's acquired
+revision and retry on a later pass. Startup without a good build fails. A launch takes session settings from its pass
+and records both of the pass's revisions and its transcript root; a resume preserves the original session's locating
+values and, when recorded, its transcript root. Already-running invocations retain their launch settings and harness
+set.
 
 **Why.** Reading individual keys mid-pass could combine revisions that never existed, while replacing a harness under a
 running invocation could change how its result is read. A failed build must not discard the last usable context.
 
-**Scope.** Runner-owned pass and session keys, including trace sweeps and all launch paths. Host and boot settings
-remain boot-owned. Explicit runner file values seed only missing entries after identity and store checks; defaults are
-not materialized, and a stored unset remains authoritative on later starts. The host's implicit tool profile retains its
-file-based exception until host-settings seed captures its effective profile
-([./worker-boundary.md](./worker-boundary.md)).
+**Scope.** Host and runner pass and session keys, including the host tick, trace sweeps, host tool children and all
+launch paths. Boot settings remain boot-owned. Explicit file values seed only missing entries after identity and store
+checks; defaults are not materialized, and a stored unset remains authoritative on later starts. A timed driver's
+interval is the one read outside a pass's snapshot: it is evaluated at the host record's current revision, so a write
+that wakes the driver is not waited out at the old value.
 
 **Detect.** A pass re-reading live entries midway through its work, an object cached without its settings inputs, a
 failed rebuild replacing only part of the context, or a running invocation switched to a new harness set or transcript
