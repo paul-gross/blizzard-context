@@ -135,8 +135,9 @@ locked seams by `bzh:transaction-participation`.
 mutation without coverage of its resource. `blizzard/tests/component/hub/store/test_transactions.py` exercises token
 lifetime, scope, graduation, and coverage.
 
-**Do.** `DeleteService.delete` calls `transaction.lock_chunks` before reading fresh facts and passes the locked token to
-the repositories.
+**Do.** `DeleteService.delete` calls `transaction.lock_set` with the chunk, dependency lock, and work-item keys before
+reading fresh facts, then passes the locked token to the repositories. If the re-read finds an uncovered work item, it
+retries in a new unit with the expanded set, without writing in the first.
 
 **Don't.** Lock one chunk, read a repository, then attempt to add another chunk to the lock set.
 
