@@ -19,28 +19,29 @@ Chromium comes from `npx playwright install chromium` in `tests/`.
 
 The projects are generated beside the service projects. `ui` rides the default hub profile's shared hub, and a
 `ui-<profile>` project exists for each `tests/ui/` subfolder named after a hub profile, riding that profile's hub with
-one worker. A UI test configures its hub through a profile, never ad hoc (`bzh:service-config-is-a-profile`). Only the
-`ui*` projects carry a browser: no `service-*` or harness project does, and the service tier's `--project='service-*'`
-selection lists none of them. A spec imports `test` and `expect` from the harness facade, the same bans as a service
-spec apply, and `page` is allowed. The facade's UI fixture (`tests/harness/ui.ts`) supplies the page's `baseURL` from
-the test's hub, opens the page in the test's own tenant rather than at the board's tenant picker, and the `wideViewport`
-and `narrowViewport` sizes, read from `tests/harness/viewports.json`, the one home the viewport fixtures read. A UI test
-asserts what the board renders. Its hub is always real; a scenario that needs runners behind the board steps real runner
-hosts through the `runnerHosts` fixture, as `tests/ui/auth/runner-federation.spec.ts` does.
+one worker. A UI test uses a profile for shared hub configuration; one-off `hubConfig` and `hubEnv` settings are allowed
+on a fresh hub, not on a shared hub (`bzh:service-config-is-a-profile`). Only the `ui*` projects carry a browser: no
+`service-*` or harness project does, and the service tier's `--project='service-*'` selection lists none of them. A spec
+imports `test` and `expect` from the harness facade, the same bans as a service spec apply, and `page` is allowed. The
+facade's UI fixture (`tests/harness/ui.ts`) supplies the page's `baseURL` from the test's hub, opens the page in the
+test's own tenant rather than at the board's tenant picker, and the `wideViewport` and `narrowViewport` sizes, read from
+`tests/harness/viewports.json`, the one home the viewport fixtures read. A UI test asserts what the board renders. Its
+hub is always real; a scenario that needs runners behind the board steps real runner hosts through the `runnerHosts`
+fixture, as `tests/ui/auth/runner-federation.spec.ts` does.
 
 The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite and is a required check. Its roster:
 
 - `tests/ui/flow-lanes.spec.ts::test_the_board_shows_each_place_on_a_branch_and_clears_it_live_once_it_lands` — a
   stepped real host brings two chunks to one branch line, held by the mock forge. `GET /api/flows?active=true` shows
-  them in arrival order, and the board's card place lines name that branch. The board loads once: after the lever
-  clears, the place lines disappear live, both chunks read `done` and landed, and `GET /api/flows/{id}/record` lists a
-  `landed` fact for each.
+  them with arrival values that sort into arrival order, and the board's card place lines name that branch. The board
+  loads once: after the lever clears, the place lines disappear live, both chunks read `done` and landed, and
+  `GET /api/flows/{id}/record` lists a `landed` fact for each.
 - `tests/ui/shell.spec.ts` — the smoke that the served bundle renders the desktop board shell at the wide viewport and
   the glance board at the narrow one, rather than the placeholder the hub serves when no bundle is built. It is the
   evidence that Chromium installed, the bundle was built and served, and the fixture works.
 - `tests/ui/event-log.spec.ts::test_the_events_tab_renders_filters_and_updates_live_in_the_browser` — seeds a
   mixed-severity feed through `POST /api/fleet/events`, opens the Events tab from `nav-events`, and proves rows render
-  newest-first (the critical row first because it arrived last), the severity filter narrows then restores, a fresh
+  newest-first (the critical row was seeded first and renders last), the severity filter narrows then restores, a fresh
   post-load event from a second runner arrives live over SSE with no reload, and a row deep-links to its chunk.
 - `tests/ui/event-log.spec.ts::test_the_events_grid_does_not_collapse_at_a_narrow_viewport` — proves the Events tab's
   time-first grid's narrow-viewport fallback: at a real ~390px width a long-message row stays bounded in height and the
@@ -48,7 +49,7 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
 - `tests/ui/event-log.spec.ts::test_activity_rail_tracks_claim_transition_and_fact_burst_across_reload` — opens the real
   board before a mock runner claims and completes a node, then pushes lease and usage facts through ingest. Checks the
   distinct claim and transition, spend refresh without extra activity rows, one row for a shared-key question
-  notification, and matching durable activity identities and row count after reload.
+  notification, unique durable activity keys before reload, and the row count and single claim row after reload.
 - `tests/ui/event-log.spec.ts::test_the_rail_survives_a_reload_with_no_duplicate_or_missing_rows` — on a fresh hub,
   proves the Activity rail survives a reload: it renders every durable row on first load, the hub restarts with a fresh
   replay ring over the same store, and the reload's `GET /api/activity` backfill restores the same rows with no
@@ -63,6 +64,8 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   `POST /api/invitations` and the board's `/invite/<token>` page, a chunk opened in the dock carries no ⋮
   `chunk-actions-menu`; promoted to contributor through `PUT /api/members/{user_id}`, a reload shows the menu; and a
   second page's logout through `nav-logout` sends the first, still-open page to `/login` with no reload.
+- `tests/ui/auth/hub-settings.spec.ts` — a tenant administrator who is not a hub administrator sees no Hub settings tab
+  and cannot open the settings page directly.
 - `tests/ui/auth/runner-federation.spec.ts::test_multi_daemon_sso_bounce` — two adopted runner hosts under one runner
   name: a sessionless browser visit to A bounces through the hub and the stub IdP into A's own session, with the
   hub-signed token never in a URL. The captured callback token is refused at B (audience-bound), refused on replay at A
@@ -79,7 +82,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   real router against the hub's own project resolution. Creates a project, then moves it to a new slug. Proves a deep
   link to `/p/default/board` opens the board under the `default` project's lens; a link naming the project by the slug
   it has left, or by its id, is rewritten in place to its current slug; and a link naming no project of the tenant opens
-  the same view on All, with a notice.
+  the same view on All, with a notice. The named project listbox follows focus and route changes with arrow keys and has
+  one Tab entry. A separate test checks that at the narrow viewport the proposal waiting-status listbox follows focus
+  and exits with Tab without horizontal page overflow.
 - `tests/ui/actions/gardening-run-dialog.spec.ts` — `test_gardening_run_dialog_browser`. The gardening run dialog,
   opened from the selected routine's own panel, on the `actions` hub, since the routine's graph names a test action.
   Mints a routine with a never-swept default scope, links a second scope into its related set ahead of time, and mints a
@@ -87,13 +92,26 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   hatch both absent; that the never-swept note shows and the delta radio is disabled; that submitting on the linked
   scope lands the run against it, read back from the hub; and that the confirmation names a real `ch_`-prefixed chunk
   id, links to `/p/default/board/chunk/<id>`, renders no board of its own, and closes back to the routines list.
+- `tests/ui/actions/gardening-cadences.spec.ts` — on a controlled clock, creates a cadence and a chore, checks waiting
+  and stopped errands and missing-scope attention, and advances time to check the next moments. The disabled flag is
+  visible: the cadence is kept but mints nothing.
+- `tests/ui/gardening-doorway.spec.ts` — mobile project cards open the selected gardening lens and browser Back returns
+  to the doorway.
+- `tests/ui/host-verified-origin.spec.ts` — host detail links the first declared origin matching the board's hostname,
+  with no requests to the declared origins' `/api/health` paths observed.
+- `tests/ui/hub-settings.spec.ts` — a hub operator edits a sweep interval; the saved value reads back and the revision
+  appears.
+- `tests/ui/repository-no-ci.spec.ts` — edits and persists the repository's allow-no-CI setting on desktop, then reads
+  it on a phone, where editing points to the CLI.
+- `tests/ui/urgency-live.spec.ts` — creates and reorders an urgency, changes ready work and checks the runner's Next
+  display updates on its event frame; retirement moves the work to the default and a stepped host follows that ordering.
 - `tests/ui/transcript-tab.spec.ts` — `test_chunk_transcripts_tab_browser`. The chunk board's Transcripts tab, over
   segments seeded straight through `POST /api/fleet/transcripts` as a runner principal rather than a live runner's
   shipping lane, which ships disabled by default and is covered at the component tier by
   `tests/component/runner/transcripts/test_transcript_pump.py` and
   `tests/component/runner/transcripts/test_transcript_drain.py`. Opens the tab on a bare-issued chunk, with no claim,
-  lease or transition, so its one step of segments groups under the unmatched bucket. Expands the first segment's
-  collapsed-by-default thinking turn, and opens a tool call to reach the sidechain nested inline under it, since
+  lease or transition, so its one step of segments groups under the unmatched bucket. Clicks the first segment's
+  thinking turn to read its body, and opens a tool call to reach the sidechain nested inline under it, since
   `toContainText` reads `textContent`, populated even behind a closed `<details>`. Follows the continues-in link to the
   second segment, opens its unlinked sidechain standalone and back, then follows the continued-from link back.
 - `tests/ui/triage-history.spec.ts` — `test_triage_migration_selects_transcript_and_artifact`. The packaged default
@@ -117,26 +135,32 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   viewport under `bzh:narrow-viewport-tier-rule`, where `/board` routes to the glance shell. The first steps a runner
   host until a verdict-less build escalates its chunk to `needs_human`, then captures and holds open the
   `GET /api/chunks` read, proves the glance shell renders `glance-list-loading` and no `glance-list-empty` row while the
-  read is in flight, and releases it, landing the card and clearing loading: the empty state is never shown on a
-  populated fleet. The second claims a chunk as a runner and ships it a subscription-only `usage.recorded` fact, an
-  estimate with no billed cost, and proves the "Fleet spend · today" panel and the running chunk's card both render the
-  one `~`-marked figure, never a plain billed `$0.00`.
+  read is in flight, and releases it, landing the card and clearing loading; it also checks no empty row after the card
+  lands. The second claims a chunk as a runner and ships it a subscription-only `usage.recorded` fact, an estimate with
+  no billed cost, and proves the "Fleet spend · today" panel and the running chunk's card both render the one `~`-marked
+  figure, never a plain billed `$0.00`. A third test emulates an old server-selected done row in the response and checks
+  it remains visible and counted when policy metadata is omitted; it does not test selection.
 - `tests/ui/graphs-diagram.spec.ts` — `test_graphs_diagram_renders_in_the_browser`,
   `test_graphs_diagram_selection_in_the_browser` and `test_diagram_geometry_matches_the_rendered_text`. The graph
   explorer's diagram over a live hub. The first opens a minted build, review and deliver graph from `/graphs` and proves
-  its SVG DAG draws every declared node, the START connector lands on the entry node, an advance edge renders, and the
-  review-to-build back-edge is derived as a `retry` edge. The second proves node, edge and self-loop selection over the
-  same graph, clicking a point on a rendered curve off its label's midpoint, since jsdom cannot hit-test geometry; empty
-  canvas clears the selection. The third syncs the packaged graphs, enumerates them from `GET /api/graphs`, and proves
-  each renders a diagram, or the fallback only when an edge leaves the graph, and that a graph authoring a targeted
-  resume renders its `resume:<node>` meta line. The measurer contract the boxes are sized by is held by
-  `web:shell-sweep`.
+  its SVG DAG draws every declared node, the START connector lands on the entry node, an advance edge renders, and a
+  `retry` edge renders. The second proves node, edge and self-loop selection over the same graph, clicking a point on a
+  rendered curve off its label's midpoint, since jsdom cannot hit-test geometry; empty canvas clears the selection. The
+  third syncs the packaged graphs, enumerates them from `GET /api/graphs`, and proves each renders a diagram, or the
+  fallback only when an edge leaves the graph, and that a graph authoring a targeted resume renders its `resume:<node>`
+  meta line. The measurer contract the boxes are sized by is held by `web:shell-sweep`. The Retired control remains an
+  independent pressed toggle.
 - `tests/ui/runner-panel-live.spec.ts` — `test_runner_panel_updates_live_over_sse_with_no_reload`. The runner's own
   panel, served by a real `blizzard-runner host` the test steps, its page pointed at the host's URL rather than the
   hub's. Loads the panel's board at `/board` once, never reloading, over an empty board; then promotes a chunk and steps
   the host once, and the chunk's card must arrive well inside the panel's one-minute poll backstop, so the publish,
   stream, `RunnerLiveUpdates` registry and re-read chain alone can have put it there. The host then steps the chunk to
-  `done`, and the card settles in the Done lane with no live worker line.
+  `done`, and the card settles in the Done lane with no live worker line. The Runner and Project listboxes each expose
+  All as their single selected option.
+- `tests/ui/tracks-progress.spec.ts` — `tracks shows real chunk graph progress while switching layouts`. A real runner
+  advances a chunk through a question and human decision. The Tracks span listbox follows focus and exits with Tab;
+  question and decision toolbars move focus without selection. Space answers once, Enter resolves once, and a held
+  resolution refuses repeated keyboard and pointer activation while pending; hub reads confirm both outcomes.
 - `tests/ui/board-browser.spec.ts` — `test_board_browser_live_group_reorder_answer_and_pause`. The mission-control board
   over a runner host the test steps, loaded once and never reloaded until its own `?chunk=` URL is mounted fresh.
   Promotes three chunks through the hub API, watching each land live in Ready, and proves decorative grips and no
@@ -149,4 +173,6 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   claimed; that chunk is paused from the dock, keeping its claim and naming who paused it, and resumed. The graph ends
   at review, and the worker's branch and its `LANDED.md` are read back from the runner host's own origin: the host's
   origins are not the hub forge's repositories, so this entry does not prove landing through the forge — a pull request
-  opened and merged onto `main`. The dock's geometry is held by `web:shell-sweep`.
+  opened and merged onto `main`. A second test emulates an old server-selected done row, checks the lane count and
+  keyboard-accessible policy disclosure, and checks the fallback when policy metadata is omitted; it does not test
+  selection. The dock's geometry is held by `web:shell-sweep`.
