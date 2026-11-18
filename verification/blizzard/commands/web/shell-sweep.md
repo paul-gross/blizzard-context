@@ -445,7 +445,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   (runner config)" wraps inside the panel at about 390px rather than forcing horizontal scroll.
 - `kit-tabs.shell-sweep.spec.ts` covers `KitTabs`' two tiers mounted together, the top strip over a `variant="sub"`
   strip: at each swept width the sub strip renders shorter than the top strip and its active tab cyan beside the top
-  strip's amber, with the kit tokens injected so both strips' colours resolve to real values.
+  strip's amber, with the kit tokens injected so both strips' colours resolve to real values. The same file covers the
+  keyboard model of a `KitTabGroup` holding a strip and its panels in real Chromium: Tab from a prior focusable lands on
+  the selected tab and the next Tab leaves the strip, Left/Right/Home/End move focus and selection with `activeChange`
+  following, and only the matching panel is visible with its content instantiated.
 - `tenant-picker.shell-sweep.spec.ts` covers the hub's tenant picker (`TenantPicker`), mounted with a short, a long, and
   a one-letter tenant name: at 1280px, 390px, and 320px every option must share one width and left edge — the widest
   name's, not each its own — with every option's right edge inside the viewport and no horizontal overflow of the page.
