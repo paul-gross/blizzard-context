@@ -442,3 +442,51 @@ the change that brings it under the rule:
 - **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
   its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
   than refusing it.
+
+## Runner settings hold one snapshot per pass (`bzh:settings-snapshot-per-pass`)
+
+**Rule.** Resolve runner pass and session entries from the runner-scoped store at use, over boot-held configuration, not
+from a cached file value. A tick and a trace sweep each acquire one coherent revision and entries and hold their own
+immutable snapshot for the whole pass. Cache built objects under their actual inputs or revisions. Publish a rebuilt
+context and harness set together only after a successful build; retain the last good pair on failure, report a failed
+rebuild's acquired revision and retry on a later pass. Startup without a good build fails. A launch takes session
+settings from its pass and records the pass revision and transcript root; a resume preserves the original session's
+locating values and, when recorded, its transcript root. Already-running invocations retain their launch settings and
+harness set.
+
+**Why.** Reading individual keys mid-pass could combine revisions that never existed, while replacing a harness under a
+running invocation could change how its result is read. A failed build must not discard the last usable context.
+
+**Scope.** Runner-owned pass and session keys, including trace sweeps and all launch paths. Host and boot settings
+remain boot-owned. Explicit runner file values seed only missing entries after identity and store checks; defaults are
+not materialized, and a stored unset remains authoritative on later starts. The host's implicit tool profile retains its
+file-based exception until host-settings seed captures its effective profile
+([./worker-boundary.md](./worker-boundary.md)).
+
+**Detect.** A pass re-reading live entries midway through its work, an object cached without its settings inputs, a
+failed rebuild replacing only part of the context, or a running invocation switched to a new harness set or transcript
+root.
+
+**Do.** `RunnerSettingsReader` (`blizzard/src/blizzard/runner/settings_reader.py`) and `RunnerStepper`
+(`blizzard/src/blizzard/runner/loop_wiring.py`) resolve the snapshot at the pass boundary; `SessionSettings`
+(`blizzard/src/blizzard/runner/harness/session_settings.py`) and `HarnessSets`
+(`blizzard/src/blizzard/runner/harness/harness_set.py`) retain invocation ownership.
+
+If snapshot acquisition fails before returning a revision, the tick retains its last context and retries, but does not
+record that failure in `in_force.failed`: that view requires a revision and may retain an earlier failure. The settings
+API also reads the store, so an ongoing store error can prevent the view itself from being returned. This is distinct
+from a rebuild failing after a revision was acquired.
+
+**Don't.** Resolve the budget separately at every step of one tick, allowing an edit halfway through to change its
+remaining decisions.
+
+**See also.** `bzh:config-read-on-use` above owns hub configured-record reads; `bzh:pluggable-seams`
+([./pluggable-seams.md](./pluggable-seams.md)) owns retained harness bindings.
+
+### Retirement-aware settings writes: handoff
+
+The current runner settings route does not yet refuse a write solely because the runner was retired. Completion requires
+an authoritative local hosted-runner fact and route resolution that returns `409 runner_retired` when its newest fact is
+retired, with policy and HTTP acceptance tests. A refused token, a missing or halted registry entry, and a hub outage
+are not evidence of retirement; settings writes remain hub-independent. Identity and settings/history remain together
+until explicit archive cleanup, and that cleanup does not establish retirement-aware routing.
