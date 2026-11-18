@@ -81,9 +81,10 @@ writes a usage sample, a host row, and its outbound report, a runner row, in one
 authored in that host module and its outbound row is built through the runner builders, so the outbound row is stamped
 like any other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
 transaction, through one handle that carries no `Connection` to the domain: the runner half is built by the transfer
-adapter's binding, and the host half by the `host_ingests` member (`host_ingest_store.py`), which merges the host rows
-by each table's declared treatment, records an ingest, and writes the moving runner's hub token, sealed under the
-destination's key, insert-where-absent; neither module names the other kind's tables.
+adapter's binding, and the host half by two host members: the `host_ingests` member (`host_ingest_store.py`), which
+merges the host rows by each table's declared treatment and records an ingest, and the `runner_hub_tokens` member
+(`host_hub_token_store.py`), which writes the moving runner's hub token, sealed under the destination's key,
+insert-where-absent; neither module names the other kind's tables.
 
 **Scope.** The runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it
 stands for — appears only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations.
