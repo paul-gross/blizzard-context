@@ -1,8 +1,8 @@
 # Mutations and pending state
 
-How a mutation hook reports its own settledness, and how a container may render a mutation's predictable outcome before
-it settles. A spoke of the [frontend structure hub](../frontend-structure.md); each rule follows the slot skeleton owned
-by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
+How a mutation hook reports its own settledness, how a container may render a mutation's predictable outcome before it
+settles, and how a form edits a versioned record. A spoke of the [frontend structure hub](../frontend-structure.md);
+each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
 
 ## A mutation settles only once its invalidations refetch (`bzh:frontend-mutation-settles-on-refresh`)
 
@@ -67,3 +67,30 @@ result to the presentational board as an input; `board-page.model.ts` owns the p
 optimisticUpdate(prev, vars)); return { prev }; }`
 — a snapshot-and-rollback cache write, forbidden regardless of correctness, because it gives the cache two writers (the
 real response and the guess).
+
+## A versioned edit saves against the baseline it started from (`bzh:frontend-edit-baseline`)
+
+**Rule.** A form service that edits a record whose wire contract takes `If-Match` takes an `EditBaseline<D>`
+(`fleet/src/lib/core/forms/edit-baseline.domain.ts`) and sends `before.revision` as the `If-Match`, never in the body.
+The container captures the id, revision, and a detached draft from one read when editing starts; a query refresh does
+not replace them, and the working draft is a separate copy. A revision conflict is a form-level refusal that keeps the
+baseline and the working draft, with no retry, rebase, or substitution of a newer revision. Restarting is explicit and
+replaces both from a fresh read. After a success, the next edit captures a fresh baseline from the settled read and
+never computes `revision + 1`. An unversioned operation invents no revision.
+
+**Why.** A revision read from the live query at save time names whatever the hub holds then, so a save made over someone
+else's change passes `If-Match` and overwrites it. A baseline fixed at the start is what makes the hub's conflict answer
+mean "this record moved since you began", and keeping the working draft through it loses nothing the operator typed.
+
+**Scope.** Services built on `core/forms`. Existing edit sites that send the live query's revision, such as
+`gardening-cadence-detail.ts`, adopt the rule as each migrates (`decision:ui-toolkit/incremental-replacement`).
+
+**Detect.** A review question: where the service reads the revision it sends, and whether a refresh or a conflict can
+replace the baseline or the working draft.
+
+**Do.** Pattern the service on `edit(before: EditBaseline<D>, after: D)`: the request takes `before.id` and
+`before.revision`, and the body is built from `before.draft` and `after`.
+
+**Don't.** A revision read from the live query at save time, or `revision + 1` after a success.
+
+**See also.** `bzh:frontend-mutation-settles-on-refresh`, which still governs when the save settles.
