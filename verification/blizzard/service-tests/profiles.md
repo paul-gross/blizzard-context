@@ -73,10 +73,11 @@ Await `reconfigure` on a running host for per-runner pass/session settings: it r
 settings API, never the store or a silent file fallback. Boot edits use `reconfigure` while stopped and take effect on
 restart; a stopped host refuses live-key edits after first boot. Put initial authored values in the pre-start overlay.
 Fixture-owned keys remain refused. For an initialized, stopped host, `prepareStopped` can replace a runner's
-documented-file subscription, id, or token, and the host token in `.env`, before `restart()` boots it. Token values come
-from enrollment; the seam never mints one. It refuses edits while the host runs. A store specimen opens `data/host.db`
-only before boot or after stop, by the table and column names `contracts/store/runner.json` declares
-(`bzh:service-public-surfaces`'s Rule, [`./surfaces.md`](./surfaces.md) §Rule).
+documented-file subscription, id, or token, and the host token in `.env`, before `restart()` boots it. A runner token
+written there reaches the host only while its store holds none: the first boot seals it, and later `.env` edits are not
+read. Token values come from enrollment; the seam never mints one. It refuses edits while the host runs. A store
+specimen opens `data/host.db` only before boot or after stop, by the table and column names
+`contracts/store/runner.json` declares (`bzh:service-public-surfaces`'s Rule, [`./surfaces.md`](./surfaces.md) §Rule).
 
 ## Subscription samples
 

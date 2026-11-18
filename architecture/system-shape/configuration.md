@@ -312,7 +312,11 @@ replacement. A value that nothing can read back needs no read permission to guar
 **Scope.** A secret belongs to one tenant, like every tenant configured record, and its name is unique within that
 tenant (`bzh:tenant-scoped-uniqueness`). The hub's one secret key seals every tenant's values, each against its own
 `(name, revision)` (`blizzard/src/blizzard/foundation/secrets/internal/aes_gcm.py`); the tenant boundary on a value is
-the store's, never the cipher's.
+the store's, never the cipher's. A runner host's hub tokens are secret values too: the host's own key —
+`BZ_HOST_SECRET_KEY`, or the host directory's `data/secret-keys/` — seals each under the name
+`runner-hub-token/<runner_id>` at its row's revision (`blizzard/src/blizzard/runner/hub/sealed_tokens.py`), so a token
+copied to another runner's row or restored at an older revision does not open, and the prefix keeps its binding apart
+from any hub secret's.
 
 **Detect.** A `SecretValue` reaching a controller, a serializer, or a logger; an `ISecretReader` injected anywhere but
 an object the composition root builds to call an external system — for a forge, only the forge authorization boundary
@@ -341,7 +345,8 @@ from one tenant's record never serves another's request or pass. Hub-wide settin
 in a tenant cache. A hub setting's declared lifetime decides when a change takes effect: a `boot` value is fixed for the
 running process and needs a restart; a later-lifetime value is read at its use. The hub's file seeds a stated key only
 when no stored entry exists, including an unset entry; it is not the authority over an existing entry. Boot inputs such
-as the root and secret key, and environment overrides declared for boot keys, remain process inputs.
+as the root and secret key — `BZ_HUB_SECRET_KEY` on the hub, `BZ_HOST_SECRET_KEY` on a runner host — and environment
+overrides declared for boot keys, remain process inputs.
 
 **Detect.**
 

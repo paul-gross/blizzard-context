@@ -10,10 +10,12 @@ A runner store holds two kinds of table. A **runner-scoped** table, declared `in
 `runner_identity` row names. A **host-scoped** table holds facts about the machine and its runtime directory — the
 workspace prompt, the graph-artifact mirror, the token replay cache, daemon liveness, external usage samples, and a
 registered host's own identity at its hub (`host_identity`), its own fact lane (`host_outbound_buffer`), the mark its
-hub last answered on that lane (`host_high_water_seen`), and the runners it took in from other stores (`host_ingests`) —
-and carries no runner key. Each host table also declares how a runner transfer treats its rows
-(`info={"transfer": ...}`), which `blizzard/tests/unit/runner/store/test_schema_declarations.py` holds every host table
-to. How a table gains the key over rows it already holds is `bzh:keyed-table-migration`'s, in
+hub last answered on that lane (`host_high_water_seen`), the runners it took in from other stores (`host_ingests`), and
+each runner's sealed hub token (`runner_hub_tokens`) — and carries no runner key. A host table about one runner, as
+`host_ingests` and `runner_hub_tokens` are, names its `runner_id` explicitly in its own adapter. Each host table also
+declares how a runner transfer treats its rows (`info={"transfer": ...}`), which
+`blizzard/tests/unit/runner/store/test_schema_declarations.py` holds every host table to. How a table gains the key over
+rows it already holds is `bzh:keyed-table-migration`'s, in
 [../../standards/persistence.md](../../standards/persistence.md).
 
 ## Adapters hold the bound seam (`bzh:runner-scoped-store`)
@@ -80,7 +82,8 @@ authored in that host module and its outbound row is built through the runner bu
 like any other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
 transaction, through one handle that carries no `Connection` to the domain: the runner half is built by the transfer
 adapter's binding, and the host half by the `host_ingests` member (`host_ingest_store.py`), which merges the host rows
-by each table's declared treatment and records an ingest; neither module names the other kind's tables.
+by each table's declared treatment, records an ingest, and writes the moving runner's hub token, sealed under the
+destination's key, insert-where-absent; neither module names the other kind's tables.
 
 **Scope.** The runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it
 stands for — appears only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations.

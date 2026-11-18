@@ -76,8 +76,8 @@ tick. Leave the seeded runner's own local pause engaged and do not clear it from
 which claims the board's `ready` chunks and spawns real workers.
 
 A seed made once the runner has registered survives every later restart or shutdown, daemon up or down: the runner's
-token survives in its runtime dir's `.env`, so it registers under the same id on every start, and the runner store is
-never cleared. A reset of the hub store ends that, since the runner comes back under a new id the seed never pinned.
+token survives sealed in its host store, so it registers under the same id on every start, and the runner store is never
+cleared. A reset of the hub store ends that, since the runner comes back under a new id the seed never pinned.
 
 ## When a write meets a moved schema
 
