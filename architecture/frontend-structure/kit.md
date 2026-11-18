@@ -101,5 +101,5 @@ green.
 - `bzh:frontend-kit-stories` above — the stories a part added or reshaped brings in the same change, so the next build
   finds them.
 - `bzh:visual-change-needs-a-render` in
-  [`../../verification/blizzard/tier-rules.md`](../../verification/blizzard/tier-rules.md) — the render artifact a
-  visual change owes, which a workshop screenshot can be.
+  [`../../verification/blizzard/tier-rules.md`](../../verification/blizzard/tier-rules.md) — the real render a visual
+  change is verified in, which a workshop exercise can be.

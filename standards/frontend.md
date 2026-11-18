@@ -5,7 +5,7 @@ settled, readable from the code, and not revisited here. Every rule follows the 
 `winter-canon:/rule-shape.md` (`canon:rule-shape`) and carries its stable `bzh:` id in its heading.
 
 What a change here owes as proof is the verification matrix's, not this file's: a change whose observable effect is
-visual owes an artifact from a real render rather than a jsdom green — `bzh:visual-change-needs-a-render` in
+visual is verified in a real render rather than by a jsdom green — `bzh:visual-change-needs-a-render` in
 [../verification/blizzard/tier-rules.md](../verification/blizzard/tier-rules.md).
 
 ## Toolchain (`bzh:frontend-toolchain`)
