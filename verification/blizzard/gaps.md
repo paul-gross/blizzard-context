@@ -421,10 +421,11 @@ the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as t
 
 ## Runner settings under Postgres
 
-Runner settings seed, revision-conditioned writes, history and spawn metadata have SQLite coverage, but no runner tier
-exercises their migrations or concurrent writes on Postgres. In particular, the revision compare-and-set and its history
-transaction have not been proven under Postgres concurrency. The runner Postgres migration and runtime gap below
-applies; no Postgres evidence is implied by the SQLite tests.
+Runner and host settings seed, revision-conditioned writes, history and spawn metadata have SQLite coverage, but no
+runner tier exercises their migrations or concurrent writes on Postgres. In particular, the revision compare-and-set and
+its history transaction, and the host record's serialization on its single row, have not been proven under Postgres
+concurrency. The runner Postgres migration and runtime gap below applies; no Postgres evidence is implied by the SQLite
+tests.
 
 ## The runner store under Postgres
 

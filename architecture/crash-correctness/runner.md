@@ -797,12 +797,14 @@ already fresh store. No crash point stands in for it.
 ## Runner settings and launch metadata
 
 Runner settings writes commit their entries, revision compare-and-set and change history in one transaction through
-`blizzard/src/blizzard/runner/store/internal/settings_store.py`; seed writes use the same atomic record machinery. A
-crash commits the whole change or none, and a repeated seed does not overwrite a stored entry or unset. These are
-**no-window** writes, not an armed crash proof. Fresh launches put the runner settings revision and transcript root in
-the `record_provisional_spawn` transaction with the provisional process and spawn row; `record_identified_spawn` later
-fills its session identity. Resumes put them in the `record_spawn` transaction with the identified spawn row. Both
-writers live in `blizzard/src/blizzard/runner/store/internal/lease_liveness_store.py`; their arguments permit null
-metadata, and the current launch callers do not supply a host settings revision. Old spawn rows may lack those fields
-and use the existing fallback. Identity is retained while settings or settings-change history remain; the per-runner
-reset above copies the identity and scoped settings/history into the archive before removing live rows.
+`blizzard/src/blizzard/runner/store/internal/settings_store.py`, and the host's through
+`blizzard/src/blizzard/runner/store/internal/host_settings_store.py`, serialized on its single `host_settings` row; seed
+writes use the same atomic record machinery. A crash commits the whole change or none, and a repeated seed does not
+overwrite a stored entry or unset. These are **no-window** writes, not an armed crash proof. Fresh launches put the host
+and runner settings revisions and transcript root in the `record_provisional_spawn` transaction with the provisional
+process and spawn row; `record_identified_spawn` later fills its session identity. Resumes put them in the
+`record_spawn` transaction with the identified spawn row. Both writers live in
+`blizzard/src/blizzard/runner/store/internal/lease_liveness_store.py`; their arguments permit null metadata. Old spawn
+rows may lack those fields and use the existing fallback. Identity is retained while settings or settings-change history
+remain; the per-runner reset above copies the identity and scoped settings/history into the archive before removing live
+rows.
