@@ -10,12 +10,12 @@ the appropriate client rather than bypassing it.
 
 ## Why
 
-Clients supply the tenant or authentication appropriate to their surface and consistent response failure diagnostics.
+Clients supply tenant headers, authentication and response failure diagnostics consistently across shared hubs.
 
 ## Detect
 
-`tests/eslint.config.mjs` rejects `fetch` and Playwright's built-in `request` fixture in specs; a literal daemon URL or
-another direct request context is a reviewable signature that lint alone does not cover.
+`tests/eslint.config.mjs` rejects `fetch` in specs; a literal daemon URL or direct request context is a reviewable
+signature that lint alone does not cover.
 
 ## Do
 
@@ -29,45 +29,38 @@ Assemble `http://localhost:${port}/api/...` in a spec.
 
 ## The hub world's clients
 
-The `federation` client simulates a browser's sign-in bounce from a runner host to the hub and back, holding the
+The `federation` client drives a sign-in bounce from a browser at a runner host to the hub and back, holding the
 runner's cookies and the hub's in separate contexts, since both answer on `127.0.0.1` and cookies ignore the port. To
-act as a specific person, use `user.api`, a person's `api` from `people`, or pass `{ as: person }` to `cli` or
-`events.open`. The CLI logs the person in under their own config home; the stream carries their session cookie instead
-of the default superuser session and still names the fixture's tenant. A call made as a worker carries the credential
-[`./surfaces.md`](./surfaces.md) §A worker's credential names.
+act as anyone but the tenant's admin, use `user.api`, a person's `api` from `people`, or the `as:` option of `cli` and
+`events.open`; a call made as a worker carries the credential [`./surfaces.md`](./surfaces.md) §A worker's credential
+names.
 
 ## A runner host's handle
 
 Beyond its clients, a `runnerHost` carries:
 
 - `cli(args)` — runs the real `blizzard-runner` on its directory; a non-zero exit is a result, not a throw.
-- `await reconfigure(overlay)` — writes live per-runner pass/session settings over the running host API; boot edits
-  require a stopped host and restart. Use the pre-start profile for initial authored values.
-- `clearHubTokens`, `renameRunner` and `removeStore` — edit its stopped directory, never a file by hand.
-- The `runnerOtlp` option and `host.otlp` — the option supplies a test-owned sink as the host's telemetry endpoint;
-  tracing still requires configuration. `spans()` returns decoded spans, including attributes, scope and resource;
-  `sumPoints()` and `logRecords()` return only each item's attributes and resource, not its value or log body.
+- `reconfigure`, `clearHubTokens`, `renameRunner` and `removeStore` — edit its stopped directory, never a file by hand.
+- The `runnerOtlp` option and `host.otlp` — the option exports its telemetry to a test-owned sink, and `host.otlp` reads
+  its spans, sum data points, and log records.
 - `socketApi` — answers its shared routes (`health`, `exportTelemetry`) over its Unix socket as well, so a spec loops
   over both transports without importing `node:http` or `node:net`.
 - The `runnerWinterTrap` option and `winterInvoked()` — the option puts a `winter` that records its invocation first on
   every host's `PATH`, a `runnerEnv.PATH` beside it refused, and `winterInvoked()` reports it.
-- `mockSessions()` and `opencodeExports()` — read JSON documents from the fixture-minted workspace's
-  `.blizzard-mock-harness/sessions` and the fixture-minted transcripts directory's `mock-opencode`, respectively. These
-  readers keep those locations even if configuration or environment overrides direct the mocks elsewhere.
-- A runner's client — names routes such as `leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`, `dashboard`,
-  and `heartbeat`. It also exposes `raw`, but a spec adds a missing route to the client instead of using that escape
-  hatch.
+- `mockSessions()` and `opencodeExports()` — read what the mock fleet wrote into the world the fixture minted: the mock
+  harness's session records in the workspace, and the `mock-opencode` export documents under the host's own transcripts
+  root.
+- A runner's client — names each route a spec reads (`leases`, `leaseUsage`, `leaseTranscript`, `transcriptSegments`,
+  `dashboard`, `heartbeat`), so a spec reaches no route through `raw`.
 
 ## Origins, and what a worker pushed
 
 A host reads a branch head in its world's bare origins with `originHead(repo, branch)`, so a spec proves a worker's push
 without running `git`; `originTree`, `originLog` (optionally by path) and `originFile` take that branch, or the sha
-`originHead` answers, and read the pushed tree, history and file text. A missing repo or ref returns `undefined`;
-`originFile` returns `undefined` for a path absent at the ref. `originLog` returns an empty array when no reachable
-commit touched the path, but can return history for a file absent at the ref. The `runnerOnForge` option names forge
-repositories made before the host is, and `${forgeOrigins}` in `runnerConfig` is the directory of the forge's bare
-repositories, `<owner>/<name>.git` below it. The option creates the repositories; the host profile must select their
-origins for the worker's pushes to land on that forge.
+`originHead` answers, and read the pushed tree, history and file text, each `undefined` for a repo, ref or path that is
+not there. The `runnerOnForge` option names forge repositories made before the host is, and `${forgeOrigins}` in
+`runnerConfig` is the directory of the forge's bare repositories, `<owner>/<name>.git` below it, so a host whose
+repository is the forge's own lands what a worker pushes.
 
 A fleet test that drives delivery passes its `repository()` result to
 `runnerHosts.create({ runnerRepositories: { [repo.name]: repo.origin! } })` before minting the graph: the host then
@@ -83,7 +76,7 @@ format `egress.format` names (NDJSON by default), through the `egress` fixture:
 
 - `query` and `recipe` — run the docs' own DuckDB load and the dictionary's views once a manifest names the dataset:
   `steps` and `invocations` through `<dataset>_newest`, `events` through `events_current` and `events_by_version`.
-- `exports(dataset)` — asks once whether a manifest names a file of the dataset.
+- `exports(dataset)` — asks once whether a manifest names the dataset.
 - `rowTexts(dataset)` and `documents()` — render every copy of every row as text, and give the text of the manifests and
   schemas, so a scan that a value never left needs no file read of its own.
 - `copies` — renders every copy of every `steps` or `invocations` row in the shape both formats share, so a test picks

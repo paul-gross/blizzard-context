@@ -1,24 +1,22 @@
 # Operational visibility (`bzh:operational-event-log`)
 
 Operational visibility is two operator-visible feeds over the same facts, read side by side: the **event log**, carrying
-operationally significant occurrences, and the **activity feed** of everything recent — situational awareness rather
+only the failures a human must act on, and the **activity feed** of everything recent — situational awareness rather
 than triage. Both read newest first. This file states the event kinds and how they surface, and is part of the domain
 model at [./index.md](./index.md).
 
 ## The event log
 
-The log is the hub's durable, append-only, typed record of operationally-significant tenant occurrences — including
-failures, recoveries, and significant non-failure occurrences such as landings and abandoned attempts, not a mirror of
-every state delta. The hub owns the log, recording each event and re-broadcasting it live; a failure the runner detects
-reaches it as a durable fact the runner reports. The event kind vocabulary below also includes fact-egress kinds; the
-hub records its own fact-egress occurrences only in its own log, never in a tenant's.
+The log is the hub's durable, append-only, typed record of operationally-significant runner and worker failures — the
+subset an operator must act on, not a mirror of every state delta. The hub owns the log, recording each event and
+re-broadcasting it live; a failure the runner detects reaches it as a durable fact the runner reports.
 
 Each event carries a severity (`info` | `warning` | `critical`), a noun-verb kind name, the runner/chunk/lease/node it
-concerns where present, a human-legible message, and an open detail payload. An event naming a chunk links back to it.
-The log reads newest first across every severity, each row keeping its severity, and is filterable by severity, runner,
-or chunk.
+concerns where present, a human-legible message, and an open detail payload. Each event links back to its chunk. The log
+reads newest first across every severity, each row keeping its severity, and is filterable by severity, runner, or
+chunk.
 
-Both logs' vocabularies are closed: the hub refuses an `event.recorded` fact whose kind is not in §Event kinds, or whose
+Both vocabularies are closed: the hub refuses an `event.recorded` fact whose kind is not in §Event kinds, or whose
 severity is not the one that kind declares. It also refuses an `event.recorded` fact of a kind the log only projects —
 `needs-human` is projected from open escalations, never recorded.
 
@@ -90,13 +88,13 @@ A deliberately deferred failure — a runner that told its operator it will star
 
 ### The hub's own log
 
-The event log above is a tenant's: every event in it concerns that tenant. The hub keeps a second log of its own
-occurrences, which concern no tenant, and only hub administrators read it ([./tenancy.md](./tenancy.md)). An occurrence
-is recorded in one log or the other, never both. The hub's own log takes the same shape — severity, kind, message,
-detail — reads newest first, and has its own closed vocabulary:
+The event log above is a tenant's: every event in it concerns that tenant's runners and chunks. The hub keeps a second
+log of its own occurrences, which concern no tenant, and only hub administrators read it ([./tenancy.md](./tenancy.md)).
+An occurrence is recorded in one log or the other, never both. The hub's own log takes the same shape — severity, kind,
+message, detail — reads newest first, and has its own closed vocabulary:
 
-- the eight trace-export and fact-egress kinds above, each at the severity it carries there, for the hub's own exports —
-  a runner's own trace export still reports into its tenant's log; fact-egress occurrences belong only to the hub's log;
+- the eight trace-export and fact-egress kinds above, each at the severity it carries there, when the export failing,
+  recovering, skipping, or reset is the hub's own — a runner's own trace export still reports into its tenant's log;
 - `hub-started` (`info`) — the hub started and reached its store, naming its version and the store's revision;
 - `hub-migrated` (`info`) — the hub moved its store between schema revisions, in either direction, by `migrate` or
   `init`, naming both (`none` for a store just created); a downgrade below the hub log's own revision is not recorded;

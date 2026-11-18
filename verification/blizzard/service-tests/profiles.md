@@ -22,9 +22,8 @@ or `service/fleet/`.
 ## Do
 
 Put a hub-wide variant in its own profile, or request a one-off case with
-`test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people uses the `auth` profile or a fresh
-hub with authentication enabled in `hubConfig`. A test whose subject is the login throttle takes a `fresh-hub` and
-enables the throttle in `hubConfig`, since the `auth` profile disables it.
+`test.use({ isolation: 'fresh-hub', hubConfig, hubEnv })`. A test that needs people belongs under the `auth` profile; a
+test whose subject is the login throttle takes a `fresh-hub` with the throttle left on.
 
 ## Don't
 
@@ -46,12 +45,11 @@ test's `hubEnv` cannot name either variable.
 
 ## Harnesses, bundles, and stubs
 
-A harness a spec runs on is enabled through `test.use({ runnerConfig })`, for example `runner[].opencode` with
-`${mockBin}/mock-opencode` or `${mockOpencode2}`, never in a `runner.toml`, which binds every spec in its folder. The
-host holds a synthetic OpenCode login at its private data home, as it holds a Claude one. A spec that moves a runner
-between OpenCode releases names `${opencode}` as `runner[].opencode.binary` in place of `${mockBin}/mock-opencode`: a
-host-owned path holding the `runnerOpencode` release when the host is built — set this `RunnerHostOptions` field through
-`runnerHosts.create({ runnerOpencode })`, not `test.use`. It is `1` by default for OpenCode 1, or a version the
+A harness a spec runs on is enabled through `test.use({ runnerConfig })`, as `runner[].opencode` with
+`${mockBin}/mock-opencode`, never in a `runner.toml`, which binds every spec in its folder. The host always holds a
+synthetic OpenCode login at its private data home, as it holds a Claude one. A spec that moves a runner between OpenCode
+releases names `${opencode}` as `runner[].opencode.binary` in place of `${mockBin}/mock-opencode`: a host-owned path
+holding the `runnerOpencode` release when the host is built — `1`, the default, for OpenCode 1, or a version the
 engine-backed OpenCode 2 mock reports — which `runnerHost.installOpencode()` replaces in place, as an operator's upgrade
 does. A published harness bundle is given with the `runnerBundle` option, whose files the fixture writes into a
 test-owned directory before the host boots and which a profile names as `${bundle}`, as in
@@ -83,8 +81,7 @@ only before boot or after stop, by the table and column names `contracts/store/r
 ## Subscription samples
 
 A runner spec produces a subscription sample through the vendor counterpart, never a store write: set what the
-credential reports on `vendorUsage` using `resetsAt` in Unix seconds, `stepHost()`, then read the recorded sample off
-`GET /api/host/subscriptions`, whose windows carry `resets_at` as a timestamp string. Mint one credential per
-subscription so the counterpart can move one without the other, and take a held window's label from that sampled read,
-never a literal. A usage-limited worker's named reset places its mark in a window only when it and a sampled `resets_at`
-fall in the same minute, so sample first and seed the limited chunk after.
+credential reports on `vendorUsage`, `stepHost()`, then read the recorded sample off `GET /api/host/subscriptions`. Mint
+one credential per subscription so the counterpart can move one without the other, and take a held window's label from
+that sampled read, never a literal. A usage-limited worker's named reset places its mark in a window only when it
+matches a sampled `resetsAt` to the minute, so sample first and seed the limited chunk after.

@@ -84,11 +84,10 @@ cannot widen the scope it was given (`bzh:controller-read-only`). Repository Pro
 
 **Scope.** The scope is the tenant and nothing narrower: a project filter is an ordinary argument of the read that
 applies it, never part of the scope. Services are built from one tenant's `TenantStores`, never from the unscoped core
-(`bzh:dependency-injection`). An ordinary write on a closed tenant's scope is refused inside its own transaction, on
-SQLite and Postgres alike, so a writer that opened its stores before the close cannot write behind the drain: it locks
-the tenant's row, then reads the deletion fact in a statement of its own, so a write that waited on a concurrent close
-sees that close's commit. Teardown instead locks the underway deletion and removes the closed tenant's rows through
-`ScopedConnections.teardown`.
+(`bzh:dependency-injection`). A write on a closed tenant's scope is refused inside its own transaction, on SQLite and
+Postgres alike, so a writer that opened its stores before the close cannot write behind the drain: it locks the tenant's
+row, then reads the deletion fact in a statement of its own, so a write that waited on a concurrent close sees that
+close's commit.
 
 For the opener and locked-scope obligations of a domain unit of work, see `bzh:short-locked-unit`
 ([../repository-access.md](../repository-access.md)).
@@ -133,17 +132,17 @@ a connection it marks hub-scoped itself, and it never holds `HubScopedReads`.
 
 - resolving a credential to its tenant — a runner's or a host's bearer token, a runner id at sign-in, an invitation
   token, a hub-executed node's marker — each returning the tenant beside its principal;
-- a sweep's corpus read (`bzh:sweep-acts-in-row-tenant`);
+- a sweep's corpus read (`bzh:sweep-acts-in-row-tenant`), and the status reads of the hub's exports, whose cursors every
+  tenant's rows share;
 - tenant administration — whether a tenant is open, and the open tenants with their names.
 
-The readers built on `AllTenantStatements` (`bzh:sweep-acts-in-row-tenant`) include credential and invitation
-resolution, probe signatures, and tenant administration.
+The export-status reads (trace export's and fact egress's newest-cursor reads) are members of the second kind, and the
+readers built on `AllTenantStatements` (`bzh:sweep-acts-in-row-tenant`) are members of the first and third.
 
 A read of a global table is an ordinary hub-level read, not a member: memberships and hub administrators are global
 (`bzh:global-tables-closed`), so listing a person's tenants or the hub administrators reads through the identity
-repositories the hub-level services hold. The exports' newest-cursor reads use the global `trace_cursor` and
-`egress_cursor` tables through their own stores, not `HubScopedReads`. Tenant deletion's own reads are hub-level the
-same way: the deletions a teardown has yet to finish are read from `tenant_deletions` on the hub-level connections
+repositories the hub-level services hold. Tenant deletion's own reads are hub-level the same way: the deletions a
+teardown has yet to finish are read from `tenant_deletions` on the hub-level connections
 (`TenantTeardownStore.underway`), not through the seam. A write never goes through it; a pass that must write across
 tenants loops over open tenants and writes through each one's own stores.
 
@@ -165,8 +164,8 @@ tenants, and the member would be a standing cross-tenant read with no reason to 
 ## Uniqueness a tenant can observe is per tenant (`bzh:tenant-scoped-uniqueness`)
 
 **Rule.** Every primary key, unique constraint, and unique index on a tenant-owned table holds `tenant_id`, or holds a
-hub-unique column: a hub-minted id the schema marks `info={"hub_unique": True}`, an autoincrement surrogate, or a
-foreign key to either.
+column the schema marks hub-unique (`info={"hub_unique": True}`) — a hub-minted ULID or an autoincrement surrogate, the
+table's own or a foreign key to one.
 
 **Why.** A natural key a tenant chooses — a name, a slug, a work ref, an id a runner minted — is one two tenants can
 both claim; unique across the hub, the second tenant's write fails on a row it cannot see, and the failure tells it the
@@ -209,13 +208,13 @@ write nothing into any tenant's store; their rows carry their tenant's id instea
 narrowed to one tenant: it reads the same hub-scoped probe and corpus and acts only in that tenant.
 
 **Detect.** The read half: the ast-grep rule `bzh:sweep-acts-in-row-tenant`
-(`contracts/ast-grep/rules/sweep-acts-in-row-tenant.yml`, run by `blizzard:structural-gate`) refuses raw SQLAlchemy
-`select`, `exists`, `join`, `outerjoin`, `union`, and `union_all` constructors in its named cross-tenant read modules,
-and the closed-tenant component test `tests/component/hub/store/internal/test_hub_scoped_corpus.py` gives a closed
-tenant a row in every table `step_facts_for` reads and fails when any corpus read returns one. The write half has no
-structural gate: the statement guard sees a scoped write as scoped whichever tenant it was opened for. A reviewer asks
-of each write a pass makes: whose scope is this, and is it the tenant of the row being acted on? A sweep's service test
-seeds two tenants and asserts each write lands in its row's tenant.
+(`contracts/ast-grep/rules/sweep-acts-in-row-tenant.yml`, run by `blizzard:structural-gate`) refuses a raw SQLAlchemy
+`select`, `exists`, `join`, or `union` constructor in the hub-scoped read modules that is not reached through one of the
+two builders, and the closed-tenant component test `tests/component/hub/store/internal/test_hub_scoped_corpus.py` gives
+a closed tenant a row in every table `step_facts_for` reads and fails when any corpus read returns one. The write half
+has no structural gate: the statement guard sees a scoped write as scoped whichever tenant it was opened for. A reviewer
+asks of each write a pass makes: whose scope is this, and is it the tenant of the row being acted on? A sweep's service
+test seeds two tenants and asserts each write lands in its row's tenant.
 
 **Do.** The close drain reads every pending close across open tenants, then for each one opens the services of the
 tenant the close belongs to and issues the close through that tenant's work-source client and event log.
