@@ -53,13 +53,13 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   strip past the viewport — each filter's chips scroll inside it instead.
 - `host-page.shell-sweep.spec.ts` covers the runner panel's host page (`/host`): a host of two runners — one halted with
   a long reason, one serving two long-named bindings and holding a chunk — two workspaces whose held environment names
-  its runner and project, and subscriptions naming their spenders. A runner row's facts sit beside its held chunks at a
-  desktop width and stack under them at 900px and below (the `@media (max-width: 900px)` collapse jsdom cannot
-  evaluate), with no horizontal overflow and every runner row and environment line inside the viewport, from 1400px down
-  to 320px. A second case serves a registration state the build's generated vocabulary does not list
-  (`bzh:frontend-open-vocabulary`): over the same widths the host title's registration badge reads the raw state, with
-  no horizontal overflow and no page error. It is proven able to fail by letting the registration lookup answer
-  `undefined` for an unknown state, the destructure that throws.
+  its runner and project, and subscriptions naming their spenders. A runner row's facts sit beside its held chunks at
+  sampled desktop widths and stack under them at sampled widths at and below 900px (the `@media (max-width: 900px)`
+  collapse jsdom cannot evaluate), with no horizontal overflow and every runner row and environment line inside the
+  viewport, from 1400px down to 320px. A second case serves a registration state the build's generated vocabulary does
+  not list (`bzh:frontend-open-vocabulary`): over the same widths the host title's registration badge reads the raw
+  state, with no horizontal overflow and no page error. It is proven able to fail by letting the registration lookup
+  answer `undefined` for an unknown state, the destructure that throws.
 - `app-panel-layout.shell-sweep.spec.ts` covers the runner's desktop board (`LocalPanelLayout`): the three lanes sit
   beside one another in the center column and the rail's hub, host and open-asks panels stack in their own fixed column
   to the right, with nothing — a long runner name, a two-workspace runner's binding lines, a long-named environment —
@@ -69,24 +69,23 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `glance-view.shell-sweep.spec.ts` covers the mobile glance board at 390px and 320px: the day's spend sits below the
   vitals strip and above its one list of cards — attention and work in flight, READY over the divider over BACKLOG, then
   completed work — which stays ordered vertically; a card's work ref and short id share its head line at opposite ends,
-  its long title clamps to two lines, its node and runner hold one meta line without running into its cost or past its
-  edge, and the board has no horizontal overflow or page error.
-- `chunk-page-layout.shell-sweep.spec.ts` covers the hub chunk detail page, reached from the mobile board — the General
-  tab, whose `@media (min-width: 720px)` grid puts work item and issues in a shared left column with node history beside
-  them, and the Transcripts tab — routed for real via `RouterTestingHarness` under a height-capped stand-in for the app
-  `.layout`, since a standalone mount cannot see these regressions. Its cases:
-  - General tab: at 390px and 320px the work-item, issues, and node-history panels must genuinely stack — distinct
-    `top`s at a common `left` — with no horizontal overflow; at 1024px node history's `left` must sit at or past the
-    work-item column's `right`, while work item and issues keep distinct `top`s in their shared column. Proven able to
-    fail by moving node history's explicit grid placement (`grid-column: 1; grid-row: 3`) into the work-item/issues
-    column.
+  its long title is at most two line-heights tall, its node and runner hold one meta line without running into its cost
+  or past its edge, and the board has no horizontal overflow or page error.
+- `chunk-page-layout.shell-sweep.spec.ts` covers the hub chunk detail page's General and Transcripts tabs, both mounted
+  standalone for layout cases, and the routed page under a height-capped stand-in for the app `.layout` for
+  composed-chain cases. Its cases:
+  - Standalone General tab: at 390px and 320px the work-item, issues, and node-history panels must genuinely stack —
+    distinct `top`s at a common `left` — with no horizontal overflow; at 1024px node history's `left` must sit at or
+    past the work-item column's `right`, while work item and issues keep distinct `top`s in their shared column. Proven
+    able to fail by moving node history's explicit grid placement (`grid-column: 1; grid-row: 3`) into the
+    work-item/issues column.
   - General tab, cost figure: at 390px, over a total and its own history step both carrying only a runner-reported
     estimate, the token breakdown's and the timeline's one combined `~$X.XX` figure must each render with no horizontal
     overflow of the tab.
-  - Transcripts-tab stacking: the tab composes `fleet-kit-master-detail`, whose nav-beside-viewer split collapses below
-    `@media (min-width: 720px)` — with one stubbed segment open at 390px, the step nav's `top` must sit above the
-    segment body's, with no horizontal overflow; proven able to fail by forcing `kit-master-detail.css`'s base `:host`
-    `flex-direction` to `row`.
+  - Standalone Transcripts-tab stacking: the tab composes `fleet-kit-master-detail`, whose nav-beside-viewer split
+    collapses below `@media (min-width: 720px)` — with one stubbed segment open at 390px, the step nav's `top` must sit
+    above the segment body's, with no horizontal overflow; proven able to fail by forcing `kit-master-detail.css`'s base
+    `:host` `flex-direction` to `row`.
   - Scroll: serves a 60-turn segment at 390×700 — the tab's box must stay bounded by the viewport, and `.tx-view` must
     genuinely scroll (`scrollTop` round-trips past 0); proven able to fail by deleting the transcripts container's
     `:host { display: contents }`, which leaves the tab's box unbounded. This case polls a bounded `pumpUntil` instead
@@ -95,9 +94,13 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   - Centering: renders the permission notice — its absolutely-centered status line must center on the tab's box, not the
     browser viewport, measured as the nearer center since the host fills the tab body; proven able to fail by deleting
     `chunk-transcripts-tab.css`'s `:host { position: relative }`.
-  - Error status: `fleet-kit-async-state`'s absolutely-centered `placement="center"` must resolve against the back row's
-    sibling rather than paint across the 44px back bar, and the issue pane's error text must stay inside its section at
-    phone widths.
+  - Routed mobile drill-down: General has no node history at phone widths; Node history, Artifacts, and Transcripts show
+    their list or detail in isolation without horizontal overflow, while desktop retains simultaneous panes.
+  - Takeover case mounts a `needs_human` chunk with a wrapped takeover command and raw resume fallback.
+    `fleet-kit-panel`'s body clips horizontally (`overflow-x: hidden`), so no takeover CSS can widen the tab; the claim
+    is the opposite — at 320px each over-wide command must be reachable by scrolling its own box (`scrollLeft`
+    round-trips past 0), or the clip amputates the string the operator must paste whole. Proven able to fail per half by
+    dropping `overflow-x: auto` from `.takeover .cmd` and `.raw-fallback .cmd`.
 - `chunk-artifacts-tab-layout.shell-sweep.spec.ts` covers the hub Artifacts tab's composed chain through a real router,
   proving the panel host's `flex: 1; min-height: 0` carries the flex chain to a definite height for the composed
   `fleet-kit-master-detail` split and an overflowing artifact nav list genuinely scrolls; proven able to fail by
@@ -119,26 +122,19 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   no page error, and a multi-paragraph ask renders on its own lines without overflowing. At 390px a running worker's
   state must render as a kit badge in `--amber`, and a chunk waiting on an ask in the ask's own tone, distinct from it.
   The desktop board is `app-panel-layout.shell-sweep.spec.ts`'s.
-- `hub-panel.shell-sweep.spec.ts` covers the runner board's hub panel rail: the link, issues and fleet rows keep a 6px
-  gap between them at phone and desktop widths.
 - `chunk-page-runner-layout.shell-sweep.spec.ts` covers the runner's chunk page (the shared fleet `ChunkPage`): at 390px
   and 320px it walks all four tabs — General, Node history, Artifacts, Transcripts — each checked for no horizontal
   overflow, exercising the General tab's `@media (min-width: 720px)` collapse and a long unbroken artifact key. Only
   General's own sections (`section-`-prefixed testids) are checked for stacking; Node history, Artifacts, and
   Transcripts — the last rendered through the shared `fleet-chunk-transcripts-container` — are each one nav-plus-viewer
-  pane rather than a stack of independent panels, so the overflow check alone stands in for that tab. Its takeover case
-  mounts a `needs_human` chunk with a wrapped takeover command and raw resume fallback. `fleet-kit-panel`'s body clips
-  horizontally (`overflow-x: hidden`), so no takeover CSS can widen the tab; the claim is the opposite — at 320px each
-  over-wide command must be reachable by scrolling its own box (`scrollLeft` round-trips past 0), or the clip amputates
-  the string the operator must paste whole. Proven able to fail per half by dropping `overflow-x: auto` from
-  `.takeover .cmd` and `.raw-fallback .cmd`.
+  pane rather than a stack of independent panels, so the overflow check alone stands in for that tab.
 - `runner-view.shell-sweep.spec.ts` covers the board rail's compact runner panel (`RunnerPanelView`): at 390px and
-  1280px each runner's name line — light, name, pause glyphs and last contact — sits above its agents bars, one per
-  binding with its name and cells on one line, inside the panel with no overflow, and a runner declaring no bindings
-  draws none. A runner both locally and hub paused must render its pause glyph in `--amber` and its stop glyph in
-  `--red`, both on the name line, and every runner's light must sit in one fixed-width column. At 390px and 320px a long
-  runner name holds to one ellipsised line beside its whole seen tag, and, where the phone's Fleet tab offers the hub
-  brake, each runner's pause/resume toggle spans the runner at a finger-sized height.
+  1280px each runner's name line — light, name, pause glyphs and last contact — sits above its agent bar, one per
+  runner, with its name and cells on one line inside the panel with no overflow. A runner both locally and hub paused
+  must render its pause glyph in `--amber` and its stop glyph in `--red`, both on the name line, and every runner's
+  light must sit in one fixed-width column. At 390px and 320px a long runner name holds to one ellipsised line beside
+  its whole seen tag, and, where the phone's Fleet tab offers the hub brake, each runner's pause/resume toggle spans the
+  runner at a finger-sized height.
 - `host-detail.shell-sweep.spec.ts` covers the host detail the phone's Fleet tab opens full-screen: at 390px and 320px
   its `@container fleet-detail` breakpoint stacks the connection facts, keeps each environment line inside its section,
   and sets each runner's facts above its held chunks, every held chunk a finger-sized link, with no horizontal overflow.
@@ -146,11 +142,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   host's detail sit side by side, the title-bar host actions are on screen and hit-testable, and the detail pane has no
   horizontal overflow; at 1024px nothing overflows horizontally. A selected host-less runner's env slot bar and
   subscription pace bars must stay inside the detail at both widths, their aging and stale "refreshed … ago" labels
-  resolving to distinct, non-body-text computed colours.
+  resolving to distinct computed colours, with aging also distinct from the root text colour.
 - `session-recovery-view.shell-sweep.spec.ts` covers `SessionRecoveryView`, which the runner app renders in place of the
-  whole panel when a federation bounce could not complete silently: at 390px and 320px its headline/detail block and
-  retry control must render with no view-wide horizontal overflow; proven able to fail by adding `white-space: nowrap`
-  to `.detail`.
+  whole panel when a federation bounce could not complete silently: at 390px and 320px the view must have no horizontal
+  overflow; proven able to fail by adding `white-space: nowrap` to `.detail`.
 - `routine-panel.shell-sweep.spec.ts` covers the gardening tab's routine panel (`FleetRoutinePanel`) — the record,
   strategy, trend, measurement, and last-swept blocks, mounted with a representative view model whose last-swept row
   carries two long per-repository revision hashes. At 1280px, 390px, and 320px every block must genuinely stack —
@@ -164,8 +159,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `canEdit` on so the description editor and the retire action both render, and with a related-routines list whose
   second entry is a long hyphenated routine name. At 1280px, 390px, and 320px the description input and the retire
   action must both be present, the panel's own `scrollWidth` must stay within its `clientWidth`, and the
-  related-routines list's must too — the long name breaks inside the list rather than widening the panel — with no page
-  error. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  related-routines list's must too, with no page error. Gardening sits in the hub's mobile bottom tab bar, so the narrow
+  widths bind (`bzh:narrow-viewport-tier-rule`).
 - `cadence-panel.shell-sweep.spec.ts` covers the gardening tab's cadence panel (`FleetCadencePanel`), stood up alone
   with `canEdit` on and a chore whose routine slug and scope list are long. At 1280px and 390px the facts, the attention
   list, and each chore must genuinely stack — distinct `top`s — with all five next moments listed, no horizontal
@@ -176,11 +171,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   `ConfigRecordPanel` and `ConfigMaster` directly with the inputs each layout receives. At 1280px the detail must carry
   its write controls and no CLI command, and the list must offer New. At 390px and 320px the detail must render none of
   Edit, Replace, Retire, or Enable and must show the `blizzard hub …` command, and the list must not offer New. At every
-  width the detail, the command, and the list must stay within their own width — a long record name wraps rather than
-  widening them — with no page error. Which layout a width gets is decided by `configActions`, which `web:unit-test`
-  covers. The phone is read-only, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`). It also mounts the secret
-  form with a multi-line PEM as its value: at 1280px, 390px, and 320px the value field must be a masked multi-line
-  control that keeps the value's line breaks, with no page error.
+  width the detail must stay within its own width; at phone widths the command and list must also stay within theirs,
+  with no page error. Which layout a width gets is decided by `configActions`, which `web:unit-test` covers. The phone
+  is read-only, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`). It also mounts the secret form with a
+  multi-line PEM as its value: at 1280px, 390px, and 320px the value field must be a masked multi-line control that
+  keeps the value's line breaks, with no page error.
 - `admin-shell.shell-sweep.spec.ts` covers Admin → Projects: the admin shell's strip is the shorter, cyan-active sub
   strip with its counts in `--snow` — Changes counted by the change log's `total` — and the projects list and the opened
   project sit in two panels with a 6px gap. On All at 1280px the first project opens beside the list; at 390px the page
@@ -216,10 +211,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `graph-diagram.shell-sweep.spec.ts` covers the graph diagram's text-measurer contract (`graph-text-measurer.ts`), with
   `GraphDiagram` mounted on its production layout and canvas measurer over two graphs written in the spec. Every node
   box's width and height, every meta line's overhang, and every edge label's background width are rebuilt from the
-  rendered SVG's own advance widths (`getComputedTextLength()`) and must match within sub-pixel slack. The spec also
-  requires a wrapped meta line, at least two boxes sized by their name row rather than their meta row, and a targeted
-  resume rendered as `resume:<node>`. Proven able to fail by changing `.node-meta`'s font size in
-  `graph-diagram-node-shape.css` without changing the measurer.
+  rendered SVG's own advance widths (`getComputedTextLength()`) and must match within 1.5px, using SVG bounding boxes
+  where applicable. The spec also requires a wrapped meta line, at least two boxes sized by their name row rather than
+  their meta row, and a targeted resume rendered as `resume:<node>`. Proven able to fail by changing `.node-meta`'s font
+  size in `graph-diagram-node-shape.css` without changing the measurer.
 - `kit-dialog.shell-sweep.spec.ts` covers `KitDialog`, the workspace's first modal shell: the scrim genuinely covers the
   full viewport (`getBoundingClientRect` against `window.inner*`, not merely the panel's own box), the panel centres
   itself (near-equal left/right gaps) and its own `.body` scrolls a tall projection while the page behind it does not
@@ -252,8 +247,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `gardening-run-dialog.shell-sweep.spec.ts` covers the gardening run dialog's own three fields, mounted directly with
   plain inputs, at the 390px and 1024px widths the dialog is reachable at: the scope field's radio rows must genuinely
   stack, the footer's Cancel/Run buttons must sit side by side with Run's own right edge staying inside the panel's, and
-  the delta baseline block's finding-set-id line must sit above its per-repo landed-since lines — real CSS layout claims
-  jsdom cannot make. The previously-swept marker renders as an uppercase `--cyan` kit label inside its option row.
+  at 1024px the delta baseline block's finding-set-id line must sit above its per-repo landed-since lines — real CSS
+  layout claims jsdom cannot make. The previously-swept marker renders as an uppercase `--cyan` kit label inside its
+  option row.
 - `garden-runs.shell-sweep.spec.ts` covers the gardening runs-and-findings tab's two presentational components, each
   mounted directly with plain inputs. `FleetRunList`'s escalated row, at 390px, must carry a genuinely different
   computed `background-color` from a normal row, while its `border-left-color` must equal the normal row's, since the
@@ -276,17 +272,15 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   inputs: at 390px and 1024px the footer's Cancel/Pass buttons must genuinely sit side by side, neither overflowing the
   dialog panel.
 - `gardening-proposal-accept-dialog.shell-sweep.spec.ts` covers the Accept dialog's own view, mounted directly with
-  plain inputs: at 390px and 1024px the mint/decline radiogroup must genuinely stack its two options, the decline reason
-  field must render below them once decline is chosen, and the footer's Cancel/Accept buttons must sit side by side,
-  neither overflowing the dialog panel.
+  plain inputs: at 390px and 1024px the mint/decline radiogroup must genuinely stack its two options, the footer's
+  Cancel/Accept buttons must sit side by side, neither overflowing the dialog panel. At 1024px the decline reason field
+  must render below the options once decline is chosen.
 - `gardening-findings-triage.shell-sweep.spec.ts` covers the findings triage list (`FleetFindingList`), mounted directly
-  with plain inputs. With every row selected through the real select-all checkbox (never by poking the component's own
-  selection signal), the bulk bar's own buttons must, at 1400px, 390px, and 320px, stay inside the viewport and never
-  overlap each other, and the list itself must carry no horizontal overflow — real CSS layout claims jsdom cannot make.
-  Separately, a `gone`-flagged row must carry a genuinely different computed `background-color` from a plain row, while
-  its `border-left-color` must equal the plain row's, since the left edge belongs to selection alone — computed-style
-  claims no viewport width changes, since jsdom would accept the `fl-body--gone` class name without ever evaluating it
-  against `finding-list.css`. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
+  with plain inputs. At 1400px, 390px, and 320px the list itself must carry no horizontal overflow. Separately, a
+  `gone`-flagged row must carry a genuinely different computed `background-color` from a plain row, while its
+  `border-left-color` must equal the plain row's, since the left edge belongs to selection alone — computed-style claims
+  no viewport width changes, since jsdom would accept the `fl-body--gone` class name without ever evaluating it against
+  `finding-list.css`. Gardening sits in the hub's mobile bottom tab bar, so the narrow widths bind
   (`bzh:narrow-viewport-tier-rule`).
 - `gardening-finding-triage-dialog.shell-sweep.spec.ts` covers the findings triage bulk-action dialog's own view,
   mounted over a real form, once per verb that carries a distinct field shape. At 1400px, 390px, and 320px the note
@@ -303,10 +297,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   card's rect, and the content's inset from the card edge must be the card's own border and padding alone — a real CSS
   cascade claim jsdom cannot make.
 - `board-card-rows.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s row order at 800px and at 390px/320px
-  (`bzh:narrow-viewport-tier-rule`): title, blocked marking, PR links, step row, and cost row stack inside the card; the
-  project's swatch leads the step row, the step stays left-aligned with the title, and the id stays in the step row,
-  clear of the step and flush right with the cost; a multi-prerequisite count stays unclipped at 320px; and a real
-  pointer reaches the PR link and the fold.
+  (`bzh:narrow-viewport-tier-rule`): title, blocked marking, PR links, cost row, and step row stack inside the card; the
+  project's color tints the card without a swatch, the step stays left-aligned with the title, and the id stays in the
+  step row, clear of the step and flush right with the cost; a multi-prerequisite count stays unclipped at 320px; and
+  `elementFromPoint` reaches the PR link and the fold. The project tint is checked at 800px and 390px.
 - `chunk-card-tone.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s and `ChunkListRow`'s status colour with the
   design tokens loaded: in every `Tone`, the left edge resolves to `toneColor`, card ids stay gold, list-row ids retain
   their tone, and a selected card's or row's edge resolves to the selection cyan.
@@ -326,17 +320,18 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   target; the grip introduces no drag handle.
 - `board-list.shell-sweep.spec.ts` covers `BoardList`'s full-width rows with reordering armed: one live, two READY, one
   BACKLOG and one DONE row, at a wide centre column and at the narrowest the desktop board renders (a 768px viewport
-  less the rail and gutters; below it the hub serves the mobile glance board). Every row and each of its cells stays
-  inside the list, each armed row's reorder grip clears its lane icon, and the READY/BACKLOG line sits between the two
-  ranked runs — layout claims jsdom cannot make. A second case seeds a row per status and holds each row's left edge to
-  its lane icon's computed color, and a selected row's edge to cyan.
+  less the rail and gutters; below it the hub serves the mobile glance board). Every row and its measured cells
+  (excluding the row-open control) stays inside the list, each armed row's reorder grip clears its lane icon, and the
+  READY/BACKLOG line sits between the two ranked runs — layout claims jsdom cannot make. A second case seeds a row per
+  status and holds each row's left edge to its lane icon's computed color, and a selected row's edge to cyan.
 - `board-shell.shell-sweep.spec.ts` covers `BoardShell`'s lane grid under a long current-node name: one running chunk
   whose node name runs to 120 characters, mounted at 1440px, must leave every lane equal-width and inside the viewport,
   with the name clipped inside its card and readable whole from the card's `title` — a layout claim jsdom cannot make,
   since it never lays out the lane grid. A second case adds a chunk whose status the build's generated vocabulary does
   not list (`bzh:frontend-open-vocabulary`), at 1440px and at the narrowest centre column the desktop board renders, as
   `board-list.shell-sweep.spec.ts` frames it: at both, the unknown lane renders headed with the raw status, every lane
-  stays equal-width inside the board and the viewport, and the chunk's card sits inside that lane.
+  stays equal-width inside the board and the viewport, and the chunk's card sits inside that lane. The viewport-right
+  assertion uses 1440px at both widths, so it does not directly establish the narrow viewport bound.
 - `step-drawer-view.shell-sweep.spec.ts` mounts `StepDrawerView` with plain inputs and a step whose executor the build's
   generated vocabulary does not list (`bzh:frontend-open-vocabulary`), at 1280px and 1024px: the `executor <raw>` label
   renders inside the Transcript section head, the transcript viewer still mounts, and neither the head nor the drawer
@@ -366,21 +361,19 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   sweeps that Pause, Detach, Complete, and Delete each stay on-viewport. Both cases assert their swept selector list
   against an exact count, so a control added to the row or the panel without being added to the list fails the fixture
   rather than passing unmeasured.
-- `chunk-delivery.shell-sweep.spec.ts` mounts the board card, detail dock, and routed General tab with both a PR and a
+- `chunk-delivery.shell-sweep.spec.ts` mounts the board, detail dock, and General tab directly with both a PR and a
   landed repository at 1280px and 390px. All outbound anchors stay within the viewport and outside the card's select
-  button, while the dock and routed tab both show the explicit human-merge wait.
+  button, while the dock and General tab both show the explicit human-merge wait.
 - `delivery-layout.shell-sweep.spec.ts` covers the real routed Delivery drawer and phone full-page composition at
   1280px, 901px, 900px, 390px, and 320px, with 16 repositories and 60 history entries inside a height-bounded app shell.
   It asserts the drawer's repository and history columns split above 900px and stack at 900px and below; the full-page
   composition stacks at every swept width. It checks horizontal bounds, the drawer's bounded height, independent column
   scroll ownership when split, and drawer-owned scrolling when stacked. After scrolling the owning pane, the final
   history entry must be fully visible inside it and the shell, with a non-zero height and a hit-testable center.
-- `machine-detail-header.shell-sweep.spec.ts` covers the machine detail dock's own header: a real pointer hover on
-  Pause/Resume must open the wired `KitTooltip` naming the claiming runner — a real CDK overlay claim jsdom cannot make
-  — and the header's two clusters (identity, actions) must never overflow with a long chunk id and runner name live at
-  once, at 390px/320px (the mobile shell `app-panel-mobile.html` mounts `app-machine-detail` inside,
-  `bzh:narrow-viewport-tier-rule`) and at a `LocalPanelLayout` desktop width. At 1024px and 390px the status label
-  renders as a kit badge in its tone's colour, the node and attempt suffix plain text after it.
+- `machine-detail-header.shell-sweep.spec.ts` covers the machine detail dock's header: clicking Pause opens a
+  confirmation dialog, and the identity and action clusters stay inside the header with a long chunk id and runner name
+  at 390px, 320px, and a `LocalPanelLayout` desktop width. At 1024px and 390px the status label renders as a kit badge
+  in its tone's colour, with node and attempt suffix plain text after it.
 - `chunk-artifact-structured.shell-sweep.spec.ts` covers the two structured readings of a garden asset artifact —
   `ChunkArtifactDelta` and `ChunkArtifactSurvey` — mounted through `ChunkArtifactBody` inside a height-capped flex
   column. Each must bound itself at the cap and scroll its own overflow (`.rd-body`'s `scrollHeight` exceeding its
@@ -397,8 +390,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline, mounted through the
   composed `FleetFindingPanel` because the timeline is never reached bare in the app: at 390px and 320px a genuinely
   unbroken long note (an ordinary-prose fixture wraps at word boundaries regardless of `overflow-wrap: anywhere` and
-  proves nothing) must wrap inside its row with no horizontal overflow — gardening sits in the hub's mobile bottom tab
-  bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
+  proves nothing) must stay in a row with no horizontal overflow (without measuring line wrapping) — gardening sits in
+  the hub's mobile bottom tab bar, so the narrow widths bind (`bzh:narrow-viewport-tier-rule`).
 - `finding-panel.shell-sweep.spec.ts` covers the finding detail panel's Summary and Note, each a `fleet-kit-prose-block`
   in its `markdown` format: at 1280px, 390px and 320px the rail and tick must sit beside both blocks, the Markdown
   paragraph's computed `white-space` must be `normal` rather than an inherited `pre-wrap`, the Summary label and the
@@ -421,13 +414,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   detail case by deleting the `.kmd-pane--hidden` rule, which leaves the inactive list pane mounted but not
   `display: none`; and a projected slot element bounded with `flex: 1; min-height: 0; overflow-y: auto` stays within its
   pane's height and scrolls itself, proven able to fail by making `.kmd-detail` `display: block`.
-- `graph-session-table.shell-sweep.spec.ts` covers `GraphSessionTable`'s columns, mounted alone at 800px — the widest
-  `graph-detail.shell-sweep.spec.ts`'s own page ever frames it at, and a page the hub's mobile bottom tab bar cannot
-  reach, so the narrow-viewport tier rule does not bind here. Every header and data cell of a session row with a
-  populated harness set must sit side by side with no column overlap and no overflow of the table's own right edge, and
-  the harness list must render inside its own column rather than being swallowed by a neighbor — a real layout claim
-  jsdom cannot make. Proven able to fail by widening the table's cell padding far enough that the row no longer fits
-  inside the table's own full width.
+- `graph-session-table.shell-sweep.spec.ts` covers `GraphSessionTable`'s columns, mounted alone at 800px, on a page the
+  hub's mobile bottom tab bar cannot reach, so the narrow-viewport tier rule does not bind here. Every header and data
+  cell of a session row with a populated harness set must sit side by side with no column overlap and no overflow of the
+  table's own right edge, and the harness list must render inside its own column rather than being swallowed by a
+  neighbor — a real layout claim jsdom cannot make. Proven able to fail by widening the table's cell padding far enough
+  that the row no longer fits inside the table's own full width.
 - `events-scroll.shell-sweep.spec.ts` covers the Events page's feed, mounted inside a bounded, clipping stand-in for the
   app shell at 1280px and 390px with more events than the viewport holds. The rows list — and only the rows list — must
   overflow its own box and scroll to the last event, proving the host chain's `min-height: 0` / `display: flex` that
@@ -450,17 +442,17 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-timeline-provenance.shell-sweep.spec.ts` covers the node-history timeline's harness-provenance badges: two
   steps recording distinct harnesses render two genuinely distinct badges beside their own usage figures, at the same
   narrow width, with no page error and no horizontal overflow. A second case, mounting both the timeline and the Node
-  history tab's Selection list over a step carrying only a runner-reported estimate, proves the estimate renders on
-  each, folded into the step's one cost figure, with no PARTIAL marker and no horizontal overflow at the same width.
+  history tab's Selection list over a step carrying only a runner-reported estimate, proves the estimate renders on the
+  timeline, folded into the step's one cost figure, with no PARTIAL marker and no horizontal overflow at the same width.
 - `chunk-timeline-forensics.shell-sweep.spec.ts` covers the node-history timeline's bounce and restart rows, mounted as
   both the timeline and the Node history tab's Selection list: at 390px and 320px a bounce carrying a long envelope and
-  a restart carrying a long operator name each render with a non-zero height, the bounce above the restart in time
-  order, with no page error and no horizontal overflow on the list or the page.
+  a restart carrying a long operator name render, the bounce with a non-zero height and above the restart in time order,
+  with no page error and no horizontal overflow on the list or the page.
 - `chunk-detail-view-provenance.shell-sweep.spec.ts` covers the runner's escalation resume box's harness-provenance
   badge: it renders beside the resume command at the runner's own narrow width, with no page error and no horizontal
   overflow.
 - `chunk-awaiting-human.shell-sweep.spec.ts` covers the Gate panel's origin line: a long runner id in "gated by runner …
-  (runner config)" wraps inside the panel at about 390px rather than forcing horizontal scroll.
+  (runner config)" renders without horizontal scroll at about 390px; actual wrapping is not measured.
 - `kit-tabs.shell-sweep.spec.ts` covers `KitTabs`' two tiers mounted together, the top strip over a `variant="sub"`
   strip: at each swept width the sub strip renders shorter than the top strip and its active tab cyan beside the top
   strip's amber, with the kit tokens injected so both strips' colours resolve to real values. The same file covers the
@@ -478,8 +470,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   current option, arrow keys then move the option without moving the grid's active cell, and a pick, Escape, or outside
   click each close the popup and return focus to the same trigger, Escape not also navigating the grid.
 - `tenant-picker.shell-sweep.spec.ts` covers the hub's tenant picker (`TenantPicker`), mounted with a short, a long, and
-  a one-letter tenant name: at 1280px, 390px, and 320px every option must share one width and left edge — the widest
-  name's, not each its own — with every option's right edge inside the viewport and no horizontal overflow of the page.
+  a one-letter tenant name: at 1280px, 390px, and 320px every option must share one width and left edge — rather than
+  each its own (the widest name is not measured) — with every option's right edge inside the viewport and no horizontal
+  overflow of the page.
 - `chip-pointer.shell-sweep.spec.ts` covers real pointer selection in the project color picker after a custom color and
   repeated clicks on an enabled `KitChips` option, asserting one choice per click.
 - `projects-table.shell-sweep.spec.ts` covers the admin projects table, mounted with a project whose name, slug, and
@@ -492,12 +485,12 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   scroll. It also shows the Color fact with its swatch, and the color picker dialog's palette chips wrapping inside the
   dialog.
 - `gardening-doorway.shell-sweep.spec.ts` covers the gardening doorway's project cards: at 1280px, 390px, and 320px the
-  cards reflow with no horizontal overflow, a long project name or routine list wraps inside its card rather than
-  widening it, and every card's way in stays inside the viewport.
+  card counts and the absence of horizontal overflow are checked, and every card's way in stays inside the viewport;
+  wrapping of long names and routine lists is not measured.
 - `project-lens-control.shell-sweep.spec.ts` covers the project lens in two places. In the hub's view-tab row, a tenant
-  with more long-named projects than the row has room for keeps the row inside the viewport at every desktop width from
-  1400px down to 700px — the chips scroll inside the control — with every route tab and the lens's marked choice on
-  screen and hit-testable. In the mobile titlebar under a lens, at every phone width from 430px down to 320px, a long
-  tenant name and a long project name both truncate inside the bar, the project's name keeping a visible share, with the
-  live dot and the menu on screen and hit-testable. At 390px each project chip carries its project's swatch, and the All
-  chip carries none.
+  with more long-named projects than the row has room for keeps the row inside the viewport at sampled desktop widths
+  1400px, 1280px, 1150px, 1000px, 900px, 800px, 768px, and 700px — the chips scroll inside the control — with route tabs
+  on screen and hit-testable and the lens's choice marked selected. In the mobile titlebar under a lens, at 430px,
+  390px, 360px, and 320px, a long tenant name and a long project name both truncate inside the bar, the project's name
+  keeping a visible share, with the live dot and the menu on screen and hit-testable. Outside the width loops each
+  project chip carries its project's swatch, and the All chip carries none.
