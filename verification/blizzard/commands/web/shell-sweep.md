@@ -188,7 +188,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `members-table.shell-sweep.spec.ts` covers the members page's table (`MembersTable`), mounted directly with a member
   whose name and email are one long unbroken string. At 360px, 768px, and 1280px the page never scrolls sideways and the
   panel stays inside the viewport; at 360px the table is wider than the phone, so it scrolls inside its own panel, and
-  the revoke control can still be scrolled into view there — with no page error at any width.
+  the revoke control can still be scrolled into view there — with no page error at any width. The same file covers the
+  table's keyboard model in real Chromium, mounted with a self row (static role text, no revoke), an assignable row, and
+  a pending row: the table is one Tab stop; the arrow keys reach the role select and the revoke button and pass over the
+  pending row's disabled controls and every empty revoke cell; choosing a role by keyboard emits `changeRole` once with
+  the chosen role; and Enter or Space on revoke emits `revoke` once.
 - `gardening-routines-page.shell-sweep.spec.ts` covers the container's `.gr-layout` list-beside-panel split — its
   `fleet-kit-master-detail` host — which `routine-panel.shell-sweep.spec.ts` never mounts since it stands
   `FleetRoutinePanel` up alone. At 1280px the list and panel must sit side by side; at 740px, 700px, 390px, and 320px
@@ -455,6 +459,16 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   keyboard model of a `KitTabGroup` holding a strip and its panels in real Chromium: Tab from a prior focusable lands on
   the selected tab and the next Tab leaves the strip, Left/Right/Home/End move focus and selection with `activeChange`
   following, and only the matching panel is visible with its content instantiated.
+- `kit-accordion-section.shell-sweep.spec.ts` covers the kit accordion group's keyboard model in real Chromium: Tab
+  reaches a header, Up/Down/Home/End move between headers, Enter and Space toggle with the panel's computed display
+  following, a soft-disabled header is reached but stays shut, and each trigger is paired with its panel.
+- `kit-grid.shell-sweep.spec.ts` covers the kit grid bridge's keyboard model in real Chromium, driving the same fixture
+  the `Kit/Grid` stories render: two rows of text cells, an enabled and a disabled select, and an enabled and a disabled
+  button. A Tab from a prior focusable enters the grid once and the next Tab leaves it; arrow keys move between text
+  cells and native controls, landing focus on the native `<button>` and skipping disabled cells; one Enter or one Space
+  on an enabled button is exactly one click; Enter and Space on a select each open its popup once with focus on the
+  current option, arrow keys then move the option without moving the grid's active cell, and a pick, Escape, or outside
+  click each close the popup and return focus to the same trigger, Escape not also navigating the grid.
 - `tenant-picker.shell-sweep.spec.ts` covers the hub's tenant picker (`TenantPicker`), mounted with a short, a long, and
   a one-letter tenant name: at 1280px, 390px, and 320px every option must share one width and left edge — the widest
   name's, not each its own — with every option's right edge inside the viewport and no horizontal overflow of the page.
