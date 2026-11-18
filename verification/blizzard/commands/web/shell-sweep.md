@@ -294,8 +294,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   card carrying its completion stamp and its one combined cost figure, billed, estimated, and partial at once. At 800px
   and at 390px/320px (`bzh:narrow-viewport-tier-rule`) the two must sit side by side on one line, neither overlapping
   the other and neither overflowing the card — a real CSS layout claim jsdom cannot make.
-- `board-card-selected.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s selected state through the kit select row's
-  `bare` mode. At 800px and at 390px/320px (`bzh:narrow-viewport-tier-rule`) a selected card's inner button must carry a
+- `board-card-selected.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s selected state through the kit card-open
+  part. At 800px and at 390px/320px (`bzh:narrow-viewport-tier-rule`) a selected card's inner button must carry a
   transparent background and no border while the outer card holds the cyan left edge, the PR links must sit inside the
   card's rect, and the content's inset from the card edge must be the card's own border and padding alone — a real CSS
   cascade claim jsdom cannot make.
@@ -307,11 +307,16 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `chunk-card-tone.shell-sweep.spec.ts` covers the fleet `ChunkCard`'s and `ChunkListRow`'s status colour with the
   design tokens loaded: in every `Tone`, the left edge resolves to `toneColor`, card ids stay gold, list-row ids retain
   their tone, and a selected card's or row's edge resolves to the selection cyan.
-- `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out at 800px and at
-  390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding, bottom hairline, left edge and
-  `--surface-selected` background, while `bare` draws no padding, border or background selected or hovered, and a flex
-  rule on the host lays the projected children on one line with the host's gap. Proven able to fail by deleting the bare
-  rule's layout inheritance.
+- `kit-select-list.shell-sweep.spec.ts` covers `fleetKitSelectList` with 40 rows in a height-capped scroller in real
+  Chromium. Tab from the element before the list lands on the selected row and the next Tab leaves it. Up, Down, Home,
+  End and type-ahead move focus without emitting, and End scrolls the last row into view. Enter emits the active row. An
+  outside value change moves the Tab stop and leaves `scrollTop` and the focused element unchanged, and a pointer click
+  emits and moves the active row. Proven able to fail by reverting the Tab-stop move on an outside value change.
+- `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out, drawn on the row's
+  inner element, at 800px and at 390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding,
+  bottom hairline, left edge and `--surface-selected` background, while `bare` draws no padding, border or background
+  selected or hovered, and a flex rule on the host lays the projected children on one line with the host's gap. Proven
+  able to fail by deleting the bare rule's layout inheritance.
 - `board-column.shell-sweep.spec.ts` covers `BoardColumn`'s decorative reorder grip: READY and BACKLOG each render a
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
@@ -381,11 +386,11 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   disclosure shell actually resolves. Both shapes are swept, never one: they render in the same slot, and a sizing rule
   naming only one of them is exactly the defect this catches. Proven able to fail by dropping either host tag from
   `chunk-artifact-body.css`'s shared sizing rule.
-- `graph-explorer-list.shell-sweep.spec.ts` covers the explorer's two row levels, built on `KitSelectRow`, with the
-  first lineage genuinely expanded so the nested level lays out. At 520px, 390px, and 320px a long graph name, its
-  version count, its right-anchored short id, the version badge, and the retired filter chip must all stay inside the
-  list's own right edge — a real layout claim, since both levels render their content projected into another component's
-  button rather than into a box this stylesheet owns.
+- `graph-explorer-list.shell-sweep.spec.ts` covers the explorer's two row levels, built on `KitSelectRow` in one
+  `fleetKitSelectList`, with the first lineage genuinely expanded so the nested level lays out. At 520px, 390px, and
+  320px a long graph name, its version count, its right-anchored short id, the version badge, and the retired filter
+  chip must all stay inside the list's own right edge — a real layout claim, since both levels render their content
+  projected into another component's row rather than into a box this stylesheet owns.
 - `finding-fact-timeline.shell-sweep.spec.ts` covers the finding detail panel's fact-chain timeline, mounted through the
   composed `FleetFindingPanel` because the timeline is never reached bare in the app: at 390px and 320px a genuinely
   unbroken long note (an ordinary-prose fixture wraps at word boundaries regardless of `overflow-wrap: anywhere` and
