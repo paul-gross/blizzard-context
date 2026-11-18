@@ -48,8 +48,9 @@ whose only race is a duplicate key is no decision here (`bzh:store-exclusive-wri
 a stop committing between the check and the append is silently outlived.
 
 **See also.** `blizzard/exemplars/python/exemplar/hub/domain/permits/service.py`
-([../../exemplars/index.md](../../exemplars/index.md)) — compare-and-set as reference code: each verb decides on the
-permit it was handed and writes at that permit's revision, refusing `PermitChanged` with `409`.
+([../../exemplars/index.md](../../exemplars/index.md)) — compare-and-set as reference code: grant, suspend, resume, and
+revoke decide on the permit handed to them and write at its revision, refusing `PermitChanged` with `409`; request
+creates a new permit.
 
 ## The store refuses stale writes, never disallowed ones (`bzh:store-refuses-stale`)
 
@@ -81,16 +82,16 @@ alone, raising `PermitChanged`, and judges no permit state.
 
 ## An exactly-one-wins decision locks its row before it reads (`bzh:store-exclusive-write`)
 
-**Rule.** A decision the hub commits to exactly once — a claim, or any write another such decision's guard reads consult
-— runs in one write transaction that locks a row before every decision guard read on that same connection. After the
-tenant-row opener, a known row is locked by a no-op update; a keyed lock may first select and conditionally insert its
-lock row under a savepoint before the no-op update. None of these acquisition reads is a decision guard read. A read
-that gates admission independently of the race itself (a paused runner, checked once before the lock opens) or that
-resolves a different aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs:
-nothing about the exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the
-lock, without reopening anything the lock closes. The scoped write's own opening lock on its tenant's row
-(`bzh:tenant-scoped-store`) precedes decision-lock acquisition; every write on a tenant's stores issues it first — save
-the one that creates the tenant, which inserts that row instead.
+**Rule.** A decision the hub commits to exactly once — a claim, or any write another such decision's guard reads — runs
+in one write transaction that locks a row before every decision guard read on that same connection. After the tenant-row
+opener, a known row is locked by a no-op update; a keyed lock may first select and conditionally insert its lock row
+under a savepoint before the no-op update. None of these acquisition reads is a decision guard read. A read that gates
+admission independently of the race itself (a paused runner, checked once before the lock opens) or that resolves a
+different aggregate this lock does not cover (a graph's retirement) is not a guard read this rule governs: nothing about
+the exactly-one-wins race depends on when it runs, so it may stay on its own connection, ahead of the lock, without
+reopening anything the lock closes. The scoped write's own opening lock on its tenant's row (`bzh:tenant-scoped-store`)
+precedes decision-lock acquisition and reads deletion state after locking the tenant row. The write that creates the
+tenant inserts that row instead; teardown locks the tenant's deletion row instead.
 
 **Why.** An in-process lock only serializes callers inside one process; the moment a second hub process shares the
 store, two processes' own locks stop serializing each other, and the transaction is the only thing both still share.
@@ -102,32 +103,41 @@ stop, complete, detach, and requeue — and the epoch-fenced writes (`bzh:epoch-
 against stop and restart. It also governs the route-token rekey, whose holder and ended-chunk guards are re-read under
 the chunk's lock, and three decisions whose guard reads facts the write itself creates: chunk ingest's pointer-held
 refusal, the default graph's first mint, and promote's promotability judgment. It governs the secret-retire /
-referrer-write pair too: a secret's retire reads that no active work source or repository references it, and each such
-record's create, edit, or enable reads that its secret is not retired, so the domain unit of each declares the secret's
-`SECRET` key before it reads. The forge-retire / referrer-write pair beside it does the same on the forge's `FORGE` key:
-a forge's retire reads that no enabled record names it, and each referrer's write reads that its forge is live. The
-credential-retire / referrer-write pair does the same on the credential's `CREDENTIAL` key (`credential_lock`): a
-credential's retire reads that no enabled record names it, and each referrer's write reads that its credential is live.
-Three more keyed namespaces guard closure judgments. A garden proposal's edit, attach, detach, pass, and accept each
-declare its `GARDEN_PROPOSAL` key (`garden_proposal_lock`) and re-read its closure under it; the minting accept declares
-that key beside the item mint's own keys in one unit. Garden delivery declares the plan's chunk and the `FINDING` key
+referrer-write pair too: a secret's retire reads that no active credential, work source, or repository references it,
+and a referrer's create, edit, or enable checks the secret's lifecycle as applicable, so the domain unit declares the
+secret's `SECRET` key before its guard reads. The forge-retire / referrer-write pair beside it does the same on the
+forge's `FORGE` key: a forge's retire reads that no enabled record names it. A referrer's retire skips reference checks;
+its other writes require the forge to exist and, when the referrer is enabled or being enabled, to be live. An edit of a
+retired referrer can keep its retired forge. The credential-retire / referrer-write pair does the same on the
+credential's `CREDENTIAL` key (`credential_lock`): a credential's retire reads that no enabled record names it. A
+referrer's retire skips reference checks; its other writes require any named credential to exist and, when the referrer
+is enabled or being enabled, to be live. A retired referrer can retain a retired credential. Three more keyed namespaces
+guard closure judgments. A garden proposal's edit, attach, detach, pass, and accept each declare its `GARDEN_PROPOSAL`
+key (`garden_proposal_lock`). Edit, attach, detach, pass, and non-minting accept re-read its closure in domain code
+under that key. Minting accept reads the closure before locking, then declares that key beside the item mint's own keys
+in one unit; its insert-if-absent checks for an existing closure under the lock and the service maps a losing insert to
+an already-closed refusal before minting. This path does not re-read the closure in domain code before deciding, and
+remains debt against `bzh:write-reestablishes-read`. Garden delivery declares the plan's chunk and the `FINDING` key
 (`finding_lock`) of every finding it expects, and the finding exit declares the `FINDING` keys of every finding it
-records facts for. A work item's edit, withdraw, and deliver each declare its `WORK_ITEM` key (`work_item_lock`) and
+writes or expects. A work item's edit, withdraw, and deliver each declare its `WORK_ITEM` key (`work_item_lock`) and
 re-read the item's closure under it. The chunk delete pre-reads the chunk's hub-source refs, declares the chunk and
 those refs' `WORK_ITEM` keys, and re-reads the record under them; a ref outside the declared keys ends the run before
-any write, and the delete runs again over the union. Each of these stores' writes takes the `LockedTransaction` and
-judges no closure itself. The flow pair is governed too: a turn's admission and a submission's close read their flows'
-open turns and the queue ahead, so their unit declares the submission's chunk and a `FLOW` key per flow it holds; a
-stop, completion, or restart reads its chunk's waiting submissions under the chunk lock, which a turn also declares. A
-macro-shape constraint on deployment topology, on what holds once more than one hub process may share a store — not a
-`kill -9` crash-correctness requirement; one hub process already serializes every one of these correctly today. The
-tenant-row lock ahead of the decision's lock changes neither guarantee: on SQLite it already took the writer lock, and
-on Postgres every writer takes the tenant row first and its chunk or keyed rows after, so the order two writers lock in
-never inverts. Dependency **release** needs no row lock for cycle safety: it can only shrink the standing set and can
-never close a cycle. Its ordering against a fold's edge rewrite still depends on the residual per-tenant lock in
-[Known debt](#known-debt). A create whose only race is a duplicate of a tenant-chosen name is no decision under this
-rule: the table's tenant-led primary key or unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one
-insert, and the store maps the losing insert's `IntegrityError` to the named conflict — `SecretStore.create`
+any write, and the delete runs again over the union. These stores' writes take the `LockedTransaction`; finding writes
+compare expected derived state under the lock, while closure decisions remain in domain code. The flow pair is governed
+too: a turn's admission and a submission's close read their flows' open turns and the queue ahead, so their unit
+declares the submission's chunk and a `FLOW` key per flow it holds; a stop, completion, or restart reads its chunk's
+waiting submissions under the chunk lock, which a turn also declares. A macro-shape constraint on deployment topology,
+on what holds once more than one hub process may share a store — not a `kill -9` crash-correctness requirement; one hub
+process already serializes every one of these correctly today. The tenant-row lock ahead of the decision's lock changes
+neither guarantee: on SQLite it already took the writer lock, and on Postgres every writer takes the tenant row first
+and its chunk or keyed rows after, so the order two writers lock in never inverts. Dependency declare, group, delete,
+and release declare the tenant's fixed `DEPENDENCIES_LOCK` key in their unit before reading or changing standing edges.
+Declare and group serialize the tenant-wide cycle judgment, including disjoint chunk sets; release and delete serialize
+with a fold's edge rewrite so it cannot remint an edge they released. Delete and declare also declare their chunk rows,
+and delete declares its work-item keys, in canonical order. Release needs no chunk row for cycle safety: it can only
+shrink the standing set. A create whose only race is a duplicate of a tenant-chosen name is no decision under this rule:
+the table's tenant-led primary key or unique constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and
+the store maps the losing insert's `IntegrityError` to the named conflict — `SecretStore.create`
 (`hub/store/internal/secret_store.py`) is the pattern. A create that reads state before its insert — a cap, a parent's
 state, a default it mints — stays a decision under this rule, in the keyed-lock form under **Do**.
 
@@ -147,55 +157,66 @@ state, a default it mints — stays a decision under this rule, in the keyed-loc
 
 **Do.** A lock on a concept no tenant owns — the identity lock, the tenant-lifecycle lock — is a seeded row of the
 `hub_locks` table, taken by `lock_hub` (`hub/store/locking.py`) and declared through `lock_set(hub=)` on a tenant unit
-or `begin(hub=)` on the identity unit; the migration seeds it and `lock_hub` never inserts. The order is `IDENTITY`,
-then the tenant's rows (its row, then chunk and keyed rows), then `TENANT_LIFECYCLE`: a tenant unit names only
-`TENANT_LIFECYCLE`, an identity unit takes `IDENTITY` first and names only `TENANT_LIFECYCLE`.
+or `begin(hub=)` on the identity unit; the migration seeds it and `lock_hub` never inserts. A tenant unit opens on the
+tenant row, then locks its declared chunk and keyed rows, then its declared `TENANT_LIFECYCLE` lock. An identity unit
+takes `IDENTITY` first, then any declared `TENANT_LIFECYCLE`, before yielding control. Tenant creation uses that
+identity unit and inserts the tenant row afterward. Each unit may name only `TENANT_LIFECYCLE` as an additional hub
+lock.
 
 **Do.** `lock_chunk_row` (`hub/store/locking.py`) — a no-op `UPDATE` on the chunk's own row, already minted before any
-claim, edit, or dependency write can reach it — called as the first statement after the tenant-row lock
-`ScopedConnections.write` (`hub/store/scoped.py`) opens with, with every guard read that follows it on the same
-connection. `IHubTransactions.begin` opens a tenant unit; its `lock_set` declares the complete set once before any
-repository statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating
-repository (`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents
-writers naming the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token,
-not the domain. The remaining `*_locked` repository methods are this seam's legacy form
-(`bzh:transaction-participation`).
+claim, edit, or dependency write can reach it — called after `ScopedConnections.write` (`hub/store/scoped.py`) locks the
+tenant row and reads deletion state, with every decision guard read that follows it on the same connection.
+`IHubTransactions.begin` opens a tenant unit; its `lock_set` declares the complete set once before any repository
+statement, ordering chunk ids before sorted keys. The resulting opaque token goes to each participating repository
+(`bzh:transaction-graduation`, [../repository-access.md](../repository-access.md)); this order prevents writers naming
+the same resources in different orders from deadlocking on Postgres. Store adapters resolve the token, not the domain.
+The remaining `*_locked` repository methods are this seam's legacy form (`bzh:transaction-participation`).
 
 A decision whose race has no existing row to lock — two ingests of one pointer, two first mints of one graph name —
 locks a row of `keyed_locks` instead, through `lock_keys` (`hub/store/locking.py`). Every namespace is a `LockNamespace`
 member, and every key a `LockKey`, in `hub/domain/kernel/locks.py`. The table is lock-only: it holds no state, nothing
-reads it as a fact, and its rows are never deleted. For each distinct key, in sorted order, the helper first selects the
-row, inserts it if absent inside a savepoint that swallows `IntegrityError`, then runs a no-op `UPDATE` to lock it
-before any decision guard read. The table's key is per tenant (`bzh:tenant-scoped-uniqueness`). Each decision keys by
-its own namespace: a pointer by `(source, ref)` encoded injectively, a graph by its name, a queue list's ranking by the
-list, and a transcript ingest by the calling runner's lane (`transcript_lane`) and each chunk its batch names
-(`transcript_chunk`) — a lane holds no row until its first mark, and a record may name a chunk the hub no longer holds.
-A flow is keyed by its resource (`flow_lock`, `hub/domain/delivery/flows.py`). A cadence mint keys its errand by chore
-and scope, encoded injectively (`cadence_errand`), in one `lock_set` beside, for a promoting chore, both ranking locks
-and the fresh chunk's id, which names no row yet and so contends with nothing. The canonical sort takes chunk ids first,
-then keys by namespace, so `cadence_errand` is taken ahead of the ranking locks, and an operator's promote, which takes
-its chunk and then the ranking locks, waits on the mint at the ranking locks rather than deadlocking with it. The
-urgency's three namespaces (`blizzard/src/blizzard/hub/domain/urgency/ports.py`) are `urgency`, keyed by urgency id, and
-`urgency_order` and `tenant_settings`, each on one fixed key; they sort after `queue_ranking` and before `work_ref`,
-`cadence_errand` ahead of them all. A retire takes the settings lock, the retiring urgency's, and `move_to`'s, and
-re-reads the default and the open chunks under them. In the same `lock_set` it locks the open chunk rows it moves, read
-ahead of the unit: chunk ids sort ahead of keys, so it takes each row before the urgency keys, in the order a chunk edit
-takes its row and then the urgency it names, and the two never deadlock. A re-read that finds an open chunk outside the
-locked set — one that took the urgency after the read ahead — writes nothing, and the retire runs its unit again over
-the wider set. A settings edit takes the settings lock and the named urgency's. A mint takes the settings lock, the
-urgency a read ahead of its unit found as the default, and every urgency a link of its chain named ahead of it, retired
-or not — the stated one, the chore's override, the routine's default — beside its own lock set; under them it re-reads
-each and resolves the chain (`blizzard/src/blizzard/hub/domain/urgency/chain.py::resolve_chain`) over what it re-read. A
-chunk edit naming an urgency opens through `IHubTransactions.begin()` and takes a `lock_set` with `keys=`, taking the
-chunk row and that urgency's key and no settings lock, and re-reads the urgency under them. A routine or cadence write
-that newly names urgencies — a routine's default, a chore override its stored cadence names on no chore — opens a unit
-locking each one's key and re-checks each live under it (`UrgencyReferences.held`); a configuration apply adds those
-keys to its plan's locks and refuses an entry as stale when such an urgency's revision has moved since the plan read it.
-A reference the write leaves is guarded by the record's own revision, which a retire clearing the reference moves. Every
-change of the default and every retire takes the settings lock, so a mint's re-read default is live, and a retire never
-runs beside a write taking up the urgency it retires. Create and both reorders take the `urgency_order` lock, re-reading
-the order under it. A decision graduates its unit with `lock_keys`, or `lock_set` when it spans namespaces; the default
-graph's first mint declares `graph_name_lock` through `lock_set`. A pointer's key comes from `work_ref_lock`.
+reads it as a fact, and its rows are retained for the tenant's life and removed during tenant teardown. For each
+distinct key, in sorted order, the helper first selects the row, inserts it if absent inside a savepoint that swallows
+`IntegrityError`, then runs a no-op `UPDATE` to lock it before any decision guard read. The table's key is per tenant
+(`bzh:tenant-scoped-uniqueness`). Each decision keys by its own namespace: a pointer by `(source, ref)` encoded
+injectively, a graph by its name, a queue list's ranking by the list, and a transcript ingest by the calling runner's
+lane (`transcript_lane`) and each chunk its batch names (`transcript_chunk`) — a lane holds no row until its first mark,
+and a record may name a chunk the hub no longer holds. A flow is keyed by its resource (`flow_lock`,
+`hub/domain/delivery/flows.py`). A cadence mint keys its errand by chore and scope, encoded injectively
+(`cadence_errand`), in one `lock_set` beside, for a promoting chore, both ranking locks and the fresh chunk's id, which
+names no row yet and so contends with nothing. The canonical sort takes chunk ids first, then keys by namespace, so
+`cadence_errand` is taken ahead of the ranking locks, and an operator's promote, which takes its chunk and then the
+ranking locks, waits on the mint at the ranking locks rather than deadlocking with it. The urgency's three namespaces
+(`blizzard/src/blizzard/hub/domain/urgency/ports.py`) are `urgency`, keyed by urgency id, and `urgency_order` and
+`tenant_settings`, each on one fixed key; they sort after `queue_ranking` and before `work_ref`, `cadence_errand` ahead
+of them all. A retire takes the settings lock, the retiring urgency's, and `move_to`'s, and re-reads the default and the
+open chunks under them. In the same `lock_set` it locks the open chunk rows it moves, read ahead of the unit: chunk ids
+sort ahead of keys, so it takes each row before the urgency keys, in the order a chunk edit takes its row and then the
+urgency it names, and the two never deadlock. A re-read that finds an open chunk outside the locked set — one that took
+the urgency after the read ahead — writes nothing, and the retire runs its unit again over the wider set. A settings
+edit takes the settings lock and the named urgency's. A mint takes the settings lock, the urgency a read ahead of its
+unit found as the default, and every urgency a link of its chain named ahead of it, retired or not — the stated one, the
+chore's override, the routine's default — beside its own lock set. It re-reads those urgency entities and the current
+default under the settings lock, then resolves the chain
+(`blizzard/src/blizzard/hub/domain/urgency/chain.py::resolve_chain`); the chore and routine references themselves were
+read ahead and are not re-read in this unit. A chunk edit naming an urgency opens through `IHubTransactions.begin()` and
+takes a `lock_set` with `keys=`, taking the chunk row and that urgency's key and no settings lock, and re-reads the
+urgency under them. A routine or cadence write that newly names urgencies — a routine's default, a chore override its
+stored cadence names on no chore — opens a unit locking each one's key and re-checks each live under it
+(`UrgencyReferences.held`); a configuration apply adds those keys to its plan's locks and refuses an entry as stale when
+such an urgency's revision has moved since the plan read it. A reference the write leaves is guarded by the record's own
+revision, which a retire clearing the reference moves. Every change of the default and every retire takes the settings
+lock, so a mint's re-read default is live, and a retire never runs beside a write taking up the urgency it retires.
+Create and both reorders take the `urgency_order` lock, re-reading the order under it. A decision graduates its unit
+with `lock_keys`, or `lock_set` when it spans namespaces; the default graph's first mint declares `graph_name_lock`
+through `lock_set`. A pointer's key comes from `work_ref_lock`.
+
+The hub-wide egress cursor is a short store-level exception to domain-declared units: `EgressStore` takes the seeded
+`EGRESS_CURSOR` hub lock inside each append or reset transaction, then reads the current dataset cursor. A pass appends
+only if its observed predecessor still matches; a reset captures its actual predecessor under that lock and appends
+unconditionally. Current authority is ordered per dataset by descending `append_order`, then `recorded_at`, then `id`.
+Legacy rows all have append order 0, so their timestamp and id retain their ordering. The lock covers only the cursor
+transaction, not file export. The export sweep itself remains a single-process background loop.
 
 The runner's store has no `keyed_locks` table, and the rule's scope names the hub; the runner applies the
 lock-a-row-known-to-exist form by analogy. The operator's pause and lift, the ceiling's self-engagement, and the
@@ -203,10 +224,11 @@ takeover open each take a no-op `UPDATE` on their own runner's `runner_identity`
 same transaction (`runner/store/internal/pause_store.py`, `runner/store/internal/takeover_store.py`); a runner holding
 no identity row yet has no neighbour to race.
 
-An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), which the
-write calls on the caller's locked unit after the lock and its replay probe and before its first insert. It applies the
-caller's terminal verdict — decided by the domain from chunk facts read under the same lock — and reads the newest epoch
-there, so a stop or restart cannot land between the guard and the write.
+An epoch-fenced write takes the lock-then-guard form through `fence` (`hub/store/internal/chunk_rows.py`), normally
+called on the caller's locked unit after the replay probe and before the first insert. It applies the caller's terminal
+verdict — decided by the domain from chunk facts read under the same lock — and reads the newest epoch there, so a stop
+or restart cannot land between the guard and the write. `write_landing_rows` is an exception: it calls the fence before
+the replay probe and records a prior forge landing even when fenced, reporting the refusal to its caller.
 
 **Don't.** A `threading.Lock` shared by `ClaimService` and `EditService`, serializing their read-then-write CAS in one
 process — correct until a second hub process starts against the same store, at which point the two locks stop
@@ -242,35 +264,17 @@ which the draw runs under the lock.
 
 Stated so a reviewer need not re-derive them:
 
-- **The residual per-tenant lock.** One in-process `threading.Lock` per tenant — `cycle_lock`, built with the tenant's
-  stores in `hub/composition.py`'s `build_tenant_stores` — stands where a row lock does not reach; dependencies never
-  cross tenants, so one tenant's lock never waits on another's. Each `import threading` it needs carries this rule's
-  `ast-grep-ignore`. Moving any of its holders onto a store-level row needs a schema migration. Its holders:
-  - `DependencyService.declare` and `GroupService.group` — for the tenant-wide standing-dependency cycle check
-    (`hub:no-standing-dependency-cycle`), which reasons over the tenant's whole graph: two disjoint writers racing on
-    different rows can still together close a cycle neither alone would.
-  - `DeleteService.delete`, for its whole transaction — the deleted chunk's row lock does not reach the other end of an
-    outgoing edge the delete releases, so a concurrent fold of that other chunk, locking only its own survivor and merge
-    ids, could otherwise remint the edge with the deleted chunk as its dependent.
-  - `DependencyService.release` — as its only lock. Without a row lock for cycle safety (Scope above), release is
-    ordered against `group`'s edge rewrite by this lock alone, which keeps a fold from reminting an edge released
-    between the fold's read of the standing set and its write.
-- **The export's pass lock.** `EgressSweep.sweep` and `EgressReset.reset` share one hub-wide in-process lock, built in
-  `hub/composition.py`, which keeps an operator's cursor move from being overwritten by the advanced cursor a pass in
-  flight appends. `egress_cursor` holds no row known to exist to lock, and the sweep it serializes against is itself a
-  single-process background loop.
 - **Running more than one hub process.** No deployment topology stands up a second hub process against one store.
 - **Single-process components outside this rule.** Each is single-process by construction, and this rule governs none of
   them:
   - **The event broker** — an in-memory subscriber fan-out.
   - **Background sweeps** — loops with no cross-process coordination.
-  - **Migrate-on-boot** — a migration run assumed uncontended at boot.
   - **The open-tenant set and the tenant cache** — the open tenants with their names, and each opened tenant's stores
     and services, held in memory (`hub/open_tenants.py`, `TenantCache` in `hub/composition.py`). A tenant another
     process created is read on the first lookup that misses it, but a rename refreshes only the process that made it.
-  - **The boot recovery of open turns** — an open turn at startup is taken to belong to a dead process's run and is
-    ended `interrupted` before the hub serves ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The boot
-    recovery of open turns).
+  - **The boot recovery of open turns** — startup treats an open turn as belonging to a dead process and attempts to end
+    it `interrupted` before serving; a failed tenant recovery does not block startup
+    ([../crash-correctness/hub.md](../crash-correctness/hub.md) §The boot recovery of open turns).
   - **The flow driver's sweep of open turns** — each tick ends `interrupted` every open turn that started before the
     previous tick began and whose task is not in the driver's in-memory set of running turns; a turn another process is
     running would be in no set this process holds.

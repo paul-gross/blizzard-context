@@ -23,29 +23,28 @@ governs loop phases; `bzh:probe-gated-pass` below governs the cost of converging
 3. **One failure shape per sink class.** The lane takes the shape its sink class names below, and takes its retry state
    from `blizzard/src/blizzard/foundation/lane_retry.py` rather than keeping its own.
 4. **Isolation.** A lane's failure never escapes into its host's other work. The hub runs each `Sweep` as its own task
-   with its own catch, the flow driver catches each tick and each turn's task on its own, and a requested pass's raise
-   is caught by the route that ran it. A runner tick-step lane catches its own failures inside `run()`, so later tick
-   steps still run. A runner driver catches per pass. A hub pass that serves many tenants carries this down to each
-   tenant (`bzh:pass-isolates-tenants`).
+   while `SweepRoster.pass_every_tenant` catches ordinary pass failures; the flow driver catches each tick and each
+   turn's task on its own. A requested single-tenant pass can propagate an exception. A runner tick-step lane catches
+   its own failures inside `run()`, so later tick steps still run. A runner driver catches per pass. A hub pass that
+   serves many tenants carries this down to each tenant (`bzh:pass-isolates-tenants`).
 5. **Hosting.** On the runner, a lane whose only sink is the hub is a step of the pass that owns its rows: a runner's
    lane is a step of that runner's tick, and the host's own lane, `HostLaneDrain`, is a step of the host tick, which
-   runs on its own driver beside the runners' ticks. Either way the hub client bounds each call, and the pass's later
-   steps consume its result. A lane whose sink is operator-configured, such as an exporter, runs on a dedicated driver,
-   so a stalled sink never holds a tick. On the hub, every lane is a `SweepRoster` entry, stepped by a `Sweep` when
-   timed and by the sweep routes on request, except one. `FlowDriver`
-   (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) is the one hub lane that is not a `Sweep` or a `SweepRoster`
-   entry: in timed mode its own coroutine, started in the hub's lifespan beside the sweeps' tasks and awaited before the
-   action loop stops, steps its `tick` through `asyncio.to_thread`. It runs turn tasks under the `flow.` crash-point
-   family: each tick's writes are store transactions with no external effect, and each turn's task drives a pass whose
-   effect writes keep the `action.` family.
+   runs on its own driver beside the runners' ticks. Either way the hub client bounds each call. A lane whose sink is
+   operator-configured, such as an exporter, runs on a dedicated driver, so a stalled sink never holds a tick. On the
+   hub, every lane is a `SweepRoster` entry, stepped by a `Sweep` when timed and by the sweep routes on request, except
+   one. `FlowDriver` (`blizzard/src/blizzard/hub/delivery/flow_driver.py`) is the one hub lane that is not a `Sweep` or
+   a `SweepRoster` entry: in timed mode its own coroutine, started in the hub's lifespan beside the sweeps' tasks and
+   awaited before the action loop stops, steps its `tick` through `asyncio.to_thread`. It runs turn tasks under the
+   `flow.` crash-point family: each tick's writes are store transactions with no external effect, and each turn's task
+   drives a pass whose effect writes keep the `action.` family.
 
 The failure shapes, by sink class:
 
-| Sink class                                                  | Shape                                                                                                                                                                                                                                                              | Lanes                                                                                                                            |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Operator-configured, with an outage the operator can act on | Whole-pass backoff and an **outage latch**: one failed event when an outage starts, one recovered event when it ends. The first pass seeds the latch from the newest persisted latch, so a restart mid-outage is silent.                                           | Hub trace export sweep, hub egress sweep, runner `LeaseTraceSweep`                                                               |
-| Per-item outcomes against a forge                           | Per-item backoff, persisted as attempt history and computed with the shared formula, plus per-item events. No latch: one item failing does not mean the sink is down. A forge rate-budget deferral holds the item to its `resume_at` without spending its backoff. | Close drain                                                                                                                      |
-| The hub as sink, or a local-store converging pass           | Retry on the next pass, with no backoff and no latch. A failed pass costs one bounded request, and an announcement would ride the channel that is failing.                                                                                                         | `OutboundDrain`, `TranscriptDrain`, `HostLaneDrain`, annotation and event-derivation reconcilers, tenant teardown, cadence sweep |
+| Sink class                                                  | Shape                                                                                                                                                                                                                                                              | Lanes                                                                                                                                          |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Operator-configured, with an outage the operator can act on | Whole-pass backoff and an **outage latch**: one failed event when an outage starts, one recovered event when it ends. The first pass seeds the latch from the newest persisted latch, so a restart mid-outage is silent.                                           | Hub trace export sweep, hub egress sweep, runner `LeaseTraceSweep`                                                                             |
+| Per-item outcomes against a forge                           | Per-item backoff, persisted as attempt history and computed with the shared formula, plus per-item events. No latch: one item failing does not mean the sink is down. A forge rate-budget deferral holds the item to its `resume_at` without spending its backoff. | Close drain                                                                                                                                    |
+| The hub as sink, or a local-store converging pass           | Retry on the next pass, with no backoff and no latch. Hub calls are individually bounded, and an announcement would ride the channel that is failing.                                                                                                              | `OutboundDrain`, `TranscriptDrain`, `HostLaneDrain`, annotation and event-derivation reconcilers, tenant teardown, cadence sweep, `FlowDriver` |
 
 **Why.** A lane runs unattended for as long as its sink is down, so every clause bounds a cost that otherwise grows
 without limit: an unbounded pass starves its host, an unreplayable item corrupts on the crash the sweep arms, an
@@ -61,9 +60,18 @@ raise reaches its host; a lane on a sink class that gives it a backoff or latch 
 **Do.** `TraceExportSweep` and `EgressSweep` (`blizzard/src/blizzard/hub/domain/observability/tracing/sweep.py`,
 `blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) hold an `OutageLatch` from `foundation/lane_retry.py`,
 ask it whether a pass is due, and announce only when it says a failure opens or a success closes an outage.
-`CloseIntentDrainer` (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) attempts a fixed number of due intents
-per pass and computes each intent's due time with `backoff_delay`. `TranscriptDrain` catches every failure inside
-`run()`.
+`CloseDrainSweep` (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) limits the due intents per pass and
+computes whether each intent is due using `backoff_delay`, then delegates attempts to `CloseIntentDrainer`. Its read of
+all pending intents before filtering and limiting is unbounded backlog-read debt, not an example of the bound clause.
+`TranscriptDrain` catches every failure inside `run()`.
+
+**Known gap.** `OutboundDrain` (`blizzard/src/blizzard/runner/lifecycle/drain.py`) has no registered crash point or
+recorded exemption for the window after the hub accepts a generic batch or a decision and before the runner records its
+acknowledgement. These windows remain unaddressed coverage debt under clause 2, not exemptions.
+
+**Known gap.** The annotation reconciler (`blizzard/src/blizzard/hub/domain/observability/forge_status.py`) keeps an
+in-memory per-tenant, per-source outage announcement latch rather than the no-latch shape its sink class requires; it is
+not the persistent `OutageLatch`.
 
 **Don't.** A new lane that hand-copies a failure counter, a next-due instant, and a failing flag, then re-implements the
 doubling and the open/close transitions beside them, instead of taking the helper. The copies drift: one lane clamps the
@@ -95,12 +103,12 @@ cheap, so the answer to it is a gated pass, not a re-timed driver. A per-item re
 statement for the hub and keeps its value and last full pass per tenant, so a tenant is judged on its own
 (`bzh:pass-isolates-tenants`). Each pass shape owes:
 
-| Shape                                                                                                                                                                | Example                                                                                                                                                                                                   | Owes                                                                                                                                                                                                          |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rescans a corpus to converge a derived state from it                                                                                                                 | The hub's annotation and event-derivation reconcilers, and the flow driver's reconcile of each tenant's flow lines                                                                                        | A probe and a floor                                                                                                                                                                                           |
-| Prunes or expires what has aged past a window far longer than its floor                                                                                              | The runner's `Retention` step in `blizzard/src/blizzard/runner/loop/steps.py`, pruning its day-scale lanes on a one-hour floor                                                                            | A floor, not a probe                                                                                                                                                                                          |
-| Enforces a window without pruning it                                                                                                                                 | The runner's `SpendCeiling` step, which engages the pause brake once rolling-window spend reaches its cap                                                                                                 | Nothing here — it is outside this rule: it owes its reaction on the tick the cap is crossed, and a floor would let spend overshoot the cap for up to one floor                                                |
-| Acts on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases | `CloseIntentDrainer.sweep` in `blizzard/src/blizzard/hub/domain/work_items/closure.py`; the flow driver's admission of the turns its flows' submissions may take; the runner's `Reap` and `Advance` steps | Nothing here — it is outside this rule: its due-set is the live work the pass exists to answer, often made due by time passing alone, so no change probe sees it and a floor would delay the reaction it owes |
+| Shape                                                                                                                                                                | Example                                                                                                                                                                                                | Owes                                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rescans a corpus to converge a derived state from it                                                                                                                 | The hub's annotation and event-derivation reconcilers, and the flow driver's reconcile of each tenant's flow lines                                                                                     | A probe and a floor                                                                                                                                                                                           |
+| Prunes or expires what has aged past a window far longer than its floor                                                                                              | The runner's `Retention` step in `blizzard/src/blizzard/runner/loop/steps.py`, pruning its day-scale lanes on a one-hour floor                                                                         | A floor, not a probe                                                                                                                                                                                          |
+| Enforces a window without pruning it                                                                                                                                 | The runner's `SpendCeiling` step, which engages the pause brake once rolling-window spend reaches its cap                                                                                              | Nothing here — it is outside this rule: it owes its reaction on the tick the cap is crossed, and a floor would let spend overshoot the cap for up to one floor                                                |
+| Acts on work as it comes due — reaping a lease, advancing or filling, draining a queue or buffer, retrying an intent whose backoff has elapsed, sampling live leases | `CloseDrainSweep.sweep` in `blizzard/src/blizzard/hub/domain/work_items/closure.py`; the flow driver's admission of the turns its flows' submissions may take; the runner's `Reap` and `Advance` steps | Nothing here — it is outside this rule: its due-set is the live work the pass exists to answer, often made due by time passing alone, so no change probe sees it and a floor would delay the reaction it owes |
 
 **Detect.** A converging pass whose first statement is its full-corpus read, with no value compared against the previous
 pass's, or one value folded across every tenant of a hub-wide pass; a pass whose skip has no floor behind it, so a probe
@@ -111,8 +119,13 @@ floor; for a pruning pass, the recorded instant and the floor alone.
 
 **Do.** `blizzard/src/blizzard/hub/domain/observability/analytics/derivation.py`'s `EventDerivationReconciler.sweep`
 reads `derivation_signature()` first, converges only the tenants whose signature differs from their last converged one
-or whose ten-minute floor is due, and records each converged tenant's signature and instant. An unchanged pass costs the
-probe's one statement.
+or whose ten-minute floor is due, and records each converged tenant's signature and instant. After a pass has found a
+due tenant, an unchanged pass costs the probe's one statement. Until then, a fresh process also reads
+`derived_segment_ids()` on each pass to find tenants whose segments and chunks are all gone, including when the store is
+empty.
+
+**Known gap.** The annotation reconciler reads two hub-wide signature probes, `live_work_refs_signature` and
+`work_source_changes_signature`, rather than the one probe statement this rule requires.
 
 **Don't.** A converging `sweep()` that reads its whole corpus and every remote's state unconditionally on each pass, so
 an idle fleet pays the whole diff every interval, changed or not.
