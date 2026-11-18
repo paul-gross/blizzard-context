@@ -7,8 +7,11 @@ Full detail for the `web:` manual methods named in [`../blizzard.md`](../blizzar
 section per row, in that table's order. The `blizzard:` methods live in [`./manual.md`](./manual.md) and the
 `blizzard-mock:` methods in [`./manual-mock.md`](./manual-mock.md).
 
-The methods are driven by a human, or a `frontend-verifier` agent, in a real browser — the pass condition is a rendered
-view and a gesture's effect. Every method starts, from the workspace root, from the same provisioned env with its
+The methods are driven by a human, or a `frontend-verifier` agent through Chrome DevTools, in a real Chromium browser —
+the pass condition is a rendered view and a gesture's effect, and the evidence is the method's written report of what it
+verified, never a screenshot ([`./tier-rules.md`](./tier-rules.md), `bzh:visual-change-needs-a-render`). A caller
+dispatching `frontend-verifier` tells it to capture no screenshot and to report in words; these steps hold over the
+agent's own screenshot defaults. Every method starts, from the workspace root, from the same provisioned env with its
 services up and its shell vars sourced; the board and panel methods drive the env's daemons, and the workshop needs no
 daemon:
 
@@ -46,10 +49,11 @@ ingest path.
 4. Perform each changed gesture, confirm the rendered result, then read the effect back from the hub itself —
    `GET /api/chunks/<chunk-id>` or `uv run blizzard hub status` from `<env>/blizzard` — so a control that only repaints
    the page does not pass.
-5. For a visual change, take the screenshot [`./tier-rules.md`](./tier-rules.md) (`bzh:visual-change-needs-a-render`)
-   admits as evidence, at each width the claim names.
-6. Keep the observations — the view's URL, the seed command, screenshots, the read-back output — with the change under
-   verification.
+5. For a visual change, check the changed surface at each width the claim names, in the render
+   [`./tier-rules.md`](./tier-rules.md) (`bzh:visual-change-needs-a-render`) admits.
+6. Report what you verified, in words: the view's URL, the seed command, each stated observable and what rendered, each
+   gesture and its read-back output, the widths checked, and the console and network results. The report is the method's
+   evidence (`bzh:visual-change-needs-a-render`).
 
 **Passes when.** Every stated observable renders in the browser from the worktree's current source, every driven
 gesture's effect is confirmed in the hub's own state, and the console and network log stay clean throughout.
@@ -83,10 +87,11 @@ why the order matters.
    as a gesture unless the pause control is what changed —
    [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) §Seeding an env whose daemons are up owns what
    that one click sets off.
-6. For a visual change, take the screenshot [`./tier-rules.md`](./tier-rules.md) (`bzh:visual-change-needs-a-render`)
-   admits as evidence, at each width the claim names.
-7. Keep the observations — the view's URL, the seed command, screenshots, the read-back output — with the change under
-   verification.
+6. For a visual change, check the changed surface at each width the claim names, in the render
+   [`./tier-rules.md`](./tier-rules.md) (`bzh:visual-change-needs-a-render`) admits.
+7. Report what you verified, in words: the view's URL, the seed command, each stated observable and what rendered before
+   and after the tick, each gesture and its read-back output, the widths checked, and the console and network results.
+   The report is the method's evidence (`bzh:visual-change-needs-a-render`).
 
 **Passes when.** Every stated observable renders in the browser from the worktree's current source and still renders
 after the next tick, every driven gesture's effect is confirmed in the runner's own state, and the console and network
@@ -112,8 +117,9 @@ next free port without a word. No seed is needed, since a story carries its own 
    one, a list of one, a list of many.
 4. Switch the viewport to `phone` and `phone-sm` for any part whose layout answers to width, and to `desktop`.
 5. Keep the browser console open throughout; a part that logs an error does not pass.
-6. For a visual change, take a screenshot of each changed state at each width the claim names, and keep the screenshots,
-   the story ids, and the commit with the change under verification.
+6. Report what you verified, in words: the commit, each story id and state, what rendered at each width the claim names,
+   the inputs pushed through the controls, and the console result. The report is the method's evidence
+   ([`./tier-rules.md`](./tier-rules.md), `bzh:visual-change-needs-a-render`).
 
 **Passes when.** Every changed state renders as intended at every width it is claimed at, every control drives the part
 without breaking it, and the console stays clean.
