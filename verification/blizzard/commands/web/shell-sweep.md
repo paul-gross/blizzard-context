@@ -230,6 +230,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `kit-select.shell-sweep.spec.ts` covers `KitSelect`'s popup at 390px: a long list stays height-capped and scrollable
   without squeezing its options, keyboard focus scrolls the last option into view, and a short list keeps its natural
   height without scrolling.
+- `kit-option-group.shell-sweep.spec.ts` covers `KitOptionGroup` as one native same-name radio group: real `ArrowDown`
+  and `ArrowUp` move the check and set the bound form value, and a disabled group cannot take focus.
 - `kit-swatch.shell-sweep.spec.ts` covers `KitSwatch` across the whole project-color palette, read from the generated
   `ProjectColor` const: every name's swatch resolves a non-empty computed background, no two names resolve the same one,
   and each holds at least 3:1 contrast against `--surface-resting` and `--surface-selected`. It is the guard against
