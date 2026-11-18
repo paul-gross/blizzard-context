@@ -1,116 +1,123 @@
-# Wire conformance
+# The domain boundary
 
-How the Angular suite relates to the hub and runner wire — what it may define for itself, where a gap in the wire is
-closed, and which files call the generated client. A spoke of the [frontend structure hub](../frontend-structure.md);
-each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
+How the Angular suite relates to the hub and runner wire — where the wire is read and translated, which concept files
+may import what, which files call the generated client, and how a vocabulary the client does not know is handled. A
+spoke of the [frontend structure hub](../frontend-structure.md); each rule follows the slot skeleton owned by
+`winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
 
-## The frontend conforms to the wire and never restates it (`bzh:frontend-wire-conformist`)
+## The frontend owns its domain and reads the wire at one boundary (`bzh:frontend-domain-boundary`)
 
-**Rule.** Take every backend vocabulary, classification, and wire shape from the generated client
-(`fleet/src/lib/api/{hub,runner}/`), and never restate one by hand in TypeScript. A gap in what the wire carries is
-closed on the wire — the backend adds the enum, field, or schema component and the client is regenerated — never filled
-in by a frontend copy. Presentation of what a view already carries is the frontend's own; an answer that is a backend
-judgment is read off a view field, never computed in the frontend (Scope draws the line). Generated client functions are
-called only from data-access files (`*.query.ts`, `*.mutations.ts`); generated types may be imported anywhere.
+**Rule.** The frontend models its own domain and translates to and from the wire at one boundary. Only data-access files
+(`*.query.ts`, `*.mutations.ts`), translators (`*.translate.ts`), their focused specs, the generated client
+(`fleet/src/lib/api/{hub,runner}/`), and the test transport (`fleet/src/lib/testing/transport/`) consume a generated
+wire type; every other file — a domain file, form, service, model, component, view, story, ordinary spec, or test helper
+— works in domain types. Generated client functions are called only from data-access files. Within the boundary:
 
-**Why.** A hand-written copy compiles against the wire as it was when the copy was written, and a judgment computed in
-the frontend is one more copy that every other consumer of the wire must write again: when the backend adds a value or
-moves a judgment, the regenerated types change under every conforming consumer while each copy keeps rendering the old
-answer with nothing to flag it. Data-access files own each resource's query keys and invalidations, so a client call
-made anywhere else bypasses the cache plane the views read from.
+- A wire vocabulary becomes a closed domain union with an explicit unknown member, and the translator is the one place
+  an unforeseen wire value is handled (`bzh:frontend-open-vocabulary`).
+- A judgment the wire already carries, such as a chunk's `terminal` or a member's `revocable`, is translated from its
+  field, never re-derived from raw values.
+- A judgment the frontend makes from what it holds is a pure function in a `*.domain.ts`, pinned by its spec.
+
+Each concept file has a fixed dependency budget:
+
+| Concept file                                   | Imports wire types | Imports Angular               | Pinned by                                   |
+| ---------------------------------------------- | ------------------ | ----------------------------- | ------------------------------------------- |
+| `<concept>.query.ts`, `<concept>.mutations.ts` | yes                | yes                           | its focused spec                            |
+| `<concept>.translate.ts`                       | yes                | no                            | `<concept>.translate.spec.ts`, no `TestBed` |
+| `<concept>.domain.ts`                          | no                 | no                            | `<concept>.domain.spec.ts`, no `TestBed`    |
+| `<concept>.form.ts` (validation rules)         | no                 | `@angular/forms/signals` only | `<concept>.form.spec.ts`                    |
+| `<concept>.service.ts`                         | no                 | yes                           | `<concept>.service.spec.ts`                 |
+| `*.model.ts`, components, views                | no                 | per their own rules           | their specs                                 |
+
+A concept's files sit in its feature folder, beside its `*.query.ts` and `*.model.ts`; which folder that is, and what it
+may import, is `bzh:frontend-placement`'s and `bzh:frontend-package-layers`' call ([placement.md](./placement.md)). A
+concept two features share goes down to the project's kernel, or to `fleet` where both apps reach it.
+
+A focused boundary spec (`*.query.spec.ts`, `*.mutations.spec.ts`, `*.translate.spec.ts`) may import wire types to pin
+its boundary's contract. Wire builders live in pure `*.translate.ts` fixture modules; a component or model spec and a
+story build their presentation inputs from domain builders, and a component spec may hand those wire fixtures to its
+stubbed HTTP transport without importing a generated type itself. No production file or story reaches
+`testing/transport/`, directly or through a barrel or helper.
+
+Hand-written TypeScript never cites a backend Python module as the authority, by `.py` path or by dotted `blizzard.…`
+module path; cite the generated type, the wire field, or a `bzh:` id instead.
+
+A unit that still reads a wire type outside the boundary is named on the gate's migration exemption list,
+`DOMAIN_BOUNDARY_EXEMPT`, until the landing that moves it behind the boundary
+(`decision:ui-toolkit/incremental-replacement`). Until then its query may keep the old wire projection for exempt
+callers beside a domain projection in the same data-access file, sharing one cache, query keys, and invalidations; the
+list only shrinks.
+
+**Why.** When every component works in the generated types directly, a wire change lands in every component that read
+the field; behind one boundary it is absorbed in one translator. A judgment re-derived from raw values is a second copy
+of one the wire already makes, and keeps rendering the old answer when the backend moves it. A domain file free of
+Angular and the wire is tested case by case with plain literals. Data-access files own each resource's query keys and
+invalidations, so a client call made anywhere else bypasses the cache plane the views read from. A backend module
+citation rots silently when the backend moves.
 
 **Exception.** A pending override's predicted outcome (`bzh:frontend-pending-override`) states what an in-flight
-mutation will change before the wire reports it; it is a prediction over a request, not a copy of a classification, and
-falls back to disabled-and-pending wherever it is not total.
+mutation will change before the wire reports it. It is a prediction over a request rather than a re-derived judgment,
+lives with the mutation in its data-access file, and falls back to disabled-and-pending wherever it is not total.
 
-**Scope.** What counts as a restatement:
+**Scope.** Every `.ts` below `web/projects`, `.storybook/` included: production files, specs, stories, and test helpers.
+A spec is inside the boundary only by its own focused name; a component or model spec is not. A barrel that re-exports a
+generated type is never itself judged — its importer is — and a domain type may share a generated type's name. The
+backend-citation and client-call halves bind every hand-written `.ts` except specs, stories, and the generated client.
 
-- **Vocabulary** — a closed value set the backend defines (a status, kind, role, severity, event type) written out as a
-  string-literal union, array, or `Set`.
-- **Classification** — a backend judgment over a vocabulary (which statuses are terminal, whether a chunk can pause,
-  whether a cost is partial) re-derived from raw values instead of read from a view field.
-- **Wire shape** — a hand-written interface or type mirroring a model the backend serializes, including one reaching the
-  client off a non-route channel such as an SSE frame or an artifact body.
-- **Backend citation** — a comment or string naming a backend Python module as the authority, by `.py` path or by dotted
-  `blizzard.…` module path; cite the generated type, the wire field, or a `bzh:` id instead.
-
-Where presentation stops and a backend judgment begins:
-
-- **Presentation**, the frontend's own — formatting, ordering, and grouping rows by a field each carries, filtering them
-  by a criterion the person or the page supplies rather than a value taken from another record, and wording or toning a
-  value a view already carries, including choosing the wording by branching on a value of a generated vocabulary
-  (`bzh:frontend-open-vocabulary`).
-- **Backend judgment**, a field on the view — any answer that joins records the wire serves separately by a domain rule,
-  that previews a predicate the backend enforces on a write, or that the domain model names
-  ([`../../domain/index.md`](../../domain/index.md)).
-
-The test between them: would a second consumer — the CLI, another page — have to reimplement the computation to give the
-same answer? If so it is a judgment, and it belongs on the wire. Two pages that word or sort one value differently
-disagree about nothing; two that join or gate differently give different answers.
-
-**Detect.** Tooled by `web:structural-gate`, neither sweep with an exemption list: its backend-citation sweep
-(`assertBackendCitationDetectorWorks`) fails a backend module citation in hand-written TypeScript, and its client-call
-placement sweep (`assertClientCallPlacementDetectorWorks`) fails a generated client function named outside `*.query.ts`
-/ `*.mutations.ts`.
+**Detect.** Tooled by `web:structural-gate`'s domain-boundary sweeps, proven first by
+`assertDomainBoundaryDetectorWorks`: the symbol-origin sweep resolves every symbol a file references to its declaration
+and fails a file outside the boundary that consumes one declared in a generated `types.gen.ts`, fails a stale
+`DOMAIN_BOUNDARY_EXEMPT` entry, and fails a production file or story reaching the test transport. Beside it, with no
+exemption list, the backend-citation sweep (`assertBackendCitationDetectorWorks`) fails a backend module citation, and
+the client-call placement sweep (`assertClientCallPlacementDetectorWorks`) fails a generated client function named
+outside `*.query.ts` / `*.mutations.ts`. `web:lint` refuses Angular and the query library in a `*.domain.ts` or
+`*.translate.ts` and every Angular import but `@angular/forms/signals` in a `*.form.ts`, proven by
+`web/scripts/boundary-imports-lint-probe.js`.
 [`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
-owns each sweep's scope, report, and self-test.
+owns each check's scope, report, and self-test.
 
-`web:client-drift` fails a generated client that no longer matches the exported specs, so a wire fix lands with its
-regenerated types. A hand-written vocabulary, classification, or shape is a review question, not tooled: does this
-literal set, interface, or status predicate duplicate what a generated type carries, or what a view field should carry?
-So is a computed answer: would a second consumer have to reimplement this join, capability check, or derived fact to
-give the same answer? If so it is a judgment (Scope's second-consumer test). The fix is the generated enum or model when
-the wire has it, and a backend change when it does not — a vocabulary or off-route shape registers in
-`src/blizzard/wire/components.py` so the spec carries it, and a classification, a join, or a write's predicate becomes a
-field on the view of the record the answer is about.
+Whether a translator re-derives a judgment a wire field already carries, and whether a domain function judges only what
+the frontend holds, are review questions.
 
 **Do.**
 
-- `if (detail.pausable)` — the view field `ChunkDetail.pausable` carries the judgment.
-- `Object.values(FindingSeverity)` populates a severity filter from the generated `const`.
+- `garden/core/cadence.translate.ts` exports `fromCadenceView(wire: CadenceView): Cadence`, and the cadences query's
+  `select` maps the cached wire response through it, so its consumers read `Cadence`.
+- A translator maps the wire's chunk status into `ChunkStatus`, ending in `'unknown'` for a value the client does not
+  list.
+- `if (chunk.terminal)` — the translator carried `ChunkDetail.terminal` into the domain type.
 - A container injects a query hook from `garden/core/finding.query.ts`, which alone imports
   `listFindingsApiFindingsGet`.
-- Presentation: `runs.sort((a, b) => Date.parse(b.minted_at) - Date.parse(a.minted_at))` orders `RunRowView` rows newest
-  first by a field each row carries.
-- Presentation: `openLookup<AttentionReason, string>({ routine_retired: 'its routine is retired', … }, (raw) => raw)`
-  words a generated vocabulary's values.
-- Backend judgment: `[disabled]="!member.revocable"` — `MemberView.revocable` previews the refusal the revoke write
-  enforces.
-- Backend judgment: `run.cadence?.cadence_name` — `RunRowView.cadence` carries the cadence that minted the run, so
-  nothing joins runs to cadences.
 
 **Don't.**
 
-- `const PAUSABLE = new Set(['ready', 'running']); if (PAUSABLE.has(detail.status))` — a classification re-derived from
-  a hand-written status list.
-- `type Severity = 'blocking' | 'should-fix';` beside the generated `FindingSeverity`.
+- A component or `*.model.ts` importing `CadenceView` from `fleet`, directly or through a barrel.
+- `const PAUSABLE = new Set(['ready', 'running']); if (PAUSABLE.has(detail.status))` — a judgment the wire carries,
+  re-derived from a hand-written status list.
+- A `*.domain.ts` importing `signal` from `@angular/core`.
 - A component importing `listFindingsApiFindingsGet` and awaiting it in `ngOnInit`.
-- Presentation: asking the wire for a display string beside `ChoreView.mode` — wording a `RunMode` value is the
-  frontend's own, and a label on the wire fixes one surface's wording for every consumer.
-- Backend judgment: `cadence.chores.filter((chore) => chore.routine === routine.slug)` over each `CadenceView` with
-  `!cadence.retired && cadence.project_id === routine.project_id` — joins cadences to a `RoutineView` by the domain's
-  kept-by rule (`bzh:routine-kept-by`, [`../../domain/cadences.md`](../../domain/cadences.md)), which the CLI would have
-  to write again.
-- Backend judgment: `[disabled]="member.role !== Role.CONTRIBUTOR"` on Revoke — a guess at the predicate the write
-  enforces, where `MemberView.revocable` states it.
 
 **See also.** `bzh:generated-client` ([`../../standards/frontend.md`](../../standards/frontend.md)) forbids hand-written
-request code; `bzh:fleet-wire-additive` ([`../system-shape/fleet-wire.md`](../system-shape/fleet-wire.md)) governs what
-a backend change to the wire may do to a running runner.
+request code; `bzh:frontend-containers-compose` ([containers.md](./containers.md)) moves a container's derivation into a
+pure file; `bzh:fleet-wire-additive` ([`../system-shape/fleet-wire.md`](../system-shape/fleet-wire.md)) governs what a
+backend change to the wire may do to a running runner.
 
 ## A wire vocabulary is open to a value the client does not know (`bzh:frontend-open-vocabulary`)
 
 **Rule.** Every branch on, and every lookup of, a vocabulary a hub or runner response carries handles a value the
-generated client does not list. A lookup table keyed by a generated vocabulary is built through `fleet`'s `openLookup`
-(`fleet/src/lib/core/open-lookup.ts`): its table stays a full `Record` over the vocabulary, so a value the client learns
-fails to compile until it is placed, and a raw value outside it resolves through the table's fallback instead of to
-`undefined`. A TypeScript `switch` carries a `default`, and a template `@switch` an `@default`. A `switch` that gives
-every declared value its own `case` hands its `default` to `fleet`'s `unlisted`, whose `never` parameter keeps a value
-the client learns a compile error there while a raw value still reaches it at run time. An unknown value renders raw, in
-the `idle` tone (`fleet/src/lib/kit/tone.ts`), or is skipped where it names nothing the surface can show. The board
-seats a chunk whose status it does not know in its own lane, declared beside `LANES` in
-`fleet/src/lib/core/chunk-lanes.ts` as `unknownLane`: shown only while such a chunk is on the board, headed with the raw
-status, and given no titlebar stat cell, since `ChunkCountsView` carries no count for a status the board cannot name.
+generated client does not list. A translator is where a wire vocabulary is read, so it is where an unforeseen value is
+handled: it maps one onto its domain union's explicit unknown (`bzh:frontend-domain-boundary`). A lookup table keyed by
+a generated vocabulary is built through `fleet`'s `openLookup` (`fleet/src/lib/core/open-lookup.ts`): its table stays a
+full `Record` over the vocabulary, so a value the client learns fails to compile until it is placed, and a raw value
+outside it resolves through the table's fallback instead of to `undefined`. A TypeScript `switch` carries a `default`,
+and a template `@switch` an `@default`. A `switch` that gives every declared value its own `case` hands its `default` to
+`fleet`'s `unlisted`, whose `never` parameter keeps a value the client learns a compile error there while a raw value
+still reaches it at run time. An unknown value renders raw, in the `idle` tone (`fleet/src/lib/kit/tone.ts`), or is
+skipped where it names nothing the surface can show. The board seats a chunk whose status it does not know in its own
+lane, declared beside `LANES` in `fleet/src/lib/core/chunk-lanes.ts` as `unknownLane`: shown only while such a chunk is
+on the board, headed with the raw status, and given no titlebar stat cell, since `ChunkCountsView` carries no count for
+a status the board cannot name.
 
 **Why.** The board and the runner panel read whatever server they are pointed at, and a server newer than the build adds
 values to its vocabularies (`bzh:open-response-vocabulary`,
@@ -118,13 +125,16 @@ values to its vocabularies (`bzh:open-response-vocabulary`,
 runtime check, so a `Record` lookup returns `undefined` for a gained value and a destructure of that answer throws,
 taking the whole view down over one field.
 
-**Scope.** Every hand-written `.ts` and `.html` under `web/projects/` except specs and stories, and every vocabulary the
-generated clients declare — a response field's, an SSE frame's event type, and a request vocabulary a response also
-carries, such as the verbs a record names as legal. A local union the frontend builds itself is held too: lint is not
-type-aware, so the `switch` rule cannot tell one from a wire value.
+**Scope.** Every vocabulary the generated clients declare — a response field's, an SSE frame's event type, and a request
+vocabulary a response also carries, such as the verbs a record names as legal — wherever it is read: in a
+`*.translate.ts`, and, while the migration lasts, in any file of a unit still on `DOMAIN_BOUNDARY_EXEMPT`, which still
+reads wire vocabularies outside the boundary. Specs and stories are outside it. The `switch` and template `@switch`
+halves hold every hand-written `.ts` and `.html` under `web/projects/` except specs and stories, a domain union's
+included: lint is not type-aware, so the `switch` rule cannot tell a domain union from a wire one.
 
 **Detect.** `web:lint` (its `default-case` rule, probed by `web/scripts/default-case-lint-probe.js`) and
-`web:structural-gate` (the open-vocabulary sweeps, with no exemption list) fail a branch with no unknown arm;
+`web:structural-gate` (the open-vocabulary sweeps, with no exemption list of their own; the vocabulary-record sweep
+binds translators and the units on `DOMAIN_BOUNDARY_EXEMPT`) fail a branch with no unknown arm;
 `web/scripts/open-lookup-type-probe.js` proves the compiler still refuses a table or a `switch` missing a declared
 value.
 [`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
@@ -151,5 +161,5 @@ skipped — is a review question.
 - `case 'enroll': default: enroll.mutate(…)` — folding `default` into a known case acts on a value it never named, and
   silences the compile error a new value would raise.
 
-**See also.** `bzh:frontend-wire-conformist` (above): the vocabulary still comes from the generated client; this rule
-only stops the client assuming it is the whole vocabulary.
+**See also.** `bzh:frontend-domain-boundary` (above): the translator turns the wire's vocabulary into a closed domain
+union, and this rule stops it assuming the generated client lists every value.

@@ -51,6 +51,20 @@ checks a runtime or type-only import from `@angular/core`, `@angular/cdk/drag-dr
 `@tanstack/angular-query-experimental` is refused in a model while a pure model and a non-model file importing Angular
 pass (`node web/scripts/model-imports-lint-probe.js` from the app repo root).
 
+The same rule carries the concept-file blocks
+([`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
+`bzh:frontend-domain-boundary`): a `**/*.domain.ts` or `**/*.translate.ts` refuses any `@angular/*` or `@tanstack/*`
+import, `import type` included, as a model does, and a `**/*.form.ts` refuses every `@angular/*` import but
+`@angular/forms/signals`, and any `@tanstack/*` import. Every `.ts` outside `fleet/src/lib/kit/` refuses `@angular/aria`
+and its subpaths
+([`../../../../architecture/frontend-structure/kit.md`](../../../../architecture/frontend-structure/kit.md)
+`bzh:frontend-kit-floor`); each suffix block that sets the rule restates that pattern, since flat config replaces a
+rule's options per matching block. `web/scripts/boundary-imports-lint-probe.js` lints under each of the hub, runner, and
+fleet configs and checks Angular and the query library, runtime or type-only, are refused in a domain file and a
+translator, a non-Signal-Forms Angular import is refused in a form file, and Aria is refused outside the kit, while a
+pure domain file, a translator importing a wire type, a Signal Forms form file, and a kit file importing Aria pass
+(`node web/scripts/boundary-imports-lint-probe.js` from the app repo root).
+
 ### web:typecheck
 
 `npm run build` in `web/` — a real AOT compile of both Angular apps, the type check `web:unit-test`'s esbuild-based
@@ -118,19 +132,35 @@ and `core/query-keys` (the plane-root chunk and transcript key helpers both daem
 `fleet barrel exports outside the disjoint-diffs rule` with file, line, and symbol or source. Its self-test,
 `assertDisjointDiffsDetectorWorks`, runs first.
 
-The same script also runs the two wire-conformist sweeps (`web/scripts/wire-conformist-sweep.js`;
+The same script also runs the domain-boundary sweeps (`web/scripts/domain-boundary-sweep.js`;
 [`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
-`bzh:frontend-wire-conformist`), neither with an exemption list, both over every `.ts` below `web/projects` except
-specs, stories, and the generated `fleet/src/lib/api/`:
+`bzh:frontend-domain-boundary`):
 
-- The backend-citation sweep fails a backend Python module cited in a comment or string, by `.py` path or by dotted
-  `blizzard.<package>` module path, printing each site under `backend .py citations in hand-written TS`. Its self-test,
-  `assertBackendCitationDetectorWorks`, must-catches path, bare-file, and dotted citations and the reported line, and
-  must-passes `.pyc`, `numpy`, `mypy.ini`, and a `blizzard.`-prefixed storage key.
-- The client-call placement sweep reads every `export const` of `fleet/src/lib/api/{hub,runner}/sdk.gen.ts` at run time
-  and fails a whole-word use of one outside a `*.query.ts` or `*.mutations.ts` file, after stripping comments and plain
-  `export … from` re-exports but not a renaming one, printing each site under
-  `generated client functions outside *.query.ts / *.mutations.ts`. Its self-test,
+- The symbol-origin sweep reuses the placement sweep's compiler-API program and resolves every symbol a file references
+  — named, renamed, and default imports, `ns.Member` access, and `import("…").T` type nodes — through the full alias
+  chain to its declaration. Over every `.ts` below `web/projects`, `.storybook/` included, it fails a file that consumes
+  a symbol declared in `fleet/src/lib/api/{hub,runner}/types.gen.ts`, except under `fleet/src/lib/api/` and
+  `fleet/src/lib/testing/transport/`, and in a `*.query.ts`, `*.mutations.ts`, or `*.translate.ts` file and its own
+  focused spec. A re-export is not consumption: a barrel is never judged, its importer is. Each site prints under
+  `wire types consumed outside the domain boundary`. A unit still migrating — a package-layers unit, the longest
+  `LAYERED_PROJECTS` key prefixing the file — is named in `DOMAIN_BOUNDARY_EXEMPT`, with one reason for the whole list
+  (`decision:ui-toolkit/incremental-replacement`); an entry whose unit no longer consumes a wire type fails as stale,
+  under `stale DOMAIN_BOUNDARY_EXEMPT entries`, so the list only shrinks. Separately, a production file or a story whose
+  consumed symbol is declared under `testing/transport/` prints under
+  `production files or stories reaching the test transport`; specs and test helpers may reach it. Its self-test,
+  `assertDomainBoundaryDetectorWorks`, must-catches direct, aliased, namespace, `import()`-type, and transitive barrel
+  imports of a generated type, `fleet` included, a component or model spec, story, or ordinary test helper consuming
+  one, transport reach from production or a story, and a stale entry, and must-passes a same-named domain declaration, a
+  data-access file, translator, or focused spec, a transport module, and an exempt unit.
+- The backend-citation sweep, with no exemption list, over every `.ts` below `web/projects` except specs, stories, and
+  the generated `fleet/src/lib/api/`, fails a backend Python module cited in a comment or string, by `.py` path or by
+  dotted `blizzard.<package>` module path, printing each site under `backend .py citations in hand-written TS`. Its
+  self-test, `assertBackendCitationDetectorWorks`, must-catches path, bare-file, and dotted citations and the reported
+  line, and must-passes `.pyc`, `numpy`, `mypy.ini`, and a `blizzard.`-prefixed storage key.
+- The client-call placement sweep, with no exemption list and the same scope, reads every `export const` of
+  `fleet/src/lib/api/{hub,runner}/sdk.gen.ts` at run time and fails a whole-word use of one outside a `*.query.ts` or
+  `*.mutations.ts` file, after stripping comments and plain `export … from` re-exports but not a renaming one, printing
+  each site under `generated client functions outside *.query.ts / *.mutations.ts`. Its self-test,
   `assertClientCallPlacementDetectorWorks`, must-catches a named import, an aliased import, a namespace access, a value
   reference, and a renaming re-export, and must-passes a comment, a plain or type-only re-export, and a generated type
   name.
@@ -161,7 +191,7 @@ from Angular — runs before the sweep is trusted.
 
 The same script also runs the two open-vocabulary sweeps (`web/scripts/open-vocabulary-sweep.js`;
 [`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
-`bzh:frontend-open-vocabulary`), neither with an exemption list:
+`bzh:frontend-open-vocabulary`), neither with an exemption list of its own:
 
 - The template-switch sweep fails an `@switch` block in any `.html` below `web/projects` with no `@default` of its own —
   a nested block's `@default` does not count for its parent — printing each site under
@@ -171,11 +201,12 @@ The same script also runs the two open-vocabulary sweeps (`web/scripts/open-voca
 - The vocabulary-record sweep reads every generated vocabulary, and every generated type's vocabulary field, from
   `fleet/src/lib/api/{hub,runner}/types.gen.ts` at run time, and fails any table keyed by one — a `Record`, or a mapped
   type over it (`{ [K in RunnerEventType]: … }`), `Partial` and optional included — outside an `openLookup(…)` call,
-  over every `.ts` below `web/projects` except specs, stories, and the generated `fleet/src/lib/api/`. A table declared
-  by an unexported `const` that its file reads only inside `openLookup(…)` calls is the helper's own and passes. Lint is
-  not type-aware, so it matches the key's written form: the vocabulary named directly or through its namespace
-  (`hubApi.EventLogSeverity`), a field's type (`HostRegistrationView['state']`), or a type alias declared in the same
-  file as either. It prints each site under `tables keyed by a generated vocabulary outside openLookup`. Its self-test,
+  over every `*.translate.ts` and every `.ts` in a unit still on `DOMAIN_BOUNDARY_EXEMPT`, where wire vocabularies are
+  still read, except specs, stories, and the generated `fleet/src/lib/api/`. A table declared by an unexported `const`
+  that its file reads only inside `openLookup(…)` calls is the helper's own and passes. Lint is not type-aware, so it
+  matches the key's written form: the vocabulary named directly or through its namespace (`hubApi.EventLogSeverity`), a
+  field's type (`HostRegistrationView['state']`), or a type alias declared in the same file as either. It prints each
+  site under `tables keyed by a generated vocabulary outside openLookup`. Its self-test,
   `assertVocabularyRecordDetectorWorks`, must-catches each written form, an alias of an alias, a type assertion, a
   mapped type, a `Partial` or optional one, and a table also read outside the helper or exported, and must-passes the
   helper's own form, a table inside an `openLookup` call or read only through one, a non-vocabulary key, and a field

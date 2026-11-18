@@ -105,7 +105,7 @@ signals last produced instead of ticking; `injectNowSignal` closes exactly that 
 `new Date()` outside `fleet/lib/core/now-signal/` — a hidden clock no spec can pin.
 
 **See also.** A status map in fleet picks a display tone or board lane only; whether a status is finished or terminal is
-a backend judgment read from a wire field — `bzh:frontend-wire-conformist`
+a backend judgment translated from a wire field — `bzh:frontend-domain-boundary`
 ([`../architecture/frontend-structure/wire.md`](../architecture/frontend-structure/wire.md)).
 
 ## Kit chrome (`bzh:frontend-kit`)
