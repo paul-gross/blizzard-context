@@ -127,14 +127,15 @@ taking the whole view down over one field.
 
 **Scope.** Every vocabulary the generated clients declare — a response field's, an SSE frame's event type, and a request
 vocabulary a response also carries, such as the verbs a record names as legal — wherever it is read: in a
-`*.translate.ts`, and, while the migration lasts, in any file of a unit still on `DOMAIN_BOUNDARY_EXEMPT`, which still
-reads wire vocabularies outside the boundary. Specs and stories are outside it. The `switch` and template `@switch`
-halves hold every hand-written `.ts` and `.html` under `web/projects/` except specs and stories, a domain union's
-included: lint is not type-aware, so the `switch` rule cannot tell a domain union from a wire one.
+`*.translate.ts`, `*.query.ts`, or `*.mutations.ts`, and, while the migration lasts, in any file of a unit still on
+`DOMAIN_BOUNDARY_EXEMPT`, which still reads wire vocabularies outside the boundary. Specs and stories are outside it.
+The `switch` and template `@switch` halves hold every hand-written `.ts` and `.html` under `web/projects/` except specs
+and stories, a domain union's included: lint is not type-aware, so the `switch` rule cannot tell a domain union from a
+wire one.
 
 **Detect.** `web:lint` (its `default-case` rule, probed by `web/scripts/default-case-lint-probe.js`) and
 `web:structural-gate` (the open-vocabulary sweeps, with no exemption list of their own; the vocabulary-record sweep
-binds translators and the units on `DOMAIN_BOUNDARY_EXEMPT`) fail a branch with no unknown arm;
+binds translators, queries, mutations, and the units on `DOMAIN_BOUNDARY_EXEMPT`) fail a branch with no unknown arm;
 `web/scripts/open-lookup-type-probe.js` proves the compiler still refuses a table or a `switch` missing a declared
 value.
 [`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)

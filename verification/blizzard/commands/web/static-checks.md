@@ -201,16 +201,16 @@ The same script also runs the two open-vocabulary sweeps (`web/scripts/open-voca
 - The vocabulary-record sweep reads every generated vocabulary, and every generated type's vocabulary field, from
   `fleet/src/lib/api/{hub,runner}/types.gen.ts` at run time, and fails any table keyed by one — a `Record`, or a mapped
   type over it (`{ [K in RunnerEventType]: … }`), `Partial` and optional included — outside an `openLookup(…)` call,
-  over every `*.translate.ts` and every `.ts` in a unit still on `DOMAIN_BOUNDARY_EXEMPT`, where wire vocabularies are
-  still read, except specs, stories, and the generated `fleet/src/lib/api/`. A table declared by an unexported `const`
-  that its file reads only inside `openLookup(…)` calls is the helper's own and passes. Lint is not type-aware, so it
-  matches the key's written form: the vocabulary named directly or through its namespace (`hubApi.EventLogSeverity`), a
-  field's type (`HostRegistrationView['state']`), or a type alias declared in the same file as either. It prints each
-  site under `tables keyed by a generated vocabulary outside openLookup`. Its self-test,
-  `assertVocabularyRecordDetectorWorks`, must-catches each written form, an alias of an alias, a type assertion, a
-  mapped type, a `Partial` or optional one, and a table also read outside the helper or exported, and must-passes the
-  helper's own form, a table inside an `openLookup` call or read only through one, a non-vocabulary key, and a field
-  that is not a vocabulary.
+  over every `*.translate.ts`, `*.query.ts`, and `*.mutations.ts`, and every `.ts` in a unit still on
+  `DOMAIN_BOUNDARY_EXEMPT`, where wire vocabularies are still read, except specs, stories, and the generated
+  `fleet/src/lib/api/`. A table declared by an unexported `const` that its file reads only inside `openLookup(…)` calls
+  is the helper's own and passes. Lint is not type-aware, so it matches the key's written form: the vocabulary named
+  directly or through its namespace (`hubApi.EventLogSeverity`), a field's type (`HostRegistrationView['state']`), or a
+  type alias declared in the same file as either. It prints each site under
+  `tables keyed by a generated vocabulary outside openLookup`. Its self-test, `assertVocabularyRecordDetectorWorks`,
+  must-catches each written form, an alias of an alias, a type assertion, a mapped type, a `Partial` or optional one,
+  and a table also read outside the helper or exported, and must-passes the helper's own form, a table inside an
+  `openLookup` call or read only through one, a non-vocabulary key, and a field that is not a vocabulary.
 
 The script also censuses every TypeScript, template, and stylesheet below `web/projects` for the retired board Top/group
 contract: its type, inputs, handlers, grouping mutation facade, and test handles. Generated grouping-client symbols are
