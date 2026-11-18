@@ -33,9 +33,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
 
 - `tests/ui/flow-lanes.spec.ts::test_the_board_shows_each_place_on_a_branch_and_clears_it_live_once_it_lands` — a
   stepped real host brings two chunks to one branch line, held by the mock forge. `GET /api/flows?active=true` shows
-  them in arrival order, and the board's card place lines name that branch. The board loads once: after the lever
-  clears, the place lines disappear live, both chunks read `done` and landed, and `GET /api/flows/{id}/record` lists a
-  `landed` fact for each.
+  them with arrival values that sort into arrival order, and the board's card place lines name that branch. The board
+  loads once: after the lever clears, the place lines disappear live, both chunks read `done` and landed, and
+  `GET /api/flows/{id}/record` lists a `landed` fact for each.
 - `tests/ui/shell.spec.ts` — the smoke that the served bundle renders the desktop board shell at the wide viewport and
   the glance board at the narrow one, rather than the placeholder the hub serves when no bundle is built. It is the
   evidence that Chromium installed, the bundle was built and served, and the fixture works.
@@ -83,8 +83,8 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   link to `/p/default/board` opens the board under the `default` project's lens; a link naming the project by the slug
   it has left, or by its id, is rewritten in place to its current slug; and a link naming no project of the tenant opens
   the same view on All, with a notice. The named project listbox follows focus and route changes with arrow keys and has
-  one Tab entry. At the narrow viewport the proposal waiting-status listbox follows focus and exits with Tab without
-  horizontal page overflow.
+  one Tab entry. A separate test checks that at the narrow viewport the proposal waiting-status listbox follows focus
+  and exits with Tab without horizontal page overflow.
 - `tests/ui/actions/gardening-run-dialog.spec.ts` — `test_gardening_run_dialog_browser`. The gardening run dialog,
   opened from the selected routine's own panel, on the `actions` hub, since the routine's graph names a test action.
   Mints a routine with a never-swept default scope, links a second scope into its related set ahead of time, and mints a
@@ -135,21 +135,21 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   viewport under `bzh:narrow-viewport-tier-rule`, where `/board` routes to the glance shell. The first steps a runner
   host until a verdict-less build escalates its chunk to `needs_human`, then captures and holds open the
   `GET /api/chunks` read, proves the glance shell renders `glance-list-loading` and no `glance-list-empty` row while the
-  read is in flight, and releases it, landing the card and clearing loading: the empty state is never shown on a
-  populated fleet. The second claims a chunk as a runner and ships it a subscription-only `usage.recorded` fact, an
-  estimate with no billed cost, and proves the "Fleet spend · today" panel and the running chunk's card both render the
-  one `~`-marked figure, never a plain billed `$0.00`. A third test emulates an old server-selected done row in the
-  response and checks it remains visible and counted when policy metadata is omitted; it does not test selection.
+  read is in flight, and releases it, landing the card and clearing loading; it also checks no empty row after the card
+  lands. The second claims a chunk as a runner and ships it a subscription-only `usage.recorded` fact, an estimate with
+  no billed cost, and proves the "Fleet spend · today" panel and the running chunk's card both render the one `~`-marked
+  figure, never a plain billed `$0.00`. A third test emulates an old server-selected done row in the response and checks
+  it remains visible and counted when policy metadata is omitted; it does not test selection.
 - `tests/ui/graphs-diagram.spec.ts` — `test_graphs_diagram_renders_in_the_browser`,
   `test_graphs_diagram_selection_in_the_browser` and `test_diagram_geometry_matches_the_rendered_text`. The graph
   explorer's diagram over a live hub. The first opens a minted build, review and deliver graph from `/graphs` and proves
-  its SVG DAG draws every declared node, the START connector lands on the entry node, an advance edge renders, and the
-  review-to-build back-edge is derived as a `retry` edge. The second proves node, edge and self-loop selection over the
-  same graph, clicking a point on a rendered curve off its label's midpoint, since jsdom cannot hit-test geometry; empty
-  canvas clears the selection. The third syncs the packaged graphs, enumerates them from `GET /api/graphs`, and proves
-  each renders a diagram, or the fallback only when an edge leaves the graph, and that a graph authoring a targeted
-  resume renders its `resume:<node>` meta line. The measurer contract the boxes are sized by is held by
-  `web:shell-sweep`. The Retired control remains an independent pressed toggle.
+  its SVG DAG draws every declared node, the START connector lands on the entry node, an advance edge renders, and a
+  `retry` edge renders. The second proves node, edge and self-loop selection over the same graph, clicking a point on a
+  rendered curve off its label's midpoint, since jsdom cannot hit-test geometry; empty canvas clears the selection. The
+  third syncs the packaged graphs, enumerates them from `GET /api/graphs`, and proves each renders a diagram, or the
+  fallback only when an edge leaves the graph, and that a graph authoring a targeted resume renders its `resume:<node>`
+  meta line. The measurer contract the boxes are sized by is held by `web:shell-sweep`. The Retired control remains an
+  independent pressed toggle.
 - `tests/ui/runner-panel-live.spec.ts` — `test_runner_panel_updates_live_over_sse_with_no_reload`. The runner's own
   panel, served by a real `blizzard-runner host` the test steps, its page pointed at the host's URL rather than the
   hub's. Loads the panel's board at `/board` once, never reloading, over an empty board; then promotes a chunk and steps
