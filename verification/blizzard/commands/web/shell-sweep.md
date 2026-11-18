@@ -164,8 +164,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   with `canEdit` on and a chore whose routine slug and scope list are long. At 1280px and 390px the facts, the attention
   list, and each chore must genuinely stack — distinct `top`s — with all five next moments listed, no horizontal
   overflow of the panel, a chore, or the attention list, each errands table kept inside the panel, the Retire action on
-  screen, and no page error. Gardening sits in the hub's mobile bottom tab bar, so the narrow width binds
-  (`bzh:narrow-viewport-tier-rule`).
+  screen, and no page error. It also hands the panel a chore add form, touched so its rule errors show, and an edit form
+  on the long-routine chore: neither form nor its urgency trigger may overflow the panel. Gardening sits in the hub's
+  mobile bottom tab bar, so the narrow width binds (`bzh:narrow-viewport-tier-rule`).
 - `admin-config.shell-sweep.spec.ts` covers the Admin config surfaces' two layouts, mounting the presentational
   `ConfigRecordPanel` and `ConfigMaster` directly with the inputs each layout receives. At 1280px the detail must carry
   its write controls and no CLI command, and the list must offer New. At 390px and 320px the detail must render none of
