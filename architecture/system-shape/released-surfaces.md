@@ -98,7 +98,7 @@ server can omit it misleads the client, and marking one required where a request
 `-Input` and `-Output` components, which the released surface may not do (`bzh:released-surface-additive`).
 
 **Why.** A field the server always sends but the schema types as optional invites the frontend to guard it with a
-fallback, and the fallback re-derives a judgment the wire already made (`bzh:frontend-wire-conformist`).
+fallback, and the fallback re-derives a judgment the wire already made (`bzh:frontend-domain-boundary`).
 
 **Detect.** The `blizzard:unit-test` guard `tests/unit/wire/test_sent_is_required.py` derives the response-only schemas
 from both built apps and fails when one lists an optional property, or when an exclude-flagged model shows up split.
@@ -115,6 +115,6 @@ from both built apps and fails when one lists an optional property, or when an e
   `x ?? fallback`.
 - `WireModel` on a request body, an SSE payload, or a model under `response_model_exclude_none=True`.
 
-**See also.** `bzh:frontend-wire-conformist` ([../frontend-structure/wire.md](../frontend-structure/wire.md)): the
-frontend half, which reads the field without a fallback. `bzh:fleet-wire-additive` ([./fleet-wire.md](./fleet-wire.md)):
-what a backend change to the wire may do to a running runner.
+**See also.** `bzh:frontend-domain-boundary` ([../frontend-structure/wire.md](../frontend-structure/wire.md)): the
+frontend half, whose translator reads the field without a fallback. `bzh:fleet-wire-additive`
+([./fleet-wire.md](./fleet-wire.md)): what a backend change to the wire may do to a running runner.

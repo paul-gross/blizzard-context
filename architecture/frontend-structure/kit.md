@@ -17,14 +17,15 @@ state message) lands once.
 element; and a site that genuinely should not convert, on the kit-floor sweep's reasoned exemption list. The shared kit
 (`fleet/src/lib/kit/`) itself remains the only general exemption.
 
-**Scope.** The kit depends only on `@angular/core`, `@angular/cdk`, and the token CSS (`core/design/tokens.css`) — no
-query, mutation, or client injection — keeping it presentational, testable by plain inputs, and at the bottom of the
-dependency graph; nothing in it may depend upward on a feature.
+**Scope.** The kit depends only on `@angular/core`, `@angular/cdk`, `@angular/aria`, `@angular/forms/signals`, and the
+token CSS (`core/design/tokens.css`) — no query, mutation, or client injection — keeping it presentational, testable by
+plain inputs, and at the bottom of the dependency graph; nothing in it may depend upward on a feature.
 
 **Detect.** A native control in an application template outside the kit is tooled by `web:lint`
 ([`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
-owns what it refuses and its probe); a reviewer asks whether a suppression's reason names a genuinely distinct native
-interaction.
+owns what it refuses and its probe), and so is an `@angular/aria` import in any `.ts` outside the kit, proven by
+`web/scripts/boundary-imports-lint-probe.js`; a reviewer asks whether a suppression's reason names a genuinely distinct
+native interaction.
 
 A new component's sibling `.css` declaring a chrome class the kit components own —
 `.panel`/`.p-hdr`/`.p-body`/`.status`/`.lbl`/`.s-head` — or a local `.none`/`.hint`/`.rest` state line standing in for

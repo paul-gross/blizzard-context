@@ -43,7 +43,6 @@ What UTC-aware means at each boundary:
 
 ## See also
 
-- `bzh:frontend-wire-conformist`
-  ([../architecture/frontend-structure/wire.md](../architecture/frontend-structure/wire.md)) — read it for the backend
-  half when a frontend consumer needs a vocabulary, classification, shape, or judgment — a join or a write's predicate —
-  the wire does not yet carry: the gap is closed on the wire, never in TypeScript.
+- `bzh:frontend-domain-boundary`
+  ([../architecture/frontend-structure/wire.md](../architecture/frontend-structure/wire.md)) — read it for the frontend
+  half: where the frontend reads the wire, and how a translator turns a wire vocabulary or judgment into its domain.
