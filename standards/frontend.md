@@ -71,7 +71,7 @@ status-color table — turns one formatting fix into an edit spanning every file
 **Detect.** Hand-rolled date parsing, formatting, or tooltip strings; `Date.now()` or `new Date()` inside a
 `computed()`; a raw `Date.now()` or zero-arg `new Date()` in non-spec code (`web:lint`'s `no-restricted-syntax` clock
 selectors flag it); a time helper called without a `now`; raw id slicing; a component-local status-color `Record` or CSS
-ladder.
+ladder; a raw `*_at` interpolation or `[title]` in a template (`web:lint` flags both, as a floor).
 
 **Do.** Resolve each display concern through its owner:
 

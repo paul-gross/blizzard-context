@@ -30,6 +30,11 @@ The HTML template `no-restricted-syntax` selector rejects native `<button>`, `<s
 interaction uses a reasoned, element-level ESLint suppression; `web/scripts/kit-control-lint-probe.js` checks the AST
 gate's must-fail and must-pass cases (`node web/scripts/kit-control-lint-probe.js` from the app repo root).
 
+The same block's selectors reject a raw `*_at` interpolation and a `[title]` bound to a raw `*_at` read
+(`bzh:frontend-formatters`); a call, a comparison or `<fleet-when [iso]>` passes.
+`web/scripts/raw-instant-lint-probe.js` checks their must-fail and must-pass cases
+(`node web/scripts/raw-instant-lint-probe.js` from the app repo root).
+
 The `default-case` rule fails a TypeScript `switch` with no `default` branch
 ([`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
 `bzh:frontend-open-vocabulary`): a newer server may send a value the generated client does not list. Lint is not
