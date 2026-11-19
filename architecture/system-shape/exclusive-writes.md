@@ -116,33 +116,33 @@ referrer's retire skips reference checks; its other writes require any named cre
 is enabled or being enabled, to be live. A retired referrer can retain a retired credential. Three more keyed namespaces
 guard closure judgments. A garden proposal's edit, attach, detach, pass, and accept each declare its `GARDEN_PROPOSAL`
 key (`garden_proposal_lock`). Edit, attach, detach, pass, and non-minting accept re-read its closure in domain code
-under that key. Minting accept reads the closure before locking, then declares that key beside the item mint's own keys
-in one unit; its insert-if-absent checks for an existing closure under the lock and the service maps a losing insert to
-an already-closed refusal before minting. The insert-if-absent of the closure row is the conditioned write that
-re-establishes the closure read (`bzh:write-reestablishes-read`). Garden delivery declares the plan's chunk and the
-`FINDING` key (`finding_lock`) of every finding it expects, and the finding exit declares the `FINDING` keys of every
-finding it writes or expects. A work item's edit, withdraw, and deliver each declare its `WORK_ITEM` key
-(`work_item_lock`) and re-read the item's closure under it. The chunk delete pre-reads the chunk's hub-source refs,
-declares the chunk and those refs' `WORK_ITEM` keys, and re-reads the record under them; a ref outside the declared keys
-ends the run before any write, and the delete runs again over the union. These stores' writes take the
-`LockedTransaction`; finding writes compare expected derived state under the lock, while closure decisions remain in
-domain code. The flow pair is governed too: a turn's admission and a submission's close read their flows' open turns and
-the queue ahead, so their unit declares the submission's chunk and a `FLOW` key per flow it holds; a stop, completion,
-or restart reads its chunk's waiting submissions under the chunk lock, which a turn also declares. A macro-shape
-constraint on deployment topology, on what holds once more than one hub process may share a store — not a `kill -9`
-crash-correctness requirement; one hub process already serializes every one of these correctly today. The tenant-row
-lock ahead of the decision's lock changes neither guarantee: on SQLite it already took the writer lock, and on Postgres
-every writer takes the tenant row first and its chunk or keyed rows after, so the order two writers lock in never
-inverts. Dependency declare, group, delete, and release declare the tenant's fixed `DEPENDENCIES_LOCK` key in their unit
-before reading or changing standing edges. Declare and group serialize the tenant-wide cycle judgment, including
-disjoint chunk sets; release and delete serialize with a fold's edge rewrite so it cannot remint an edge they released.
-Delete and declare also declare their chunk rows, and delete declares its work-item keys, in canonical order. Release
-needs no chunk row for cycle safety: it can only shrink the standing set. A create whose only race is a duplicate of a
-tenant-chosen name is no decision under this rule: the table's tenant-led primary key or unique constraint
-(`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's `IntegrityError` to
-the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A create that reads
-state before its insert — a cap, a parent's state, a default it mints — stays a decision under this rule, in the
-keyed-lock form under **Do**.
+under that key. Minting accept refuses a closed proposal early, ahead of drafting, then declares that key beside the
+item mint's own keys in one unit and re-reads the closure under it; its insert-if-absent checks for an existing closure
+under the lock and the service maps a losing insert to an already-closed refusal before minting. The insert-if-absent of
+the closure row is the conditioned write that re-establishes the closure read (`bzh:write-reestablishes-read`). Garden
+delivery declares the plan's chunk and the `FINDING` key (`finding_lock`) of every finding it expects, and the finding
+exit declares the `FINDING` keys of every finding it writes or expects. A work item's edit, withdraw, and deliver each
+declare its `WORK_ITEM` key (`work_item_lock`) and re-read the item's closure under it. The chunk delete pre-reads the
+chunk's hub-source refs, declares the chunk and those refs' `WORK_ITEM` keys, and re-reads the record under them; a ref
+outside the declared keys ends the run before any write, and the delete runs again over the union. These stores' writes
+take the `LockedTransaction`; finding writes compare expected derived state under the lock, while closure decisions
+remain in domain code. The flow pair is governed too: a turn's admission and a submission's close read their flows' open
+turns and the queue ahead, so their unit declares the submission's chunk and a `FLOW` key per flow it holds; a stop,
+completion, or restart reads its chunk's waiting submissions under the chunk lock, which a turn also declares. A
+macro-shape constraint on deployment topology, on what holds once more than one hub process may share a store — not a
+`kill -9` crash-correctness requirement; one hub process already serializes every one of these correctly today. The
+tenant-row lock ahead of the decision's lock changes neither guarantee: on SQLite it already took the writer lock, and
+on Postgres every writer takes the tenant row first and its chunk or keyed rows after, so the order two writers lock in
+never inverts. Dependency declare, group, delete, and release declare the tenant's fixed `DEPENDENCIES_LOCK` key in
+their unit before reading or changing standing edges. Declare and group serialize the tenant-wide cycle judgment,
+including disjoint chunk sets; release and delete serialize with a fold's edge rewrite so it cannot remint an edge they
+released. Delete and declare also declare their chunk rows, and delete declares its work-item keys, in canonical order.
+Release needs no chunk row for cycle safety: it can only shrink the standing set. A create whose only race is a
+duplicate of a tenant-chosen name is no decision under this rule: the table's tenant-led primary key or unique
+constraint (`bzh:tenant-scoped-uniqueness`) admits exactly one insert, and the store maps the losing insert's
+`IntegrityError` to the named conflict — `SecretStore.create` (`hub/store/internal/secret_store.py`) is the pattern. A
+create that reads state before its insert — a cap, a parent's state, a default it mints — stays a decision under this
+rule, in the keyed-lock form under **Do**.
 
 **Detect.**
 
