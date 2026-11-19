@@ -22,9 +22,7 @@ selection, and copy until one is fixed and the other is not.
 **Scope.** Binds those units of `fleet/src/lib/` and every `fleet` import. A mixed folder reached by both apps passes at
 the folder level, so shared infrastructure (`kit/`, `core/viewport/`, `sse/`) may hold a file only one app uses.
 Spec-support (`testing/`, which has its own `fleet/testing` entry) and declaration-free re-export barrels
-(`core/format/`) are exempt, each with its reason named in the sweep. `core/forms/` is a third, temporary exemption: the
-shared form-save contracts land before any app form uses them (`decision:ui-toolkit/shared-form-bootstrap`), and
-awaiting-human adoption, where both apps reach them, removes the entry and this sentence.
+(`core/format/`) are exempt, each with its reason named in the sweep.
 
 **Detect.** The placement sweep inside `web:structural-gate`
 ([`../../verification/blizzard.md`](../../verification/blizzard.md)): it resolves reach to the symbol through the

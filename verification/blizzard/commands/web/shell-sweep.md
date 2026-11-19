@@ -126,7 +126,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   overflow, exercising the General tab's `@media (min-width: 720px)` collapse and a long unbroken artifact key. Only
   General's own sections (`section-`-prefixed testids) are checked for stacking; Node history, Artifacts, and
   Transcripts — the last rendered through the shared `fleet-chunk-transcripts-container` — are each one nav-plus-viewer
-  pane rather than a stack of independent panels, so the overflow check alone stands in for that tab.
+  pane rather than a stack of independent panels, so the overflow check alone stands in for that tab. Its fixture holds
+  an open question and an open gate, and it asserts the panel renders no editable control and sends no non-GET request.
 - `runner-view.shell-sweep.spec.ts` covers the board rail's compact runner panel (`RunnerPanelView`): at 390px and
   1280px the first runner's name line — light, name, pause glyphs and last contact — sits above its agent bar, with its
   name and cells on one line inside the panel with no overflow. A runner both locally and hub paused must render its

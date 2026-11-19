@@ -121,8 +121,8 @@ violation names the unit and the single app that reaches it, or no app when the 
 imports an app. An exempt unit is named with its reason in `PLACEMENT_EXEMPT_UNITS`, the `REAL_TIMER_EXEMPT_FILES`
 idiom. A story, like a spec, ships in no bundle, so its imports are not reach. Its self-test,
 `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a both-app unit and a
-hub story whose `fleet` import adds no hub reach, and the exempt `core/forms` unit when unreached; must-catch an
-unreached `core/` child other than `core/forms` and an unreached top-level `forms` unit — runs first.
+hub story whose `fleet` import adds no hub reach; must-catch an unreached `core/` child and an unreached top-level
+`forms` unit — runs first.
 
 The same script also runs the disjoint-diffs sweep (`web/scripts/disjoint-diffs-sweep.js`, reusing the placement sweep's
 compiler-API program;
