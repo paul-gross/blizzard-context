@@ -484,6 +484,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   stays inside the viewport, the badge text renders with a width and stays on screen, and the long-name row's project
   swatch sits beside its light. A wired project's light paints the `--green` token and a wanting project's the `--red`
   one.
+- `project-link-panel.shell-sweep.spec.ts` covers the admin project link panel, mounted with a long repository name,
+  detail and branch override: at 390px and 1280px the override name and its badge stay readable inside the row.
 - `project-detail.shell-sweep.spec.ts` covers the admin project detail page at 1280px and 390px: the empty pick prompt,
   no queue or empty revisions while their reads are in flight, the empty-revisions state once read, and no sideways
   scroll. It also checks the header swatch beside the name at both widths and, on desktop, the color picker dialog's
