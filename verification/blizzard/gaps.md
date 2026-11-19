@@ -463,6 +463,10 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   Postgres 16 from the empty store to head, down to base and up again: the schema after the second upgrade matched the
   first and the table read empty. It creates one table of portable column types and writes no data, so no seeded or
   concurrent run was made.
+- **The runner hub tokens table.** The revision creating the host-scoped `runner_hub_tokens`, whose downgrade drops it,
+  has not been executed on Postgres: its colocated test walks it forward, back and forward again on SQLite only. It
+  creates one table of portable column types, its sealed values base64 `Text`, and writes no data; the seed's
+  insert-where-absent and a replacement's locked revision read have run on SQLite alone.
 - **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. No run has carried an empty
   Postgres store from the baseline to head, so a revision above the baseline has run on Postgres only where a bullet
   above says so.

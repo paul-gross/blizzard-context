@@ -35,9 +35,9 @@ the tool profile plus the per-spawn identity variables (`BLIZZARD_LEASE_ID`, the
 tracing exporter). Any other per-launch variable is an explicit `adding(...)` on the profile value. A tool that needs a
 daemon variable is named in `env_passthrough`.
 
-**Don't.** `env=os.environ`, or a bare `env=dict(os.environ)` — either hands the child the per-runner token
-(`BZ_HUB_TOKEN_<NAME>`) and every other daemon secret. Don't give a tool child the worker profile: it carries the lease
-token a tool has no use for.
+**Don't.** `env=os.environ`, or a bare `env=dict(os.environ)` — either hands the child any per-runner token the
+environment still carries (`BZ_HUB_TOKEN_<NAME>`), the host's key (`BZ_HOST_SECRET_KEY`), and every other daemon secret.
+Don't give a tool child the worker profile: it carries the lease token a tool has no use for.
 
 ## Every child launches through one seam (`bzh:runner-child-launch`)
 

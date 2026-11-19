@@ -48,6 +48,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
 - `hostlane.` — a registered host's own fact lane's after-push, before-mark window.
 - `ingest.` — `blizzard runner ingest`'s after-copy and after-config windows.
+- `seed.` — a host start's token import, after a runner's sealed token and after a runner seeded whole.
 - `takeover.` — a forced takeover entry's after-decision and after-kill windows.
 - `usagelimit.` — the runner's own usage-limit mark-then-park window, on a worker generation's exit and a judge
   elicitation's exit alike.
@@ -134,6 +135,14 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   stores. The bounded-CI representative is `ingest.after-config.before-removal`. The refusal of a re-run after the
   source ran in between is pinned at the component tier by `tests/component/runner/test_ingest.py`.
   `blizzard-context/architecture/crash-correctness/runner.md` owns the windows' ground.
+- `seed.`, a start's token import, is swept by `test_kill9_at_seed_crash_point` over both of its members —
+  `seed.after-token.before-settings` and `seed.after-runner.before-next-runner`. It is armed in an offline
+  `blizzard runner tick`, which runs the same import a start does, over a host of two runners added at a real hub, one
+  token in `.env` and one in `[hub_tokens]`. After the kill the first runner holds its one row, at revision 1, opening
+  to its source's token, and the second holds none; an unarmed tick of each completes the import, each runner holding
+  exactly one row at revision 1, and the invariants are green. The bounded-CI representative is
+  `seed.after-runner.before-next-runner`. `blizzard-context/architecture/crash-correctness/runner.md` owns the windows'
+  ground.
 - `preempt.`, the operator-restart teardown window armed on the runner, is swept by `test_kill9_at_preempt_crash_point`:
   an operator restarts a running chunk and the runner dies between killing the displaced worker and recording the
   `preempted` closure; recovery re-derives the same preempt off the hub's still-standing fence — the lease closes

@@ -654,10 +654,11 @@ A `MISMATCHED` runner also skips the steps that drive leases or deliver facts un
 that does not answer leaves the verdict as it stood. Nothing durable is lost to any of this: restoring the right token
 or hub resumes the runner from what its store already holds.
 
-While refusing, each check first re-reads the token from the runtime dir's `.env` through `HubTokenHolder.reread`
-(`blizzard/src/blizzard/runner/hub/held_token.py`), so a corrected token takes effect without a restart. The re-read
-only reads the file and swaps the token in memory; a token the process environment supplied overrides the file, and so
-stays fixed until a restart.
+Every check first compares the revision of the runner's `runner_hub_tokens` row with the one it holds, through
+`HubTokenHolder.refresh` (`blizzard/src/blizzard/runner/hub/held_token.py`), and opens the row only when the revision
+has moved, so a token set again takes effect at the next check without a restart, whether or not the runner was
+refusing. The refresh is one primary-key read and an in-memory swap; it writes nothing. A row that no longer opens
+leaves the runner refusing, never presenting no token.
 
 The write owes the invariant checker nothing: the row is the hub's own answer about the token, never derived from other
 facts.
@@ -749,35 +750,51 @@ directory; a runner directory that has not graduated takes no lock, so it is hel
 reads the source only through a backup copy, so the source is written by the last step alone. The steps run in this
 order:
 
-1. Copy the runner's rows into this host's store in one transaction that also appends its `host_ingests` row: the
-   runner, the source, and the source's last `daemon_liveness` stamp.
+1. Copy the runner's rows into this host's store in one transaction that also appends its `host_ingests` row — the
+   runner, the source, and the source's last `daemon_liveness` stamp — and seals its token under this host's key as its
+   `runner_hub_tokens` row, insert-where-absent. The token is the source's row opened under the source's key, or the
+   source `.env`'s when the source holds no row.
 2. Append the runner's `[[workspace]]`.
 3. Append its `[[subscription]]`.
 4. Copy the path files under `runners/<name>/` and append its `[[runner]]`.
-5. Write its token into this host's `.env`.
-6. Remove its token from the source's `.env`.
-7. Delete its rows from the source, only from the runner tables the source's schema has, and move a source left with no
-   runner aside whole. A runner directory that has not graduated holds that one runner in a store at the schema it ran,
-   so its store is moved aside whole, unedited.
+5. Remove its token from the source's `.env`, when it holds one.
+6. Delete its rows from the source, its `runner_hub_tokens` row with them, only from the runner tables the source's
+   schema has, and move a source left with no runner aside whole. A runner directory that has not graduated holds that
+   one runner in a store at the schema it ran, so its store is moved aside whole, unedited.
 
-Each edit from 2 to 6 is skipped when the file already holds it, so a re-run completes whatever an interrupted run left.
+Each edit from 2 to 5 is skipped when the file already holds it, so a re-run completes whatever an interrupted run left.
 The re-run is keyed on the record, not on the files: a runner whose identity row this host holds, with a newest
 `host_ingests` row from the same source and an unchanged source stamp, skips step 1. A source that no longer holds the
 runner gets only its move-aside. A moved stamp refuses, naming both stores, since the source ran after the copy. Two
 windows are **real windows**, each an armed crash point. `ingest.after-copy.before-config` falls after step 1, with the
-rows in both stores and no configuration here yet. `ingest.after-config.before-removal` falls after step 6, with the
-token here and the rows still in the source. Without its token the source cannot run this runner, but a source host
-serving other runners still moves its host-wide stamp, and the re-run then refuses; the recovery is
-`store reset --runner` here, then a fresh ingest.
+rows in both stores and no configuration here yet. `ingest.after-config.before-removal` falls after step 5, with the
+token sealed here, and the rows, the source's token row among them, still in the source. Without its token the source
+cannot run this runner, but a source host serving other runners still moves its host-wide stamp, and the re-run then
+refuses; the recovery is `store reset --runner` here, then a fresh ingest. The token row is deleted after the rows, in a
+transaction of its own, so a crash between the two leaves it behind in the source, which a re-run no longer revisits.
+That loss is **accepted**: the source's host still halts the runner, since its hub holds it under this host now.
+
+## The seed's token import
+
+Each host start and offline `tick` runs `seed_runners` (`blizzard/src/blizzard/runner/cli/runtime.py`) after the store
+write guard. For each kept runner with an id, `import_hub_token` (`blizzard/src/blizzard/runner/hub/token_seed.py`)
+seals the token its deprecated sources hold — `BZ_HUB_TOKEN_<NAME>`, `[hub_tokens]`, then `.env` — at revision 1 in one
+transaction, insert-where-absent, so it never overwrites a row, one that does not open included. Then the runner's
+settings are seeded and it is projected over its stored token. Two windows are **real windows**, each an armed crash
+point. `seed.after-token.before-settings` falls after a runner's row is written and before its settings seed.
+`seed.after-runner.before-next-runner` falls after one runner is seeded whole and before the next one's import. A
+`kill -9` at either leaves each runner with its row or none, never a half row, and the next start completes the import:
+an imported runner keeps its row, and the deprecated source still holds the token of one not yet imported. A token row
+derives no cross-fact invariant, so it owes the invariant checker no assertion.
 
 ## The add-then-write-token window
 
 `runner init` joins a runner that holds no token, or one holding a token its hub does not know under `--allow-readd`.
 `RunnerBootstrap.join` (`blizzard/src/blizzard/runner/hub/bootstrap.py`) adds the runner at the hub, which commits the
 new registration and its token hash before answering. It then writes the token the hub returns to the runtime dir's
-`.env` through `HubTokenFile.write` (`blizzard/src/blizzard/runner/hub/internal/token_file.py`). The token write itself
-is atomic, a fsynced temp file renamed over the original, so the file holds the old token or the new one, never half of
-either.
+`.env`, the seed's import source, through `HubTokenFile.write`
+(`blizzard/src/blizzard/runner/hub/internal/token_file.py`). The token write itself is atomic, a fsynced temp file
+renamed over the original, so the file holds the old token or the new one, never half of either.
 
 A store belongs to the runner that wrote it, so a runner added in place of another never inherits its store. Under
 `--allow-readd` with a token the hub does not know, `join` sets the store aside through `IRunnerStoreAside.set_aside`

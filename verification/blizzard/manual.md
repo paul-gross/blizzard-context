@@ -799,7 +799,9 @@ release that adds a runner revision or graduates the directory, once per runner 
 
 **Hazards.** The live store file is only ever read, by SQLite's backup API; nothing in the rehearsal opens it for
 writing, migrates it, or points a daemon at it. Every command after the copy names the scratch directory, never the live
-one. The scratch directory carries no `.env`, so no hub token leaves the live directory and nothing can reach a hub.
+one. The scratch directory carries no `.env` and no `data/secret-keys/`, and the rehearsal shell sets no
+`BZ_HOST_SECRET_KEY`, so no hub token leaves the live directory readable — a copied store's sealed tokens do not open
+without the live host's key — and nothing can reach a hub.
 
 **Setup.** A scratch virtualenv with the release's wheel installed (`uv venv`, then `uv pip install <wheel>`), so the
 rehearsal runs the migrations the release ships and not the live runner's installed ones. A scratch directory holding a
@@ -1146,14 +1148,15 @@ with a routine's charge.
 - The hub holds no repository record — create none. With the env's mock forge, delivery resolves each cited commit
   against fixture origins that hold no real commit, and rejects every delta.
 - The verification runner has its own runtime directory, joined to the env-local hub with
-  `blizzard runner init <dir> --hub <env-local hub url>`, which adds it there and writes its token to `<dir>/.env`. Then
-  set the `[[runner]]`'s `name`, the `[[workspace]]`'s `envs` to the dedicated env, the runner's binding to
-  `agents = 1`, `[worker] path_prepend` to the mise shims, and `[opencode] enabled = false`, with `BZ_HARNESS_BINARY`
-  set to the real harness and `base_branch` set to the branch under test. It starts from a clean environment, never the
-  env band, so no mock fence reaches the real harness. The runner resets the dedicated env to `base_branch` on every
-  acquire; a branch already checked out in another env's worktree cannot be that base, so name a remote-tracking ref
-  that only the verification needs (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls
-  back to its own main, so the ref is set only in the repo under test.
+  `blizzard runner init <dir> --hub <env-local hub url>`, which adds it there and writes its token to `<dir>/.env`, for
+  its first start to seal in its host store. Then set the `[[runner]]`'s `name`, the `[[workspace]]`'s `envs` to the
+  dedicated env, the runner's binding to `agents = 1`, `[worker] path_prepend` to the mise shims, and
+  `[opencode] enabled = false`, with `BZ_HARNESS_BINARY` set to the real harness and `base_branch` set to the branch
+  under test. It starts from a clean environment, never the env band, so no mock fence reaches the real harness. The
+  runner resets the dedicated env to `base_branch` on every acquire; a branch already checked out in another env's
+  worktree cannot be that base, so name a remote-tracking ref that only the verification needs
+  (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its own main, so the ref
+  is set only in the repo under test.
 - The delta run needs a baseline that both carries the command under test and leaves changed functions with mutants. An
   older commit alone cannot: it may predate the command, or the range may change only functions the method cannot see.
   Build the base as an older commit with the command's own commit cherry-picked onto it, and confirm with a direct run
