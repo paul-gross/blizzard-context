@@ -71,7 +71,7 @@ may also import `testing`:
 | `chunk`       | L2           | `api`, `core`, `kit`, `transcripts` |
 | `host`        | L2           | `api`, `core`, `kit`                |
 | `shell`       | L3           | `api`, `core`, `kit`                |
-| `testing`     | spec support | `api`                               |
+| `testing`     | spec support | `api`, `chunk`                      |
 
 `hub`, rooted at `hub/src/app/`, with kernel `core`, has no table here: its units and their edges are
 `web/scripts/structural-gate.js`'s `HUB_LAYERS`, the one roster.
