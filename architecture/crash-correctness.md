@@ -159,6 +159,8 @@ durable invariants:
 - each runner's retained outbound and pending transcript-outbound seqs are gapless, per runner
   (`runner:gapless-outbound-seq`, `runner:gapless-transcript-outbound-seq`);
 - no retained outbox row sits above its runner's counter in `outbox_counters` (`runner:outbox-counter-above-seq`).
+- once a runner store hosts any runner, every runner its `runner_identity` records has a `hosted_runners` row
+  (`runner:identity-row-hosted`).
 
 Each daemon must serve its half on request: the hub's at `GET /api/admin/invariants`, to hub administrators alone, and
 the runner host's at `GET /api/host/invariants`, on its human lane. Each half must run inside one read transaction on
