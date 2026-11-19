@@ -64,8 +64,8 @@ exists, and raw SQL standing data up in a Python tier.
 finalizers finish, before its temporary store is removed. Close checked-out connections as well: disposing an engine
 alone does not close connections still held by a user. Shared test helpers participate in suite-owned cleanup without
 requiring each caller to dispose an engine. Preserve wider fixture lifetimes, borrowed resources, and deliberate
-process-lifetime migration prototypes; a copied test store is not a prototype. Do not use a hosted app's owned engine
-after its lifespan ends; make a separately owned engine for later store inspection.
+process-lifetime migration prototypes; a copied test store is not a prototype. A hosted app borrows its engine: its
+owner keeps it alive until the app and its finalizers finish, and disposes it after any later store inspection.
 
 **Why.** An open SQLite connection can retain a deleted temporary file, while disposing a borrowed or wider-scoped
 engine early breaks its owner.
@@ -86,10 +86,11 @@ its borrower.
 Every daemon any tier spawns runs with the tenant statement guard on, whether the suite is Python or Playwright. The
 Python suite plugin's (`tests/support/suite_plugin.py`) `pytest_configure` sets `BLIZZARD_TENANT_GUARD=1` and installs
 the guard (`src/blizzard/hub/store/tenant_guard.py`) in the test process, and every hub a service or crash test spawns
-inherits the variable and installs the guard as it opens its engine (`open_hub_engine`, `src/blizzard/hub/app.py`). The
-Playwright harness sets it through `tests/daemon-env.json`; its daemon-log refusal check fails the request's test, or
-the run when no request owns the refusal. Only the value `1` switches the guard on. Fixture SQL a test writes raw is
-outside the guard's reach, so it names the tenant itself. `bzh:tenant-scoped-store`'s Detect
+inherits the variable and installs the guard as it opens its engine (`open_hub_engine`,
+`src/blizzard/hub/composition.py`). The Playwright harness sets it through `tests/daemon-env.json`; its daemon-log
+refusal check fails the request's test, or the run when no request owns the refusal. Only the value `1` switches the
+guard on. Fixture SQL a test writes raw is outside the guard's reach, so it names the tenant itself.
+`bzh:tenant-scoped-store`'s Detect
 ([../../architecture/system-shape/tenancy.md](../../architecture/system-shape/tenancy.md#adapters-hold-scoped-connections-only-bzhtenant-scoped-store))
 owns what the guard refuses and its exemption.
 

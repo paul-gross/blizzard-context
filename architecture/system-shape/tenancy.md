@@ -101,10 +101,10 @@ are exempt: `HubScopedReads` (`bzh:hub-scoped-reads-confined`), the invariant ch
 it stands for — spelled as an import, a name, an attribute, a keyword argument, or a string — appears only in
 `hub/tenancy.py`, `hub/store/tenant_guard.py`, the `hub/store/internal/hub_scoped_*.py` modules,
 `hub/store/internal/invariants.py`, and `hub/store/migrations/`; the same test fails a `ScopedConnections` constructed
-outside `hub/store/` and an import of the guard outside `hub/store/` and `hub/app.py`, which installs it. By eye: an
-adapter constructor typed `HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a raw
-`sa.select(table)` on a tenant-owned table inside an adapter. A guard refusal is the finding, never something to switch
-off: a test outside `tests/unit/hub/store/test_tenant_guard.py` that borrows its `no_hub_guard` fixture or unsets
+outside `hub/store/` and an import of the guard outside `hub/store/` and `hub/composition.py`, which installs it. By
+eye: an adapter constructor typed `HubStoreConnections` or `Engine`; a repository method taking a `tenant` parameter; a
+raw `sa.select(table)` on a tenant-owned table inside an adapter. A guard refusal is the finding, never something to
+switch off: a test outside `tests/unit/hub/store/test_tenant_guard.py` that borrows its `no_hub_guard` fixture or unsets
 `BLIZZARD_TENANT_GUARD` is itself the violation.
 [The tier rules](../../verification/blizzard/tier-rules.md#the-tenant-statement-guard-is-on-in-every-tier) own how the
 test processes and spawned daemons install the guard.
