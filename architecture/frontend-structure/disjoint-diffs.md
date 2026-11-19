@@ -12,15 +12,14 @@ re-exported once from the root `public-api.ts`; what a sub-barrel exports is dec
 feature directory — a sibling only the feature's own components mount stays unexported, so the public surface names what
 is actually re-stackable. A live feature registers its invalidated query keys as a declarative row in its own daemon's
 SSE dispatch registry — the hub's board in `EVENT_INVALIDATION_REGISTRY` (`hub/src/app/core/live/hub-live-updates.ts`),
-the runner's local panel in its own disjoint `RUNNER_EVENT_INVALIDATION_REGISTRY`
-(`runner/src/app/core/live/runner-live-updates.ts`) — never a `case` added to the shared
+the runner's local panel in `runner/src/app/core/live/runner-live-updates.ts` — never a `case` added to the shared
 `LiveInvalidationSpine.dispatch()` (`fleet/src/lib/sse/live-invalidation-spine.ts`) both registries drive. The two
 daemons' registries never share a line range because they never share a file.
 
 Each daemon owns its whole live plane: its query keys (`hub/src/app/core/query-keys.ts`,
 `runner/src/app/core/query-keys.ts`) and its registry sit in its own app. `fleet` keeps only what both daemons reach —
-the SSE transport, `LiveInvalidationSpine`, the coalesce window, both stream vocabularies (`sse/hub-events.ts`,
-`sse/runner-events.ts`), and the chunk and transcript key helpers that take a plane root.
+the SSE transport, `LiveInvalidationSpine`, the coalesce window, both stream vocabularies (`sse/hub-events.domain.ts`,
+`sse/runner-stream.domain.ts`) and their translators, and the chunk and transcript key helpers that take a plane root.
 
 **Why.** A monolithic `public-api.ts` and a hand-written dispatch `switch` are guaranteed merge conflicts — every
 in-flight feature touches the same line range; sub-barrels and a data-shaped registry make adding a feature additive,
@@ -44,10 +43,8 @@ not contended.
   `public-api.ts` carries one `export * from './lib/transcripts'` line; a sibling mounted only by its own feature stays
   unexported.
 - A new live board feature adds a row keyed by its event type to `EVENT_INVALIDATION_REGISTRY` — an `openLookup` table
-  whose rows stay exhaustive over `HUB_EVENT_TYPES`, so an unhandled event type is a compile error, while a type this
-  build does not know stales nothing (`bzh:frontend-open-vocabulary`, [wire.md](./wire.md)) — and a new live
-  runner-panel read does the same in `RUNNER_EVENT_INVALIDATION_REGISTRY`, exhaustive over `RunnerEventType`: each
-  registry exhaustive over its own daemon's event union, never growing a branch for the other's kind.
+  exhaustive over `HubEventKind`, so an unhandled domain event is a compile error, while a type this build does not know
+  stales nothing (`bzh:frontend-open-vocabulary`, [wire.md](./wire.md)).
 
 **Don't.** Two features both editing the same span of `public-api.ts` to add their exports, or both adding a `case` to
 the same `switch`.

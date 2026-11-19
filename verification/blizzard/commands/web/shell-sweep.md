@@ -180,6 +180,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   strip with its counts in `--snow` — Changes counted by the change log's `total` — and the projects list and the opened
   project sit in two panels with a 6px gap. On All at 1280px the first project opens beside the list; at 390px the page
   stays on the list in its own panel.
+- `project-link-panel.shell-sweep.spec.ts` mounts `ProjectLinkPanel` at 390px and 1280px: link text stays readable
+  without horizontal overflow, stacks on the phone and shares a row with actions on desktop, and a long branch override
+  wraps while its badge remains readable and within the row.
 - `members-table.shell-sweep.spec.ts` covers the members page's table (`MembersTable`), mounted directly with a member
   whose name and email are one long unbroken string. At 360px, 768px, and 1280px the page never scrolls sideways and the
   panel stays inside the viewport; at 360px the table is wider than the phone, so it scrolls inside its own panel, and

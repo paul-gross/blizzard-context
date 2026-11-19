@@ -51,7 +51,7 @@ construction.
 (`fleet/lib/api/{hub,runner}/`):
 
 ```ts
-import { healthApiHealthGet } from '../api/hub';
+import { healthApiHealthGet } from 'fleet/shell';
 // ...
 const { data, error } = await healthApiHealthGet({ throwOnError: false });
 ```
