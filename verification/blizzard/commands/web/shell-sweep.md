@@ -488,6 +488,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   no queue or empty revisions while their reads are in flight, the empty-revisions state once read, and no sideways
   scroll. It also checks the header swatch beside the name at both widths and, on desktop, the color picker dialog's
   palette chips horizontally bounded inside the dialog.
+- `project-link-panel.shell-sweep.spec.ts` covers the admin project link panel at 1280px and 390px: a long override and
+  its badge stay readable and bounded, link content keeps a readable width, and the panel never scrolls sideways.
 - `gardening-doorway.shell-sweep.spec.ts` covers the gardening doorway's project cards: at 1280px, 390px, and 320px the
   card counts and the absence of horizontal overflow are checked, and every card's way in stays inside the viewport;
   wrapping of long names and routine lists is not measured.
