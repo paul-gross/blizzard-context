@@ -592,11 +592,10 @@ cursor, never a corpus it would rescan to find nothing changed.
 
 The store's `runner_identity` row records a runner the store hosts: the name and tenant the hub last answered for it. A
 runner's admission writes it with its hosting on one transaction — the full add, and `init`'s join, recorded under the
-`cli` door and the `init` actor (`blizzard/src/blizzard/runner/store/internal/runner_admission_store.py`). Three callers
-refresh it, all through `RunnerIdentityStore.record_runner_identity`
-(`blizzard/src/blizzard/runner/store/internal/identity_store.py`): `runner init`, through `RunnerIdentityService.record`
-(`blizzard/src/blizzard/runner/hub/identity_service.py`), `Registration.run`
-(`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
+`cli` door and the `init` actor (`blizzard/src/blizzard/runner/store/internal/runner_admission_store.py`): `runner init`
+writes it through `RunnerAdmissionStore.record_joined`. Two callers refresh it, both through
+`RunnerIdentityStore.record_runner_identity` (`blizzard/src/blizzard/runner/store/internal/identity_store.py`):
+`Registration.run` (`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
 (`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). None adopts an id: the store is bound to the hosted
 runner's id before anything runs, and the write refuses an identity naming another runner (`RunnerAlreadyBound`).
 Registration refreshes the name and tenant under the configured id, and a reply naming another runner writes nothing and

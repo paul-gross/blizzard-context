@@ -83,16 +83,17 @@ writes a usage sample, a host row, and its outbound report, a runner row, in one
 authored in that host module and its outbound row is built through the runner builders, so the outbound row is stamped
 like any other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
 transaction, through one handle that carries no `Connection` to the domain: the runner half is built by the transfer
-adapter's binding, and the host half by two host members: the `host_ingests` member (`host_ingest_store.py`), which
-merges the host rows by each table's declared treatment and records an ingest, and the `runner_hub_tokens` member
-(`host_hub_token_store.py`), which writes the moving runner's hub token, sealed under the destination's key,
-insert-where-absent; neither module names the other kind's tables. A runner admission
+adapter's binding, and the host half by three host members, each through its own `*_locked` method on the handle: the
+`host_ingests` member (`host_ingest_store.py`), which merges the host rows by each table's declared treatment and
+records an ingest, the `hosted_runners` member (`host_hosted_runner_store.py`), which hosts the moving runner, and the
+`runner_hub_tokens` member (`host_hub_token_store.py`), which writes the moving runner's hub token, sealed under the
+destination's key, insert-where-absent; none imports another, and none names the other kind's tables. A runner admission
 (`blizzard/src/blizzard/runner/store/internal/runner_admission_store.py`) writes one runner's identity row with its
 hosting on one transaction: the full add writes the identity, the first settings revision, the hosted row, the `added`
-fact and the sealed token, and `init`'s join writes the identity and its hosting. Its runner half goes through
-connections bound to the admitted runner, and its host half through the `hosted_runners` member
-(`host_hosted_runner_store.py`) and the `runner_hub_tokens` member, on the same transaction; no method takes a runner
-id.
+fact and the sealed token, and `init`'s join writes the identity and its hosting. It opens the transaction on
+connections bound to the admitted runner and hands it, as one handle, to each member's own `*_locked` method: the
+identity and settings stores for its runner half, and the `hosted_runners` and `runner_hub_tokens` members for its host
+half; no method takes a runner id.
 
 **Scope.** The runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it
 stands for — appears only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations.
