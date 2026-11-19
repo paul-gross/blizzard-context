@@ -49,8 +49,12 @@ seam exists to bind a mock to. For the harness seam, the adapter-isolation check
 - a harness module other than `harness/wiring.py` importing `wiring.py`, which reaches every adapter through it;
 - a module under `harness/` importing `runner/loop/` or the loop's composition root, `runner/loop_wiring.py`.
 
-The same module's planted-tree cases prove the check catches each form. On every other seam a reviewer asks whether an
-adapter imports a sibling, or has grown a second module of its own while still flat in `internal/`.
+The same module's planted-tree cases prove the check catches each form. The same module holds the flat `internal/` seams
+— the forge, work sources, and OAuth — by a roster that classes every module of each seam's `internal/` as an adapter, a
+helper, or wiring, and fails on each breach: one adapter importing another; an adapter named by any module but the
+seam's wiring and the composition roots; and a module in a rostered `internal/` the roster does not class. On every
+other seam a reviewer asks whether an adapter imports a sibling, or has grown a second module of its own while still
+flat in `internal/`.
 
 **Do.** The runner depends on `IWorkspaceProvider` and `IHarnessAdapter`; production selects winter or the built-in
 basic workspace provider by configuration, and every enabled harness the catalog declares (Claude Code, OpenCode), while
