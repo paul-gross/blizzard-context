@@ -49,6 +49,8 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `hostlane.` — a registered host's own fact lane's after-push, before-mark window.
 - `ingest.` — `blizzard runner ingest`'s after-copy and after-config windows.
 - `seed.` — a host start's token import, after a runner's sealed token and after a runner seeded whole.
+- `hostrunner.` — a running host's add or retire of one of its runners, after the hub's mint, after the rows, after the
+  hub's retire, and after the retired fact.
 - `takeover.` — a forced takeover entry's after-decision and after-kill windows.
 - `usagelimit.` — the runner's own usage-limit mark-then-park window, on a worker generation's exit and a judge
   elicitation's exit alike.
@@ -143,6 +145,15 @@ interrupted-claim adoption rather than a dedicated scenario. The windows with de
   exactly one row at revision 1, and the invariants are green. The bounded-CI representative is
   `seed.after-runner.before-next-runner`. `blizzard-context/architecture/crash-correctness/runner.md` owns the windows'
   ground.
+- `hostrunner.`, a running host's add and retire of a runner, is swept by `test_kill9_at_hostrunner_crash_point` over
+  all four of its members — `hostrunner.add.after-mint.before-rows`, `hostrunner.add.after-rows.before-start`,
+  `hostrunner.retire.after-hub.before-fact` and `hostrunner.retire.after-fact.before-drain`. A host serving one runner,
+  and for a retire a second added while it was stopped, is killed at the point by `blizzard runner add` or
+  `retire --force` reaching it over its socket. The invariants are green at the kill and after an unarmed restart: a
+  runner minted with no row here is never started, one in the store is served beside its neighbour, and one retired at
+  the hub ends retired in the store with its sealed token deleted. The bounded-CI representative is
+  `hostrunner.add.after-rows.before-start`. `blizzard-context/architecture/crash-correctness/runner.md` owns the
+  windows' ground.
 - `preempt.`, the operator-restart teardown window armed on the runner, is swept by `test_kill9_at_preempt_crash_point`:
   an operator restarts a running chunk and the runner dies between killing the displaced worker and recording the
   `preempted` closure; recovery re-derives the same preempt off the hub's still-standing fence — the lease closes

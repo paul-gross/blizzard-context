@@ -590,44 +590,40 @@ cursor, never a corpus it would rescan to find nothing changed.
 
 ## The identity row
 
-The store's `runner_identity` row records the runner the host file's `[[runner]] id` names: the name and tenant the hub
-last answered for it. Three callers write it, all through `RunnerIdentityStore.record_runner_identity`
-(`blizzard/src/blizzard/runner/store/internal/identity_store.py`): `runner init`, through `RunnerIdentityService.record`
-(`blizzard/src/blizzard/runner/hub/identity_service.py`), `Registration.run`
-(`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
-(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). None adopts an id: the store is bound to the configured id
-before anything runs, and the write refuses an identity naming another runner (`RunnerAlreadyBound`). Registration
-refreshes the name and tenant under the configured id, and a reply naming another runner writes nothing and turns the
-verdict to a mismatch. The check judges the token's runner against the configured id, never against the row, and writes
-only to fill in the tenant a matching answer names. `init` writes the row from the hub's answer whether it added the
-runner or kept it, so a configured runner has its row before it writes anything. Nothing ever overwrites the id: `init`
-writes the host file's `id` only into an entry that has none, or over a stale one under `--allow-readd` with a store
-that is fresh (set aside for the re-add) or names only the joined runner; a held token naming another runner than the
-configured id stops `init` before it writes a token, host-file id or identity row (the store itself may already have
-been adopted or migrated by then), and a start, `host --check` or `tick` over a store whose identity rows name any
-runner other than the configured one refuses that runner untouched. The bound runner's row is updated in place, or
-inserted when none exists, in one transaction, so a `kill -9` leaves the previous row or the new one, never neither and
-never both. The in-process identity holder is updated only after the row commits, and is restart-erased and reseeded
-from the row at boot. This is a **no-window** write: there is no partner write a crash could separate it from, and a
-lost write is made again by the next registration or matching check.
+The store's `runner_identity` row records a runner the store hosts: the name and tenant the hub last answered for it. A
+runner's admission writes it with its hosting on one transaction — the full add, and `init`'s join, recorded under the
+`cli` door and the `init` actor (`blizzard/src/blizzard/runner/store/internal/runner_admission_store.py`): `runner init`
+writes it through `RunnerAdmissionStore.record_joined`. Two callers refresh it, both through
+`RunnerIdentityStore.record_runner_identity` (`blizzard/src/blizzard/runner/store/internal/identity_store.py`):
+`Registration.run` (`blizzard/src/blizzard/runner/lifecycle/registration.py`) and `IdentityCheck.run`
+(`blizzard/src/blizzard/runner/lifecycle/identity_check.py`). None adopts an id: the store is bound to the hosted
+runner's id before anything runs, and the write refuses an identity naming another runner (`RunnerAlreadyBound`).
+Registration refreshes the name and tenant under the configured id, and a reply naming another runner writes nothing and
+turns the verdict to a mismatch. The check judges the token's runner against the configured id, never against the row,
+and writes only to fill in the tenant a matching answer names. `init` writes the row from the hub's answer whether it
+added the runner or kept it, so a configured runner has its row before it writes anything. Nothing ever overwrites the
+id: `init` writes the host file's `id` only into an entry that has none, or over a stale one under `--allow-readd` with
+a store that is fresh (set aside for the re-add) or names only the joined runner; a held token naming another runner
+than the configured id stops `init` before it writes a token, host-file id or identity row (the store itself may already
+have been adopted or migrated by then), and a start, `host --check` or `tick` over a store `host_store_verdict` judges
+foreign — one whose identity rows name a runner neither its hosted runners nor the file account for — refuses that
+runner untouched. The bound runner's row is updated in place, or inserted when none exists, in one transaction, so a
+`kill -9` leaves the previous row or the new one, never neither and never both. The in-process identity holder is
+updated only after the row commits, and is restart-erased and reseeded from the row at boot. This is a **no-window**
+write: there is no partner write a crash could separate it from, and a lost write is made again by the next registration
+or matching check.
 
-The row may be forgotten (`forget_runner_identity`) by two callers through the `runner/hub` identity service, but is
-retained whenever settings or history remain. A retained unconfigured identity still trips the wrong-store guard; stop
-the owned host and use `runner store reset <host-directory> --runner <id>` to archive and remove that runner before
-restarting configured siblings. Do not rely on archive ingest to reinstate a retired runner. `runner retire` forgets it
-only with the host stopped, under `store_write_guard`'s hold, after the hub retire and before the `[[runner]]` removal;
-with a host running it writes nothing to the store. The running host's registration step forgets it
-(`RetiredRunnerWatch`) for a runner it judges not held, and only when the runner's own token is refused as `retired`
-naming that runner: not held alone also describes a runner moved to another host and awaiting adoption. The delete is
-one transaction and idempotent, a **no-window** write. Recovery from a crash:
-
-- After the hub retire with the `[[runner]]` still present: the next `retire` finishes, since the hub retire is
-  idempotent; a host start also finishes, since the hub refuses the built runner's token and the tick forgets the row
-  only if no settings or history require it.
-- After the CLI removed the `[[runner]]` and before the host tick forgot the row: the next start meets a store naming a
-  runner no `[[runner]]` configures and halts it as `foreign_store_reason` words it, since a start does not contact the
-  hub. `retire --runner <id>` with the host stopped finishes when no settings or history retain the row; otherwise use
-  the archive cleanup above.
+Retirement keeps the row: nothing forgets it. A retired runner's identity, settings and history stay in the store, and
+what retires it is the `retired` fact in `hosted_runner_facts`. Two writers append it. `HostedRunnerService.retire`
+(`blizzard/src/blizzard/runner/hosting/service.py`) appends it after the hub's retire, on a running host through the
+host's route and on a stopped one through `runner retire` under `store_write_guard`'s hold
+([The hosted-runner retirement](#the-hosted-runner-retirement)). The running host's registration step appends it
+(`RetiredRunnerWatch`, `blizzard/src/blizzard/runner/hub/identity_service.py`, door and actor `hub`) for a runner it
+judges not held, and only when the runner's own token is refused as `retired` naming that runner: not held alone also
+describes a runner moved to another host and awaiting adoption. The append is one transaction, and a retired runner's
+retire writes nothing, so it is a **no-window** write. A retired runner's identity row is the host's, since its hosted
+row accounts for it, so it never trips the wrong-store guard, and a `[[runner]]` still naming it is warned of and not
+read.
 
 The verdict the row is checked against is held only in the process: `IdentityVerdictHolder`
 (`blizzard/src/blizzard/runner/hub/identity.py`) is either `UNCHECKED`, `MATCHED` or `MISMATCHED`, and starts every
@@ -663,11 +659,12 @@ leaves the runner refusing, never presenting no token.
 The write owes the invariant checker nothing: the row is the hub's own answer about the token, never derived from other
 facts.
 
-### Binding at the configured id
+### Binding at the hosted runner
 
 The binding contract belongs to `bzh:runner-scoped-store`'s Scope
 ([../system-shape/runner-scoping.md](../system-shape/runner-scoping.md#adapters-hold-the-bound-seam-bzhrunner-scoped-store)).
-A `kill -9` leaves nothing to reconcile: the binding is reseeded from the host file at the next boot.
+The binding is made from the runner's `hosted_runners` row, never from the host file's `id`, so a `kill -9` leaves
+nothing to reconcile: each boot binds every runner the store hosts and has not retired again from its row.
 
 The runner store's baseline revision creates every runner-scoped table with `runner_id` `NOT NULL`, so a row naming no
 runner cannot exist; `blizzard/contracts/store/runner.json` records each column's nullability. A store below the
@@ -787,6 +784,11 @@ point. `seed.after-token.before-settings` falls after a runner's row is written 
 an imported runner keeps its row, and the deprecated source still holds the token of one not yet imported. A token row
 derives no cross-fact invariant, so it owes the invariant checker no assertion.
 
+Before that import, seed step 4 hosts every identified `[[runner]]` of the file that the store does not yet host — its
+hosted row and `added` fact — in one transaction, under the `seed` door, so a `kill -9` leaves every file runner hosted
+or none, and the next start writes the same transaction again. A `[[runner]]` naming a retired runner is not hosted
+again: the seed warns of it and skips it. It is a **no-window** write.
+
 ## The add-then-write-token window
 
 `runner init` joins a runner that holds no token, or one holding a token its hub does not know under `--allow-readd`.
@@ -810,6 +812,33 @@ keeps what it had. A failed write exits naming `blizzard hub runner retire <id> 
 runner shows as never connected in `hub runner list`, and retiring it by its id is the recovery either way. The loss is
 one inert registry row: it holds no route and claims nothing, and re-running init adds the runner afresh over the
 already fresh store. No crash point stands in for it.
+
+## The hosted-runner add
+
+`HostedRunnerService.add` (`blizzard/src/blizzard/runner/hosting/service.py`) judges the runner's name, projects and
+settings before the hub is asked, then mints the runner at the hub under the host's token, then writes its identity,
+first settings revision, hosted row, `added` fact and sealed token in one admission transaction
+(`blizzard/src/blizzard/runner/store/internal/runner_admission_store.py`); a running host starts it at its next tick.
+Two armed crash points bracket the rows. `hostrunner.add.after-mint.before-rows` falls after the hub's mint and before
+the transaction. `hostrunner.add.after-rows.before-start` falls after it commits and before the host starts the runner:
+a `kill -9` there leaves the runner hosted, and the next boot or tick starts it.
+
+The window between the mint and the rows is a **real window**, and its loss is **accepted** and named. The hub mints the
+runner's id, so the mint and the rows cannot share a transaction. A `kill -9` inside it leaves the hub holding a runner
+as never connected and the host holding no row and no token for it. The runner is inert: nothing connects as it, it
+holds no route and claims nothing. Recovery is to retire it at the hub with `blizzard hub runner retire <id>` and add it
+again.
+
+## The hosted-runner retirement
+
+`HostedRunnerService.retire` asks the hub to retire the runner, with `force` when given, then appends the `retired`
+fact; the running host drains the runner at its next reconcile and deletes its sealed token. Two armed crash points
+bracket the fact. `hostrunner.retire.after-hub.before-fact` falls after the hub's retire and before the fact: a
+`kill -9` there leaves the runner retired at the hub and active in the store, and the next `retire` finishes, since the
+hub's retire of a retired runner is idempotent, as does the registration step's `RetiredRunnerWatch` once the hub
+refuses the runner's token as retired. `hostrunner.retire.after-fact.before-drain` falls after the fact commits and
+before the drain: the restart never starts a retired runner, and the next reconcile deletes a retired runner's leftover
+token, idempotently.
 
 ## Runner settings and launch metadata
 

@@ -10,12 +10,13 @@ A runner store holds two kinds of table. A **runner-scoped** table, declared `in
 `runner_identity` row names. A **host-scoped** table holds facts about the machine and its runtime directory — the
 workspace prompt, the graph-artifact mirror, the token replay cache, daemon liveness, external usage samples, and a
 registered host's own identity at its hub (`host_identity`), its own fact lane (`host_outbound_buffer`), the mark its
-hub last answered on that lane (`host_high_water_seen`), the runners it took in from other stores (`host_ingests`), and
-each runner's sealed hub token (`runner_hub_tokens`) — and carries no runner key. A host table about one runner, as
-`host_ingests` and `runner_hub_tokens` are, names its `runner_id` explicitly in its own adapter. Each host table also
-declares how a runner transfer treats its rows (`info={"transfer": ...}`), which
-`blizzard/tests/unit/runner/store/test_schema_declarations.py` holds every host table to. How a table gains the key over
-rows it already holds is `bzh:keyed-table-migration`'s, in
+hub last answered on that lane (`host_high_water_seen`), the runners it took in from other stores (`host_ingests`), each
+runner's sealed hub token (`runner_hub_tokens`), and which runners are the host's (`hosted_runners`, with the
+append-only history of each one's adds and retirements, `hosted_runner_facts`) — and carries no runner key. A host table
+about one runner, as `host_ingests`, `runner_hub_tokens` and the two hosted tables are, names its `runner_id` explicitly
+in its own adapter. Each host table also declares how a runner transfer treats its rows (`info={"transfer": ...}`),
+which `blizzard/tests/unit/runner/store/test_schema_declarations.py` holds every host table to. How a table gains the
+key over rows it already holds is `bzh:keyed-table-migration`'s, in
 [../../standards/persistence.md](../../standards/persistence.md).
 
 ## Adapters hold the bound seam (`bzh:runner-scoped-store`)
@@ -23,22 +24,23 @@ rows it already holds is `bzh:keyed-table-migration`'s, in
 **Rule.** A `runner/store/internal/` adapter holds `RunnerStoreConnections` and builds every statement on a
 runner-scoped table through its `select`, `exists`, `insert`, `update`, and `delete` builders, which apply the bound
 runner to every runner-scoped table they name. The runner is a property of the connections instance — bound once, from
-the host file's runner `id` — never an argument an adapter method takes or a value a caller supplies.
+the runner's `hosted_runners` row — never an argument an adapter method takes or a value a caller supplies.
 
 **Why.** An adapter that never writes the runner predicate by hand cannot forget it, and a key the seam stamps is the
 binding the store was opened with rather than a value a caller can get wrong. Two runners sharing a store, or a store
 carried from one runner to another, then cannot read or overwrite each other's rows.
 
 **Scope.** The binding is set once and never changes (`RunnerAlreadyBound` refuses another id). Every composition binds
-the stores to the configured runner's `id` before anything runs, the hub reachable or not: the host and tick graphs and
-the offline read verbs. The invariant checker reads across runners through the exempt `runner_audit`, so it takes no
+the stores to a runner the store hosts before anything runs — the binding is made from its `hosted_runners` row, never
+once from the host file's `id` nor reseeded from the file — the hub reachable or not: the host and tick graphs and the
+offline read verbs. The invariant checker reads across runners through the exempt `runner_audit`, so it takes no
 binding. The store never learns its runner from its own rows, and registration never adopts an id. A connection never
 bound reads a runner-scoped table as empty and refuses a write with `RunnerUnbound`, so no writer lands an unowned row.
 A runner transfer, which copies one runner's rows from one store into another and deletes them from one store, is
 admitted: its adapter (`blizzard/src/blizzard/runner/store/internal/runner_transfer_store.py`) binds both stores'
 connections to the moving runner and builds every statement through them, iterating the schema's runner-scoped tables
 rather than a list of its own. How the binding survives a crash is
-[../crash-correctness/runner.md](../crash-correctness/runner.md#binding-at-the-configured-id)'s to record.
+[../crash-correctness/runner.md](../crash-correctness/runner.md#binding-at-the-hosted-runner)'s to record.
 
 **Detect.** The runner statement guard — a `before_execute` listener
 (`blizzard/src/blizzard/runner/store/runner_guard.py`) the test suite switches on in every tier and production leaves
@@ -76,15 +78,22 @@ module:
 its exemptions a list a reviewer reads whole, turns "where can one runner's rows leak?" into a question with a short
 answer.
 
-**Exception.** Two cross-kind writes are admitted. `record_external_usage_attempt` (`host_external_usage_store.py`)
+**Exception.** Three cross-kind writes are admitted. `record_external_usage_attempt` (`host_external_usage_store.py`)
 writes a usage sample, a host row, and its outbound report, a runner row, in one transaction. Its host statement is
 authored in that host module and its outbound row is built through the runner builders, so the outbound row is stamped
 like any other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
 transaction, through one handle that carries no `Connection` to the domain: the runner half is built by the transfer
-adapter's binding, and the host half by two host members: the `host_ingests` member (`host_ingest_store.py`), which
-merges the host rows by each table's declared treatment and records an ingest, and the `runner_hub_tokens` member
-(`host_hub_token_store.py`), which writes the moving runner's hub token, sealed under the destination's key,
-insert-where-absent; neither module names the other kind's tables.
+adapter's binding, and the host half by three host members, each through its own `*_locked` method on the handle: the
+`host_ingests` member (`host_ingest_store.py`), which merges the host rows by each table's declared treatment and
+records an ingest, the `hosted_runners` member (`host_hosted_runner_store.py`), which hosts the moving runner, and the
+`runner_hub_tokens` member (`host_hub_token_store.py`), which writes the moving runner's hub token, sealed under the
+destination's key, insert-where-absent; none imports another, and none names the other kind's tables. A runner admission
+(`blizzard/src/blizzard/runner/store/internal/runner_admission_store.py`) writes one runner's identity row with its
+hosting on one transaction: the full add writes the identity, the first settings revision, the hosted row, the `added`
+fact and the sealed token, and `init`'s join writes the identity and its hosting. It opens the transaction on
+connections bound to the admitted runner and hands it, as one handle, to each member's own `*_locked` method: the
+identity and settings stores for its runner half, and the `hosted_runners` and `runner_hub_tokens` members for its host
+half; no method takes a runner id.
 
 **Scope.** The runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it
 stands for — appears only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations.
