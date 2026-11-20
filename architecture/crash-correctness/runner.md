@@ -854,3 +854,18 @@ process and spawn row; `record_identified_spawn` later fills its session identit
 rows may lack those fields and use the existing fallback. Identity is retained while settings or settings-change history
 remain; the per-runner reset above copies the identity and scoped settings/history into the archive before removing live
 rows.
+
+## The host's workspace and subscription records
+
+Each write of a workspace or subscription record — create, edit, retire, enable or seed — commits in one transaction
+through `_HostRecordStore.apply` (`blizzard/src/blizzard/runner/store/internal/host_record_store.py`): the
+`host_workspaces` or `host_subscriptions` row at its new revision under a compare-and-set on the revision it was decided
+against, its `host_workspace_facts` or `host_subscription_facts` lifecycle fact when it retires or enables, and its
+`host_setting_changes` row. A crash commits the whole write or none of it. These are **no-window** writes.
+
+The start's seed of the host file's `[[workspace]]` and `[[subscription]]` tables (`seed_record_tables`,
+`blizzard/src/blizzard/runner/composition.py`) writes one such transaction per table, under the store guard and before
+any runner is built. Its parts are independently harmless, so it too is **no-window**. A crash between two tables leaves
+some records seeded and the rest absent. The next start seeds only the ones still absent, since a seed skips any key the
+store holds, retired or not. No derived cross-fact invariant is introduced: a record's state is its newest fact, read
+with the row. So no invariant-checker assertion is owed.
