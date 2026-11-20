@@ -165,8 +165,9 @@ environment. Keep both scratch hosts stopped throughout; never start either runn
 **Steps.**
 
 1. Prepare distinct source and destination host configurations using the current scaffold, with distinct runner and
-   workspace names. Initialize and register each with `uv run blizzard runner init <directory> --hub "$BZ_HUB_URL"`.
-   Record host and runner ids, baseline parsed configuration, marker files, and read-only store observations.
+   workspace names. Initialize and register each with `uv run blizzard runner init <directory> --hub "$BZ_HUB_URL"`,
+   then declare each host's `[[workspace]]` under the name its runner binds — `init` declares none. Record host and
+   runner ids, baseline parsed configuration, marker files, and read-only store observations.
 2. Set a registered source runner path key to a marker beneath its runner directory and another to an absolute path
    outside the source, also under the scratch directory. Record their values and marker bytes. Release and adopt the
    moving runner at the env-local hub:
@@ -1149,14 +1150,14 @@ with a routine's charge.
   against fixture origins that hold no real commit, and rejects every delta.
 - The verification runner has its own runtime directory, joined to the env-local hub with
   `blizzard runner init <dir> --hub <env-local hub url>`, which adds it there and writes its token to `<dir>/.env`, for
-  its first start to seal in its host store. Then set the `[[runner]]`'s `name`, the `[[workspace]]`'s `envs` to the
-  dedicated env, the runner's binding to `agents = 1`, `[worker] path_prepend` to the mise shims, and
-  `[opencode] enabled = false`, with `BZ_HARNESS_BINARY` set to the real harness and `base_branch` set to the branch
-  under test. It starts from a clean environment, never the env band, so no mock fence reaches the real harness. The
-  runner resets the dedicated env to `base_branch` on every acquire; a branch already checked out in another env's
-  worktree cannot be that base, so name a remote-tracking ref that only the verification needs
-  (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its own main, so the ref
-  is set only in the repo under test.
+  its first start to seal in its host store. Then set the `[[runner]]`'s `name`, add the `[[workspace]]` its binding
+  names — `init` declares none — with `envs` set to the dedicated env, the runner's binding to `agents = 1`,
+  `[worker] path_prepend` to the mise shims, and `[opencode] enabled = false`, with `BZ_HARNESS_BINARY` set to the real
+  harness and `base_branch` set to the branch under test. It starts from a clean environment, never the env band, so no
+  mock fence reaches the real harness. The runner resets the dedicated env to `base_branch` on every acquire; a branch
+  already checked out in another env's worktree cannot be that base, so name a remote-tracking ref that only the
+  verification needs (`git update-ref refs/remotes/origin/<name> <sha>`). A repo that lacks the ref falls back to its
+  own main, so the ref is set only in the repo under test.
 - The delta run needs a baseline that both carries the command under test and leaves changed functions with mutants. An
   older commit alone cannot: it may predate the command, or the range may change only functions the method cannot see.
   Build the base as an older commit with the command's own commit cherry-picked onto it, and confirm with a direct run
