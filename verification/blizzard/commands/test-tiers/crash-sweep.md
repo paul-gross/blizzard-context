@@ -36,6 +36,7 @@ The registry's boundary families (`bzh:crash-point-registry`):
 - `pause.`
 - `flow.` — the flow driver's submit, turn-start, and boot-recovery windows, and a pending turn's poll-then-end window.
 - `action.` — a hub action pass's effect and resume windows.
+- `rebase.` — the forge update after a rewritten head, before its result is recorded.
 - `migrate.`
 - `attach.`
 - `declare-commit.`
@@ -62,6 +63,9 @@ Ungrouped generic build-to-deliver points, which mostly fire in the runner loop,
 the plaintext token back — is the first ungrouped point armed on the hub, recovered generically by the runner's
 interrupted-claim adoption rather than a dedicated scenario. The windows with dedicated scenarios:
 
+- `rebase.after-update.before-record` is swept by `test_kill9_at_rebase_crash_point`: a behind PR is rewritten by the
+  forge before the armed hub dies. The test checks invariants immediately and after restart, then asserts convergence,
+  one landed repository and merge marker, one PR, and one work-file commit in the origin history.
 - `migrate.`, the cross-graph migration window armed on the hub, is swept by `test_kill9_at_migrate_crash_point`: a kill
   right after the atomic re-pin loses only the `MIGRATED` response, the runner's replay re-derives it via the
   `accepted_migration` probe, and the migration invariants come back green.
