@@ -5,22 +5,23 @@ configured record shares, how a declarative document is decoded, what may carry 
 read; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rule here follows the slot skeleton owned
 by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
-A **configured record** is a record the hub holds as operator-set configuration and that an operator changes while the
-hub runs: a forge, a credential, a work source, a repository, a secret, a project, a project source link, a project
-repository link, a scope, a routine, a cadence, an urgency, the tenant's settings, or the hub-wide settings. The rules
-below name the seams and tables that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by
-the names their implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt)
-lists the code these rules do not yet hold.
+A **configured record** is a record the hub or a runner host holds as operator-set configuration and that an operator
+changes while it runs: a forge, a credential, a work source, a repository, a secret, a project, a project source link, a
+project repository link, a scope, a routine, a cadence, an urgency, the tenant's settings, the hub-wide settings, or a
+runner host's workspace or subscription. The rules below name the seams and tables that keep them — `IConfigCodec`,
+`SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so code adding one of them
+takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
-**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable; a kind
-listed below departs from it only as its entry states. Give editable records a sparse-merge edit, and each record a
-`revision` that every changed write increments and one change row appended in the same transaction as each write; tenant
-records use `config_changes`, while hub-wide settings and the host's records use their own audit below. A sparse merge
-leaves an absent field unchanged, sets a present field, and takes an explicit `null` as clearing a nullable field,
-refusing it on any other. A retire of a retired record, or an enable of an enabled one, writes nothing; an edit of a
-retired record is legal and leaves it retired. Enable reverses a retirement.
+**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable — show's
+CLI verb being `get` (`bzh:cli-get-verb`); a kind listed below departs from it only as its entry states. Give editable
+records a sparse-merge edit, and each record a `revision` that every changed write increments and one change row
+appended in the same transaction as each write; tenant records use `config_changes`, while hub-wide settings and the
+host's records use their own audit below. A sparse merge leaves an absent field unchanged, sets a present field, and
+takes an explicit `null` as clearing a nullable field, refusing it on any other. A retire of a retired record, or an
+enable of an enabled one, writes nothing; an edit of a retired record is legal and leaves it retired. Enable reverses a
+retirement.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
@@ -122,14 +123,14 @@ verb set itself:
   restoring the old value.
 - **The host's workspaces and subscriptions** are the runner host's records, not a tenant's: their routes sit under
   `/api/host/workspaces` and `/api/host/subscriptions` on the runner, keyed by `workspace_id` and `slug`, and their CLI
-  nouns are `blizzard runner workspace` and `blizzard runner subscription`, whose read verb is `get`
-  (`bzh:cli-get-verb`) rather than `show`. `workspace_id`, `slug` and a subscription's `provider` are immutable: an edit
-  naming one is refused `422`. Each write needs superuser authority, except the workspace prompt routes, which write the
-  workspace record's prompt at its current revision with no `If-Match`. Each changed write appends one row to the host
-  store's `host_setting_changes`, its `record_kind` `workspace` or `subscription` and its `record_key` the record's key,
-  never `config_changes`. The host file's `[[workspace]]` and `[[subscription]]` seed a record once, when the store
-  holds none of that key; the file is not read for them after. The models own the lifecycle rules and the service the
-  validation, the write and the change row, in `blizzard/src/blizzard/runner/host_records/`; the decision and the
+  nouns are `blizzard runner workspace` and `blizzard runner subscription`. `workspace_id`, `slug` and a subscription's
+  `provider` are immutable: an edit naming one is refused `422`. Each write needs superuser authority, except the
+  workspace prompt routes, which write the workspace record's prompt at its current revision with no `If-Match`. Each
+  changed write appends one row to the host store's `host_setting_changes`, its `record_kind` `workspace` or
+  `subscription` and its `record_key` the record's key, never `config_changes`. The host file's `[[workspace]]` and
+  `[[subscription]]` seed a record once, when the store holds none of that key; the file is not read for them after. The
+  models own the lifecycle rules and the service the validation, in `blizzard/src/blizzard/runner/host_records/`; the
+  store adapter writes the record, its lifecycle fact and its change row in one transaction; the decision and the
   refusals are `blizzard/src/blizzard/foundation/settings_record/`'s, shared with the hub-wide settings.
 
 Implement tenant configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord`
@@ -156,7 +157,8 @@ identified and resolved is `bzh:configured-record-names` below.
 - A `PUT` that replaces a whole record, other than a secret's value replace; a project link's `PUT` replaces no fields.
 - A `DELETE` route on a configured record.
 - A changed write to a configured record with no change row in its transaction, or one that leaves `revision` where it
-  was, except the secret lifecycle debt below; hub-wide settings use their own audit rather than `config_changes`.
+  was, except the secret lifecycle debt below; hub-wide settings and the host's records use their own audit rather than
+  `config_changes`.
 - A change row of a project, a project's link, or a record of any kind a project owns written without that record's
   project.
 - A create of a kind a project owns that does not take the call's project by id or slug (`--project` on the CLI), does
