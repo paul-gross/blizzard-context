@@ -31,9 +31,7 @@ landing. A worker that cannot finish just exits with its facts, and the platform
 
 - Delivery is a hub-executed node, not an agent's role. Every code-delivering lane delivers through its `deliver` node's
   `land` action, and how each repository lands is that repository's landing policy, which
-  [../domain/artifacts/delivery.md](../domain/artifacts/delivery.md) owns. Under the `merge-on-checks` policy the action
-  opens a pull request for the repository, and the hub merges it with a merge commit only after a terminal-green check
-  verdict.
+  [../domain/artifacts/delivery.md](../domain/artifacts/delivery.md) owns.
 - A human enters only where invited or where failure parks the chunk — asks, gate decisions, takeover
   ([../domain/humans.md](../domain/humans.md)).
 

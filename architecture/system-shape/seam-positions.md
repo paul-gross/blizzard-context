@@ -46,6 +46,10 @@ the work-source family, and login through its own seam:
 | `IOAuthProvider` | Login                                                                                                                                                                                                | Protocol seam                                                                                                                                                                                        |
 | Landing seam     | Delivery: the `land` action's refs, changes and checks, and the garden's commit check, which resolves a name or `owner/repo` against the enabled records and answers nothing for one no record names | Protocol seams, `IForgeRefs`, `IForgeChanges` and `IForgeChecks`, built per repository by the registry; each forge kind offers a capability set, and an action's unmet requirement refuses the visit |
 
+The refs role also supplies immutable commit, complete tree and blob evidence for rewrite proof. The changes role offers
+repository-aware landing options and an explicit update method; the forge binding owns method preference and repository
+settings, while delivery consumes its answer. Repository availability is not an adapter capability.
+
 The hub holds no shared forge endpoint and no owner fallback: each repository is a record naming its forge record,
 owner, base branch and credential, and a `deliver` step and the garden's commit check each resolve every repository they
 act on to its record on every use; a work source names its forge record and credential likewise, and the OAuth provider

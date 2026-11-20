@@ -1046,11 +1046,13 @@ fleet-delivered PR for each repo being checked.
    `required_pull_request_reviews.required_approving_review_count` against the documented `0`.
 3. From the known PR URL, confirm its branch matches the delivered chunk and its state is merged with
    `gh pr view <fleet-pr-number> --repo <owner>/<repo> --json state,headRefName,mergedAt,mergeCommit`.
-4. Fetch in that repo's worktree with `git -C <repo-worktree> fetch origin`, then
-   `git -C <repo-worktree> log -1 --format=%P <mergeCommit.oid>` reads two parents.
+4. Determine the method used for that PR from its delivery and forge evidence. Fetch in that repo's worktree with
+   `git -C <repo-worktree> fetch origin`, then inspect `git -C <repo-worktree> log --format='%H %P' <mergeCommit.oid>`.
+   A merge commit has two parents; rebase and squash landings have linear, single-parent history.
 
 **Passes when.** Every protected repo's live protection matches its documented required set exactly, and the selected
-fleet PR's own merge commit has two parents.
+fleet PR's landed history matches its selected method: two parents for a merge commit, linear history for rebase or
+squash.
 
 `blizzard-infra` is out of scope for this method — its own docs record why it cannot be protected on the current GitHub
 plan.

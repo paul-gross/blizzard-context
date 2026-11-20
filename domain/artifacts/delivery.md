@@ -55,6 +55,12 @@ worker node's judgement ([edges](../graphs/edges.md)).
   opt in to landing with no CI; that permits an empty result, not a failed, pending, or unreadable check result. If the
   overall delivery deadline expires with an observation recorded, it escalates as missing checks without claiming a
   later read confirmed the absence. A parked change remains a person's merge decision.
+- **Automatic method choice.** For GitHub `merge-on-checks`, the forge offers allowed methods in preference order: merge
+  commit, rebase-merge, then squash. A method-specific incompatibility permits trying the next allowed method;
+  exhaustion escalates with the allowed set and reasons. A behind change uses a rebase update when merge commits are
+  disabled. The updated head must be admitted and pass its own checks before landing; rebase-merge and squash can
+  produce a different landed revision, which is recorded without another post-landing check. Repository method settings
+  are distinct from adapter and credential capabilities.
 - **The policy is the repository's.** How a change lands is a fact about the repository it lands in: each repository
   record carries a landing policy, and the `land` action runs each repository's own. A policy is accepted only on a
   forge that offers its required capabilities. The policies are:

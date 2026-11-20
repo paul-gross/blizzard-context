@@ -103,7 +103,11 @@ so the sweep opens the window between `land`'s two repositories there: killed wi
 second repository not yet merged, the restarted hub lands the second without merging the first twice.
 
 Landing recovery re-reads forge state and durable markers; a candidate is proven before reuse and cleanup follows a
-durable landing record.
+durable landing record. The external rebase update has its own registered window, `rebase.after-update.before-record`,
+after the forge accepts the update and before recovery polls. A durable rewrite intent precedes the mutation; a later
+pass re-reads the PR and proves its immutable head against that intent before checking or landing it. The PR identity
+locates even a deleted branch but is not proof. The dedicated kill-9 scenario exercises this boundary; an unprovable or
+raced head is not authorized by the mutation response.
 
 ## The trace export sweep
 
