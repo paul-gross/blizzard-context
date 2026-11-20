@@ -181,8 +181,8 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
   with no per-name exemption; the module is a wiring root, not a seam a collaborator reaches into.
 - A `hub/` or `runner/` module — outside its own connections seam — acquiring `self._engine` directly instead of taking
   the injected `HubStoreConnections` / `RunnerStoreConnections` collaborator (`bzh:dependency-inversion`'s exemplar).
-- A `blizzard.*` class constructed more than once across the hub's composition-root files (`hub/app.py`,
-  `hub/composition.py`, `hub/store/internal/chunk_store_factory.py`) — a second copy of a process-scoped collaborator.
+- Duplicate construction or engine acquisition in the hosted hub graph across its app, composition, runtime, and tool
+  roots — a second copy of a process-scoped collaborator. Independent short-lived roots remain separate.
 - `build_stores`, `build_production_harnesses`, or `HarnessHealthCache` called anywhere under `blizzard/src/blizzard/`
   other than `runner/composition.py` — a second copy of the runner's process graph.
 
@@ -204,15 +204,18 @@ adapter, not to transports in general.
 down in a frozen dataclass like `HubServices`. Thread-confined engines and clients can remain independent, but belong to
 the same process graph with explicit lifetimes:
 
-- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py`, which runs `build_hub_core`, then the work-source registry,
-  then `build_services`
-- `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core builds the hub-level
-  stores once, and a tenant's stores and leaf services once per tenant, on its first `HubCore.open(scope)`, cached in
-  the core's `TenantCache`; `build_services` takes the core and builds none of them. It builds the hub-level
-  `HubServices` and has the cache serve each tenant's `TenantServices`, built from that tenant's `TenantStores` alone
-  (`build_tenant_services`) and cached beside them. A hub-level service reaches a tenant's services only through
-  `HubServices.tenants` (`TenantServicesOpener`); no service is built from the unscoped core (`bzh:tenant-scoped-store`,
-  [./system-shape/tenancy.md](./system-shape/tenancy.md))
+- `hub/cli/runtime.py` owns the hosted engine and platform tracing handle. It acquires the instrumented connections
+  graph through `hub/composition.py` and shares it with settings and the hosted app; it disposes the engine and shuts
+  down tracing after their users finish.
+- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py` consumes those borrowed resources, builds the core, and
+  passes work-source and forge registry factories to `build_services` for per-tenant use.
+- `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core consumes the shared
+  connections, builds the hub-level stores once, and a tenant's stores and leaf services once per tenant, on its first
+  `HubCore.open(scope)`, cached in the core's `TenantCache`; `build_services` takes the core and builds none of them. It
+  builds the hub-level `HubServices` and has the cache serve each tenant's `TenantServices`, built over that tenant's
+  `TenantStores` with shared service parts and its event broker (`build_tenant_services`) and cached beside them. A
+  hub-level service reaches a tenant's services only through `HubServices.tenants` (`TenantServicesOpener`); no service
+  is built from the unscoped core (`bzh:tenant-scoped-store`, [./system-shape/tenancy.md](./system-shape/tenancy.md))
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py` — `build_host_process` holding one
   `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
   runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`. `HostStores` and the telemetry receiver
