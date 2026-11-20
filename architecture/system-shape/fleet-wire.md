@@ -96,3 +96,26 @@ the reader; compare each client-read refusal with the operation's declared probl
 **Do.** A verb that acts on one refusal compares the reader's `type` with the registered URN.
 
 **Don't.** A verb keeps an `on_status` map, or tests whether `detail` contains a phrase.
+
+## Decode a daemon's answer against its model (`bzh:clients-decode-answers`)
+
+**Rule.** Every CLI tree reads a daemon's success answer only through its tree's wrapper over
+`blizzard/src/blizzard/cli/answer.py::decode_answer`, validated against the route's served response model. The verb
+reads the typed value, never an indexed dict. `--json` prints the raw body the decoder returns, not a dump of the model.
+
+**Why.** A verb that indexes a raw body fails with a `KeyError` or `TypeError` traceback when the answer's shape skews
+from what the verb expects. The decoder turns that into one sanitized line naming the operation and the daemon, and the
+typed read makes a shape change a type error at build time.
+
+**Scope.** The success answer of a hub or runner call that returns one JSON value. A refusal body belongs to
+`bzh:clients-read-problem-types`. An NDJSON stream is printed line by line and never indexed, so it is not decoded.
+Decoding never relaxes the model: a body the served model rejects is an unreadable answer, not a reason to loosen the
+model.
+
+**Detect.** `hub-cli-answer-decoded` (`blizzard:structural-gate`) fails any `.json()` call under
+`blizzard/src/blizzard/hub/cli/`. It is a floor for that one tree: search the runner and dev CLI trees for a raw
+`.json()` read of a success answer, and compare each decoded call's model with the route's declared response model.
+
+**Do.** A verb gets the `(raw, value)` pair from the wrapper, prints `raw` under `--json`, and formats from `value`.
+
+**Don't.** A verb indexes `resp.json()["rows"]`, or casts the body to a `TypedDict` that mirrors a wire model.

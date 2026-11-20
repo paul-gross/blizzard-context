@@ -186,7 +186,7 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
 - `build_stores`, `build_production_harnesses`, or `HarnessHealthCache` called anywhere under `blizzard/src/blizzard/`
   other than `runner/composition.py` — a second copy of the runner's process graph.
 
-Three ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
+Four ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 
 - `cli-httpx-confined` fails any httpx2 import under the three CLI trees (`cli/`, `hub/cli/`, `runner/cli/`) other than
   `blizzard/src/blizzard/cli/collaborators.py`.
@@ -195,6 +195,8 @@ Three ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP
 - `cli-refusal-body-confined` fails a CLI-tree read of a refusal's `detail` outside
   `blizzard/src/blizzard/cli/refusal.py`, and a status read or raw `resp.json()` re-read beside a `refusal_of` call
   ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
+- `hub-cli-answer-decoded` fails any `.json()` call under `blizzard/src/blizzard/hub/cli/`: a hub answer is read through
+  the decoder ([`bzh:clients-decode-answers`](./system-shape/fleet-wire.md)).
 
 One Ruff rule beside them holds the OpenCode 2 service seam: `TID251` bans `UrllibServiceTransport` in every
 `runner/cli/` module except `runner/cli/children.py`, which builds the production one. It is scoped to that one concrete
