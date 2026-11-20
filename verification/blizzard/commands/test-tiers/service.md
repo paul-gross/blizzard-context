@@ -293,9 +293,10 @@ the chunk lands because the runner fences on its own lease epoch, not the envelo
 
 **First default offer**
 (`tests/service/fleet/runner-serves-default.spec.ts::test_a_freshly_initialized_runner_is_offered_a_default_chunk_on_first_registration`)
-checks init's pre-overlay scaffold serves `default`, then the overlaid host file stays unchanged through its first step.
-The hub registration and runner status agree on the resolved project; a peek under the enrolled runner's token offers
-the promoted default chunk with its project id and slug.
+checks init's pre-overlay scaffold serves `default` and declares no `[[workspace]]`, then that the overlaid host file
+declares the workspace the runner binds and stays unchanged through its first step. The hub registration and runner
+status agree on the resolved project; a peek under the enrolled runner's token offers the promoted default chunk with
+its project id and slug.
 
 **Checks-gate enforcement** (`tests/service/fleet/checks-gate.spec.ts`) drives a real forge, hub and stepped runner.
 `tests/service/fleet/checks-gate.spec.ts::test_checks_gate_bounces_a_red_pass_then_lands_when_green` proves a red gated

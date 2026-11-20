@@ -86,22 +86,26 @@ runner claiming it already knows the one workspace its work will happen in; the 
 - **Agents are not environments.** The count is separate from how many environments a workspace holds: an agent whose
   next project's workspace has no free environment claims only as one frees, and the runner looks to the projects whose
   workspaces have one.
-- **Live binding edits are checked before acceptance.** A binding naming an undeclared workspace, or a subscription
-  outside the host roster, is refused without disturbing the current settings or running work. A valid edit affects
-  future claims, not a held binding.
+- **Live binding edits are checked before acceptance.** A binding naming a workspace the host does not hold, or a
+  subscription outside the host roster, is refused without disturbing the current settings or running work. A valid edit
+  affects future claims, not a held binding.
 - **The workspace is fixed for the chunk's tenure.** Recovery, release, and resume work in the workspace the chunk was
   claimed through; a binding changed later affects only the next claim.
 - **One project, one binding.** A runner that binds the same project twice by name halts before it registers. Two
   distinct entries the hub resolves to one project leave the runner registered but claiming nothing until one is
   removed.
-- **Checked against the host twice.** A binding naming a workspace its host does not declare, or a runner naming a
-  subscription outside its host's roster, halts that runner before it registers; the host's other runners are
-  unaffected. The hub checks again against what the host last described: it offers no work through a binding whose
-  workspace the host has not described, and none at all to a runner whose subscription is outside the host's roster. The
-  hub flags such a binding rather than refusing it — the runner keeps registering — and flags nothing while the host has
-  never described itself. A claim is judged the same way, against the host as it stands at the claim: one made through a
-  flagged binding, under a subscription outside the roster, or through a workspace other than the one the runner binds
-  the chunk's project to is refused, while a route already held keeps the workspace it was claimed with.
+- **A binding the host does not serve never halts a runner.** A binding naming a workspace the host holds no active
+  record of claims nothing, while the runner keeps running and its other bindings keep claiming; a runner naming a
+  subscription the host holds no active record of runs as naming none — it declares no subscription and no
+  subscription's usage throttles it. A host serving no workspace runs its runners and claims nothing. A settings write
+  that names either is refused. There is no default workspace: a host serves only the workspaces it holds.
+- **Checked against the host twice.** The host refuses the write above; the hub checks again against what the host last
+  described: it offers no work through a binding whose workspace the host has not described, and none at all to a runner
+  whose subscription is outside the host's roster. The hub flags such a binding rather than refusing it — the runner
+  keeps registering — and flags nothing while the host has never described itself. A claim is judged the same way,
+  against the host as it stands at the claim: one made through a flagged binding, under a subscription outside the
+  roster, or through a workspace other than the one the runner binds the chunk's project to is refused, while a route
+  already held keeps the workspace it was claimed with.
 
 ## Subscriptions
 
