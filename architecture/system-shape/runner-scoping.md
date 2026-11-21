@@ -78,7 +78,7 @@ module:
 its exemptions a list a reviewer reads whole, turns "where can one runner's rows leak?" into a question with a short
 answer.
 
-**Exception.** Three cross-kind writes are admitted. `record_external_usage_attempt` (`host_external_usage_store.py`)
+**Exception.** Four cross-kind writes are admitted. `record_external_usage_attempt` (`host_external_usage_store.py`)
 writes a usage sample, a host row, and its outbound report, a runner row, in one transaction. Its host statement is
 authored in that host module and its outbound row is built through the runner builders, so the outbound row is stamped
 like any other. A runner transfer's copy writes the moving runner's rows and the source's host rows on one destination
@@ -93,7 +93,11 @@ hosting on one transaction: the full add writes the identity, the first settings
 fact and the sealed token, and `init`'s join writes the identity and its hosting. It opens the transaction on
 connections bound to the admitted runner and hands it, as one handle, to each member's own `*_locked` method: the
 identity and settings stores for its runner half, and the `hosted_runners` and `runner_hub_tokens` members for its host
-half; no method takes a runner id.
+half; no method takes a runner id. A runner host's settings apply
+(`blizzard/src/blizzard/runner/store/internal/host_settings_apply_store.py`) writes the host settings record, host
+records and per-runner settings in one unit of work: it opens the transaction and hands it, as one handle, to the host
+settings record's, the host record stores' and each runner's settings store's own `*_locked` methods, and names no table
+itself.
 
 **Scope.** The runner-unscoped mark itself — `RUNNER_UNSCOPED_OPTION`, or the `blizzard_runner_unscoped` string it
 stands for — appears only in `runner/store/scoped.py`, the guard, the exempt member's module, and runner migrations.
