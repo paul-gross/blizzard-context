@@ -5,22 +5,23 @@ configured record shares, how a declarative document is decoded, what may carry 
 read; the macro-shape hub is [../system-shape.md](../system-shape.md). Every rule here follows the slot skeleton owned
 by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
-A **configured record** is a record the hub holds as operator-set configuration and that an operator changes while the
-hub runs: a forge, a credential, a work source, a repository, a secret, a project, a project source link, a project
-repository link, a scope, a routine, a cadence, an urgency, the tenant's settings, or the hub-wide settings. The rules
-below name the seams and tables that keep them — `IConfigCodec`, `SecretValue`, `ISecretReader`, `config_changes` — by
-the names their implementations take, so code adding one of them takes the name stated here. [Known debt](#known-debt)
-lists the code these rules do not yet hold.
+A **configured record** is a record the hub or a runner host holds as operator-set configuration and that an operator
+changes while it runs: a forge, a credential, a work source, a repository, a secret, a project, a project source link, a
+project repository link, a scope, a routine, a cadence, an urgency, the tenant's settings, the hub-wide settings, or a
+runner host's workspace or subscription. The rules below name the seams and tables that keep them — `IConfigCodec`,
+`SecretValue`, `ISecretReader`, `config_changes` — by the names their implementations take, so code adding one of them
+takes the name stated here. [Known debt](#known-debt) lists the code these rules do not yet hold.
 
 ## Every configured record takes one verb set and one patch meaning (`bzh:configured-record`)
 
-**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable; a kind
-listed below departs from it only as its entry states. Give editable records a sparse-merge edit, and each record a
-`revision` that every changed write increments and one change row appended in the same transaction as each write; tenant
-records use `config_changes`, while hub-wide settings use their own audit below. A sparse merge leaves an absent field
-unchanged, sets a present field, and takes an explicit `null` as clearing a nullable field, refusing it on any other. A
-retire of a retired record, or an enable of an enabled one, writes nothing; an edit of a retired record is legal and
-leaves it retired. Enable reverses a retirement.
+**Rule.** Give a standalone retirable configured record the verb set create, list, show, edit, retire, enable — show's
+CLI verb being `get` (`bzh:cli-get-verb`); a kind listed below departs from it only as its entry states. Give editable
+records a sparse-merge edit, and each record a `revision` that every changed write increments and one change row
+appended in the same transaction as each write; tenant records use `config_changes`, while hub-wide settings and the
+host's records use their own audit below. A sparse merge leaves an absent field unchanged, sets a present field, and
+takes an explicit `null` as clearing a nullable field, refusing it on any other. A retire of a retired record, or an
+enable of an enabled one, writes nothing; an edit of a retired record is legal and leaves it retired. Enable reverses a
+retirement.
 
 | Verb   | Route                           |
 | ------ | ------------------------------- |
@@ -33,7 +34,8 @@ leaves it retired. Enable reverses a retirement.
 
 Standalone retirable CLI nouns carry the six verbs, a secret's replace standing in for its edit. Each entry below states
 a kind's own surface beside the six; only the entries for a project, a project's link, a graph, a work item, a secret,
-an urgency, the tenant's settings, and the hub-wide settings depart from the verb set itself:
+an urgency, the tenant's settings, the hub-wide settings, and the host's workspaces and subscriptions depart from the
+verb set itself:
 
 - **A project** takes create, list, show, and edit but no retire or enable: a project, once created, stays
   ([../../domain/projects.md](../../domain/projects.md)). Its links to sources and repositories carry the lifecycle in
@@ -119,6 +121,17 @@ an urgency, the tenant's settings, and the hub-wide settings depart from the ver
   moves neither revision nor audit. A changed write moves the revision and appends its audit in the same transaction.
   Set and unset are distinct: unset restores the default and leaves an entry that prevents a later file seed from
   restoring the old value.
+- **The host's workspaces and subscriptions** are the runner host's records, not a tenant's: their routes sit under
+  `/api/host/workspaces` and `/api/host/subscriptions` on the runner, keyed by `workspace_id` and `slug`, and their CLI
+  nouns are `blizzard runner workspace` and `blizzard runner subscription`. `workspace_id`, `slug` and a subscription's
+  `provider` are immutable: an edit naming one is refused `422`. Each write needs superuser authority, except the
+  workspace prompt routes, which write the workspace record's prompt at its current revision with no `If-Match`. Each
+  changed write appends one row to the host store's `host_setting_changes`, its `record_kind` `workspace` or
+  `subscription` and its `record_key` the record's key, never `config_changes`. The host file's `[[workspace]]` and
+  `[[subscription]]` seed a record once, when the store holds none of that key; the file is not read for them after. The
+  models own the lifecycle rules and the service the validation, in `blizzard/src/blizzard/runner/host_records/`; the
+  store adapter writes the record, its lifecycle fact and its change row in one transaction; the decision and the
+  refusals are `blizzard/src/blizzard/foundation/settings_record/`'s, shared with the hub-wide settings.
 
 Implement tenant configured kinds against `blizzard/src/blizzard/hub/domain/config/records.py`: `ConfiguredRecord`
 requires only revision and its check; retirement, name and slug are separate capabilities, and `ConfiguredLink` names
@@ -144,7 +157,8 @@ identified and resolved is `bzh:configured-record-names` below.
 - A `PUT` that replaces a whole record, other than a secret's value replace; a project link's `PUT` replaces no fields.
 - A `DELETE` route on a configured record.
 - A changed write to a configured record with no change row in its transaction, or one that leaves `revision` where it
-  was, except the secret lifecycle debt below; hub-wide settings use their own audit rather than `config_changes`.
+  was, except the secret lifecycle debt below; hub-wide settings and the host's records use their own audit rather than
+  `config_changes`.
 - A change row of a project, a project's link, or a record of any kind a project owns written without that record's
   project.
 - A create of a kind a project owns that does not take the call's project by id or slug (`--project` on the CLI), does
@@ -455,13 +469,13 @@ the change that brings it under the rule:
 
 **Rule.** Resolve the host's and each runner's pass and session entries from the runner store at use, over boot-held
 configuration, not from a cached file value. A tick, a host pass and a trace sweep each acquire one coherent revision —
-for a runner tick, the pair of host and runner revisions — and entries and hold their own immutable snapshot for the
-whole pass. Cache built objects under their actual inputs or revisions. Publish a rebuilt context and harness set
-together only after a successful build; retain the last good pair on failure, report a failed rebuild's acquired
-revision and retry on a later pass. Startup without a good build fails. A launch takes session settings from its pass
-and records both of the pass's revisions and its transcript root; a resume preserves the original session's locating
-values and, when recorded, its transcript root. Already-running invocations retain their launch settings and harness
-set.
+for a runner tick, the pair of host and runner revisions — and entries, the host's revision covering its active
+workspace and subscription records with its settings, and hold their own immutable snapshot for the whole pass. Cache
+built objects under their actual inputs or revisions. Publish a rebuilt context and harness set together only after a
+successful build; retain the last good pair on failure, report a failed rebuild's acquired revision and retry on a later
+pass. Startup without a good build fails. A launch takes session settings from its pass and records both of the pass's
+revisions and its transcript root; a resume preserves the original session's locating values and, when recorded, its
+transcript root. Already-running invocations retain their launch settings and harness set.
 
 **Why.** Reading individual keys mid-pass could combine revisions that never existed, while replacing a harness under a
 running invocation could change how its result is read. A failed build must not discard the last usable context.
@@ -477,8 +491,10 @@ failed rebuild replacing only part of the context, or a running invocation switc
 root.
 
 **Do.** `RunnerSettingsReader` (`blizzard/src/blizzard/runner/settings_reader.py`) and `RunnerStepper`
-(`blizzard/src/blizzard/runner/loop_wiring.py`) resolve the snapshot at the pass boundary; `SessionSettings`
-(`blizzard/src/blizzard/runner/harness/session_settings.py`) and `HarnessSets`
+(`blizzard/src/blizzard/runner/loop_wiring.py`) resolve the snapshot at the pass boundary; `HostSettingsReader`'s
+snapshot carries the host's active workspace and subscription records and their revisions, read once per pass, and the
+host tick rebuilds the workspace registry and each moved subscription's sampler and renewer from it, with no restart;
+`SessionSettings` (`blizzard/src/blizzard/runner/harness/session_settings.py`) and `HarnessSets`
 (`blizzard/src/blizzard/runner/harness/harness_set.py`) retain invocation ownership.
 
 If snapshot acquisition fails before returning a revision, the tick retains its last context and retries, but does not

@@ -116,7 +116,8 @@ The serve smoke on the built wheel in a node-free venv. `blizzard hub init <dir>
 then `blizzard hub host --dir <dir> --port <p>` serves the embedded board — `GET /` returns the Angular `index.html`,
 deep routes falling back to it — and `GET /api/health` returns `200`. Then, with that hub still serving, likewise
 `blizzard runner init <dir> --hub http://127.0.0.1:<p>`/`host`: init adds the runner at that hub, which the scaffold's
-`auth.mode = "none"` lets it do with no sign-in, and exits non-zero, adding nothing, when no hub answers.
+`auth.mode = "none"` lets it do with no sign-in, and exits non-zero, adding nothing, when no hub answers. The scaffold
+declares no `[[workspace]]`, so the started runner claims nothing until one is declared or created.
 
 ### blizzard:image-smoke
 
