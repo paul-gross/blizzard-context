@@ -287,7 +287,11 @@ naming a former slug is refused rather than taking the slug back ([../../domain/
 §Former slugs), and an entry of any kind a project owns acts in the project its `project` names, by id or slug, resolved
 as [../../domain/projects.md](../../domain/projects.md) §A call that needs a project states. Export writes each project
 by its slug, the `projects` section first, so applying an export back writes nothing. A legacy import links the sources
-and repositories it writes to the tenant's only project, and is refused when the tenant holds several.
+and repositories it writes to the tenant's only project, and is refused when the tenant holds several. The runner host's
+settings document binds too: `POST /api/host/settings/apply` on the runner host
+(`blizzard/src/blizzard/runner/api/host_settings.py`) reconciles it through
+`blizzard/src/blizzard/runner/settings/apply.py`, refuses the whole document on any entry's refusal, commits in one
+transaction with door `apply` and one `apply_id`, and rolls a dry run back.
 
 **Detect.**
 
@@ -296,6 +300,7 @@ and repositories it writes to the tenant's only project, and is refused when the
 - A dry run that reads the store and predicts instead of running the writes and rolling them back.
 - A change row from an apply with a door other than `apply`, or without the shared `apply_id`.
 - An `apply` door value read from a request header or body.
+- A runner host settings apply that commits part of a refused document, or commits outside its one transaction.
 - An apply that plans the `projects` section or resolves an entry's project itself, rather than taking both planned from
   the package that owns projects.
 - An apply that enables a retired urgency, or reconciles a routine or cadence before the urgency sections it may name.
@@ -306,7 +311,9 @@ and repositories it writes to the tenant's only project, and is refused when the
 `blizzard/src/blizzard/hub/domain/config/apply.py` decides the plan and
 `blizzard/src/blizzard/hub/store/internal/config_apply_store.py` runs it. The plan is pure, the writer runs each planned
 write through the same per-operation bodies the per-record adapters run, and a dry run raises a private sentinel after
-the last write so the store rolls back.
+the last write so the store rolls back. The runner host's apply mirrors it:
+`blizzard/src/blizzard/runner/settings/apply.py` plans and
+`blizzard/src/blizzard/runner/store/internal/host_settings_apply_store.py` runs the plan.
 
 **Don't.** A dry run that checks "would this name collide" with a select of its own — it passes while the real apply
 fails on a check the select did not know to make.
