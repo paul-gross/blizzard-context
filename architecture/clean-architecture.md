@@ -255,8 +255,8 @@ The hub's hosted lifetimes and the runner host:
 - `hub/cli/runtime.py` owns the hosted engine and platform tracing handle. It acquires the instrumented connections
   graph through `hub/composition.py` and shares it with settings and the hosted app; it disposes the engine and shuts
   down tracing after their users finish.
-- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py` consumes those borrowed resources, builds the core, and
-  passes work-source and forge registry factories to `build_services` for per-tenant use.
+- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py` consumes those borrowed resources, builds the core, and hands
+  them to `build_services`; each configured adapter is born in its area's wiring, not passed in.
 - `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core opens the process root
   over the shared connections and resolves the hub-level stores from it, and a tenant's stores and leaf services once
   per tenant, on its first `HubCore.open(scope)`, over that tenant's container scope (`TenantContainers` in

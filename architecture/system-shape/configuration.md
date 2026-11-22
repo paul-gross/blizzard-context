@@ -361,13 +361,13 @@ one hub process or several. A cache keyed by revision holds nothing true only in
 second process reading the same revisions builds equivalent objects.
 
 **Scope.** Binds configured records, including hub-wide settings. Each tenant's records build into that tenant's own
-cache, opened with its services (`build_live_config`, `blizzard/src/blizzard/hub/composition.py`), so an object built
-from one tenant's record never serves another's request or pass. Hub-wide settings are shared across tenants, not placed
-in a tenant cache. A hub setting's declared lifetime decides when a change takes effect: a `boot` value is fixed for the
-running process and needs a restart; a later-lifetime value is read at its use. The hub's file seeds a stated key only
-when no stored entry exists, including an unset entry; it is not the authority over an existing entry. Boot inputs such
-as the root and secret key — `BZ_HUB_SECRET_KEY` on the hub, `BZ_HOST_SECRET_KEY` on a runner host — and environment
-overrides declared for boot keys, remain process inputs.
+cache, the tenant's registered `ConfigObjectCache` (`blizzard/src/blizzard/hub/live_config/wiring.py`), so an object
+built from one tenant's record never serves another's request or pass. Hub-wide settings are shared across tenants, not
+placed in a tenant cache. A hub setting's declared lifetime decides when a change takes effect: a `boot` value is fixed
+for the running process and needs a restart; a later-lifetime value is read at its use. The hub's file seeds a stated
+key only when no stored entry exists, including an unset entry; it is not the authority over an existing entry. Boot
+inputs such as the root and secret key — `BZ_HUB_SECRET_KEY` on the hub, `BZ_HOST_SECRET_KEY` on a runner host — and
+environment overrides declared for boot keys, remain process inputs.
 
 **Detect.**
 
