@@ -229,17 +229,17 @@ first reaches it. In the hub:
 
 - `blizzard/src/blizzard/hub/process_root.py` is the hub's composition root. `register_hub` declares the scope inputs,
   the legacy bridge's leaves, each store adapter, and each adopted area over the adapter `Ref` the store wiring hands
-  it; `build_store_backed` and `build_store_free` open the validated container over the borrowed connections, clock and
-  settings graph. Registering and building are separate steps, so a stand-in root reuses `register_hub` and adds an area
-  before it builds.
+  it; `build_store_backed` and `build_store_free` open the validated container over the borrowed connections, clock,
+  settings graph, hub actions, and packaged graph and system-artifact loaders. Registering and building are separate
+  steps, so a stand-in root reuses `register_hub` and adds an area before it builds.
 - The store wiring registers every store adapter and transaction primitive, at the tenant or the process lifetime. The
   hub settings ports are the members of the borrowed settings graph, registered in `hub/settings/wiring.py`.
 - A new hub service is born in its area's `wiring.py`, beside the concept it serves
-  (`hub/domain/garden/findings/wiring.py`): the area aliases its read and write ports onto the adapter `Ref` it is
-  handed and registers its services by class, naming no adapter and no other area's wiring. An adapter is registered in
-  its own package's `wiring.py` (`hub/store/wiring.py`), the one module beside its `internal/` that names the adapter.
-  The store-free or settings-less graph declares each absent port, and a route that reaches one answers the store's
-  unavailability.
+  (`hub/domain/garden/findings/wiring.py`, `hub/domain/graph/wiring.py`): the area aliases its read and write ports onto
+  the adapter `Ref` it is handed and registers its services by class, naming no adapter and no other area's wiring. An
+  adapter is registered in its own package's `wiring.py` (`hub/store/wiring.py`), the one module beside its `internal/`
+  that names the adapter. The store-free or settings-less graph declares each absent port, and a route that reaches one
+  answers the store's unavailability.
 - A route takes each service it calls through `FromDishka[...]` under `@inject_sync`, resolved through the request's
   resolver: the process scope on every route, and on a tenant route a request scope beneath the admitted tenant's scope
   (`hub/api/resolution.py`, entered through `tenant_bound`).
