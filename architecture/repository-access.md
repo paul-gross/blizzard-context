@@ -34,8 +34,9 @@ them.
 
 **See also.** `blizzard/exemplars/python/exemplar/hub/domain/permits/model.py`
 ([../exemplars/index.md](../exemplars/index.md)) — a read/write Protocol pair, implemented by the exemplar `PermitStore`
-and bound in the exemplar `composition.py`. [`./system-shape/exclusive-writes.md`](./system-shape/exclusive-writes.md)
-`bzh:store-exclusive-write` — the one seam where a write Protocol splits further than read and write, by lock.
+and aliased onto it in the exemplar area's `permits/wiring.py`.
+[`./system-shape/exclusive-writes.md`](./system-shape/exclusive-writes.md) `bzh:store-exclusive-write` — the one seam
+where a write Protocol splits further than read and write, by lock.
 
 ## Controllers hold read repositories only (`bzh:controller-read-only`)
 

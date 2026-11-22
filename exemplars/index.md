@@ -32,7 +32,9 @@ Under `blizzard/exemplars/python/exemplar/`.
 | `hub/api/refusals.py`                                            | Turning a domain refusal into an HTTP status, or into an `application/problem+json` problem a client dispatches on                                 |
 | `hub/api/permit_params.py`                                       | Resolving a path id to its loaded object, or a `404`, before a route calls the domain                                                              |
 | `wire/permit.py`                                                 | Adding or changing a wire model                                                                                                                    |
-| `hub/composition.py`                                             | Wiring a new store and service into a tenant's services                                                                                            |
+| `hub/domain/permits/wiring.py`                                   | Registering a new hub service, or an area's ports over the adapter it is handed                                                                    |
+| `hub/store/wiring.py`                                            | Registering a hub store adapter for an area to alias its ports onto                                                                                |
+| `hub/process_root.py`                                            | Composing a hub area into the process root, or reusing the hub's registration in a stand-in root                                                   |
 | `hub/graphs/basic-development-workflow/prompts/`                 | Writing a worker node's prompt, its judgement, or an edge's addendum                                                                               |
 
 ## Runner
