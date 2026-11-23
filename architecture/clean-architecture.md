@@ -230,8 +230,9 @@ first reaches it. In the hub:
 - `blizzard/src/blizzard/hub/process_root.py` is the hub's composition root. `register_hub` declares the scope inputs,
   the legacy bridge's leaves, each store adapter, and each adopted area over the adapter `Ref` the store wiring hands
   it; `build_store_backed` and `build_store_free` open the validated container over the borrowed connections, clock,
-  settings graph, hub actions, and packaged graph and system-artifact loaders. Registering and building are separate
-  steps, so a stand-in root reuses `register_hub` and adds an area before it builds.
+  settings graph, boot config, tracing handle, environment, hub actions, and packaged graph and system-artifact loaders.
+  Registering and building are separate steps, so a stand-in root reuses `register_hub` and adds an area before it
+  builds.
 - The store wiring registers every store adapter and transaction primitive, at the tenant or the process lifetime. The
   hub settings ports are the members of the borrowed settings graph, registered in `hub/settings/wiring.py`.
 - A new hub service is born in its area's `wiring.py`, beside the concept it serves
@@ -255,8 +256,9 @@ The hub's hosted lifetimes and the runner host:
 - `hub/cli/runtime.py` owns the hosted engine and platform tracing handle. It acquires the instrumented connections
   graph through `hub/composition.py` and shares it with settings and the hosted app; it disposes the engine and shuts
   down tracing after their users finish.
-- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py` consumes those borrowed resources, builds the core, and
-  passes work-source and forge registry factories to `build_services` for per-tenant use.
+- `build_hosted_app` in `blizzard/src/blizzard/hub/app.py` consumes those borrowed resources and supplies them to
+  `build_hub_core`'s container; `build_services` reads them from it, and each configured adapter is born in its area's
+  wiring, not passed in.
 - `build_hub_core` and `build_services` in `blizzard/src/blizzard/hub/composition.py`: the core opens the process root
   over the shared connections and resolves the hub-level stores from it, and a tenant's stores and leaf services once
   per tenant, on its first `HubCore.open(scope)`, over that tenant's container scope (`TenantContainers` in
