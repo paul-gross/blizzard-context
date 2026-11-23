@@ -155,8 +155,10 @@ The same script also runs the domain-boundary sweeps (`web/scripts/domain-bounda
   `LAYERED_PROJECTS` key prefixing the file, except that a file in a subfolder of `hub/src/app/admin/` is keyed by that
   subfolder and one directly in `admin/` by the root — is named in `DOMAIN_BOUNDARY_EXEMPT`, with one reason for the
   whole list (`decision:ui-toolkit/incremental-replacement`); an entry whose unit no longer consumes a wire type fails
-  as stale, under `stale DOMAIN_BOUNDARY_EXEMPT entries`, so the list only shrinks. Separately, a production file or a
-  story whose consumed symbol is declared under `testing/transport/` prints under
+  as stale, under `stale DOMAIN_BOUNDARY_EXEMPT entries`, so the list only shrinks. A concept already behind the
+  boundary inside a still-exempt unit is pinned in `DOMAIN_BOUNDARY_STRICT_SCOPES`, by folder prefix or concept stem:
+  the sweep fails a wire consumer there despite its unit's exemption. Separately, a production file or a story whose
+  consumed symbol is declared under `testing/transport/` prints under
   `production files or stories reaching the test transport`; specs and test helpers may reach it. Its self-test,
   `assertDomainBoundaryDetectorWorks`, must-catches direct, aliased, namespace, `import()`-type, and transitive barrel
   imports of a generated type, `fleet` included, a component or model spec, story, or ordinary test helper consuming
