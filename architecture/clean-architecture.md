@@ -240,7 +240,9 @@ first reaches it. In the hub:
   the adapter `Ref` it is handed and registers its services by class, naming no adapter and no other area's wiring. An
   adapter is registered in its own package's `wiring.py` (`hub/store/wiring.py`), the one module beside its `internal/`
   that names the adapter. The store-free or settings-less graph declares each absent port, and a route that reaches one
-  answers the store's unavailability.
+  answers the store's unavailability. The hub identity area is adopted this way, born in `hub/auth/wiring.py`; the
+  pre-admission auth dependencies, which run before any route's `FromDishka` resolution, resolve their named process
+  services from the request's resolver.
 - When a lower area takes a sequence of collaborators that areas above it define, the lower area declares the key and
   the highest such area's wiring provides it, so no import runs upward: the urgency lifecycle takes
   `UrgencyReferenceClearings`, which `hub/domain/cadence/wiring.py` composes from the garden and cadence clearings.
@@ -330,9 +332,9 @@ fails any caller that supplies less and any member the collaborator starts readi
 `runner/loop/context.py`, `runner/loop/tick.py`, and `runner/loop/steps.py`; the edges are everything under
 `runner/api/` and `runner/cli/`. On the hub, a route module on the narrowing roster (`NARROWED_MODULES` in
 `tests/support/container_guards.py`, starting with `hub/api/findings.py`) is in scope: it takes each service through the
-container and names no `Services` or `TenantServices` bag. The rest of the hub's API edge, holding `HubServices` or
-`Services`, stays out of scope until its area migrates, when its module joins the roster. Tests are out of scope: they
-act as their own roots.
+container and names no `Services`, `TenantServices`, `Hub`, `HubServices`, or `hub_services` bag. The rest of the hub's
+API edge, holding `HubServices` or `Services`, stays out of scope until its area migrates, when its module joins the
+roster. Tests are out of scope: they act as their own roots.
 
 **Detect.** A step or domain service typed by a bundle while its body reads a handful of the bundle's members.
 `tests/guards/test_layering.py` fails the unit tier on each of these, and plants a temporary tree to prove each check
