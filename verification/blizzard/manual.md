@@ -1046,13 +1046,19 @@ fleet-delivered PR for each repo being checked.
    `required_pull_request_reviews.required_approving_review_count` against the documented `0`.
 3. From the known PR URL, confirm its branch matches the delivered chunk and its state is merged with
    `gh pr view <fleet-pr-number> --repo <owner>/<repo> --json state,headRefName,mergedAt,mergeCommit`.
-4. Determine the method used for that PR from its delivery and forge evidence. Fetch in that repo's worktree with
-   `git -C <repo-worktree> fetch origin`, then inspect `git -C <repo-worktree> log --format='%H %P' <mergeCommit.oid>`.
-   A merge commit has two parents; rebase and squash landings have linear, single-parent history.
+4. Determine the method used for that PR and the base tip immediately before landing from delivery and forge evidence.
+   Fetch in that repo's worktree with `git -C <repo-worktree> fetch origin`, then inspect the landing range with
+   `git -C <repo-worktree> log --format='%H %P' <pre-landing-base>..<mergeCommit.oid>`. Check that the recorded base is
+   an ancestor of the landed commit with
+   `git -C <repo-worktree> merge-base --is-ancestor <pre-landing-base> <mergeCommit.oid>`. For merge and squash, the
+   landed commit's first parent also identifies the pre-landing base; for rebase, retain or obtain that base from
+   evidence rather than assuming the landed tip's parent is the base. If the base cannot be established, the history
+   check is inconclusive.
 
 **Passes when.** Every protected repo's live protection matches its documented required set exactly, and the selected
-fleet PR's landed history matches its selected method: two parents for a merge commit, linear history for rebase or
-squash.
+fleet PR's landed history matches its selected method: the landed merge commit has two parents; a squash has one
+single-parent commit in the landing range; a rebase has a linear chain of single-parent commits in that range, starting
+at the pre-landing base. Older base ancestry is outside the range.
 
 `blizzard-infra` is out of scope for this method — its own docs record why it cannot be protected on the current GitHub
 plan.
