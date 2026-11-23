@@ -30,8 +30,7 @@ export, so one `from 'fleet'` in the app root ships every feature area before th
 importing `fleet`: a barrel behind a `loadComponent` boundary costs the initial chunk nothing.
 
 **Scope.** Binds each app's eager shell and the `fleet` modules `shell-api.ts` and `runner-shell-api.ts` reach; a lazy
-route page and the contents of a `@defer` block are outside it. `bzh:generated-client`'s `'../api/hub'` import stays as
-it is.
+route page and the contents of a `@defer` block are outside it. `bzh:generated-client` illustrates a shell import.
 
 **Detect.** `from 'fleet'` in either app's `main.ts`, `shell/app.ts`, `shell/app.config.ts`, `shell/app.routes.ts`, a
 nav component the app root mounts outside a `@defer` block, or a `core/` module they reach; a `from '../<feature>'`
