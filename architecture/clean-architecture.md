@@ -241,6 +241,9 @@ first reaches it. In the hub:
   adapter is registered in its own package's `wiring.py` (`hub/store/wiring.py`), the one module beside its `internal/`
   that names the adapter. The store-free or settings-less graph declares each absent port, and a route that reaches one
   answers the store's unavailability.
+- When a lower area takes a sequence of collaborators that areas above it define, the lower area declares the key and
+  the highest such area's wiring provides it, so no import runs upward: the urgency lifecycle takes
+  `UrgencyReferenceClearings`, which `hub/domain/cadence/wiring.py` composes from the garden and cadence clearings.
 - A route takes each service it calls through `FromDishka[...]` under `@inject_sync`, resolved through the request's
   resolver: the process scope on every route, and on a tenant route a request scope beneath the admitted tenant's scope
   (`hub/api/resolution.py`, entered through `tenant_bound`).
