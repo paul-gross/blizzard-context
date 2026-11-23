@@ -84,8 +84,8 @@ the frontend holds, are review questions.
 
 - `garden/core/cadence.translate.ts` exports `fromCadenceView(wire: CadenceView): Cadence`, and the cadences query's
   `select` maps the cached wire response through it, so its consumers read `Cadence`.
-- A translator maps the wire's chunk status into `ChunkStatus`, ending in `'unknown'` for a value the client does not
-  list.
+- `fleet/src/lib/core/chunk-lanes.translate.ts` maps the wire's `ChunkStatus` into `LaneStatus`, retaining an unlisted
+  value as `{ kind: 'unknown', raw }`.
 - `if (chunk.terminal)` — the translator carried `ChunkDetail.terminal` into the domain type.
 - A container injects a query hook from `garden/core/finding.query.ts`, which alone imports
   `listFindingsApiFindingsGet`.
