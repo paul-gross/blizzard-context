@@ -230,9 +230,9 @@ first reaches it. In the hub:
 - `blizzard/src/blizzard/hub/process_root.py` is the hub's composition root. `register_hub` declares the scope inputs,
   the legacy bridge's leaves, each store adapter, and each adopted area over the adapter `Ref` the store wiring hands
   it; `build_store_backed` and `build_store_free` open the validated container over the borrowed connections, clock,
-  settings graph, boot config, tracing handle, environment, hub actions, and packaged graph and system-artifact
-  loaders. Registering and building are separate
-  steps, so a stand-in root reuses `register_hub` and adds an area before it builds.
+  settings graph, boot config, tracing handle, environment, hub actions, and packaged graph and system-artifact loaders.
+  Registering and building are separate steps, so a stand-in root reuses `register_hub` and adds an area before it
+  builds.
 - The store wiring registers every store adapter and transaction primitive, at the tenant or the process lifetime. The
   hub settings ports are the members of the borrowed settings graph, registered in `hub/settings/wiring.py`.
 - A new hub service is born in its area's `wiring.py`, beside the concept it serves
