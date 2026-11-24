@@ -24,8 +24,8 @@ jobs:
     name: dprint + rumdl + vale
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
+      - uses: actions/checkout@v5
+      - uses: jdx/mise-action@v4
         with:
           version: 2026.9.2
           install: false
@@ -40,7 +40,7 @@ jobs:
     name: registry-drift + lint-markdown-style script tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: registry-drift script tests
         run: python3 tests/test_check_registry_drift.py
       - name: lint-markdown-style script tests
@@ -50,7 +50,7 @@ jobs:
     name: reference lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: reference-lint script tests
         run: python3 tests/test_lint_references.py
       - name: reference lint
