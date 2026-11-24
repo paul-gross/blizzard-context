@@ -469,8 +469,11 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
 - **The counter allocation.** `insert_outbox_rows` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
   lane under READ COMMITTED by the number of rows it inserts, seeding a new lane's counter at that count; the one-row
   `insert_outbox_row` wraps it. Eight threads racing the first allocation of a new runner's lane one row at a time were
-  issued `1` through `8`, with the counter at `8` and the invariants holding. The advance by more than one row, and a
-  first allocation racing multi-row runs, have not been run on Postgres.
+  issued `1` through `8`, with the counter at `8` and the invariants holding. A hand run on Postgres 16 then raced eight
+  threads on the first allocation of another new lane with three rows each through `insert_outbox_rows`: each was issued
+  a contiguous run, the eight runs covered `1` through `24` without overlap, the counter stood at `24`, and the
+  invariants held. On a seeded lane, a one-row write took the seq above the counter, and a five-row run took the next
+  five. No repeatable method runs either race.
 - **The usage-limit floor tables.** The revision creating the empty `subscription_usage_limits`,
   `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables, whose downgrade drops them, has
   run on Postgres only inside the empty-store chain run the execution observations bullet records; it creates four
@@ -500,12 +503,22 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   downgrade drops the table, creates one table of portable column types and writes no data, so no seeded or concurrent
   run was made.
 - **The runner hub tokens table.** The revision creating the host-scoped `runner_hub_tokens`, whose downgrade drops it,
-  has not been executed on Postgres: its colocated test walks it forward, back and forward again on SQLite only. It
-  creates one table of portable column types, its sealed values base64 `Text`, and writes no data; the seed's
-  insert-where-absent and a replacement's locked revision read have run on SQLite alone.
-- **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. The one empty-store chain run
-  stopped at the execution observations revision; no run has carried an empty Postgres store through the revisions above
-  it to the current head, so a revision above the baseline has run on Postgres only where a bullet above says so.
+  has run on Postgres only inside the empty-store chain run the empty-store upgrade bullet records; its colocated test
+  walks it forward, back and forward again on SQLite only. It creates one table of portable column types, its sealed
+  values base64 `Text`, and writes no data; the seed's insert-where-absent and a replacement's locked revision read have
+  run on SQLite alone.
+- **The buffered payload size.** The revision adding `transcript_outbound_buffer.payload_bytes`, `NOT NULL` with a
+  server default of `0`, fills every existing row from `length(payload)` in bounded pages; its downgrade drops the
+  column. A hand run on Postgres 16 seeded its parent shape with two runners holding 2,204 buffered rows between them,
+  pending and acked, final markers included, one runner's rows spanning two pages and one payload holding escaped
+  non-ASCII text. The upgrade filled every row with its payload's byte length, the schema matched the empty-store
+  chain's head, and the invariants held. The revision then went down, dropping the column with every row kept, and up
+  again, filling every row once more. No run has raced a runner's writes against the fill.
+- **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. A hand run carried an empty
+  Postgres 16 store through every revision to the head of its day, the one adding
+  `transcript_outbound_buffer.payload_bytes`, down to base, and up again, with the schema after the second upgrade
+  matching the first. That run wrote no rows, so a revision above the baseline has run on Postgres over data only where
+  a bullet above says so.
 
 Standing in for a tier: `blizzard:store-baseline` for the baseline, the colocated migration tests of the revisions above
 it and the seam's component tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand
