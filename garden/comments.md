@@ -19,13 +19,7 @@ states it in a vocabulary that is not the code's. Concretely, on this target:
 
 ## Scope
 
-| Slug            | Ground                                                                      |
-| --------------- | --------------------------------------------------------------------------- |
-| `hub-daemon`    | The hub's domain, stores, API, delivery, graphs, and work sources           |
-| `runner-daemon` | The runner's domain, loop, stores, API, harness, environments, and selftest |
-| `shared-spine`  | The daemon-neutral layer both daemons depend on, and the wire models        |
-| `cli-surface`   | The hub and runner command surfaces and the shared CLI entry package        |
-| `web-suite`     | The Angular libraries and apps                                              |
+The same slugs, each over the same ground, as [`architecture.md`](./architecture.md) §Scope, which owns the table.
 
 ## Criteria
 

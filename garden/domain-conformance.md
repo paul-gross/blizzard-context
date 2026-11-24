@@ -19,18 +19,24 @@ report that it pins the wrong intent. Concretely, on this target:
 
 ## Scope
 
-One slug per domain hub, each covering that hub, its spokes, and the code implementing them.
+One slug per concept row of [`../domain/index.md`](../domain/index.md) — every row but `no-technical-detail.md`, which
+states how the tree is written and no behavior. Each slug covers the file its row names, every spoke that file routes,
+and the code implementing them, so a spoke added under a hub is in its slug's ground the moment the hub routes it. A row
+added to that index owes a slug here.
 
-| Slug                | Ground                                                                                                            |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `domain-work`       | A unit of work — its identity, derived status, transitions, ranking, restart, and migration                       |
-| `domain-graphs`     | The immutable workflow definition a chunk travels — nodes, edges, identity, and what a graph declares beside them |
-| `domain-execution`  | Who runs a chunk and what happens to one in flight — acquisition, envelope, fencing, pause, and recovery          |
-| `domain-artifacts`  | What work produces and how it lands — the model, the series, delivery, and the never-code rule                    |
-| `domain-humans`     | Where a person enters the loop — asks, gates, escalation, and takeover                                            |
-| `domain-operations` | Operational visibility — the durable, typed event log                                                             |
-| `domain-routines`   | A routine's graph, default scope, run preference, and retired brake, and a scope's slug and retired brake         |
-| `domain-findings`   | A finding's identity, liveness, and vocabulary, and a proposal's findings list                                    |
+| Slug                | Ground                                                             |
+| ------------------- | ------------------------------------------------------------------ |
+| `domain-work`       | [`work.md`](../domain/work.md)                                     |
+| `domain-graphs`     | [`graphs.md`](../domain/graphs.md)                                 |
+| `domain-execution`  | [`execution.md`](../domain/execution.md)                           |
+| `domain-artifacts`  | [`artifacts.md`](../domain/artifacts.md)                           |
+| `domain-humans`     | [`humans.md`](../domain/humans.md)                                 |
+| `domain-operations` | [`operations.md`](../domain/operations.md)                         |
+| `domain-routines`   | [`routines-and-scopes.md`](../domain/routines-and-scopes.md)       |
+| `domain-cadences`   | [`cadences.md`](../domain/cadences.md)                             |
+| `domain-findings`   | [`findings-and-proposals.md`](../domain/findings-and-proposals.md) |
+| `domain-tenancy`    | [`tenancy.md`](../domain/tenancy.md)                               |
+| `domain-projects`   | [`projects.md`](../domain/projects.md)                             |
 
 ## Criteria
 
