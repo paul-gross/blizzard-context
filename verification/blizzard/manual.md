@@ -74,6 +74,12 @@ change needs with `tool:mock-data`, or through the real ingest path when ingest 
    it, a read compared against the seed or the drive that put the state there.
 5. Keep the commands run and their output with the change under verification.
 
+A hand claim through `POST /api/fleet/routes` on the env's own hub needs no waiver: the env's runner spawns the fenced
+mock harness and reads `claude_code` `available: true` (`blizzard hub runner list --json`), because `winter service up`
+points `claude_code_credentials_path` at a placeholder credentials file inside the env's own runner state. The real
+`~/.claude/.credentials.json` is never read. A reading of `authentication_failure` means that env was not freshly
+`winter service up`'d — re-up it rather than waiving the claim.
+
 When the behavior under exercise rides the acceptance loop — ingest, acquire, commit, deliver, landed — walk the loop
 against the live stack rather than seeding past it:
 
