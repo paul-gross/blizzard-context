@@ -252,6 +252,11 @@ first reaches it. In the hub:
 - When a lower area takes a sequence of collaborators that areas above it define, the lower area declares the key and
   the highest such area's wiring provides it, so no import runs upward: the urgency lifecycle takes
   `UrgencyReferenceClearings`, which `hub/domain/cadence/wiring.py` composes from the garden and cadence clearings.
+- A process-scoped registered service that reads tenant state takes a typed tenant accessor, a role type the process
+  root binds over `TenantContainers` once the process is built, never a bag or a generic resolver: the trace store's
+  `StepHydrations` is the reference, resolving each tenant's `StepHydration` from that tenant's scope. An export the
+  root decides at boot is registered from a `register_hub` switch with `Registry.optional`, and its consumers take
+  `T | None`: the trace and egress sweeps the roster reads.
 - A route takes each service it calls through `FromDishka[...]` under `@inject_sync`, resolved through the request's
   resolver: the process scope on every route, and on a tenant route a request scope beneath the admitted tenant's scope
   (`hub/api/resolution.py`, entered through `tenant_bound`).
