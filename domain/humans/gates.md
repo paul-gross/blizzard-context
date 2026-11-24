@@ -46,7 +46,9 @@ a closing fact references a runner-configured gate, a plain completion out of th
 is refused, whether the gate is still waiting or already resolved: only the transition naming the decision moves on, and
 only to the resolved choice of the current visit's decision. The current holder carries that decision at its own fence —
 the same claim at a later lease, or a new claimant after a detach or release: its completion must clear the current
-lease fence, while the decision still belongs to the visit. A new claimant consumes a resolved decision with that
+lease fence, while the decision still belongs to the visit. The holder of the live route may also carry the decision of
+a visit a restart opened at the restart's own epoch, with no lease, on the terms
+[../execution/fencing.md](../execution/fencing.md) owns. A new claimant consumes a resolved decision with that
 transition rather than rerunning the worker. Approval is the visit's, never the claim's. A return to the gate through
 another transition, migration, or restart is a new visit, and the earlier visit's decision cannot authorize it. A
 resolution to a `requires_checks` choice over a red check is accepted — a human's judgement is not bound by the gate

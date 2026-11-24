@@ -25,19 +25,37 @@ offered nothing ([../projects.md](../projects.md)) — nor through a binding the
 unusable entry holds only its own project's later entries, and the scan goes on to the other named projects' chunks, so
 one blocked project never stands in front of another's work.
 
-A claim is refused first on the runner, before any race: it is not registered at the hub, it is retired, or the hub has
-paused it. Under the claim lock the runner is judged again before anything else: a runner that is no longer registered
-or has since been retired is refused as such, never on the chunk. Then it is refused on the chunk, in this order: the
-chunk has ended (`stopped` or `done`), its route is held, it is not `ready`
-([../work/statuses.md](../work/statuses.md)), or a prerequisite is unmet — of any project, since a chunk may wait on
-another project's chunk ([../projects.md](../projects.md)); then when the runner does not serve the chunk's project —
-the claim rechecks what the peek offered, and the refusal names the project; then when the runner serves the project but
-not through the workspace it claims with — that binding is flagged against the host's latest report, is another
-workspace's, or the runner's subscription is outside its host's roster — the claim judges this against the host as it
-stands now, not as the peek saw it, and the refusal names the workspace; and last when the runner's capabilities do not
-fit the chunk. A runner reporting no capabilities fits no chunk: it is eligible for nothing, so the matched peek hands
-it no entry and a claim by it is refused, the same answer at both places. Rekeying a route token is refused once the
-chunk has ended, as a claim on it is.
+A claim is refused first on the runner, before any race, on the first of these that holds:
+
+1. It is not registered at the hub.
+2. It is retired.
+3. The hub's compatibility window refused the version it last registered with
+   ([./responsibilities.md](./responsibilities.md)).
+4. The hub has paused it.
+
+Under the claim lock the runner is judged again before anything else — unregistered, then retired, then refused on its
+version, so a runner whose standing changed since is refused as such, never on the chunk. The pause is not judged again
+there. Then the claim is refused on the first of these that holds:
+
+1. The chunk has ended (`stopped` or `done`).
+2. Its route is held.
+3. It is not `ready` ([../work/statuses.md](../work/statuses.md)).
+4. A prerequisite is unmet — of any project, since a chunk may wait on another project's chunk
+   ([../projects.md](../projects.md)).
+5. The runner does not serve the chunk's project. The claim rechecks what the peek offered, and the refusal names the
+   project.
+6. The runner serves the project, but its bindings and its host do not admit the claim through the workspace it claims
+   with: the binding is flagged against the host's latest report, the runner binds the project to another workspace, or
+   the runner's subscription is outside its host's roster. The claim judges this against the host as it stands now, not
+   as the peek saw it. The refusal names the project and says the runner is not admitted to it through the claimed
+   workspace; it never names the workspace submitted. A runner registered with no bindings at all — which is not an
+   empty set of them — is not judged on its workspace ([./hosts.md](./hosts.md) §Bindings).
+7. The runner's capabilities do not fit the chunk. A runner reporting no capabilities fits no chunk: it is eligible for
+   nothing, so the matched peek hands it no entry and a claim by it is refused, the same answer at both places.
+8. The runner prepared the chunk at repository targets that are not the chunk's — it started work on branches the chunk
+   no longer targets ([../projects.md](../projects.md#where-a-chunk-may-land)). It is refused and tries again.
+
+Rekeying a route token is refused once the chunk has ended, as a claim on it is.
 
 Tenure is sticky: consecutive node-steps of a chunk run on the holding runner, never re-queued between nodes.
 
