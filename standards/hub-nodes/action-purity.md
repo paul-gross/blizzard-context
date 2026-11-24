@@ -10,15 +10,12 @@ Parent: [../hub-nodes.md](../hub-nodes.md).
 `Visit`, the forge handles it is handed, and its effect sink — and writes only by handing an effect to the sink and
 waiting for it to be durable. An action that needs more declares it as an input the executor reads into the `Visit`
 before the pass begins; it never reaches for it inside the pass. Every module under `hub/delivery/actions/` imports only
-the allowlist: from the standard library, the pure modules that reach neither the environment, a process, nor a socket
-(`asyncio` without its subprocess and connection functions, `dataclasses`, `json`, `re`, `typing`, `urllib.parse`, and
-their kind); from `blizzard.foundation`, only `roles`, `escalation_causes`, `findings`, `garden_proposals`,
-`landing_policy`, and `repo_ref`; and of blizzard's own, only `hub/domain/actions/`, `hub/domain/graph/actions.py`,
-`hub/domain/artifact/model.py`, `hub/domain/chunk/pr_markers.py`, `hub/domain/kernel/garden_delivery_fault.py`,
-`hub/domain/config/repositories.py`, `hub/domain/config/capabilities.py`, `hub/domain/config/landing_policies.py`,
-`hub/forge/landing.py`, and its own package. Every blizzard module an action reaches, directly or through another,
-imports nothing that reaches a process or the network, and touches no part of `os` but `os.urandom`. Each `Visit` is
-immutable all the way down, and each action is constructed with no arguments.
+the allowlist, which the import gate in `blizzard/tests/guards/test_layering.py` owns as its own literal: the
+standard-library modules that reach neither the environment, a process, nor a socket; the named `blizzard.foundation`
+modules; the named pure modules of the hub's domain and its landing seam; and the action's own package. Every blizzard
+module an action reaches, directly or through another, imports nothing that reaches a process or the network, and
+touches no part of `os` but `os.urandom`. Each `Visit` is immutable all the way down, and each action is constructed
+with no arguments.
 
 A delivery marker a pass records takes the one `content` shape its name fixes: a PR reference,
 `delivery-pr/<repo>/<number>` or the bare `delivery-pr/<repo>`, carries the JSON object
@@ -42,14 +39,14 @@ durable. Holding it to its inputs and its sink keeps every external effect it ma
 happens, and keeps the action testable from a fixture visit alone.
 
 **Detect.** An import under `hub/delivery/actions/` outside the allowlist — the store, `os`, `sys`, `time`, `threading`,
-an HTTP client, or a `blizzard.foundation` module not named above; an attribute of `asyncio` that starts a process or
-opens a connection; an allowlisted module that reaches a process or the network, or any of `os` but `os.urandom`, behind
-it; a `Visit` holding a `list`, `dict`, `set`, `bytearray`, a mapping that is not a `MappingProxyType`, or a dataclass
-that is not frozen; an action whose constructor takes an argument; a delivery marker whose content departs from the
-shapes above. `blizzard/tests/guards/test_layering.py` fails the unit tier on each import and the transitive reach, and
-`blizzard/tests/unit/hub/delivery/test_action_registry.py` on the visit's runtime values and the constructions; planted
-cases in both prove each check fires. The allowlist is the test's own literal: a later change that widens it names the
-module in its own spec.
+an HTTP client, or a `blizzard.foundation` module the allowlist does not name; an attribute of `asyncio` that starts a
+process or opens a connection; an allowlisted module that reaches a process or the network, or any of `os` but
+`os.urandom`, behind it; a `Visit` holding a `list`, `dict`, `set`, `bytearray`, a mapping that is not a
+`MappingProxyType`, or a dataclass that is not frozen; an action whose constructor takes an argument; a delivery marker
+whose content departs from the shapes above. `blizzard/tests/guards/test_layering.py` fails the unit tier on each import
+and the transitive reach, and `blizzard/tests/unit/hub/delivery/test_action_registry.py` on the visit's runtime values
+and the constructions; planted cases in both prove each check fires. The allowlist is the test's own literal: a later
+change that widens it names the module in its own spec.
 
 **Do.** `garden-deliver` (`hub/delivery/actions/garden_deliver.py`) reads its `delta` and `proposals` from the visit's
 node arguments, hands a `RecordGardenDelivery` to the sink, and answers from the `EffectResult` it gets back; the

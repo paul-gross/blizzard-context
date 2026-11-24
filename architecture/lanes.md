@@ -1,14 +1,14 @@
 # Periodic passes and lanes
 
 A **lane** is a periodic pass or store-and-forward pass that moves facts toward a sink. On the hub, every pass hosted by
-the `Sweep` driver is a lane: the annotation and event-derivation reconcilers, the close drain, tenant teardown, the
-cadence sweep, the trace export sweep, and the egress sweep. `SweepRoster` (`blizzard/src/blizzard/hub/domain/sweeps/`),
-built once in `build_services`, owns that roster, and `Sweep.all` (`blizzard/src/blizzard/hub/app.py`) yields its timed
-members. On the runner, every pass that moves facts off the runner is one: `OutboundDrain`, `TranscriptDrain`,
-`LeaseTraceSweep`, and a registered host's own `HostLaneDrain`. The core phases (REAP, PULL, FILL, ADVANCE, RESUME), the
-samplers, and `Retention` are not lanes. `bzh:steppable-loop` in [`./crash-correctness.md`](./crash-correctness.md)
-governs loop phases; `bzh:probe-gated-pass` below governs the cost of converging and pruning passes, including
-`Retention`. Each rule follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`).
+the `Sweep` driver is a lane. `SweepRoster` (`blizzard/src/blizzard/hub/domain/sweeps/`), built once in
+`build_services`, owns that roster — read it there for the members — and `Sweep.all`
+(`blizzard/src/blizzard/hub/app.py`) yields its timed members. On the runner, every pass that moves facts off the runner
+is one: `OutboundDrain`, `TranscriptDrain`, `LeaseTraceSweep`, and a registered host's own `HostLaneDrain`. The core
+phases (REAP, PULL, FILL, ADVANCE, RESUME), the samplers, and `Retention` are not lanes. `bzh:steppable-loop` in
+[`./crash-correctness.md`](./crash-correctness.md) governs loop phases; `bzh:probe-gated-pass` below governs the cost of
+converging and pruning passes, including `Retention`. Each rule follows the slot skeleton owned by
+`winter-canon:/rule-shape.md` (`canon:rule-shape`).
 
 ## What a lane owes around its body (`bzh:lane-contract`)
 

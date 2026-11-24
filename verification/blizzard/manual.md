@@ -124,9 +124,9 @@ Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — 
    (`blizzard:manual-hub`'s loop walk) for behavior only a live lease shows.
 3. Drive the behavior with `curl` against `http://127.0.0.1:$BZ_RUNNER_PORT/runners/<id>/api/…`, or the root's
    `/api/host/…` for a host read. The app repo's `openapi/runner.openapi.json` carries every route and its shapes.
-4. Account for the tick: the daemon reconciles its store on every tick — 30 seconds by default, `tick end` in the
-   runner's log — so re-read after one, and treat a row that changes across it as the daemon's doing rather than the
-   request's.
+4. Account for the tick: the daemon reconciles its store on every tick — `tick end` in the runner's log marks one, at
+   the interval `tick_seconds` (`blizzard/docs/deployment/runner-settings.md`) sets — so re-read after one, and treat a
+   row that changes across it as the daemon's doing rather than the request's.
 5. Confirm it through a second surface — `uv run blizzard runner status --runner-url "http://127.0.0.1:$BZ_RUNNER_PORT"`
    from `<env>/blizzard`, `GET /runners/<id>/api/dashboard`, or, for a read, the seed or the drive that put the state
    there — and keep the commands run and their output with the change under verification.

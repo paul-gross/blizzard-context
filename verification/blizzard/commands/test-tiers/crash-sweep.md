@@ -29,38 +29,16 @@ asserts each named point still exists (`bzh:crash-point-registry`), so a rename 
 documented local command above, and `pr` and the tag `release` workflow run it. All three run it as a real gate over a
 two-repo checkout — `blizzard` and `blizzard-mock` as siblings.
 
-The registry's boundary families (`bzh:crash-point-registry`):
-
-- `resume.`
-- `abandon.`
-- `pause.`
-- `flow.` — the flow driver's submit, turn-start, and boot-recovery windows, and a pending turn's poll-then-end window.
-- `action.` — a hub action pass's effect and resume windows.
-- `migrate.`
-- `attach.`
-- `declare-commit.`
-- `nudge.`
-- `checks.`
-- `preempt.`
-- `close.` — the close-intent outbox's enqueue-then-drain windows.
-- `teardown.` — a tenant deletion's after-close, between-batch, and after-drain windows.
-- `trace.` — the trace export sweep's after-export, before-cursor window.
-- `leasetrace.` — the runner's lease trace sweep's after-export, before-cursor window.
-- `hostlane.` — a registered host's own fact lane's after-push, before-mark window.
-- `ingest.` — `blizzard runner ingest`'s after-copy and after-config windows.
-- `seed.` — a host start's token import, after a runner's sealed token and after a runner seeded whole.
-- `hostrunner.` — a running host's add or retire of one of its runners, after the hub's mint, after the rows, after the
-  hub's retire, and after the retired fact.
-- `takeover.` — a forced takeover entry's after-decision and after-kill windows.
-- `usagelimit.` — the runner's own usage-limit mark-then-park window, on a worker generation's exit and a judge
-  elicitation's exit alike.
-
-Ungrouped generic build-to-deliver points, which mostly fire in the runner loop, sit beside them. No case count is kept
-— the predicate is the membership test, not a number that drifts.
+The registry groups its points into boundary families by name prefix (`bzh:crash-point-registry`). A family with a
+scenario of its own is named in `_DEDICATED_PREFIXES` in `blizzard/tests/crash/test_kill9_sweep.py`, which owns that
+roster; read the families there, never from a list kept here. Every other point is generic, in `_GENERIC_POINTS` beside
+it, and the generic scenario sweeps them; its OpenCode twin sweeps the generic `spawn.` and `advance.` points again, off
+`_OPENCODE_GENERIC_POINTS`. No case count is kept — the predicate is the membership test, not a number that drifts.
 
 `claim.` — the route-claim boundary between persisting the route with its capability-token fact and the runner reading
-the plaintext token back — is the first ungrouped point armed on the hub, recovered generically by the runner's
-interrupted-claim adoption rather than a dedicated scenario. The windows with dedicated scenarios:
+the plaintext token back — is the first generic family armed on the hub, recovered generically by the runner's
+interrupted-claim adoption rather than a dedicated scenario. The dedicated scenarios whose setup or recovery this file
+explains:
 
 - `migrate.`, the cross-graph migration window armed on the hub, is swept by `test_kill9_at_migrate_crash_point`: a kill
   right after the atomic re-pin loses only the `MIGRATED` response, the runner's replay re-derives it via the

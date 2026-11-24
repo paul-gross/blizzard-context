@@ -125,7 +125,7 @@ runner's registration declares it, so the runner serves the chunks the board sho
    winter service restart alpha/runner
    ```
 
-   Wait for one `tick end` in the runner's log — 30 seconds by default — then seed one coherent fleet:
+   Wait for one `tick end` in the runner's log, then seed one coherent fleet:
 
    ```bash
    uv run blizzard-mock-data scenario fleet --chunks 6 --seed 1 --hub-dir "$BZ_HUB_RUNTIME" --runner-dir "$BZ_RUNNER_RUNTIME"
