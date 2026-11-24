@@ -23,8 +23,9 @@ effective scope, no other — and the declaration is a constraint, not a groupin
 every op naming an existing finding must name one recorded under that same scope, and one op naming a finding under
 another scope refuses the whole delivery. So does a commit the delivery names that is malformed or does not resolve in
 its repository — a revision the set declares, or the `introduced` commit of a finding it adds. A commit is resolved only
-in a repository the hub can reach, and an `introduced` commit, which names no repository of its own, only where the set
-declares exactly one; otherwise it is held to its shape alone.
+in a repository the run's project links ([projects.md](./projects.md)) and the hub can check, and an `introduced`
+commit, which names no repository of its own, only where the set declares exactly one; otherwise it is held to its shape
+alone.
 
 ## A finding can also be raised by a delivery lane's review
 
@@ -37,8 +38,8 @@ It also names the chunk whose review raised it. It is visible to every routine r
 if that routine had raised it itself, and a run may answer it with `observed`/`gone` like any other. It arrives in no
 finding set — the one exception to the finding set's own "one per artifact" rule above — because a review delta spans
 whatever scopes its entries name and has no run behind it to measure. A review raises findings once per chunk: a later
-review delivery on the same chunk, at any node or epoch, is recorded and mints nothing. A review round that delivers no
-review-finding delta at all is refused, as a run's delivery naming none is (§A run emits a delta, not a state).
+review delivery on the same chunk, at any node or epoch, is recorded and mints nothing. A review delivery on a chunk
+that carries no review delta at all is refused, as a run's delivery naming none is (§A run emits a delta, not a state).
 
 ## A run emits a delta, not a state
 

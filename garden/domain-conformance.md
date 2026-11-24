@@ -21,8 +21,7 @@ report that it pins the wrong intent. Concretely, on this target:
 
 One slug per concept row of [`../domain/index.md`](../domain/index.md) — every row but `no-technical-detail.md`, which
 states how the tree is written and no behavior. Each slug covers the file its row names, every spoke that file routes,
-and the code implementing them, so a spoke added under a hub is in its slug's ground the moment the hub routes it. A row
-added to that index owes a slug here.
+and the code implementing them, so a spoke added under a hub is in its slug's ground the moment the hub routes it.
 
 | Slug                | Ground                                                             |
 | ------------------- | ------------------------------------------------------------------ |

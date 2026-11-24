@@ -9,7 +9,9 @@ where it lives in code. The tree fills the `domain/` slot of the harness shape a
 Parent hub: [../index.md](../index.md).
 
 Per `bzh:one-prose-home`, a domain-concept fact restated in code prose relocates here for good, the code sites reducing
-to pointers at its section; and where domain and code disagree, code is current — fix the domain file.
+to pointers at its section; and where domain and code disagree, code is current — fix the domain file. A concept row
+added to the table below owes a scope slug in [`../garden/domain-conformance.md`](../garden/domain-conformance.md)
+§Scope, or no scope-less conformance run sweeps it.
 
 | File                                                     | When to read                                                                                                                                                                                                                                                                                     |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
