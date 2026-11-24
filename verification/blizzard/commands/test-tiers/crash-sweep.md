@@ -31,12 +31,12 @@ two-repo checkout — `blizzard` and `blizzard-mock` as siblings.
 
 The registry groups its points into boundary families by name prefix (`bzh:crash-point-registry`). A family with a
 scenario of its own is named in `_DEDICATED_PREFIXES` in `blizzard/tests/crash/test_kill9_sweep.py`, which owns that
-roster; read the families there, never from a list kept here. Every other point is generic: the ungrouped
-build-to-deliver points, which mostly fire in the runner loop, swept by the one generic scenario. No case count is kept
-— the predicate is the membership test, not a number that drifts.
+roster; read the families there, never from a list kept here. Every other point is generic, in `_GENERIC_POINTS` beside
+it, and the generic scenario sweeps them; its OpenCode twin sweeps the generic `spawn.` and `advance.` points again, off
+`_OPENCODE_GENERIC_POINTS`. No case count is kept — the predicate is the membership test, not a number that drifts.
 
 `claim.` — the route-claim boundary between persisting the route with its capability-token fact and the runner reading
-the plaintext token back — is the first ungrouped point armed on the hub, recovered generically by the runner's
+the plaintext token back — is the first generic family armed on the hub, recovered generically by the runner's
 interrupted-claim adoption rather than a dedicated scenario. The dedicated scenarios whose setup or recovery this file
 explains:
 

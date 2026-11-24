@@ -360,16 +360,15 @@ hermetic, network-free CI tier's reach.
 
 ## Projects' migration and writes under Postgres
 
-Postgres reads each statement of a READ COMMITTED transaction on its own snapshot and enforces foreign keys. Two methods
-run a hub store there, and neither races two writers through a mechanism below: `blizzard:rehearsal`'s Postgres leg
-drives one hub's journey a write at a time, and `blizzard:postgres-uow-concurrency`'s drain case seeds one row into
-every tenant-owned table of the migrated schema and drains the tenant. Every other tier runs on SQLite, with one writer
-lock and foreign keys off, so each mechanism holds there by construction. What stays unverified on Postgres:
+Postgres reads each statement of a READ COMMITTED transaction on its own snapshot and enforces foreign keys. SQLite
+holds one writer lock and leaves foreign keys off, so each mechanism below holds there by construction, and no method
+races two writers through one on Postgres; [`../blizzard.md`](../blizzard.md) inventories the methods that run a hub
+store there. What stays unverified on Postgres:
 
-- **The project keys.** The `fk_<table>_projects` foreign keys are enforced against the rows the rehearsal's journey
-  writes — a project, its links, an ingest, a claim, and a landing — and otherwise only against the drain case's one
-  seeded row per table. `fk_questions_projects` and `fk_decisions_projects` are among the second kind: no question or
-  decision a route wrote has met its key.
+- **The project keys.** The `fk_<table>_projects` foreign keys are enforced against the rows `blizzard:rehearsal`'s
+  Postgres journey writes, one write at a time — a project, its links, an ingest, a claim, and a landing — and against
+  seeded rows such as the one per tenant-owned table `blizzard:postgres-uow-concurrency`'s drain case seeds and drains.
+  No question or decision a route wrote has met `fk_questions_projects` or `fk_decisions_projects`.
 - **The slug move.** A project's slug move (`update_project`, `src/blizzard/hub/store/internal/project_store.py`) runs
   in one transaction. It reads for a current holder of the new slug, deletes the new slug's former-slug row, updates the
   project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two
@@ -384,8 +383,9 @@ lock and foreign keys off, so each mechanism holds there by construction. What s
   mint is unverified; SQLite's writer lock serializes the two whatever the key.
 - **A landed repository row's repository.** `delivery_repo_landed`'s `repository_id` carries neither a unique key nor a
   foreign key to the repository record: that a landing names a repository its project linked is held by the invariant
-  checker's `hub:landed-repository-linked` (`src/blizzard/hub/store/internal/invariants.py`) alone, and no tier runs the
-  invariant pass on Postgres.
+  checker's `hub:landed-repository-linked` (`src/blizzard/hub/store/internal/invariants.py`) alone. Only a hand run
+  under `blizzard:manual-postgres-invariants` has run the invariant pass on Postgres; no repeatable method or CI tier
+  runs it there.
 - **A chunk's captured targets.** A chunk's repository targets are inserted once under its row lock — at its claim, in
   the route's own transaction, and at a delivery's submission (`ChunkTargetsStore.capture`,
   `src/blizzard/hub/store/internal/chunk_targets_store.py`) — reading the held rows and inserting only the missing ones.
@@ -410,20 +410,19 @@ lock and foreign keys off, so each mechanism holds there by construction. What s
 Standing in for a tier: the slug-move and link tests on SQLite, and the portable SQL `bzh:sql-portable` holds each
 statement to. Each racing-write bullet leaves this entry in the change that adds a case racing its mechanism on the
 migrated schema to `blizzard:postgres-uow-concurrency`. The project-keys bullet leaves when a method writes a question
-and a decision through their routes on Postgres, and the landed-row bullet when one runs the invariant pass there. The
-read-plan bullet closes with the query-plan entry it points at.
+and a decision through their routes on Postgres, and the landed-row bullet when a repeatable method runs the invariant
+pass there. The read-plan bullet closes with the query-plan entry it points at.
 
 ## Hosts under Postgres
 
-Postgres reads each statement of a READ COMMITTED transaction on its own snapshot and enforces foreign keys. Two methods
-run a hub store there, and neither races two writers through a mechanism below: `blizzard:rehearsal`'s Postgres leg
-drives one hub's journey a write at a time, and `blizzard:postgres-uow-concurrency`'s drain case seeds one row into
-every tenant-owned table of the migrated schema and drains the tenant. Every other tier runs on SQLite, with one writer
-lock and foreign keys off, so each mechanism holds there by construction. What stays unverified on Postgres:
+Postgres reads each statement of a READ COMMITTED transaction on its own snapshot and enforces foreign keys. SQLite
+holds one writer lock and leaves foreign keys off, so each mechanism below holds there by construction, and no method
+races two writers through one on Postgres; [`../blizzard.md`](../blizzard.md) inventories the methods that run a hub
+store there. What stays unverified on Postgres:
 
-- **The host key.** The `fk_runner_registrations_hosts` key is enforced against the drain case's one seeded registration
-  and its children-first deletes. The rehearsal's journey neither adopts a runner nor retires a host, so no adoption or
-  retire through `HostRegistryStore` has met the key.
+- **The host key.** The `fk_runner_registrations_hosts` key is enforced against the one registration
+  `blizzard:postgres-uow-concurrency`'s drain case seeds and its children-first deletes. `blizzard:rehearsal`'s journey
+  neither adopts a runner nor retires a host, so no adoption or retire through `HostRegistryStore` has met the key.
 - **The host fact lane's upserts.** `host_high_water`, `host_external_usage`, and `host_external_usage_misses` are each
   tenant-keyed and carry no key on `host_id`; the upserts that refresh a `(host_id, slug)` row in place have only run
   under SQLite's writer lock.
@@ -472,7 +471,8 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   `8`, with the counter at `8` and the invariants holding.
 - **The usage-limit floor tables.** The revision creating the empty `subscription_usage_limits`,
   `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables, whose downgrade drops them, has
-  not been executed on Postgres; it creates four tables of portable column types and writes no data.
+  run on Postgres only inside the empty-store chain run the execution observations bullet records; it creates four
+  tables of portable column types and writes no data.
 - **The fact append sequence.** The revision adding a nullable `seq` to `env_bindings`, `binding_releases`,
   `pause_parks`, `pause_park_resumes`, `requeues` and `leases` creates `fact_counters` and numbers every existing row
   per runner, openers before closers at a tied instant. The hand run seeded its parent shape with two runners holding
@@ -482,34 +482,36 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   numbered store, which changed nothing. Two writers racing the first allocation of a new runner's fact counter were not
   run on Postgres; the allocation is the outbox counter's, which that run covers.
 - **The takeover entries.** The revision creating `takeover_entries`, with a foreign key to `takeovers`, inserts an
-  entry for every takeover open at that moment; its downgrade drops the table. It has not been hand-run under
-  `blizzard:manual-postgres-runner-migrations`: its colocated test walks it forward, back and forward again on SQLite
-  only, and it uses portable column types and `INSERT … SELECT`. SQLite leaves foreign keys off, so the foreign key is
-  enforced on Postgres alone and no tier exercises it.
+  entry for every takeover open at that moment; its downgrade drops the table. On Postgres it has run only inside the
+  empty-store chain run the execution observations bullet records, over no takeover; its colocated test walks it
+  forward, back and forward again on SQLite only, and it uses portable column types and `INSERT … SELECT`. SQLite leaves
+  foreign keys off, so the foreign key is enforced on Postgres alone, and no run has bound a row to it.
 - **The lease-row lock of a declaration.** A declaration's admission and an outcome's capture each run as one write
   transaction whose first statement is a no-op update of the lease's `leases` row (`LeaseLockStore.locked`,
   `src/blizzard/runner/store/internal/lease_lock_store.py`), so the admission either commits before the capture and is
   carried, or queues behind it and is refused. SQLite's single writer lock serializes the two whatever the row, and
   `tests/component/runner/test_declaration_admission_races.py` runs a second thread against a held capture unit there.
   No tier shows that Postgres queues the second writer on the row and reads the buffered submission once it commits.
-- **The execution observations table.** The revision creating `execution_observations`, whose downgrade drops it, ran on
-  Postgres 16 from the empty store to head, down to base and up again: the schema after the second upgrade matched the
-  first and the table read empty. It creates one table of portable column types and writes no data, so no seeded or
-  concurrent run was made.
+- **The execution observations table.** A hand run under `blizzard:manual-postgres-runner-migrations` carried the chain
+  on Postgres 16 from an empty store to the head of its day, the revision creating `execution_observations`, down to
+  base and up again: the schema after the second upgrade matched the first and the table read empty. The revision, whose
+  downgrade drops the table, creates one table of portable column types and writes no data, so no seeded or concurrent
+  run was made.
 - **The runner hub tokens table.** The revision creating the host-scoped `runner_hub_tokens`, whose downgrade drops it,
   has not been executed on Postgres: its colocated test walks it forward, back and forward again on SQLite only. It
   creates one table of portable column types, its sealed values base64 `Text`, and writes no data; the seed's
   insert-where-absent and a replacement's locked revision read have run on SQLite alone.
-- **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. No run has carried an empty
-  Postgres store from the baseline to head, so a revision above the baseline has run on Postgres only where a bullet
-  above says so.
+- **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. The one empty-store chain run
+  stopped at the execution observations revision; no run has carried an empty Postgres store through the revisions above
+  it to the current head, so a revision above the baseline has run on Postgres only where a bullet above says so.
 
 Standing in for a tier: `blizzard:store-baseline` for the baseline, the colocated migration tests of the revisions above
 it and the seam's component tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand
-run is not repeatable from a durable script, since the matrix carries the method and no driver. No method runs the
-runner store on Postgres past its baseline — `blizzard:postgres-uow-concurrency` proves the hub store alone — so the gap
-closes when a repeatable method carries a Postgres runner store from the baseline to head and races the counter
-allocation and the lease-row lock there; a bullet leaves in the change whose method runs its mechanism.
+runs the bullets above record are not repeatable from a durable script, since the matrix carries the method and no
+driver, so no repeatable method runs the runner store on Postgres past its baseline; `blizzard:postgres-uow-concurrency`
+proves the hub store alone. The gap closes when a repeatable method carries a Postgres runner store from the baseline to
+head and races the counter allocation and the lease-row lock there; a bullet leaves in the change whose method runs its
+mechanism.
 
 ## Hub actions' columns under Postgres
 
