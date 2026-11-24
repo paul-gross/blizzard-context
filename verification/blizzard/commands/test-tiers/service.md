@@ -35,6 +35,10 @@ and skips cleanly without `BLIZZARD_SERVICE=1`.
 `tests/service/forge/test_github_checks_service.py` exercises the production GitHub adapter against the mock forge over
 HTTP, checking pagination at 100, 101 and 205 check runs and status contexts and latest-status deduplication.
 
+`tests/service/forge/test_rewrite_large_tree_service.py::test_large_unchanged_tree_does_not_require_blob_reads`
+exercises rewrite intent and admission against Git-backed forge history, checking the rebased tree and bounded blob
+reads despite a large unchanged subtree.
+
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
 **Kept transition-era export**
