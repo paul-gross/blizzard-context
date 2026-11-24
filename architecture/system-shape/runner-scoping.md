@@ -87,7 +87,9 @@ adapter's binding, and the host half by three host members, each through its own
 `host_ingests` member (`host_ingest_store.py`), which merges the host rows by each table's declared treatment and
 records an ingest, the `hosted_runners` member (`host_hosted_runner_store.py`), which hosts the moving runner, and the
 `runner_hub_tokens` member (`host_hub_token_store.py`), which writes the moving runner's hub token, sealed under the
-destination's key, insert-where-absent; none imports another, and none names the other kind's tables. A runner admission
+destination's key, insert-where-absent; none imports another, and none names the other kind's tables. The transfer's
+removal deletes the moving runner's rows from the source with its hosting and token on one source transaction, through
+the `hosted_runners` and `runner_hub_tokens` members' `*_locked` methods on one handle. A runner admission
 (`blizzard/src/blizzard/runner/store/internal/runner_admission_store.py`) writes one runner's identity row with its
 hosting on one transaction: the full add writes the identity, the first settings revision, the hosted row, the `added`
 fact and the sealed token, and `init`'s join writes the identity and its hosting. It opens the transaction on
