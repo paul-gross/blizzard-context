@@ -297,9 +297,9 @@ Helpers a CLI root calls into rather than repeating:
 - `blizzard/src/blizzard/runner/cli/daemon.py`'s `Door.uds_client` builds the local UDS client, through the carrier's
   factory, that both `RunnerDaemon.reach` and `daemon_holding` need, shared rather than duplicated; each caller passes
   the `Door` its command resolved from the context, so no call site reads a trace source or a factory ambiently.
-- `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_stores` builds the runner's read-only store bundle and disposes
-  the engine on exit, so `runner/cli/prompt.py`'s `_stored_override` calls into it instead of repeating the construction
-  outside a composition root.
+- `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_host_stores` builds a host-scoped read-only store bundle and
+  disposes the engine on exit, so `runner/cli/prompt.py`'s `_effective_prompt_lane` calls into it instead of repeating
+  the construction outside a composition root.
 
 Example — a click command taking its swappable collaborators from the invoker:
 

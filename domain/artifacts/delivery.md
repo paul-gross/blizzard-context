@@ -58,16 +58,17 @@ worker node's judgement ([edges](../graphs/edges.md)).
 - **Automatic method choice.** For GitHub `merge-on-checks`, the forge offers allowed methods in preference order: merge
   commit, rebase-merge, then squash. A method-specific incompatibility permits trying the next allowed method;
   exhaustion escalates with the allowed set and reasons. A behind change uses a rebase update when merge commits are
-  disabled. The updated head must be admitted and pass its own checks before landing; rebase-merge and squash can
-  produce a different landed revision, which is recorded without another post-landing check. Repository method settings
-  are distinct from adapter and credential capabilities.
+  disabled. The updated head must be admitted and checked independently before landing: its checks must pass or be
+  neutral, or its successful empty check read must be permitted by `allow_no_ci`. Results from the prior head are not
+  reused. Rebase-merge and squash can produce a different landed revision, which is recorded without another
+  post-landing check. Repository method settings are distinct from adapter and credential capabilities.
 - **The policy is the repository's.** How a change lands is a fact about the repository it lands in: each repository
   record carries a landing policy, and the `land` action runs each repository's own. A policy is accepted only on a
   forge that offers its required capabilities. The policies are:
 
   | Policy            | Landing behavior                                                                                      |
   | ----------------- | ----------------------------------------------------------------------------------------------------- |
-  | `merge-on-checks` | Default; opens a change, updates it from the base, and merges when checks are green.                  |
+  | `merge-on-checks` | Default; opens a change, updates it from the base, and merges when its checks permit landing.         |
   | `fast-forward`    | Checks the work revision, or a proven merge candidate when the base diverged, then advances the base. |
   | `park`            | Opens a change for a person to merge; their merge is authoritative, at its actual revision.           |
 
