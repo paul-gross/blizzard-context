@@ -290,7 +290,8 @@ The hub's hosted lifetimes and the runner host:
   `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
   runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`. `HostStores` and the telemetry receiver
   are host-scoped and built once per host; each `RunnerProcess` holds only runner-bound collaborators plus its attempt
-  handle, the one runner-scoped external-usage write
+  handle and one host-kind write seam for external-usage attempts. That seam uses runner-bound connections to write an
+  unregistered host's sampled attempt and its runner-scoped outbound report in one transaction.
 
 Helpers a CLI root calls into rather than repeating:
 
@@ -361,8 +362,9 @@ fires:
 - A `ctx` parameter or `ctx:` field under `runner/`, outside the driver, roots, and edges, not typed by a `Protocol` its
   own module declares; or a parameter or field of any other name typed — bare, module-qualified, or wrapped in a union —
   by `LoopContext` or another module's step context.
-- A step context Protocol with no sentinel assignment `_<name>_conforms: type[<Protocol>] = LoopContext` in
-  `runner/loop/context.py` proving `LoopContext` satisfies it.
+- A Protocol used to type a scanned `ctx` with no annotated assignment of `LoopContext` to `type[<Protocol>]` in
+  `runner/loop/context.py`. The guard checks the assignment's annotation and value, not its target name; pyright checks
+  that `LoopContext` satisfies the Protocol.
 
 `tests/guards/test_container_boundaries.py` fails the unit tier on a module on the hub's narrowing roster that names a
 legacy bag in an import, a name, or an attribute.
