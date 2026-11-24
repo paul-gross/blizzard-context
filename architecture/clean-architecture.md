@@ -192,6 +192,9 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
 - An offline hub verb or tool that keeps its old call signature, such as the event-log opener or `tools.invariants`,
   taking its capability from a bag rather than a registered provider. The opener gets it through `open_store_backed`;
   the invariant tool gets it from the store wiring's registered factory over its borrowed engine.
+- An engine opened under `runner/cli/` or in `runner/runtime.py` at a site the gate's shrink-only allowlist does not
+  list, or a listed site that no longer opens one — the stopped-host verbs read the store through the composition's
+  readers.
 
 The hub's container is held by `tests/guards/test_hub_graph.py` and `tests/guards/test_container_boundaries.py`, over
 the checks in `tests/support/container_guards.py`; each check carries a planted violation it fails:
