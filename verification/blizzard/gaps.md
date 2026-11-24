@@ -466,9 +466,11 @@ its runner key and counters hold there by construction. `blizzard:store-baseline
 empty Postgres store and holds it to `contracts/store/runner.json`; what that proof and the hand runs under
 `blizzard:manual-postgres-runner-migrations` leave unverified:
 
-- **The counter allocation.** `insert_outbox_row` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
-  lane under READ COMMITTED. Eight threads racing the first allocation of a new runner's lane were issued `1` through
-  `8`, with the counter at `8` and the invariants holding.
+- **The counter allocation.** `insert_outbox_rows` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
+  lane under READ COMMITTED by the number of rows it inserts, seeding a new lane's counter at that count; the one-row
+  `insert_outbox_row` wraps it. Eight threads racing the first allocation of a new runner's lane one row at a time were
+  issued `1` through `8`, with the counter at `8` and the invariants holding. The advance by more than one row, and a
+  first allocation racing multi-row runs, have not been run on Postgres.
 - **The usage-limit floor tables.** The revision creating the empty `subscription_usage_limits`,
   `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables, whose downgrade drops them, has
   run on Postgres only inside the empty-store chain run the execution observations bullet records; it creates four

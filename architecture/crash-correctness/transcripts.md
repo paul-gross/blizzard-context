@@ -13,7 +13,8 @@ cursor and enqueues the deltas in one `record_transcript_deltas` transaction. A 
 loses only the read, since `turns_since` is a pure forward read of an immutable log and the next tick re-reads from the
 same unadvanced cursor for the same batch.
 
-The enqueued rows take their `seq` from the runner's `transcript` lane through `insert_outbox_row`; the
+The enqueued rows take one contiguous run of `seq`s from the runner's `transcript` lane through `insert_outbox_rows`,
+which advances the lane once per window rather than once per payload; the
 [outbox counter advance](./runner.md#the-outbox-counter-advance) owns why that write has no window.
 
 The write half sits behind the boundary the `transcript.*` crash-point family already guards — the drain's submit/ack
