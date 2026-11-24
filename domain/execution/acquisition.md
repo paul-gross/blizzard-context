@@ -52,6 +52,8 @@ there. Then the claim is refused on the first of these that holds:
    empty set of them — is not judged on its workspace ([./hosts.md](./hosts.md) §Bindings).
 7. The runner's capabilities do not fit the chunk. A runner reporting no capabilities fits no chunk: it is eligible for
    nothing, so the matched peek hands it no entry and a claim by it is refused, the same answer at both places.
+8. The runner prepared the chunk at repository targets that are not the chunk's — it started work on branches the chunk
+   no longer targets ([../projects.md](../projects.md#where-a-chunk-may-land)). It is refused and tries again.
 
 Rekeying a route token is refused once the chunk has ended, as a claim on it is.
 

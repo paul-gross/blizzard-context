@@ -57,9 +57,9 @@ subscription the host does not sample, one on a runner spending no subscription,
 30-minute fallback.
 
 An exhausted window holds until a newer sample shows it under 100 percent — in the same period or a later one: with no
-harness having met a limit, the newest reading is all there is to go on — and, with no newer sample, until an hour past
-the window's reset. It stands apart from any mark: a mark lifting on the clock leaves a window the newest sample shows
-exhausted holding still.
+harness having met a limit, the newest reading is all there is to go on — and otherwise until an hour past the window's
+reset: a sample still reporting the passed period does not hold it past that hour. It stands apart from any mark: a mark
+lifting on the clock leaves a window the newest sample shows exhausted holding still.
 
 An operator may clear a hold; a cleared hold holds a runner back again only on a mark or a newly exhausted window after
 the clear. The clear names what the floor belongs to: a subscription's floor is cleared by naming the subscription, and

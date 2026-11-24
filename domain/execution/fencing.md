@@ -66,9 +66,10 @@ idempotent per chunk, node, marker name, and epoch. No runner write shares this 
 
 ## Carrying a restarted gate's decision
 
-One runner write lands at an epoch the hub owns. A restart landing on a human-judged node opens that visit's decision at
-the restart's own epoch ([../work/restart.md](../work/restart.md)), which no lease stands behind. Once a person resolves
-it, the runner holding the chunk's live route carries that resolution at that epoch, taking no new lease to do so.
+One state-advancing runner write lands at an epoch the hub owns. A restart landing on a human-judged node opens that
+visit's decision at the restart's own epoch ([../work/restart.md](../work/restart.md)), which no lease stands behind.
+Once a person resolves it, the runner holding the chunk's live route carries that resolution at that epoch, taking no
+new lease to do so.
 
 The exception lifts the ownership check for that one write and nothing else of the fence:
 
@@ -81,9 +82,11 @@ The exception lifts the ownership check for that one write and nothing else of t
 ## Route authorization
 
 Holding the chunk is a prerequisite separate from owning the epoch, judged ahead of the fence and on its own. A claim
-hands its claimant a route token for the route it grants, and a chunk-scoped write a runner submits — a completion, a
-gate decision, a release, a lease's mint, an escalation, an ask — is authorized only when it presents the live route's
-token and comes from the runner that route names. A chunk with no live route authorizes no such write.
+hands its claimant a route token for the route it grants, and these chunk-scoped writes a runner submits — a completion,
+a gate decision, a release, a lease's mint, an escalation, an ask — are authorized only when they present the live
+route's token and come from the runner that route names. A chunk with no live route authorizes none of them. A runner's
+reports about a chunk — the usage it spent, the events it records — are not route-authorized: a fenced-out or dying
+worker's report is still worth keeping.
 
 Authorization answers who holds the chunk, never which attempt may advance it: a write that passes it is still read
 against the fence, and passing it admits nothing the fence refuses.
@@ -95,5 +98,6 @@ What a failed authorization costs the write is the operator's `route_token_mode`
 | `enforce` | Is refused before the fence is read, never recorded.             |
 | `warn`    | Is logged and goes on to the fence as an authorized write would. |
 
-Neither mode changes epoch ownership: a write `warn` lets through is refused at a stale epoch, an epoch its attempt does
-not own, or an ended chunk exactly as under `enforce`.
+Neither mode changes the fence: a fenced write `warn` lets through is refused at a stale epoch, an epoch its attempt
+does not own, or an ended chunk exactly as under `enforce`. A release is judged on the route, the chunk's status, and
+the newest epoch, not on ownership: its holder may give the route back at an epoch a restart opened.
