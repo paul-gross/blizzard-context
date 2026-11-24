@@ -3,7 +3,7 @@
 A **scope** is an operator-named bucket — a slug and a description, findings grouped into it. The slug is lowercase
 letters, digits, and hyphens, at least one character and nothing else; whatever wants prose goes in the description. A
 **routine** is an operator-named pointer at a graph its runs execute, a default scope, and default run preferences
-(model, effort, urgency); a run is the routine acting, addressed at itself and an effective scope. Part of the
+(model, effort, harness, urgency); a run is the routine acting, addressed at itself and an effective scope. Part of the
 [domain model](./index.md).
 
 Every scope and routine belongs to one project ([projects.md](./projects.md)), fixed at its mint. A scope's slug and a
@@ -79,8 +79,12 @@ baseline, while a `delta` run runs against the routine/scope pair's own recorded
 the record, never refused — when the pair has recorded none yet. A routine may name a **default urgency**, the urgency
 its runs take when the run names none ([work/chunk.md](./work/chunk.md#urgency)); naming none leaves its runs to the
 tenant's default. The default urgency must be live when it is set, and retiring that urgency clears it
-([work/urgency.md](./work/urgency.md#retiring-with-the-work-moved)). What turns a run away is
-[What refuses](#what-refuses).
+([work/urgency.md](./work/urgency.md#retiring-with-the-work-moved)). A routine also carries a **default harness
+preference**, an ordered list of the harnesses its runs accept, editable like its other run preferences; an empty one —
+what a mint stating none records — expresses no preference, where an authored harness set is never empty
+([graphs/declared-sessions.md](./graphs/declared-sessions.md#harness-set), which owns what the set means to a session).
+How a run's chunk takes the routine's defaults is [work/chunk.md](./work/chunk.md#model-effort-and-harness-defaults)'s.
+What turns a run away is [What refuses](#what-refuses).
 
 ## What refuses
 
@@ -96,6 +100,9 @@ sent to another scope or another graph.
   once, where a scope's slug is not ([Mint-on-name](#mint-on-name)): a second routine under a slug already held is
   refused, never merged into the routine holding it.
 - **A routine slug outside the scope-slug shape** — at mint, when the mint states the slug.
+- **A malformed harness preference** — a blank entry, or one harness named twice — when a routine is minted or an edit
+  sets it, and before anything else the act would record: a mint or edit refused for it mints no default scope
+  ([Mint-on-name](#mint-on-name)).
 - **A scope that does not exist** — when a routine's declared set names one, grown or shrunk; the growing verb mints
   nothing of its own ([A routine sweeps a declared set of scopes](#a-routine-sweeps-a-declared-set-of-scopes)).
 - **A scope of another project** — as a routine's default or in its declared set, at mint, at an edit, or from a
