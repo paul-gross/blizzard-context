@@ -80,8 +80,8 @@ why the order matters.
    ([`blizzard:manual-hub`](./manual.md#blizzardmanual-hub)'s loop walk) for what only a live lease renders.
 3. Open the view that carries the change and confirm it renders the stated result, with no error in the browser console
    and no failed `/api` request in the network log.
-4. Wait one tick — 30 seconds by default, `tick end` in the runner's log — and confirm the view still renders the stated
-   result: the daemon reconciles its store every tick, and a panel correct only until then does not pass.
+4. Wait one tick — `tick end` in the runner's log marks it — and confirm the view still renders the stated result: the
+   daemon reconciles its store every tick, and a panel correct only until then does not pass.
 5. Perform each changed gesture, confirm the rendered result, then read the effect back from the runner itself with
    `curl -fs "http://127.0.0.1:$BZ_RUNNER_PORT/runners/<id>/api/dashboard"`. Do not clear a seeded runner's local pause
    as a gesture unless the pause control is what changed —

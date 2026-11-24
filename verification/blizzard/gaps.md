@@ -1,15 +1,32 @@
 # Surfaces no tier reaches (`bzh:matrix-gaps`)
 
 The matrix leaves the surfaces below uncovered on purpose. Each entry names the evidence standing in for a tier and why
-a tier cannot reach it; each is a documented gap, not an invitation to invent a tier around it. A surface's
-unreachability by any tier is re-tested each time a gap is entered here and never inherited by analogy from a sibling
-gap, because tooling that lands later can automate part of what was manual and leave a narrower residue than the
-original claim assumed.
+a tier cannot reach it; each is a documented gap, not an invitation to invent a tier around it.
 
-A change that closes a gap deletes its entry in the same change, and one that narrows a gap rewrites its entry to the
-residue that remains. A change that adds a mechanism an open gap already covers adds it to that entry rather than
-entering it anew. An entry left behind for a closed gap tells the next reader to keep owing evidence nothing needs any
-longer.
+**Rule.** Keep every entry equal to what no tier reaches today, in the change that moves it:
+
+- A change that closes a gap deletes its entry.
+- A change that narrows a gap rewrites its entry to the residue that remains.
+- A change that adds a mechanism an open gap already covers adds it to that entry rather than entering it anew.
+- A change that enters a gap tests the surface against every tier itself, never inheriting unreachability by analogy
+  from a sibling gap.
+
+Each entry states its own exposure and, where it has one, its own closing condition; it never borrows either from
+another entry by reference.
+
+**Why.** An entry left behind for a closed gap tells the next reader to keep owing evidence nothing needs, and one that
+borrows a sibling's terms loses them when that sibling closes. Tooling that lands later can automate part of what was
+manual and leave a narrower residue than the original claim assumed.
+
+**Detect.** An entry whose exposure or closing condition reads "as the … one above does" or "the same exposure as …'s";
+an entry claiming "every tier" or "no tier" that a method in [`../blizzard.md`](../blizzard.md) contradicts; a change
+adding a tier or a proof case with no hunk here for the gaps it reaches.
+
+**Do.** *"The gap closes when `blizzard:postgres-uow-concurrency` runs each mechanism below on its migrated schema; a
+bullet leaves this entry in the change that adds its case."*
+
+**Don't.** *"The gap closes as the tenancy one above does."* — the entry it leans on is deleted the day that gap closes,
+and this one is left with no condition.
 
 ## `docs/` claims about daemon behavior (`bzh:operator-doc-claims-unverified`)
 
@@ -47,10 +64,11 @@ effective context accounting a harness ran under, because the mock façade sees 
 asserts the flag on the Claude Code façade — the mint and every resume carry the same resolved model — and stops there.
 
 Standing in for a tier: what backs the surrounding export behavior is a one-time empirical observation of Claude Code
-CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted range (currently `>=1.18.25,<2.0`).
-Neither observation proves OpenCode session stickiness when model flags are omitted; each harness also has a
-configuration that can defeat stickiness, which `docs/deployment/worker-spawn.md` states as deployment requirements. Do
-not add a real-token tier to close this gap.
+CLI 2.1.220 and the retained live compatibility evidence for the runner's admitted OpenCode range, which
+`ADMITTED_OPENCODE_RANGE_DISPLAY` (`blizzard/src/blizzard/runner/harness/opencode/compatibility/probe.py`) owns. Neither
+observation proves OpenCode session stickiness when model flags are omitted; each harness also has a configuration that
+can defeat stickiness, which `docs/deployment/worker-spawn.md` states as deployment requirements. Do not add a
+real-token tier to close this gap.
 
 ## The declared compaction window
 
@@ -68,9 +86,9 @@ its threshold contrast is observed; a configuration echo or a documented procedu
 The OpenCode compatibility diagnostic treats a compaction part's tail marker as a logical prune when history rows are
 retained rather than removed. That field is read as `tail_start_id`, a snake_case key in a payload family that is
 otherwise strictly camelCase (`sessionID`, `messageID`, `callID`, `parentID`), and no captured fixture under any of the
-runner's committed corpus directories — the runner's admitted range (currently `>=1.18.25,<2.0`) is backed by only the
-one, `blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — carries it: that corpus version's live runs
-never compacted. A wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
+runner's committed corpus directories — the runner's admitted range is backed by only the one,
+`blizzard/src/blizzard/runner/harness/contracts/opencode/1.18.25/` — carries it: that corpus version's live runs never
+compacted. A wrong spelling parses as absent, so the fallback silently stops firing rather than failing.
 
 Standing in for a tier: the physical-removal path, which every retained fixture does exercise, is the primary evidence
 for `transcript_cursor`; the tail-marker fallback is unverified until a live run compacts and the shape is captured.
@@ -342,12 +360,16 @@ hermetic, network-free CI tier's reach.
 
 ## Projects' migration and writes under Postgres
 
-The projects mechanisms below have the same exposure as tenancy's: every tier runs on SQLite, with one writer lock and
-foreign keys off, so each holds there by construction and stays unverified on Postgres.
+Postgres reads each statement of a READ COMMITTED transaction on its own snapshot and enforces foreign keys. Two methods
+run a hub store there, and neither races two writers through a mechanism below: `blizzard:rehearsal`'s Postgres leg
+drives one hub's journey a write at a time, and `blizzard:postgres-uow-concurrency`'s drain case seeds one row into
+every tenant-owned table of the migrated schema and drains the tenant. Every other tier runs on SQLite, with one writer
+lock and foreign keys off, so each mechanism holds there by construction. What stays unverified on Postgres:
 
-- **The project keys.** The `fk_<table>_projects` foreign keys, `fk_questions_projects` and `fk_decisions_projects`
-  among them, have never been enforced against a written row, since every tier leaves foreign keys off. Nor has the
-  tenant drain run over rows those keys bind.
+- **The project keys.** The `fk_<table>_projects` foreign keys are enforced against the rows the rehearsal's journey
+  writes — a project, its links, an ingest, a claim, and a landing — and otherwise only against the drain case's one
+  seeded row per table. `fk_questions_projects` and `fk_decisions_projects` are among the second kind: no question or
+  decision a route wrote has met its key.
 - **The slug move.** A project's slug move (`update_project`, `src/blizzard/hub/store/internal/project_store.py`) runs
   in one transaction. It reads for a current holder of the new slug, deletes the new slug's former-slug row, updates the
   project, then records the slug it left. Under READ COMMITTED each statement reads its own snapshot. What two
@@ -360,10 +382,10 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   `src/blizzard/hub/domain/projects/links.py`), so the links an ingest read stand until it commits. That an unlink
   racing an ingest under READ COMMITTED waits on the key rather than committing between the ingest's link read and its
   mint is unverified; SQLite's writer lock serializes the two whatever the key.
-- **A landed repository row's keys.** `delivery_repo_landed`'s foreign keys to its chunk and its tenant have never been
-  enforced, and its `repository_id` carries neither a unique key nor a foreign key to the repository record: that a
-  landing names a repository its project linked is held by the invariant checker's `hub:landed-repository-linked`
-  (`src/blizzard/hub/store/internal/invariants.py`) alone, and its behavior under enforced keys is unverified.
+- **A landed repository row's repository.** `delivery_repo_landed`'s `repository_id` carries neither a unique key nor a
+  foreign key to the repository record: that a landing names a repository its project linked is held by the invariant
+  checker's `hub:landed-repository-linked` (`src/blizzard/hub/store/internal/invariants.py`) alone, and no tier runs the
+  invariant pass on Postgres.
 - **A chunk's captured targets.** A chunk's repository targets are inserted once under its row lock — at its claim, in
   the route's own transaction, and at a delivery's submission (`ChunkTargetsStore.capture`,
   `src/blizzard/hub/store/internal/chunk_targets_store.py`) — reading the held rows and inserting only the missing ones.
@@ -386,15 +408,22 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   pairs. The verbs themselves run on SQLite only, where the writer lock serializes the two whatever the key.
 
 Standing in for a tier: the slug-move and link tests on SQLite, and the portable SQL `bzh:sql-portable` holds each
-statement to. The gap closes as the tenancy one above does.
+statement to. Each racing-write bullet leaves this entry in the change that adds a case racing its mechanism on the
+migrated schema to `blizzard:postgres-uow-concurrency`. The project-keys bullet leaves when a method writes a question
+and a decision through their routes on Postgres, and the landed-row bullet when one runs the invariant pass there. The
+read-plan bullet closes with the query-plan entry it points at.
 
 ## Hosts under Postgres
 
-The hosts mechanisms below have the same exposure as projects': every tier runs on SQLite, with one writer lock and
-foreign keys off, so each holds there by construction and stays unverified on Postgres.
+Postgres reads each statement of a READ COMMITTED transaction on its own snapshot and enforces foreign keys. Two methods
+run a hub store there, and neither races two writers through a mechanism below: `blizzard:rehearsal`'s Postgres leg
+drives one hub's journey a write at a time, and `blizzard:postgres-uow-concurrency`'s drain case seeds one row into
+every tenant-owned table of the migrated schema and drains the tenant. Every other tier runs on SQLite, with one writer
+lock and foreign keys off, so each mechanism holds there by construction. What stays unverified on Postgres:
 
-- **The host key.** The `fk_runner_registrations_hosts` key has never been enforced against a written row, nor has the
-  tenant drain run over rows it binds.
+- **The host key.** The `fk_runner_registrations_hosts` key is enforced against the drain case's one seeded registration
+  and its children-first deletes. The rehearsal's journey neither adopts a runner nor retires a host, so no adoption or
+  retire through `HostRegistryStore` has met the key.
 - **The host fact lane's upserts.** `host_high_water`, `host_external_usage`, and `host_external_usage_misses` are each
   tenant-keyed and carry no key on `host_id`; the upserts that refresh a `(host_id, slug)` row in place have only run
   under SQLite's writer lock.
@@ -417,7 +446,11 @@ foreign keys off, so each holds there by construction and stays unverified on Po
   exactly one host is unverified; SQLite's writer lock serializes them.
 
 Standing in for a tier: the registration-column revisions' colocated tests, the adoption and name tests on SQLite, and
-the portable SQL `bzh:sql-portable` holds each statement to. The gap closes as the tenancy one above does.
+the portable SQL `bzh:sql-portable` holds each statement to. The name-uniqueness, adoption, and upsert bullets each
+leave this entry in the change that adds a case racing its mechanism on the migrated schema to
+`blizzard:postgres-uow-concurrency`. The two column-revision bullets leave when a repeatable method, not a hand run,
+takes those revisions up and down over populated, key-bound rows on Postgres. The host-key bullet narrows when a method
+runs an adoption or a host retire through `HostRegistryStore` there, and leaves once both have run.
 
 ## Runner settings under Postgres
 
@@ -473,8 +506,10 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
 
 Standing in for a tier: `blizzard:store-baseline` for the baseline, the colocated migration tests of the revisions above
 it and the seam's component tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand
-run is not repeatable from a durable script, since the matrix carries the method and no driver. The gap closes as the
-tenancy one above does.
+run is not repeatable from a durable script, since the matrix carries the method and no driver. No method runs the
+runner store on Postgres past its baseline — `blizzard:postgres-uow-concurrency` proves the hub store alone — so the gap
+closes when a repeatable method carries a Postgres runner store from the baseline to head and races the counter
+allocation and the lease-row lock there; a bullet leaves in the change whose method runs its mechanism.
 
 ## Hub actions' columns under Postgres
 
@@ -623,9 +658,9 @@ enforced, DDL is transactional, and identifiers stop at 63 characters.
   `blizzard:manual-postgres-invariants`, steps 1–2, then ran: `GET /api/admin/invariants` answered `200` with no
   violation, and after one tenant's `credentials.authority` was rewritten by SQL it answered `200` with
   `hub:credential-authority-derived` naming that tenant and credential.
-- **What `blizzard:rehearsal` now covers.** Its Postgres leg, on every `master` push, migrates a supported release's
-  store through the credential revisions, including the carry-over, and reads the journey's repository and work source
-  and the credential each names through the routes, then ingests and lands with the carried-over credential.
+- **What `blizzard:rehearsal` covers.** Its Postgres leg, on every `master` push, migrates a supported release's store
+  through the credential revisions, including the carry-over, and reads the journey's repository and work source and the
+  credential each names through the routes, then ingests and lands with the carried-over credential.
 - **What no tier repeats.** No CI tier runs the invariant pass under Postgres, and none writes a credential, or a
   referrer's `credential_id`, through the credential routes there.
 
