@@ -155,17 +155,19 @@ The same script also runs the domain-boundary sweeps (`web/scripts/domain-bounda
   `LAYERED_PROJECTS` key prefixing the file, except that a file in a subfolder of `hub/src/app/admin/` is keyed by that
   subfolder and one directly in `admin/` by the root — is named in `DOMAIN_BOUNDARY_EXEMPT`, with one reason for the
   whole list (`decision:ui-toolkit/incremental-replacement`); an entry whose unit no longer consumes a wire type fails
-  as stale, under `stale DOMAIN_BOUNDARY_EXEMPT entries`, so the list only shrinks. A concept already behind the
-  boundary inside a still-exempt unit is pinned in `DOMAIN_BOUNDARY_STRICT_SCOPES`, by folder prefix or concept stem:
-  the sweep fails a wire consumer there despite its unit's exemption. Separately, a production file or a story whose
-  consumed symbol is declared under `testing/transport/` prints under
-  `production files or stories reaching the test transport`; specs and test helpers may reach it. Its self-test,
-  `assertDomainBoundaryDetectorWorks`, must-catches direct, aliased, namespace, `import()`-type, and transitive barrel
-  imports of a generated type, `fleet` included, a component or model spec, story, or ordinary test helper consuming
-  one, transport reach from production or a story, and a stale entry, and must-passes a same-named domain declaration, a
-  data-access file, translator, or focused spec, a transport module, and an exempt unit. A second self-test,
-  `assertDomainBoundaryKeyingWorks`, proves the admin keying before the sweep relies on it: a subfolder of `admin/` is
-  its own unit, a file directly in `admin/` keeps the root's, and no other unit is split.
+  as stale, under `stale DOMAIN_BOUNDARY_EXEMPT entries`, so the list only shrinks. `DOMAIN_BOUNDARY_STRICT_SCOPES`
+  overrides the exemption for migrated areas inside an exempt unit: each entry is a `projects/`-relative directory
+  prefix without a trailing slash, or a concept stem matching files beginning with the stem followed by `.`. These are
+  literal prefixes, not globs; ordinary specs and stories in a strict scope are checked too. Focused boundary specs
+  retain their boundary allowance. Separately, a production file or a story whose consumed symbol is declared under
+  `testing/transport/` prints under `production files or stories reaching the test transport`; specs and test helpers
+  may reach it. Its self-test, `assertDomainBoundaryDetectorWorks`, must-catches direct, aliased, namespace,
+  `import()`-type, and transitive barrel imports of a generated type, `fleet` included, a component or model spec,
+  story, or ordinary test helper consuming one, transport reach from production or a story, and a stale entry, and
+  must-passes a same-named domain declaration, a data-access file, translator, or focused spec, a transport module, and
+  an exempt unit. A second self-test, `assertDomainBoundaryKeyingWorks`, proves the admin keying before the sweep relies
+  on it: a subfolder of `admin/` is its own unit, a file directly in `admin/` keeps the root's, and no other unit is
+  split.
 - The backend-citation sweep, with no exemption list, over every `.ts` below `web/projects` except specs, stories, and
   the generated `fleet/src/lib/api/`, fails a backend Python module cited in a comment or string, by `.py` path or by
   dotted `blizzard.<package>` module path, printing each site under `backend .py citations in hand-written TS`. Its
