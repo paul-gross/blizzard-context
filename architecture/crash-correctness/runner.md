@@ -755,9 +755,9 @@ order:
 3. Append its `[[subscription]]`.
 4. Copy the path files under `runners/<name>/` and append its `[[runner]]`.
 5. Remove its token from the source's `.env`, when it holds one.
-6. Delete its rows from the source, its `runner_hub_tokens` row with them, only from the runner tables the source's
-   schema has, and move a source left with no runner aside whole. A runner directory that has not graduated holds that
-   one runner in a store at the schema it ran, so its store is moved aside whole, unedited.
+6. Delete its rows from the source — its `runner_hub_tokens` row and its hosting with them, in one transaction — only
+   from the tables the source's schema has, and move a source left with no runner aside whole. A runner directory that
+   has not graduated holds that one runner in a store at the schema it ran, so its store is moved aside whole, unedited.
 
 Each edit from 2 to 5 is skipped when the file already holds it, so a re-run completes whatever an interrupted run left.
 The re-run is keyed on the record, not on the files: a runner whose identity row this host holds, with a newest
@@ -767,9 +767,7 @@ windows are **real windows**, each an armed crash point. `ingest.after-copy.befo
 rows in both stores and no configuration here yet. `ingest.after-config.before-removal` falls after step 5, with the
 token sealed here, and the rows, the source's token row among them, still in the source. Without its token the source
 cannot run this runner, but a source host serving other runners still moves its host-wide stamp, and the re-run then
-refuses; the recovery is `store reset --runner` here, then a fresh ingest. The token row is deleted after the rows, in a
-transaction of its own, so a crash between the two leaves it behind in the source, which a re-run no longer revisits.
-That loss is **accepted**: the source's host still halts the runner, since its hub holds it under this host now.
+refuses; the recovery is `store reset --runner` here, then a fresh ingest.
 
 ## The seed's token import
 
