@@ -476,8 +476,8 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   five. No repeatable method runs either race.
 - **The usage-limit floor tables.** The revision creating the empty `subscription_usage_limits`,
   `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables, whose downgrade drops them, has
-  run on Postgres only inside the empty-store chain run the execution observations bullet records; it creates four
-  tables of portable column types and writes no data.
+  run on Postgres only inside the empty-store chain runs the execution observations and empty-store upgrade bullets
+  record; it creates four tables of portable column types and writes no data.
 - **The fact append sequence.** The revision adding a nullable `seq` to `env_bindings`, `binding_releases`,
   `pause_parks`, `pause_park_resumes`, `requeues` and `leases` creates `fact_counters` and numbers every existing row
   per runner, openers before closers at a tied instant. The hand run seeded its parent shape with two runners holding
@@ -488,9 +488,10 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   run on Postgres; the allocation is the outbox counter's, which that run covers.
 - **The takeover entries.** The revision creating `takeover_entries`, with a foreign key to `takeovers`, inserts an
   entry for every takeover open at that moment; its downgrade drops the table. On Postgres it has run only inside the
-  empty-store chain run the execution observations bullet records, over no takeover; its colocated test walks it
-  forward, back and forward again on SQLite only, and it uses portable column types and `INSERT … SELECT`. SQLite leaves
-  foreign keys off, so the foreign key is enforced on Postgres alone, and no run has bound a row to it.
+  empty-store chain runs the execution observations and empty-store upgrade bullets record, over no takeover; its
+  colocated test walks it forward, back and forward again on SQLite only, and it uses portable column types and
+  `INSERT … SELECT`. SQLite leaves foreign keys off, so the foreign key is enforced on Postgres alone, and no run has
+  bound a row to it.
 - **The lease-row lock of a declaration.** A declaration's admission and an outcome's capture each run as one write
   transaction whose first statement is a no-op update of the lease's `leases` row (`LeaseLockStore.locked`,
   `src/blizzard/runner/store/internal/lease_lock_store.py`), so the admission either commits before the capture and is
@@ -508,12 +509,13 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   values base64 `Text`, and writes no data; the seed's insert-where-absent and a replacement's locked revision read have
   run on SQLite alone.
 - **The buffered payload size.** The revision adding `transcript_outbound_buffer.payload_bytes`, `NOT NULL` with a
-  server default of `0`, fills every existing row from `length(payload)` in bounded pages; its downgrade drops the
-  column. A hand run on Postgres 16 seeded its parent shape with two runners holding 2,204 buffered rows between them,
-  pending and acked, final markers included, one runner's rows spanning two pages and one payload holding escaped
-  non-ASCII text. The upgrade filled every row with its payload's byte length, the schema matched the empty-store
-  chain's head, and the invariants held. The revision then went down, dropping the column with every row kept, and up
-  again, filling every row once more. No run has raced a runner's writes against the fill.
+  server default of `0`, fills every existing row from `length(payload)` in bounded pages keyed by runner and seq; its
+  downgrade drops the column. A hand run on Postgres 16 seeded its parent shape with two runners holding 2,707 buffered
+  rows between them, pending and acked, final markers included, over three pages, one of them split between the two
+  runners, and one payload holding escaped non-ASCII text. The upgrade filled every row with its payload's byte length,
+  the schema matched the empty-store chain's head, and the invariants held. The revision then went down, dropping the
+  column with every row kept, and up again, filling every row once more; a rerun of the upgrade over the filled store
+  changed nothing. No run has raced a runner's writes against the fill.
 - **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. A hand run carried an empty
   Postgres 16 store through every revision to the head of its day, the one adding
   `transcript_outbound_buffer.payload_bytes`, down to base, and up again, with the schema after the second upgrade
