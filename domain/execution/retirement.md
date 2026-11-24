@@ -21,8 +21,11 @@ one undifferentiated refusal, so the retired case is told apart only by a caller
 
 A runner holding chunks cannot be retired plainly: the hub refuses, naming each held chunk and its environments. A
 forced retirement records the fact first, so new claims are refused from that instant, and then releases every route the
-runner still holds through the same release detach uses; each chunk re-derives `ready`. Repeating the retirement
-finishes any release that was interrupted, and releases a claim that slipped in after the holdings check.
+runner still holds through the same release detach uses. The release frees the claim and supersedes nothing: each chunk
+derives its status from the facts that remain, and is `ready` only when nothing else holds it — an open ask or
+escalation still waits on its person ([./acquisition.md](./acquisition.md) §Giving tenure back,
+[./recovery.md](./recovery.md) §Detach). Repeating the retirement finishes any release that was interrupted, and
+releases a claim that slipped in after the holdings check.
 
 A retirement acts only on itself. Once the runner is reinstated, a retirement still under way, or one repeated by an
 operator who saw the runner before the reinstatement, is refused: it revokes no token the runner was enrolled with since
@@ -37,11 +40,12 @@ worktrees stay held until the process is stopped.
 ## Reinstatement
 
 Reinstatement finishes the retirement it reverses, then records the reversal: a chunk the retirement left held — one a
-retirement stopped before its releases left behind — is released first, as the retirement would have, and re-derives
-`ready`. A reinstatement decided on a retirement since reversed or repeated is refused. The runner is unenrolled —
-reinstating revokes any token it still carries, in the same step as the reversal — and must be enrolled afresh;
-enrolling a retired runner is refused, so there is one lever back. A runner still under a retired host is refused
-reinstatement; released from that host, it can be reinstated, and stands alone ([./hosts.md](./hosts.md)).
+retirement stopped before its releases left behind — is released first, as the retirement would have, and derives its
+status the same way ([Holdings](#holdings)). A reinstatement decided on a retirement since reversed or repeated is
+refused. The runner is unenrolled — reinstating revokes any token it still carries, in the same step as the reversal —
+and must be enrolled afresh; enrolling a retired runner is refused, so there is one lever back. A runner still under a
+retired host is refused reinstatement; released from that host, it can be reinstated, and stands alone
+([./hosts.md](./hosts.md)).
 
 ## Token revocation
 

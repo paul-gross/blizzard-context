@@ -20,13 +20,14 @@ state-advancing write is checked against.
 ## The stale-attempt rule (`bzh:epoch-fencing`)
 
 Every state-advancing write for a chunk (transition, decision, artifacts) carries an epoch; a write below the chunk's
-newest epoch is rejected, never recorded; a write a runner submits is rejected too unless its attempt owns that epoch;
-and a terminal fact (stopped, delivered) rejects every later state-advancing write regardless of epoch. Each epoch has
-one owner — the hub for an epoch it mints itself, a runner for an epoch its claim reserved or its lease took — the first
-one recorded, and that owner keeps it for good. The epoch is ordinarily the producing lease's, but the fence belongs to
-the chunk, not any lease — an operator restart ([../work/restart.md](../work/restart.md)) mints a hub-owned epoch with
-no attempt or lease behind it, and a claim reserves the next epoch for its claimant before that claimant mints any
-lease, each a fencing write setting the new floor the instant it lands, so the displaced attempt cannot still advance.
+newest epoch is rejected, never recorded; a write a runner submits is rejected too unless its attempt owns that epoch —
+with [one exception](#carrying-a-restarted-gates-decision); and a terminal fact (stopped, delivered) rejects every later
+state-advancing write regardless of epoch. Each epoch has one owner — the hub for an epoch it mints itself, a runner for
+an epoch its claim reserved or its lease took — the first one recorded, and that owner keeps it for good. The epoch is
+ordinarily the producing lease's, but the fence belongs to the chunk, not any lease — an operator restart
+([../work/restart.md](../work/restart.md)) mints a hub-owned epoch with no attempt or lease behind it, and a claim
+reserves the next epoch for its claimant before that claimant mints any lease, each a fencing write setting the new
+floor the instant it lands, so the displaced attempt cannot still advance.
 
 A worker presumed dead can wake and write after its successor started; fencing makes the successor authoritative and
 bounces the zombie's late writes — a zombie can lose work but never land wrong work, without requiring reliable process
@@ -44,7 +45,10 @@ How an epoch is minted, owned, and read:
   mint lands only on an epoch its own runner already owns. The route here only refuses, never admits.
 - A transition is never accepted because its submitter still holds the route — route tenure is not attempt fencing.
 - A runner's write is refused, never recorded, when its attempt does not own the write's epoch — a hub-owned epoch, or
-  one another runner owns.
+  one another runner owns — save [a restarted gate's decision](#carrying-a-restarted-gates-decision).
+- An attempt owns a runner-owned epoch when the runners match, and the lease is compared only when the write names one
+  and the epoch was taken under one: a write naming a lease other than the one the epoch was taken under is refused,
+  while a write naming no lease, or one at an epoch taken under no named lease, is judged on its runner alone.
 - The epoch alone does not place a completion or decision at a node; [../work/transitions.md](../work/transitions.md)
   owns the guards at the write.
 - A fencing write's own epoch is derived inside the transaction recording it, never from a read the write no longer
@@ -52,8 +56,44 @@ How an epoch is minted, owned, and read:
 - The party honoring the fence reads it generously — the hub's floor lags leases it has not yet heard of, so a fencing
   write can land level with the attempt it displaces, and level is displaced.
 
-The one exception is a hub action's record of a merge that has already happened on a forge — the repository's landed
-marker, its landed row, and the close intents beside them. It is admitted past the fence: a terminal chunk or a stale
-epoch does not refuse it, because it records what the forge already did rather than a step the chunk may take. The fence
-is still read on that write, and where it would have refused, the action is told so and touches no further repository.
-It stays idempotent per chunk, node, marker name, and epoch.
+## Past the fence: a merge already landed
+
+The one write admitted past the fence is a hub action's record of a merge that has already happened on a forge — the
+repository's landed marker, its landed row, and the close intents beside them. A terminal chunk or a stale epoch does
+not refuse it, because it records what the forge already did rather than a step the chunk may take. The fence is still
+read on that write, and where it would have refused, the action is told so and touches no further repository. It stays
+idempotent per chunk, node, marker name, and epoch. No runner write shares this admission.
+
+## Carrying a restarted gate's decision
+
+One runner write lands at an epoch the hub owns. A restart landing on a human-judged node opens that visit's decision at
+the restart's own epoch ([../work/restart.md](../work/restart.md)), which no lease stands behind. Once a person resolves
+it, the runner holding the chunk's live route carries that resolution at that epoch, taking no new lease to do so.
+
+The exception lifts the ownership check for that one write and nothing else of the fence:
+
+- A completion naming no decision at that epoch is refused: ordinary work still owes an epoch its own attempt owns.
+- A runner not holding the chunk's live route is refused, as at any hub-owned epoch.
+- An earlier visit's decision authorizes nothing here; [../humans/gates.md](../humans/gates.md) owns that refusal.
+- The stale-epoch and terminal refusals stand: a later restart or claim raises the fence past the write, and an ended
+  chunk refuses it.
+
+## Route authorization
+
+Holding the chunk is a prerequisite separate from owning the epoch, judged ahead of the fence and on its own. A claim
+hands its claimant a route token for the route it grants, and a chunk-scoped write a runner submits — a completion, a
+gate decision, a release, a lease's mint, an escalation, an ask — is authorized only when it presents the live route's
+token and comes from the runner that route names. A chunk with no live route authorizes no such write.
+
+Authorization answers who holds the chunk, never which attempt may advance it: a write that passes it is still read
+against the fence, and passing it admits nothing the fence refuses.
+
+What a failed authorization costs the write is the operator's `route_token_mode`, `warn` unless set otherwise:
+
+| Mode      | A write failing authorization                                    |
+| --------- | ---------------------------------------------------------------- |
+| `enforce` | Is refused before the fence is read, never recorded.             |
+| `warn`    | Is logged and goes on to the fence as an authorized write would. |
+
+Neither mode changes epoch ownership: a write `warn` lets through is refused at a stale epoch, an epoch its attempt does
+not own, or an ended chunk exactly as under `enforce`.

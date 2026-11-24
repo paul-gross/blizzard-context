@@ -106,6 +106,10 @@ runner claiming it already knows the one workspace its work will happen in; the 
   against the host as it stands at the claim: one made through a flagged binding, under a subscription outside the
   roster, or through a workspace other than the one the runner binds the chunk's project to is refused, while a route
   already held keeps the workspace it was claimed with.
+- **Declaring no bindings is not declaring an empty set.** A runner that registers the projects it serves and no
+  bindings at all is offered and admitted work of every project it serves, through whichever workspace it claims with:
+  the roster check on its subscription still applies, and nothing is judged on the workspace. A runner that declares an
+  empty set of bindings has bound no project, so it is offered nothing and its every claim is refused.
 
 ## Subscriptions
 
@@ -115,9 +119,11 @@ Naming a subscription is the operator's word about which plan pays for a runner'
 blizzard never hands a worker a plan's credentials, and a runner's harnesses constrain nothing about which plan it
 names.
 
-The host samples each subscription once, however many runners spend it — one that no runner spends included — and
-reports it to the hub once, as the host's. The host's entry shows each subscription once, naming the runners spending
-it, by the same rules a runner's entry follows ([./responsibilities.md](./responsibilities.md)); a runner's own entry
-shows the usage of the subscription it spends, and nothing for a runner spending none. An exhausted subscription holds
-back every runner spending it and no other — `bzh:subscription-floor-reach`, owned by
-[./throttling.md](./throttling.md).
+The host samples each subscription whose provider it has a sampler for once, however many runners spend it — one that no
+runner spends included — and reports it to the hub once, as the host's. A subscription of any other provider is declared
+and spent all the same, and simply goes unsampled: no sample is attempted, so none fails
+([./throttling.md](./throttling.md) owns how its holds lift without one). The host's entry shows each subscription once,
+naming the runners spending it, by the same rules a runner's entry follows
+([./responsibilities.md](./responsibilities.md)); a runner's own entry shows the usage of the subscription it spends,
+and nothing for a runner spending none. An exhausted subscription holds back every runner spending it and no other —
+`bzh:subscription-floor-reach`, owned by [./throttling.md](./throttling.md).
