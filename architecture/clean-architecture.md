@@ -270,8 +270,11 @@ The hub's hosted lifetimes and the runner host:
   `hub/scopes/tenants.py`), cached in the core's `TenantCache`; `build_services` takes the core and builds none of them.
   It builds the hub-level `HubServices` and has the cache serve each tenant's `TenantServices`, built over that tenant's
   `TenantStores` with shared service parts and its event broker (`build_tenant_services`) and cached beside them. A
-  hub-level service reaches a tenant's services only through `HubServices.tenants` (`TenantServicesOpener`); no service
-  is built from the unscoped core (`bzh:tenant-scoped-store`, [./system-shape/tenancy.md](./system-shape/tenancy.md))
+  hub-level service reaches a tenant's services through `HubServices.tenants` (`TenantServicesOpener`) until its area
+  adopts the container; an adopted background driver reaches a tenant's service through a typed accessor its entrypoint
+  builds over the cached tenant scope, never through a bag or a generic resolver, with `build_flow_driver` as the
+  reference. No service is built from the unscoped core (`bzh:tenant-scoped-store`,
+  [./system-shape/tenancy.md](./system-shape/tenancy.md))
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py` — `build_host_process` holding one
   `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
   runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`. `HostStores` and the telemetry receiver
