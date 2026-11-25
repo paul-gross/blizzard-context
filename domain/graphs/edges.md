@@ -8,8 +8,9 @@ every choice has exactly one edge; resolution is checked at graph creation, so n
 dangle. A graph has exactly one entry node; cycles are intentional, not a validation error. Reachability is warned,
 never rejected: a node no path from the entry reaches, or an entry with no path to the terminal, is a warning on the
 mint response, and the definition still mints. An edge carries arrival context: prose appended to the target node's
-prompt. Only a same-graph edge carries it: nothing arrives along a `graph:<name>` or `escalate` choice, and mint refuses
-a `prompt_addendum` on either.
+prompt. Only an edge to a node of the same graph delivers it. Nothing arrives along a `graph:<name>` or `escalate`
+choice, and mint refuses a `prompt_addendum` on either; a `done` edge reaches no node either, so an addendum on one
+mints and is never delivered.
 
 ## Choices
 

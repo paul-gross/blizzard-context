@@ -50,16 +50,17 @@ mint. `low|medium|high|max` is the well-known vocabulary, extended by runner con
 
 ## Compaction window
 
-The compaction window is a tuning knob, not a preference: a string hub-checked only for non-emptiness, reasserted on
-every invocation, and declaration-only, with no chunk-level default. Its vocabulary is the harness adapter's, not the
-hub's — nothing at mint knows which adapter will serve the session — and an adapter forwards only a value shaped like
-its harness's vocabulary, logging and dropping any other, so a misshapen window surfaces in the runner's log rather than
-as a mint error. The Claude Code adapter forwards `auto` or a token count, bare or `k`-suffixed (`400000`, `400k`), as
-its `--autocompact`; the count's range is the CLI's own to enforce, so a well-shaped value outside it is forwarded and
-refused by the harness. OpenCode accepts the same shapes: `auto` leaves its native configuration unchanged, while a
-numeric window targets the usable input threshold through a per-model input limit. Applying it requires the invocation's
-model, local model limits and effective configuration; when these cannot be established the runner logs a warning and
-launches unchanged. The window does not change the model's output cap or enable compaction if it is disabled.
+The compaction window is a tuning knob, not a preference: a single value hub-checked only for non-emptiness — a list,
+map, or boolean rejects the mint — reasserted on every invocation, and declaration-only, with no chunk-level default.
+Its vocabulary is the harness adapter's, not the hub's — nothing at mint knows which adapter will serve the session —
+and an adapter forwards only a value shaped like its harness's vocabulary, logging and dropping any other, so a
+misshapen window surfaces in the runner's log rather than as a mint error. The Claude Code adapter forwards `auto` or a
+token count, bare or `k`-suffixed (`400000`, `400k`), as its `--autocompact`; the count's range is the CLI's own to
+enforce, so a well-shaped value outside it is forwarded and refused by the harness. OpenCode accepts the same shapes:
+`auto` leaves its native configuration unchanged, while a numeric window targets the usable input threshold through a
+per-model input limit. Applying it requires the invocation's model, local model limits and effective configuration; when
+these cannot be established the runner logs a warning and launches unchanged. The window does not change the model's
+output cap or enable compaction if it is disabled.
 
 The window is commensurable only with `rotate.max_context_tokens` (both in tokens, unlike the other bounds): compaction
 shrinks context within a step, rotation ends the lineage across steps. A window below `max_context_tokens` means
