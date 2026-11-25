@@ -21,12 +21,12 @@ A delivery marker a pass records takes the one `content` shape its name fixes: a
 `delivery-pr/<repo>/<number>` or the bare `delivery-pr/<repo>`, carries the JSON object
 `{ "repo": "<repo>", "number": <integer>, "url": "<forge web PR URL>" }` whose `repo`, and `number` where the name
 carries one, match the name; `merged/<repo>` carries the landed revision, and blank content records no landing;
-`awaiting-external-merge`'s content is never read. A no-code resolution uses a distinct durable marker whose key and
-content bind the repository record, base, submitted branch, and commit; pure domain matching accepts it only for that
-same declaration. The marker is node-local, while reconciliation considers resolved facts across the chunk. It is never
-a blank or fabricated `merged/<repo>` revision. The chunk-artifacts store's delivery read, which feeds the hub's
-projection of these markers, skips a PR reference of any other shape without error. What each marker means is
-[delivery](../../domain/artifacts/delivery.md)'s.
+`awaiting-external-merge` and `awaiting-external-merge/<repo>/<number>` carry no read content; the latter names the
+parked PR. A no-code resolution uses a distinct durable marker whose key and content bind the repository record, base,
+submitted branch, and commit; pure domain matching accepts it only for that same declaration. The marker is node-local,
+while reconciliation considers resolved facts across the chunk. It is never a blank or fabricated `merged/<repo>`
+revision. The chunk-artifacts store's delivery read, which feeds the hub's projection of these markers, skips a PR
+reference of any other shape without error. What each marker means is [delivery](../../domain/artifacts/delivery.md)'s.
 
 A rebase intent is named `rewrite-intent/<repo>/<number>/<digest>`, where the digest is SHA-256 of its canonical JSON
 content. It binds the chunk, node, repository and repository record, forge, branch, base branch, submission and PR, plus

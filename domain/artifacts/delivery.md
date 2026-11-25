@@ -34,11 +34,11 @@ worker node's judgement ([edges](../graphs/edges.md)).
   was never recorded and they share one write instant, which one is latest cannot be known; the read's deterministic
   pick is not evidence of the later write. The repo's `merged/<repo>` marker records a real landed revision, not the
   submitted branch tip. A delivery that cannot establish its landed revision records no landing for that repository. A
-  policy that deliberately parks for a person's merge may author an `awaiting-external-merge` marker in the same
-  delivery epoch as its PR reference; only that marker signals a human merge wait. The hub projects these markers
-  alongside per-repo landing facts: closed PRs stay in history, while landed rows name only repos with a landed
-  revision. What each marker's content carries is the hub action contract's to state
-  ([action purity](../../standards/hub-nodes/action-purity.md)).
+  policy that deliberately parks for a person's merge may author an `awaiting-external-merge` marker in the same or a
+  later delivery epoch than its PR reference; a reference-specific wait identifies the PR a person must merge. Only a
+  wait marker signals a human merge wait. The hub projects these markers alongside per-repo landing facts: closed PRs
+  stay in history, while landed rows name only repos with a landed revision. What each marker's content carries is the
+  hub action contract's to state ([action purity](../../standards/hub-nodes/action-purity.md)).
 - **No code to land.** An empty commit set completes without a landing. A submitted repository resolves without a merge
   only when its submitted commit is proven contained in the intended base and its current branch and head are safe; an
   unreadable or refused comparison is not proof. Its durable no-code evidence matches the current declaration, so replay
