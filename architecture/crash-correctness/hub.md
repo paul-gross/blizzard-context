@@ -239,6 +239,12 @@ a crash after that write replays against the node and epoch's existing marker an
 crash before the write leaves no observation and the next pass reads the forge again. The marker's shape is owned by
 [action purity](../../standards/hub-nodes/action-purity.md).
 
+The marker superseding such an observation is the same kind of effect, written during the pass whose read found checks,
+and takes the accepted-loss ground. A crash between that read and the write loses the supersession; the next pass that
+reads checks writes it again. If none does before the poll deadline, as when the forge is silent at the final build, the
+timeout escalates `missing-checks` although checks had appeared. Nothing lands and no durable fact is contradicted: the
+escalation names the revision, so an operator reads its checks on the forge and requeues the chunk.
+
 ## The boot recovery of open turns
 
 The hub daemon's startup attempts `FlowDriver.recover_turns` once in each open tenant before serving and before the
