@@ -45,8 +45,8 @@ rotates the pool at its next member rather than switching a running session's mo
 
 ## Effort
 
-Effort is a single value, not a list — every harness maps an ordinal somewhere. `low|medium|high|max` is the well-known
-vocabulary, extended by runner configuration.
+Effort is a single value, not a list — every harness maps an ordinal somewhere — and a list, map, or boolean rejects the
+mint. `low|medium|high|max` is the well-known vocabulary, extended by runner configuration.
 
 ## Compaction window
 
@@ -75,7 +75,8 @@ threshold; strictly over one, the next member starts a new session in the same p
 its owner sourced as [Harness set](#harness-set) and [Model preference](#model-preference) state, never carried from the
 session it replaces. Bounds cover context size, transcript size, and harness invocations — the last counting spawns,
 resumes, and judgements, so a node-step spends two or three. An unmeasurable bound is not a breach; a missing
-measurement leaves the session standing.
+measurement leaves the session standing. An unrecognized key under `rotate:` rejects the mint as an unrecognized
+declaration key does (above).
 
 ## Harness set
 
