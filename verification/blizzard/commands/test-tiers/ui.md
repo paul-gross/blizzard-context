@@ -66,6 +66,9 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   second page's logout through `nav-logout` sends the first, still-open page to `/login` with no reload.
 - `tests/ui/auth/hub-settings.spec.ts` — a tenant administrator who is not a hub administrator sees no Hub settings tab
   and cannot open the settings page directly.
+- `tests/ui/auth/runner-settings-guest.spec.ts` — an adopted, federated runner host whose file `[auth]` resolves the
+  signed-in user to a non-superuser role: the runner panel's Settings tab shows every panel — the host's and each
+  runner's settings, Workspaces, Subscriptions and History — with no edit, create, retire or enable control.
 - `tests/ui/auth/runner-federation.spec.ts::test_multi_daemon_sso_bounce` — two adopted runner hosts under one runner
   name: a sessionless browser visit to A bounces through the hub and the stub IdP into A's own session, with the
   hub-signed token never in a URL. The captured callback token is refused at B (audience-bound), refused on replay at A
@@ -99,6 +102,10 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   to the doorway.
 - `tests/ui/host-verified-origin.spec.ts` — host detail links the first declared origin matching the board's hostname,
   with no requests to the declared origins' `/api/health` paths observed.
+- `tests/ui/runner-settings.spec.ts` — on a stepped runner host with auth off, the runner panel's Settings tab edits
+  `throttle.budget.usd` and its `in_force` line reads the written revision pending; after a step, with no reload, it
+  reads that revision in force, as the runner's settings read agrees. A missing `runner_prompt_file` shows the failed
+  rebuild with its revision and error while the previous revision stays in force, and unsetting it clears the failure.
 - `tests/ui/hub-settings.spec.ts` — a hub operator edits a sweep interval; the saved value reads back and the revision
   appears.
 - `tests/ui/repository-no-ci.spec.ts` — edits and persists the repository's allow-no-CI setting on desktop, then reads
