@@ -91,8 +91,11 @@ adopted claim, a resumed requeue, a reclaimed claim). Each stays on the prior le
 hand still admits it — an empty set admits any — and when that harness has left the set it escalates rather than
 switching owners ([../humans/escalation.md](../humans/escalation.md) §What raises an escalation). A chunk with no prior
 owner selects as any fresh mint does. Neither is a continuation, which resumes its recorded session, or a node entry,
-which resolves its session and harness afresh. A member the fleet doesn't hold is still valid authored policy: which
-harnesses a runner actually binds is a runner-time fact, never a mint-validation concern, so authoring an id no runner
-yet binds mints cleanly. A single-harness set follows [Model preference](#model-preference), including its authored-tier
-resolution requirement; a multi-harness set requires strict per-harness resolution for any nonempty model preference
-list — a harness resolving none of it is skipped rather than falling back within it.
+which resolves its session and harness afresh. One adopted claim is a node entry rather than a recovery at the same
+node: the one whose last attempt at the node being adopted transitioned back into that same node. A self-loop a gate
+held does not count, and at a restart entry the adopted claim stays a recovery. A member the fleet doesn't hold is still
+valid authored policy: which harnesses a runner actually binds is a runner-time fact, never a mint-validation concern,
+so authoring an id no runner yet binds mints cleanly. A single-harness set follows
+[Model preference](#model-preference), including its authored-tier resolution requirement; a multi-harness set requires
+strict per-harness resolution for any nonempty model preference list — a harness resolving none of it is skipped rather
+than falling back within it.
