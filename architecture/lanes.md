@@ -124,9 +124,6 @@ due tenant, an unchanged pass costs the probe's one statement. Until then, a fre
 `derived_segment_ids()` on each pass to find tenants whose segments and chunks are all gone, including when the store is
 empty.
 
-**Known gap.** The annotation reconciler reads two hub-wide signature probes, `live_work_refs_signature` and
-`work_source_changes_signature`, rather than the one probe statement this rule requires.
-
 **Don't.** A converging `sweep()` that reads its whole corpus and every remote's state unconditionally on each pass, so
 an idle fleet pays the whole diff every interval, changed or not.
 
