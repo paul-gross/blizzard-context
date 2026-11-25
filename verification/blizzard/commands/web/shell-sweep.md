@@ -210,8 +210,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `new-hub-item.shell-sweep.spec.ts` mounts the new hub item dialog on stubbed reads at 1280px and 320px. The panel
   stays inside the viewport, and its title, body, urgency, and submit controls stay inside the panel.
 - `questions-gates.shell-sweep.spec.ts` mounts the questions and gates views with domain inputs at 1280px, 390px, and
-  320px, checking their rendered question options and gate origin and that their rows stay inside their columns without
-  horizontal overflow.
+  320px, checking their rendered question options and gate origin, that their roots have no horizontal overflow, and
+  that each row's right edge stays inside its root.
 - `board-dock.shell-sweep.spec.ts` covers the board page's chunk dock, `BoardPage` mounted on stubbed reads in a
   height-bounded column. With nothing selected the dock is mounted but takes no box and the board runs the column's full
   height; selecting a chunk opens the dock beneath the board, which keeps its left, top and width and shortens;
