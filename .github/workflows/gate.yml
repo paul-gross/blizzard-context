@@ -10,10 +10,9 @@
 # verification files beside blizzard's and blizzard-mock's trees, so it checks both out as
 # siblings, each at the pull request's same-named branch if it has one, else `master`.
 #
-# `registry-drift` (verifiability.md) stays local-only and does not run here: it needs
-# the sibling `blizzard` checkout with its `.venv`, and `blizzard-mock`, and running it
-# against their `master` would redden a PR whenever a chunk changes a citation here
-# together with the sibling repo it cites (the sibling half is not on `master` yet).
+# `registry-drift` (verifiability.md) stays local-only and does not run here: neither
+# sibling repo's gate runs it, so drift that merges there would redden a later,
+# unrelated PR here.
 name: gate
 
 on:

@@ -167,9 +167,10 @@ CI runs it as `gate / restatement sweep (blizzard:restatement-sweep)` in both re
 [this repo's](https://github.com/paul-gross/blizzard-context/blob/master/.github/workflows/gate.yml), over `blizzard`,
 `blizzard-mock` and `blizzard-context` checked out side by side. Each sibling of the repository under test is checked
 out at the pull request's same-named branch if it has one, else `master`. An unresolved `--context-root` refuses a green
-rather than skipping silently. When one change spans two of these repositories, the push-to-`master` run of the one
-merged first can be red until the other lands (in `blizzard` that also holds back `push.yml`'s `dev-image`); re-run it
-then.
+rather than skipping silently. When one change spans two of these repositories, any run that reads one half beside the
+other repository's `master` can be red until both halves are there: every pull request in either repository with no
+same-named sibling branch, and the push-to-`master` run of the half merged first (in `blizzard` that also holds back
+`push.yml`'s `dev-image`). Re-run it once the second half lands.
 
 Refresh a `new`/`stale` finding with `measure --write-sites`, which rewrites `sites[]` to the observed tree — never by
 hand — plus a `reason` on any new non-owner site. `measure --write-sites` refuses a partial scan (a file skipped as
