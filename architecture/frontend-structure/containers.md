@@ -31,8 +31,8 @@ carries domain markup (rows, cards, forms) rather than delegating to a child; a 
   status read and pause mutation) render straight off kit primitives (`KitBadge`, `KitButton`) inside the runner
   header's `[header-trailing]` slot, owing no presentational sibling.
 
-**Don't.** A single component both injecting `injectHubRunnersQuery()` and rendering the registry table inline — testing
-the table then needs a stubbed client even when only row markup changed.
+**Don't.** A single component both injecting a runners query and rendering the registry table inline — testing the table
+then needs a stubbed client even when only row markup changed.
 
 ## Containers compose; models derive (`bzh:frontend-containers-compose`)
 
