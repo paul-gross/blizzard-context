@@ -101,20 +101,23 @@ The same script also sweeps the kit floor
 ([`../../../../architecture/frontend-structure/kit.md`](../../../../architecture/frontend-structure/kit.md)
 `bzh:frontend-kit-floor`): a component `.css` outside `fleet/lib/kit/` declaring one of the kit's own retired chrome
 classes (`KitPanel`'s `.panel`/`.p-hdr`/`.p-body`/`.lbl`, `KitAsyncState`'s `.status` and its hand-rolled precursors
-`.none`/`.hint`/`.rest`) as a standalone rule, or a component `.html` outside the kit hand-rolling `KitFactList`'s own
-`<dl class="kv">` grid. A site that should not convert is named with its reason in `KIT_FLOOR_EXEMPT_SITES`, the
-`REAL_TIMER_EXEMPT_FILES` idiom. Its own fixture self-test, `assertKitFloorDetectorWorks`, runs alongside
-`assertRealTimerDetectorWorks` before either sweep does.
+`.none`/`.hint`/`.rest`, `KitButton`'s `.act`, `KitSectionHead`'s `.s-head`) as a standalone rule, or a component
+`.html` outside the kit hand-rolling `KitFactList`'s own `<dl class="kv">` grid. A site that should not convert is named
+with its reason in `KIT_FLOOR_EXEMPT_SITES`, the `REAL_TIMER_EXEMPT_FILES` idiom. Its own fixture self-test,
+`assertKitFloorDetectorWorks`, runs alongside `assertRealTimerDetectorWorks` before either sweep does.
 
 The same script also sweeps the kit's stories
 ([`../../../../architecture/frontend-structure/kit.md`](../../../../architecture/frontend-structure/kit.md)
-`bzh:frontend-kit-stories`): every class `fleet/src/lib/kit/index.ts` exports as a `@Component` or `@Directive`,
-resolved with the TypeScript compiler to its declaration, needs a `*.stories.ts` in the kit whose default-exported meta
-names that class as `component`, resolved the same way rather than matched by name. A part no meta names is reported as
-its class and file. A part that genuinely cannot be shown alone is named with its reason in `KIT_STORIES_EXEMPT`, the
-`KIT_FLOOR_EXEMPT_SITES` idiom, empty today; an entry naming a class the kit no longer exports, or one a meta now names,
-fails as stale. Its fixture self-test, `assertKitStoriesDetectorWorks`, plants a kit with a storied component, a storied
-directive, an unstoried component, and a stale exemption, and runs alongside `assertKitFloorDetectorWorks`.
+`bzh:frontend-kit-stories`): every class `fleet/src/lib/kit/index.ts` exports as a `@Component` or `@Directive` needs a
+`*.stories.ts` in the kit whose default-exported meta names that class as `component`. The sweep parses with TypeScript
+but uses its own limited resolver: named relative exports and story imports, including aliases and named re-export
+chains, resolved to immediate `.ts` files in the kit directory, not general compiler symbol resolution. It reads
+immediate `.ts` files only, excluding specs, and requires named exports from `index.ts`. A part no meta names is
+reported as its class and file. A part that genuinely cannot be shown alone is named with its reason in
+`KIT_STORIES_EXEMPT`, the `KIT_FLOOR_EXEMPT_SITES` idiom, empty today; an entry naming a class the kit no longer
+exports, or one a meta now names, fails as stale. Its fixture self-test, `assertKitStoriesDetectorWorks`, plants a kit
+with a storied component, a storied directive, an unstoried component, and a stale exemption, and runs alongside
+`assertKitFloorDetectorWorks`.
 
 The same script also runs the placement sweep (`web/scripts/placement-sweep.js`, over the TypeScript compiler API;
 [`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
@@ -145,13 +148,13 @@ The same script also runs the domain-boundary sweeps (`web/scripts/domain-bounda
 
 - The symbol-origin sweep reuses the placement sweep's compiler-API program and resolves every symbol a file references
   — named, renamed, and default imports, `ns.Member` access, and `import("…").T` type nodes — through the full alias
-  chain to its declaration. Over every `.ts` below `web/projects`, `.storybook/` included, it fails a file that consumes
-  a symbol declared in `fleet/src/lib/api/{hub,runner}/types.gen.ts`, except under `fleet/src/lib/api/` and
-  `fleet/src/lib/testing/transport/`, and in a `*.query.ts`, `*.mutations.ts`, or `*.translate.ts` file and its own
-  focused spec. A re-export is not consumption: a barrel is never judged, its importer is. Each site prints under
-  `wire types consumed outside the domain boundary`. `DOMAIN_BOUNDARY_EXEMPT` is empty. Ordinary specs and stories are
-  checked, while focused boundary specs retain their boundary allowance. Separately, a production file or a story whose
-  consumed symbol is declared under `testing/transport/` prints under
+  chain to its declaration. Over every `.ts` below `web/projects`, `.storybook/` included and `.d.ts` excluded, it fails
+  a file that consumes a symbol declared in `fleet/src/lib/api/{hub,runner}/types.gen.ts`, except under
+  `fleet/src/lib/api/` and `fleet/src/lib/testing/transport/`, and in a `*.query.ts`, `*.mutations.ts`, or
+  `*.translate.ts` file and its own focused spec. A re-export is not consumption: a barrel is never judged, its importer
+  is. Each site prints under `wire types consumed outside the domain boundary`. `DOMAIN_BOUNDARY_EXEMPT` is empty.
+  Ordinary specs and stories are checked, while focused boundary specs retain their boundary allowance. Separately, a
+  production file or a story whose consumed symbol is declared under `testing/transport/` prints under
   `production files or stories reaching the test transport`; specs and test helpers may reach it. Its self-test,
   `assertDomainBoundaryDetectorWorks`, must-catches direct, aliased, namespace, `import()`-type, and transitive barrel
   imports of a generated type, `fleet` included, a component or model spec, story, or ordinary test helper consuming
@@ -160,9 +163,10 @@ The same script also runs the domain-boundary sweeps (`web/scripts/domain-bounda
 
 - The backend-citation sweep, with no exemption list, over every `.ts` below `web/projects` except specs, stories, and
   the generated `fleet/src/lib/api/`, fails a backend Python module cited in a comment or string, by `.py` path or by
-  dotted `blizzard.<package>` module path, printing each site under `backend .py citations in hand-written TS`. Its
-  self-test, `assertBackendCitationDetectorWorks`, must-catches path, bare-file, and dotted citations and the reported
-  line, and must-passes `.pyc`, `numpy`, `mypy.ini`, and a `blizzard.`-prefixed storage key.
+  dotted `blizzard.<package>` module path for `auth_core`, `cli`, `foundation`, `hub`, `runner`, `tools`, or `wire`,
+  printing each site under `backend .py citations in hand-written TS`. Its self-test,
+  `assertBackendCitationDetectorWorks`, must-catches path, bare-file, and dotted citations and the reported line, and
+  must-passes `.pyc`, `numpy`, `mypy.ini`, and a `blizzard.`-prefixed storage key.
 - The client-call placement sweep, with no exemption list and the same scope, reads every `export const` of
   `fleet/src/lib/api/{hub,runner}/sdk.gen.ts` at run time and fails a whole-word use of one outside a `*.query.ts` or
   `*.mutations.ts` file, after stripping comments and plain `export … from` re-exports but not a renaming one, printing
@@ -234,9 +238,10 @@ board-control census follows.
 
 The script also sweeps every mutation hook for the two shapes
 [`../../../../architecture/frontend-structure/mutations.md`](../../../../architecture/frontend-structure/mutations.md)
-declares tooled. `bzh:frontend-mutation-settles-on-refresh`'s half: a `queryClient.invalidateQueries(...)` call inside a
-mutation hook that is `void`-discarded rather than returned (or `Promise.all`'d and returned) from `onSuccess`/
-`onSettled`. No exemption list — the shape has no legitimate exception. Its own fixture self-test,
+declares tooled. `bzh:frontend-mutation-settles-on-refresh`'s half: in any file calling `injectMutation(`, an
+`invalidateQueries(...)` call on any receiver that is `void`-discarded or a bare discarded statement, anywhere in the
+file rather than only in `onSuccess` or `onSettled`. Returned, awaited, assigned, or consumed calls, including calls
+inside `Promise.all`, pass. `INVALIDATE_RETURNED_EXEMPT_FILES` is empty. Its own fixture self-test,
 `assertInvalidateReturnedDetectorWorks`, runs alongside the other detectors' self-tests before the sweep trusts it
 (`bzh:case-pins-its-own-name`).
 
@@ -284,10 +289,10 @@ granularity — the output whose entry point is `main.ts`, plus every output it 
 edge, a `dynamic-import` edge starting a lazy chunk instead — it prints the per-area byte breakdown (framework, CDK,
 each fleet area) that a bundle-size change records. At source-file granularity, over the same metafile's module graph,
 it enforces the gate: a source file reachable eagerly that matches a forbidden pattern fails the run, named together
-with the file that imports it. Both apps forbid the fleet `chunk-detail/` or `transcripts/` sub-barrels and
-`@angular/cdk`'s `menu`/`overlay`/`listbox` bundles; the hub also forbids its `garden/`, `graphs/`, and
-`board/chunk-dock/` folders and `@dagrejs/*`. Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one
-eager import matching a forbidden pattern, one eager import that does not, and a forbidden pattern reached only through
-a dynamic import — runs before the walk is trusted (`bzh:case-pins-its-own-name`). The `initial` budget in
-`angular.json` is the size backstop each app's build enforces. Wired into `gate.yml`'s `frontend` job and
-`scripts/ci-gate.sh` beside `web:structural-gate`.
+with the file that imports it. Both apps forbid files throughout the fleet `chunk-detail/`, `awaiting-human/`, and
+`transcripts/` directories and `@angular/cdk`'s `menu`/`overlay`/`listbox` bundles; the hub also forbids its `garden/`,
+`graphs/`, and `board/chunk-dock/` folders and `@dagrejs/*`. Its own fixture self-test,
+`assertBundleCompositionDetectorWorks` — one eager import matching a forbidden pattern, one eager import that does not,
+and a forbidden pattern reached only through a dynamic import — runs before the walk is trusted
+(`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json` is the size backstop each app's build enforces.
+Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside `web:structural-gate`.
