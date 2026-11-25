@@ -27,8 +27,6 @@ carries domain markup (rows, cards, forms) rather than delegating to a child; a 
 
 - `chunk-detail.ts` (the container — owns the query, maps `actionError` and the derived async state, forwards `detail`)
   renders the presentational `chunk-detail-panel.ts`, passing data down and re-emitting its outputs unchanged.
-- Under the exception: `app-identity.ts` renders straight off kit primitives with its own session read and logout
-  mutation inside the runner header's `[header-trailing]` slot, owing no presentational sibling.
 
 **Don't.** A single component both injecting a runners query and rendering the registry table inline — testing the table
 then needs a stubbed client even when only row markup changed.
