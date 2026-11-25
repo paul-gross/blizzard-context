@@ -40,6 +40,9 @@ the plaintext token back — is the first generic family armed on the hub, recov
 interrupted-claim adoption rather than a dedicated scenario. The dedicated scenarios whose setup or recovery this file
 explains:
 
+- `rebase.after-update.before-record` is swept by `test_kill9_at_rebase_crash_point`: a behind PR is rewritten by the
+  forge before the armed hub dies. The test checks invariants immediately and after restart, then asserts convergence,
+  one landed repository and merge marker, one PR, and one work-file commit in the origin history.
 - `migrate.`, the cross-graph migration window armed on the hub, is swept by `test_kill9_at_migrate_crash_point`: a kill
   right after the atomic re-pin loses only the `MIGRATED` response, the runner's replay re-derives it via the
   `accepted_migration` probe, and the migration invariants come back green.

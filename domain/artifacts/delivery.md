@@ -8,11 +8,11 @@ worker node's judgement ([edges](../graphs/edges.md)).
 
 - **Resources and flows.** A hub step holds the resources it acts on — for a landing, each target branch it lands on —
   and each resource has one flow: an arrival-ordered line of the visits that hold it. A visit is submitted to its flows
-  when its chunk reaches the hub node, and runs as a turn once it is next on every flow it holds, so steps on different
-  branches run side by side, chunks on one branch land in arrival order, and a step holding no branch waits on none. A
-  `pending` answer ends the turn and yields the branch to the next in line until its poll is due. A visit takes one turn
-  at a time, and a turn runs only while its chunk still stands at the node, so a re-submitted completion or a
-  hub-advance never starts a second run, nor re-runs a node the chunk has left.
+  when its chunk reaches the hub node, and runs as a turn once it is the earliest eligible visit on every flow it holds.
+  Steps on different branches run side by side, and a step holding no branch waits on none. A `pending` answer ends the
+  turn and yields the branch until its poll is due, so a later visit can land before it. A visit takes one turn at a
+  time, and a turn runs only while its chunk still stands at the node, so a re-submitted completion or a hub-advance
+  never starts a second run, nor re-runs a node the chunk has left.
 - **Only a `delivering` chunk is driven.** A chunk standing at a hub node is submitted to its flows and takes turns
   there only while it is `delivering` ([../work/statuses.md](../work/statuses.md)): a paused chunk waits for its resume,
   and one escalated, stopped, or done is never driven through it.
@@ -55,13 +55,20 @@ worker node's judgement ([edges](../graphs/edges.md)).
   opt in to landing with no CI; that permits an empty result, not a failed, pending, or unreadable check result. If the
   overall delivery deadline expires with an observation recorded, it escalates as missing checks without claiming a
   later read confirmed the absence. A parked change remains a person's merge decision.
+- **Automatic method choice.** For GitHub `merge-on-checks`, the forge offers allowed methods in preference order: merge
+  commit, rebase-merge, then squash. A method-specific incompatibility permits trying the next allowed method;
+  exhaustion escalates with the allowed set and reasons. A behind change uses a rebase update when merge commits are
+  disabled. The updated head must be admitted and checked independently before landing: its checks must pass or be
+  neutral, or its successful empty check read must be permitted by `allow_no_ci`. Results from the prior head are not
+  reused. Rebase-merge and squash can produce a different landed revision, which is recorded without another
+  post-landing check. Repository method settings are distinct from adapter and credential capabilities.
 - **The policy is the repository's.** How a change lands is a fact about the repository it lands in: each repository
   record carries a landing policy, and the `land` action runs each repository's own. A policy is accepted only on a
   forge that offers its required capabilities. The policies are:
 
   | Policy            | Landing behavior                                                                                      |
   | ----------------- | ----------------------------------------------------------------------------------------------------- |
-  | `merge-on-checks` | Default; opens a change, updates it from the base, and merges when checks are green.                  |
+  | `merge-on-checks` | Default; opens a change, updates it from the base, and merges when its checks permit landing.         |
   | `fast-forward`    | Checks the work revision, or a proven merge candidate when the base diverged, then advances the base. |
   | `park`            | Opens a change for a person to merge; their merge is authoritative, at its actual revision.           |
 

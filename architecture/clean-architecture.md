@@ -135,7 +135,7 @@ the store, forge, harness, or workspace adapter satisfies it.
 inward.
 
 **Do.** `blizzard/src/blizzard/hub/domain/chunk/ports/` declares per-concept read/write Protocol pairs (for example
-`IReadChunkRecordRepository` and `IWriteChunkRecordRepository`) plus one read-only-only seam (`facts`);
+`IReadChunkRecordRepository` and `IWriteChunkRecordRepository`) alongside read-only seams such as `facts`;
 `ChunkRecordStore` in `blizzard/src/blizzard/hub/store/internal/chunk_record_store.py` implements that pair
 structurally, one adapter per seam, and the domain never imports any of them.
 
@@ -215,10 +215,12 @@ Four ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP 
 
 - `cli-httpx-confined` fails any httpx2 import under the three CLI trees (`cli/`, `hub/cli/`, `runner/cli/`) other than
   `blizzard/src/blizzard/cli/collaborators.py`.
-- `cli-patch-not-seam` fails any test `setattr` whose first argument is a string naming a `blizzard.` path with a `cli`
-  segment.
-- `cli-refusal-body-confined` fails a CLI-tree read of a refusal's `detail` outside
-  `blizzard/src/blizzard/cli/refusal.py`, and a status read or raw `resp.json()` re-read beside a `refusal_of` call
+- `cli-patch-not-seam` matches test calls of the form `patcher.setattr(...)` whose first argument is a string matching
+  its `blizzard.` CLI-path regex; it does not cover builtin `setattr` calls.
+- `cli-refusal-body-confined` catches specific `detail` reads from a JSON response, status reads in a function that
+  passes the same response to `refusal_of` (except inside a `RunnerDaemon.reach` with block), and raw JSON reads inside
+  an `if` whose condition calls `refusal_of` on that response. It applies outside
+  `blizzard/src/blizzard/cli/refusal.py`; it is not an exhaustive detector of refusal-body reads
   ([`bzh:clients-read-problem-types`](./system-shape/fleet-wire.md)).
 - `hub-cli-answer-decoded` fails any `.json()` call under `blizzard/src/blizzard/hub/cli/`: a hub answer is read through
   the decoder ([`bzh:clients-decode-answers`](./system-shape/fleet-wire.md)).
@@ -289,17 +291,19 @@ The hub's hosted lifetimes and the runner host:
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py` — `build_host_process` holding one
   `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
   runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`. `HostStores` and the telemetry receiver
-  are host-scoped and built once per host; each `RunnerProcess` holds only runner-bound collaborators plus its attempt
-  handle, the one runner-scoped external-usage write
+  are host-scoped and built once per host; each `RunnerProcess` references that host graph and holds runner-bound
+  collaborators, its attempt handle and one host-kind write seam for external-usage attempts. That seam uses
+  runner-bound connections to write an unregistered host's sampled attempt and its runner-scoped outbound report in one
+  transaction.
 
 Helpers a CLI root calls into rather than repeating:
 
 - `blizzard/src/blizzard/runner/cli/daemon.py`'s `Door.uds_client` builds the local UDS client, through the carrier's
   factory, that both `RunnerDaemon.reach` and `daemon_holding` need, shared rather than duplicated; each caller passes
   the `Door` its command resolved from the context, so no call site reads a trace source or a factory ambiently.
-- `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_stores` builds the runner's read-only store bundle and disposes
-  the engine on exit, so `runner/cli/prompt.py`'s `_stored_override` calls into it instead of repeating the construction
-  outside a composition root.
+- `blizzard/src/blizzard/runner/cli/runtime.py`'s `read_host_stores` builds a host-scoped read-only store bundle and
+  disposes the engine on exit, so `runner/cli/prompt.py`'s `_effective_prompt_lane` calls into it instead of repeating
+  the construction outside a composition root.
 
 Example — a click command taking its swappable collaborators from the invoker:
 
@@ -307,12 +311,13 @@ Example — a click command taking its swappable collaborators from the invoker:
 @click.command()
 @click.pass_context
 def init(ctx: click.Context, ...) -> None:
-    collaborators = ctx.find_object(InitCollaborators) or InitCollaborators(_http_hub_clients)
-    with collaborators.join_with(config) as (identity, admin):
-        _join_hub(config, identity, admin, allow_readd=allow_readd)
+    collaborators = InitCollaborators.of(ctx)
+    # ...
+    with collaborators.host_clients(config.hub_url) as host_clients:
+        host = register_host(config, collaborators, host_clients, store, rerun)
 
 
-# in a test: result = CliRunner().invoke(blizzard, ["runner", "init", ...], obj=InitCollaborators(fake_hub.clients))
+# A test passes an InitCollaborators containing its fake clients and session store as obj.
 ```
 
 **Don't.** A coordinator that calls `ChunkRecordStore()` or `datetime.now()` inside a method; a module-level
@@ -361,8 +366,9 @@ fires:
 - A `ctx` parameter or `ctx:` field under `runner/`, outside the driver, roots, and edges, not typed by a `Protocol` its
   own module declares; or a parameter or field of any other name typed — bare, module-qualified, or wrapped in a union —
   by `LoopContext` or another module's step context.
-- A step context Protocol with no sentinel assignment `_<name>_conforms: type[<Protocol>] = LoopContext` in
-  `runner/loop/context.py` proving `LoopContext` satisfies it.
+- A Protocol used to type a scanned `ctx` with no annotated assignment of `LoopContext` to `type[<Protocol>]` in
+  `runner/loop/context.py`. The guard checks the assignment's annotation and value, not its target name; pyright checks
+  that `LoopContext` satisfies the Protocol.
 
 `tests/guards/test_container_boundaries.py` fails the unit tier on a module on the hub's narrowing roster that names a
 legacy bag in an import, a name, or an attribute.
@@ -384,7 +390,7 @@ if TYPE_CHECKING:
 ```
 
 A domain service takes one keyword parameter per repository seam:
-`TakeoverService(clock, process, *, takeover, asks, outbound, tokens, elicitations, ...)`.
+`TakeoverService(clock, process, *, takeover, elicitations, local_api_url, harnesses_for_lease, workspaces, events=None)`.
 
 **Don't.** A domain service taking `stores: RunnerReadStores` to read seven of its repositories, or a step dataclass
 with a `ctx: LoopContext` field. A new gate added inline to a `steps.py` phase, reading a new `LoopContext` member that
@@ -461,19 +467,19 @@ reason.
 
 **Detect.** `tests/guards/test_layering.py` fails the unit tier on a kernel module importing a non-kernel blizzard
 package, on any kernel module import loading a `hub`, `runner`, `cli`, or `tools` module in a fresh interpreter, and on
-a hub or runner composition root loading the other daemon. The same module fails an import of a kernel vocabulary name
-through any module but its defining `foundation/` module. The ast-grep rule `bzh:shared-kernel` fails a vocabulary
-defined under `wire/`: an enum class, or a `Literal` of two or more values, whether an annotation or an alias. A closed
-vocabulary typed as plain `str` is not seen and stays a judgment call. The layering test also fails a `foundation/` or
-`auth_core/` module that no `wire/` module reaches and that only one daemon does. Reach follows imports through the
-kernel, and a `cli` module counts as the sides of the daemon modules that reach it; a `tools` module is no side, and
-`internal/` and docstring-only `__init__` modules are not judged. The fix moves the module into that daemon's domain, or
-gives it an allowlist entry with its reason, which the check drops once the entry is stale. The check sees whole modules
-only: a one-sided rule living as a name in a shared module is not caught and stays a judgment call. A business rule in
-`foundation/` that only one daemon applies is that daemon's rule placed in the kernel; the fix moves it into that
-daemon's domain. One both daemons apply that takes a repository, clock, or client, or performs I/O, is made pure, with
-the facts and the instant passed in as values. The rotation workflow the Exception names is not such a rule, and stays
-effectful.
+a hub or runner composition root loading the other daemon. The same module checks `from` imports of the kernel
+vocabulary names explicitly listed in `_MOVED_HOMES` against their defining modules. The ast-grep rule
+`bzh:shared-kernel` catches specific vocabulary shapes under `wire/`: classes extending `Enum`, `StrEnum`, or `IntEnum`,
+and certain unqualified `Literal` annotations and aliases with two or more values. A closed vocabulary typed as plain
+`str` is not seen and stays a judgment call. The layering test also fails a `foundation/` or `auth_core/` module that no
+`wire/` module reaches and that only one daemon does. Reach follows imports through the kernel, and a `cli` module
+counts as the sides of the daemon modules that reach it; a `tools` module is no side, and `internal/` and docstring-only
+`__init__` modules are not judged. The fix moves the module into that daemon's domain, or gives it an allowlist entry
+with its reason, which the check drops once the entry is stale. The check sees whole modules only: a one-sided rule
+living as a name in a shared module is not caught and stays a judgment call. A business rule in `foundation/` that only
+one daemon applies is that daemon's rule placed in the kernel; the fix moves it into that daemon's domain. One both
+daemons apply that takes a repository, clock, or client, or performs I/O, is made pure, with the facts and the instant
+passed in as values. The rotation workflow the Exception names is not such a rule, and stays effectful.
 
 **Do.** A new enum carried on a `wire/` model that hub domain code also uses is defined once in a `foundation/` module;
 `wire/` and `hub/domain/` both import it. A type no wire model carries stays in its daemon's domain.
@@ -501,11 +507,11 @@ rather than for the concept it serves.
 
 **Do.** Blizzard's concept packages sit inside each daemon — `blizzard/src/blizzard/hub/auth/`,
 `blizzard/src/blizzard/hub/delivery/`, `blizzard/src/blizzard/runner/harness/`, `blizzard/src/blizzard/runner/leases/`,
-`blizzard/src/blizzard/runner/lifecycle/`, `blizzard/src/blizzard/runner/transcripts/` — each owning that concept's
-domain types and repository seam. Inside `blizzard/src/blizzard/hub/domain/`, the hub's business rules split the same
-way into the concept packages `bzh:domain-package-layers` orders (`chunk/`, `execution/`, `operations/`, `garden/`, …);
-the runner's concept packages sit directly under `blizzard/src/blizzard/runner/`, ordered by the same rule's runner
-table.
+`blizzard/src/blizzard/runner/lifecycle/`, `blizzard/src/blizzard/runner/transcripts/`. Hub delivery's domain types and
+repository seams live in `hub/domain/delivery/`, separate from the delivery adapters. Inside
+`blizzard/src/blizzard/hub/domain/`, the hub's business rules split the same way into the concept packages
+`bzh:domain-package-layers` orders (`chunk/`, `execution/`, `operations/`, `garden/`, …); the runner's concept packages
+sit directly under `blizzard/src/blizzard/runner/`, ordered by the same rule's runner table.
 
 **Don't.** `models/`, `routers/`, and `crud/`, where one chunk change touches three unrelated directories.
 
@@ -519,8 +525,8 @@ The data lives in the code, not here: the hub domain's table is `_DOMAIN_PACKAGE
 `_RUNNER_PACKAGE_LAYERS`, both in `blizzard/tests/guards/test_layering.py`, each mapping a node to the nodes its row may
 import. Every hub package may also import `kernel`; the runner has no shared node. In the runner, each harness binding
 package and `harness/wiring` are nodes of their own (the binding ids come from the harness catalog); any other
-`runner/<first segment>` is that segment, so `config_table.py` and `stores.py` are the two top-level modules in the
-graph.
+`runner/<first segment>` is that segment, so `config_table.py`, `route_paths.py`, and `stores.py` are the top-level
+modules in the graph.
 
 A row only points down: every node a row may import sits strictly lower in the graph than the row's own node, `kernel`
 aside, so the dict is acyclic and no edge runs sideways between two nodes of one level. Declare an edge only when an
@@ -557,7 +563,7 @@ edge whose last import is removed leaves it.
 **Do.** `UNSET` lives in `blizzard/src/blizzard/hub/domain/kernel/unset.py`, so `config`, `garden`, and `work_items`
 take it without importing `operations`. The hub action catalogue is `graph`'s (`hub/domain/graph/actions.py`), since
 graph validation reads it, while the visit and the effects an action is handed sit in `actions`, a package above `chunk`
-and `graph` that only the delivery edge imports. The requeue and attachment repository seams live in
+and `graph` that the delivery domain and delivery edge import. The requeue and attachment repository seams live in
 `blizzard/src/blizzard/runner/leases/operator_requests.py`: the `lifecycle` claim and dormant steps read through
 `IReadRequeueRepository` and `IReadAttachmentRepository`, and the `operator` services import the write seams from there.
 `WorktreeGitError` sits beside `IWorktreeGit` in `runner/environments/worktree.py`, so

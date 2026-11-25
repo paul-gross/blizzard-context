@@ -35,6 +35,10 @@ and skips cleanly without `BLIZZARD_SERVICE=1`.
 `tests/service/forge/test_github_checks_service.py` exercises the production GitHub adapter against the mock forge over
 HTTP, checking pagination at 100, 101 and 205 check runs and status contexts and latest-status deduplication.
 
+`tests/service/forge/test_rewrite_large_tree_service.py::test_large_unchanged_tree_does_not_require_blob_reads`
+exercises rewrite intent and admission against Git-backed forge history, checking the rebased tree and bounded blob
+reads despite a large unchanged subtree.
+
 The same tier also binds a whole-CLI external-tool fake the mock fleet emits (`bzh:external-cli-fake-is-service-tier`).
 
 **Kept transition-era export**
@@ -316,6 +320,13 @@ an authored graph with the shipped choices, a brisk poll cadence, and conflict a
   change".
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_self_heals_a_behind_branch_and_lands` proves a really moved
   base is merged into the head by `update-branch`, the PR pends and then lands once that action clears `stale_branch`.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_rechecks_the_rebased_head_before_rebase_landing` and
+  `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_rechecks_the_rebased_head_before_squash_landing` hold the
+  rewritten head pending despite the old head being green, then land after its own checks pass and record the origin's
+  landed revision.
+- `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_explains_each_exhausted_allowed_method` checks the per-method
+  refusal detail and unchanged base; `test_pr_ci_falls_back_to_squash_after_method_specific_refusals` checks the
+  resulting single-parent landing and recorded revision.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_dirty_conflict_back_to_build` routes `conflict`,
   with nothing merged.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_refuses_a_foreign_commit_on_the_head` routes `failure`, names
@@ -347,6 +358,11 @@ The component-tier `tests/component/hub/forge/internal/test_github_landing.py` c
 the component-tier
 `tests/component/hub/delivery/actions/test_land.py::test_pending_landing_polls_use_only_conditional_forge_reads_after_the_first_pass`
 covers the pending landing's ten-poll read budget and filtered lookup count.
+
+The pytest service half's
+`tests/service/forge/test_github_rewrite_service.py::test_adapter_settings_and_rebase_evidence` exercises the production
+adapter against the Git-backed mock for all allowed-method combinations and a guarded rebase update with immutable
+evidence.
 
 **Authored post-merge edge**
 (`tests/service/fleet/post-merge-node.spec.ts::test_authored_landed_edge_runs_a_post_merge_node_after_landing`) lands a

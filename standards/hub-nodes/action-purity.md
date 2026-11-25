@@ -28,6 +28,12 @@ a blank or fabricated `merged/<repo>` revision. The chunk-artifacts store's deli
 projection of these markers, skips a PR reference of any other shape without error. What each marker means is
 [delivery](../../domain/artifacts/delivery.md)'s.
 
+A rebase intent is named `rewrite-intent/<repo>/<number>/<digest>`, where the digest is SHA-256 of its canonical JSON
+content. It binds the chunk, node, repository and repository record, forge, branch, base branch, submission and PR, plus
+the admitted source, source base, pinned base and ordered source commits. It is durable before the update; matching
+identity and content authorize proof of a replay, not the resulting head by themselves. Repeated rewrites require an
+already-admitted source.
+
 An empty-check observation is named `empty-checks/<repository-record-id>/<sha>` and carries a JSON object with `repo`
 (the forge owner and repository), `policy`, `sha`, and `at` (the observation time as an ISO timestamp). It is scoped to
 the node and epoch; its identity includes the repository record and candidate revision.
