@@ -14,7 +14,8 @@ worker node's judgement ([edges](../graphs/edges.md)).
   also yields the branch while waiting for a person's merge and is polled no more often than every two minutes. A visit
   takes one turn at a time, and a turn starts only while its chunk still stands at the node, so a re-submitted
   completion or a hub-advance never starts a second run, nor re-runs a node the chunk has left. A stop arriving mid-turn
-  takes effect when the turn ends, with any landing it made recorded.
+  stops the chunk and releases its route immediately; the running turn may finish and record any landing it makes,
+  closing its submission as stopped when the turn ends.
 - **Only a `delivering` chunk starts a turn.** A chunk standing at a hub node is submitted to its flows and starts turns
   there only while it is `delivering` ([../work/statuses.md](../work/statuses.md)): a paused chunk waits for its resume,
   and one escalated, stopped, or done starts no turn.

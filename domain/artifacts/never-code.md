@@ -41,9 +41,9 @@ The validated kinds, and what each check covers:
   outside the run's own scope — where the review delta mints whatever scopes it names
   ([findings-and-proposals](../findings-and-proposals.md) §A finding can also be raised by a delivery lane's review).
   `class` is indexed and never interpreted.
-- Garden proposal candidates are checked for their required shape at staging. At delivery, a blank title, class, or
-  body, a repeated candidate ref within one artifact, a repeated finding citation, or an unresolvable citation is
-  refused. Which findings a proposal may cite is [findings-and-proposals](../findings-and-proposals.md)'s.
+- Garden proposal candidates are checked for their required shape at staging. At delivery, a repeated candidate ref
+  within one artifact is refused. The shared field and finding-citation requirements are
+  [findings-and-proposals](../findings-and-proposals.md)'s.
 
 Every other asset, a worker node's included, is stored as submitted. A graph's `artifacts:` declaration is authored
 definition text, the same class as an inlined `prompt:`, and always the asset kind. Hub-command output is recorded as
