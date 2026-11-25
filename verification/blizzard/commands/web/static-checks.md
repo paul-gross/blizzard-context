@@ -151,23 +151,16 @@ The same script also runs the domain-boundary sweeps (`web/scripts/domain-bounda
   a symbol declared in `fleet/src/lib/api/{hub,runner}/types.gen.ts`, except under `fleet/src/lib/api/` and
   `fleet/src/lib/testing/transport/`, and in a `*.query.ts`, `*.mutations.ts`, or `*.translate.ts` file and its own
   focused spec. A re-export is not consumption: a barrel is never judged, its importer is. Each site prints under
-  `wire types consumed outside the domain boundary`. A unit still migrating — a package-layers unit, the longest
-  `LAYERED_PROJECTS` key prefixing the file, except that a file in a subfolder of `hub/src/app/admin/` is keyed by that
-  subfolder and one directly in `admin/` by the root — is named in `DOMAIN_BOUNDARY_EXEMPT`, with one reason for the
-  whole list (`decision:ui-toolkit/incremental-replacement`); an entry whose unit no longer consumes a wire type fails
-  as stale, under `stale DOMAIN_BOUNDARY_EXEMPT entries`, so the list only shrinks. `DOMAIN_BOUNDARY_STRICT_SCOPES`
-  overrides the exemption for migrated areas inside an exempt unit: each entry is a `projects/`-relative directory
-  prefix without a trailing slash, or a concept stem matching files beginning with the stem followed by `.`. These are
-  literal prefixes, not globs; ordinary specs and stories in a strict scope are checked too. Focused boundary specs
-  retain their boundary allowance. Separately, a production file or a story whose consumed symbol is declared under
-  `testing/transport/` prints under `production files or stories reaching the test transport`; specs and test helpers
-  may reach it. Its self-test, `assertDomainBoundaryDetectorWorks`, must-catches direct, aliased, namespace,
-  `import()`-type, and transitive barrel imports of a generated type, `fleet` included, a component or model spec,
-  story, or ordinary test helper consuming one, transport reach from production or a story, and a stale entry, and
-  must-passes a same-named domain declaration, a data-access file, translator, or focused spec, a transport module, and
-  an exempt unit. A second self-test, `assertDomainBoundaryKeyingWorks`, proves the admin keying before the sweep relies
-  on it: a subfolder of `admin/` is its own unit, a file directly in `admin/` keeps the root's, and no other unit is
-  split.
+  `wire types consumed outside the domain boundary`. `DOMAIN_BOUNDARY_EXEMPT` is empty; there are no migration strict
+  scopes or admin subkeys. Ordinary specs and stories are checked, while focused boundary specs retain their boundary
+  allowance. Separately, a production file or a story whose consumed symbol is declared under `testing/transport/`
+  prints under `production files or stories reaching the test transport`; specs and test helpers may reach it. Its
+  self-test, `assertDomainBoundaryDetectorWorks`, must-catches direct, aliased, namespace, `import()`-type, and
+  transitive barrel imports of a generated type, `fleet` included, a component or model spec, story, or ordinary test
+  helper consuming one, transport reach from production or a story, and a stale entry, and must-passes a same-named
+  domain declaration, a data-access file, translator, or focused spec, a transport module, and an exempt unit in its
+  controlled fixture.
+
 - The backend-citation sweep, with no exemption list, over every `.ts` below `web/projects` except specs, stories, and
   the generated `fleet/src/lib/api/`, fails a backend Python module cited in a comment or string, by `.py` path or by
   dotted `blizzard.<package>` module path, printing each site under `backend .py citations in hand-written TS`. Its
@@ -217,8 +210,7 @@ The same script also runs the two open-vocabulary sweeps (`web/scripts/open-voca
 - The vocabulary-record sweep reads every generated vocabulary, and every generated type's vocabulary field, from
   `fleet/src/lib/api/{hub,runner}/types.gen.ts` at run time, and fails any table keyed by one — a `Record`, or a mapped
   type over it (`{ [K in RunnerEventType]: … }`), `Partial` and optional included — outside an `openLookup(…)` call,
-  over every `*.translate.ts`, `*.query.ts`, and `*.mutations.ts`, and every `.ts` in a unit still on
-  `DOMAIN_BOUNDARY_EXEMPT`, where wire vocabularies are still read, except specs, stories, and the generated
+  over every `*.translate.ts`, `*.query.ts`, and `*.mutations.ts`, except specs, stories, and the generated
   `fleet/src/lib/api/`. A table declared by an unexported `const` that its file reads only inside `openLookup(…)` calls
   is the helper's own and passes. Lint is not type-aware, so it matches the key's written form: the vocabulary named
   directly or through its namespace (`hubApi.EventLogSeverity`), a field's type (`HostRegistrationView['state']`), or a
@@ -258,6 +250,29 @@ file. `onMutate` stays scoped to a defining file; a site that keeps `onMutate` f
 sweeps use. Its own fixture self-test, `assertNoCacheWriteDetectorWorks`, proves the exemption does real work — an
 exempted fixture would still be caught without it — alongside the other detectors' self-tests before the sweep trusts it
 (`bzh:case-pins-its-own-name`).
+
+The wire-projection retirement census (`web/scripts/retirement-census.js`) runs in `web:structural-gate` after its
+self-test and reports each retired reference with file and line under `retired wire-projection references`. Run
+`node web/scripts/retirement-census.js` from the app root for its self-test alone, or add `--check` to run the census
+independently; the latter exits nonzero for hits.
+
+The declaration inventory covers the projects, forges, board chunks, questions, decisions, spend, and runners
+compatibility observers; the projects query-options primitive may remain private. It checks TypeScript under
+`web/projects` by declaration identity and follows named, aliased, nested, local-reexport, and wildcard barrels, even
+when the original declaration is missing. Namespace imports and namespace re-exports follow the same chains, including
+property, string-literal index, and qualified-type references. The retired-rule citation and API-name prose scans cover
+`README.md`, `SECURITY.md`, and the `docs/`, `exemplars/`, `src/`, `scripts/`, `tests/`, and `web/` trees: TypeScript
+comments and text in JavaScript, Markdown, HTML, CSS, Python, shell, YAML, and TOML. The scan ignores generated
+`.gen.ts`/`.gen.js`, build, dependency, cache, and environment directories and the detector's own controlled self-test
+literals. Prose has no compiler identity: a bare inventoried name is reported, while a name qualified with a
+`.domain.ts#` or `.gen.ts#` source is not. A bare same-named domain or generated symbol in prose needs manual
+disambiguation. Legal generated exports, fixture translators, transport, and same-named domain symbols in TypeScript are
+not retired by name.
+
+The self-test exercises resolved and dangling aliased barrel chains and consumers, a wildcard, local and namespace
+re-exports, namespace consumers, same-named domain declarations, translators, transport, every inventoried prose name,
+and retired-rule citations. The production check is deliberately separate: a passing self-test does not assert that the
+inventory is absent.
 
 ### web:bundle-composition
 
