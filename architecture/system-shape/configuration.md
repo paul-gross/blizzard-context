@@ -451,7 +451,8 @@ ignored: an undeclared key in a file loads, and an undeclared read in the test s
   surface.
 
 The `bzh:config-key-declared` ast-grep rule fails a `tomllib` import anywhere under `blizzard/src/blizzard/runner/` or
-`blizzard/src/blizzard/hub/` outside the two loaders and the version window's in-memory decode.
+`blizzard/src/blizzard/hub/` outside `runner/host_config.py`, `hub/config.py`, `hub/domain/runners/version_window.py`,
+and the document codec `hub/documents/internal/toml_codec.py`.
 
 **Do.** Pass the registry to the loader's root view, and hand each section parser the view at its table; declare a
 section's keys beside its parser.
