@@ -6,11 +6,13 @@
 # The `reference lint` job runs the reference-integrity lint over the repo itself (bzh ids,
 # links and anchors, hub routing, path notation) and its script tests.
 #
-# `registry-drift` (verifiability.md) stays local-only and does not run here: it needs
-# the sibling `blizzard` and `blizzard-mock` checkouts a single-repo CI runner does not
-# carry, and running it against their `master` would redden a PR whenever a chunk changes
-# a citation here together with the sibling repo it cites (the sibling half is not on
-# `master` yet).
+# The `restatement sweep` job runs blizzard's one-home census, which reads this repo's
+# verification files beside blizzard's and blizzard-mock's trees, so it checks both out as
+# siblings, each at the pull request's same-named branch if it has one, else `master`.
+#
+# `registry-drift` (verifiability.md) stays local-only and does not run here: neither
+# sibling repo's gate runs it, so drift that merges there would redden a later,
+# unrelated PR here.
 name: gate
 
 on:
@@ -55,3 +57,54 @@ jobs:
         run: python3 tests/test_lint_references.py
       - name: reference lint
         run: python3 scripts/lint-references.py --gate .
+
+  restatement-sweep:
+    name: restatement sweep (blizzard:restatement-sweep)
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout blizzard-context
+        uses: actions/checkout@v5
+        with:
+          path: blizzard-context
+          persist-credentials: false
+      # blizzard's own ref cannot be resolved by an action blizzard hosts. The rule is owned by blizzard's
+      # .github/actions/resolve-mock-ref/resolve-mock-ref.sh.
+      - name: resolve the blizzard ref
+        id: blizzard-ref
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BLIZZARD_URL: https://github.com/paul-gross/blizzard
+        run: |
+          ref=master
+          if [ -n "$HEAD_REF" ]; then
+            found="$(git ls-remote --heads "$BLIZZARD_URL" "refs/heads/$HEAD_REF")"
+            if [ -n "$found" ]; then ref="$HEAD_REF"; fi
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "resolved paul-gross/blizzard: $ref"
+      - name: checkout blizzard
+        uses: actions/checkout@v5
+        with:
+          repository: paul-gross/blizzard
+          ref: ${{ steps.blizzard-ref.outputs.ref }}
+          path: blizzard
+          persist-credentials: false
+      - name: resolve and checkout blizzard-mock
+        uses: ./blizzard/.github/actions/resolve-mock-ref
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
+          working-directory: blizzard
+      - uses: jdx/mise-action@v4
+        with:
+          version: 2026.9.2
+          install: false
+          working_directory: blizzard
+        env:
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}/blizzard
+      - name: restatement sweep (mise run restatement-check)
+        working-directory: blizzard
+        env:
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}/blizzard
+        run: mise run restatement-check
