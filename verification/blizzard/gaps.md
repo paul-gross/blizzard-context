@@ -211,8 +211,8 @@ disabled (`[transcripts] ship = false`).
 ## The query-plan assertions never run under postgres
 
 `tests/component/hub/store/internal/test_finding_store.py`'s `test_list_for_query_plans_as_an_index_search` and
-`test_count_by_class_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend every component
-test runs against — that `list_for`'s routine+scope read and `count_by_class`'s routine+class read use
+`test_distinct_classes_for_a_routine_query_plans_as_an_index_search` assert `EXPLAIN QUERY PLAN` on sqlite — the backend
+every component test runs against — that `list_for`'s routine+scope read and `distinct_classes`' routine read use
 `ix_findings_tenant_project_routine_scope`/`ix_findings_tenant_project_routine_class` rather than a table scan.
 `tests/component/hub/store/internal/test_chunk_fact_table_indexes.py` asserts the same shape over the twenty
 `chunk_id`-filtered fact tables' indexes and the hub store's hot-path indexes: the three `(chunk_id, epoch)` composite

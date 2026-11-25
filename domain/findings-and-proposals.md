@@ -52,6 +52,9 @@ resolve refuses the whole delivery, as does naming none, since a missing delta w
 measurement. A named proposals artifact that does not resolve is tolerated — the delivery proceeds without it — because
 a run with no response to propose reaches delivery without drafting one.
 
+A delivery names a finding in at most one op, counted across all its delta artifacts together. One naming a finding in
+more than one is refused whole, since two facts on one finding would contradict each other.
+
 ## Liveness is derived, and reversible
 
 Whether a finding is live is never a stored state; it is the newest thing a run said about it. A run reporting a finding
@@ -92,11 +95,11 @@ answers different questions, not because one exit outranks another.
 ## `class` and `locus` are opaque
 
 Both a finding's `class` and a proposal's `class` are the deployment's own vocabulary — a kind of weed, a kind of
-response. The hub indexes and counts them, and never interprets either: it can tell how often a class recurs without
-knowing what the name means, which is what any case for mechanizing a judgment rests on. A finding's `locus` is where it
-lives, read and stored the same way. Opaque is not the same as optional: a finding's `class`, `locus`, and `summary` are
-never blank, whichever route mints it — a run's delta or a review's round — and a single blank or whitespace-only one
-refuses the whole delivery, since a finding nobody can read is no observation at all.
+response. The hub indexes both and never interprets either. It counts how often a proposal's class recurs without
+knowing what the name means; a finding's class it lists and filters by, but does not count. A finding's `locus` is where
+it lives, read and stored the same way. Opaque is not the same as optional: a finding's `class`, `locus`, and `summary`
+are never blank, whichever route mints it — a run's delta or a review's round — and a single blank or whitespace-only
+one refuses the whole delivery, since a finding nobody can read is no observation at all.
 
 ## A proposal's findings are optional
 
@@ -104,7 +107,8 @@ A garden proposal may name no findings at all: the hub enforces no minimum. Whet
 is that graph's own decision to make, never the hub's — the hub only stores, groups, and counts whatever a proposal
 names. Grouping findings under one response is still the proposal's whole job when it names any; a finding itself never
 groups. A list names each finding once: naming one twice is refused wherever a proposal takes its findings — a run's
-delivery, which it refuses whole, or an operator's `create`, `attach`, or `detach`.
+delivery, which it refuses whole, or an operator's `create`, `attach`, or `detach`. What counts is the finding a
+citation resolves to, so a run's own name for a finding it added and the id that addition was given are one finding.
 
 ## A proposal's origin: a routine's run, or an operator
 
