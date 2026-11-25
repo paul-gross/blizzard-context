@@ -12,9 +12,10 @@ stable `bzh:` id in its heading.
 daemon may depend on backend-specific behavior — in syntax or in result determinism. A select whose consumer depends on
 the result's row order — an index into it, a newest or oldest read — carries an explicit total `order_by` on the query
 itself; an unordered select is not made portable by passing on both backends. A runner outbox row's `seq` comes from the
-runner's durable counter in `outbox_counters`, never from the backend's key generation: `insert_outbox_row`
-(`src/blizzard/runner/store/internal/base.py`) is the one place that inserts into `outbound_buffer` or
-`transcript_outbound_buffer`, advancing the counter in the row's transaction.
+runner's durable counter in `outbox_counters`, never from the backend's key generation: `insert_outbox_rows`
+(`src/blizzard/runner/store/internal/base.py`), with `insert_outbox_row` its one-row wrapper, is the one place that
+inserts into `outbound_buffer` or `transcript_outbound_buffer`, advancing the counter once by the rows' count in their
+transaction.
 
 **Why.** sqlite is the fast local default and test backend, while postgres support stays within SQLAlchemy's portable
 surface rather than a second test matrix; a bare sqlite key reuses a pruned rowid and a postgres sequence burns values,
@@ -48,8 +49,8 @@ contract exposes the gap.
 a code path branching on the configured backend; a consumer indexing `[-1]` or `[0]` into a select carrying no explicit
 total `order_by`; streaming (`yield_per`/`stream_results`) set on a connection rather than on one statement's execution
 — mechanically flagged by `contracts/ast-grep/rules/statement-scoped-streaming.yml`. An insert into `outbound_buffer` or
-`transcript_outbound_buffer` that goes around `insert_outbox_row` — `test_every_outbox_row_is_inserted_through_the_seam`
-in `tests/guards/test_layering.py` fails it.
+`transcript_outbound_buffer` that goes around `insert_outbox_rows` or its wrapper `insert_outbox_row` —
+`test_every_outbox_row_is_inserted_through_the_seam` in `tests/guards/test_layering.py` fails it.
 
 **Do.** `ChunkFactsStore.load_facts` uses `select(s.chunk_pause_facts).where(...).order_by(s.chunk_pause_facts.c.id)`
 because the fact projection it reconstitutes carries the chunk's pause history and a consumer indexes that list's tail.

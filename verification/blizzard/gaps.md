@@ -466,13 +466,18 @@ its runner key and counters hold there by construction. `blizzard:store-baseline
 empty Postgres store and holds it to `contracts/store/runner.json`; what that proof and the hand runs under
 `blizzard:manual-postgres-runner-migrations` leave unverified:
 
-- **The counter allocation.** `insert_outbox_row` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
-  lane under READ COMMITTED. Eight threads racing the first allocation of a new runner's lane were issued `1` through
-  `8`, with the counter at `8` and the invariants holding.
+- **The counter allocation.** `insert_outbox_rows` (`src/blizzard/runner/store/internal/base.py`) advances a runner's
+  lane under READ COMMITTED by the number of rows it inserts, seeding a new lane's counter at that count; the one-row
+  `insert_outbox_row` wraps it. Eight threads racing the first allocation of a new runner's lane one row at a time were
+  issued `1` through `8`, with the counter at `8` and the invariants holding. A hand run on Postgres 16 then raced eight
+  threads on the first allocation of another new lane with three rows each through `insert_outbox_rows`: each was issued
+  a contiguous run, the eight runs covered `1` through `24` without overlap, the counter stood at `24`, and the
+  invariants held. On a seeded lane, a one-row write took the seq above the counter, and a five-row run took the next
+  five. No repeatable method runs either race.
 - **The usage-limit floor tables.** The revision creating the empty `subscription_usage_limits`,
   `subscription_floor_clears`, `runner_usage_limits`, and `runner_floor_clears` tables, whose downgrade drops them, has
-  run on Postgres only inside the empty-store chain run the execution observations bullet records; it creates four
-  tables of portable column types and writes no data.
+  run on Postgres only inside the empty-store chain runs the execution observations and empty-store upgrade bullets
+  record; it creates four tables of portable column types and writes no data.
 - **The fact append sequence.** The revision adding a nullable `seq` to `env_bindings`, `binding_releases`,
   `pause_parks`, `pause_park_resumes`, `requeues` and `leases` creates `fact_counters` and numbers every existing row
   per runner, openers before closers at a tied instant. The hand run seeded its parent shape with two runners holding
@@ -483,9 +488,10 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   run on Postgres; the allocation is the outbox counter's, which that run covers.
 - **The takeover entries.** The revision creating `takeover_entries`, with a foreign key to `takeovers`, inserts an
   entry for every takeover open at that moment; its downgrade drops the table. On Postgres it has run only inside the
-  empty-store chain run the execution observations bullet records, over no takeover; its colocated test walks it
-  forward, back and forward again on SQLite only, and it uses portable column types and `INSERT … SELECT`. SQLite leaves
-  foreign keys off, so the foreign key is enforced on Postgres alone, and no run has bound a row to it.
+  empty-store chain runs the execution observations and empty-store upgrade bullets record, over no takeover; its
+  colocated test walks it forward, back and forward again on SQLite only, and it uses portable column types and
+  `INSERT … SELECT`. SQLite leaves foreign keys off, so the foreign key is enforced on Postgres alone, and no run has
+  bound a row to it.
 - **The lease-row lock of a declaration.** A declaration's admission and an outcome's capture each run as one write
   transaction whose first statement is a no-op update of the lease's `leases` row (`LeaseLockStore.locked`,
   `src/blizzard/runner/store/internal/lease_lock_store.py`), so the admission either commits before the capture and is
@@ -498,12 +504,23 @@ empty Postgres store and holds it to `contracts/store/runner.json`; what that pr
   downgrade drops the table, creates one table of portable column types and writes no data, so no seeded or concurrent
   run was made.
 - **The runner hub tokens table.** The revision creating the host-scoped `runner_hub_tokens`, whose downgrade drops it,
-  has not been executed on Postgres: its colocated test walks it forward, back and forward again on SQLite only. It
-  creates one table of portable column types, its sealed values base64 `Text`, and writes no data; the seed's
-  insert-where-absent and a replacement's locked revision read have run on SQLite alone.
-- **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. The one empty-store chain run
-  stopped at the execution observations revision; no run has carried an empty Postgres store through the revisions above
-  it to the current head, so a revision above the baseline has run on Postgres only where a bullet above says so.
+  has run on Postgres only inside the empty-store chain run the empty-store upgrade bullet records; its colocated test
+  walks it forward, back and forward again on SQLite only. It creates one table of portable column types, its sealed
+  values base64 `Text`, and writes no data; the seed's insert-where-absent and a replacement's locked revision read have
+  run on SQLite alone.
+- **The buffered payload size.** The revision adding `transcript_outbound_buffer.payload_bytes`, `NOT NULL` with a
+  server default of `0`, fills every existing row from `length(payload)` in bounded pages keyed by runner and seq; its
+  downgrade drops the column. A hand run on Postgres 16 seeded its parent shape with two runners holding 2,707 buffered
+  rows between them, pending and acked, final markers included, over three pages, one of them split between the two
+  runners, and one payload holding escaped non-ASCII text. The upgrade filled every row with its payload's byte length,
+  the schema matched the empty-store chain's head, and the invariants held. The revision then went down, dropping the
+  column with every row kept, and up again, filling every row once more; a rerun of the upgrade over the filled store
+  changed nothing. No run has raced a runner's writes against the fill.
+- **The empty-store upgrade.** `blizzard:store-baseline` applies the baseline alone. A hand run carried an empty
+  Postgres 16 store through every revision to the head of its day, the one adding
+  `transcript_outbound_buffer.payload_bytes`, down to base, and up again, with the schema after the second upgrade
+  matching the first. That run wrote no rows, so a revision above the baseline has run on Postgres over data only where
+  a bullet above says so.
 
 Standing in for a tier: `blizzard:store-baseline` for the baseline, the colocated migration tests of the revisions above
 it and the seam's component tests on SQLite, and the portable SQL `bzh:sql-portable` holds each statement to. The hand

@@ -698,11 +698,13 @@ exists, so neither can create the second file.
 
 ## The outbox counter advance
 
-Every outbox `seq` is allocated by the one seam, `insert_outbox_row`
-(`blizzard/src/blizzard/runner/store/internal/base.py`), which advances the bound runner's lane in `outbox_counters` in
-the same transaction as the row. This is a **no-window** write: a crash leaves both the row and its advance or neither,
-so a rolled-back `seq` is returned and a counter that never moves backwards never reissues a pruned row's. The invariant
-checker's `runner:outbox-counter-above-seq` asserts that no retained row sits above its counter.
+Every outbox `seq` is allocated by the one seam, `insert_outbox_rows`
+(`blizzard/src/blizzard/runner/store/internal/base.py`), which advances the bound runner's lane in `outbox_counters`
+once, by the number of rows, and inserts the rows under that contiguous run of `seq`s, in bounded batches, in the same
+transaction; `insert_outbox_row` is its one-row wrapper. This is a **no-window** write: a crash leaves all of the rows
+and their advance or none of them, so a rolled-back run of `seq`s is returned and a counter that never moves backwards
+never reissues a pruned row's. The invariant checker's `runner:outbox-counter-above-seq` asserts that no retained row
+sits above its counter.
 
 ## Held-binding completion
 
