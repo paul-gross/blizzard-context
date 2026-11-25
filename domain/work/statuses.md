@@ -78,10 +78,11 @@ A chunk currently named as another's prerequisite cannot itself be deleted while
 409, naming the dependents. Deleting the *dependent* chunk is unaffected by this and stays exactly as deletable as the
 sentence above already promises.
 
-Folding a chunk away carries its standing edges onto the survivor rather than releasing them outright — the blocked
-marking a dependent carries continues to resolve through the survivor after the fold, never left naming a chunk that no
-longer exists. Each carried edge keeps the instant it was first declared, so the earliest-declared naming holds across a
-fold; where carried edges collapse onto one pair, the earliest instant wins.
+Folding a chunk away carries its standing edges onto the survivor, except an edge between the survivor and a folded
+chunk or between two folded chunks: that edge is released, since carrying it would make the survivor depend on itself. A
+survivor blocked on a chunk folded into it loses that blocker. Other dependents' blocked markings continue to resolve
+through the survivor. Each carried edge keeps the instant it was first declared, so the earliest-declared naming holds
+across a fold; where carried edges collapse onto one pair, the earliest instant wins.
 
 A prerequisite may stand at any status but ephemeral (grouped away or deleted): `stopped` and `done` are admitted, a
 `done` prerequisite born satisfied. Declaring an already-standing pair is an idempotent replay that writes nothing, and

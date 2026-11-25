@@ -33,7 +33,7 @@ whole life. The slug is fixed at mint and never changes; editing a routine may c
 default scope, its run preferences, or its display name, but never its slug. A routine's name is a free display name:
 operator-editable, not unique, and never what anything belongs to. A mint states a slug, a name, or both, and the one
 left out takes the other's value. A slug a mint states has the scope slug's shape; a slug taken from a name only is not
-shape-checked, so a name that was a valid handle before the slug existed stays one.
+shape-checked.
 
 ## The retired brake
 

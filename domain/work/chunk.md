@@ -45,7 +45,8 @@ Grouping folds unacquired chunks into a survivor, which absorbs their work refs,
 as deletion below. It is not a reorder: a `ready` and a `not_ready` chunk may fold together, the survivor keeps the
 status it derives, and a folded chunk's promotion and queue position vanish with it. The survivor keeps its own urgency;
 a folded chunk's urgency vanishes with it. Grouping never crosses projects: folding in a chunk of another project than
-the survivor's is refused.
+the survivor's is refused. How grouping carries or releases dependency edges is
+[The blocked marking](./statuses.md#the-blocked-marking)'s.
 
 ## Deletion
 

@@ -3,9 +3,8 @@
 An operator's explicit order over each of the two lists an unacquired chunk rests in — `not_ready` and `ready`
 ([./statuses.md](./statuses.md)) — recorded as position facts. Spoke of the [work hub](../work.md).
 
-Ranking exists wherever a chunk can be reordered by hand: the `not_ready` list's order decides which resting work an
-operator promotes next, the `ready` queue's decides which unclaimed work a runner claims next. Reordering touches
-neither promotion nor acquisition itself — it only orders what is already resting in one list or the other.
+Ranking exists wherever a chunk can be reordered by hand. Reordering touches neither promotion nor acquisition itself —
+it only orders what is already resting in one list or the other.
 
 Each list is the whole tenant's: chunks of every project rest and rank in one `not_ready` list and one `ready` queue
 ([../projects.md](../projects.md)).
@@ -29,11 +28,12 @@ A reorder of one list never repositions a chunk that belongs to the other.
 ## Promotion and demotion after rank
 
 Promotion lands a chunk at the tail of the `ready` queue — after every chunk the queue already ranks, however the queue
-was last ordered — unless the operator names an anchor, when it lands in that anchor's slot. A queue reorder that ran
+was last ordered — unless the operator requests the head or names an anchor to land just after. A queue reorder that ran
 before a promotion is never undone by it.
 
-Demotion always stamps an explicit position in the backlog — the tail, or the named anchor's slot — so the mint-instant
-fallback never ranks a demoted chunk.
+Demotion always stamps an explicit position in the backlog — the tail, the requested head, or just after a named anchor
+— so the mint-instant fallback never ranks a demoted chunk. Both acts refuse a placement naming an anchor and the head
+together.
 
 ## Claim order is not a third ranked list
 
