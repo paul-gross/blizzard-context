@@ -48,9 +48,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   alert beside the profile menu — over the same widths, asserting the alert renders, the menu stays on-viewport, and the
   header carries no horizontal overflow.
 - `app-nav.shell-sweep.spec.ts` covers the runner's top tab strip (`AppNav`) with its Runner and Project filters. Its
-  `KitTabStrip`/`KitTab` chrome is unclamped flex, so from a wide monitor down to 320px the Board, Events and Host tabs
-  stay on-screen and the filters over a host's worth of long-named, braked runners and several projects never force the
-  strip past the viewport — each filter's chips scroll inside it instead.
+  `KitTabStrip`/`KitTab` chrome is unclamped flex, so from a wide monitor down to 320px the Board, Events, Host and
+  Settings tabs stay on-screen and the filters over a host's worth of long-named, braked runners and several projects
+  never force the strip past the viewport — each filter's chips scroll inside it instead.
 - `host-page.shell-sweep.spec.ts` covers the runner panel's host page (`/host`): a host of two runners — one halted with
   a long reason, one serving two long-named bindings and holding a chunk — two workspaces whose held environment names
   its runner and project, and subscriptions naming their spenders. A runner row's facts sit beside its held chunks at

@@ -76,15 +76,16 @@ may also import `testing`:
 
 `runner`, rooted at `runner/src/app/`, with kernel `core`:
 
-| Unit      | Layer | May import                           |
-| --------- | ----- | ------------------------------------ |
-| `core`    | L0    | —                                    |
-| `asks`    | L1    | —                                    |
-| `events`  | L1    | —                                    |
-| `runners` | L1    | —                                    |
-| `host`    | L1    | `runners`                            |
-| `board`   | L1    | `asks`, `runners`                    |
-| `shell`   | L2    | `board`, `events`, `host`, `runners` |
+| Unit       | Layer | May import                                       |
+| ---------- | ----- | ------------------------------------------------ |
+| `core`     | L0    | —                                                |
+| `asks`     | L1    | —                                                |
+| `events`   | L1    | —                                                |
+| `runners`  | L1    | —                                                |
+| `host`     | L1    | `runners`                                        |
+| `board`    | L1    | `asks`, `runners`                                |
+| `settings` | L1    | —                                                |
+| `shell`    | L2    | `board`, `events`, `host`, `runners`, `settings` |
 
 **Why.** A declared one-way folder graph lets a feature be read, moved, or lazy-loaded without dragging its importers
 along. Without it the app root drifts back into being both shell and kernel — importing every feature while every
