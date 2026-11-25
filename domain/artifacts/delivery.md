@@ -41,8 +41,9 @@ worker node's judgement ([edges](../graphs/edges.md)).
   hub action contract's to state ([action purity](../../standards/hub-nodes/action-purity.md)).
 - **One record per visit.** A landing visit records its findings and its log once, at its end: each repository's checks
   in the state the ending pass saw them, one not concluded marked unfinished, and each landed revision. A waiting pass,
-  `awaiting-merge` included, records neither, so what a reader finds is never an earlier poll's state. A visit that ends
-  before any pass runs reads no check and records no findings.
+  `awaiting-merge` included, records neither, so what a reader finds is never an earlier poll's state. A conflict is
+  named in the findings beside the checks. A visit that ends before any pass runs reads no check and records no
+  findings, and neither does one whose ending pass raises or overruns its bound; its log says what ended it.
 - **No code to land.** An empty commit set completes without a landing. A submitted repository resolves without a merge
   only when its submitted commit is proven contained in the intended base and its current branch and head are safe; an
   unreadable or refused comparison is not proof. Its durable no-code evidence matches the current declaration, so replay
@@ -59,9 +60,10 @@ worker node's judgement ([edges](../graphs/edges.md)).
 - **Checks and empty results.** `merge-on-checks` and `fast-forward` check the actual candidate revision. A successful
   empty check read is not green by default: the first observation waits, and an empty read of the same revision after
   ten minutes escalates as missing checks. A different revision starts its own observation. A repository may explicitly
-  opt in to landing with no CI; that permits an empty result, not a failed, pending, or unreadable check result. If the
-  overall delivery deadline expires with an observation recorded, it escalates as missing checks without claiming a
-  later read confirmed the absence. A parked change remains a person's merge decision.
+  opt in to landing with no CI; that permits an empty result, not a failed, pending, or unreadable check result. A later
+  read finding checks on the repository supersedes the observation. If the overall delivery deadline expires with an
+  observation still standing, it escalates as missing checks without claiming a later read confirmed the absence. A
+  parked change remains a person's merge decision.
 - **Automatic method choice.** For GitHub `merge-on-checks`, the forge offers allowed methods in preference order: merge
   commit, rebase-merge, then squash. A method-specific incompatibility permits trying the next allowed method;
   exhaustion escalates with the allowed set and reasons. A behind change uses a rebase update when merge commits are
