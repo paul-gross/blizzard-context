@@ -1,8 +1,8 @@
 # Periodic passes and lanes
 
 A **lane** is a periodic pass or store-and-forward pass that moves facts toward a sink. On the hub, every pass hosted by
-the `Sweep` driver is a lane. `SweepRoster` (`blizzard/src/blizzard/hub/domain/sweeps/`), built once in
-`build_services`, owns that roster — read it there for the members — and `Sweep.all`
+the `Sweep` driver is a lane. `SweepRoster` (`blizzard/src/blizzard/hub/domain/sweeps/`), registered once per process in
+`hub/domain/sweeps/wiring.py`, owns that roster — read it there for the members — and `Sweep.all`
 (`blizzard/src/blizzard/hub/app.py`) yields its timed members. On the runner, every pass that moves facts off the runner
 is one: `OutboundDrain`, `TranscriptDrain`, `LeaseTraceSweep`, and a registered host's own `HostLaneDrain`. The core
 phases (REAP, PULL, FILL, ADVANCE, RESUME), the samplers, and `Retention` are not lanes. `bzh:steppable-loop` in
