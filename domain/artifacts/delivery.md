@@ -39,6 +39,10 @@ worker node's judgement ([edges](../graphs/edges.md)).
   wait marker signals a human merge wait. The hub projects these markers alongside per-repo landing facts: closed PRs
   stay in history, while landed rows name only repos with a landed revision. What each marker's content carries is the
   hub action contract's to state ([action purity](../../standards/hub-nodes/action-purity.md)).
+- **One record per visit.** A landing visit records its findings and its log once, at its end: each repository's checks
+  in the state the ending pass saw them, one not concluded marked unfinished, and each landed revision. A waiting pass,
+  `awaiting-merge` included, records neither, so what a reader finds is never an earlier poll's state. A visit that ends
+  before any pass runs reads no check and records no findings.
 - **No code to land.** An empty commit set completes without a landing. A submitted repository resolves without a merge
   only when its submitted commit is proven contained in the intended base and its current branch and head are safe; an
   unreadable or refused comparison is not proof. Its durable no-code evidence matches the current declaration, so replay
