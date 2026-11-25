@@ -134,7 +134,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   pause glyph in `--amber` and its stop glyph in `--red`, both on the name line, and every runner's light must sit in
   one fixed-width column. At 390px and 320px a long runner name holds to one ellipsised line beside its whole seen tag,
   and, where the phone's Fleet tab offers the hub brake, each runner's pause/resume toggle spans the runner at a
-  finger-sized height.
+  finger-sized height. The next-claim view also wraps 200-character project names in its candidate, passed, and held
+  entries without horizontal overflow at 1280px, 390px, and 320px.
 - `host-detail.shell-sweep.spec.ts` covers the host detail the phone's Fleet tab opens full-screen: at 390px and 320px
   its `@container fleet-detail` breakpoint stacks the connection facts, keeps each environment line inside its section,
   and sets each runner's facts above its held chunks, every held chunk a finger-sized link, with no horizontal overflow.
