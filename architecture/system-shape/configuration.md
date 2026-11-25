@@ -64,12 +64,13 @@ verb set itself:
   secret is supplied by the operator or its access renewed by the hub, validates and canonicalizes the record's
   `settings`, and derives its `authority`, which no write states and which a second credential on the forge is refused
   `credential_authority_taken` for claiming, a retired holder keeping its claim. An edit whose settings would stop
-  offering a capability an enabled repository acting with it needs is refused `forge_capability_missing`, listing each.
-  Its retire is refused `credential_in_use`, listing each enabled repository and work source naming it. Beside the verb
-  set it takes a read-only check — `POST /api/credentials/{credential}/checks`, on the CLI
-  `blizzard hub credential check` — which writes no record and no change row. What a credential is, and who maintains
-  its access, is [../../domain/projects.md](../../domain/projects.md#the-credential-a-source-or-repository-acts-with)'s;
-  how a binding becomes what a forge client authenticates with, and what adding one takes, is
+  offering a capability an enabled repository acting with it needs is refused `forge_capability_missing` on `settings`,
+  naming the repositories that fall short and the capabilities they would lose. Its retire is refused
+  `credential_in_use`, listing each enabled repository and work source naming it. Beside the verb set it takes a
+  read-only check — `POST /api/credentials/{credential}/checks`, on the CLI `blizzard hub credential check` — which
+  writes no record and no change row. What a credential is, and who maintains its access, is
+  [../../domain/projects.md](../../domain/projects.md#the-credential-a-source-or-repository-acts-with)'s; how a binding
+  becomes what a forge client authenticates with, and what adding one takes, is
   [./seam-positions.md](./seam-positions.md#a-forge-credential-becomes-an-authorization-at-one-boundary)'s.
 - **A repository and a work source** each name the credential they act with in `credential`, by id or slug. One of
   another forge is refused `credential_forge_mismatch`; one unknown, or retired while the record is enabled,

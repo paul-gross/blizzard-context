@@ -93,10 +93,8 @@ was. An invitation is the tenant's own record, so it lives and dies with the ten
 
 ## The default tenant
 
-A store upgraded from a revision without tenants places its state in one tenant named `default`: every person is a
-member in their existing role, every runner belongs to it, and nothing is re-ingested or reconfigured. A fresh hub
-starts with an empty `default` tenant. Nothing else sets it apart — its name changes like any other tenant's — and an
-operator who never creates a second tenant never needs to notice the concept.
+A fresh hub starts with an empty `default` tenant. Nothing else sets it apart — its name changes like any other tenant's
+— and an operator who never creates a second tenant never needs to notice the concept.
 
 ## Deleting a tenant
 

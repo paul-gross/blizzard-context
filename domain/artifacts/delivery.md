@@ -10,12 +10,15 @@ worker node's judgement ([edges](../graphs/edges.md)).
   and each resource has one flow: an arrival-ordered line of the visits that hold it. A visit is submitted to its flows
   when its chunk reaches the hub node, and runs as a turn once it is the earliest eligible visit on every flow it holds.
   Steps on different branches run side by side, and a step holding no branch waits on none. A `pending` answer ends the
-  turn and yields the branch until its poll is due, so a later visit can land before it. A visit takes one turn at a
-  time, and a turn runs only while its chunk still stands at the node, so a re-submitted completion or a hub-advance
-  never starts a second run, nor re-runs a node the chunk has left.
-- **Only a `delivering` chunk is driven.** A chunk standing at a hub node is submitted to its flows and takes turns
+  turn and yields the branch until its poll is due, so a later visit can land before it. A parked `awaiting-merge` visit
+  also yields the branch while waiting for a person's merge and is polled no more often than every two minutes. A visit
+  takes one turn at a time, and a turn starts only while its chunk still stands at the node, so a re-submitted
+  completion or a hub-advance never starts a second run, nor re-runs a node the chunk has left. A stop arriving mid-turn
+  stops the chunk and releases its route immediately; the running turn may finish and record any landing it makes,
+  closing its submission as stopped when the turn ends.
+- **Only a `delivering` chunk starts a turn.** A chunk standing at a hub node is submitted to its flows and starts turns
   there only while it is `delivering` ([../work/statuses.md](../work/statuses.md)): a paused chunk waits for its resume,
-  and one escalated, stopped, or done is never driven through it.
+  and one escalated, stopped, or done starts no turn.
 - **Per-repository landing, with reconciliation.** A delivery action that lands a multi-repository chunk serially per
   repository records its own `merged/<repo>` marker immediately after each push; a re-run — after a crash, or a
   kicked-back redelivery — skips every repository whose marker is already durable. The engine imposes no per-repository
@@ -79,9 +82,8 @@ worker node's judgement ([edges](../graphs/edges.md)).
   both would write the one merged marker.
 - **Landing follows the project's order.** [../projects.md](../projects.md) §Where a chunk may land owns the landing
   order and the visit's terms.
-- **A chunk delivers one project's work.** A chunk lands only in repositories its project links, and a commit naming one
-  it does not link is refused before any push — [../projects.md](../projects.md) §Where a chunk may land owns the rule,
-  the moment the links are read, and the refusal.
+- **A chunk delivers one project's work.** [../projects.md](../projects.md) §Where a chunk may land owns repository
+  eligibility.
 - **Environment retention.** The holding runner keeps the chunk's environments throughout delivery, until the outcome is
   known.
 

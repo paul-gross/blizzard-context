@@ -41,10 +41,8 @@ the table then needs a stubbed client even when only row markup changed.
 in a pure `*.model.ts` beside the feature: it takes plain values (a `now: number`, never a clock), imports no Angular,
 query, or `inject`, and is pinned by a sibling `*.model.spec.ts` that needs no `TestBed`. A structural query-handle
 interface the model declares or imports, such as `AsyncStateQuery` or `WorkItemsQuery`, counts as a plain value: the
-container passes its live query, and the spec passes a literal. A derivation that is a domain judgment — a
-classification, a join by a domain rule, or a write's predicate — lives in a pure `*.domain.ts` instead, pinned by its
-own spec, and one the wire already carries is translated from its field rather than re-derived, per
-`bzh:frontend-domain-boundary`.
+container passes its live query, and the spec passes a literal. For domain judgments, follow
+`bzh:frontend-domain-boundary` ([wire.md](./wire.md)).
 
 **Why.** A branch inside a container's `computed()` is reachable only through a component fixture with stubbed queries,
 so it goes untested or gets tested through markup; a pure function over plain values is tested case by case, and a
