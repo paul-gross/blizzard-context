@@ -257,17 +257,18 @@ self-test and reports each retired reference with file and line under `retired w
 independently; the latter exits nonzero for hits.
 
 The declaration inventory covers the projects, forges, board chunks, questions, decisions, spend, and runners
-compatibility observers; the projects query-options primitive may remain private. It checks TypeScript under
-`web/projects`, including `.storybook/`, by declaration identity and follows named, aliased, nested, local-reexport, and
-wildcard barrels, even when the original declaration is missing. Namespace imports and namespace re-exports follow the
-same chains, including property, string-literal index, and qualified-type references. The retired-rule citation and
-API-name prose scans cover `README.md`, `SECURITY.md`, and the `docs/`, `exemplars/`, `src/`, `scripts/`, `tests/`, and
-`web/` trees: TypeScript comments and text in JavaScript, Markdown, HTML, CSS, Python, shell, YAML, and TOML. The scan
-ignores generated `.gen.ts`/`.gen.js`, build, dependency, cache, and environment directories and the detector's own
-controlled self-test literals. Prose has no compiler identity: a bare inventoried name is reported, while a name
-qualified with a `.domain.ts#` or `.gen.ts#` source is not. A bare same-named domain or generated symbol in prose needs
-manual disambiguation. Legal generated exports, fixture translators, transport, and same-named domain symbols in
-TypeScript are not retired by name.
+compatibility observers and the retired board and runner chunk query options; the projects query-options primitive may
+remain private, and `boardChunksReadOptions` and `BoardChunksRead` remain legal cache primitives. It checks TypeScript
+under `web/projects`, including `.storybook/`, by declaration identity and follows named, aliased, nested,
+local-reexport, and wildcard barrels, even when the original declaration is missing. Namespace imports and namespace
+re-exports follow the same chains, including property, string-literal index, and qualified-type references. The
+retired-rule citation and API-name prose scans cover `README.md`, `SECURITY.md`, and the `docs/`, `exemplars/`, `src/`,
+`scripts/`, `tests/`, and `web/` trees: TypeScript comments and text in JavaScript, Markdown, HTML, CSS, Python, shell,
+YAML, and TOML. The scan ignores generated `.gen.ts`/`.gen.js`, build, dependency, cache, and environment directories
+and the detector's own controlled self-test literals. Prose has no compiler identity: a bare inventoried name is
+reported, while a name qualified with a `.domain.ts#` or `.gen.ts#` source is not. A bare same-named domain or generated
+symbol in prose needs manual disambiguation. Legal generated exports, fixture translators, transport, and same-named
+domain symbols in TypeScript are not retired by name.
 
 The self-test exercises Storybook enumeration and ignored dependency directories, resolved and dangling aliased barrel
 chains and consumers, a wildcard, local and namespace re-exports, namespace consumers, same-named domain declarations,
