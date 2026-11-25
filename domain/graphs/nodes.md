@@ -26,11 +26,12 @@ The facets:
   such a node's `action:`, `with:`, worker-only fields, and answers.
 - **`checks`** — deterministic commands the runner runs at worker exit and injects into the exit judgement as durable
   facts, so the worker judges against mechanical truth; a `requires_checks` choice may gate on them. `checks_cwd` (where
-  checks run, relative to the leased env's workdir) and `checks_timeout` (per-check seconds) configure checks and are
-  legal only on a node declaring `checks:`. An omitted `checks_timeout` bounds each check at 600 seconds, and a check
-  that overruns its bound is a red check, never an error — so a hung check reads as red to a `requires_checks` choice
-  ([./edges.md](./edges.md) §Failure, not judgement) instead of wedging the exit. Authoring `checks:` makes a graph
-  application-specific by design — checks are necessarily toolchain commands (`bzh:app-agnostic-graphs` in
+  checks run, relative to the leased env's workdir — mint refuses an absolute path or one escaping it) and
+  `checks_timeout` (per-check seconds) configure checks and are legal only on a node declaring `checks:`. An omitted
+  `checks_timeout` bounds each check at 600 seconds, and a check that overruns its bound is a red check, never an error
+  — so a hung check reads as red to a `requires_checks` choice ([./edges.md](./edges.md) §Failure, not judgement)
+  instead of wedging the exit. Authoring `checks:` makes a graph application-specific by design — checks are necessarily
+  toolchain commands (`bzh:app-agnostic-graphs` in
   [../../architecture/system-shape/graphs.md](../../architecture/system-shape/graphs.md)).
 - **`produces`** — names the artifacts the node must submit ([../artifacts.md](../artifacts.md)); a worker node's prompt
   must instruct submitting each by name

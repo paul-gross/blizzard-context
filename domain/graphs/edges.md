@@ -8,7 +8,9 @@ every choice has exactly one edge; resolution is checked at graph creation, so n
 dangle. A graph has exactly one entry node; cycles are intentional, not a validation error. Reachability is warned,
 never rejected: a node no path from the entry reaches, or an entry with no path to the terminal, is a warning on the
 mint response, and the definition still mints. An edge carries arrival context: prose appended to the target node's
-prompt.
+prompt. Only an edge to a node of the same graph delivers it. Nothing arrives along a `graph:<name>` or `escalate`
+choice, and mint refuses a `prompt_addendum` on either; a `done` edge reaches no node either, so an addendum on one
+mints and is never delivered.
 
 ## Choices
 
@@ -31,9 +33,10 @@ Taking a `graph:<name>` choice re-pins the chunk to the named graph, landing at 
 target's entry ([../work/migration.md](../work/migration.md) §Landing). The target resolves by name only when taken
 (`bzh:ids-exact-names-correlate`, [./ids-and-names.md](./ids-and-names.md)), so targeting a graph not yet minted is a
 mint-time warning, not an error. A migration choice may carry `model:` — a single model name re-pinned as the chunk's
-default model preference, what undeclared surfaces inherit. The override is scoped to model alone: a migration choice
-carries no harness override, so a migration never re-pins the chunk's default harness set — only a plain chunk edit
-([../work/chunk.md](../work/chunk.md) §Model, effort, and harness defaults) does.
+default model preference, what undeclared surfaces inherit; mint refuses a `model:` that is not one non-empty name. The
+override is scoped to model alone: a migration choice carries no harness override, so a migration never re-pins the
+chunk's default harness set — only a plain chunk edit ([../work/chunk.md](../work/chunk.md) §Model, effort, and harness
+defaults) does.
 
 ## Judgement
 

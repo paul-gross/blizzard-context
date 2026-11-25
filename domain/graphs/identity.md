@@ -69,6 +69,10 @@ definition change however it is spelled, and the translation never hides one.
 [./declared-artifacts.md](./declared-artifacts.md) §Order owns what the comparison makes of a reordered `artifacts:`
 map.
 
+A newest stored definition that no longer parses has nothing to compare. With an enabled mint of the name it counts as
+changed and a new graph is minted. With every mint of the name retired, reconciliation holds: it mints nothing, reports
+the name not reconciled, and leaves the brake in place, so a change in what the hub can read never lifts it.
+
 ## Operational surfaces
 
 `enabled` and `follow-latest` are the only mutable surfaces, set and re-set without touching the definition. They are
@@ -91,4 +95,5 @@ Work ingested naming no graph lands on the newest enabled mint of the default na
 retired, an ingest a person drives — a work-item create, a chunk ingest by token, or a garden proposal accept — is
 refused rather than minting again over the brake. Reconciling a name whose every mint is retired mints a new, enabled
 graph when the definition changed — a new definition is a new graph, so the brake lifts — and mints nothing when it is
-unchanged, as [§Comparison at reconciliation](#comparison-at-reconciliation) judges it.
+unchanged, as [§Comparison at reconciliation](#comparison-at-reconciliation) judges it — which also states the one case
+that neither mints nor reads as unchanged, a stored definition that no longer parses.
