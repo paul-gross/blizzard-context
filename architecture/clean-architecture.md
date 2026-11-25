@@ -205,6 +205,8 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
   route.
 - The registry declares only the legacy leaves and bags `tests/support/legacy_inventory.py` lists, and every listed
   entry is still declared.
+- Only the source modules `BAG_CONSUMERS` in `tests/support/legacy_inventory.py` lists name the hub's legacy bag, and
+  every listed module still does.
 - A wiring module imports no other area's wiring and no adapter, other than an adapter package's own `wiring.py` naming
   its `internal/`; the process roots compose them all.
 - dishka is imported only under `foundation/registry/internal/`, and from `dishka.integrations.fastapi` under
@@ -236,11 +238,11 @@ refuses a missing dependency, a second owner, or a lifetime off its scope path w
 first reaches it. In the hub:
 
 - `blizzard/src/blizzard/hub/process_root.py` is the hub's composition root. `register_hub` declares the scope inputs,
-  the legacy bridge's leaves, each store adapter, and each adopted area over the adapter `Ref` the store wiring hands
-  it; `build_store_backed` and `build_store_free` open the validated container over the borrowed connections, clock,
-  settings graph, boot config, tracing handle, environment, hub actions, and packaged graph and system-artifact loaders.
-  Registering and building are separate steps, so a stand-in root reuses `register_hub` and adds an area before it
-  builds.
+  the legacy bridge's transitional ports, each store adapter, and each adopted area over the adapter `Ref` the store
+  wiring hands it; `build_store_backed` and `build_store_free` open the validated container over the borrowed
+  connections, clock, settings graph, boot config, tracing handle, environment, hub actions, and packaged graph and
+  system-artifact loaders. Registering and building are separate steps, so a stand-in root reuses `register_hub` and
+  adds an area before it builds.
 - The store wiring registers every store adapter and transaction primitive, at the tenant or the process lifetime. The
   hub settings ports are the members of the borrowed settings graph, registered in `hub/settings/wiring.py`.
 - A new hub service is born in its area's `wiring.py`, beside the concept it serves
@@ -268,12 +270,12 @@ first reaches it. In the hub:
   their roster (`hub/domain/sweeps/wiring.py`). `hub/process_root.py` only composes them, handing each area the `Ref`s
   it needs and binding the typed tenant accessors once the process is built.
 - The legacy builders in `hub/composition.py` — `build_hub_core`, `build_services`, and the per-tenant
-  `build_tenant_stores` and `build_tenant_services` — take no new construction. They read each adopted service and
-  legacy leaf from the container, never the reverse, so a retained bag field is the container's own instance.
-  `build_services` builds only the request bridge's `HubServices.tenants`.
-- A legacy leaf (`LegacyRegistry.leaf`) is a port an unadopted owner still builds, filled from its existing
-  construction, and a legacy bag one still built outside the container. Both are transitional: the inventory gate holds
-  the set, each entry naming its owning area, and an area's adoption removes its entries.
+  `build_tenant_stores` and `build_tenant_services` — take no new construction. They read each adopted service from the
+  container, never the reverse, so a retained bag field is the container's own instance. The one transitional exception
+  is closed-tenant forgetting: `hub_core_over` rebinds the container's `ClosedTenantForgetting` so it also evicts the
+  legacy `TenantCache` entry. `build_services` builds only the request bridge's `HubServices.tenants`.
+- The hub registry declares no legacy leaf or bag (`LegacyRegistry.leaf` and `LegacyRegistry.bag`, for a value still
+  built outside the container): `LEGACY_INVENTORY` is empty, so the inventory gate fails any new one.
 
 The hub's hosted lifetimes and the runner host:
 
@@ -292,9 +294,8 @@ The hub's hosted lifetimes and the runner host:
   `hub/scopes/tenants.py`), cached in the core's `TenantCache`; `build_services` takes the core and builds none of them.
   It has the cache serve each tenant's `TenantServices`, built over that tenant's `TenantStores` with shared service
   parts and its event broker (`build_tenant_services`) and cached beside them, and builds the request bridge's
-  `HubServices.tenants` (`TenantServicesOpener`) over it. A process pass reaches a tenant's service through a typed
-  accessor the root binds, or its entrypoint builds, over the tenant scope, never through a bag or a generic resolver,
-  with `build_flow_driver` as the entrypoint reference. No service is built from the unscoped core
+  `HubServices.tenants` (`TenantServicesOpener`) over it. A typed tenant accessor (above) may also be built by its
+  entrypoint, with `build_flow_driver` as the reference. No service is built from the unscoped core
   (`bzh:tenant-scoped-store`, [./system-shape/tenancy.md](./system-shape/tenancy.md))
 - The runner host graph in `blizzard/src/blizzard/runner/composition.py` — `build_host_process` holding one
   `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
