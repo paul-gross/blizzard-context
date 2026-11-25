@@ -11,14 +11,16 @@ Read [`../../blizzard.md`](../../blizzard.md) first for the short command and th
 
 `mise run gate` (`./scripts/ci-gate.sh`) reproduces CI's shared `gate` job locally, the one the `pr` and `push`
 workflows both call: ruff format --check, ruff check, pyright, the ast-grep structural gate
-(`blizzard:structural-gate`), the repo-path pointer check (`blizzard:pointer-check`), pytest, the OpenAPI spec-drift
-check, the contract-document drift check (`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility
-against the supported releases (`blizzard:compat`), the change-note check (`mise run change-notes`, which runs
+(`blizzard:structural-gate`), the repo-path pointer check (`blizzard:pointer-check`), the one-home census
+(`blizzard:restatement-sweep`), pytest, the OpenAPI spec-drift check, the contract-document drift check
+(`blizzard-export-contracts` and a `git diff` over `contracts/`), compatibility against the supported releases
+(`blizzard:compat`), the change-note check (`mise run change-notes`, which runs
 `uv run blizzard-change-notes check && uv run blizzard-change-notes owed --against origin/master`), then eslint, vitest,
 the web structural gate's sweeps (`web:structural-gate`), the bundle-composition check (`web:bundle-composition`), the
 story render check (`web:story-render`), and generated-client drift over `web/`. Stage regenerated `openapi/`,
 `contracts/` or `web/` client output before running it: the drift checks are a working-tree-vs-index `git diff`, so a
-staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`).
+staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`). The census reads the sibling
+`../blizzard-context` and `../blizzard-mock` checkouts, so both must be present.
 
 `mise run gate` is not the full master merge gate — it omits every upper tier, which the `pr` workflow runs as separate
 real gate jobs; `blizzard:gate-full` below reproduces the unconditional tiers, and `bzh:ci-job-local-command`
@@ -180,6 +182,7 @@ gh api -X PUT repos/paul-gross/blizzard/branches/master/protection --input - <<'
       {"context": "gate / exemplar check (web)"},
       {"context": "gate / playwright static"},
       {"context": "gate / process-reference and change-history lint"},
+      {"context": "gate / restatement sweep (blizzard:restatement-sweep)"},
       {"context": "upper-tiers / service tier (blizzard:service-test)"},
       {"context": "upper-tiers / kill-9 crash sweep (blizzard:crash-sweep)"},
       {"context": "upper-tiers / ui (blizzard:ui)"},

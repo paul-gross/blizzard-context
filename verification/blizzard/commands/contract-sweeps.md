@@ -159,11 +159,17 @@ fact ([`../../../standards/one-prose-home.md`](../../../standards/one-prose-home
 `mise run restatement-check` for short:
 
 ```bash
-uv run python scripts/restated_invariants.py check --strict --owners --context-root ../blizzard-context src tests docs README.md web/projects ../blizzard-mock/src
+uv run python scripts/restated_invariants.py check --strict --owners --context-root ../blizzard-context src tests docs README.md web/projects ../blizzard-mock/src ../blizzard-context/verification/blizzard/gaps.md ../blizzard-context/verification/blizzard/manual.md ../blizzard-context/verification/blizzard.md
 ```
 
-Local-only via `--context-root`: `../blizzard-mock` is already a CI sibling, but `../blizzard-context` is checked out
-nowhere in CI, and an unresolved `--context-root` refuses a green rather than skipping silently.
+CI runs it as `gate / restatement sweep (blizzard:restatement-sweep)` in both repositories, from
+[blizzard's `gate.yml`](https://github.com/paul-gross/blizzard/blob/master/.github/workflows/gate.yml) and
+[this repo's](https://github.com/paul-gross/blizzard-context/blob/master/.github/workflows/gate.yml), over `blizzard`,
+`blizzard-mock` and `blizzard-context` checked out side by side. Each sibling of the repository under test is checked
+out at the pull request's same-named branch if it has one, else `master`. An unresolved `--context-root` refuses a green
+rather than skipping silently. When one change spans two of these repositories, the push-to-`master` run of the one
+merged first can be red until the other lands (in `blizzard` that also holds back `push.yml`'s `dev-image`); re-run it
+then.
 
 Refresh a `new`/`stale` finding with `measure --write-sites`, which rewrites `sites[]` to the observed tree — never by
 hand — plus a `reason` on any new non-owner site. `measure --write-sites` refuses a partial scan (a file skipped as

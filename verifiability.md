@@ -32,13 +32,15 @@ repo-wide `TokenIgnores` entry.
 `:registry-drift-tests`, `:lint-script-tests`, `:reference-lint`, and `:reference-lint-tests` as the
 `gate / dprint + rumdl + vale`, `gate / registry-drift + lint-markdown-style script tests`, and `gate / reference lint`
 checks, each tool pinned to an exact version inline in the workflow rather than declared in a `mise.toml`
-(`blizzard-context:ci-workflows` below states why this repo carries none). Passing `--gate` to the registry-drift check
-refuses a green on any skipped check, not only on a `fail`. `blizzard-context:registry-drift` is local-only and
-**deliberately excluded from the PR gate**: it needs the sibling `blizzard` checkout with its `.venv` and the sibling
-`blizzard-mock` checkout, which a feature env supplies and a single-repo CI runner does not; running it against their
-`master` would also redden a PR whenever a chunk changes a citation here together with the sibling repo it cites, before
-that sibling half has landed. `blizzard-context:registry-drift-tests` exercises every check against stdlib-only fixtures
-and needs no blizzard checkout, so it runs in CI even though `registry-drift` itself does not.
+(`blizzard-context:ci-workflows` below states why this repo carries none). They also run `blizzard:restatement-sweep`,
+over sibling checkouts of `blizzard` and `blizzard-mock`, as the `gate / restatement sweep (blizzard:restatement-sweep)`
+check. Passing `--gate` to the registry-drift check refuses a green on any skipped check, not only on a `fail`.
+`blizzard-context:registry-drift` is local-only and **deliberately excluded from the PR gate**: it needs the sibling
+`blizzard` checkout with its `.venv` and the sibling `blizzard-mock` checkout, which a feature env supplies and the gate
+does not set up; running it against their `master` would also redden a PR whenever a chunk changes a citation here
+together with the sibling repo it cites, before that sibling half has landed. `blizzard-context:registry-drift-tests`
+exercises every check against stdlib-only fixtures and needs no blizzard checkout, so it runs in CI even though
+`registry-drift` itself does not.
 
 `blizzard-context:lint-script-tests` exercises the `winter lint` check this extension contributes
 (`scripts/lint-markdown-style.py`, wired through `winter-ext.toml`'s `lint` field) against stubbed binaries, so none of
@@ -65,7 +67,7 @@ installed and pinned inline in the workflow (`mise x <tool>@<version> --`) rathe
 
 **Required checks on `master`.** The `pr.yml`/`push.yml` checks below are the set an operator applies and verifies via
 `blizzard:manual-branch-protection`. This repo's `pr.yml` has no `hotfix/` lane: every check is cheap, so a `hotfix/`
-pull request runs all three. The protection binds admins and requires a pull request, with no approving review:
+pull request runs all four. The protection binds admins and requires a pull request, with no approving review:
 
 ```bash
 gh api -X PUT repos/paul-gross/blizzard-context/branches/master/protection --input - <<'EOF'
@@ -75,7 +77,8 @@ gh api -X PUT repos/paul-gross/blizzard-context/branches/master/protection --inp
     "checks": [
       {"context": "gate / dprint + rumdl + vale"},
       {"context": "gate / registry-drift + lint-markdown-style script tests"},
-      {"context": "gate / reference lint"}
+      {"context": "gate / reference lint"},
+      {"context": "gate / restatement sweep (blizzard:restatement-sweep)"}
     ]
   },
   "enforce_admins": true,
