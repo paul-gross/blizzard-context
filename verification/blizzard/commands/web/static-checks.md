@@ -11,7 +11,7 @@ gate, and the bundle-composition check — under the Angular workspace hub, [`..
 
 ### web:lint
 
-`npm run lint` in `web/` (`ng lint`, eslint over all four Angular projects). Carries a `max-lines` ceiling — the
+`npm run lint` in `web/` (`ng lint`, eslint over all three Angular projects). Carries a `max-lines` ceiling — the
 ~400-line cap, `skipBlankLines`/`skipComments` both off — over every `.ts` file each project's own config reads (spec
 files at an 800-line ceiling instead, a runaway guard rather than design pressure). No architecture doc declares the
 number itself. An oversized component can signal merged container/presentational concerns
@@ -28,23 +28,23 @@ rule's options per matching block.
 The HTML template `no-restricted-syntax` selector rejects native `<button>`, `<select>`, and `<input>` outside
 `fleet/src/lib/kit/` (`bzh:frontend-kit-floor`), including a control with fresh CSS classes. A genuinely distinct native
 interaction uses a reasoned, element-level ESLint suppression; `web/scripts/kit-control-lint-probe.js` checks the AST
-gate's must-fail and must-pass cases (`node web/scripts/kit-control-lint-probe.js` from the app repo root).
+gate's must-fail and must-pass cases (`node scripts/kit-control-lint-probe.js` from `web/`).
 
 The same block's selectors reject a raw `*_at` interpolation and a `[title]` bound to a raw `*_at` read
 (`bzh:frontend-formatters`); a call, a comparison or `<fleet-when [iso]>` passes.
 `web/scripts/raw-instant-lint-probe.js` checks their must-fail and must-pass cases
-(`node web/scripts/raw-instant-lint-probe.js` from the app repo root).
+(`node scripts/raw-instant-lint-probe.js` from `web/`).
 
 The `default-case` rule fails a TypeScript `switch` with no `default` branch
 ([`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
 `bzh:frontend-open-vocabulary`): a newer server may send a value the generated client does not list. Lint is not
 type-aware, so the rule holds every switch, a local union's included. `web/scripts/default-case-lint-probe.js` checks a
 bare switch is refused and a defaulted one passes, in an app file and a `fleet` file
-(`node web/scripts/default-case-lint-probe.js` from the app repo root). `web/scripts/open-lookup-type-probe.js` compiles
-fixtures against the real helpers under `web/tsconfig.json` and checks an `openLookup` table or a `switch` defaulting to
+(`node scripts/default-case-lint-probe.js` from `web/`). `web/scripts/open-lookup-type-probe.js` compiles fixtures
+against the real helpers under `web/tsconfig.json` and checks an `openLookup` table or a `switch` defaulting to
 `unlisted` fails to compile when missing a declared value while the complete forms compile, proving
-`bzh:frontend-open-vocabulary`'s exhaustiveness requirement (`node web/scripts/open-lookup-type-probe.js` from the app
-repo root) — `web:unit-test` never type-checks.
+`bzh:frontend-open-vocabulary`'s exhaustiveness requirement (`node scripts/open-lookup-type-probe.js` from `web/`) —
+`web:unit-test` never type-checks.
 
 A `@typescript-eslint/no-restricted-imports` rule over `**/*.model.ts` refuses any import from the `@angular/*` or
 `@tanstack/*` family, `import type` included
@@ -54,7 +54,7 @@ config restates it, since flat config replaces a rule's options per matching blo
 `web/scripts/model-imports-lint-probe.js` lints under each of the hub, runner, and fleet configs, as `ng lint` does, and
 checks a runtime or type-only import from `@angular/core`, `@angular/cdk/drag-drop`, or
 `@tanstack/angular-query-experimental` is refused in a model while a pure model and a non-model file importing Angular
-pass (`node web/scripts/model-imports-lint-probe.js` from the app repo root).
+pass (`node scripts/model-imports-lint-probe.js` from `web/`).
 
 The same rule carries the concept-file blocks
 ([`../../../../architecture/frontend-structure/wire.md`](../../../../architecture/frontend-structure/wire.md)
@@ -68,7 +68,7 @@ rule's options per matching block. `web/scripts/boundary-imports-lint-probe.js` 
 fleet configs and checks Angular and the query library, runtime or type-only, are refused in a domain file and a
 translator, a non-Signal-Forms Angular import is refused in a form file, and Aria is refused outside the kit, while a
 pure domain file, a translator importing a wire type, a Signal Forms form file, and a kit file importing Aria pass
-(`node web/scripts/boundary-imports-lint-probe.js` from the app repo root).
+(`node scripts/boundary-imports-lint-probe.js` from `web/`).
 
 ### web:typecheck
 
