@@ -333,7 +333,8 @@ an authored graph with the shipped choices, a brisk poll cadence, and conflict a
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_refuses_a_foreign_commit_on_the_head` routes `failure`, names
   the foreign commit in `delivery-findings/foreign-head`, and leaves main unchanged.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_poll_timeout_back_to_build` proves timeout bounces
-  to build with nothing merged and main unchanged; its trace-only companion
+  to build with nothing merged and main unchanged, the deliver epoch's `delivery-findings` marking the pending check
+  unfinished; its trace-only companion
   `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_poll_timeout_back_to_build_traced` proves pending
   polls, the `bounce` event and the next build's `bounce` link.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_lands_an_unstable_pr_once_checks_are_green` lands an unstable
