@@ -43,16 +43,16 @@ rather than labeling semantic loss normalization.
 
 One existing carry-over is admitted under the same ids as a legacy category of its own: it is not held to the
 preservation condition [§Representation under one identity](#representation-under-one-identity) sets, and it is not
-claimed to meet it. A stored hub node naming no action, whose retired `run:` is a single recognized packaged command,
-reads as the action that command named, or as `pass` when its `run:` is empty, with its graph, node, and choice ids and
-its chunks' history unchanged. Its original definition text stays the authoring record and may still spell `run:` while
-the executable view reads `action:`; that spelling difference under one identity is legal, and pins and recorded history
-survive it. The carry-over is a recognized-command lookup, not a preservation proof: it reads only the commands it
-recognizes, discards step metadata that has no home on an action, and is not certified lossless here. A `run:` it does
-not recognize stays untranslated for comparison, and its stored command is retained beside the node for diagnosis and
-human escalation, never executed — an old custom script does not run, and a packaged set naming only actions does not
-show the carry-over to be unused. A new graph naming `run:` on a hub node is refused regardless. This section owns why
-the carry-over is admitted under the same ids and that it proves no preservation;
+claimed to meet it. A stored hub node naming no action, whose retired `run:` is empty or a single recognized packaged
+command, reads as the action that command named, or as `pass` when its `run:` is empty, with its graph, node, and choice
+ids and its chunks' history unchanged. Its original definition text stays the authoring record and may still spell
+`run:` while the executable view reads `action:`; that spelling difference under one identity is legal, and pins and
+recorded history survive it. The carry-over is a recognized-command lookup, not a preservation proof: it reads only the
+commands it recognizes, discards step metadata that has no home on an action, and is not certified lossless here. A
+`run:` it does not recognize stays untranslated for comparison, and its stored command is retained beside the node for
+diagnosis and human escalation, never executed — an old custom script does not run, and a packaged set naming only
+actions does not show the carry-over to be unused. A new graph naming `run:` on a hub node is refused regardless. This
+section owns why the carry-over is admitted under the same ids and that it proves no preservation;
 [../humans/escalation.md](../humans/escalation.md) owns the escalation a node it cannot carry takes,
 `hub-action-missing`.
 
@@ -91,9 +91,10 @@ takes as no change.
 
 ## Retiring every mint of a name
 
-Work ingested naming no graph lands on the newest enabled mint of the default name. With every mint of that name
-retired, an ingest a person drives — a work-item create, a chunk ingest by token, or a garden proposal accept — is
-refused rather than minting again over the brake. Reconciling a name whose every mint is retired mints a new, enabled
-graph when the definition changed — a new definition is a new graph, so the brake lifts — and mints nothing when it is
-unchanged, as [§Comparison at reconciliation](#comparison-at-reconciliation) judges it — which also states the one case
-that neither mints nor reads as unchanged, a stored definition that no longer parses.
+Work ingested naming no graph lands on the newest enabled mint of the default name. When no mint of that name has ever
+existed, an ingest a person drives — a work-item create, a chunk ingest by token, or a garden proposal accept — first
+mints the packaged default and lands on it. With every mint of that name retired, such an ingest is refused rather than
+minting again over the brake. Reconciling a name whose every mint is retired mints a new, enabled graph when the
+definition changed — a new definition is a new graph, so the brake lifts — and mints nothing when it is unchanged, as
+[§Comparison at reconciliation](#comparison-at-reconciliation) judges it — which also states the one case that neither
+mints nor reads as unchanged, a stored definition that no longer parses.

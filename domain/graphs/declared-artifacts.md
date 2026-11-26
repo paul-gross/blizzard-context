@@ -14,8 +14,9 @@ ambiguous, not a legal shadow.
 ## Resolution
 
 Each reference resolves to its file's text at definition load, so what reaches the mint is content, never a path. A
-definition submitted with no directory to resolve against must already carry the text inline; a value still reading as a
-bare path is rejected rather than baked.
+definition submitted with no directory to resolve against must already carry the text inline; a value that still reads
+as a path — one whitespace-free token, not a URL, carrying a `/` or a filename extension — is rejected rather than
+baked. A lone token with neither, such as `notes`, cannot be told from one-word content and mints as content.
 
 ## Order
 
