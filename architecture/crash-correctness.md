@@ -1,8 +1,8 @@
 # Crash correctness
 
-MVP acceptance criterion 4 promises that `kill -9` at every step boundary is **a tested operation, not a hope**. That
-promise imposes four requirements on daemon code — built in from the first commit, because each is cheap on day one and
-expensive to retrofit. Crash correctness is an orthogonal dimension, not a fifth test tier
+Blizzard promises that `kill -9` at every step boundary is **a tested operation, not a hope**. That promise imposes four
+requirements on daemon code — built in from the first commit, because each is cheap on day one and expensive to
+retrofit. Crash correctness is an orthogonal dimension, not a fifth test tier
 ([../verification/blizzard.md](../verification/blizzard.md)): the requirements below are *architecture*; the kill-9
 sweep that exercises them is a verification method (`blizzard:crash-sweep`) in the matrix. Beside the four stands one
 recording rule, `bzh:recorded-crash-exemption`, for the durable writes the sweep does not arm. Each rule follows the
@@ -195,5 +195,5 @@ chunk looking landed while an invariant is silently violated.
   [./system-shape/store-facts.md](./system-shape/store-facts.md) — `bzh:facts-not-status` — the invariants these
   requirements rest on.
 - [../verification/blizzard.md](../verification/blizzard.md) — `blizzard:crash-sweep`, the method that composes the four
-  requirements into the criterion-4 proof, and the division of labor with the unit and component tiers.
+  requirements into the proof of that kill-9 promise, and the division of labor with the unit and component tiers.
 - [./lanes.md](./lanes.md) — the contract around periodic passes and store-and-forward lanes.

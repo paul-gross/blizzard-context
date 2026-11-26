@@ -22,11 +22,11 @@ work item through the hub pass-through (`blizzard runner work-items`) and branch
 Five issues are filed across both forge repositories and ingested by id; direct hub API calls group two into one chunk
 and place the riskiest first. The journeys:
 
-- a clean multi-repo land with grouping and serial delivery (criteria 11/13);
-- a review-fail loop carrying its findings asset and `prompt_addendum` back into build (criterion 9);
-- an ask parked `waiting_on_human` and answered with `blizzard hub question answer` (criterion 7);
-- a genuine failure escalated to `needs_human` whose takeover command, run verbatim, resumes the stuck session
-  (criterion 6), its `wrapped_takeover_command` compared exactly against the runner's name from `GET /api/host/runners`.
+- a clean multi-repo land with grouping and serial delivery;
+- a review-fail loop carrying its findings asset and `prompt_addendum` back into build;
+- an ask parked `waiting_on_human` and answered with `blizzard hub question answer`;
+- a genuine failure escalated to `needs_human` whose takeover command, run verbatim, resumes the stuck session, its
+  `wrapped_takeover_command` compared exactly against the runner's name from `GET /api/host/runners`.
 
 Every phase gates on a chunk's latched hub state, not timing — the run is deterministic. Mid-run both daemons are
 `SIGKILL`ed and restarted on their directories and ports; every chunk resumes at exactly the node the hub last recorded
