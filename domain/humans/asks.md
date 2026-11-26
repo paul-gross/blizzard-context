@@ -14,10 +14,11 @@ same lease: it never reads as open again, even once the newer ask is answered.
 
 ## Answering
 
-Exactly one answer ever exists — the first write wins — and later answerers are shown who won and what they said.
-Answering resumes the dormant agent session with the answer delivered into it. The answer stays readable to every later
-session on the chunk, and binds them: none asks again what a person already decided, or contradicts it. An answer is
-refused once the chunk has ended (`stopped` or `done`).
+Exactly one answer ever exists — the first write wins — and later answerers are shown who won and what they said. An
+answer is refused once the chunk has ended (`stopped` or `done`), and that refusal comes first: a late answer to an
+already-answered question on an ended chunk is told the question is closed, never who won. Answering resumes the dormant
+agent session with the answer delivered into it. The answer stays readable to every later session on the chunk, and
+binds them: none asks again what a person already decided, or contradicts it.
 
 Answered and delivered are distinct derived states: a person decided, versus the runner durably recorded the resume
 carrying the answer. A question row surfaces both, so the answerer sees the return trip rather than inferring it from

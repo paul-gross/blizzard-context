@@ -12,18 +12,20 @@ acceptable harness can serve a mint: a fresh mint exhausts harness selection, or
 recovery's prior owner is outside the current acceptable set, so the fresh session refuses to switch owners. It also
 escalates when a changed harness version refuses a launch and its one relaunch, spending no retry, since no launch can
 succeed until the runner restarts. The hub itself escalates when a migrating choice's target graph fails to resolve,
-when a node's bounce cap is crossed, or when a worker takes a choice targeting the reserved `escalate`
-([../graphs/edges.md](../graphs/edges.md) §Escalation choices), when a step is stuck, when a hub node names no action
-its hub knows, or when a node's outcome has no edge its graph authors. It also escalates when delivery's action is
-refused by its forge or landing: the repository's credential is rejected, its repository is unknown to that credential,
-the forge lacks a capability the landing needs, a parked change is closed or times out, branch protection refuses the
-branch operation, or the allowed merge methods are exhausted, including when none are allowed. The explanation names the
-allowed set and why each allowed method could not be used. Delivery also escalates when its candidate has no CI checks
-under the repository's landing terms ([delivery](../artifacts/delivery.md)).
+when a node's bounce cap is crossed, or when a worker's taken choice or a gate's resolved choice targets the reserved
+`escalate` ([../graphs/edges.md](../graphs/edges.md) §Escalation choices), when a step is stuck, when a hub node names
+no action its hub knows — a stored `run:` no migration could translate — or when a node's outcome has no edge its graph
+authors. A hub node naming an action its hub's catalogue lacks does not escalate: it routes the node's `failure` choice.
+The hub also escalates when delivery's action is refused by its forge or landing: the repository's credential is
+rejected, its repository is unknown to that credential, the forge lacks a capability the landing needs, a parked change
+is closed or times out, branch protection refuses the branch operation, or the allowed merge methods are exhausted,
+including when none are allowed. The explanation names the allowed set and why each allowed method could not be used.
+Delivery also escalates when its candidate has no CI checks under the repository's landing terms
+([delivery](../artifacts/delivery.md)).
 
 ## Why it escalated
 
-Every escalation records its cause, from a closed vocabulary, and a one-line detail, at the moment it is written:
+Every escalation records its cause, from a closed vocabulary, and a short detail, at the moment it is written:
 
 | Origin                                                                                                                                                        | Cause                           |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
@@ -34,9 +36,9 @@ Every escalation records its cause, from a closed vocabulary, and a one-line det
 | the chunk's spend cap is reached                                                                                                                              | `spend-cap`                     |
 | a node's bounce cap is crossed (hub-authored)                                                                                                                 | `bounce-cap`                    |
 | a migrating choice's target graph fails to resolve (hub-authored)                                                                                             | `migration-target-unresolvable` |
-| a worker takes a choice whose target is the reserved `escalate`                                                                                               | `escalate-choice`               |
+| a worker's taken choice or a gate's resolved choice targets the reserved `escalate` (hub-authored)                                                            | `escalate-choice`               |
 | a hub step's last three turns were all cut off at their deadline (hub-authored)                                                                               | `hub-action-stuck`              |
-| a hub node names no action its hub knows (hub-authored)                                                                                                       | `hub-action-missing`            |
+| a hub node names no action its hub knows — a stored `run:` no migration could translate (hub-authored)                                                        | `hub-action-missing`            |
 | a hub node's outcome has no edge its graph authors (hub-authored)                                                                                             | `unroutable-outcome`            |
 | a repository's forge refuses its credential, diagnosed by `forge-auth-refused` and [recovered by a check and a requeue](#a-refused-credential) (hub-authored) | `forge-auth`                    |
 | a repository is unknown to its credential's forge (hub-authored)                                                                                              | `forge-config`                  |
@@ -82,7 +84,9 @@ missing.
 Three things near a refused credential are not this escalation:
 
 - **Access the hub renews itself.** A managed token the forge rejects as invalid is obtained afresh and the call sent
-  once more; only a rejection of the fresh one escalates. Every other refusal escalates at once.
+  once more; only a rejection of the fresh one escalates. Every other refusal escalates at once. The exception to both
+  is the forge refusing the one re-run of a check failure inherited from the base branch: even a rejected fresh token
+  escalates nothing there. The hub logs the refusal and the step routes `failure`.
 - **A credential the forge accepts but that cannot do the work.** A repository the credential cannot see escalates
   `forge-config`, and access lacking a capability the landing needs escalates `forge-capability-missing`.
 - **A work source's refused credential.** It escalates no chunk: a refused read leaves the remedy in the item's error,
