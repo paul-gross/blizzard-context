@@ -326,6 +326,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   bottom hairline, left edge and `--surface-selected` background, while `bare` draws no padding, border or background
   selected or hovered, and a flex rule on the host lays the projected children on one line with the host's gap. Proven
   able to fail by deleting the bare rule's layout inheritance.
+- `kit-combobox.shell-sweep.spec.ts` covers the zone picker's keyboard model in real Chromium input at 390px, over a
+  `[formField]`-bound `KitCombobox`: typing filters the options by label, the arrows move the highlight, Enter picks it
+  into the field, and Escape closes with the value unchanged. A stored value no option carries is listed first, marked
+  not in list, and kept; Tab away after an edit that matched nothing restores the current value's text.
 - `board-column.shell-sweep.spec.ts` covers `BoardColumn`'s decorative reorder grip: READY and BACKLOG each render a
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag

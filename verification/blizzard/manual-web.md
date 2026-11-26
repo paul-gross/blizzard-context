@@ -7,13 +7,14 @@ Full detail for the `web:` manual methods named in [`../blizzard.md`](../blizzar
 section per row, in that table's order. The `blizzard:` methods live in [`./manual.md`](./manual.md) and the
 `blizzard-mock:` methods in [`./manual-mock.md`](./manual-mock.md).
 
-The methods are driven by a human, or a `frontend-verifier` agent through Chrome DevTools, in a real Chromium browser —
-the pass condition is a rendered view and a gesture's effect, and the evidence is the method's written report of what it
-verified, never a screenshot ([`./tier-rules.md`](./tier-rules.md), `bzh:visual-change-needs-a-render`). A caller
-dispatching `frontend-verifier` tells it to capture no screenshot and to report in words; these steps hold over the
-agent's own screenshot defaults. Every method starts, from the workspace root, from the same provisioned env with its
-services up and its shell vars sourced; the board and panel methods drive the env's daemons, and the workshop needs no
-daemon:
+The methods other than [`web:manual-form-adoption-census`](#webmanual-form-adoption-census), which reads the tree and
+runs gates rather than driving a page, are driven by a human, or a `frontend-verifier` agent through Chrome DevTools, in
+a real Chromium browser — the pass condition is a rendered view and a gesture's effect, and the evidence is the method's
+written report of what it verified, never a screenshot ([`./tier-rules.md`](./tier-rules.md),
+`bzh:visual-change-needs-a-render`). A caller dispatching `frontend-verifier` tells it to capture no screenshot and to
+report in words; these steps hold over the agent's own screenshot defaults. Every browser method starts, from the
+workspace root, from the same provisioned env with its services up and its shell vars sourced; the board and panel
+methods drive the env's daemons, and the workshop needs no daemon:
 
 ```bash
 winter provision <env>
@@ -127,3 +128,85 @@ without breaking it, and the console stays clean.
 A frontend build also works here as it goes: `bzh:frontend-workshop-first` in
 [`../../architecture/frontend-structure/kit.md`](../../architecture/frontend-structure/kit.md) owns when a build opens
 the workshop and performs this method before the work is called done.
+
+### `web:manual-form-adoption-census`
+
+**Surface.** Whether every kit input control in the `hub`, `runner` and `fleet` app templates is on the shared forms
+path (`[formField]` over a `*.form.ts` schema and a domain draft, inside a `KitField`), or is one of the declared kinds
+that are not forms. It also covers whether the keyboard models those surfaces lean on hold under real Chromium input:
+the members grid, the cadence and routine select lists, and the zone picker. It reads the tree and runs gates; it drives
+no page.
+
+**Setup.** The `blizzard` worktree of the feature env under census, provisioned, with `web/`'s dependencies installed.
+No service needs to be up. Run every command from the worktree root.
+
+**Not-a-form kinds.** A kit input control without `[formField]` is classified into exactly one of these, or it fails the
+census:
+
+1. **Filter** — a list's filter, whose pick narrows a read and saves nothing: the events, findings and proposals
+   filters.
+2. **Acts on pick** — a control whose pick is itself the whole operation, with no draft to hold: the urgencies default,
+   the routine panel's default urgency, and the members grid's role select.
+3. **Composite internals** — the inner control of a composite `FormValueControl` that is itself bound by its own caller:
+   `config-mark-input` and `project-color-picker`.
+4. **Lifecycle argument** — the urgency retire confirmation's destination, the argument of a lifecycle verb that is kept
+   apart from the urgency's edit form.
+
+**Steps.**
+
+1. Record `git rev-parse HEAD`.
+2. List every unbound kit input control, and every `fleet-kit-option` outside a bound `fleet-kit-option-group`, in a
+   non-kit, non-story app template:
+
+   ```bash
+   python3 - <<'PY'
+   import pathlib, re, subprocess
+   root = 'web/projects'
+   listed = subprocess.run(['git', 'ls-files', root], capture_output=True, text=True, check=True).stdout
+   files = [f for f in listed.split() if '/src/' in f and f.endswith(('.html', '.ts'))]
+   skip = re.compile(r'(^web/projects/fleet/src/lib/kit/|\.form-story\.html$|\.stories\.ts$|\.spec\.ts$)')
+   tag = lambda name: re.compile(rf'<fleet-kit-{name}(?![-\w])(?:[^>"\']|"[^"]*"|\'[^\']*\')*>')
+   control = tag('(?:text-input|select|checkbox|option-group|number-input|color-input|combobox)')
+   group, option = tag('option-group'), tag('option')
+   for path in sorted(f for f in files if not skip.search(f)):
+       text = pathlib.Path(path).read_text()
+       line = lambda m: text.count('\n', 0, m.start()) + 1
+       for m in control.finditer(text):
+           if '[formField]' not in m.group(0):
+               print(f'{path}:{line(m)}: {m.group(0).split()[0][1:]}')
+       for m in option.finditer(text):
+           opened = list(group.finditer(text, 0, m.start()))
+           g = opened[-1] if opened else None
+           if g is None or '</fleet-kit-option-group>' in text[g.end():m.start()] or '[formField]' not in g.group(0):
+               print(f'{path}:{line(m)}: fleet-kit-option (no bound group)')
+   PY
+   ```
+
+   Read each hit in its template and classify it under the kinds above. The census reads the tree and changes nothing: a
+   hit that fits no kind is a failure to report, not something the pass migrates on its way through.
+3. List every app template that binds a control, then confirm each one wraps its bound controls in `fleet-kit-field`,
+   and that its container's form comes from a `*.form.ts` schema whose draft type is imported from a `*.domain.ts`:
+
+   ```bash
+   git grep -l -E '\[formField\]' -- 'web/projects/*/src/**.html' ':!web/projects/fleet/src/lib/kit/**' ':!*.form-story.html'
+   ```
+
+4. Run [`web:structural-gate`](../blizzard.md) and confirm `DOMAIN_BOUNDARY_EXEMPT` is empty:
+   `grep -n 'const DOMAIN_BOUNDARY_EXEMPT' web/scripts/structural-gate.js` reads `= [];`.
+5. Confirm the superseded hand-built form inventory is gone:
+   `git grep -n -E 'AcceptSubmission|AcceptMode|missingRequired|invalidNumbers' -- web/` has no hits.
+6. Run the four keyboard sweeps, each from `web/` with
+   `npx ng test <project> --browsers=ChromiumHeadless --watch=false --include=<spec>`: the members grid (`hub`,
+   `projects/hub/src/app/admin/members/members-table.shell-sweep.spec.ts`, and `fleet`,
+   `projects/fleet/src/lib/kit/kit-grid.shell-sweep.spec.ts`), the cadence and routine select lists (`fleet`,
+   `projects/fleet/src/lib/kit/kit-select-list.shell-sweep.spec.ts`), and the zone picker (`fleet`,
+   `projects/fleet/src/lib/kit/kit-combobox.shell-sweep.spec.ts`).
+
+**Evidence.** Record the revision, the commands as run, one line per step-2 hit giving its path, line, control, kind,
+and the reason that kind was reached, and each other step's result. Keep the record with the change under review — the
+pull request or commit that claims this method — rather than in this file, which holds no per-run readings
+([`../../standards/prose-budget.md`](../../standards/prose-budget.md)).
+
+**Passes when.** Every step-2 hit classifies under one of the four kinds, every bound template composes `KitField` over
+a schema and a domain draft, the structural gate passes with no exemption, the superseded inventory has no hits, and the
+four sweeps pass.
