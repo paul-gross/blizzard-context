@@ -269,19 +269,19 @@ about the model: it asserts the machinery a model's output flows through, which 
 
 ## The review-fail, deliver-conflict, and inherited-CI-failure loops' prompt behavior
 
-`bas-hwf`'s `iterate` and `pre-push` prompts, together with `build.md`/`review.md`/`review.judgement.md`/
+`bas-hwf`'s `iterate` and `pre-release` prompts, together with `build.md`/`review.md`/`review.judgement.md`/
 `retrospective.md`, carry this lane's whole method for the review-fail loop, the deliver-conflict loop, and their
 retiering off the frontier tier `build` alone still runs on. The declared methods reach the mechanical half only —
 `blizzard:unit-test`'s packaged-prompt byte bars and `tests/unit/hub/graphs/test_basic_harness_workflow_graph.py`'s
 mint-validation and routing pins, and `blizzard:component-test`'s graph mint and choice-edge resolution. That `iterate`
-actually answers review's findings as a cold read rather than assuming `build`'s own reasoning, that `pre-push`'s
+actually answers review's findings as a cold read rather than assuming `build`'s own reasoning, that `pre-release`'s
 severity triage lands correctly, or that `retrospective` can reconstruct the journey from the chunk's asset trail alone
-— with no lineage memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-push` — is asserted by nothing: a prompt is an
-input to a model no tier runs.
+— with no lineage memory of `build` or `iterate`, unlike `bas-dwf`'s `pre-release` — is asserted by nothing: a prompt is
+an input to a model no tier runs.
 
 The same residue covers `adv-dwf`'s `build.from-deliver.md`, `bas-dwf`'s `build.from-deliver.md`, and `bas-hwf`'s
 `iterate.from-deliver.md` — the `deliver` → repair-node addenda a base-inherited CI failure routes through on every lane
-— and each lane's `pre-push.md` rebase-to-empty qualifier. The `land` action's own classification is proven by
+— and each lane's `pre-release.md` rebase-to-empty qualifier. The `land` action's own classification is proven by
 `blizzard:unit-test`'s `land` action cases over a scripted forge and `tests/unit/hub/domain/graph/test_authoring.py`'s
 per-lane edge/addendum pins; that a worker reads the addendum's repair charge correctly, or applies the loop bound's
 chunk-history check rather than repeating the repair a second time, is not. Nor is whether a `failure` bounce's
@@ -290,16 +290,16 @@ reads `delivery-findings` at all. No tier asserts that a repair worker reads a f
 rather than adopting the foreign commit under `resolved`.
 
 Every lane's `retrospective.md` verifies landing by the PR's own merge state and its merged sha's reachability from
-base, never the sha pre-push declared — no tier reads this leg back; a worker misreading it (checking the wrong sha, or
-skipping the merge-state read) is silent until a live chunk exposes it.
+base, never the sha pre-release declared — no tier reads this leg back; a worker misreading it (checking the wrong sha,
+or skipping the merge-state read) is silent until a live chunk exposes it.
 
-`adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-push.md` addenda, scope a second or later visit to the
-delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method covers
-pass without a re-run. The byte bars and `tests/unit/hub/graphs/test_adw_docket.py`'s pointer census hold the prompts'
-mechanics; that a re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its fix,
-scopes by the change's own commits once a rebase or base merge intervenes, re-runs every method the delta reaches or the
-prior report records as failed, and records the scoping decision in the new report is asserted by nothing — a scoping
-that quietly skips a method the delta touches passes the same as an honest one until a live chunk exposes it.
+`adv-dwf`'s `verify.md` and `review.md`, with their `*.from-pre-release.md` addenda, scope a second or later visit to
+the delta since the tip the gate's own prior report recorded, and let a delta that reaches nothing a declared method
+covers pass without a re-run. The byte bars and `tests/unit/hub/graphs/test_adw_docket.py`'s pointer census hold the
+prompts' mechanics; that a re-visiting worker diffs from the recorded tip rather than trusting `build`'s account of its
+fix, scopes by the change's own commits once a rebase or base merge intervenes, re-runs every method the delta reaches
+or the prior report records as failed, and records the scoping decision in the new report is asserted by nothing — a
+scoping that quietly skips a method the delta touches passes the same as an honest one until a live chunk exposes it.
 
 `adv-dwf`'s `mutation.md`, `mutation.judgement.md`, and `review.from-mutation.md`, and the survivor bullet in
 `build.from-review.md`, carry the delivery-time mutation report's whole method: run the project's declared diff-scoped
