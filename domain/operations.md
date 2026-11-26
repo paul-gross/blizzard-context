@@ -107,11 +107,13 @@ decisions, runner pauses, and event-log rows; no separate log is written for it.
 most the 200 newest rows.
 
 A route claim is its own occurrence, distinct from a node transition. Lease-mint and usage facts can refresh chunk,
-spend, and other views without adding another activity row: only the claim's route fact belongs in the feed, once. One
-fact is one row, however many times and by whatever path news of it arrives — announced as it happens, told again, or
-reconstructed from the record — while an occurrence with no identity of its own is a row each time. A row names the
-fact's own cause, the same whether the row arrives as it happens or is reconstructed, never the chunk's status at the
-moment the news arrived.
+spend, and other views without adding another activity row: only the claim's route fact belongs in the feed, once. A
+release is a row of its own only when it is the occurrence itself: a detach, retirement's release, or the holding
+runner's own release. A release written as part of a stop, completion, the hub's requeue, a migration, or a hub node's
+move reads as that fact's row alone. One fact is one row, however many times and by whatever path news of it arrives —
+announced as it happens, told again, or reconstructed from the record — while an occurrence with no identity of its own
+is a row each time. A row names the fact's own cause, the same whether the row arrives as it happens or is
+reconstructed, never the chunk's status at the moment the news arrived.
 
 These produce no activity-feed row:
 
