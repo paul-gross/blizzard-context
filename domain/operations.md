@@ -2,8 +2,7 @@
 
 Operational visibility is two operator-visible feeds over the same facts, read side by side: the **event log**, carrying
 only the failures a human must act on, and the **activity feed** of everything recent — situational awareness rather
-than triage. Both read newest first. This file states the event kinds and how they surface, and is part of the domain
-model at [./index.md](./index.md).
+than triage. Both read newest first. This file is part of the domain model at [./index.md](./index.md).
 
 ## The event log
 
