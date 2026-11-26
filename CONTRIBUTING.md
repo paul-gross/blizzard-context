@@ -43,6 +43,9 @@ stable-id scheme:
   id updates every citation in the same change. A ``(`bzh:<slug>`)`` on a `domain/` heading is a citation anchor — code
   and other files cite it — not a declaration that the section is a skeleton rule, and the scheme binds it as it binds a
   rule's id.
+- List a known code site that violates a rule in its file's `## Known debt` section, after the rules, naming the rule's
+  id and the code path — never as a slot or paragraph inside the rule: `**Known gap.**` is not a skeleton slot
+  (`canon:rule-shape`). An entry states what the code does today, not the plan for changing it.
 - Never name a store migration revision or its colocated test here — a fold deletes it; `bzh:no-revision-citations` in
   [standards/persistence.md](./standards/persistence.md) owns what to point at instead.
 - Read `winter-canon:/principles.md` before authoring or editing any file here, and follow every principle it states —
