@@ -272,7 +272,7 @@ The hub runs as one process per store. These facts are that premise, stated so a
   - **The event broker** — an in-memory subscriber fan-out.
   - **Background sweeps** — loops with no cross-process coordination.
   - **The open-tenant set and the tenant cache** — the open tenants with their names, and each opened tenant's stores
-    and services, held in memory (`hub/open_tenants.py`, `TenantCache` in `hub/composition.py`, `TenantContainers` in
+    and services, held in memory (`hub/open_tenants.py`, and the scope cache of `TenantContainers` in
     `hub/scopes/tenants.py`). A tenant another process created is read on the first lookup that misses it, but a rename
     refreshes only the process that made it.
   - **The boot recovery of open turns** — startup treats an open turn as belonging to a dead process and attempts to end
