@@ -88,6 +88,14 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   the same view on All, with a notice. The named project listbox follows focus and route changes with arrow keys and has
   one Tab entry. A separate test checks that at the narrow viewport the proposal waiting-status listbox follows focus
   and exits with Tab without horizontal page overflow.
+- `tests/ui/gardening-proposal-accept.spec.ts` —
+  `test_gardening_proposal_accept_dialog_mints_declines_and_recovers_from_a_closure`. The proposal docket's Accept
+  dialog over three operator proposals seeded through `POST /api/projects/{slug}/garden-proposals`. A mint with the
+  prefilled body edited and an urgency picked closes the dialog, and the hub reads the proposal accepted and minted, the
+  minted item carrying the edited body and its chunk the picked urgency. A decline with a blank reason is held at the
+  reason field, which takes focus, and sends nothing; with a reason it closes, and the hub reads it accepted and
+  declined with no work item. A proposal passed over the API while its dialog is open keeps the dialog and its typed
+  body on Accept, with the refusal on the form line, and Cancel closes it.
 - `tests/ui/actions/gardening-run-dialog.spec.ts` — `test_gardening_run_dialog_browser`. The gardening run dialog,
   opened from the selected routine's own panel, on the `actions` hub, since the routine's graph names a test action.
   Mints a routine with a never-swept default scope, links a second scope into its related set ahead of time, and mints a

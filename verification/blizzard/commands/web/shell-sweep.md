@@ -283,10 +283,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `gardening-proposal-pass-dialog.shell-sweep.spec.ts` covers the Pass dialog's own view, mounted directly with plain
   inputs: at 390px and 1024px the footer's Cancel/Pass buttons must genuinely sit side by side, with the submit button's
   right edge inside the dialog panel.
-- `gardening-proposal-accept-dialog.shell-sweep.spec.ts` covers the Accept dialog's own view, mounted directly with
-  plain inputs: at 390px and 1024px the mint/decline radiogroup must genuinely stack its two options, the footer's
-  Cancel/Accept buttons must sit side by side, with the submit button's right edge inside the dialog panel. At 1024px
-  the decline reason field must render below the options once decline is chosen.
+- `gardening-proposal-accept-dialog.shell-sweep.spec.ts` covers the Accept dialog's own view, mounted over a real
+  `form()`: at 320px, 390px and 1024px, in both mint and decline modes, the mint/decline option group must genuinely
+  stack its two options and the reason field must render below them. The `KitForm` action row's Cancel/Accept buttons
+  must sit side by side without overlapping, with both edges inside the dialog panel.
 - `gardening-findings-triage.shell-sweep.spec.ts` covers the findings triage list (`FleetFindingList`), mounted directly
   with plain inputs. At 1400px, 390px, and 320px the list itself must carry no horizontal overflow. Separately, a
   `gone`-flagged row must carry a genuinely different computed `background-color` from a plain row, while its
@@ -326,6 +326,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   bottom hairline, left edge and `--surface-selected` background, while `bare` draws no padding, border or background
   selected or hovered, and a flex rule on the host lays the projected children on one line with the host's gap. Proven
   able to fail by deleting the bare rule's layout inheritance.
+- `kit-combobox.shell-sweep.spec.ts` covers the zone picker's keyboard model in real Chromium input at 390px, over a
+  `[formField]`-bound `KitCombobox`: typing filters the options by label, the arrows move the highlight, Enter picks it
+  into the field, and Escape closes with the value unchanged. A stored value no option carries is listed first, marked
+  not in list, and kept; Tab away after an edit that matched nothing restores the current value's text.
 - `board-column.shell-sweep.spec.ts` covers `BoardColumn`'s decorative reorder grip: READY and BACKLOG each render a
   token-coloured two-wide, six-row dot grid when reordering is armed, while a permission-withheld READY lane and the
   non-ranked RUNNING lane render neither the grip nor a drag wrapper. The card wrapper remains the whole-card drag
