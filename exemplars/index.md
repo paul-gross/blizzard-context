@@ -54,10 +54,11 @@ Under `blizzard/exemplars/python/exemplar/`.
 
 Under `blizzard/exemplars/web/`.
 
-| Exemplar                    | Copy it when you are…                                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------- |
-| `hub/src/app/permits/`      | Adding or extending an Angular feature                                                            |
-| `hub/src/app/cadence-edit/` | Editing a versioned record through a form, or putting a concept's read behind the domain boundary |
+| Exemplar                           | Copy it when you are…                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `hub/src/app/permits/`             | Adding or extending an Angular feature                                                                       |
+| `hub/src/app/cadence-edit/`        | Editing a versioned record through a form, or putting a concept's read behind the domain boundary            |
+| `hub/src/app/proposal-acceptance/` | Building a form: a draft judged by one schema, sent through a service, with refusals landing on their fields |
 
 ## Tests
 
