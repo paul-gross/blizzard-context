@@ -211,6 +211,13 @@ rule, in the keyed-lock form below. The lock a decision takes follows what its r
   the first insert. It applies the caller's terminal verdict — decided by the domain from chunk facts read under the
   same lock — and reads the newest epoch there, so a stop or restart cannot land between the guard and the write.
   `write_landing_rows` departs from that order, as **Exception** states.
+- **A concept no tenant owns.** The identity lock and the tenant-lifecycle lock are each a seeded row of the `hub_locks`
+  table, taken by `lock_hub` (`hub/store/locking.py`) and declared through `lock_set(hub=)` on a tenant unit or
+  `begin(hub=)` on the identity unit; the migration seeds each and `lock_hub` never inserts. A tenant unit opens on the
+  tenant row, then locks its declared chunk and keyed rows, then its declared `TENANT_LIFECYCLE` lock. An identity unit
+  takes `IDENTITY` first, then any declared `TENANT_LIFECYCLE`, before yielding control. Tenant creation uses that
+  identity unit and inserts the tenant row afterward. Each unit may name only `TENANT_LIFECYCLE` as an additional hub
+  lock. The hub-wide egress cursor's seeded `EGRESS_CURSOR` row departs from this form, as **Exception** states.
 
 **Detect.**
 
@@ -226,13 +233,14 @@ rule, in the keyed-lock form below. The lock a decision takes follows what its r
   `UPDATE` locks nothing on an empty table, so the exclusion never engages. Not mechanically checkable; judged at
   review. The remedy is the keyed-lock form under **Scope**.
 
-**Do.** A lock on a concept no tenant owns — the identity lock, the tenant-lifecycle lock — is a seeded row of the
-`hub_locks` table, taken by `lock_hub` (`hub/store/locking.py`) and declared through `lock_set(hub=)` on a tenant unit
-or `begin(hub=)` on the identity unit; the migration seeds it and `lock_hub` never inserts. A tenant unit opens on the
-tenant row, then locks its declared chunk and keyed rows, then its declared `TENANT_LIFECYCLE` lock. An identity unit
-takes `IDENTITY` first, then any declared `TENANT_LIFECYCLE`, before yielding control. Tenant creation uses that
-identity unit and inserts the tenant row afterward. Each unit may name only `TENANT_LIFECYCLE` as an additional hub
-lock.
+**Do.** `DependencyService.declare` (`hub/domain/chunk/dependencies.py`) declares its whole lock set before its first
+guard read, and every guard read takes the locked token:
+
+```python
+with self._transactions.begin() as unit:
+    transaction = unit.lock_set(chunks=[dependent.chunk_id, prerequisite_id], keys=[DEPENDENCIES_LOCK])
+    edges = self._dependencies.list_standing_edges(transaction=transaction)
+```
 
 **Don't.** A `threading.Lock` shared by `ClaimService` and `EditService`, serializing their read-then-write CAS in one
 process — correct until a second hub process starts against the same store, at which point the two locks stop

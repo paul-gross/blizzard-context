@@ -473,8 +473,8 @@ takes session settings from its pass and records both of the pass's revisions an
 preserves the original session's locating values and, when recorded, its transcript root. Already-running invocations
 retain their launch settings.
 
-**Why.** Reading individual keys mid-pass could combine revisions that never existed, while replacing a harness under a
-running invocation could change how its result is read. A failed build must not discard the last usable context.
+**Why.** Reading individual keys mid-pass could combine revisions that never existed, and a failed build must not
+discard the last usable context.
 
 **Scope.** Host and runner pass and session keys, including the host tick, trace sweeps, host tool children and all
 launch paths. Boot settings remain boot-owned. Explicit file values seed only missing entries after identity and store
@@ -486,15 +486,13 @@ record that failure in `in_force.failed`, since that view requires a revision an
 settings API also reads the store, so an ongoing store error can prevent the view itself from being returned.
 
 **Detect.** A pass re-reading live entries midway through its work, an object cached without its settings inputs, a
-failed rebuild replacing only part of the context, or a running invocation switched to a new harness set or transcript
-root.
+failed rebuild replacing only part of the context, or a running invocation switched to a new transcript root.
 
 **Do.** `RunnerSettingsReader` (`blizzard/src/blizzard/runner/settings_reader.py`) and `RunnerStepper`
 (`blizzard/src/blizzard/runner/loop_wiring.py`) resolve the snapshot at the pass boundary; `HostSettingsReader`'s
 snapshot carries the host's active workspace and subscription records and their revisions, read once per pass, and the
 host tick rebuilds the workspace registry and each moved subscription's sampler and renewer from it, with no restart;
-`SessionSettings` (`blizzard/src/blizzard/runner/harness/session_settings.py`) and `HarnessSets`
-(`blizzard/src/blizzard/runner/harness/harness_set.py`) retain invocation ownership.
+`SessionSettings` (`blizzard/src/blizzard/runner/harness/session_settings.py`) retains invocation ownership.
 
 **Don't.** Resolve the budget separately at every step of one tick, allowing an edit halfway through to change its
 remaining decisions.
@@ -507,17 +505,13 @@ remaining decisions.
 Stated so a reviewer need not re-derive them — each is a site the rules above name as a violation and that stands until
 the change that brings it under the rule:
 
-- Graphs are not records under the rule: a graph's mutable flag is a sparse `PATCH` that appends a policy fact, with no
-  `revision` or change row.
-- **A secret's retire and enable move no revision.** Each appends a change row at the secret's unchanged revision,
+- **A graph's flag patch moves no revision** (`bzh:configured-record`). `PATCH /graphs/{graph_id}`
+  (`blizzard/src/blizzard/hub/api/graphs.py`) appends a policy fact for a graph's mutable flag, with no `revision` or
+  change row.
+- **A secret's retire and enable move no revision** (`bzh:configured-record`). `record_lifecycle_fact`
+  (`blizzard/src/blizzard/hub/store/internal/secret_store.py`) appends a change row at the secret's unchanged revision,
   because its value is sealed against `(name, revision)` and a revision moved without resealing would leave the value
   undecryptable. A forge's, a credential's, a work source's, or a repository's retire and enable do move its revision.
-- **The work-item patch reads `null` as unchanged.** `WorkItemPatchRequest` declares `title` and `body` nullable, and
-  its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on either to unchanged rather
-  than refusing it.
-- **The runner settings route does not refuse a write from a retired runner.** `PATCH /api/settings`
-  (`blizzard/src/blizzard/runner/api/settings.py`) accepts a write for a retired runner, where it owes
-  `409 runner_retired`: the route holds no authoritative local hosted-runner fact to resolve retirement from. A refused
-  token, a missing or halted registry entry, and a hub outage are not evidence of retirement, and settings writes remain
-  hub-independent. Identity, settings, and history stay together until explicit archive cleanup, which does not itself
-  make the route retirement-aware.
+- **The work-item patch reads `null` as unchanged** (`bzh:configured-record`). `WorkItemPatchRequest` declares `title`
+  and `body` nullable, and its handler (`blizzard/src/blizzard/hub/api/work_sources.py`) maps an explicit `null` on
+  either to unchanged rather than refusing it.
