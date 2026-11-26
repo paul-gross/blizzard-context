@@ -53,7 +53,7 @@ stable-id scheme:
 - A new rule or routing change is a harness change: run the cold-spawn eval it is owed before pushing
   (`winter-canon:/evaluating-harness-changes.md`).
 
-## Pre-push expectations
+## Pre-release expectations
 
 Run this repo's own declared methods before pushing. [verifiability.md](./verifiability.md) owns each one's surface and
 pass criteria; what belongs here is only *which* a change owes:

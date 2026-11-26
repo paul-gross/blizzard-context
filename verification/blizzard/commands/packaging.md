@@ -24,7 +24,7 @@ staged-but-uncommitted regeneration passes and an unstaged one fails (`web:clien
 
 `mise run gate` is not the full master merge gate — it omits every upper tier, which the `pr` workflow runs as separate
 real gate jobs; `blizzard:gate-full` below reproduces the unconditional tiers, and `bzh:ci-job-local-command`
-([`../pre-push.md`](../pre-push.md)) maps each CI job to its local command. `mise run gate` runs
+([`../pre-release.md`](../pre-release.md)) maps each CI job to its local command. `mise run gate` runs
 `blizzard:process-ref-lint` as one of its own steps (`scripts/ci-gate.sh`), so a green `blizzard:gate` already covers
 it; the row below exists for running the rule on its own.
 

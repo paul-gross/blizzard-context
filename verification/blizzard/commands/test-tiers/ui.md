@@ -14,7 +14,7 @@ The UI spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md). Read
 package's `ui` projects: a real Chromium page against the board the test's hub serves out of
 `src/blizzard/static/{hub,runner}`. It depends on `web-build` because the projects drive the built bundle, never the
 sources (see
-[`../../pre-push.md`](../../pre-push.md#the-browser-tiers-run-the-built-bundle-bzhbrowser-tiers-run-the-built-bundle)).
+[`../../pre-release.md`](../../pre-release.md#the-browser-tiers-run-the-built-bundle-bzhbrowser-tiers-run-the-built-bundle)).
 Chromium comes from `npx playwright install chromium` in `tests/`.
 
 The projects are generated beside the service projects. `ui` rides the default hub profile's shared hub, and a

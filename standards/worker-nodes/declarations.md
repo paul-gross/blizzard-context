@@ -47,7 +47,7 @@ prompt to the kind-appropriate current verb, deprecated aliases included.
   worker cannot supply the wrong one. `--env <id>` is needed only when the chunk holds more than one environment: with
   one, the runner infers it; with several, the same repo has a worktree in each, so the verb is refused rather than
   guessed.
-- A node that converges work before delivery (the packaged `pre-push` and `resolve` nodes) instructs declaring every
+- A node that converges work before delivery (the packaged `pre-release` and `resolve` nodes) instructs declaring every
   repo it touched, every time — including a repo whose rebase changed nothing: delivery needs the submitted commit to
   establish that the base already holds it. An empty commit set completes with no code to land, so an omitted repo
   cannot be reconciled as part of the delivery.
