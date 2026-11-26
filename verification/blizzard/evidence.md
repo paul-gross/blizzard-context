@@ -113,9 +113,9 @@ default, lands with the change, and lies from its first read.
 ## Plan against the claims a change owes (`bzh:owed-claims-landed`)
 
 **Rule.** Plan against the claims a change newly owes, not only the claims it falsifies: a change that grows a surface a
-graph author meets names the domain statement that surface now owes and lands the statement in the same change. The home
-is the `blizzard-context:/domain/` file modeling the concept — the home `bzh:one-prose-home` assigns a domain concept —
-with two placements the domain tree's own shape decides:
+graph author meets, or changes execution policy an operator or a worker can observe, names the domain statement it now
+owes and lands the statement in the same change. The home is the `blizzard-context:/domain/` file modeling the concept —
+the home `bzh:one-prose-home` assigns a domain concept — with two placements the domain tree's own shape decides:
 
 - A key inside a contract the domain file has delegated to a standard is placed by `bzh:domain-no-technical-detail`'s
   Exception in [`../../domain/no-technical-detail.md`](../../domain/no-technical-detail.md), which owns the spoke that
@@ -132,14 +132,32 @@ is.
 
 **Why.** The domain hub concedes that code is current where the two disagree, so absent this rule a surface the code
 grows and the model never claims trips no check and is found only by a standing sweep, a year late and without the
-author's intent — the change that grew it is the one moment its author knows what it means.
+author's intent — the change that grew it is the one moment its author knows what it means. An operator setting a
+default and a worker handed changed instructions read the same model a graph author does, so behavior either one meets
+goes missing from it in exactly the same way.
 
-**Scope.** Binds the surfaces a graph author meets, each owing its own statement:
+**Scope.** Binds two families of surface, each surface owing its own statement.
+
+The surfaces a graph author meets:
 
 - A key an author writes — a node facet, a declaration field, a choice attribute the parser reads — owes the entry
   naming it and what it governs.
 - A default an omitted declaration resolves to owes the statement of what omission resolves to.
 - A rejection or warning an author sees at mint owes the statement that the outcome exists and what triggers it.
+
+Execution policy an operator or a worker can observe:
+
+- A default an operator's omitted setting resolves to owes the statement of what omission resolves to.
+- A refusal of an operator's configuration, or a halt it causes, owes the statement that it exists and what triggers it.
+- An admission decision — whether a runner is registered, offered work, or granted a claim, including an exception made
+  for compatibility — owes the statement of who is admitted and on what terms.
+- Instruction delivery — what a worker session is primed with, and how a changed or withdrawn instruction reaches it —
+  owes the statement of what the worker is told.
+
+What is owed is the consequence at the level of the model: what an operator, an author, or a worker can now expect.
+`bzh:domain-no-technical-detail` still bounds the statement, so the setting's meaning lands in `domain/` while its wire
+spelling and the service that enforces it do not. A parser field or an implementation branch that changes no such
+expectation owes nothing, and neither does a refactor that moves behavior without changing it.
 
 **Detect.** A `blizzard` hunk that reads a new literal key an author writes, resolves an omitted value against a
 configured or constant default, or raises a parse rejection or appends a validator error or warning at mint, while the
@@ -148,6 +166,12 @@ change. The common tells sit under `blizzard/src/blizzard/hub/domain/` and the r
 (`runner/lifecycle/`, `runner/leases/`, …), but the trigger is the author-facing surface wherever it is parsed or
 resolved, not those trees. The question to ask of the hunk: could a graph author, reading only
 `blizzard-context:/domain/` and the standards it delegates to, predict what it does?
+
+The execution-policy signature is the same hunk on the operator's side: one that resolves an operator's omitted setting,
+records a configuration error or halts a runner on one, adds or loosens a condition on registering a runner, offering it
+work, or granting its claim, or changes what a spawn or a resumed session is sent — while the home states nothing of it.
+The question there: could an operator configuring a host, or a worker reading what it was sent, predict the outcome from
+`blizzard-context:/domain/` alone?
 
 A second signature, once the statement itself lands: the branch, default, or warning it names carries no gating-tier
 assertion that would fail were the branch deleted or the warning's trigger inverted — `bzh:mutation-review-selection`'s
@@ -167,6 +191,12 @@ owes: an entry reaching no terminal → blizzard-context:/domain/graphs/edges.md
 owes: hub-node key `poll_jitter:` omitted → blizzard-context:/standards/hub-nodes/outcome-protocol.md, the delegate
       spoke that states the other polling defaults; nodes.md gains no hunk; pinned by a case in
       tests/unit/hub/test_command_node.py asserting the delegate default applies
+owes: clearing a workspace's prompt leaves it no standing prompt → blizzard-context:/domain/execution/envelope.md's
+      standing instructions; pinned by
+      tests/component/runner/api/test_host_records.py::test_the_prompt_routes_write_the_workspace_record
+owes: a runner registering no bindings is admitted through whichever workspace it claims with →
+      blizzard-context:/domain/execution/hosts.md's bindings; pinned by
+      tests/component/hub/api/test_claim_binding_recheck.py::test_a_legacy_registration_is_judged_by_its_served_declaration_alone
 ```
 
 **Don't.** A `blizzard` commit that parses, stores, serves, and tests a new node key, with this message and no companion
@@ -180,6 +210,14 @@ The nodes.md facet entry can follow once the runner side settles what omission m
 
 An author cannot learn the key exists, the omission already resolves to something, and absent this rule nothing at
 landing time would report that either should be stated.
+
+Nor an operator-side change with no companion `blizzard-context` change under `domain/execution/`:
+
+```text
+feat(runner): halt a runner whose host config omits `claim_backoff:`
+
+Not graph authoring, so no domain hunk.
+```
 
 **See also.**
 

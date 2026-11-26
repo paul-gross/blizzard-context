@@ -82,7 +82,8 @@ runner claiming it already knows the one workspace its work will happen in; the 
 - **One count of agents, shared.** A runner has a single count of agents, shared by every one of its bindings; a binding
   fixes only the workspace its project runs in. Any free agent works whichever project the hub's ready queue ranks next
   among those the runner can take, so the queue's order alone decides which project an agent serves and a full project
-  never stands in front of another's work.
+  never stands in front of another's work. A runner with bindings states the count itself: one stating none halts before
+  it registers. A runner serving nothing needs no count.
 - **Agents are not environments.** The count is separate from how many environments a workspace holds: an agent whose
   next project's workspace has no free environment claims only as one frees, and the runner looks to the projects whose
   workspaces have one.

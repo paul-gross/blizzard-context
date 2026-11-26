@@ -11,7 +11,8 @@ throttle declines rather than refuses, and lifts of itself once its reading chan
 — the floor, then each the operator configures:
 
 - The subscription floor.
-- A pace against a window's elapsed share.
+- A pace against a window's elapsed share: the window the operator names, or with none named the longest one the sample
+  reports.
 - A utilization line.
 - A budget of spend over a trailing window against a dollar ceiling.
 - A schedule.

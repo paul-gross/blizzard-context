@@ -1,8 +1,9 @@
 # What a change must land alongside (`bzh:matrix-companion-changes`)
 
 A surface can land on one side of a boundary and go silently unserved on the other. The rules below name what has to be
-in the same commit for that not to happen. Across the repo boundary, the domain statement an author-facing surface owes
-is the companion that `bzh:owed-claims-landed` in [./evidence.md](./evidence.md) requires of a `blizzard` change.
+in the same commit for that not to happen. Across the repo boundary, the domain statement an author-facing surface or an
+observable execution policy owes is the companion that `bzh:owed-claims-landed` in [./evidence.md](./evidence.md)
+requires of a `blizzard` change.
 
 ## A wire change extends the mock (`bzh:wire-change-extends-mock`)
 
