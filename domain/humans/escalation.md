@@ -137,9 +137,10 @@ session predating that record gets a bare command rather than a guessed one.
 - **Forge credential refused** — the hub writes the escalation, so it carries neither the wrapped verb nor the raw
   command; its recovery is [§A refused credential](#a-refused-credential)'s.
 
-- **Escalate choice taken** — a worker's own live transition or a human gate's resolved choice; the hub writes the
-  escalation, so it carries operator guidance in place of the raw command, and the session behind it is real and
-  reachable through the ordinary takeover check. No transition is recorded, and a requeue re-runs the node.
+- **Escalate choice taken** — the hub writes the escalation, so it carries operator guidance in place of the raw
+  command. Reached through a worker's own live transition, the session behind it is real and reachable through the
+  ordinary takeover check; reached through a gate's resolved choice, no such session guarantee holds
+  ([./gates.md](./gates.md)). No transition is recorded, and a requeue re-runs the node.
 
 ## Whether a takeover can enter
 
