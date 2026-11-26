@@ -204,7 +204,8 @@ caused it.
 tenant (`bzh:pass-isolates-tenants`). A hub-wide job that is not a sweep — boot turn recovery, the flow driver's tick,
 key coverage, key rotation — loops over open tenants and acts through each one's stores. Trace export and fact egress
 write nothing into any tenant's store; their rows carry their tenant's id instead. A one-tenant pass is the same pass
-narrowed to one tenant: it reads the same hub-scoped probe and corpus and acts only in that tenant.
+narrowed to one tenant: it reads the same hub-scoped probe, its corpus read narrowed to that tenant, and acts only in
+that tenant.
 
 **Detect.** The read half: the ast-grep rule `bzh:sweep-acts-in-row-tenant`
 (`contracts/ast-grep/rules/sweep-acts-in-row-tenant.yml`, run by `blizzard:structural-gate`) refuses a raw SQLAlchemy
@@ -236,9 +237,9 @@ which one tenant's broken source or burst of work changes what the pass does for
 teardown. Trace export and fact egress are outside it: each advances one cursor in fact order, which is the order their
 sink receives, so a fact one of them cannot place holds its cursor for every tenant. Boot loops and key rotation fail
 fast by design and are not periodic passes. The probe read stays hub-wide and one statement
-(`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due. A one-tenant pass reads and
-writes only its own tenant's convergence entry, never rebinding or pruning state across tenants, and leaves the close
-drain's and the cadence sweep's rotations unmoved.
+(`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due, and narrows them to the due
+tenants when some are. A one-tenant pass reads and writes only its own tenant's convergence entry, never rebinding or
+pruning state across tenants, and leaves the close drain's and the cadence sweep's rotations unmoved.
 
 **Detect.** The poisoned-tenant fixture, `tests/support/pass_isolation.py`, is used by a `blizzard:unit-test`: it runs a
 pass twice on the virtual clock, once with a tenant whose units raise, report unconverged, or hold a burst of due work,
