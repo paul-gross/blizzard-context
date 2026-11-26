@@ -137,8 +137,8 @@ projects declare a component class of the same name where one app consumes both.
 **Why.** Apps consume `fleet` from source via a tsconfig path, so a selector or class-name collision stays invisible
 until the first page composes both.
 
-**Detect.** A selector outside its project's configured prefix; a component class name declared in both `fleet`'s
-`public-api.ts` surface and the consuming app.
+**Detect.** A selector outside its project's configured prefix; a component class name declared in both `fleet`'s entry
+surface (`fleet/src/entries/`) and the consuming app.
 
 **Do.** `runner/eslint.config.js` sets `prefix: "app"` on both the `@angular-eslint/component-selector` and
 `@angular-eslint/directive-selector` rules, and `runner/src/app/board/chunk-dock/chunk-detail.ts` declares

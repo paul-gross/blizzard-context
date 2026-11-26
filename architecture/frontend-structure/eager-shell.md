@@ -1,15 +1,17 @@
 # The eager shell
 
-What an app's always-loaded shell may import, how chrome it needs only on interaction is loaded, and how the project
-lens the shell derives reaches a view. A spoke of the [frontend structure hub](../frontend-structure.md); each rule
-follows the slot skeleton owned by `winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
+What an app's always-loaded shell may import, the entry points every consumer reads `fleet` through, how chrome the
+shell needs only on interaction is loaded, and how the project lens the shell derives reaches a view. A spoke of the
+[frontend structure hub](../frontend-structure.md); each rule follows the slot skeleton owned by
+`winter-canon:/rule-shape.md` (`canon:rule-shape`), rule-per-section.
 
 ## Eager shell code imports `fleet/shell` (`bzh:frontend-eager-shell-entry`)
 
-**Rule.** A module statically reachable from an app's `main.ts` imports the `fleet` library only through an entry point;
-a `fleet` module on that eager path imports a sibling by file (`../../kit/kit-button`), never through a sub-barrel
-(`../../kit`); and chrome the shell needs only on interaction — the profile menu and the mobile titlebar, with the CDK
-menu stack behind them — is `@defer`-loaded.
+**Rule.** A module statically reachable from an app's `main.ts` imports the `fleet` library only through `fleet/shell`
+and, for the runner, `fleet/runner-shell`; a `fleet` module on that eager path imports a sibling by file
+(`../../kit/kit-button`), as every `fleet` module does (`bzh:frontend-weight-class-entries` below); and chrome the shell
+needs only on interaction — the profile menu and the mobile titlebar, with the CDK menu stack behind them — is
+`@defer`-loaded.
 
 - **The hub.** Its `shell/` folder (the app root, its config and route table, and the nav chrome the root mounts outside
   a `@defer` block) and the hub modules they reach (`core/auth/` — among them the no-access screen and the tenant picker
@@ -26,16 +28,15 @@ menu stack behind them — is `@defer`-loaded.
   every module a re-export names, so the same exports in `shell-api.ts` would grow the hub's initial chunk.
 
 **Why.** esbuild keeps every decorated module a barrel on the eager path names, whether or not the shell reads its
-export, so one `from 'fleet'` in the app root ships every feature area before the board renders. A lazy route page keeps
-importing `fleet`: a barrel behind a `loadComponent` boundary costs the initial chunk nothing.
+export, so one weight-class entry in the app root ships all of that entry's members before the board renders.
 
 **Scope.** Binds each app's eager shell and the `fleet` modules `shell-api.ts` and `runner-shell-api.ts` reach; a lazy
 route page and the contents of a `@defer` block are outside it. `bzh:generated-client` illustrates a shell import.
 
-**Detect.** `from 'fleet'` in either app's `main.ts`, `shell/app.ts`, `shell/app.config.ts`, `shell/app.routes.ts`, a
-nav component the app root mounts outside a `@defer` block, or a `core/` module they reach; a `from '../<feature>'`
-sub-barrel import in a module either entry file reaches; an export added to an entry file that only a lazy page uses; an
-export only the runner reads added to `shell-api.ts`. Each surfaces as a forbidden module in the initial chunk under
+**Detect.** A `fleet/<entry>` import other than `fleet/shell` or `fleet/runner-shell` in either app's `main.ts`,
+`shell/app.ts`, `shell/app.config.ts`, `shell/app.routes.ts`, a nav component the app root mounts outside a `@defer`
+block, or a `core/` module they reach; an export added to an entry file that only a lazy page uses; an export only the
+runner reads added to `shell-api.ts`. Each surfaces as a forbidden module in the initial chunk under
 `web:bundle-composition` (`npm run bundle-check`, [`../../verification/blizzard.md`](../../verification/blizzard.md)),
 which names the module and the file that imports it; the `initial` budget in `angular.json` is the size backstop for
 growth the forbidden list does not name.
@@ -50,14 +51,56 @@ imports `AppShell` from `'fleet/shell'` and `injectMeQuery` from `'../core/auth/
 `hubClient`, `FetchEventSource`, and `EVENT_SOURCE_FACTORY` from it, so the one tenant context names the tenant on the
 generated client's requests and on the live stream's own `fetch`.
 
-**Don't.** `import { AppShell } from 'fleet'` in `shell/app.ts` — one line that puts the chunk-detail and transcripts
-barrels back into the initial chunk; an eager import of the hub's `garden/` or `graphs/` folder, which brings the whole
-feature and dagre with it; a re-export shim that still names the menu components eagerly, which keeps the CDK menu stack
-eager even though nothing renders it until a click.
+**Don't.** `import { AppShell } from 'fleet/chrome'` in `shell/app.ts` — one line that puts every part that entry names
+into the initial chunk; an eager import of the hub's `garden/` or `graphs/` folder, which brings the whole feature and
+dagre with it; a re-export shim that still names the menu components eagerly, which keeps the CDK menu stack eager even
+though nothing renders it until a click.
 
-**See also.** `bzh:frontend-disjoint-diffs` — the sub-barrels this rule routes the eager path around still own each
-feature's public surface for every lazy consumer. `bzh:frontend-project-lens-seam` below — the app scope reaches `fleet`
-through the same entry point's seams.
+**See also.** `bzh:frontend-weight-class-entries` below — the entries every consumer off the eager path imports.
+`bzh:frontend-project-lens-seam` below — the app scope reaches `fleet` through the same entry point's seams.
+
+## `fleet` is imported through weight-class entry points (`bzh:frontend-weight-class-entries`)
+
+**Rule.** Consume `fleet` only through a `fleet/<entry>` path, never a root and never a relative path into the library,
+and group an entry's members by the heavy dependencies they reach, so importing an entry costs about what using it
+costs.
+
+- **An entry is a file** under `fleet/src/entries/`, named for its specifier, holding a file-by-file list of named
+  re-exports, and declared once as a `paths` entry in `web/tsconfig.json`. `fleet/shell` and `fleet/runner-shell`
+  re-export eager subsets of the entries' symbols from files beside that folder.
+- **An exported symbol belongs to one entry.** Members of an entry share their footprint in `@angular/cdk`,
+  `@angular/aria`, and `@angular/forms`: a heavy part joins a light entry's neighbor, such as `fleet/kit/<family>`,
+  `fleet/viewport/menu`, or `fleet/chunk-page/view`, and `fleet/kit` reaches none of the three packages. The footprint,
+  not the folder, decides the boundary.
+- **Inside `fleet/src/lib`, a module imports a sibling area by file**, never through an entry.
+- **`public-api.ts` is the library build's aggregate** (`ng-package.json`'s entry file), one `export *` line per entry.
+  Nothing imports it, and no `fleet` path names it.
+- **`lib/api/` keeps its generated barrels**, whose weight is the generated files alone.
+
+**Why.** esbuild splits code per file and keeps every decorated module a barrel names, so a lazy page importing one
+symbol from a barrel downloads the barrel's whole surface. A single entry per symbol would cost less still but leaves no
+surface to name; a weight class keeps a short specifier and bounds what a page pays for it.
+
+**Detect.**
+
+- `'fleet'` named by an import, a re-export, a dynamic `import()`, or an `import('fleet')` type: `web:lint`'s
+  `fleet-root/no-root-import` rule, in every project and exemplar.
+- `fleet/kit`'s closure reaching `@angular/cdk`, `@angular/aria`, or `@angular/forms`, or the hub build holding no
+  `fleet/kit` entry: `web:bundle-composition`.
+- A lazy entry's closure reaching `fleet/src/public-api.ts`: `web:bundle-composition`, which also prints each lazy
+  entry's closure and each entry file's, the evidence for whether an entry's members still share a footprint
+  ([`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)).
+- A heavy member in a light entry other than `fleet/kit`, or a `fleet/*` import from `fleet/src/lib/`: the first is a
+  review question on the report, the second `web:structural-gate`'s package-layers sweep.
+
+**Do.** A new menu-backed control in `fleet/src/lib/kit/` is exported from `entries/kit/menu.ts`; a lazy page imports
+`KitButton` from `'fleet/kit'` and `KitMenu` from `'fleet/kit/menu'`.
+
+**Don't.** A menu-backed part added to `entries/kit.ts` so that one import line serves it — every page that renders a
+button then downloads the CDK menu stack.
+
+**See also.** `bzh:frontend-disjoint-diffs` ([`./disjoint-diffs.md`](./disjoint-diffs.md)) — an entry is a feature's one
+shared line. `bzh:frontend-eager-shell-entry` above — the eager path's own two entries.
 
 ## A view follows the project lens through its `fleet/shell` seams (`bzh:frontend-project-lens-seam`)
 

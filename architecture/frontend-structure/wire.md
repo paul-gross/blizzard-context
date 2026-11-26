@@ -84,7 +84,7 @@ the frontend holds, are review questions.
 
 **Don't.**
 
-- A component or `*.model.ts` importing `CadenceView` from `fleet`, directly or through a barrel.
+- A component or `*.model.ts` importing `CadenceView` from `fleet/hub-api`, directly or through a barrel.
 - `const PAUSABLE = new Set(['ready', 'running']); if (PAUSABLE.has(detail.status))` — a judgment the wire carries,
   re-derived from a hand-written status list.
 - A `*.domain.ts` importing `signal` from `@angular/core`.

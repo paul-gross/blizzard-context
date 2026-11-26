@@ -16,14 +16,21 @@ gate, and the bundle-composition check — under the Angular workspace hub, [`..
 files at an 800-line ceiling instead, a runaway guard rather than design pressure). No architecture doc declares the
 number itself. An oversized component can signal merged container/presentational concerns
 [`../../../../architecture/frontend-structure/containers.md`](../../../../architecture/frontend-structure/containers.md)
-(`bzh:frontend-container-presentational`). Also carries a `no-restricted-syntax` rule over `ExportAllDeclaration` in
-`projects/*/src/lib/*/index.ts` —
+(`bzh:frontend-container-presentational`). Also carries a `no-restricted-syntax` rule over a bare `export *` in
+`fleet/src/entries/**`, `shell-api.ts`, and `runner-shell-api.ts` —
 [`../../../../architecture/frontend-structure/disjoint-diffs.md`](../../../../architecture/frontend-structure/disjoint-diffs.md)
-`bzh:frontend-disjoint-diffs`'s ban on a sub-barrel `export *`, scoped so fleet's own `public-api.ts` stays legal. The
-same rule bans a zero-arg `new Date()` and `Date.now()` in non-spec `projects/**/*.ts`
+`bzh:frontend-disjoint-diffs`'s ban, scoped so the `hubApi`/`runnerApi` namespace re-exports and `public-api.ts` stay
+legal. The same rule bans a zero-arg `new Date()` and `Date.now()` in non-spec `projects/**/*.ts`
 ([`../../../../standards/frontend.md`](../../../../standards/frontend.md) `bzh:frontend-formatters`), exempting only
-`fleet/lib/core/now-signal/`; the `lib/**/index.ts` block restates both selector sets, since flat config replaces a
-rule's options per matching block.
+`fleet/lib/core/now-signal/`; the entry-file block restates both selector sets, since flat config replaces a rule's
+options per matching block.
+
+The `fleet-root/no-root-import` rule (`web/eslint.fleet-root.js`) refuses `'fleet'` in an import or re-export, a dynamic
+`import()`, and an `import('fleet')` type
+([`../../../../architecture/frontend-structure/eager-shell.md`](../../../../architecture/frontend-structure/eager-shell.md)
+`bzh:frontend-weight-class-entries`). It is the built-in `no-restricted-syntax` registered under its own name, so it
+replaces no other block's options. `web/scripts/fleet-root-lint-probe.js` checks that each form is refused and an entry
+import passes, under the hub, runner, and fleet configs, when run with Node from `web/`.
 
 The HTML template `no-restricted-syntax` selector rejects native `<button>`, `<select>`, and `<input>` outside
 `fleet/src/lib/kit/` (`bzh:frontend-kit-floor`), including a control with fresh CSS classes. A genuinely distinct native
@@ -108,38 +115,39 @@ with its reason in `KIT_FLOOR_EXEMPT_SITES`, the `REAL_TIMER_EXEMPT_FILES` idiom
 
 The same script also sweeps the kit's stories
 ([`../../../../architecture/frontend-structure/kit.md`](../../../../architecture/frontend-structure/kit.md)
-`bzh:frontend-kit-stories`): every class `fleet/src/lib/kit/index.ts` exports as a `@Component` or `@Directive` needs a
-`*.stories.ts` in the kit whose default-exported meta names that class as `component`. The sweep parses with TypeScript
-but uses its own limited resolver: named relative exports and story imports, including aliases and named re-export
-chains, resolved to immediate `.ts` files in the kit directory, not general compiler symbol resolution. It reads
-immediate `.ts` files only, excluding specs, and requires named exports from `index.ts`. A part no meta names is
-reported as its class and file. A part that genuinely cannot be shown alone is named with its reason in
-`KIT_STORIES_EXEMPT`, the `KIT_FLOOR_EXEMPT_SITES` idiom, empty today; an entry naming a class the kit no longer
-exports, or one a meta now names, fails as stale. Its fixture self-test, `assertKitStoriesDetectorWorks`, plants a kit
-with a storied component, a storied directive, an unstoried component, and a stale exemption, and runs alongside
+`bzh:frontend-kit-stories`): every class a kit entry (`fleet/src/entries/kit.ts` and `entries/kit/*.ts`) exports as a
+`@Component` or `@Directive` needs a `*.stories.ts` in the kit whose default-exported meta names that class as
+`component`. The sweep parses with TypeScript but uses its own limited resolver: named relative exports and story
+imports, including aliases and named re-export chains, resolved to immediate `.ts` files in the kit directory, not
+general compiler symbol resolution. It reads immediate `.ts` files of the kit directory only, excluding specs, and
+requires named exports from each entry; it fails when a `fleet/kit` path in `tsconfig.json` has no entry file, or no
+entry names a part. A part no meta names is reported as its class and file. A part that genuinely cannot be shown alone
+is named with its reason in `KIT_STORIES_EXEMPT`, the `KIT_FLOOR_EXEMPT_SITES` idiom, empty today; an entry naming a
+class the kit no longer exports, or one a meta now names, fails as stale. Its fixture self-test,
+`assertKitStoriesDetectorWorks`, plants a kit across two entries with a storied component, a storied directive, an
+unstoried component, a stale exemption, a missing entry, and a kit with no part, and runs alongside
 `assertKitFloorDetectorWorks`.
 
 The same script also runs the placement sweep (`web/scripts/placement-sweep.js`, over the TypeScript compiler API;
 [`../../../../architecture/frontend-structure/placement.md`](../../../../architecture/frontend-structure/placement.md)
 `bzh:frontend-placement`, whose Rule and Scope own which units of `fleet/src/lib/` it binds and which are exempt), with
-reach resolved to the symbol through the `fleet` and `fleet/shell` barrels and through `fleet`-internal imports. A
-violation names the unit and the single app that reaches it, or no app when the unit is dead, or the `fleet` file that
-imports an app. An exempt unit is named with its reason in `PLACEMENT_EXEMPT_UNITS`, the `REAL_TIMER_EXEMPT_FILES`
-idiom. A story, like a spec, ships in no bundle, so its imports are not reach. Its self-test,
-`assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a both-app unit and a
-hub story whose `fleet` import adds no hub reach; must-catch an unreached `core/` child and an unreached top-level
-`forms` unit — runs first.
+reach resolved to the symbol through the `fleet/*` entries `tsconfig.json` declares (the program reads its `paths`) and
+through `fleet`-internal imports. A violation names the unit and the single app that reaches it, or no app when the unit
+is dead, or the `fleet` file that imports an app. An exempt unit is named with its reason in `PLACEMENT_EXEMPT_UNITS`,
+the `REAL_TIMER_EXEMPT_FILES` idiom. A story, like a spec, ships in no bundle, so its imports are not reach. Its
+self-test, `assertPlacementDetectorWorks` — must-catch a single-app unit and a `fleet`→app import, must-pass a both-app
+unit and a hub story whose `fleet/*` import adds no hub reach; must-catch an unreached `core/` child and an unreached
+top-level `forms` unit — runs first.
 
 The same script also runs the disjoint-diffs sweep (`web/scripts/disjoint-diffs-sweep.js`, reusing the placement sweep's
 compiler-API program;
 [`../../../../architecture/frontend-structure/disjoint-diffs.md`](../../../../architecture/frontend-structure/disjoint-diffs.md)
-`bzh:frontend-disjoint-diffs`): every export of a `fleet` sub-barrel — each `fleet/src/lib/**/index.ts` outside
-`lib/api/` — needs a consumer outside that barrel's own directory, judged per symbol through any alias chain, where a
-re-export is not consumption, a spec counts as a consumer, and a namespace or dynamic `import()` consumes a module's
-every export; and each `public-api.ts` statement re-exports only from a sub-barrel. The generated client (`lib/api/`)
-and `core/query-keys` (the plane-root chunk and transcript key helpers both daemons read) are allowed direct sources in
-`ROOT_DIRECT_EXPORT_ALLOWED`, each with its reason; `shell-api.ts` is not read. A violation prints under
-`fleet barrel exports outside the disjoint-diffs rule` with file, line, and symbol or source. Its self-test,
+`bzh:frontend-disjoint-diffs`): every export of a `fleet` entry — each file under `fleet/src/entries/` — needs a
+consumer outside the placement unit that declares it, judged per symbol through any alias chain, where a re-export is
+not consumption, a spec counts as a consumer, an `import()` type consumes its name, and a namespace or dynamic
+`import()` consumes a module's every export; a name the generated `lib/api/` declares is not judged. Each
+`public-api.ts` statement re-exports only an entry; `shell-api.ts` is not read. A violation prints under
+`fleet entry exports outside the disjoint-diffs rule` with file, line, and symbol or source. Its self-test,
 `assertDisjointDiffsDetectorWorks`, runs first.
 
 The same script also runs the domain-boundary sweeps (`web/scripts/domain-boundary-sweep.js`;
@@ -283,16 +291,27 @@ inventory is absent.
 
 `npm run bundle-check` in `web/` (`web/scripts/bundle-check.js`) — the tooled half of
 [`../../../../architecture/frontend-structure/eager-shell.md`](../../../../architecture/frontend-structure/eager-shell.md)
-`bzh:frontend-eager-shell-entry`. Builds each app — the hub, then the runner — with esbuild's own metafile
-(`ng build <app> --stats-json`, into a temp directory) and resolves its initial chunk from it twice. At output
-granularity — the output whose entry point is `main.ts`, plus every output it reaches over a static `import-statement`
-edge, a `dynamic-import` edge starting a lazy chunk instead — it prints the per-area byte breakdown (framework, CDK,
-each fleet area) that a bundle-size change records. At source-file granularity, over the same metafile's module graph,
-it enforces the gate: a source file reachable eagerly that matches a forbidden pattern fails the run, named together
-with the file that imports it. Both apps forbid files throughout the fleet `chunk-detail/`, `awaiting-human/`, and
-`transcripts/` directories and `@angular/cdk`'s `menu`/`overlay`/`listbox` bundles; the hub also forbids its `garden/`,
-`graphs/`, and `board/chunk-dock/` folders and `@dagrejs/*`. Its own fixture self-test,
-`assertBundleCompositionDetectorWorks` — one eager import matching a forbidden pattern, one eager import that does not,
-and a forbidden pattern reached only through a dynamic import — runs before the walk is trusted
-(`bzh:case-pins-its-own-name`). The `initial` budget in `angular.json` is the size backstop each app's build enforces.
-Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside `web:structural-gate`.
+`bzh:frontend-eager-shell-entry` and `bzh:frontend-weight-class-entries`. Builds each app — the hub, then the runner —
+with esbuild's own metafile (`ng build <app> --stats-json`, into a temp directory) and resolves its initial chunk from
+it twice. At output granularity — the output whose entry point is `main.ts`, plus every output it reaches over a static
+`import-statement` edge, a `dynamic-import` edge starting a lazy chunk instead — it prints the per-area byte breakdown
+(framework, CDK, each fleet area) that a bundle-size change records. At source-file granularity, over the same
+metafile's module graph, it enforces the gate: a source file reachable eagerly that matches a forbidden pattern fails
+the run, named together with the file that imports it. Both apps forbid files throughout the fleet `chunk-detail/`,
+`awaiting-human/`, and `transcripts/` directories and `@angular/cdk`'s `menu`/`overlay`/`listbox` bundles; the hub also
+forbids its `garden/`, `graphs/`, and `board/chunk-dock/` folders and `@dagrejs/*`. It also fails when the source
+closure of the light `fleet/kit` entry (`fleet/src/entries/kit.ts`) reaches `@angular/cdk`, `@angular/aria`, or
+`@angular/forms`, skipping type-only edges, naming the file that imports the heavy module — and when the hub build holds
+no such entry — and when any lazy entry's source closure reaches `fleet/src/public-api.ts`.
+
+It prints, per app, every dynamic-import target's static output closure beyond the initial chunk (routes and `@defer`
+blocks alike) with the `fleet` areas and heavy packages it reaches, their median, and each `fleet` entry file's bundled
+closure beyond the initial chunk (`web/scripts/bundle-closure.js`).
+
+Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one eager import matching a forbidden pattern, one
+eager import that does not, and a forbidden pattern reached only through a dynamic import; each heavy package caught in
+the light kit, a type-only, lazy, or core import passing, and an absent entry failing where required; a lazy entry
+reaching the root caught and one reaching only an entry passing — runs before the walk is trusted
+(`bzh:case-pins-its-own-name`), as does `assertLazyClosureReportWorks` over the closure walk and median. The `initial`
+budget in `angular.json` is the size backstop each app's build enforces. Wired into `gate.yml`'s `frontend` job and
+`scripts/ci-gate.sh` beside `web:structural-gate`.
