@@ -76,18 +76,18 @@ tenant's configured record; their global tables and access are governed by `bzh:
 **Rule.** A `hub/store/internal/` adapter for a tenant-owned table holds `ScopedConnections` and nothing wider, and
 builds every statement through its `select`, `insert`, `update`, `delete`, and `scope_join` builders, which apply the
 scope's tenant to every tenant-owned table they name. The tenant is a property of the repository instance a caller was
-handed — opened per tenant through `HubCore.open(scope)` — never an argument a method takes.
+handed — resolved from that tenant's container scope — never an argument a method takes.
 
 **Why.** Domain code that never writes the filter by hand cannot forget it, and a controller holding a read repository
 cannot widen the scope it was given (`bzh:controller-read-only`). Repository Protocols keep their shape
 (`bzh:repository-split`), because the tenant travels on the instance rather than through the signature.
 
 **Scope.** The scope is the tenant and nothing narrower: a project filter is an ordinary argument of the read that
-applies it, never part of the scope. Services are built from one tenant's `TenantStores`, never from the unscoped core
-(`bzh:dependency-injection`). A write on a closed tenant's scope is refused inside its own transaction, on SQLite and
-Postgres alike, so a writer that opened its stores before the close cannot write behind the drain: it locks the tenant's
-row, then reads the deletion fact in a statement of its own, so a write that waited on a concurrent close sees that
-close's commit.
+applies it, never part of the scope. Services are resolved from one tenant's container scope, never from the unscoped
+process (`bzh:dependency-injection`). A write on a closed tenant's scope is refused inside its own transaction, on
+SQLite and Postgres alike, so a writer that opened its stores before the close cannot write behind the drain: it locks
+the tenant's row, then reads the deletion fact in a statement of its own, so a write that waited on a concurrent close
+sees that close's commit.
 
 For the opener and locked-scope obligations of a domain unit of work, see `bzh:short-locked-unit`
 ([../repository-access.md](../repository-access.md)).
@@ -110,7 +110,7 @@ switch off: a test outside `tests/unit/hub/store/test_tenant_guard.py` that borr
 test processes and spawned daemons install the guard.
 
 **Do.** An adapter's listing reads `conn.select(s.chunks).where(...)`, and the domain asks for `stores.chunks.list(...)`
-on the `TenantStores` its request resolved — neither line names a tenant.
+on the store its request resolved from the tenant's scope — neither line names a tenant.
 
 **Don't.** `list_chunks(tenant_id, ...)` on a read repository — every caller now supplies the boundary, and one
 supplying the wrong value reads another tenant's chunks.
@@ -148,12 +148,11 @@ tenants loops over open tenants and writes through each one's own stores.
 
 **Detect.** The ast-grep rule `bzh:hub-scoped-reads-confined` (`contracts/ast-grep/rules/hub-scoped-reads-confined.yml`,
 run by `blizzard:structural-gate`) refuses any naming of the seam — `HubScopedReads`, any `hub_scoped_*` module, helper,
-or factory, or the `HubCore` field — whether as an import, an annotation, an attribute, or a string spelled for
-`importlib` or `getattr`; its `ignores` are the allowlist. The member groups live in
-`hub/store/internal/hub_scoped_<kind>.py` and are taken whole, through `build_hub_scoped_reads`:
-`tests/guards/test_layering.py` fails an import of one member group anywhere outside those modules. By eye: a member
-added for a read a tenant-scoped repository could serve; a member that writes; an allowlist entry added for a route
-under a tenant's own family.
+or factory — whether as an import, an annotation, an attribute, or a string spelled for `importlib` or `getattr`; its
+`ignores` are the allowlist. The member groups live in `hub/store/internal/hub_scoped_<kind>.py` and are taken whole,
+through `build_hub_scoped_reads`: `tests/guards/test_layering.py` fails an import of one member group anywhere outside
+those modules. By eye: a member added for a read a tenant-scoped repository could serve; a member that writes; an
+allowlist entry added for a route under a tenant's own family.
 
 **Do.** A runner's or a host's bearer token resolves through a `HubScopedReads` member to its registration and that
 registration's tenant; the request then opens that tenant's stores and does everything else through them.
