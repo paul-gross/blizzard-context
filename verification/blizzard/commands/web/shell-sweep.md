@@ -283,10 +283,10 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
 - `gardening-proposal-pass-dialog.shell-sweep.spec.ts` covers the Pass dialog's own view, mounted directly with plain
   inputs: at 390px and 1024px the footer's Cancel/Pass buttons must genuinely sit side by side, with the submit button's
   right edge inside the dialog panel.
-- `gardening-proposal-accept-dialog.shell-sweep.spec.ts` covers the Accept dialog's own view, mounted directly with
-  plain inputs: at 390px and 1024px the mint/decline radiogroup must genuinely stack its two options, the footer's
-  Cancel/Accept buttons must sit side by side, with the submit button's right edge inside the dialog panel. At 1024px
-  the decline reason field must render below the options once decline is chosen.
+- `gardening-proposal-accept-dialog.shell-sweep.spec.ts` covers the Accept dialog's own view, mounted over a real
+  `form()`: at 320px, 390px and 1024px, in both mint and decline modes, the mint/decline option group must genuinely
+  stack its two options and the reason field must render below them. The `KitForm` action row's Cancel/Accept buttons
+  must sit side by side without overlapping, with both edges inside the dialog panel.
 - `gardening-findings-triage.shell-sweep.spec.ts` covers the findings triage list (`FleetFindingList`), mounted directly
   with plain inputs. At 1400px, 390px, and 320px the list itself must carry no horizontal overflow. Separately, a
   `gone`-flagged row must carry a genuinely different computed `background-color` from a plain row, while its
