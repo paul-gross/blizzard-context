@@ -74,10 +74,12 @@ bounds an ordinary lineage — declaring both chooses that deliberately, and nei
 Rotation bounds make a lineage finite: a session continues while every measurable declared bound is at or under its
 threshold; strictly over one, the next member starts a new session in the same pool. That new session is a fresh mint,
 its owner sourced as [Harness set](#harness-set) and [Model preference](#model-preference) state, never carried from the
-session it replaces. Bounds cover context size, transcript size, and harness invocations — the last counting spawns,
-resumes, and judgements, so a node-step spends two or three. An unmeasurable bound is not a breach; a missing
-measurement leaves the session standing. An unrecognized key under `rotate:` rejects the mint as an unrecognized
-declaration key does (above).
+session it replaces. Bounds cover context size, transcript size, and harness invocations. The invocation bound counts
+the spawns, resumes, and judgements whose usage was recorded, and nothing else, so a node-step spends two or three when
+each of its invocations records usage. An invocation that ends before its usage is readable does not count: the lineage
+rotates later by at most the invocations that went uncounted, which strands nothing. An unmeasurable bound is not a
+breach; a missing measurement leaves the session standing. An unrecognized key under `rotate:` rejects the mint as an
+unrecognized declaration key does (above).
 
 ## Harness set
 
