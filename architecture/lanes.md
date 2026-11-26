@@ -8,7 +8,8 @@ is one: `OutboundDrain`, `TranscriptDrain`, `LeaseTraceSweep`, and a registered 
 phases (REAP, PULL, FILL, ADVANCE, RESUME), the samplers, and `Retention` are not lanes. `bzh:steppable-loop` in
 [`./crash-correctness.md`](./crash-correctness.md) governs loop phases; `bzh:probe-gated-pass` below governs the cost of
 converging and pruning passes, including `Retention`. Each rule follows the slot skeleton owned by
-`winter-canon:/rule-shape.md` (`canon:rule-shape`).
+`winter-canon:/rule-shape.md` (`canon:rule-shape`). [Known debt](#known-debt) lists the code these rules do not yet
+hold.
 
 ## What a lane owes around its body (`bzh:lane-contract`)
 
@@ -61,17 +62,8 @@ raise reaches its host; a lane on a sink class that gives it a backoff or latch 
 `blizzard/src/blizzard/hub/domain/observability/egress/sweep.py`) hold an `OutageLatch` from `foundation/lane_retry.py`,
 ask it whether a pass is due, and announce only when it says a failure opens or a success closes an outage.
 `CloseDrainSweep` (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) limits the due intents per pass and
-computes whether each intent is due using `backoff_delay`, then delegates attempts to `CloseIntentDrainer`. Its read of
-all pending intents before filtering and limiting is unbounded backlog-read debt, not an example of the bound clause.
+computes whether each intent is due using `backoff_delay`, then delegates attempts to `CloseIntentDrainer`.
 `TranscriptDrain` catches every failure inside `run()`.
-
-**Known gap.** `OutboundDrain` (`blizzard/src/blizzard/runner/lifecycle/drain.py`) has no registered crash point or
-recorded exemption for the window after the hub accepts a generic batch or a decision and before the runner records its
-acknowledgement. These windows remain unaddressed coverage debt under clause 2, not exemptions.
-
-**Known gap.** The annotation reconciler (`blizzard/src/blizzard/hub/domain/observability/forge_status.py`) keeps an
-in-memory per-tenant, per-source outage announcement latch rather than the no-latch shape its sink class requires; it is
-not the persistent `OutageLatch`.
 
 **Don't.** A new lane that hand-copies a failure counter, a next-due instant, and a failing flag, then re-implements the
 doubling and the open/close transitions beside them, instead of taking the helper. The copies drift: one lane clamps the
@@ -132,3 +124,20 @@ of its step functions — and `bzh:injected-clock` there, whose clock the floor 
 `bzh:bulk-reconstitution` — what the pass owes per item once it does run. `bzh:lane-contract` above — what a lane owes
 around its body. [`./repository-access.md`](./repository-access.md) `bzh:pass-reads-one-snapshot` — which of the pass's
 reads must come from one snapshot.
+
+## Known debt
+
+Stated so a reviewer need not re-derive them — each is a site the rules above name as a violation and that stands until
+the change that brings it under the rule:
+
+- **`OutboundDrain` has unregistered crash windows** (`bzh:lane-contract`, clause 2). `OutboundDrain`
+  (`blizzard/src/blizzard/runner/lifecycle/drain.py`) has no registered crash point or recorded exemption for the window
+  after the hub accepts a generic batch or a decision and before the runner records its acknowledgement. These windows
+  are unaddressed coverage debt, not exemptions.
+- **The annotation reconciler keeps a latch its sink class does not name** (`bzh:lane-contract`, clause 3). The
+  annotation reconciler (`blizzard/src/blizzard/hub/domain/observability/forge_status.py`) keeps an in-memory
+  per-tenant, per-source outage announcement latch rather than the no-latch shape its sink class requires; it is not the
+  persistent `OutageLatch`.
+- **`CloseDrainSweep` reads its whole backlog** (`bzh:lane-contract`, clause 1). `CloseDrainSweep`
+  (`blizzard/src/blizzard/hub/domain/work_items/closure.py`) reads all pending intents before filtering and limiting
+  them, so its backlog read is unbounded though its attempts per pass are not.
