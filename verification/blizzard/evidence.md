@@ -211,8 +211,13 @@ The nodes.md facet entry can follow once the runner side settles what omission m
 An author cannot learn the key exists, the omission already resolves to something, and absent this rule nothing at
 landing time would report that either should be stated.
 
-Nor an operator-side change excused as not being graph authoring — a runner halted for a setting it omits, or admitted
-on an exception, with `domain/execution/` saying nothing: the operator meets the halt with no model to read it against.
+Nor an operator-side change with no companion `blizzard-context` change under `domain/execution/`:
+
+```text
+feat(runner): halt a runner whose host config omits `claim_backoff:`
+
+Not graph authoring, so no domain hunk.
+```
 
 **See also.**
 

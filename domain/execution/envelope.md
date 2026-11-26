@@ -44,7 +44,8 @@ Standing instructions reach a reused session by comparison with what that sessio
 on its own. A new session is sent both in full. A node entry that reuses a session
 ([../graphs/nodes.md](../graphs/nodes.md), `session`) is told one of three things about each:
 
-- Unchanged: acknowledged as still in force, its text not sent again.
+- Unchanged: acknowledged as still in force, its text not sent again; a workspace's standing prompt that was absent and
+  still is goes unmentioned.
 - Changed: sent in full under a notice that the instructions have been updated and the text that follows supersedes what
   the session was handed earlier.
 - Withdrawn — a workspace's standing prompt that is no longer there: announced as withdrawn and no longer in effect,
