@@ -27,12 +27,9 @@ carries domain markup (rows, cards, forms) rather than delegating to a child; a 
 
 - `chunk-detail.ts` (the container — owns the query, maps `actionError` and the derived async state, forwards `detail`)
   renders the presentational `chunk-detail-panel.ts`, passing data down and re-emitting its outputs unchanged.
-- Under the exception: `app-identity.ts` (its own session read and logout mutation) and `app-pause-control.ts` (its own
-  status read and pause mutation) render straight off kit primitives (`KitBadge`, `KitButton`) inside the runner
-  header's `[header-trailing]` slot, owing no presentational sibling.
 
-**Don't.** A single component both injecting `injectHubRunnersQuery()` and rendering the registry table inline — testing
-the table then needs a stubbed client even when only row markup changed.
+**Don't.** A single component both injecting a runners query and rendering the registry table inline — testing the table
+then needs a stubbed client even when only row markup changed.
 
 ## Containers compose; models derive (`bzh:frontend-containers-compose`)
 
@@ -69,10 +66,10 @@ included, proven by `web/scripts/model-imports-lint-probe.js`. Outside the sweep
 - Does a moved derivation compute a domain judgment that belongs in a `*.domain.ts`, or re-derive one the wire already
   carries (`bzh:frontend-domain-boundary` Rule)?
 
-**Do.** `board-page.ts` declares
-`boardChunks = computed(() => withPendingBoardChanges(this.chunks(), this.pendingPromotes(), this.pendingDeletes()))`;
-the deletes filter and the promote override live in `board-page.model.ts`, and `board-page.model.spec.ts` pins each
-branch without a fixture.
+**Do.** `board-page.ts` composes `boardChunks` with `withPendingBoardChanges` over chunks, pending promotes, deletes,
+and demotes, then `withPendingUrgencies` over that result, pending urgencies, and urgency data. The board-change
+derivations live in `board-page.model.ts` and are pinned by `board-page.model.spec.ts` without a fixture; urgency
+derivation lives in `urgency.model.ts` and is pinned by `urgency.model.spec.ts`.
 
 **Don't.** `rows = computed(() => (this.rowsQuery.data() ?? []).filter((r) => r.active).map(toRowVm))` in a container —
 the filter's edge cases are now testable only by stubbing `rowsQuery` and rendering the component.

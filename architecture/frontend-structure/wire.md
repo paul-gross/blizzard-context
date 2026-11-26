@@ -43,11 +43,8 @@ stubbed HTTP transport without importing a generated type itself. No production 
 Hand-written TypeScript never cites a backend Python module as the authority, by `.py` path or by dotted `blizzard.…`
 module path; cite the generated type, the wire field, or a `bzh:` id instead.
 
-A unit that still reads a wire type outside the boundary is named on the gate's migration exemption list,
-`DOMAIN_BOUNDARY_EXEMPT`, until the landing that moves it behind the boundary
-(`decision:ui-toolkit/incremental-replacement`). Until then its query may keep the old wire projection for exempt
-callers beside a domain projection in the same data-access file, sharing one cache, query keys, and invalidations; the
-list only shrinks.
+Queries expose domain values to presentation consumers while retaining the shared cache, query keys, and invalidations.
+Private wire reads and cache entries remain data-access details, not presentation APIs.
 
 **Why.** When every component works in the generated types directly, a wire change lands in every component that read
 the field; behind one boundary it is absorbed in one translator. A judgment re-derived from raw values is a second copy
@@ -65,15 +62,10 @@ A spec is inside the boundary only by its own focused name; a component or model
 generated type is never itself judged — its importer is — and a domain type may share a generated type's name. The
 backend-citation and client-call halves bind every hand-written `.ts` except specs, stories, and the generated client.
 
-**Detect.** Tooled by `web:structural-gate`'s domain-boundary sweeps, proven first by
-`assertDomainBoundaryDetectorWorks`: the symbol-origin sweep resolves every symbol a file references to its declaration
-and fails a file outside the boundary that consumes one declared in a generated `types.gen.ts`, fails a stale
-`DOMAIN_BOUNDARY_EXEMPT` entry, and fails a production file or story reaching the test transport. Beside it, with no
-exemption list, the backend-citation sweep (`assertBackendCitationDetectorWorks`) fails a backend module citation, and
-the client-call placement sweep (`assertClientCallPlacementDetectorWorks`) fails a generated client function named
-outside `*.query.ts` / `*.mutations.ts`. `web:lint` refuses Angular and the query library in a `*.domain.ts` or
-`*.translate.ts` and every Angular import but `@angular/forms/signals` in a `*.form.ts`, proven by
-`web/scripts/boundary-imports-lint-probe.js`.
+**Detect.** `web:structural-gate` checks symbol origins, test-transport reach, backend citations, client-call placement,
+and the retired projection inventory. `DOMAIN_BOUNDARY_EXEMPT` is empty. `web:lint` refuses Angular and the query
+library in a `*.domain.ts` or `*.translate.ts` and every Angular import but `@angular/forms/signals` in a `*.form.ts`,
+proven by `web/scripts/boundary-imports-lint-probe.js`.
 [`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
 owns each check's scope, report, and self-test.
 
@@ -127,17 +119,14 @@ taking the whole view down over one field.
 
 **Scope.** Every vocabulary the generated clients declare — a response field's, an SSE frame's event type, and a request
 vocabulary a response also carries, such as the verbs a record names as legal — wherever it is read: in a
-`*.translate.ts`, `*.query.ts`, or `*.mutations.ts`, and, while the migration lasts, in any file of a unit still on
-`DOMAIN_BOUNDARY_EXEMPT`, which still reads wire vocabularies outside the boundary. Specs and stories are outside it.
-The `switch` and template `@switch` halves hold every hand-written `.ts` and `.html` under `web/projects/` except specs
-and stories, a domain union's included: lint is not type-aware, so the `switch` rule cannot tell a domain union from a
-wire one.
+`*.translate.ts`, `*.query.ts`, or `*.mutations.ts`. Specs and stories are outside it. The `switch` and template
+`@switch` halves hold every hand-written `.ts` and `.html` under `web/projects/` except specs and stories, a domain
+union's included: lint is not type-aware, so the `switch` rule cannot tell a domain union from a wire one.
 
 **Detect.** `web:lint` (its `default-case` rule, probed by `web/scripts/default-case-lint-probe.js`) and
 `web:structural-gate` (the open-vocabulary sweeps, with no exemption list of their own; the vocabulary-record sweep
-binds translators, queries, mutations, and the units on `DOMAIN_BOUNDARY_EXEMPT`) fail a branch with no unknown arm;
-`web/scripts/open-lookup-type-probe.js` proves the compiler still refuses a table or a `switch` missing a declared
-value.
+binds translators, queries, and mutations) fail a branch with no unknown arm; `web/scripts/open-lookup-type-probe.js`
+proves the compiler still refuses a table or a `switch` missing a declared value.
 [`../../verification/blizzard/commands/web/static-checks.md`](../../verification/blizzard/commands/web/static-checks.md)
 owns each check's scope and self-test. Whether an unknown value's fallback is the right reading — raw, `idle`, or
 skipped — is a review question.

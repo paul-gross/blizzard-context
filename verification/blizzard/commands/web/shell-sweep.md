@@ -134,7 +134,8 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   pause glyph in `--amber` and its stop glyph in `--red`, both on the name line, and every runner's light must sit in
   one fixed-width column. At 390px and 320px a long runner name holds to one ellipsised line beside its whole seen tag,
   and, where the phone's Fleet tab offers the hub brake, each runner's pause/resume toggle spans the runner at a
-  finger-sized height.
+  finger-sized height. The next-claim view also wraps 200-character project names in its candidate, passed, and held
+  entries without horizontal overflow at 1280px, 390px, and 320px.
 - `host-detail.shell-sweep.spec.ts` covers the host detail the phone's Fleet tab opens full-screen: at 390px and 320px
   its `@container fleet-detail` breakpoint stacks the connection facts, keeps each environment line inside its section,
   and sets each runner's facts above its held chunks, every held chunk a finger-sized link, with no horizontal overflow.
@@ -209,6 +210,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   supplies spacing within the container's single flex slot; proven able to fail by setting that `:host`'s `gap` to `0`.
 - `new-hub-item.shell-sweep.spec.ts` mounts the new hub item dialog on stubbed reads at 1280px and 320px. The panel
   stays inside the viewport, and its title, body, urgency, and submit controls stay inside the panel.
+- `questions-gates.shell-sweep.spec.ts` mounts the questions and gates views with domain inputs at 1280px, 390px, and
+  320px, checking a rendered question option and gate origin, that their roots have no horizontal overflow, and that
+  each row's right edge stays inside its root.
 - `board-dock.shell-sweep.spec.ts` covers the board page's chunk dock, `BoardPage` mounted on stubbed reads in a
   height-bounded column. With nothing selected the dock is mounted but takes no box and the board runs the column's full
   height; selecting a chunk opens the dock beneath the board, which keeps its left, top and width and shortens;
