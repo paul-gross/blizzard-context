@@ -36,7 +36,13 @@ already-admitted source.
 
 An empty-check observation is named `empty-checks/<repository-record-id>/<sha>` and carries a JSON object with `repo`
 (the forge owner and repository), `policy`, `sha`, and `at` (the observation time as an ISO timestamp). It is scoped to
-the node and epoch; its identity includes the repository record and candidate revision.
+the node and epoch; its identity includes the repository record and candidate revision. A read that finds checks on a
+repository supersedes each such observation of it with a marker named
+`empty-checks-superseded/<repository-record-id>/<sha>`, whose content is that observation's `<sha>`.
+
+A parked change merged at a head other than the submitted commit records `delivery-findings/merged-head/<repo>`, a JSON
+object with `repo`, `submitted`, `merged_head`, and, where the forge could compare them, `compared_commits` (the
+revisions between the two). Its neighbours `delivery-findings` and `delivery-findings/foreign-head` are markdown.
 
 **Why.** A pass runs on a thread shared by every tenant's passes, beside the process environment that holds the key
 sealing every tenant's secrets. An action that could read the environment, open a process or a socket, write the store,

@@ -121,7 +121,7 @@ The env's runner spawns the fenced mock harness (`tool:mock-fleet`), never a rea
 [`../../tooling/store-seeding.md`](../../tooling/store-seeding.md) owns why on both counts.
 
 Restart the env's runner — to pick up an edited `blizzard-host.toml`, say — with `winter service restart <env>/runner`;
-`workspace:/context/project/singleton-instance.md` §Traps on `xps` owns how to stop any other runner.
+`workspace:/context/project/instance.md` §Traps on `xps` owns how to stop any other runner.
 
 **Steps.**
 

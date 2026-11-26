@@ -314,10 +314,11 @@ decision matrix.
 an authored graph with the shipped choices, a brisk poll cadence, and conflict and failure edges back to `build`:
 
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_pends_on_blocked_then_lands_when_green` holds a blocked PR
-  across polls with exactly one unchanging `delivery-findings`, then lands on green; the merge preserves both parents.
+  across polls with no `delivery-findings` or `hub-log.land`, then lands on green with one of each, carrying the checks'
+  conclusions and the landed revision; the merge preserves both parents.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_routes_failure_on_a_terminally_failed_check` routes `failure`
-  inside the timeout budget; an owned second world proves a red base routes `inherited-failure` and names "not this
-  change".
+  inside the timeout budget, its findings listing the failing check with none left running; an owned second world proves
+  a red base routes `inherited-failure` and names "not this change".
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_self_heals_a_behind_branch_and_lands` proves a really moved
   base is merged into the head by `update-branch`, the PR pends and then lands once that action clears `stale_branch`.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_rechecks_the_rebased_head_before_rebase_landing` and
@@ -332,7 +333,8 @@ an authored graph with the shipped choices, a brisk poll cadence, and conflict a
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_refuses_a_foreign_commit_on_the_head` routes `failure`, names
   the foreign commit in `delivery-findings/foreign-head`, and leaves main unchanged.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_poll_timeout_back_to_build` proves timeout bounces
-  to build with nothing merged and main unchanged; its trace-only companion
+  to build with nothing merged and main unchanged, the deliver epoch's `delivery-findings` marking the pending check
+  unfinished; its trace-only companion
   `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_bounces_a_poll_timeout_back_to_build_traced` proves pending
   polls, the `bounce` event and the next build's `bounce` link.
 - `tests/service/fleet/delivery-pr-ci.spec.ts::test_pr_ci_lands_an_unstable_pr_once_checks_are_green` lands an unstable

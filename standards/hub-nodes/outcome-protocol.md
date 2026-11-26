@@ -20,16 +20,18 @@ runs a fresh pass — skipping the work its own markers already record ([./step-
 node). A wait itself spends no retry and no bounce budget; only a poll timeout or an incomplete-delivery crossing does.
 
 Exceeding `poll_timeout` (default three hours, measured from the start of the current consecutive `pending` run) stops
-polling and kicks the chunk back: a bounce fact is recorded and the chunk re-routes through the node's `failure` edge. A
-chunk is also kicked back when an authored edge routes to a non-terminal node while any repo among the node's own
-commits has neither a landing marker nor a no-code resolution matching its current declaration. This incomplete-delivery
-kick-back records its bounce fact and a `bounce-envelope` artifact but lets the chunk travel the authored choice's own
-edge — it is detected from resolved facts, never from the choice name, so no outcome name is privileged. Either
-kick-back escalates to `needs_human` once the node's `bounce_cap` (default 5, overridable per node) is crossed. An
-answer the node authors no edge for escalates the chunk at once, naming the choice, rather than re-polling.
+polling and kicks the chunk back: a bounce fact is recorded and the chunk re-routes through the node's `failure` edge.
+The pass that finds the deadline passed is the visit's last: it runs once more, and may still answer a choice or an
+escalation, which routes as usual; only a `pending` answer is the timeout kick-back. A chunk is also kicked back when an
+authored edge routes to a non-terminal node while any repo among the node's own commits has neither a landing marker nor
+a no-code resolution matching its current declaration. This incomplete-delivery kick-back records its bounce fact and a
+`bounce-envelope` artifact but lets the chunk travel the authored choice's own edge — it is detected from resolved
+facts, never from the choice name, so no outcome name is privileged. Either kick-back escalates to `needs_human` once
+the node's `bounce_cap` (default 5, overridable per node) is crossed. An answer the node authors no edge for escalates
+the chunk at once, naming the choice, rather than re-polling.
 
-An `awaiting-merge` poll is not charged against the pending run's timeout. The repository's separate park timeout
-applies to the review wait.
+An `awaiting-merge` poll is not charged against the pending run's timeout, including when it answers the last pass. The
+repository's separate park timeout applies to the review wait.
 
 **Why.** A typed answer leaves no parsing to go wrong, and fixing "an authored choice, or a reserved wait" as the whole
 vocabulary lets mint-time validation prove every answer routes. The shared bounce-cap ladder keeps a stuck or
