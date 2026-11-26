@@ -77,4 +77,5 @@ bound by this rule.
 - `bzh:one-prose-home` in [`../standards/one-prose-home.md`](../standards/one-prose-home.md) — assigns a domain concept
   its home in this tree; this rule bounds what that home may say.
 - `bzh:owed-claims-landed` in [`../verification/blizzard/evidence.md`](../verification/blizzard/evidence.md) — the
-  planning rule that lands an author-facing surface's statement here, placing a delegated key by §Exception.
+  planning rule that lands here the statement a graph author's surface or an operator- or worker-observable execution
+  policy owes, placing a delegated key by §Exception.
