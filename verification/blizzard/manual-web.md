@@ -204,8 +204,7 @@ census:
 
 **Evidence.** Record the revision, the commands as run, one line per step-2 hit giving its path, line, control, kind,
 and the reason that kind was reached, and each other step's result. Keep the record with the change under review — the
-pull request or commit that claims this method — rather than in this file, which holds no per-run readings
-([`../../standards/prose-budget.md`](../../standards/prose-budget.md)).
+pull request or commit that claims this method — rather than in this file.
 
 **Passes when.** Every step-2 hit classifies under one of the four kinds, every bound template composes `KitField` over
 a schema and a domain draft, the structural gate passes with no exemption, the superseded inventory has no hits, and the
