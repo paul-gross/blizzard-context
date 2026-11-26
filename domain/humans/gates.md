@@ -60,6 +60,8 @@ with its choice. A decision closes by one of:
 - a migration record, when the chosen choice migrates cross-graph — a migration writes no transition
   ([../work/migration.md](../work/migration.md));
 - an escalation, when that migration's target is unresolvable;
+- an escalation, when the chosen choice targets the reserved `escalate` ([../graphs/edges.md](../graphs/edges.md)
+  §Escalation choices) — it writes no transition;
 - an operator's restart, whose move off the gate closes it — no choice is invented for the runner to transition along. A
   restart closes a decision a person already resolved but the runner has not yet moved on, so no runner later acts on
   that resolution.
