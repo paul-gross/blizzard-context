@@ -614,9 +614,9 @@ write: a lost write is made again by the next registration or matching check.
 
 `Registration.run` follows the row with the runner's settings seed, a second transaction through `RunnerSettingsSeed`
 (`blizzard/src/blizzard/runner/settings/seed.py`), on every registration that records the identity; the check seeds
-nothing. The halves are independently harmless: a row with no seed leaves the settings record unwritten, which a read
-previews from the runner's file entry without writing, and the next registration or start seeds it. A repeated seed
-writes only the keys still without an entry. It is a **no-window** write, with no armed crash point.
+nothing. The halves are independently harmless: while the settings record is unwritten, a read previews it from the
+runner's file entry without writing, and an admitted runner's record already holds the entries it was admitted with.
+Either way the next registration or start runs the seed again. It is a **no-window** write, with no armed crash point.
 
 Retirement keeps the row: nothing forgets it. A retired runner's identity, settings and history stay in the store, and
 what retires it is the `retired` fact in `hosted_runner_facts`. Two writers append it. `HostedRunnerService.retire`
