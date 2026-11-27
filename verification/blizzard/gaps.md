@@ -608,6 +608,13 @@ The migration adds non-null, default-false `allow_no_ci` columns to repositories
 disposable Postgres cluster, the hub chain passed head → base → head, and a seeded parent store passed upgrade →
 downgrade → upgrade. No CI tier repeats those Postgres runs; the colocated migration test runs on SQLite.
 
+## Transition reasons under Postgres
+
+The nullable transition reason's migration has passed an upgrade, downgrade, and upgrade over populated transitions on a
+disposable database in the assigned environment's Postgres service. The colocated migration test exercises the same
+directions on SQLite. No CI tier repeats the populated Postgres exercise, so a later change to the migration needs a
+fresh run there.
+
 ## Landing policies' columns under Postgres
 
 Every tier runs the revision adding landing policies on SQLite only. It adds `repositories.landing_policy` and

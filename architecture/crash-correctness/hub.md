@@ -6,6 +6,13 @@ accepted and named — exempts it from `bzh:crash-point-registry`, and what stan
 owns the registry, the invariant checker, and the obligation to record a decision here; a hub write inside the
 transcript lane is recorded in [`./transcripts.md`](./transcripts.md) instead.
 
+## A transition's judgement reason
+
+`ChunkMovementStore.record_transition` (`blizzard/src/blizzard/hub/store/internal/chunk_movement_store.py`) writes an
+optional reason on the transition row in the same transaction as the transition and its artifacts. No window: a crash
+before commit leaves none of that write durable; after commit the reason, when supplied, is durable with the transition.
+The reason adds no separate write or crash point.
+
 ## Promote or demote, then stamp the position
 
 `PromoteService.promote` (`blizzard/src/blizzard/hub/domain/operations/promote.py`) calls
