@@ -324,7 +324,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   emitting, End scrolls the last row into view, and so does Tabbing onto the list while its active row is off-screen.
   Enter emits the active row. An outside value change moves the active row and leaves `scrollTop` and the focused
   element unchanged. A pointer click emits, leaves focus on the list with no outline, and one Shift+Tab then leaves it.
-  Proven able to fail by reverting the active-row move on an outside value change.
+  An arrow key pressed on a link inside a row returns focus to the list and outlines the row it moves to, which Enter
+  then emits. Proven able to fail by reverting the active-row move on an outside value change, and by leaving focus on
+  the link.
 - `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out, drawn on the row's
   inner element, at 800px and at 390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding,
   bottom hairline, left edge and `--surface-selected` background, while `bare` draws no padding, border or background
