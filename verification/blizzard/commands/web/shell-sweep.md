@@ -143,7 +143,9 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   host's detail sit side by side, the title-bar host actions are on screen and hit-testable, and the detail pane has no
   horizontal overflow; at 1024px nothing overflows horizontally. A selected host-less runner's env slot bar and
   subscription pace bars must stay inside the detail at both widths, their aging and stale "refreshed … ago" labels
-  resolving to distinct computed colours, with aging also distinct from the root text colour.
+  resolving to distinct computed colours, with aging also distinct from the root text colour. A clicked bare card is the
+  active one yet draws no outline, an arrow key then rings the newly active card and not the list, and blurring the list
+  drops the ring. Proven able to fail by removing the card's focus ring.
 - `session-recovery-view.shell-sweep.spec.ts` covers `SessionRecoveryView`, which the runner app renders in place of the
   whole panel when a federation bounce could not complete silently: at 390px and 320px the view must have no horizontal
   overflow; proven able to fail by adding `white-space: nowrap` to `.detail`.
@@ -317,15 +319,21 @@ Each spec is named `*.shell-sweep.spec.ts`, mounts a real component tree, and is
   design tokens loaded: in every `Tone`, the left edge resolves to `toneColor`, card ids stay gold, list-row ids retain
   their tone, and a selected card's or row's edge resolves to the selection cyan.
 - `kit-select-list.shell-sweep.spec.ts` covers `fleetKitSelectList` with 40 rows in a height-capped scroller in real
-  Chromium. Tab from the element before the list lands on the selected row and the next Tab leaves it. Up, Down, Home,
-  End and type-ahead move focus without emitting, and End scrolls the last row into view. Enter emits the active row. An
-  outside value change moves the Tab stop and leaves `scrollTop` and the focused element unchanged, and a pointer click
-  emits and moves the active row. Proven able to fail by reverting the Tab-stop move on an outside value change.
+  Chromium. Tab from the element before the list lands on the list itself with the selected row as its active
+  descendant, and the next Tab leaves it. Up, Down, Home, End and type-ahead move the active descendant without
+  emitting, End scrolls the last row into view, and so does Tabbing onto the list while its active row is off-screen.
+  Enter emits the active row. An outside value change moves the active row and leaves `scrollTop` and the focused
+  element unchanged. A pointer click emits, leaves focus on the list with no outline, and one Shift+Tab then leaves it.
+  An arrow key pressed on a link inside a row returns focus to the list and outlines the row it moves to, which Enter
+  then emits. A list inside a `fleet-kit-async-state`, filtered to nothing and back after a click, outlines its selected
+  row again on Tab. Proven able to fail by reverting the active-row move on an outside value change, by leaving focus on
+  the link, and by not restoring the active row when rows return.
 - `kit-select-row.shell-sweep.spec.ts` covers `KitSelectRow`'s default chrome and its `bare` opt-out, drawn on the row's
   inner element, at 800px and at 390px/320px (`bzh:narrow-viewport-tier-rule`): the default keeps its `6px 8px` padding,
   bottom hairline, left edge and `--surface-selected` background, while `bare` draws no padding, border or background
-  selected or hovered, and a flex rule on the host lays the projected children on one line with the host's gap. Proven
-  able to fail by deleting the bare rule's layout inheritance.
+  selected or hovered, and a flex rule on the host lays the projected children on one line with the host's gap. The
+  active default row is outlined only while the list has keyboard focus, and an active bare row never is. Proven able to
+  fail by deleting the bare rule's layout inheritance, and by removing the active row's outline.
 - `kit-combobox.shell-sweep.spec.ts` covers the zone picker's keyboard model in real Chromium input at 390px, over a
   `[formField]`-bound `KitCombobox`: typing filters the options by label, the arrows move the highlight, Enter picks it
   into the field, and Escape closes with the value unchanged. A stored value no option carries is listed first, marked
