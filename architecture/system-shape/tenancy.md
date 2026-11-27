@@ -237,8 +237,9 @@ which one tenant's broken source or burst of work changes what the pass does for
 teardown. Trace export and fact egress are outside it: each advances one cursor in fact order, which is the order their
 sink receives, so a fact one of them cannot place holds its cursor for every tenant. Boot loops and key rotation fail
 fast by design and are not periodic passes. The probe read stays hub-wide and one statement
-(`bzh:sweep-acts-in-row-tenant`), and a pass skips its corpus reads when no tenant is due, and narrows them to the due
-tenants when some are. A one-tenant pass reads and writes only its own tenant's convergence entry, never rebinding or
+(`bzh:sweep-acts-in-row-tenant`). A probe-gated pass (`bzh:probe-gated-pass`) skips its corpus reads when no tenant is
+due and narrows them to the due tenants when some are, save a fresh derivation reconciler's every-tenant read of
+derivation markers. A one-tenant pass reads and writes only its own tenant's convergence entry, never rebinding or
 pruning state across tenants, and leaves the close drain's and the cadence sweep's rotations unmoved.
 
 **Detect.** The poisoned-tenant fixture, `tests/support/pass_isolation.py`, is used by a `blizzard:unit-test`: it runs a
