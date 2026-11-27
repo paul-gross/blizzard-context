@@ -19,8 +19,11 @@ A node-scope artifact accumulates as an append-only, versioned series per node a
 - **A name in more than one scope is refused, never guessed** — a name that resolves in more than one of the node,
   graph, and system scopes is refused until the read names the scope or a producing node, and the refusal lists the
   candidates.
-- **Narrowing is the read's to state** — a read narrows by naming the producing node or the scope, and
-  [declarations](../../standards/worker-nodes/declarations.md) owns the verbs for both.
+- **Narrowing is the read's to state** — a read narrows by naming the producing node, the scope, or an epoch, and
+  [declarations](../../standards/worker-nodes/declarations.md) owns the verbs for each.
+- **A read may name a shadowed entry** — naming an epoch reads that one entry of the history instead of the newest, a
+  read may also list every entry, and naming an epoch the series does not hold is refused, listing those it holds. Only
+  node scope has epochs.
 - **The series keys on the node name** — after a migration or a re-published graph, a re-run of `build` keeps appending
   to the same series (`bzh:ids-exact-names-correlate`, [ids and names](../graphs/ids-and-names.md)); the exact producing
   node is on each artifact's provenance.
