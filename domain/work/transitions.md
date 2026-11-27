@@ -4,7 +4,8 @@ How a chunk moves along an edge within its pinned graph. Spoke of the [work hub]
 
 A transition is one entry in a chunk's append-only movement record: a judgement at a node's exit selected an edge and
 the chunk moved along it. Every transition is fully formed — the edge is selected by a judgement, whether the worker's
-verdict, the hub's own machinery at a hub node, or a human's choice at a gate — so unjudged movement does not exist.
+verdict, the hub's own machinery at a hub node, or a human's choice at a gate — so unjudged movement does not exist. The
+judgement may also leave a reason on the transition, explaining the choice; a transition need not have one.
 
 Transitions are authored by the holder: the holding runner reports them, and the hub's own executor authors them for
 hub-executed nodes. [Gate decisions](../humans/gates.md) owns when a gate opens and how its resolution leads to
