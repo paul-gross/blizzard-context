@@ -9,9 +9,9 @@ How the suite's shared files are shaped so two agents editing different features
 **Rule.** Two agents changing two different features must produce diffs that touch no shared file beyond one entry
 export line and one SSE registry row. A feature's public surface is the export lines naming it in its entry files under
 `fleet/src/entries/` (`bzh:frontend-weight-class-entries`, [eager-shell.md](./eager-shell.md)); what an entry exports is
-decided by a consumer outside the unit that declares it — a sibling only the feature's own components mount stays
-unexported, so the public surface names what is actually re-stackable. A live feature registers its invalidated query
-keys as a declarative row in its own daemon's SSE dispatch registry — the hub's board in `EVENT_INVALIDATION_REGISTRY`
+decided by a consumer outside `fleet`, which imports itself by file — a part only `fleet` mounts stays unexported, so
+the public surface names what an app actually stacks. A live feature registers its invalidated query keys as a
+declarative row in its own daemon's SSE dispatch registry — the hub's board in `EVENT_INVALIDATION_REGISTRY`
 (`hub/src/app/core/live/hub-live-updates.ts`), the runner's local panel in
 `runner/src/app/core/live/runner-live-updates.ts` — never a `case` added to the shared
 `LiveInvalidationSpine.dispatch()` (`fleet/src/lib/sse/live-invalidation-spine.ts`) both registries drive. The two
@@ -28,8 +28,8 @@ feature additive, not contended.
 
 **Detect.**
 
-- An entry export no consumer outside the unit that declares it imports, or a `public-api.ts` statement that re-exports
-  anything but an entry — `web:structural-gate`'s disjoint-diffs sweep catches both mechanically.
+- An entry export no consumer outside `fleet` imports, or a `public-api.ts` statement that re-exports anything but an
+  entry — `web:structural-gate`'s disjoint-diffs sweep catches both mechanically.
 - A bare `export *` in an entry, `shell-api.ts`, or `runner-shell-api.ts`, which re-exports a file's whole surface with
   no diff on the entry when it grows — `web:lint`'s `no-restricted-syntax` rule over `ExportAllDeclaration` catches this
   one mechanically; `public-api.ts` itself is exempt, since it legitimately stars the entries.
@@ -39,8 +39,8 @@ feature additive, not contended.
 
 **Do.**
 
-- `entries/transcripts.ts` names every transcripts symbol a consumer outside `transcripts/` imports at that weight, and
-  a sibling mounted only by its own feature stays unexported.
+- `entries/transcripts.ts` names every transcripts symbol an app imports at that weight, and a part mounted only inside
+  `fleet` stays unexported.
 - A new live board feature adds a row keyed by its event type to `EVENT_INVALIDATION_REGISTRY` — an `openLookup` table
   exhaustive over `HubEventKind`, so an unhandled domain event is a compile error, while a type this build does not know
   stales nothing (`bzh:frontend-open-vocabulary`, [wire.md](./wire.md)).

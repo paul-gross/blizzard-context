@@ -30,7 +30,7 @@ The `fleet-root/no-root-import` rule (`web/eslint.fleet-root.js`) refuses `'flee
 ([`../../../../architecture/frontend-structure/eager-shell.md`](../../../../architecture/frontend-structure/eager-shell.md)
 `bzh:frontend-weight-class-entries`). It is the built-in `no-restricted-syntax` registered under its own name, so it
 replaces no other block's options. `web/scripts/fleet-root-lint-probe.js` checks that each form is refused and an entry
-import passes, under the hub, runner, and fleet configs, when run with Node from `web/`.
+import passes, under the hub, runner, fleet, and exemplar configs, when run with Node from `web/`.
 
 The HTML template `no-restricted-syntax` selector rejects native `<button>`, `<select>`, and `<input>` outside
 `fleet/src/lib/kit/` (`bzh:frontend-kit-floor`), including a control with fresh CSS classes. A genuinely distinct native
@@ -143,10 +143,10 @@ The same script also runs the disjoint-diffs sweep (`web/scripts/disjoint-diffs-
 compiler-API program;
 [`../../../../architecture/frontend-structure/disjoint-diffs.md`](../../../../architecture/frontend-structure/disjoint-diffs.md)
 `bzh:frontend-disjoint-diffs`): every export of a `fleet` entry — each file under `fleet/src/entries/` — needs a
-consumer outside the placement unit that declares it, judged per symbol through any alias chain, where a re-export is
-not consumption, a spec counts as a consumer, an `import()` type consumes its name, and a namespace or dynamic
-`import()` consumes a module's every export; a name the generated `lib/api/` declares is not judged. Each
-`public-api.ts` statement re-exports only an entry; `shell-api.ts` is not read. A violation prints under
+consumer outside `projects/fleet/`, judged per symbol through any alias chain, where a re-export is not consumption, a
+spec counts as a consumer, an `import()` type consumes its name, and a namespace or dynamic `import()` consumes a
+module's every export; a name the generated `lib/api/` declares is not judged. Each `public-api.ts` statement re-exports
+only an entry; `shell-api.ts` is not read. A violation prints under
 `fleet entry exports outside the disjoint-diffs rule` with file, line, and symbol or source. Its self-test,
 `assertDisjointDiffsDetectorWorks`, runs first.
 
@@ -298,20 +298,22 @@ it twice. At output granularity — the output whose entry point is `main.ts`, p
 (framework, CDK, each fleet area) that a bundle-size change records. At source-file granularity, over the same
 metafile's module graph, it enforces the gate: a source file reachable eagerly that matches a forbidden pattern fails
 the run, named together with the file that imports it. Both apps forbid files throughout the fleet `chunk-detail/`,
-`awaiting-human/`, and `transcripts/` directories and `@angular/cdk`'s `menu`/`overlay`/`listbox` bundles; the hub also
-forbids its `garden/`, `graphs/`, and `board/chunk-dock/` folders and `@dagrejs/*`. It also fails when the source
-closure of the light `fleet/kit` entry (`fleet/src/entries/kit.ts`) reaches `@angular/cdk`, `@angular/aria`, or
-`@angular/forms`, skipping type-only edges, naming the file that imports the heavy module — and when the hub build holds
-no such entry — and when any lazy entry's source closure reaches `fleet/src/public-api.ts`.
+`awaiting-human/`, and `transcripts/` directories, any `fleet` entry file under `entries/` and `public-api.ts`, and
+`@angular/cdk`'s `menu`/`overlay`/`listbox` bundles; the hub also forbids its `garden/`, `graphs/`, and
+`board/chunk-dock/` folders and `@dagrejs/*`. It also fails when the source closure of the light `fleet/kit` entry
+(`fleet/src/entries/kit.ts`) reaches `@angular/cdk`, `@angular/aria`, or `@angular/forms`, skipping type-only edges,
+naming the file that imports the heavy module — and when the hub build holds no such entry — and when any lazy entry's
+source closure reaches `fleet/src/public-api.ts`.
 
 It prints, per app, every dynamic-import target's static output closure beyond the initial chunk (routes and `@defer`
 blocks alike) with the `fleet` areas and heavy packages it reaches, their median, and each `fleet` entry file's bundled
 closure beyond the initial chunk (`web/scripts/bundle-closure.js`).
 
 Its own fixture self-test, `assertBundleCompositionDetectorWorks` — one eager import matching a forbidden pattern, one
-eager import that does not, and a forbidden pattern reached only through a dynamic import; each heavy package caught in
-the light kit, a type-only, lazy, or core import passing, and an absent entry failing where required; a lazy entry
-reaching the root caught and one reaching only an entry passing — runs before the walk is trusted
-(`bzh:case-pins-its-own-name`), as does `assertLazyClosureReportWorks` over the closure walk and median. The `initial`
-budget in `angular.json` is the size backstop each app's build enforces. Wired into `gate.yml`'s `frontend` job and
-`scripts/ci-gate.sh` beside `web:structural-gate`.
+eager import that does not, and a forbidden pattern reached only through a dynamic import; an eager value import of an
+entry or the root caught while a type-only one and `fleet/shell` pass; each heavy package caught in the light kit, a
+type-only, lazy, or core import passing, and an absent entry failing where required; a lazy entry reaching the root
+caught and one reaching only an entry passing — runs before the walk is trusted (`bzh:case-pins-its-own-name`), as does
+`assertLazyClosureReportWorks` over the closure walk and median. The `initial` budget in `angular.json` is the size
+backstop each app's build enforces. Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside
+`web:structural-gate`.
