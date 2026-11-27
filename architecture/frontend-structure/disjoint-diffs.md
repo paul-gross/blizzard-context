@@ -6,13 +6,14 @@ How the suite's shared files are shaped so two agents editing different features
 
 ## Shared files grow additively (`bzh:frontend-disjoint-diffs`)
 
-**Rule.** Two agents changing two different features must produce diffs that touch no shared file beyond one sub-barrel
-export line and one SSE registry row. Each feature directory under `fleet/lib/` owns an `index.ts` sub-barrel
-re-exported once from the root `public-api.ts`; what a sub-barrel exports is decided by a consumer outside its own
-feature directory — a sibling only the feature's own components mount stays unexported, so the public surface names what
-is actually re-stackable. A live feature registers its invalidated query keys as a declarative row in its own daemon's
-SSE dispatch registry — the hub's board in `EVENT_INVALIDATION_REGISTRY` (`hub/src/app/core/live/hub-live-updates.ts`),
-the runner's local panel in `runner/src/app/core/live/runner-live-updates.ts` — never a `case` added to the shared
+**Rule.** Two agents changing two different features must produce diffs that touch no shared file beyond one entry
+export line and one SSE registry row. A feature's public surface is the export lines naming it in its entry files under
+`fleet/src/entries/` (`bzh:frontend-weight-class-entries`, [eager-shell.md](./eager-shell.md)); what an entry exports is
+decided by a consumer outside `fleet`, which imports itself by file — a part only `fleet` mounts stays unexported, so
+the public surface names what an app actually stacks. A live feature registers its invalidated query keys as a
+declarative row in its own daemon's SSE dispatch registry — the hub's board in `EVENT_INVALIDATION_REGISTRY`
+(`hub/src/app/core/live/hub-live-updates.ts`), the runner's local panel in
+`runner/src/app/core/live/runner-live-updates.ts` — never a `case` added to the shared
 `LiveInvalidationSpine.dispatch()` (`fleet/src/lib/sse/live-invalidation-spine.ts`) both registries drive. The two
 daemons' registries never share a line range because they never share a file.
 
@@ -21,30 +22,28 @@ Each daemon owns its whole live plane: its query keys (`hub/src/app/core/query-k
 the SSE transport, `LiveInvalidationSpine`, the coalesce window, both stream vocabularies (`sse/hub-events.domain.ts`,
 `sse/runner-stream.domain.ts`) and their translators, and the chunk and transcript key helpers that take a plane root.
 
-**Why.** A monolithic `public-api.ts` and a hand-written dispatch `switch` are guaranteed merge conflicts — every
-in-flight feature touches the same line range; sub-barrels and a data-shaped registry make adding a feature additive,
-not contended.
+**Why.** A monolithic surface file and a hand-written dispatch `switch` are guaranteed merge conflicts — every in-flight
+feature touches the same line range; entries that group by feature and weight, and a data-shaped registry, make adding a
+feature additive, not contended.
 
 **Detect.**
 
-- A new top-level export added directly to `public-api.ts` instead of a feature sub-barrel; a sub-barrel export no
-  consumer outside its own feature directory imports — `web:structural-gate`'s disjoint-diffs sweep catches both
-  mechanically.
-- A sub-barrel `export *`, which re-exports the feature directory's whole surface with no diff on the barrel when it
-  grows — `web:lint`'s `no-restricted-syntax` rule over `ExportAllDeclaration` in `projects/*/src/lib/*/index.ts`
-  catches this one mechanically; the root `public-api.ts` itself is exempt, since it legitimately stars its sub-barrels.
+- An entry export no consumer outside `fleet` imports, or a `public-api.ts` statement that re-exports anything but an
+  entry — `web:structural-gate`'s disjoint-diffs sweep catches both mechanically.
+- A bare `export *` in an entry, `shell-api.ts`, or `runner-shell-api.ts`, which re-exports a file's whole surface with
+  no diff on the entry when it grows — `web:lint`'s `no-restricted-syntax` rule over `ExportAllDeclaration` catches this
+  one mechanically; `public-api.ts` itself is exempt, since it legitimately stars the entries.
 - A live feature's invalidation expressed as anything other than a row in its own daemon's registry — the shared
   `LiveInvalidationSpine.dispatch()` is the one place a `case` could physically be added, and it is private to
   `live-invalidation-spine.ts`; a registry row in one daemon for a query key that belongs to the other.
 
 **Do.**
 
-- `transcripts/index.ts` re-exports every transcripts-feature symbol a consumer outside `transcripts/` imports, and
-  `public-api.ts` carries one `export * from './lib/transcripts'` line; a sibling mounted only by its own feature stays
-  unexported.
+- `entries/transcripts.ts` names every transcripts symbol an app imports at that weight, and a part mounted only inside
+  `fleet` stays unexported.
 - A new live board feature adds a row keyed by its event type to `EVENT_INVALIDATION_REGISTRY` — an `openLookup` table
   exhaustive over `HubEventKind`, so an unhandled domain event is a compile error, while a type this build does not know
   stales nothing (`bzh:frontend-open-vocabulary`, [wire.md](./wire.md)).
 
-**Don't.** Two features both editing the same span of `public-api.ts` to add their exports, or both adding a `case` to
-the same `switch`.
+**Don't.** Two features both editing the same span of one file to add their exports, or both adding a `case` to the same
+`switch`.

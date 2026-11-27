@@ -33,11 +33,11 @@ reading as a contract, and the next implementer or caller inherits one consumer'
 
 Binds the same trees as `bzh:comment-locality`, and the seams it holds are each language's own:
 
-| Tree                                                                               | Seams                                                                                                                                   |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, `blizzard/exemplars/python` | A Protocol, an interface dataclass, a wire model, a store schema, a shared-kernel module's docstring (`bzh:shared-kernel`)              |
-| `blizzard/web/projects`, `blizzard/exemplars/web`                                  | An exported `interface` or type alias, an `InjectionToken`, a component's `input()` and `output()` members, a library's `public-api.ts` |
-| `blizzard/tests` (handwritten `.ts`; not `tests/harness/client/wire/`)             | An exported `interface` or type alias, and fixture/client boundary contracts                                                            |
+| Tree                                                                               | Seams                                                                                                                               |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard/src`, `blizzard/tests`, `blizzard-mock/src`, `blizzard/exemplars/python` | A Protocol, an interface dataclass, a wire model, a store schema, a shared-kernel module's docstring (`bzh:shared-kernel`)          |
+| `blizzard/web/projects`, `blizzard/exemplars/web`                                  | An exported `interface` or type alias, an `InjectionToken`, a component's `input()` and `output()` members, a library's entry files |
+| `blizzard/tests` (handwritten `.ts`; not `tests/harness/client/wire/`)             | An exported `interface` or type alias, and fixture/client boundary contracts                                                        |
 
 ## Detect
 

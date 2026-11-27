@@ -34,7 +34,7 @@ A new component's sibling `.css` declaring a chrome class the kit components own
 ([`../../verification/blizzard.md`](../../verification/blizzard.md)); a kit component (`fleet/lib/kit/*`) importing a
 query, mutation, or the generated API client — this half stays a review question.
 
-**Do.** A new panel imports `KitPanel`/`KitAsyncState`/`KitBadge` from `fleet` and composes them; a status message
+**Do.** A new panel imports `KitPanel`/`KitAsyncState`/`KitBadge` from `fleet/kit` and composes them; a status message
 renders through `KitAsyncState`'s `loading`/`error`/`empty` states rather than a local `<p class="status">`. A tab's
 count is `KitTab`'s `count`, and a failed gesture's inline line is `KitErrorLine`, fed the failure's message.
 
