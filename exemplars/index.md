@@ -53,6 +53,7 @@ Under `blizzard/exemplars/python/exemplar/`.
 | `runner/disk/wiring.py`  | Registering a new host or runner service in its area's wiring                                     |
 | `runner/host_root.py`    | Composing a runner area into the host root, or reusing the host's registration in a stand-in root |
 | `runner/api/disk.py`     | Adding a host-root route that resolves its service from the host's process scope                  |
+| `runner/cli/`            | Adding a container-wired worker command with a borrowed session and area-owned providers           |
 
 ## Web
 
