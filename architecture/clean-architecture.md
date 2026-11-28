@@ -197,7 +197,7 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
   roots — a second copy of a process-scoped collaborator. Independent short-lived roots remain separate.
 - `build_stores`, `build_production_harnesses`, or `HarnessHealthCache` called anywhere under `blizzard/src/blizzard/`
   other than the host's composition modules (`runner/composition.py`, `runner/host_root.py`) and a runner area's
-  `wiring.py` — a second copy of the runner's process graph.
+  `wiring.py` that imports the registry interface — a second copy of the runner's process graph.
 - A concrete runner-store adapter (a `*Store` class under `runner/store/internal/`) named anywhere under
   `blizzard/src/blizzard/` other than the host's composition modules and a `wiring.py` of the adapter package's own in
   `runner/store/`.
@@ -225,9 +225,10 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
   `hub/cli/container_command.py` — calls a registration verb; each composes areas and orchestrates lifecycles, and the
   areas' wiring registers.
 - A wiring module imports no other area's wiring and no adapter, other than an adapter package's own `wiring.py` naming
-  its `internal/`; the process roots, the two CLI roots among them, compose them all.
-- dishka is imported only under `foundation/registry/internal/`, and from `dishka.integrations.fastapi` under
-  `hub/api/`.
+  its `internal/`; a runner area's `wiring.py` imports only the registry interface and its own package. The process
+  roots, the two CLI roots among them, compose them all.
+- dishka is imported only under `foundation/registry/internal/`, and from `dishka.integrations.fastapi` under the route
+  edges `hub/api/` and `runner/api/`.
 - A child scope opens only through the registry's own opener.
 
 The runner host's container is held by `tests/guards/test_host_graph.py`, over the same checks; each carries a planted
@@ -237,6 +238,8 @@ violation it fails:
   no alias onto a doubled owner, no two roles over one key, and no defaulted constructor.
 - Every host-root route's `FromDishka` dependency resolves from the host's process scope, and no `/runners/{id}` route
   takes one.
+- The host-free graph (`open_host_free`) refuses every host-root route's `FromDishka` dependency as absent, so a host
+  service missing from its area's `register_absent` fails the gate rather than answering `500`.
 - Its legacy leaves are inventoried, not refused, while the runner children hold them.
 
 A migrated command is held by two more modules. `tests/guards/test_command_graph.py` builds the `hub status` registry on
@@ -334,12 +337,11 @@ The hub's hosted lifetimes and the runner host:
 - `blizzard/src/blizzard/runner/host_root.py` is the host's composition root, and the running host serves from it.
   `register_host` declares the borrowed `HostProcess`, the `HostConfig` and `RunnerCompose` options a runner child is
   composed from, `HostRunnerSet`, each runner child's one context value `BuiltRunner`, the named legacy leaves, and each
-  adopted area's `register` call. `HostRoot.serving` opens it: `build_hosted_app` in
+  adopted area's `register` call. `HostRoot.serving` opens it: `build_hosted_app_over_process` in
   `blizzard/src/blizzard/runner/app.py` opens it over the host `runner host` built, and `open_standalone` and
   `build_runner_process` open it over a host of one for the standalone verbs, the self-built loop tick and
-  `runner
-  tick`, whose caller owns and closes what it opened. A stand-in root reuses `register_host` and adds an area
-  before the build.
+  `runner tick`, whose caller owns and closes what it opened; `build_hosted_app` serves such an opened host. A stand-in
+  root reuses `register_host`, adds an area, and hands its registry to `open_host` before the build.
 - `HostRunnerSet` in `runner/composition.py` alone opens and closes runner children, one new child for every start
   attempt, and a runner's graph closes before its child on drain, abandon and host stop. The served app closes the root
   — its runner children, then its process scope — before `runner host` closes the borrowed host.
@@ -353,9 +355,11 @@ The hub's hosted lifetimes and the runner host:
   registers `SubscriptionFloorClearService` at the process lifetime, and declares it absent through `register_absent`.
   An app built without a host root serves its host routes from the host-free graph `open_host_free` opens, each host
   service declared absent; a route that reaches one answers `503` through the runner app's `ServiceAbsent` handler.
-- A host-root route takes each service it calls through `FromDishka[...]` under `@inject_sync`, resolved through the
-  host's process scope: `host_request` (`runner/api/resolution.py`) attaches that resolver on the host-root lanes, never
-  on a `/runners/{id}` lane, and never closes it. A `/runners/{id}` route still reads its runner's seams.
+- A host-root route serving an adopted host service takes it through `FromDishka[...]` under `@inject_sync`, resolved
+  through the host's process scope: `host_request` (`runner/api/resolution.py`) attaches that resolver on the host-root
+  lanes, never on a `/runners/{id}` lane, and never closes it. The floor clear takes `SubscriptionFloorClearService` so;
+  it and the other host routes still read `RunnerWiring` for what no area has adopted, and a `/runners/{id}` route still
+  reads its runner's seams.
 - `HostRunnerSet` is the one exception to a registered service taking no `OwnedChild`: the host root hands it the
   process scope through `bind` once it is built, and it opens runner children beneath that scope and resolves nothing
   through it.
