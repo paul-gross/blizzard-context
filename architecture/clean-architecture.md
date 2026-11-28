@@ -255,8 +255,9 @@ first reaches it. In the hub:
   adapter is registered in its own package's `wiring.py` (`hub/store/wiring.py`), the one module beside its `internal/`
   that names the adapter. The store-free or settings-less graph declares each absent port, and a route that reaches one
   answers the store's unavailability. The hub identity area is adopted this way, born in `hub/auth/wiring.py`; the
-  pre-admission auth dependencies, which run before any route's `FromDishka` resolution, resolve their named process
-  services from the request's resolver.
+  pre-admission auth dependencies take named process services through `FromDishka` under `@inject_sync`. Branch-gated
+  services use optional keys that alias the canonical owner when available and yield `None` in the store-free graph;
+  consumers that require storage take the plain absent key and receive its unavailability.
 - When a lower area takes a sequence of collaborators that areas above it define, the lower area declares the key and
   the highest such area's wiring provides it, so no import runs upward: the urgency lifecycle takes
   `UrgencyReferenceClearings`, which `hub/domain/cadence/wiring.py` composes from the garden and cadence clearings.
