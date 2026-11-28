@@ -166,18 +166,31 @@ only the shared and hub client areas on its own: a verb whose collaborator lives
 area's `register` as `area=` to its command class. An unmigrated command keeps inline wiring until its own migration
 moves it.
 
-Either way a command resolves what a test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one
-when the invoker handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test
-patches is not a seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI
-trees' one httpx2 import: every command builds its HTTP client through the carrier's `client_factory` and takes httpx2's
-types (`Client`, `Response`, the error classes) from that module, never from httpx2. The root groups pass the resolved
-carrier into `OperatorTrace` and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory.
-`runner/cli/runtime.py`'s `init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the
-`runner` group so a worker verb never loads a daemon's stack; the carrier also holds the `host` verb's process and
-harness-bundle builders, which only `runtime.py` — a composition root — may import. A runner verb resolves the shared
-carrier extended with the child-process launcher, the loopback transport, and the OpenCode 2 service transport from
-`runner/cli/children.py`, and reads its clocks, launcher, and transports from that one carrier, so a test hands HTTP,
-launcher, and transport fakes in one `obj`.
+A migrated worker command likewise opens a graph for the selected command alone, not for the worker group or its
+siblings. It borrows the `WorkerSession` the runner group already owns; the command closes its own resources on success
+and failure, never the session. Providers are registered in the owning area's wiring, while the command root composes
+those areas and resolves only the selected verb's collaborators.
+
+The CLI edge resolves what a test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one when
+the invoker handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A migrated command's callback takes
+its declared collaborators as arguments from its selected-command container, not by looking them up in Click context. A
+module-level factory a test patches is not a seam. The shared carrier is `CliCollaborators` in
+`blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one httpx2 import: every command builds its HTTP client
+through the carrier's `client_factory` and takes httpx2's types (`Client`, `Response`, the error classes) from that
+module, never from httpx2. The root groups pass the resolved carrier into `OperatorTrace` and `WorkerSession` as
+required arguments, and a hub verb's `CliContext` holds its factory. `runner/cli/runtime.py`'s `init` resolves its own
+hub-clients carrier the same way, keeping the HTTP default out of the `runner` group so a worker verb never loads a
+daemon's stack; the carrier also holds the `host` verb's process and harness-bundle builders, which only `runtime.py` —
+a composition root — may import. Runner commands use a carrier extending the shared one with the child-process launcher
+and transports, so a test hands HTTP, launcher, and transport fakes in one `obj`. An explicitly supplied runner carrier
+takes precedence over a shared carrier; when only the shared carrier is supplied, preserve its clocks and HTTP factory,
+and otherwise use production defaults. The production launcher, loopback transport, and OpenCode 2 service transport are
+constructed by their owning areas: `runner/process/wiring.py`, `runner/harness/opencode/compatibility/wiring.py`, and
+`runner/harness/opencode_v2/transport_wiring.py`, respectively. For unmigrated commands `runner/cli/children.py` extends
+the shared carrier by calling those providers. The selected OpenCode drive graph composes
+`runner/harness/opencode_v2/wiring.py`, which uses a supplied runner carrier's service override or the production
+provider. Resolve that transport lazily for drive: other worker commands must not load its adapter merely by opening
+their graph.
 
 **Why.** One process graph prevents independently wired app and driver collaborators from diverging, and lets tests
 substitute a fake store, a virtual clock, and a mock forge without patching module globals.
@@ -224,11 +237,11 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
 - No module under `blizzard/src/blizzard/` names a services bag (`BAG_NAMES`) in an import, a definition, a name, or an
   attribute.
 - No hub root — `hub/process_root.py`, `hub/app.py`, `hub/composition.py` — and no CLI root — `cli/command_root.py`,
-  `hub/cli/command.py` — calls a registration verb; each composes areas and orchestrates lifecycles, and the areas'
-  wiring registers.
+  `hub/cli/command.py`, `runner/cli/container_command.py` — calls a registration verb; each composes areas and
+  orchestrates lifecycles, and the areas' wiring registers.
 - A wiring module imports no other area's wiring and no adapter, other than an adapter package's own `wiring.py` naming
-  its `internal/`; a runner area's `wiring.py` imports only the registry interface and its own package. The process
-  roots, the two CLI roots among them, compose them all.
+  its `internal/`; a runner area's `wiring.py` imports only the registry interface and its own package, except runner
+  process command wiring, which also takes the foundation clock role. The process roots and CLI roots compose them all.
 - dishka is imported only under `foundation/registry/internal/`, and from `dishka.integrations.fastapi` under the route
   edges `hub/api/` and `runner/api/`.
 - A child scope opens only through the registry's own opener.
@@ -253,6 +266,10 @@ constructor, a parameter taking a generic resolver or process handle, and a lega
 daemon app or store stack, no other group's module and no other area's wiring, beyond the shrink-only exceptions that
 module records. `tests/unit/hub/cli/test_status_imports.py` pins the exact CLI modules `hub status` loads.
 
+`tests/guards/test_worker_command_graph.py` holds worker graphs to the same registration boundaries;
+`tests/component/runner/cli/test_worker_command_scope.py` exercises borrowed-session ownership, and
+`tests/unit/runner/cli/test_worker_container_imports.py` checks import isolation.
+
 Four ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 
 - `cli-httpx-confined` fails any httpx2 import under the three CLI trees (`cli/`, `hub/cli/`, `runner/cli/`) other than
@@ -267,9 +284,9 @@ Four ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP 
 - `hub-cli-answer-decoded` fails any `.json()` call under `blizzard/src/blizzard/hub/cli/`: a hub answer is read through
   the decoder ([`bzh:clients-decode-answers`](./system-shape/fleet-wire.md)).
 
-One Ruff rule beside them holds the OpenCode 2 service seam: `TID251` bans `UrllibServiceTransport` in every
-`runner/cli/` module except `runner/cli/children.py`, which builds the production one. It is scoped to that one concrete
-adapter, not to transports in general.
+One Ruff rule beside them holds the OpenCode 2 service seam: `TID251` bans imports of `UrllibServiceTransport` under
+`runner/cli/`; the adapter area's transport wiring builds the production one. It is scoped to that one concrete adapter
+and CLI tree, not to transports or other modules in general.
 
 **Do.** The hub process composes its graph in a container; the runner host serves from a container over its host root
 and still hands its legacy-built collaborators down in frozen dataclasses. Thread-confined engines and clients can
