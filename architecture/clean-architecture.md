@@ -152,17 +152,19 @@ area's `permits/wiring.py` aliasing the ports onto it; read it when building a r
 composition graph: process-scoped collaborators are built once and injected into both its served app and its driver.
 Short-lived CLI commands have their own roots.
 
-CLI wiring is in transition, and a command is wired one of two ways. An unmigrated command's body under a `*/cli/`
-directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is such a root: it wires collaborators once,
-inline, at the top, without joining the hosted process graph. A migrated command — today `hub status` — declares its
-collaborators by type and takes only those instances, from a validated `COMMAND`-lifetime container that
-`blizzard/src/blizzard/cli/command_root.py` builds per invocation over the shared (`cli/wiring.py`) and hub client
-(`hub/cli/wiring.py`) areas, composed by `hub/cli/container_command.py`. The carrier's values, the operator trace and
-the connection options enter that container as borrowed contexts it never closes; what the command owns is closed as it
-ends, on success and on failure. A new collaborator for a migrated command is born in its area's `wiring.py` and named
-at its verb. The container composes only the shared and hub client areas on its own: a verb whose collaborator lives in
-any other area also passes that area's `register` as `area=` to `ContainerFleetCommand`. An unmigrated command keeps
-inline wiring until its own migration moves it.
+CLI wiring is in transition, and a command is wired one of two ways. An unmigrated command — the hub's local verbs
+(`init`, `migrate`, `host`, `config import-legacy`, `config check-forges`, `secret rotate-key`) and the runner CLI —
+keeps its body under a `*/cli/` directory as such a root: it wires collaborators once, inline, at the top, without
+joining the hosted process graph. The `OperatorGroup` and `_RunnerGroup` `invoke` methods are roots of the same kind. A
+migrated command — every hub client verb — declares its collaborators by type and takes only those instances, from a
+validated `COMMAND`-lifetime container that `blizzard/src/blizzard/cli/command_root.py` builds per invocation over the
+shared (`cli/wiring.py`) and hub client (`hub/cli/wiring.py`) areas, composed by `hub/cli/command.py`. The carrier's
+values, the operator trace and the connection options enter that container as borrowed contexts it never closes; what
+the command owns is closed as it ends, on success and on failure. A verb declaring no `collaborators` takes the
+`CliContext` alone. A new collaborator is born in its area's `wiring.py` and named at its verb. The container composes
+only the shared and hub client areas on its own: a verb whose collaborator lives in any other area also passes that
+area's `register` as `area=` to its command class. An unmigrated command keeps inline wiring until its own migration
+moves it.
 
 Either way a command resolves what a test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one
 when the invoker handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test
@@ -222,8 +224,8 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
 - No module under `blizzard/src/blizzard/` names a services bag (`BAG_NAMES`) in an import, a definition, a name, or an
   attribute.
 - No hub root — `hub/process_root.py`, `hub/app.py`, `hub/composition.py` — and no CLI root — `cli/command_root.py`,
-  `hub/cli/container_command.py` — calls a registration verb; each composes areas and orchestrates lifecycles, and the
-  areas' wiring registers.
+  `hub/cli/command.py` — calls a registration verb; each composes areas and orchestrates lifecycles, and the areas'
+  wiring registers.
 - A wiring module imports no other area's wiring and no adapter, other than an adapter package's own `wiring.py` naming
   its `internal/`; a runner area's `wiring.py` imports only the registry interface and its own package. The process
   roots, the two CLI roots among them, compose them all.
@@ -242,12 +244,14 @@ violation it fails:
   service missing from its area's `register_absent` fails the gate rather than answering `500`.
 - Its legacy leaves are inventoried, not refused, while the runner children hold them.
 
-A migrated command is held by two more modules. `tests/guards/test_command_graph.py` builds the `hub status` registry on
-the `COMMAND` lifetime and fails it on a missing dependency, a second owner, another lifetime, an alias onto a doubled
-owner, two roles over one key, a defaulted constructor, a parameter taking a generic resolver or process handle, a
-legacy declaration, or a declared collaborator nothing registers. `tests/unit/hub/cli/test_status_imports.py` runs the
-CLI in a fresh interpreter: `hub status` loads no daemon app or store stack and no sibling command or wiring module, and
-an unmigrated verb loads neither the command root nor the registry.
+Migrated commands are held by three more modules. `tests/guards/test_command_graph.py` walks the `hub` tree: it fails a
+verb that is neither a `HubCommand` nor one of the named local verbs, a client verb's graph that does not build on the
+`COMMAND` lifetime, and a declared collaborator nothing registers; over the `hub status` registry it also fails a
+missing dependency, a second owner, another lifetime, an alias onto a doubled owner, two roles over one key, a defaulted
+constructor, a parameter taking a generic resolver or process handle, and a legacy declaration.
+`tests/unit/hub/cli/test_client_verb_imports.py` runs one verb of each client group in a fresh interpreter: it loads no
+daemon app or store stack, no other group's module and no other area's wiring, beyond the shrink-only exceptions that
+module records. `tests/unit/hub/cli/test_status_imports.py` pins the exact CLI modules `hub status` loads.
 
 Four ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 
