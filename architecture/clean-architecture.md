@@ -234,8 +234,8 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
 - No module under `blizzard/src/blizzard/` names a services bag (`BAG_NAMES`) in an import, a definition, a name, or an
   attribute.
 - No hub root — `hub/process_root.py`, `hub/app.py`, `hub/composition.py` — and no CLI root — `cli/command_root.py`,
-  `hub/cli/command.py`, `runner/cli/container_command.py` — calls a registration verb; each composes areas and orchestrates lifecycles, and the areas'
-  wiring registers.
+  `hub/cli/command.py`, `runner/cli/container_command.py` — calls a registration verb; each composes areas and
+  orchestrates lifecycles, and the areas' wiring registers.
 - A wiring module imports no other area's wiring and no adapter, other than an adapter package's own `wiring.py` naming
   its `internal/`; a runner area's `wiring.py` imports only the registry interface and its own package. The process
   roots, the CLI roots among them, compose them all.
@@ -263,7 +263,9 @@ constructor, a parameter taking a generic resolver or process handle, and a lega
 daemon app or store stack, no other group's module and no other area's wiring, beyond the shrink-only exceptions that
 module records. `tests/unit/hub/cli/test_status_imports.py` pins the exact CLI modules `hub status` loads.
 
-`tests/guards/test_worker_command_graph.py` holds worker graphs to the same registration boundaries; `tests/component/runner/cli/test_worker_command_scope.py` exercises borrowed-session ownership, and `tests/unit/runner/cli/test_worker_container_imports.py` checks import isolation.
+`tests/guards/test_worker_command_graph.py` holds worker graphs to the same registration boundaries;
+`tests/component/runner/cli/test_worker_command_scope.py` exercises borrowed-session ownership, and
+`tests/unit/runner/cli/test_worker_container_imports.py` checks import isolation.
 
 Four ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 
