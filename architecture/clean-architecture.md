@@ -300,6 +300,14 @@ The hub's hosted lifetimes and the runner host:
   collaborators, its attempt handle and one host-kind write seam for external-usage attempts. That seam uses
   runner-bound connections to write an unregistered host's sampled attempt and its runner-scoped outbound report in one
   transaction.
+- `blizzard/src/blizzard/runner/host_root.py` is the host's composition root. It registers its own keys — the borrowed
+  `HostProcess`, `HostRunnerSet` and each runner child's `BuiltRunner` — until area wiring begins, and a test declares
+  its runner graph before the build. Only tests exercise it; the running host still serves from `build_host_process`
+  until the root is activated. `HostRunnerSet` in `runner/composition.py` alone opens and closes runner children, and a
+  runner's graph closes before its wiring on drain, abandon and host stop.
+- `HostRunnerSet` is the one exception to a registered service taking no `OwnedChild`: the host root hands it the
+  process scope through `bind` once it is built, and it opens runner children beneath that scope and resolves nothing
+  through it.
 
 Helpers a CLI root calls into rather than repeating:
 
