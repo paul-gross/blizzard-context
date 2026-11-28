@@ -1116,6 +1116,71 @@ invariant checks return no violation. The method needs a driver that seeds rows 
 matrix does not carry one, so each run writes its driver from this description, and `gaps.md` records what has been
 covered.
 
+### `blizzard:manual-runner-invariants-offline`
+
+**Surface.** The offline runner invariant command on a stopped, migrated host, and the runner checker over a borrowed
+engine and supplied process probe. The component test drives the command in process; this method runs the installed CLI
+as an operator and reads its verdict.
+
+**Setup.** From the feature environment's `blizzard` worktree, use a fresh disposable directory, never a real host or
+its store. The support fixture initializes and migrates the host and registers a synthetic runner; its corruption adds
+two held bindings for distinct chunks to the same workspace and environment. Set `BLIZZARD_TMPDIR` to the session's
+private scratch directory if it is not already set.
+
+**Steps.** Keep the commands, output, exit codes, specimen path, provenance and ownership with the verification report.
+The following creates a directory owned by the invoking user under the approved scratch location:
+
+```bash
+export SPECIMEN="$(mktemp -d "${BLIZZARD_TMPDIR:?}/runner-invariants.XXXXXX")/host"
+uv run blizzard dev check-invariants --help
+uv run python -c 'import os; from pathlib import Path; from tests.support.runner_invariant_specimens import healthy; healthy(Path(os.environ["SPECIMEN"]))'
+uv run blizzard dev check-invariants --runner-dir "$SPECIMEN"; echo "exit=$?"
+uv run python -c 'import os; from pathlib import Path; from tests.support.runner_invariant_specimens import corrupt; corrupt(Path(os.environ["SPECIMEN"]))'
+uv run blizzard dev check-invariants --runner-dir "$SPECIMEN"; echo "exit=$?"
+export SPECIMEN="$(mktemp -d "${BLIZZARD_TMPDIR:?}/runner-invariants.XXXXXX")/host"
+uv run python -c 'import os; from pathlib import Path; from tests.support.runner_invariant_specimens import healthy; healthy(Path(os.environ["SPECIMEN"]))'
+uv run blizzard dev check-invariants --runner-dir "$SPECIMEN"; echo "exit=$?"
+```
+
+On the recreated specimen, demonstrate the borrowed engine and probe using the fixture's normal insert seam:
+
+```bash
+uv run python - <<'PY'
+import os
+from pathlib import Path
+import sqlalchemy as sa
+from blizzard.foundation.store.engine import create_engine_from_url
+from blizzard.runner.store import schema
+from blizzard.tools.invariants import runner_invariants
+from tests.support.config_inputs import load_host_config_for_store
+from tests.support.migrations.invariant_checker import NOW, insert
+from tests.support.runner_fakes import FakeProbe
+
+engine = create_engine_from_url(load_host_config_for_store(Path(os.environ["SPECIMEN"])).db_url)
+disposed = []
+sa.event.listen(engine, "engine_disposed", lambda _: disposed.append(True))
+with engine.begin() as conn:
+    conn.execute(insert(schema.leases).values(lease_id="lease_a", chunk_id="ch_1", epoch=1,
+                 created_at=NOW, pid=4242, process_start_time="start-4242"))
+probe = FakeProbe(alive={(4242, "start-4242")})
+checker = runner_invariants(engine, process=probe)
+live = {v.invariant for v in checker.run(after_recovery=True)}
+probe.alive.clear()
+dead = {v.invariant for v in checker.run(after_recovery=True)}
+with engine.connect() as conn:
+    print("engine usable:", conn.execute(sa.text("select 1")).scalar_one() == 1)
+print("live:", "runner:active-lease-process-is-live" in live)
+print("dead:", "runner:active-lease-process-is-live" in dead)
+print("disposed by checker:", bool(disposed))
+engine.dispose()
+PY
+```
+
+**Passes when.** Help identifies offline `--runner-dir`; the healthy, corrupt, and recreated healthy commands exit 0, 1,
+and 0 respectively, with `invariants hold` on both healthy runs and `runner:unique-env-binding` on the corrupt run. The
+probe prints `engine usable: True`, `live: False`, `dead: True`, and `disposed by checker: False`. Remove only the
+disposable directories once the evidence is retained.
+
 ### `blizzard:manual-postgres-invariants`
 
 **Surface.** The invariant routes, `GET /api/admin/invariants` on the hub and `GET /api/host/invariants` on the runner

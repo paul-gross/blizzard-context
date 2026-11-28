@@ -187,6 +187,7 @@ under verification is to that claim — a probe whose steps merely pass through 
 | `blizzard:manual-strict-types`                            | Repository-wide Python discovery and suppression enforcement                |
 | `blizzard:manual-hub`                                     | A running hub driven by hand: its HTTP API and the operator CLI             |
 | `blizzard:manual-runner`                                  | A running runner driven by hand over its HTTP API                           |
+| `blizzard:manual-runner-invariants-offline`               | The stopped-host runner invariant CLI and its borrowed-engine seam          |
 | `blizzard:manual-runner-ingest`                           | The stopped-host runner ingest CLI, against disposable hosts                |
 | `blizzard:manual-sse-probe`                               | The live SSE wire probe: framing and timing on a real socket                |
 | `blizzard:manual-standing-idp`                            | Auth-gated behavior in a browser against a standing hub and stub IdP        |
