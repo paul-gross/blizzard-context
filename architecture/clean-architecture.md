@@ -15,8 +15,8 @@ Protocol.
 
 **Rule.** Business rules live in a domain layer that depends on nothing outward — no FastAPI, SQLAlchemy, click, httpx2,
 dishka, filesystem, or network — with frameworks, stores, and transports outside it, depending inward. The registry
-interface (`blizzard.foundation.registry.interface`) is not a framework: an area's `wiring.py` under `hub/domain/`
-imports it to declare the area's ports and services, and never dishka itself.
+interface (`blizzard.foundation.registry.interface`) is not a framework: an area's `wiring.py`, under `hub/domain/` or
+in a runner concept package, imports it to declare the area's ports and services, and never dishka itself.
 
 **Why.** A domain core free of outward dependencies is unit-testable with no store or server, and survives a framework
 swap untouched.
@@ -196,7 +196,11 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
 - Duplicate construction or engine acquisition in the hosted hub graph across its app, composition, runtime, and tool
   roots — a second copy of a process-scoped collaborator. Independent short-lived roots remain separate.
 - `build_stores`, `build_production_harnesses`, or `HarnessHealthCache` called anywhere under `blizzard/src/blizzard/`
-  other than `runner/composition.py` — a second copy of the runner's process graph.
+  other than the host's composition modules (`runner/composition.py`, `runner/host_root.py`) and a runner area's
+  `wiring.py` — a second copy of the runner's process graph.
+- A concrete runner-store adapter (a `*Store` class under `runner/store/internal/`) named anywhere under
+  `blizzard/src/blizzard/` other than the host's composition modules and a `wiring.py` of the adapter package's own in
+  `runner/store/`.
 - A hub store acquisition inside a registered factory or resource, or inside any wiring module; a class the hub registry
   owns constructed again in a hub root file.
 - An offline hub verb or tool, such as the event-log opener or `tools.invariants`, taking its capability from anything
@@ -226,6 +230,15 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
   `hub/api/`.
 - A child scope opens only through the registry's own opener.
 
+The runner host's container is held by `tests/guards/test_host_graph.py`, over the same checks; each carries a planted
+violation it fails:
+
+- The production host registry (`register_host`) builds, and declares no second owner, no lifetime off `HOST_LIFETIMES`,
+  no alias onto a doubled owner, no two roles over one key, and no defaulted constructor.
+- Every host-root route's `FromDishka` dependency resolves from the host's process scope, and no `/runners/{id}` route
+  takes one.
+- Its legacy leaves are inventoried, not refused, while the runner children hold them.
+
 A migrated command is held by two more modules. `tests/guards/test_command_graph.py` builds the `hub status` registry on
 the `COMMAND` lifetime and fails it on a missing dependency, a second owner, another lifetime, an alias onto a doubled
 owner, two roles over one key, a defaulted constructor, a parameter taking a generic resolver or process handle, a
@@ -251,11 +264,11 @@ One Ruff rule beside them holds the OpenCode 2 service seam: `TID251` bans `Urll
 `runner/cli/` module except `runner/cli/children.py`, which builds the production one. It is scoped to that one concrete
 adapter, not to transports in general.
 
-**Do.** The hub process composes its graph in a container; the runner host still hands process-scoped collaborators down
-in frozen dataclasses. Thread-confined engines and clients can remain independent, but belong to the same process graph
-with explicit lifetimes. The hub's container is the direction (`decision:adopt-di/container`): one validated graph
-refuses a missing dependency, a second owner, or a lifetime off its scope path when it is built, not when a request
-first reaches it. In the hub:
+**Do.** The hub process composes its graph in a container; the runner host serves from a container over its host root
+and still hands its legacy-built collaborators down in frozen dataclasses. Thread-confined engines and clients can
+remain independent, but belong to the same process graph with explicit lifetimes. The hub's container is the direction
+(`decision:adopt-di/container`): one validated graph refuses a missing dependency, a second owner, or a lifetime off its
+scope path when it is built, not when a request first reaches it. In the hub:
 
 - `blizzard/src/blizzard/hub/process_root.py` is the hub's composition root. `register_hub` declares, over the plain
   recording registry, the scope inputs, each store adapter, and each area over the adapter `Ref` the store wiring hands
@@ -312,18 +325,37 @@ The hub's hosted lifetimes and the runner host:
   `hub/scopes/tenants.py`), never from the unscoped process (`bzh:tenant-scoped-store`,
   [./system-shape/tenancy.md](./system-shape/tenancy.md)). A typed tenant accessor (above) may also be built by its
   entrypoint, with `build_flow_driver` as the reference.
-- The runner host graph in `blizzard/src/blizzard/runner/composition.py` — `build_host_process` holding one
-  `RunnerProcess` per runner — with the served app built over the host in `blizzard/src/blizzard/runner/app.py` and each
-  runner's periodic loop wired in `blizzard/src/blizzard/runner/loop_wiring.py`. `HostStores` and the telemetry receiver
-  are host-scoped and built once per host; each `RunnerProcess` references that host graph and holds runner-bound
-  collaborators, its attempt handle and one host-kind write seam for external-usage attempts. That seam uses
-  runner-bound connections to write an unregistered host's sampled attempt and its runner-scoped outbound report in one
-  transaction.
-- `blizzard/src/blizzard/runner/host_root.py` is the host's composition root. It registers its own keys — the borrowed
-  `HostProcess`, `HostRunnerSet` and each runner child's `BuiltRunner` — until area wiring begins, and a test declares
-  its runner graph before the build. Only tests exercise it; the running host still serves from `build_host_process`
-  until the root is activated. `HostRunnerSet` in `runner/composition.py` alone opens and closes runner children, and a
-  runner's graph closes before its wiring on drain, abandon and host stop.
+- The runner host graph in `blizzard/src/blizzard/runner/composition.py`: `build_host_process` builds the host — its
+  `HostStores`, telemetry receiver and records reconcile, once per host — and no runner, and `compose_runner` composes
+  one `RunnerProcess` over it. Each `RunnerProcess` references that host graph and holds runner-bound collaborators, its
+  attempt handle and one host-kind write seam for external-usage attempts. That seam uses runner-bound connections to
+  write an unregistered host's sampled attempt and its runner-scoped outbound report in one transaction. Each runner's
+  periodic loop is wired in `blizzard/src/blizzard/runner/loop_wiring.py`.
+- `blizzard/src/blizzard/runner/host_root.py` is the host's composition root, and the running host serves from it.
+  `register_host` declares the borrowed `HostProcess`, the `HostConfig` and `RunnerCompose` options a runner child is
+  composed from, `HostRunnerSet`, each runner child's one context value `BuiltRunner`, the named legacy leaves, and each
+  adopted area's `register` call. `HostRoot.serving` opens it: `build_hosted_app` in
+  `blizzard/src/blizzard/runner/app.py` opens it over the host `runner host` built, and `open_standalone` and
+  `build_runner_process` open it over a host of one for the standalone verbs, the self-built loop tick and
+  `runner
+  tick`, whose caller owns and closes what it opened. A stand-in root reuses `register_host` and adds an area
+  before the build.
+- `HostRunnerSet` in `runner/composition.py` alone opens and closes runner children, one new child for every start
+  attempt, and a runner's graph closes before its child on drain, abandon and host stop. The served app closes the root
+  — its runner children, then its process scope — before `runner host` closes the borrowed host.
+- Until each area's slice adopts it, what the host and each runner are still built by is reached through named legacy
+  leaves that only the root declares, through `LegacyRegistry`: a runner child holds its `RunnerProcess` as a
+  runner-lifetime leaf, built as the child opens so a bad entry fails the child's opening, and the host's usage-limit
+  store and clock are process-lifetime leaves over the borrowed host. An adopted area depends on a leaf only by the
+  `Ref` the root hands it, or by its type.
+- A new host or runner service is born in its area's `wiring.py`, which imports only the registry interface and its own
+  package: `runner/throttle/wiring.py` aliases the floor-clear write onto the usage-limit `Ref` the root hands it and
+  registers `SubscriptionFloorClearService` at the process lifetime, and declares it absent through `register_absent`.
+  An app built without a host root serves its host routes from the host-free graph `open_host_free` opens, each host
+  service declared absent; a route that reaches one answers `503` through the runner app's `ServiceAbsent` handler.
+- A host-root route takes each service it calls through `FromDishka[...]` under `@inject_sync`, resolved through the
+  host's process scope: `host_request` (`runner/api/resolution.py`) attaches that resolver on the host-root lanes, never
+  on a `/runners/{id}` lane, and never closes it. A `/runners/{id}` route still reads its runner's seams.
 - `HostRunnerSet` is the one exception to a registered service taking no `OwnedChild`: the host root hands it the
   process scope through `bind` once it is built, and it opens runner children beneath that scope and resolves nothing
   through it.
@@ -379,10 +411,11 @@ fails any caller that supplies less and any member the collaborator starts readi
 
 **Scope.** The bundles are the runner's store bundles — `RunnerStores`, `RunnerReadStores`, and the `IReadRunnerStore` /
 `IWriteRunnerStore` Protocols they satisfy, all in `blizzard/src/blizzard/runner/stores.py` — and the loop's
-`LoopContext`. The composition roots are those `bzh:dependency-injection` names; the loop driver is
-`runner/loop/context.py`, `runner/loop/tick.py`, and `runner/loop/steps.py`; the edges are everything under
-`runner/api/` and `runner/cli/`. On the hub, every module is in scope, with no roster: each takes every service through
-the container and holds no bag. Tests are out of scope: they act as their own roots.
+`LoopContext`. The composition roots are those `bzh:dependency-injection` names; a host-root route taking `FromDishka`
+names each service it calls, never a bundle. The loop driver is `runner/loop/context.py`, `runner/loop/tick.py`, and
+`runner/loop/steps.py`; the edges are everything under `runner/api/` and `runner/cli/`. On the hub, every module is in
+scope, with no roster: each takes every service through the container and holds no bag. Tests are out of scope: they act
+as their own roots.
 
 **Detect.** A step or domain service typed by a bundle while its body reads a handful of the bundle's members.
 `tests/guards/test_layering.py` fails the unit tier on each of these, and plants a temporary tree to prove each check

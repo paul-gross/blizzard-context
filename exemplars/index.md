@@ -42,14 +42,17 @@ Under `blizzard/exemplars/python/exemplar/`.
 
 Under `blizzard/exemplars/python/exemplar/`.
 
-| Exemplar                 | Copy it when you are…                                     |
-| ------------------------ | --------------------------------------------------------- |
-| `runner/disk/floor.py`   | Adding a runner loop step or changing what one acts on    |
-| `runner/disk/model.py`   | Putting a runner decision in a pure function a step calls |
-| `runner/loop/context.py` | Proving the loop's context satisfies a step's Protocol    |
-| `runner/loop/steps.py`   | Registering a step with the loop                          |
-| `runner/stores.py`       | Giving a runner step a store it reads or writes           |
-| `runner/disk/probe.py`   | Putting an external driver behind a pluggable runner seam |
+| Exemplar                 | Copy it when you are…                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------- |
+| `runner/disk/floor.py`   | Adding a runner loop step or changing what one acts on                                            |
+| `runner/disk/model.py`   | Putting a runner decision in a pure function a step calls                                         |
+| `runner/loop/context.py` | Proving the loop's context satisfies a step's Protocol                                            |
+| `runner/loop/steps.py`   | Registering a step with the loop                                                                  |
+| `runner/stores.py`       | Giving a runner step a store it reads or writes                                                   |
+| `runner/disk/probe.py`   | Putting an external driver behind a pluggable runner seam                                         |
+| `runner/disk/wiring.py`  | Registering a new host or runner service in its area's wiring                                     |
+| `runner/host_root.py`    | Composing a runner area into the host root, or reusing the host's registration in a stand-in root |
+| `runner/api/disk.py`     | Adding a host-root route that resolves its service from the host's process scope                  |
 
 ## Web
 
@@ -75,6 +78,7 @@ Playwright service spec also follows the [service-test rulebook](../verification
 | `component/hub/store/internal/test_permit_store.py`       | Testing a hub store adapter                                      |
 | `component/hub/api/test_permits.py`                       | Testing a route's HTTP contract                                  |
 | `component/runner/disk/test_floor.py`                     | Testing a runner loop step across the moves it makes             |
+| `component/runner/api/test_disk.py`                       | Testing a host-root route through the served host app            |
 | `guards/test_injected_clock.py`                           | Writing an architectural gate as a test                          |
 
 ## Keeping them true
