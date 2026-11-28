@@ -166,7 +166,10 @@ only the shared and hub client areas on its own: a verb whose collaborator lives
 area's `register` as `area=` to its command class. An unmigrated command keeps inline wiring until its own migration
 moves it.
 
-A migrated worker command likewise opens a graph for the selected command alone, not for the worker group or its siblings. It borrows the `WorkerSession` the runner group already owns; the command closes its own resources on success and failure, never the session. Providers are registered in the owning area's wiring, while the command root composes those areas and resolves only the selected verb's collaborators.
+A migrated worker command likewise opens a graph for the selected command alone, not for the worker group or its
+siblings. It borrows the `WorkerSession` the runner group already owns; the command closes its own resources on success
+and failure, never the session. Providers are registered in the owning area's wiring, while the command root composes
+those areas and resolves only the selected verb's collaborators.
 
 The CLI edge resolves what a test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one when
 the invoker handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A migrated command's callback takes
@@ -237,8 +240,8 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
   `hub/cli/command.py`, `runner/cli/container_command.py` — calls a registration verb; each composes areas and
   orchestrates lifecycles, and the areas' wiring registers.
 - A wiring module imports no other area's wiring and no adapter, other than an adapter package's own `wiring.py` naming
-  its `internal/`; a runner area's `wiring.py` imports only the registry interface and its own package. The process
-  roots, the CLI roots among them, compose them all.
+  its `internal/`; a runner area's `wiring.py` imports only the registry interface and its own package, except runner
+  process command wiring, which also takes the foundation clock role. The process roots and CLI roots compose them all.
 - dishka is imported only under `foundation/registry/internal/`, and from `dishka.integrations.fastapi` under the route
   edges `hub/api/` and `runner/api/`.
 - A child scope opens only through the registry's own opener.
