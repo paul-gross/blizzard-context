@@ -152,3 +152,13 @@ scenarios are:
 `fill.after-env-acquire.before-bind`, `fill.after-bind.before-claim`, and `abandon.after-release.before-closure` on a
 real runner subprocess; each restart lands the chunk exactly once with both-store invariants green. The release case
 also checks the released worktree's repo manifest is empty before restart.
+
+### blizzard:crash-sweep-ci
+
+`mise run crash-sweep-ci` runs the bounded profile the `blizzard:crash-sweep` section above describes: one
+representative point per boundary family, the whole-process cases, and the recovery-critical windows. It is the row a
+fleet node binds for a change to crash recovery, where the full sweep is CI's: `pr` and the tag `release` workflow run
+every point (`bzh:ci-job-local-command`).
+
+A green here claims the bounded subset only. A change that adds or moves a crash point outside that subset is proven by
+the full sweep on its pull request.

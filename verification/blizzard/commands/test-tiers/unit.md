@@ -57,3 +57,18 @@ The tier's other named coverage:
   and, distinct from that firing condition, `test_the_docket_vocabulary_census_is_exactly_six_files` pins the matched
   set by name: the guard on the guard against a pattern silently ceasing to match. No docket assertion reaches content
   agreement: editing the docket format means re-checking each restatement against `docket.md` by hand.
+
+### blizzard:unit-test-scoped
+
+`uv run pytest -n auto -m unit <test paths>` runs the unit tier over the named test paths only. A plan that binds a
+change to this row names the paths beside the id.
+
+Choose the paths from what the change touches. The test tree mirrors the source tree (`bzh:mirrored-test-layout`), so
+`src/blizzard/hub/egress/` is covered by `tests/unit/hub/egress/`. Add the test files that import a changed module,
+found with `grep -rl '<module>' tests/unit/`, and `tests/guards/` when the change adds or moves a file, a config key, a
+CLI command, or a workflow, since the sweep guards there read the whole tree. The marker follows the folder, so
+`-m unit` selects every test under `tests/unit/` and `tests/guards/`. One package's unit tests finish in under a minute
+and `tests/guards/` in a few. The whole tier takes several minutes on an idle host and far longer on a shared runner
+host, so a node never binds it.
+
+A scoped green claims only the paths it ran. CI runs the whole tier on every pull request (`bzh:ci-job-local-command`).

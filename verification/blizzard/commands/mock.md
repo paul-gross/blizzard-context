@@ -82,3 +82,32 @@ gh api -X PUT repos/paul-gross/blizzard-mock/branches/master/protection --input 
 }
 EOF
 ```
+
+### blizzard-mock:unit-test-scoped
+
+`uv run pytest <test paths>` from the `blizzard-mock` repo root runs the named test files only, for a change that
+touches one part of the mock fleet. The whole suite takes a few minutes on an idle host; a scoped green claims only the
+files it ran, and `gate.yml` runs the whole suite on every pull request.
+
+### blizzard-mock:build
+
+`uv sync` in the `blizzard-mock` repo.
+
+### blizzard-mock:lint
+
+`uv run ruff check .` from the `blizzard-mock` repo root, governed by
+[`../../../standards/python.md`](../../../standards/python.md) like the two rows below.
+
+### blizzard-mock:format
+
+`uv run ruff format --check .` from the `blizzard-mock` repo root.
+
+### blizzard-mock:typecheck
+
+`uv run pyright` from the `blizzard-mock` repo root — strict over repository-owned Python, excluding dependency, cache,
+and dot-directory output (`bzh:strict-types`).
+
+### blizzard-mock:ci-workflows
+
+`mise x actionlint@1.7.12 -- actionlint` from the `blizzard-mock` repo root scans `.github/workflows/` by default. It is
+local-only: that repo's `gate.yml` does not run it.

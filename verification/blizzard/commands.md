@@ -1,12 +1,13 @@
 # Command-method detail (`bzh:matrix-command-detail`)
 
-This file carries the per-method detail behind every `*(more)*`-flagged row of the Commands table in
-[`../blizzard.md`](../blizzard.md): what the command runs, what its named guards assert, and what it cannot see. The
-short command form and the inventory of method ids are in `../blizzard.md`.
+This file routes to the detail behind every row of the Commands tables in [`../blizzard.md`](../blizzard.md): what the
+command runs, what its named guards assert, and what it cannot see. The short command form and the inventory of method
+ids are in `../blizzard.md`.
 
 | File                                                             | Read when…                                                                                                                                                   |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`./commands/test-tiers.md`](./commands/test-tiers.md)           | You are running or reading a test tier or a focused database proof                                                                                           |
+| [`./commands/static.md`](./commands/static.md)                   | You are running the build, a linter, the type check, or a structural scan                                                                                    |
+| [`./commands/test-tiers.md`](./commands/test-tiers.md)           | You are running or reading a test tier, narrowing one to what a change touches, or running a focused database proof                                          |
 | [`./commands/web.md`](./commands/web.md)                         | You are verifying the Angular workspace                                                                                                                      |
 | [`./commands/contract-sweeps.md`](./commands/contract-sweeps.md) | You are checking a surface against its committed contract, or checking that a restated fact agrees with its owner                                            |
 | [`./commands/packaging.md`](./commands/packaging.md)             | You are running a merge or prose gate, checking compatibility with supported releases, or building or validating a distributable or deployment configuration |

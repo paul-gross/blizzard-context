@@ -15,7 +15,7 @@ Every command method below runs from the repo root.
 | `blizzard-context:registry-drift`       | `python3 scripts/check-registry-drift.py --blizzard ../blizzard --blizzard-mock ../blizzard-mock --gate` |
 | `blizzard-context:registry-drift-tests` | `python3 tests/test_check_registry_drift.py`                                                             |
 | `blizzard-context:lint-script-tests`    | `python3 tests/test_lint_markdown_style.py`                                                              |
-| `blizzard-context:reference-lint`       | `python3 scripts/lint-references.py --gate .`                                                            |
+| `blizzard-context:reference-lint`       | `WINTER_WORKSPACE_DIR=<workspace-root> python3 scripts/lint-references.py --gate .`                      |
 | `blizzard-context:reference-lint-tests` | `python3 tests/test_lint_references.py`                                                                  |
 | `blizzard-context:ci-workflows`         | `mise x actionlint@1.7.12 -- actionlint`                                                                 |
 
@@ -52,8 +52,10 @@ code: each `bzh:` citation resolves to exactly one defining heading (`bzh-id-int
 (`reference-links`); each leaf is linked from its nearest hub (`hub-routing`); each `<module>:/path` notation reaches an
 existing file (`path-notation-targets`); no `Detect` paragraph under `architecture/` names a test function
 (`detect-cites-modules`). `--gate` exits 1 on any `fail`; without it the script always exits 0, per the lint contract.
-Run it with `WINTER_WORKSPACE_DIR` set to the workspace root to resolve `workspace:` and installed-extension paths;
-without it each such module is one `warn`, never a `fail`, which is the mode the CI runner is in.
+The command sets `WINTER_WORKSPACE_DIR` to the workspace root — the directory holding `.winter/`, two levels above a
+feature env's worktree of this repo — so `workspace:` and installed-extension paths are resolved and a dangling one is a
+`fail`. Without the variable each such module is one `warn`, never a `fail`, and the command exits 0 without checking
+them: that weaker mode is the one the CI runner is in, having no workspace, and never the one a local run uses.
 `blizzard-context:reference-lint-tests` exercises each check against fixture repos through the `winter lint` env
 contract, one seeded violation per check, and needs nothing installed.
 

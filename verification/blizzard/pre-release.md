@@ -23,9 +23,10 @@ first runs.
 **Do.** By hand: run `mise run gate-full` ([`blizzard:gate-full`](./commands/packaging.md#blizzardgate-full)), or only
 the tier the change reaches. For changed store revisions, also run `mise run store-baseline`; for a release cut, also
 run `mise run rehearsal`. From a fleet node: the linter-class rows over what changed — `blizzard:format`,
-`blizzard:lint`, `blizzard:typecheck`, `blizzard:process-ref-lint`, `web:lint`, `web:client-drift` — plus
-`blizzard:unit-test` and `web:unit-test` narrowed to the modules the change touched; a red `gate / …` job reproduced as
-`uv run pytest <failing test ids>` or the one red step's own command. Every `pr.yml` job and its local command:
+`blizzard:lint`, `blizzard:typecheck`, `blizzard:process-ref-lint`, `web:lint`, `web:client-drift` — plus the scoped row
+of each tier the change reaches, `blizzard:unit-test-scoped` and `web:unit-test-scoped` among them, over the paths the
+change touched; a red `gate / …` job reproduced as `uv run pytest <failing test ids>` or the one red step's own command.
+Every `pr.yml` job and its local command:
 
 | CI job                                                           | Local command                        |
 | ---------------------------------------------------------------- | ------------------------------------ |

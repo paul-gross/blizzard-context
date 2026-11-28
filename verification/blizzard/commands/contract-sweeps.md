@@ -176,3 +176,23 @@ Refresh a `new`/`stale` finding with `measure --write-sites`, which rewrites `si
 hand — plus a `reason` on any new non-owner site. `measure --write-sites` refuses a partial scan (a file skipped as
 unreadable or unparsable) unless `--force`; `check` instead reports a skipped file as an informational `skipped` finding
 without failing, so a clean verdict claims only the scanned files.
+
+### blizzard:openapi-drift
+
+`mise run export-openapi && git diff --exit-code -- openapi/` regenerates the committed hub and runner OpenAPI specs and
+fails on any difference. The diff is working tree against index, so stage a regenerated spec before running it
+(`bzh:drift-stage-not-route-around`). It is the Python half of `bzh:generated-client`; `web:client-drift` is the other
+half. `blizzard:gate` runs it as its spec-drift step.
+
+### blizzard:contract-drift
+
+`mise run export-contracts && git diff --exit-code -- contracts/` regenerates the committed store schema and daemon
+config documents and fails on any difference, working tree against index. `blizzard:gate`'s step also fails on a
+document the exporter wrote that is not tracked, which `git diff` does not see: check
+`git ls-files --others --exclude-standard -- contracts/` prints nothing.
+
+### blizzard:docs-references
+
+`uv run pytest tests/guards/test_operator_docs.py` asserts that every relative link and `#anchor` under `docs/`
+resolves, and that every `blizzard hub` invocation in `docs/deployment/` walks to a command and its options in
+`contracts/cli/hub.json`.

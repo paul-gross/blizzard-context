@@ -1,7 +1,7 @@
 # Tool detail (`bzh:matrix-tool-detail`)
 
-Full per-tool detail for the Tools rows of [../blizzard.md](../blizzard.md) marked "(more)" — one flat `###` section per
-tool id, in table order.
+Full per-tool detail for the Tools rows of [../blizzard.md](../blizzard.md) — one flat `###` section per tool id, in
+table order.
 
 <!-- The flat `###` shape is a contract shared with the sibling spokes; this directive suppresses the MD001 lint it trips. -->
 
