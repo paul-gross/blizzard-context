@@ -160,7 +160,9 @@ collaborators by type and takes only those instances, from a validated `COMMAND`
 (`hub/cli/wiring.py`) areas, composed by `hub/cli/container_command.py`. The carrier's values, the operator trace and
 the connection options enter that container as borrowed contexts it never closes; what the command owns is closed as it
 ends, on success and on failure. A new collaborator for a migrated command is born in its area's `wiring.py` and named
-at its verb; an unmigrated command keeps inline wiring until its own migration moves it.
+at its verb. The container composes only the shared and hub client areas on its own: a verb whose collaborator lives in
+any other area also passes that area's `register` as `area=` to `ContainerFleetCommand`. An unmigrated command keeps
+inline wiring until its own migration moves it.
 
 Either way a command resolves what a test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one
 when the invoker handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test
