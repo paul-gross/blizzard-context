@@ -22,6 +22,12 @@ story render check (`web:story-render`), and generated-client drift over `web/`.
 staged-but-uncommitted regeneration passes and an unstaged one fails (`web:client-drift`). The census reads the sibling
 `../blizzard-context` and `../blizzard-mock` checkouts, so both must be present.
 
+CI runs this job on every pull request and on `master`, and the whole run does not fit a fleet node's foreground cap, so
+a fleet node never runs `mise run gate`: it runs the row of each step its change reaches (`bzh:ci-job-local-command`).
+Every step is a row of its own — the static rows, `blizzard:unit-test-scoped` and `blizzard:component-test-scoped` in
+place of the whole pytest step, `blizzard:aggregate-census`, `blizzard:openapi-drift`, `blizzard:contract-drift`,
+`blizzard:compat`, `blizzard:change-notes`, `blizzard:flag-lifecycle`, and the `web:` rows.
+
 `mise run gate` is not the full master merge gate — it omits every upper tier, which the `pr` workflow runs as separate
 real gate jobs; `blizzard:gate-full` below reproduces the unconditional tiers, and `bzh:ci-job-local-command`
 ([`../pre-release.md`](../pre-release.md)) maps each CI job to its local command. `mise run gate` runs
@@ -34,10 +40,11 @@ it; the row below exists for running the rule on its own.
 (`./scripts/ci-gate.sh`), then `mise run service-test`, the FULL `mise run crash-sweep`, `mise run ui`,
 `mise run journey`, `mise run image-smoke` and `mise run compose-smoke`, serially, because the smokes bind fixed ports.
 A red tier does not stop the later ones: the run ends with a per-tier verdict and exits non-zero on any red.
-`GATE_FULL_TIERS` narrows it to the named tiers. The conditional checks are separate: for changed store revisions run
-`mise run store-baseline` (`blizzard:store-baseline`), and for a cut PR run `mise run rehearsal` (`blizzard:rehearsal`).
-Both need `gh` and Postgres. The task needs everything its tiers need: the sibling `blizzard-mock` worktree, Chromium,
-and a docker daemon with compose v2.
+`GATE_FULL_TIERS` narrows it to the named tiers. CI runs every one of these tiers on each pull request, and a fleet node
+never runs this task: it binds the scoped row of each tier its change reaches (`bzh:ci-job-local-command`). The
+conditional checks are separate: for changed store revisions run `mise run store-baseline` (`blizzard:store-baseline`),
+and for a cut PR run `mise run rehearsal` (`blizzard:rehearsal`). Both need `gh` and Postgres. The task needs everything
+its tiers need: the sibling `blizzard-mock` worktree, Chromium, and a docker daemon with compose v2.
 
 ### blizzard:process-ref-lint
 

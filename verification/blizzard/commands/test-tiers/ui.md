@@ -191,3 +191,14 @@ The job `upper-tiers / ui (blizzard:ui)` runs on every pull request's full suite
   opened and merged onto `main`. A second test emulates an old server-selected done row, checks the lane count and
   keyboard-accessible policy disclosure, and checks the fallback when policy metadata is omitted; it does not test
   selection. The dock's geometry is held by `web:shell-sweep`.
+
+### blizzard:ui-scoped
+
+`mise run ui -- <spec paths>` runs the named UI specs only, across the `ui*` projects that hold them. A plan that binds
+a change to this row names the specs beside the id.
+
+The task runs from `tests/`, so a spec path is relative to it: `ui/shell.spec.ts`, never `tests/ui/shell.spec.ts`. It is
+the same task as `blizzard:ui`, so it rebuilds the bundle through `web-build` before the first spec runs
+(`bzh:browser-tiers-run-the-built-bundle`).
+
+A scoped green claims only the specs it ran. CI runs the whole tier on every pull request (`bzh:ci-job-local-command`).

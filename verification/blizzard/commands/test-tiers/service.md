@@ -572,3 +572,18 @@ authorize request through the second provider
 (`tests/service/fleet/auth/idp-federation.spec.ts::test_a_two_provider_bounce_resumes_through_the_login_chooser`). The
 runner's three-lane gating split — human-lane 401, worker-hook and socket ungated — is pinned at the unit-tier and
 component-tier by `tests/unit/runner/api/test_route_gating.py` and `tests/component/runner/api/test_federation.py`.
+
+### blizzard:service-test-scoped
+
+`mise run playwright -- --project=<service project> <spec paths>` runs the named Playwright service specs only, and
+`BLIZZARD_SERVICE=1 uv run pytest -n auto <test paths>` runs the named files of the pytest half. A plan that binds a
+change to this row names the project and the paths beside the id.
+
+The task runs from `tests/`, so a spec path is relative to it: `service/hub/close-intents.spec.ts`, never
+`tests/service/hub/close-intents.spec.ts`. The project is the one the spec's folder runs as, which the
+`blizzard:service-test` section above names; `--project='service-*'` selects by path alone when the folder's project is
+not known. `--grep '<title pattern>'` narrows further, to the cases whose titles match. The pytest paths are files under
+`tests/service/`, from the repo root.
+
+Both halves need the sibling `blizzard-mock` worktree provisioned, as the full tier does. A scoped green claims only the
+specs it ran. CI runs the whole tier on every pull request (`bzh:ci-job-local-command`).

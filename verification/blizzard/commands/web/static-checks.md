@@ -5,9 +5,9 @@
 <!-- The `###` headings, test/spec-filename code spans, and `npm run` script names are machine-checked — keep each verbatim, inside its own section. -->
 
 The detail spoke for the Angular checks that need no browser — the AOT compile, generated-client drift, the structural
-gate, and the bundle-composition check — under the Angular workspace hub, [`../web.md`](../web.md). Read
-[`../../../blizzard.md`](../../../blizzard.md) first for the short command and the method-id inventory;
-[`../../commands.md`](../../commands.md) routes to the other methods' detail.
+gate, the bundle-composition check, and the vitest unit tier — under the Angular workspace hub,
+[`../web.md`](../web.md). Read [`../../../blizzard.md`](../../../blizzard.md) first for the short command and the
+method-id inventory; [`../../commands.md`](../../commands.md) routes to the other methods' detail.
 
 ### web:lint
 
@@ -317,3 +317,22 @@ caught and one reaching only an entry passing — runs before the walk is truste
 `assertLazyClosureReportWorks` over the closure walk and median. The `initial` budget in `angular.json` is the size
 backstop each app's build enforces. Wired into `gate.yml`'s `frontend` job and `scripts/ci-gate.sh` beside
 `web:structural-gate`.
+
+### web:unit-test
+
+`npm run test` in `web/` — vitest, the frontend unit and component tier, over the `hub`, `runner`, and `fleet` projects
+in turn. [`../../../../standards/frontend.md`](../../../../standards/frontend.md) governs it. The whole tier finishes in
+a minute or two, so a fleet node may run it whole; `web:unit-test-scoped` is the narrower row for a change to one
+project.
+
+### web:unit-test-scoped
+
+`npx ng test <project> --include='<spec glob>'` in `web/` runs one project's specs matching the glob only. A plan that
+binds a change to this row names the project and the glob beside the id.
+
+The project is the one that owns the changed file: `hub`, `runner`, or `fleet`, by its folder under `web/projects/`. The
+glob names the spec beside the changed file, `--include='**/chunk-page.spec.ts'`, or a feature folder's specs,
+`--include='**/chunk/**/*.spec.ts'`. `npx ng test <project>` with no `--include` runs the whole project.
+
+A scoped green claims only the specs it ran, and like the full tier it type-checks nothing: `web:typecheck` is the row
+for a changed shared interface or exported signature.

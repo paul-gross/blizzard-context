@@ -30,3 +30,16 @@ The component spoke of the test-tier hub [`../test-tiers.md`](../test-tiers.md).
   drives the census against a real, migrated-to-head sqlite store. It fails if any plans an unindexed scan, or an sqlite
   automatic covering index, over a table not declared in `tests/support/store_scan_allowlist.py`; extend or fix its
   coverage or allowances there and in `tests/support/store_read_census.py`, not in this file.
+
+### blizzard:component-test-scoped
+
+`uv run pytest -n auto -m component <test paths>` runs the component tier over the named test paths only. A plan that
+binds a change to this row names the paths beside the id.
+
+Choose the paths the way [`blizzard:unit-test-scoped`](./unit.md#blizzardunit-test-scoped) does, under
+`tests/component/`, and name a sub-package folder or single files, never a whole top-level package: this tier's tests
+are slow. `tests/component/hub/store/` finishes in about a minute on an idle host, where `tests/component/hub/` whole
+takes over ten, past a fleet node's foreground cap. A change to a store revision also names its colocated tests under
+`src/blizzard/{hub,runner}/store/migrations/tests/`.
+
+A scoped green claims only the paths it ran. CI runs the whole tier on every pull request (`bzh:ci-job-local-command`).
