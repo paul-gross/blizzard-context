@@ -152,20 +152,30 @@ area's `permits/wiring.py` aliasing the ports onto it; read it when building a r
 composition graph: process-scoped collaborators are built once and injected into both its served app and its driver.
 Short-lived CLI commands have their own roots.
 
-Every click command body under a `*/cli/` directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is
-such a root: it wires collaborators once, inline, at the top, without joining the hosted process graph, resolves what a
-test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one when the invoker handed none; a test
-hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test patches is not a seam. The shared
-carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI trees' one httpx2 import: every
-command builds its HTTP client through the carrier's `client_factory` and takes httpx2's types (`Client`, `Response`,
-the error classes) from that module, never from httpx2. The root groups pass the resolved carrier into `OperatorTrace`
-and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory. `runner/cli/runtime.py`'s
-`init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the `runner` group so a worker
-verb never loads a daemon's stack; the carrier also holds the `host` verb's process and harness-bundle builders, which
-only `runtime.py` — a composition root — may import. A runner verb resolves the shared carrier extended with the
-child-process launcher, the loopback transport, and the OpenCode 2 service transport from `runner/cli/children.py`, and
-reads its clocks, launcher, and transports from that one carrier, so a test hands HTTP, launcher, and transport fakes in
-one `obj`.
+CLI wiring is in transition, and a command is wired one of two ways. An unmigrated command's body under a `*/cli/`
+directory, and the `OperatorGroup` and `_RunnerGroup` `invoke` methods, is such a root: it wires collaborators once,
+inline, at the top, without joining the hosted process graph. A migrated command — today `hub status` — declares its
+collaborators by type and takes only those instances, from a validated `COMMAND`-lifetime container that
+`blizzard/src/blizzard/cli/command_root.py` builds per invocation over the shared (`cli/wiring.py`) and hub client
+(`hub/cli/wiring.py`) areas, composed by `hub/cli/container_command.py`. The carrier's values, the operator trace and
+the connection options enter that container as borrowed contexts it never closes; what the command owns is closed as it
+ends, on success and on failure. A new collaborator for a migrated command is born in its area's `wiring.py` and named
+at its verb. The container composes only the shared and hub client areas on its own: a verb whose collaborator lives in
+any other area also passes that area's `register` as `area=` to `ContainerFleetCommand`. An unmigrated command keeps
+inline wiring until its own migration moves it.
+
+Either way a command resolves what a test may swap from `ctx.find_object(<carrier>)`, and defaults to the production one
+when the invoker handed none; a test hands its own through `CliRunner.invoke(obj=...)`. A module-level factory a test
+patches is not a seam. The shared carrier is `CliCollaborators` in `blizzard/src/blizzard/cli/collaborators.py`, the CLI
+trees' one httpx2 import: every command builds its HTTP client through the carrier's `client_factory` and takes httpx2's
+types (`Client`, `Response`, the error classes) from that module, never from httpx2. The root groups pass the resolved
+carrier into `OperatorTrace` and `WorkerSession` as required arguments, and a hub verb's `CliContext` holds its factory.
+`runner/cli/runtime.py`'s `init` resolves its own hub-clients carrier the same way, keeping the HTTP default out of the
+`runner` group so a worker verb never loads a daemon's stack; the carrier also holds the `host` verb's process and
+harness-bundle builders, which only `runtime.py` — a composition root — may import. A runner verb resolves the shared
+carrier extended with the child-process launcher, the loopback transport, and the OpenCode 2 service transport from
+`runner/cli/children.py`, and reads its clocks, launcher, and transports from that one carrier, so a test hands HTTP,
+launcher, and transport fakes in one `obj`.
 
 **Why.** One process graph prevents independently wired app and driver collaborators from diverging, and lets tests
 substitute a fake store, a virtual clock, and a mock forge without patching module globals.
@@ -173,8 +183,8 @@ substitute a fake store, a virtual clock, and a mock forge without patching modu
 **Scope.** The injected clock (`bzh:injected-clock`) is a member of this rule, not an exception to it. The CLI-root half
 reaches a helper a command's own root calls into rather than repeating, provided the root passes in whatever varies, and
 it is wider than the mechanical roster: `tests/guards/test_layering.py::_COMPOSITION_ROOTS` stays the narrower set of
-modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition`, and a CLI module
-outside it is not a violation.
+modules that may import `internal/` (`bzh:internal-visibility`) or `blizzard.runner.composition` — `cli/command_root.py`
+among them — and a CLI module outside it is not a violation.
 
 **Detect.** A service instantiating a store, client, clock, or subprocess runner in its own body, or a module-level
 singleton read directly. `tests/guards/test_layering.py` fails the unit tier on any of:
@@ -207,13 +217,21 @@ the checks in `tests/support/container_guards.py`; each check carries a planted 
   generic resolver or process handle — `Resolver`, `HubProcess`, `TenantContainers` or `OwnedChild`, however wrapped.
 - No module under `blizzard/src/blizzard/` names a services bag (`BAG_NAMES`) in an import, a definition, a name, or an
   attribute.
-- No hub root — `hub/process_root.py`, `hub/app.py`, `hub/composition.py` — calls a registration verb; each composes
-  areas and orchestrates lifecycles, and the areas' wiring registers.
+- No hub root — `hub/process_root.py`, `hub/app.py`, `hub/composition.py` — and no CLI root — `cli/command_root.py`,
+  `hub/cli/container_command.py` — calls a registration verb; each composes areas and orchestrates lifecycles, and the
+  areas' wiring registers.
 - A wiring module imports no other area's wiring and no adapter, other than an adapter package's own `wiring.py` naming
-  its `internal/`; the process roots compose them all.
+  its `internal/`; the process roots, the two CLI roots among them, compose them all.
 - dishka is imported only under `foundation/registry/internal/`, and from `dishka.integrations.fastapi` under
   `hub/api/`.
 - A child scope opens only through the registry's own opener.
+
+A migrated command is held by two more modules. `tests/guards/test_command_graph.py` builds the `hub status` registry on
+the `COMMAND` lifetime and fails it on a missing dependency, a second owner, another lifetime, an alias onto a doubled
+owner, two roles over one key, a defaulted constructor, a parameter taking a generic resolver or process handle, a
+legacy declaration, or a declared collaborator nothing registers. `tests/unit/hub/cli/test_status_imports.py` runs the
+CLI in a fresh interpreter: `hub status` loads no daemon app or store stack and no sibling command or wiring module, and
+an unmigrated verb loads neither the command root nor the registry.
 
 Four ast-grep rules in `blizzard/contracts/ast-grep/rules/` hold the CLI's HTTP seam (`blizzard:structural-gate`):
 

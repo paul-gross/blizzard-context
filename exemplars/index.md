@@ -35,6 +35,7 @@ Under `blizzard/exemplars/python/exemplar/`.
 | `hub/domain/permits/wiring.py`                                   | Registering a new hub service, or an area's ports over the adapter it is handed                                                                    |
 | `hub/store/wiring.py`                                            | Registering a hub store adapter for an area to alias its ports onto                                                                                |
 | `hub/process_root.py`                                            | Composing a hub area into the process root, or reusing the hub's registration in a stand-in root                                                   |
+| `hub/cli/wiring.py`, `hub/cli/permits.py`                        | Registering a service a migrated CLI command consumes                                                                                              |
 | `hub/graphs/basic-development-workflow/prompts/`                 | Writing a worker node's prompt, its judgement, or an edge's addendum                                                                               |
 
 ## Runner
