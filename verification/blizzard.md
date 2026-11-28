@@ -80,19 +80,19 @@ runs the whole default suite by design, so it is a proof run by hand, never a fl
 
 <!-- vale Blizzard.ProcessReference = NO -->
 
-| Method                              | Command                                                                                                              |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `blizzard:unit-test-scoped`         | `uv run pytest -n auto -m unit <test paths>`                                                                         |
-| `blizzard:component-test-scoped`    | `uv run pytest -n auto -m component <test paths>`                                                                    |
-| `blizzard:service-test-scoped`      | `mise run playwright -- --project=<service project> <spec paths>`                                                    |
-| `blizzard:ui-scoped`                | `mise run ui -- <spec paths>`                                                                                        |
-| `blizzard:crash-sweep-ci`           | `mise run crash-sweep-ci`                                                                                            |
-| `blizzard:harness-check`            | `mise run playwright -- --project=harness --project=harness-auth --project=harness-runner --project=harness-actions` |
-| `blizzard:aggregate-census`         | `uv run python -m tests.support.aggregate_census`                                                                    |
-| `blizzard:winter-binding`           | `mise run winter-binding`                                                                                            |
-| `blizzard:mutation`                 | `mise run mutation <scope>`                                                                                          |
-| `blizzard:sqlite-test-engine-leaks` | `uv run pytest -n auto`                                                                                              |
-| `blizzard:postgres-uow-concurrency` | `uv run --extra postgres python scripts/check_hub_uow_postgres.py`                                                   |
+| Method                              | Command                                                                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `blizzard:unit-test-scoped`         | `uv run pytest -n auto -m unit <test paths>`                                                                                  |
+| `blizzard:component-test-scoped`    | `uv run pytest -n auto -m component <test paths>`                                                                             |
+| `blizzard:service-test-scoped`      | `mise run playwright -- --project=<service project> <spec paths>` and `BLIZZARD_SERVICE=1 uv run pytest -n auto <test paths>` |
+| `blizzard:ui-scoped`                | `mise run ui -- <spec paths>`                                                                                                 |
+| `blizzard:crash-sweep-ci`           | `mise run crash-sweep-ci`                                                                                                     |
+| `blizzard:harness-check`            | `mise run playwright -- --project=harness --project=harness-auth --project=harness-runner --project=harness-actions`          |
+| `blizzard:aggregate-census`         | `uv run python -m tests.support.aggregate_census`                                                                             |
+| `blizzard:winter-binding`           | `mise run winter-binding`                                                                                                     |
+| `blizzard:mutation`                 | `mise run mutation <scope>`                                                                                                   |
+| `blizzard:sqlite-test-engine-leaks` | `uv run pytest -n auto`                                                                                                       |
+| `blizzard:postgres-uow-concurrency` | `uv run --extra postgres python scripts/check_hub_uow_postgres.py`                                                            |
 
 <!-- vale Blizzard.ProcessReference = YES -->
 

@@ -17,7 +17,9 @@ is a second opinion fighting the one ruff already is.
 
 **Do.** A change must pass `blizzard:build`, `blizzard:lint`, `blizzard:format`, `blizzard:typecheck`,
 `blizzard:unit-test`, and `blizzard:component-test` — in `blizzard-mock`, the `blizzard-mock:` rows that scope carries
-for them. [../verification/blizzard.md](../verification/blizzard.md) §Commands owns the command each id runs, and with
+for them. A fleet node binds `blizzard:unit-test-scoped` and `blizzard:component-test-scoped` for the tests the change
+reaches, never the whole tiers; CI proves those ([`bzh:ci-job-local-command`](../verification/blizzard/pre-release.md)).
+[../verification/blizzard.md](../verification/blizzard.md) §Commands owns the command each id runs, and with
 [./frontend.md](./frontend.md) the browser tiers.
 
 **Don't.** A `# noqa: S10x` directive — `pyproject.toml`'s `[tool.ruff.lint]` `select` lists the enabled families and

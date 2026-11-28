@@ -5,9 +5,9 @@
 <!-- The `###` headings, test/spec-filename code spans, and `npm run` script names are machine-checked — keep each verbatim, inside its own section. -->
 
 The detail spoke for the Angular checks that need no browser — the AOT compile, generated-client drift, the structural
-gate, and the bundle-composition check — under the Angular workspace hub, [`../web.md`](../web.md). Read
-[`../../../blizzard.md`](../../../blizzard.md) first for the short command and the method-id inventory;
-[`../../commands.md`](../../commands.md) routes to the other methods' detail.
+gate, the bundle-composition check, and the vitest unit tier — under the Angular workspace hub,
+[`../web.md`](../web.md). Read [`../../../blizzard.md`](../../../blizzard.md) first for the short command and the
+method-id inventory; [`../../commands.md`](../../commands.md) routes to the other methods' detail.
 
 ### web:lint
 
