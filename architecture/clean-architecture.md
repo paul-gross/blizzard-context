@@ -205,9 +205,9 @@ singleton read directly. `tests/guards/test_layering.py` fails the unit tier on 
   `runner/store/`.
 - A hub store acquisition inside a registered factory or resource, or inside any wiring module; a class the hub registry
   owns constructed again in a hub root file.
-- An offline hub verb or tool, such as the event-log opener or `tools.invariants`, taking its capability from anything
-  but a registered provider. The opener gets it through `open_store_backed`; the invariant tool gets it from the store
-  wiring's registered factory over its borrowed engine.
+- An offline hub or runner verb or tool, such as the event-log opener or `tools.invariants`, taking its capability from
+  anything but a registered provider. The opener gets it through `open_store_backed`; each invariant checker comes from
+  its store wiring's bounded registered factory over borrowed connections.
 - An engine opened under `runner/cli/` or in `runner/runtime.py` at a site the gate's shrink-only allowlist does not
   list, or a listed site that no longer opens one — the stopped-host verbs read the store through the composition's
   readers.
